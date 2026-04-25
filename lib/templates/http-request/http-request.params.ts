@@ -67,4 +67,18 @@ export interface HttpRequestTemplateParams {
   ignoreSsl?: boolean;
   /** Следовать редиректам */
   followRedirects?: boolean;
+  /** Включить пагинацию */
+  enablePagination?: boolean;
+  /** Режим пагинации: interactive — кнопки Далее/Назад, fetch_all — собрать все страницы */
+  paginationMode?: 'interactive' | 'fetch_all';
+  /** Имя переменной offset для интерактивной пагинации */
+  paginationOffsetVar?: string;
+  /** Поле с общим количеством записей в ответе API */
+  paginationTotalField?: string;
+  /** Поле с массивом элементов в ответе API */
+  paginationItemsField?: string;
+  /** Количество элементов на страницу */
+  paginationLimit?: number;
+  /** Максимальное количество страниц для режима fetch_all */
+  paginationMaxPages?: number;
 }

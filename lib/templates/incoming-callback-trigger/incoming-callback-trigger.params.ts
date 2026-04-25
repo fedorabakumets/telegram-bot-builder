@@ -15,6 +15,10 @@ export interface IncomingCallbackTriggerEntry {
   callbackPattern?: string;
   /** Тип сопоставления паттерна: "startsWith" | "equals" | "contains" */
   callbackMatchType?: string;
+  /** Префикс для удаления из callback_data перед сохранением в переменную */
+  callbackDataStripPrefix?: string;
+  /** Имя переменной куда сохранять callback_data (по умолчанию "callback_data") */
+  callbackDataSaveAs?: string;
 }
 
 /** Минимальное описание узла для навигации в waiting_callback_input_middleware */

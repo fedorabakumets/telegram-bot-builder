@@ -167,3 +167,54 @@ export const httpRequestNodePost: Node = {
     httpRequestResponseVariable: 'create_response',
   } as any,
 };
+
+/** Параметры: интерактивная пагинация */
+export const validParamsInteractivePagination: HttpRequestTemplateParams = {
+  nodeId: 'fetch_users',
+  safeName: 'fetch_users',
+  url: 'https://api.example.com/users?limit=10&offset={users_offset}',
+  method: 'GET',
+  timeout: 30,
+  responseVariable: 'users_data',
+  enablePagination: true,
+  paginationMode: 'interactive',
+  paginationOffsetVar: 'users_offset',
+  paginationTotalField: 'count',
+  paginationItemsField: 'items',
+  paginationLimit: 10,
+};
+
+/** Параметры: режим fetch_all */
+export const validParamsFetchAll: HttpRequestTemplateParams = {
+  nodeId: 'fetch_all_tracks',
+  safeName: 'fetch_all_tracks',
+  url: 'https://api.example.com/tracks',
+  method: 'GET',
+  timeout: 30,
+  responseVariable: 'tracks_data',
+  enablePagination: true,
+  paginationMode: 'fetch_all',
+  paginationTotalField: 'total',
+  paginationItemsField: 'items',
+  paginationLimit: 50,
+  paginationMaxPages: 10,
+};
+
+/** Узел графа: интерактивная пагинация */
+export const httpRequestNodePagination: Node = {
+  id: 'fetch_users',
+  type: 'http_request',
+  position: { x: 0, y: 0 },
+  data: {
+    httpRequestUrl: 'https://api.example.com/users?limit=10&offset={users_offset}',
+    httpRequestMethod: 'GET',
+    httpRequestTimeout: 30,
+    httpRequestResponseVariable: 'users_data',
+    httpRequestEnablePagination: true,
+    httpRequestPaginationMode: 'interactive',
+    httpRequestPaginationOffsetVar: 'users_offset',
+    httpRequestPaginationTotalField: 'count',
+    httpRequestPaginationItemsField: 'items',
+    httpRequestPaginationLimit: 10,
+  } as any,
+};

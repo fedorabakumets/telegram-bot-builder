@@ -64,6 +64,13 @@ export function nodeToHttpRequestParams(node: Node, context?: HttpRequestNodeCon
     ignoreHttpErrors: !!data?.httpRequestIgnoreHttpErrors,
     ignoreSsl: !!data?.httpRequestIgnoreSsl,
     followRedirects: data?.httpRequestFollowRedirects !== false,
+    enablePagination: !!data?.httpRequestEnablePagination,
+    paginationMode: data?.httpRequestPaginationMode === 'fetch_all' ? 'fetch_all' : 'interactive',
+    paginationOffsetVar: typeof data?.httpRequestPaginationOffsetVar === 'string' ? data.httpRequestPaginationOffsetVar : '',
+    paginationTotalField: typeof data?.httpRequestPaginationTotalField === 'string' ? data.httpRequestPaginationTotalField : 'count',
+    paginationItemsField: typeof data?.httpRequestPaginationItemsField === 'string' ? data.httpRequestPaginationItemsField : 'items',
+    paginationLimit: typeof data?.httpRequestPaginationLimit === 'number' ? data.httpRequestPaginationLimit : 10,
+    paginationMaxPages: typeof data?.httpRequestPaginationMaxPages === 'number' ? data.httpRequestPaginationMaxPages : 20,
   };
 }
 

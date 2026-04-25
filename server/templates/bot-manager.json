@@ -1,22 +1,24 @@
 {
-  "name": "🤖 Менеджер ботов",
-  "description": "Управление проектами через Telegram-бота: список проектов, создание, импорт, управление токенами, запуск/остановка ботов.",
-  "category": "utility",
+  "name": "🤖 Bot Manager — Управление ботами",
+  "description": "Полнофункциональный менеджер Telegram-ботов: список проектов, карточка токена, управление пользователями с пагинацией, администраторы, импорт/экспорт проектов.",
+  "category": "tools",
   "tags": [
-    "менеджер",
+    "bot-manager",
     "управление",
     "проекты",
     "токены",
-    "администрирование"
+    "пользователи",
+    "пагинация",
+    "администраторы"
   ],
   "isPublic": 1,
-  "difficulty": "medium",
+  "difficulty": "advanced",
   "authorName": "Система",
+  "version": "2.1.0",
   "featured": 1,
   "language": "ru",
-  "requiresToken": 1,
-  "complexity": 5,
-  "estimatedTime": 15,
+  "complexity": 9,
+  "estimatedTime": 0,
   "data": {
     "sheets": [
       {
@@ -4073,7 +4075,7 @@
             }
           },
           {
-            "id": "token-card-msg",
+            "id": "token-card-msg-running",
             "data": {
               "buttons": [],
               "markdown": false,
@@ -4095,7 +4097,7 @@
                 "sourceVariable": "",
                 "callbackTemplate": ""
               },
-              "keyboardNodeId": "token-actions-keyboard",
+              "keyboardNodeId": "token-actions-keyboard-running",
               "resizeKeyboard": true,
               "enableTextInput": false,
               "oneTimeKeyboard": false,
@@ -4119,23 +4121,65 @@
             "type": "message",
             "position": {
               "x": 2180,
-              "y": 2400
+              "y": 1500
             }
           },
           {
-            "id": "token-actions-keyboard",
+            "id": "token-card-msg-stopped",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "formatMode": "html",
+              "showInMenu": false,
+              "messageText": "🤖 <b>Бот {token_status.instance.botName}</b>\n\n📁 Проект: {project_detail.name}\n📊 Статус: {token_status.instance.statusLabel}\n⏱ Аптайм: {token_status.instance.uptime}\n\n👥 <b>Статистика пользователей:</b>\n• Всего: {token_status.userStats.total}\n• Активных (24ч): {token_status.userStats.active_24h}\n• Активных (7д): {token_status.userStats.active_7d}\n• Новых сегодня: {token_status.userStats.new_today}",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "keyboardNodeId": "token-actions-keyboard-stopped",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "variableFilters": {},
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "message",
+            "position": {
+              "x": 2180,
+              "y": 1800
+            }
+          },
+          {
+            "id": "token-actions-keyboard-running",
             "data": {
               "buttons": [
                 {
-                  "id": "btn-token-start",
-                  "text": "▶️ Запустить",
-                  "action": "goto",
-                  "target": "token-action-start",
-                  "hideAfterClick": false,
-                  "skipDataCollection": false
-                },
-                {
-                  "id": "btn-token-stop",
+                  "id": "btn-token-stop-running",
                   "text": "⏹ Остановить",
                   "action": "goto",
                   "target": "token-action-stop",
@@ -4143,7 +4187,15 @@
                   "skipDataCollection": false
                 },
                 {
-                  "id": "btn-token-admins",
+                  "id": "btn-token-users-running",
+                  "text": "👤 Пользователи",
+                  "action": "goto",
+                  "target": "fetch-bot-users",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                },
+                {
+                  "id": "btn-token-admins-running",
                   "text": "👥 Администраторы",
                   "action": "goto",
                   "target": "fetch-token-admins",
@@ -4151,7 +4203,7 @@
                   "skipDataCollection": false
                 },
                 {
-                  "id": "btn-delete-token",
+                  "id": "btn-delete-token-running",
                   "text": "🗑 Удалить",
                   "action": "goto",
                   "target": "delete-token-confirm",
@@ -4159,7 +4211,7 @@
                   "skipDataCollection": false
                 },
                 {
-                  "id": "btn-back-to-project-from-token",
+                  "id": "btn-back-to-project-running",
                   "text": "📁 К проекту",
                   "action": "goto",
                   "target": "reload-project",
@@ -4189,28 +4241,146 @@
                 "rows": [
                   {
                     "buttonIds": [
-                      "btn-token-start",
-                      "btn-token-stop"
+                      "btn-token-stop-running"
                     ]
                   },
                   {
                     "buttonIds": [
-                      "btn-token-admins"
+                      "btn-token-users-running"
                     ]
                   },
                   {
                     "buttonIds": [
-                      "btn-delete-token"
+                      "btn-token-admins-running"
                     ]
                   },
                   {
                     "buttonIds": [
-                      "btn-back-to-project-from-token"
+                      "btn-delete-token-running"
                     ]
                   },
                   {
                     "buttonIds": [
-                      "btn-back-to-tokens"
+                      "btn-back-to-project-running"
+                    ]
+                  }
+                ],
+                "columns": 2,
+                "autoLayout": false
+              },
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "keyboard",
+            "position": {
+              "x": 2840,
+              "y": 1400
+            }
+          },
+          {
+            "id": "token-actions-keyboard-stopped",
+            "data": {
+              "buttons": [
+                {
+                  "id": "btn-token-start-stopped",
+                  "text": "▶️ Запустить",
+                  "action": "goto",
+                  "target": "token-action-start",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                },
+                {
+                  "id": "btn-token-users-stopped",
+                  "text": "👤 Пользователи",
+                  "action": "goto",
+                  "target": "fetch-bot-users",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                },
+                {
+                  "id": "btn-token-admins-stopped",
+                  "text": "👥 Администраторы",
+                  "action": "goto",
+                  "target": "fetch-token-admins",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                },
+                {
+                  "id": "btn-delete-token-stopped",
+                  "text": "🗑 Удалить",
+                  "action": "goto",
+                  "target": "delete-token-confirm",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                },
+                {
+                  "id": "btn-back-to-project-stopped",
+                  "text": "📁 К проекту",
+                  "action": "goto",
+                  "target": "reload-project",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                }
+              ],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "inline",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "keyboardLayout": {
+                "rows": [
+                  {
+                    "buttonIds": [
+                      "btn-token-start-stopped"
+                    ]
+                  },
+                  {
+                    "buttonIds": [
+                      "btn-token-users-stopped"
+                    ]
+                  },
+                  {
+                    "buttonIds": [
+                      "btn-token-admins-stopped"
+                    ]
+                  },
+                  {
+                    "buttonIds": [
+                      "btn-delete-token-stopped"
+                    ]
+                  },
+                  {
+                    "buttonIds": [
+                      "btn-back-to-project-stopped"
                     ]
                   }
                 ],
@@ -4927,6 +5097,111 @@
             }
           },
           {
+            "id": "token-action-restart",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "httpRequestUrl": "http://localhost:5000/api/projects/{project_detail.id}/bot/restart",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "httpRequestBody": "{\"tokenId\": \"{callback_data}\"}",
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "check-token-restart-status",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "httpRequestMethod": "POST",
+              "audioInputVariable": "",
+              "httpRequestHeaders": "{\"Content-Type\": \"application/json\"}",
+              "httpRequestTimeout": 30,
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": true,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false,
+              "httpRequestStatusVariable": "token_restart_status",
+              "httpRequestResponseVariable": "token_restart_response"
+            },
+            "type": "http_request",
+            "position": {
+              "x": 3300,
+              "y": 3000
+            }
+          },
+          {
+            "id": "check-token-restart-status",
+            "data": {
+              "buttons": [],
+              "branches": [
+                {
+                  "id": "ok",
+                  "label": "= 200",
+                  "value": "200",
+                  "target": "token-action-result-msg",
+                  "operator": "equals"
+                },
+                {
+                  "id": "else",
+                  "label": "Иначе",
+                  "value": "",
+                  "target": "token-action-error-msg",
+                  "operator": "else"
+                }
+              ],
+              "markdown": false,
+              "variable": "token_restart_status",
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "oneTimeKeyboard": false,
+              "enableStatistics": false,
+              "conditionalMessages": [],
+              "enableDynamicButtons": false,
+              "enableConditionalMessages": false
+            },
+            "type": "condition",
+            "position": {
+              "x": 3268,
+              "y": 3200
+            }
+          },
+          {
             "id": "token-action-result-msg",
             "data": {
               "buttons": [],
@@ -5143,7 +5418,109 @@
             }
           },
           {
-            "id": "token-card-with-photo",
+            "id": "check-token-running-with-photo",
+            "data": {
+              "buttons": [],
+              "branches": [
+                {
+                  "id": "running",
+                  "label": "= running",
+                  "value": "running",
+                  "target": "token-card-with-photo-running",
+                  "operator": "equals"
+                },
+                {
+                  "id": "else",
+                  "label": "Иначе",
+                  "value": "",
+                  "target": "token-card-with-photo-stopped",
+                  "operator": "else"
+                }
+              ],
+              "markdown": false,
+              "variable": "token_status.instance.status",
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "oneTimeKeyboard": false,
+              "enableStatistics": false,
+              "conditionalMessages": [],
+              "enableDynamicButtons": false,
+              "enableConditionalMessages": false
+            },
+            "type": "condition",
+            "position": {
+              "x": 1756,
+              "y": 1080
+            }
+          },
+          {
+            "id": "check-token-running-no-photo",
+            "data": {
+              "buttons": [],
+              "branches": [
+                {
+                  "id": "running",
+                  "label": "= running",
+                  "value": "running",
+                  "target": "token-card-msg-running",
+                  "operator": "equals"
+                },
+                {
+                  "id": "else",
+                  "label": "Иначе",
+                  "value": "",
+                  "target": "token-card-msg-stopped",
+                  "operator": "else"
+                }
+              ],
+              "markdown": false,
+              "variable": "token_status.instance.status",
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "oneTimeKeyboard": false,
+              "enableStatistics": false,
+              "conditionalMessages": [],
+              "enableDynamicButtons": false,
+              "enableConditionalMessages": false
+            },
+            "type": "condition",
+            "position": {
+              "x": 1756,
+              "y": 1380
+            }
+          },
+          {
+            "id": "token-card-with-photo-running",
             "data": {
               "buttons": [],
               "imageUrl": "{bot_photo.photoUrl}",
@@ -5167,7 +5544,7 @@
                 "sourceVariable": "",
                 "callbackTemplate": ""
               },
-              "keyboardNodeId": "token-actions-keyboard",
+              "keyboardNodeId": "token-actions-keyboard-running",
               "resizeKeyboard": true,
               "enableTextInput": false,
               "oneTimeKeyboard": false,
@@ -5192,7 +5569,60 @@
             "type": "message",
             "position": {
               "x": 2400,
-              "y": 1580
+              "y": 900
+            }
+          },
+          {
+            "id": "token-card-with-photo-stopped",
+            "data": {
+              "buttons": [],
+              "imageUrl": "{bot_photo.photoUrl}",
+              "markdown": false,
+              "adminOnly": false,
+              "formatMode": "html",
+              "showInMenu": false,
+              "messageText": "🤖 <b>Бот {token_status.instance.botName}</b>\n\n📁 Проект: {project_detail.name}\n📊 Статус: {token_status.instance.statusLabel}\n⏱ Аптайм: {token_status.instance.uptime}\n\n👥 <b>Статистика пользователей:</b>\n• Всего: {token_status.userStats.total}\n• Активных (24ч): {token_status.userStats.active_24h}\n• Активных (7д): {token_status.userStats.active_7d}\n• Новых сегодня: {token_status.userStats.new_today}",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "attachedMedia": [],
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "keyboardNodeId": "token-actions-keyboard-stopped",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "variableFilters": {},
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enablePhotoAttachment": true,
+              "enableConditionalMessages": false
+            },
+            "type": "message",
+            "position": {
+              "x": 2400,
+              "y": 1200
             }
           },
           {
@@ -5259,14 +5689,14 @@
                   "id": "has-photo",
                   "label": "> 0",
                   "value": "0",
-                  "target": "token-card-with-photo",
+                  "target": "check-token-running-with-photo",
                   "operator": "greater_than"
                 },
                 {
                   "id": "else",
                   "label": "Иначе",
                   "value": "",
-                  "target": "token-card-msg",
+                  "target": "check-token-running-no-photo",
                   "operator": "else"
                 }
               ],
@@ -5300,10 +5730,119 @@
               "x": 1256,
               "y": 1080
             }
+          },
+          {
+            "id": "reload-token-status",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "httpRequestUrl": "http://localhost:5000/api/bot/tokens/{token_status.instance.tokenId}/status?telegram_id={user_id}",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "httpRequestBody": "",
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "reload-token-photo",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "httpRequestMethod": "GET",
+              "audioInputVariable": "",
+              "httpRequestHeaders": "{}",
+              "httpRequestTimeout": 10,
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": true,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false,
+              "httpRequestStatusVariable": "token_status_code",
+              "httpRequestResponseVariable": "token_status"
+            },
+            "type": "http_request",
+            "position": {
+              "x": 456,
+              "y": 3400
+            }
+          },
+          {
+            "id": "reload-token-photo",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "httpRequestUrl": "http://localhost:5000/api/bot/tokens/{token_status.instance.tokenId}/photo?telegram_id={user_id}",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "httpRequestBody": "",
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "check-photo-exists",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "httpRequestMethod": "GET",
+              "audioInputVariable": "",
+              "httpRequestHeaders": "{}",
+              "httpRequestTimeout": 15,
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": true,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false,
+              "httpRequestResponseFormat": "autodetect",
+              "httpRequestStatusVariable": "bot_photo_status",
+              "httpRequestResponseVariable": "bot_photo"
+            },
+            "type": "http_request",
+            "position": {
+              "x": 856,
+              "y": 3400
+            }
           }
         ],
         "createdAt": "2026-04-13T00:00:00.000Z",
-        "updatedAt": "2026-04-22T22:34:51.726Z",
+        "updatedAt": "2026-04-23T12:05:48.099Z",
         "viewState": {
           "pan": {
             "x": 0,
@@ -6057,9 +6596,1268 @@
           },
           "zoom": 100
         }
+      },
+      {
+        "id": "sheet-users",
+        "name": "Пользователи",
+        "nodes": [
+          {
+            "id": "fetch-bot-users",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "httpRequestUrl": "http://localhost:5000/api/bot/tokens/{token_status.instance.tokenId}/users?telegram_id={user_id}&limit=10&offset={users_offset}",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "httpRequestBody": "",
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "check-users-status",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "httpRequestMethod": "GET",
+              "audioInputVariable": "",
+              "httpRequestHeaders": "{}",
+              "httpRequestTimeout": 15,
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": true,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false,
+              "httpRequestPaginationMode": "interactive",
+              "httpRequestStatusVariable": "users_status",
+              "httpRequestPaginationLimit": 10,
+              "httpRequestEnablePagination": true,
+              "httpRequestResponseVariable": "users_data",
+              "httpRequestPaginationOffsetVar": "users_offset",
+              "httpRequestPaginationItemsField": "items",
+              "httpRequestPaginationTotalField": "count"
+            },
+            "type": "http_request",
+            "position": {
+              "x": 100,
+              "y": 600
+            }
+          },
+          {
+            "id": "check-users-status",
+            "data": {
+              "buttons": [],
+              "branches": [
+                {
+                  "id": "ok",
+                  "label": "= 200",
+                  "value": "200",
+                  "target": "check-users-empty",
+                  "operator": "equals"
+                },
+                {
+                  "id": "else",
+                  "label": "Иначе",
+                  "value": "",
+                  "target": "users-error-msg",
+                  "operator": "else"
+                }
+              ],
+              "markdown": false,
+              "variable": "users_status",
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "oneTimeKeyboard": false,
+              "enableStatistics": false,
+              "conditionalMessages": [],
+              "enableDynamicButtons": false,
+              "enableConditionalMessages": false
+            },
+            "type": "condition",
+            "position": {
+              "x": 500,
+              "y": 600
+            }
+          },
+          {
+            "id": "check-users-empty",
+            "data": {
+              "buttons": [],
+              "branches": [
+                {
+                  "id": "has-users",
+                  "label": "> 0",
+                  "value": "0",
+                  "target": "users-list-msg",
+                  "operator": "greater_than"
+                },
+                {
+                  "id": "else",
+                  "label": "Иначе",
+                  "value": "",
+                  "target": "no-users-msg",
+                  "operator": "else"
+                }
+              ],
+              "markdown": false,
+              "variable": "users_data.count",
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "oneTimeKeyboard": false,
+              "enableStatistics": false,
+              "conditionalMessages": [],
+              "enableDynamicButtons": false,
+              "enableConditionalMessages": false
+            },
+            "type": "condition",
+            "position": {
+              "x": 900,
+              "y": 600
+            }
+          },
+          {
+            "id": "users-list-msg",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "formatMode": "html",
+              "showInMenu": false,
+              "messageText": "👥 <b>Пользователи бота:</b>\n\nВсего: {users_data.count}\n\nВыберите пользователя из списка:",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "variableFilters": {},
+              "autoTransitionTo": "check-has-prev",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": true,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "message",
+            "position": {
+              "x": 1300,
+              "y": 600
+            }
+          },
+          {
+            "id": "no-users-msg",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "formatMode": "html",
+              "showInMenu": false,
+              "messageText": "👤 У этого бота пока нет пользователей.",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "keyboardNodeId": "users-back-keyboard",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "variableFilters": {},
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "message",
+            "position": {
+              "x": 1300,
+              "y": 900
+            }
+          },
+          {
+            "id": "users-error-msg",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "formatMode": "html",
+              "showInMenu": false,
+              "messageText": "❌ Не удалось загрузить пользователей. Попробуйте позже.",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "keyboardNodeId": "users-back-keyboard",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "variableFilters": {},
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "message",
+            "position": {
+              "x": 900,
+              "y": 900
+            }
+          },
+          {
+            "id": "users-back-keyboard",
+            "data": {
+              "buttons": [
+                {
+                  "id": "btn-users-back-to-token",
+                  "text": "◀️ К токену",
+                  "action": "goto",
+                  "target": "reload-token-status",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                }
+              ],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "inline",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "keyboard",
+            "position": {
+              "x": 1700,
+              "y": 900
+            }
+          },
+          {
+            "id": "incoming-user-trigger",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "callbackPattern": "user_",
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "fetch-user-detail",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "callbackMatchType": "startsWith",
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": true,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "incoming_callback_trigger",
+            "position": {
+              "x": 100,
+              "y": 1200
+            }
+          },
+          {
+            "id": "fetch-user-detail",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "httpRequestUrl": "http://localhost:5000/api/bot/tokens/{token_status.instance.tokenId}/users/{callback_data}?telegram_id={user_id}",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "httpRequestBody": "",
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "check-user-detail-status",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "httpRequestMethod": "GET",
+              "audioInputVariable": "",
+              "httpRequestHeaders": "{}",
+              "httpRequestTimeout": 15,
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": true,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false,
+              "httpRequestStatusVariable": "user_detail_status",
+              "httpRequestResponseVariable": "user_detail"
+            },
+            "type": "http_request",
+            "position": {
+              "x": 500,
+              "y": 1200
+            }
+          },
+          {
+            "id": "check-user-detail-status",
+            "data": {
+              "buttons": [],
+              "branches": [
+                {
+                  "id": "ok",
+                  "label": "= 200",
+                  "value": "200",
+                  "target": "check-user-photo",
+                  "operator": "equals"
+                },
+                {
+                  "id": "else",
+                  "label": "Иначе",
+                  "value": "",
+                  "target": "user-detail-error-msg",
+                  "operator": "else"
+                }
+              ],
+              "markdown": false,
+              "variable": "user_detail_status",
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "oneTimeKeyboard": false,
+              "enableStatistics": false,
+              "conditionalMessages": [],
+              "enableDynamicButtons": false,
+              "enableConditionalMessages": false
+            },
+            "type": "condition",
+            "position": {
+              "x": 900,
+              "y": 1200
+            }
+          },
+          {
+            "id": "check-user-photo",
+            "data": {
+              "buttons": [],
+              "branches": [
+                {
+                  "id": "no-photo",
+                  "label": "= \"\"",
+                  "value": "",
+                  "target": "user-card-msg",
+                  "operator": "equals"
+                },
+                {
+                  "id": "has-photo",
+                  "label": "Иначе",
+                  "value": "",
+                  "target": "user-card-with-photo",
+                  "operator": "else"
+                }
+              ],
+              "markdown": false,
+              "variable": "user_detail.photoUrl",
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "oneTimeKeyboard": false,
+              "enableStatistics": false,
+              "conditionalMessages": [],
+              "enableDynamicButtons": false,
+              "enableConditionalMessages": false
+            },
+            "type": "condition",
+            "position": {
+              "x": 1300,
+              "y": 1200
+            }
+          },
+          {
+            "id": "user-card-with-photo",
+            "data": {
+              "buttons": [],
+              "imageUrl": "{user_detail.photoUrl}",
+              "markdown": false,
+              "adminOnly": false,
+              "formatMode": "html",
+              "showInMenu": false,
+              "messageText": "👤 <b>{user_detail.firstName} (@{user_detail.userName})</b>\n\n📅 Зарегистрирован: {user_detail.registeredAt}\n🕐 Последняя активность: {user_detail.lastInteraction}\n💬 Взаимодействий: {user_detail.interactionCount}\n✅ Статус: Активен",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "keyboardNodeId": "user-actions-keyboard",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "variableFilters": {},
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enablePhotoAttachment": true,
+              "enableConditionalMessages": false
+            },
+            "type": "message",
+            "position": {
+              "x": 1720,
+              "y": 1100
+            }
+          },
+          {
+            "id": "user-card-msg",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "formatMode": "html",
+              "showInMenu": false,
+              "messageText": "👤 <b>{user_detail.firstName} (@{user_detail.userName})</b>\n\n📅 Зарегистрирован: {user_detail.registeredAt}\n🕐 Последняя активность: {user_detail.lastInteraction}\n💬 Взаимодействий: {user_detail.interactionCount}\n✅ Статус: Активен",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "keyboardNodeId": "user-actions-keyboard",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "variableFilters": {},
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "message",
+            "position": {
+              "x": 1700,
+              "y": 1300
+            }
+          },
+          {
+            "id": "user-actions-keyboard",
+            "data": {
+              "buttons": [
+                {
+                  "id": "btn-back-to-users",
+                  "text": "◀️ К списку",
+                  "action": "goto",
+                  "target": "fetch-bot-users",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                }
+              ],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "inline",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "keyboard",
+            "position": {
+              "x": 2100,
+              "y": 1200
+            }
+          },
+          {
+            "id": "user-detail-error-msg",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "formatMode": "html",
+              "showInMenu": false,
+              "messageText": "❌ Не удалось загрузить данные пользователя.",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "keyboardNodeId": "users-back-keyboard",
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "variableFilters": {},
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "message",
+            "position": {
+              "x": 900,
+              "y": 1400
+            }
+          },
+          {
+            "id": "incoming-pagination-trigger",
+            "data": {
+              "buttons": [],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "callbackPattern": "pg_",
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "fetch-bot-users",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "callbackMatchType": "startsWith",
+              "audioInputVariable": "",
+              "callbackDataSaveAs": "users_offset",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": true,
+              "enableDynamicButtons": false,
+              "documentInputVariable": "",
+              "callbackDataStripPrefix": "pg_",
+              "enableConditionalMessages": false
+            },
+            "type": "incoming_callback_trigger",
+            "position": {
+              "x": 2100,
+              "y": 600
+            }
+          },
+          {
+            "id": "check-has-prev",
+            "data": {
+              "buttons": [],
+              "branches": [
+                {
+                  "id": "filled",
+                  "label": "Заполнено",
+                  "value": "",
+                  "target": "check-has-next-with-prev",
+                  "operator": "filled"
+                },
+                {
+                  "id": "else",
+                  "label": "Иначе",
+                  "value": "",
+                  "target": "check-has-next-no-prev",
+                  "operator": "else"
+                }
+              ],
+              "markdown": false,
+              "variable": "users_data.prevOffset",
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "oneTimeKeyboard": false,
+              "enableStatistics": false,
+              "conditionalMessages": [],
+              "enableDynamicButtons": false,
+              "enableConditionalMessages": false
+            },
+            "type": "condition",
+            "position": {
+              "x": 1700,
+              "y": 600
+            }
+          },
+          {
+            "id": "check-has-next-with-prev",
+            "data": {
+              "buttons": [],
+              "branches": [
+                {
+                  "id": "filled",
+                  "label": "Заполнено",
+                  "value": "",
+                  "target": "kb-both",
+                  "operator": "filled"
+                },
+                {
+                  "id": "else",
+                  "label": "Иначе",
+                  "value": "",
+                  "target": "kb-prev-only",
+                  "operator": "else"
+                }
+              ],
+              "markdown": false,
+              "variable": "users_data.nextOffset",
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "oneTimeKeyboard": false,
+              "enableStatistics": false,
+              "conditionalMessages": [],
+              "enableDynamicButtons": false,
+              "enableConditionalMessages": false
+            },
+            "type": "condition",
+            "position": {
+              "x": 2100,
+              "y": 400
+            }
+          },
+          {
+            "id": "check-has-next-no-prev",
+            "data": {
+              "buttons": [],
+              "branches": [
+                {
+                  "id": "filled",
+                  "label": "Заполнено",
+                  "value": "",
+                  "target": "kb-next-only",
+                  "operator": "filled"
+                },
+                {
+                  "id": "else",
+                  "label": "Иначе",
+                  "value": "",
+                  "target": "kb-no-nav",
+                  "operator": "else"
+                }
+              ],
+              "markdown": false,
+              "variable": "users_data.nextOffset",
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "none",
+              "requiresAuth": false,
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 2,
+                "arrayPath": "",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "",
+                "styleTemplate": "",
+                "sourceVariable": "",
+                "callbackTemplate": ""
+              },
+              "resizeKeyboard": true,
+              "oneTimeKeyboard": false,
+              "enableStatistics": false,
+              "conditionalMessages": [],
+              "enableDynamicButtons": false,
+              "enableConditionalMessages": false
+            },
+            "type": "condition",
+            "position": {
+              "x": 2100,
+              "y": 800
+            }
+          },
+          {
+            "id": "kb-both",
+            "data": {
+              "buttons": [
+                {
+                  "id": "btn-users-prev",
+                  "text": "⬅️ Назад",
+                  "action": "goto",
+                  "target": "incoming-pagination-trigger",
+                  "hideAfterClick": false,
+                  "customCallbackData": "pg_{users_data.prevOffset}",
+                  "skipDataCollection": false
+                },
+                {
+                  "id": "btn-users-next",
+                  "text": "➡️ Далее",
+                  "action": "goto",
+                  "target": "incoming-pagination-trigger",
+                  "hideAfterClick": false,
+                  "customCallbackData": "pg_{users_data.nextOffset}",
+                  "skipDataCollection": false
+                },
+                {
+                  "id": "btn-back-to-token",
+                  "text": "◀️ К токену",
+                  "action": "goto",
+                  "target": "reload-token-status",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                }
+              ],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "inline",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 1,
+                "arrayPath": "items",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "{firstName} (@{userName})",
+                "styleTemplate": "",
+                "sourceVariable": "users_data",
+                "callbackTemplate": "user_{userId}"
+              },
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": true,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "keyboard",
+            "position": {
+              "x": 2500,
+              "y": 300
+            }
+          },
+          {
+            "id": "kb-prev-only",
+            "data": {
+              "buttons": [
+                {
+                  "id": "btn-users-prev",
+                  "text": "⬅️ Назад",
+                  "action": "goto",
+                  "target": "incoming-pagination-trigger",
+                  "hideAfterClick": false,
+                  "customCallbackData": "pg_{users_data.prevOffset}",
+                  "skipDataCollection": false
+                },
+                {
+                  "id": "btn-back-to-token",
+                  "text": "◀️ К токену",
+                  "action": "goto",
+                  "target": "reload-token-status",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                }
+              ],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "inline",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 1,
+                "arrayPath": "items",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "{firstName} (@{userName})",
+                "styleTemplate": "",
+                "sourceVariable": "users_data",
+                "callbackTemplate": "user_{userId}"
+              },
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": true,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "keyboard",
+            "position": {
+              "x": 2500,
+              "y": 500
+            }
+          },
+          {
+            "id": "kb-next-only",
+            "data": {
+              "buttons": [
+                {
+                  "id": "btn-users-next",
+                  "text": "➡️ Далее",
+                  "action": "goto",
+                  "target": "incoming-pagination-trigger",
+                  "hideAfterClick": false,
+                  "customCallbackData": "pg_{users_data.nextOffset}",
+                  "skipDataCollection": false
+                },
+                {
+                  "id": "btn-back-to-token",
+                  "text": "◀️ К токену",
+                  "action": "goto",
+                  "target": "reload-token-status",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                }
+              ],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "inline",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 1,
+                "arrayPath": "items",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "{firstName} (@{userName})",
+                "styleTemplate": "",
+                "sourceVariable": "users_data",
+                "callbackTemplate": "user_{userId}"
+              },
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": true,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "keyboard",
+            "position": {
+              "x": 2500,
+              "y": 700
+            }
+          },
+          {
+            "id": "kb-no-nav",
+            "data": {
+              "buttons": [
+                {
+                  "id": "btn-back-to-token",
+                  "text": "◀️ К токену",
+                  "action": "goto",
+                  "target": "reload-token-status",
+                  "hideAfterClick": false,
+                  "skipDataCollection": false
+                }
+              ],
+              "markdown": false,
+              "adminOnly": false,
+              "showInMenu": false,
+              "messageText": "",
+              "keyboardType": "inline",
+              "requiresAuth": false,
+              "inputVariable": "",
+              "isPrivateOnly": false,
+              "dynamicButtons": {
+                "columns": 1,
+                "arrayPath": "items",
+                "styleMode": "none",
+                "styleField": "",
+                "textTemplate": "{firstName} (@{userName})",
+                "styleTemplate": "",
+                "sourceVariable": "users_data",
+                "callbackTemplate": "user_{userId}"
+              },
+              "resizeKeyboard": true,
+              "enableTextInput": false,
+              "oneTimeKeyboard": false,
+              "autoTransitionTo": "",
+              "collectUserInput": false,
+              "enableAudioInput": false,
+              "enablePhotoInput": false,
+              "enableStatistics": false,
+              "enableVideoInput": false,
+              "audioInputVariable": "",
+              "photoInputVariable": "",
+              "videoInputVariable": "",
+              "conditionalMessages": [],
+              "enableDocumentInput": false,
+              "enableAutoTransition": false,
+              "enableDynamicButtons": true,
+              "documentInputVariable": "",
+              "enableConditionalMessages": false
+            },
+            "type": "keyboard",
+            "position": {
+              "x": 2460,
+              "y": 1400
+            }
+          }
+        ],
+        "createdAt": "2026-04-21T18:00:00.000Z",
+        "updatedAt": "2026-04-25T11:39:38.003Z",
+        "viewState": {
+          "pan": {
+            "x": 0,
+            "y": 0
+          },
+          "zoom": 100
+        }
       }
     ],
     "version": 2,
-    "activeSheetId": "sheet-token-card"
+    "activeSheetId": "sheet-users"
   }
 }

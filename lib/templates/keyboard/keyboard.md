@@ -76,6 +76,16 @@ const code = generateKeyboard({
 
 Если keyboard-нода вынесена отдельно на canvas, её данные при генерации переносятся в связанный message/start/command-узел. Привязка может быть явной через `keyboardNodeId` или неявной через граф переходов, например `message -> condition -> keyboard`. Сам `keyboard`-узел остаётся отдельной сущностью только на уровне редактора.
 
+## Переменные в customCallbackData
+
+Поле `customCallbackData` поддерживает подстановку переменных через синтаксис `{var_name}`.
+Если строка содержит `{`, генератор автоматически использует `replace_variables_in_text` для подстановки.
+
+Примеры:
+- `offset_{users_data.nextOffset}` → подставит текущий nextOffset
+- `edit_{item.type}_{item.id}` → подставит тип и ID элемента
+- `confirm_order` → статическая строка, подстановка не применяется
+
 ## Переменные {callback_data} и {button_text}
 
 При нажатии инлайн-кнопки в обработчике `handle_callback_<nodeId>` автоматически сохраняются переменные:

@@ -403,6 +403,87 @@ describe('keyboard.py.jinja2 шаблон', () => {
       });
     });
 
+    describe('переменные в customCallbackData', () => {
+      it('customCallbackData с {переменной} генерирует replace_variables_in_text', () => {
+        const result = generateKeyboard({
+          keyboardType: 'inline',
+          buttons: [
+            {
+              id: 'btn_next',
+              text: '➡️ Далее',
+              action: 'goto',
+              target: 'pagination-input',
+              buttonType: 'normal',
+              skipDataCollection: false,
+              hideAfterClick: false,
+              customCallbackData: 'offset_{users_data.nextOffset}',
+            },
+          ],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+
+        assert.ok(
+          result.includes('replace_variables_in_text("offset_{users_data.nextOffset}"'),
+          `Ожидался replace_variables_in_text для customCallbackData с переменной, получено:\n${result}`
+        );
+      });
+
+      it('customCallbackData без переменных остаётся статическим', () => {
+        const result = generateKeyboard({
+          keyboardType: 'inline',
+          buttons: [
+            {
+              id: 'btn_confirm',
+              text: 'Подтвердить',
+              action: 'goto',
+              target: 'node_confirm',
+              buttonType: 'normal',
+              skipDataCollection: false,
+              hideAfterClick: false,
+              customCallbackData: 'confirm_order',
+            },
+          ],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+
+        assert.ok(
+          result.includes('callback_data="confirm_order"'),
+          `Ожидался статический callback_data="confirm_order", получено:\n${result}`
+        );
+        assert.ok(
+          !result.includes('replace_variables_in_text("confirm_order"'),
+          'Статический customCallbackData не должен использовать replace_variables_in_text'
+        );
+      });
+
+      it('customCallbackData с несколькими переменными подставляется корректно', () => {
+        const result = generateKeyboard({
+          keyboardType: 'inline',
+          buttons: [
+            {
+              id: 'btn_edit',
+              text: 'Редактировать',
+              action: 'goto',
+              target: 'edit-node',
+              buttonType: 'normal',
+              skipDataCollection: false,
+              hideAfterClick: false,
+              customCallbackData: 'edit_{item.type}_{item.id}',
+            },
+          ],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+
+        assert.ok(
+          result.includes('replace_variables_in_text("edit_{item.type}_{item.id}"'),
+          `Ожидался replace_variables_in_text для нескольких переменных, получено:\n${result}`
+        );
+      });
+    });
+
     describe('requestContact / requestLocation', () => {
       it('генерирует request_contact=True для кнопки с requestContact', () => {
         const result = generateKeyboard(validParamsContactLocation);

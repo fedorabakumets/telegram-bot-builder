@@ -9,4 +9,5 @@ export * from './button-action-selector';
 export * from './button-skip-data-toggle';
 export * from './button-hide-after-click-toggle';
 export * from './button-callback-field';
+export * from './button-callback-variable-picker';
 export * from './button-card';
