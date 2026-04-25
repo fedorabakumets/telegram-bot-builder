@@ -52,7 +52,7 @@ export async function setupVite(app: Express, server: Server): Promise<void> {
   // Обработка WebSocket upgrade для Vite HMR
   server.on('upgrade', (req, socket, head) => {
     if (req.url?.includes('__vite_hmr')) {
-      vite.ws.server.handleUpgrade(req, socket, head);
+      (vite.ws as any).handleUpgrade?.(req, socket, head);
     }
   });
 
