@@ -89,8 +89,16 @@ export function useTelegramAuth() {
      */
     const handleAuthChange = (e: any) => {
       try {
-        setUser(e.detail.user ?? GUEST_USER);
+        const newUser = e.detail.user ?? GUEST_USER;
+        setUser(newUser);
+        // Если пришёл авторизованный пользователь — сессия уже готова
+        if (newUser && !checkIsGuest(newUser)) {
+          setSessionReady(true);
+        }
         invalidateAuthQueries(queryClient);
+        // Немедленно перезапрашиваем проекты и шаблоны
+        queryClient.refetchQueries({ queryKey: ['/api/projects'] });
+        queryClient.refetchQueries({ queryKey: ['/api/projects/list'] });
       } catch (err) {
         console.error('Ошибка обработки события авторизации:', err);
       }
