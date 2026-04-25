@@ -30,8 +30,8 @@ export function collectEditMessageEntries(nodes: Node[]): EditMessageEntry[] {
 
     // Поддерживаем оба имени поля: editKeyboardNodeId (новое) и keyboardNodeId (legacy)
     const editKeyboardNodeId: string =
-      (node.data as any)?.editKeyboardNodeId ??
-      (node.data as any)?.keyboardNodeId ??
+      (node.data as any)?.editKeyboardNodeId ||
+      (node.data as any)?.keyboardNodeId ||
       '';
 
     // Находим keyboard-узел и извлекаем его кнопки

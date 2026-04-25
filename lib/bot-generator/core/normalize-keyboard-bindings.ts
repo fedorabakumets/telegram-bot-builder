@@ -268,6 +268,19 @@ export function normalizeKeyboardBindings(nodes: Node[], connections: GraphConne
   const incomingMap = buildIncomingMap(connections || []);
   const processedKeyboardNodes = new Set<string>();
 
+  // Собираем ID keyboard-нод, на которые ссылаются edit_message-ноды
+  // (через editKeyboardNodeId или legacy keyboardNodeId).
+  // Такие ноды нельзя очищать — их данные нужны renderer'у edit_message.
+  const editMessageKeyboardNodeIds = new Set<string>();
+  for (const node of normalizedNodes) {
+    if (node.type !== 'edit_message') continue;
+    const data = node.data as Record<string, unknown>;
+    const editKbId = typeof data?.editKeyboardNodeId === 'string' ? data.editKeyboardNodeId.trim() : '';
+    const legacyKbId = typeof data?.keyboardNodeId === 'string' ? data.keyboardNodeId.trim() : '';
+    if (editKbId) editMessageKeyboardNodeIds.add(editKbId);
+    if (legacyKbId) editMessageKeyboardNodeIds.add(legacyKbId);
+  }
+
   for (const keyboardNode of normalizedNodes.filter(node => node.type === NODE_TYPES.KEYBOARD)) {
     const keyboardNodeId = keyboardNode.id;
     const explicitHostIds = findExplicitKeyboardHostIds(normalizedNodes, keyboardNodeId);
@@ -280,7 +293,10 @@ export function normalizeKeyboardBindings(nodes: Node[], connections: GraphConne
 
     if (hostIds.length === 0) {
       generatorLogger.warn(`Не удалось привязать keyboard-ноду ${keyboardNodeId} к message, она будет проигнорирована`);
-      clearKeyboardNodeData(keyboardNode);
+      // Не очищаем ноду если она используется edit_message
+      if (!editMessageKeyboardNodeIds.has(keyboardNodeId)) {
+        clearKeyboardNodeData(keyboardNode);
+      }
       continue;
     }
 
@@ -295,7 +311,10 @@ export function normalizeKeyboardBindings(nodes: Node[], connections: GraphConne
       delete (hostNode.data as Record<string, unknown>).keyboardNodeId;
     }
 
-    clearKeyboardNodeData(keyboardNode);
+    // Не очищаем ноду если она используется edit_message — её данные нужны renderer'у
+    if (!editMessageKeyboardNodeIds.has(keyboardNodeId)) {
+      clearKeyboardNodeData(keyboardNode);
+    }
     processedKeyboardNodes.add(keyboardNodeId);
   }
 

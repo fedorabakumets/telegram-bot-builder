@@ -11,6 +11,7 @@
  * Блок H: Граничные случаи (8 тестов)
  * Блок I: Взаимодействие с другими action-узлами (8 тестов)
  * Блок J: Полные реальные сценарии (8 тестов)
+ * Блок K: keyboardNodeId и динамические кнопки (8 тестов)
  */
 
 import fs from 'fs';
@@ -1234,6 +1235,222 @@ test('J08', 'полный проект: start + 3 callback_trigger + 3 edit_mess
   ok(code.includes('handle_callback_em_b'), 'handle_callback_em_b должен быть в коде');
   ok(code.includes('handle_callback_em_c'), 'handle_callback_em_c должен быть в коде');
   syntax(code, 'j08');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК K: keyboardNodeId и динамические кнопки
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок K: keyboardNodeId и динамические кнопки ──────────────────');
+
+/**
+ * Создаёт keyboard-узел для использования в edit_message с editKeyboardMode=node
+ * @param id - ID узла
+ * @param extra - Дополнительные поля data (переопределяют значения по умолчанию)
+ * @returns Объект узла типа keyboard
+ */
+function makeKeyboardNode(id: string, extra: Record<string, any> = {}) {
+  return {
+    id, type: 'keyboard',
+    position: { x: 0, y: 0 },
+    data: {
+      buttons: [],
+      keyboardType: 'inline',
+      enableDynamicButtons: false,
+      dynamicButtons: {
+        sourceVariable: '',
+        arrayPath: '',
+        textTemplate: '',
+        callbackTemplate: '',
+        columns: 1,
+      },
+      ...extra,
+    },
+  };
+}
+
+test('K01', 'editKeyboardMode=node + keyboardNodeId (legacy поле) → InlineKeyboardBuilder в коде → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_kb_legacy'),
+    makeEditMessageNode('em_kb_legacy', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      keyboardNodeId: 'kb_legacy',  // legacy поле
+    }),
+    makeKeyboardNode('kb_legacy', {
+      buttons: [{ id: 'btn1', text: 'Кнопка', action: 'goto', target: 'msg1' }],
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'k01');
+  ok(code.includes('InlineKeyboardBuilder'), 'InlineKeyboardBuilder должен быть в коде');
+  syntax(code, 'k01');
+});
+
+test('K02', 'editKeyboardMode=node + editKeyboardNodeId (новое поле) → InlineKeyboardBuilder в коде → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_kb_new'),
+    makeEditMessageNode('em_kb_new', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_new',  // новое поле
+    }),
+    makeKeyboardNode('kb_new', {
+      buttons: [{ id: 'btn1', text: 'Кнопка', action: 'goto', target: 'msg1' }],
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'k02');
+  ok(code.includes('InlineKeyboardBuilder'), 'InlineKeyboardBuilder должен быть в коде');
+  syntax(code, 'k02');
+});
+
+test('K03', 'editKeyboardMode=node + keyboard-нода с enableDynamicButtons=true → цикл for _edit_item in _edit_items → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_dyn'),
+    makeEditMessageNode('em_dyn', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_dyn',
+    }),
+    makeKeyboardNode('kb_dyn', {
+      enableDynamicButtons: true,
+      dynamicButtons: {
+        sourceVariable: 'users_data',
+        arrayPath: 'items',
+        textTemplate: '{firstName} (@{userName})',
+        callbackTemplate: 'user_{userId}',
+        columns: 1,
+      },
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'k03');
+  ok(code.includes('for _edit_item in _edit_items'), 'цикл for _edit_item in _edit_items должен быть в коде');
+  syntax(code, 'k03');
+});
+
+test('K04', 'editKeyboardMode=node + keyboard-нода с динамическими и статическими кнопками → оба типа в коде → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_mixed'),
+    makeEditMessageNode('em_mixed', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_mixed',
+    }),
+    makeKeyboardNode('kb_mixed', {
+      enableDynamicButtons: true,
+      dynamicButtons: {
+        sourceVariable: 'items_list',
+        arrayPath: '',
+        textTemplate: '{name}',
+        callbackTemplate: 'item_{id}',
+        columns: 2,
+      },
+      buttons: [{ id: 'btn_back', text: '⬅️ Назад', action: 'goto', target: 'msg1' }],
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'k04');
+  ok(code.includes('for _edit_item in _edit_items'), 'динамические кнопки (цикл) должны быть в коде');
+  ok(code.includes('callback_data'), 'статические кнопки (callback_data) должны быть в коде');
+  syntax(code, 'k04');
+});
+
+test('K05', 'editKeyboardMode=node + keyboard-нода с columns=2 → _edit_builder.adjust(2) в коде → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_cols'),
+    makeEditMessageNode('em_cols', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_cols',
+    }),
+    makeKeyboardNode('kb_cols', {
+      enableDynamicButtons: true,
+      dynamicButtons: {
+        sourceVariable: 'products',
+        arrayPath: 'list',
+        textTemplate: '{title}',
+        callbackTemplate: 'prod_{id}',
+        columns: 2,
+      },
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'k05');
+  ok(code.includes('_edit_builder.adjust(2)'), '_edit_builder.adjust(2) должен быть в коде');
+  syntax(code, 'k05');
+});
+
+test('K06', 'editKeyboardMode=node + keyboard-нода со статической кнопкой action=goto → callback_data в коде → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_goto'),
+    makeEditMessageNode('em_goto', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_goto',
+    }),
+    makeKeyboardNode('kb_goto', {
+      buttons: [
+        { id: 'btn_goto', text: '➡️ Перейти', action: 'goto', target: 'msg1', customCallbackData: 'go_to_msg1' },
+      ],
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'k06');
+  ok(code.includes('callback_data'), 'callback_data должен быть в коде');
+  syntax(code, 'k06');
+});
+
+test('K07', 'editKeyboardMode=node + keyboard-нода со статической кнопкой action=url → url= в коде → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_url'),
+    makeEditMessageNode('em_url', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_url',
+    }),
+    makeKeyboardNode('kb_url', {
+      buttons: [
+        { id: 'btn_url', text: '🌐 Сайт', action: 'url', url: 'https://example.com' },
+      ],
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'k07');
+  ok(code.includes('url='), 'url= должен быть в коде');
+  syntax(code, 'k07');
+});
+
+test('K08', 'полный сценарий пагинации: http_request → condition → edit_message(keyboardNodeId=kb-next-only) + keyboard-нода с динамическими кнопками и кнопкой "➡️ Далее" → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb_page', 'fetch-bot-users'),
+    makeHttpRequestNode('fetch-bot-users', 'https://api.example.com/users?page=1', 'check-has-next'),
+    makeConditionNode('check-has-next', 'edit-kb-next-only'),
+    makeEditMessageNode('edit-kb-next-only', 'msg_list', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      keyboardNodeId: 'kb-next-only',  // legacy поле
+    }),
+    makeKeyboardNode('kb-next-only', {
+      enableDynamicButtons: true,
+      dynamicButtons: {
+        sourceVariable: 'users_response',
+        arrayPath: 'users',
+        textTemplate: '{name} ({role})',
+        callbackTemplate: 'select_user_{id}',
+        columns: 1,
+      },
+      buttons: [
+        { id: 'btn_next', text: '➡️ Далее', action: 'goto', target: 'cb_page', customCallbackData: 'page_next' },
+      ],
+    }),
+    makeMessageNode('msg_list', 'Список пользователей'),
+  ]);
+  const code = gen(p, 'k08');
+  ok(code.includes('InlineKeyboardBuilder'), 'InlineKeyboardBuilder должен быть в коде');
+  ok(code.includes('for _edit_item in _edit_items'), 'цикл по динамическим кнопкам должен быть в коде');
+  syntax(code, 'k08');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────
