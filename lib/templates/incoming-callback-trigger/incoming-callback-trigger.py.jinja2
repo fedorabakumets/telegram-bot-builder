@@ -45,12 +45,15 @@ async def incoming_callback_trigger_{{ sanitized_node_id }}_middleware(handler, 
         # Сохраняем данные нажатой кнопки
         if user_id not in user_data:
             user_data[user_id] = {}
-        user_data[user_id]["callback_data"] = event.data or ""
+        {%- set _save_var = entry.callbackDataSaveAs if entry.callbackDataSaveAs else "callback_data" %}
+        _ict_cb_value = event.data or ""
         {%- if entry.callbackDataStripPrefix %}
         # Убираем префикс "{{ entry.callbackDataStripPrefix }}" из callback_data
-        if user_data[user_id]["callback_data"].startswith("{{ entry.callbackDataStripPrefix }}"):
-            user_data[user_id]["callback_data"] = user_data[user_id]["callback_data"][{{ entry.callbackDataStripPrefix | length }}:]
+        if _ict_cb_value.startswith("{{ entry.callbackDataStripPrefix }}"):
+            _ict_cb_value = _ict_cb_value[{{ entry.callbackDataStripPrefix | length }}:]
         {%- endif %}
+        user_data[user_id]["{{ _save_var }}"] = _ict_cb_value
+        user_data[user_id]["callback_data"] = event.data or ""
         # Читаем текст кнопки из reply_markup
         _ict_btn_text = ""
         try:

@@ -19,6 +19,8 @@ const incomingCallbackTriggerEntrySchema = z.object({
   callbackMatchType: z.string().optional(),
   /** Префикс для удаления из callback_data перед сохранением */
   callbackDataStripPrefix: z.string().optional(),
+  /** Имя переменной куда сохранять callback_data (по умолчанию "callback_data") */
+  callbackDataSaveAs: z.string().optional(),
 });
 
 /** Схема параметров шаблона middleware триггеров входящих callback_query */
