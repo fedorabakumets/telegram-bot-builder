@@ -174,6 +174,8 @@ export function useTelegramAuth() {
     try {
       localStorage.removeItem(STORAGE_KEY);
       invalidateAuthQueries(queryClient);
+      // Оповещаем все экземпляры хука (в т.ч. AuthGuard) о выходе
+      window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: { user: GUEST_USER } }));
     } catch (e) {
       console.error('Ошибка удаления пользователя из localStorage:', e);
     }
