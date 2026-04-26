@@ -1133,6 +1133,67 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Обновление защиты контента для токена бота
+   * PUT /api/projects/:projectId/tokens/:tokenId/protect-content
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/protect-content", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
+      const { protectContent } = req.body as { protectContent: number };
+
+      if (protectContent !== 0 && protectContent !== 1) {
+        return res.status(400).json({ message: "protectContent должен быть 0 или 1" });
+      }
+
+      const updated = await storage.updateBotToken(tokenId, { protectContent });
+      if (!updated) {
+        return res.status(404).json({ message: "Токен не найден" });
+      }
+
+      try {
+        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
+        const { join } = await import('path');
+        const botsDir = join(process.cwd(), 'bots');
+
+        if (existsSync(botsDir)) {
+          const dirs = readdirSync(botsDir, { withFileTypes: true });
+
+          for (const dir of dirs) {
+            if (!dir.isDirectory()) continue;
+
+            const envPath = join(botsDir, dir.name, '.env');
+            if (!existsSync(envPath)) continue;
+
+            const content = readFileSync(envPath, 'utf8');
+            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
+
+            const line = `PROTECT_CONTENT=${protectContent === 1 ? 'true' : 'false'}`;
+            let updatedContent = content;
+
+            if (/^PROTECT_CONTENT=.*/m.test(updatedContent)) {
+              updatedContent = updatedContent.replace(/^PROTECT_CONTENT=.*/m, line);
+            } else {
+              updatedContent = `${updatedContent.trim()}\n\n# Защита контента от копирования/пересылки в Telegram\n${line}\n`;
+            }
+
+            if (updatedContent !== content) {
+              writeFileSync(envPath, updatedContent, 'utf8');
+              console.log(`✅ PROTECT_CONTENT обновлён в ${envPath}: ${protectContent}`);
+            }
+          }
+        }
+      } catch (envErr) {
+        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
+      }
+
+      res.json({ success: true, protectContent });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка обновления защиты контента" });
+    }
+  });
+
+  /**
    * Обновление уровня логирования для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/log-level
    */

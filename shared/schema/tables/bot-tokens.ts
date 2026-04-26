@@ -59,6 +59,8 @@ export const botTokens = pgTable("bot_tokens", {
   maxRestartAttempts: integer("max_restart_attempts").default(3),
   /** Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) */
   logLevel: text("log_level").default("WARNING"),
+  /** Защита контента от копирования/пересылки (0 = выключено, 1 = включено) */
+  protectContent: integer("protect_content").default(0),
   /** Режим запуска бота: 'polling' (по умолчанию) или 'webhook' */
   launchMode: text("launch_mode").default("polling"),
   /** Базовый URL для webhook режима (например https://example.com) */
@@ -105,6 +107,8 @@ export const insertBotTokenSchema = z.object({
   maxRestartAttempts: z.number().min(1).max(10).default(3),
   /** Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) */
   logLevel: z.enum(['DEBUG', 'INFO', 'WARNING', 'ERROR']).default('WARNING').optional(),
+  /** Защита контента от копирования/пересылки (0 = выключено, 1 = включено) */
+  protectContent: z.number().min(0).max(1).default(0),
   /** Режим запуска бота: polling или webhook */
   launchMode: z.enum(['polling', 'webhook']).default('polling').optional(),
   /** Базовый URL для webhook режима */
