@@ -1084,7 +1084,7 @@ export default function Editor() {
    */
   const handleSaveProject = useCallback(() => {
     if (activeProject?.id) {
-      updateProjectMutation.mutate({});
+      updateProjectMutation.mutate({ restartOnUpdate: true });
     }
   }, [activeProject?.id, updateProjectMutation]);
 
@@ -1272,7 +1272,7 @@ export default function Editor() {
             onRedo={redo}
             canUndo={canUndo}
             canRedo={canRedo}
-            onSave={() => updateProjectMutation.mutate({})}
+            onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
             isSaving={updateProjectMutation.isPending}
             onCopyToClipboard={copyToClipboard}
             onPasteFromClipboard={pasteFromClipboard}
@@ -1553,7 +1553,7 @@ export default function Editor() {
                   onRedo={redo}
                   canUndo={canUndo}
                   canRedo={canRedo}
-                  onSave={() => updateProjectMutation.mutate({})}
+                  onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
                   isSaving={updateProjectMutation.isPending}
                   onCopyToClipboard={copyToClipboard}
                   onPasteFromClipboard={pasteFromClipboard}
