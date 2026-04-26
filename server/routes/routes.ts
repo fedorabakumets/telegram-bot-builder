@@ -958,6 +958,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
+      console.error('[routes] createBotToken error:', error);
       res.status(500).json({ message: "Failed to create token" });
     }
   });
