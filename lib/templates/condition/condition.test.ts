@@ -111,6 +111,11 @@ describe('generateConditionHandlers() из Node[]', () => {
     expect(r).toContain('handle_callback_');
   });
 
+  it('генерирует декоратор @dp.callback_query для condition-узла', () => {
+    const r = generateConditionHandlers(nodesWithConditionFilledEmpty);
+    expect(r).toContain('@dp.callback_query(lambda c: c.data == "condition_check_name")');
+  });
+
   it('сгенерированный код содержит init_all_user_vars', () => {
     const r = generateConditionHandlers(nodesWithConditionFilledEmpty);
     expect(r).toContain('init_all_user_vars');
@@ -155,6 +160,11 @@ describe('generateConditionHandlers() из ConditionTemplateParams', () => {
     const r = generateConditionHandlers(validParamsFilledEmpty);
     expect(r).toContain('handle_callback_condition_check_name');
     expect(r).toContain('init_all_user_vars');
+  });
+
+  it('генерирует декоратор @dp.callback_query для condition-узла (params)', () => {
+    const r = generateConditionHandlers(validParamsFilledEmpty);
+    expect(r).toContain('@dp.callback_query(lambda c: c.data == "condition_check_name")');
   });
 
   it('генерирует код для equals', () => {
@@ -333,7 +343,7 @@ describe('generateConditionHandlers() — системные операторы'
 
   it('системная ветка с target — генерирует await handle_callback_', () => {
     const r = generateConditionHandlers(nodesWithConditionIsPrivate);
-    expect(r).toContain('await handle_callback_msg_private(callback_query)');
+    expect(r).toContain('await handle_callback_msg_private(callback_query, state=state)');
   });
 
   it('системная ветка без target — генерирует pass', () => {
@@ -512,7 +522,7 @@ describe('generateConditionHandlers() — is_admin / is_premium / is_bot', () =>
 
   it('is_admin с target — генерирует await handle_callback_', () => {
     const r = generateConditionHandlers(nodesWithConditionIsAdmin);
-    expect(r).toContain('await handle_callback_msg_admin(callback_query)');
+    expect(r).toContain('await handle_callback_msg_admin(callback_query, state=state)');
   });
 
   it('is_admin без target — генерирует pass', () => {

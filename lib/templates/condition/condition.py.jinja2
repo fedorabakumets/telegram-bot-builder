@@ -36,7 +36,8 @@ pass
 # Обработчики узлов условия
 {% for entry in conditionEntries %}
 {%- set sanitized_node_id = entry.nodeId | safe_name %}
-async def handle_callback_{{ sanitized_node_id }}(callback_query, state: FSMContext = None):
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
     # Узел условия {{ entry.nodeId }}{% if entry.variable %}, переменная: {{ entry.variable }}{% endif %}
 
     user_id = callback_query.from_user.id
