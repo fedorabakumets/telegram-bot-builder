@@ -117,6 +117,19 @@ export function CodeEditorArea({
   return (
     <Card className="border border-border/50 shadow-sm overflow-hidden h-full flex flex-col">
       <CardContent className="p-0 flex-1 flex flex-col h-full">
+        {selectedFormat === 'json' && showHint && !isLoading && (
+          <div
+            onClick={handleHintClick}
+            className="flex items-center gap-2.5 px-3 py-2 cursor-text border-b border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors"
+          >
+            <i className="fas fa-pencil-alt text-xs text-muted-foreground/60 flex-shrink-0" />
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Здесь хранится структура сценария бота. Отредактируйте JSON и нажмите{' '}
+              <span className="font-medium text-foreground/80">«Применить»</span> — изменения вступят в силу.
+            </p>
+            <i className="fas fa-times text-xs text-muted-foreground/40 flex-shrink-0 ml-auto hover:text-muted-foreground/70" />
+          </div>
+        )}
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex flex-col items-center gap-3">
@@ -125,20 +138,7 @@ export function CodeEditorArea({
             </div>
           </div>
         ) : (
-          <div className="relative flex-1 h-full">
-            {selectedFormat === 'json' && showHint && (
-              <div
-                onClick={handleHintClick}
-                className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 cursor-text bg-background/60 backdrop-blur-[2px] transition-opacity"
-              >
-                <i className="fas fa-code text-2xl text-muted-foreground/50" />
-                <p className="text-sm text-muted-foreground text-center px-6 leading-relaxed">
-                  Здесь хранится структура сценария бота.<br />
-                  Отредактируйте JSON и нажмите <span className="font-medium text-foreground">«Применить»</span>.
-                </p>
-                <p className="text-xs text-muted-foreground/60">Нажмите чтобы начать редактирование</p>
-              </div>
-            )}
+          <div className="flex-1 h-full">
             <Editor
               value={displayContent}
               language={
