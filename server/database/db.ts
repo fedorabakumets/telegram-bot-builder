@@ -31,7 +31,7 @@ if (!process.env.DATABASE_URL) {
 console.log('🔍 Конфигурация базы данных:', {
   url: process.env.DATABASE_URL?.substring(0, 30) + '...',
   nodeEnv: process.env.NODE_ENV,
-  sslEnabled: process.env.NODE_ENV === 'production'
+  sslEnabled: process.env.NODE_ENV === 'production' && process.env.PGSSLMODE !== 'disable'
 });
 
 /**
@@ -45,7 +45,7 @@ const poolConfig = {
   idleTimeoutMillis: 30000, // Закрытие неиспользуемых соединений после 30 секунд
   connectionTimeoutMillis: 20000, // Увеличен таймаут до 20 секунд
   acquireTimeoutMillis: 60000, // Таймаут получения соединения после 60 секунд
-  ssl: process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.includes('localhost') ? {
+  ssl: process.env.NODE_ENV === 'production' && process.env.PGSSLMODE !== 'disable' && !process.env.DATABASE_URL?.includes('localhost') ? {
     rejectUnauthorized: false,
     require: true
   } : false
