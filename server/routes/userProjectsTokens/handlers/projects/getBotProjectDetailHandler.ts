@@ -28,7 +28,7 @@ function parseProjectId(raw: string): number {
  * Параметр :id может быть числом (42) или callback-строкой (project_42).
  *
  * @param req - query: telegram_id, params: id
- * @param res - { id, name, description, botStatus: 'running'|'stopped'|'unknown' }
+ * @param res - { id, name, description, createdAt, updatedAt }
  */
 export async function getBotProjectDetailHandler(req: Request, res: Response): Promise<void> {
     try {
@@ -58,15 +58,10 @@ export async function getBotProjectDetailHandler(req: Request, res: Response): P
             return;
         }
 
-        // Получаем статус бота
-        const instance = await storage.getBotInstance(projectId);
-        const botStatus = instance?.status ?? "unknown";
-
         res.json({
             id: project.id,
             name: project.name,
             description: project.description,
-            botStatus,
             createdAt: project.createdAt,
             updatedAt: project.updatedAt,
         });
