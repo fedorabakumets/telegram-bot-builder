@@ -3,7 +3,7 @@
  * Отображает сгенерированный код с подсветкой синтаксиса и поддержкой сворачивания
  */
 
-import { MutableRefObject, useEffect } from 'react';
+import { MutableRefObject, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Editor from '@monaco-editor/react';
 import { Loader2 } from 'lucide-react';
@@ -86,6 +86,22 @@ export function CodeEditorArea({
   areAllCollapsed,
   onContentChange,
 }: CodeEditorAreaProps) {
+  /** Показывать ли подсказку-оверлей (только для JSON, пока не кликнули) */
+  const [showHint, setShowHint] = useState(true);
+
+  // Сбрасываем подсказку при смене формата
+  useEffect(() => {
+    setShowHint(true);
+  }, [selectedFormat]);
+
+  /**
+   * Обрабатывает клик по оверлею — скрывает подсказку и фокусирует редактор
+   */
+  const handleHintClick = () => {
+    setShowHint(false);
+    setTimeout(() => editorRef.current?.focus(), 50);
+  };
+
   // Реагируем на изменение состояния сворачивания извне
   useEffect(() => {
     const editor = editorRef.current;
@@ -109,57 +125,75 @@ export function CodeEditorArea({
             </div>
           </div>
         ) : (
-          <Editor
-            value={displayContent}
-            language={
-              selectedFormat === 'python' ? 'python' :
-              selectedFormat === 'json' ? 'json' :
-              selectedFormat === 'readme' ? 'markdown' :
-              selectedFormat === 'dockerfile' ? 'dockerfile' :
-              selectedFormat === 'config' ? 'yaml' :
-              selectedFormat === 'env' ? 'shell' :
-              'plaintext'
-            }
-            theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
-            onMount={(editor) => {
-              editorRef.current = editor;
-              if ((selectedFormat === 'python' || selectedFormat === 'json') && codeStats.totalLines > 0) {
-                const currentCollapseState = areAllCollapsed;
-                setTimeout(() => {
-                  if (currentCollapseState) {
-                    editor.getAction('editor.foldAll')?.run();
-                  } else {
-                    editor.getAction('editor.unfoldAll')?.run();
-                  }
-                  setAreAllCollapsed(!!currentCollapseState);
-                }, 100);
+          <div className="relative flex-1 h-full">
+            {selectedFormat === 'json' && showHint && (
+              <div
+                onClick={handleHintClick}
+                className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 cursor-text bg-background/60 backdrop-blur-[2px] transition-opacity"
+              >
+                <i className="fas fa-code text-2xl text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground text-center px-6 leading-relaxed">
+                  Здесь хранится структура сценария бота.<br />
+                  Отредактируйте JSON и нажмите <span className="font-medium text-foreground">«Применить»</span>.
+                </p>
+                <p className="text-xs text-muted-foreground/60">Нажмите чтобы начать редактирование</p>
+              </div>
+            )}
+            <Editor
+              value={displayContent}
+              language={
+                selectedFormat === 'python' ? 'python' :
+                selectedFormat === 'json' ? 'json' :
+                selectedFormat === 'readme' ? 'markdown' :
+                selectedFormat === 'dockerfile' ? 'dockerfile' :
+                selectedFormat === 'config' ? 'yaml' :
+                selectedFormat === 'env' ? 'shell' :
+                'plaintext'
               }
-            }}
-            options={{
-              readOnly: selectedFormat !== 'json',
-              lineNumbers: 'on',
-              wordWrap: 'on',
-              fontSize: 12,
-              lineHeight: 1.5,
-              minimap: { enabled: codeStats.totalLines > 500 },
-              folding: true,
-              foldingHighlight: true,
-              foldingStrategy: 'auto',
-              showFoldingControls: 'always',
-              glyphMargin: true,
-              scrollBeyondLastLine: false,
-              padding: { top: 8, bottom: 8 },
-              automaticLayout: true,
-              contextmenu: false,
-              bracketPairColorization: { enabled: selectedFormat === 'json' },
-              formatOnPaste: false,
-              formatOnType: false,
-            }}
-            data-testid={`monaco-editor-code-${selectedFormat}`}
-            onChange={(value) => {
-              if (selectedFormat === 'json') onContentChange?.(value ?? '');
-            }}
-          />
+              theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
+              onMount={(editor) => {
+                editorRef.current = editor;
+                if ((selectedFormat === 'python' || selectedFormat === 'json') && codeStats.totalLines > 0) {
+                  const currentCollapseState = areAllCollapsed;
+                  setTimeout(() => {
+                    if (currentCollapseState) {
+                      editor.getAction('editor.foldAll')?.run();
+                    } else {
+                      editor.getAction('editor.unfoldAll')?.run();
+                    }
+                    setAreAllCollapsed(!!currentCollapseState);
+                  }, 100);
+                }
+              }}
+              options={{
+                readOnly: selectedFormat !== 'json',
+                lineNumbers: 'on',
+                wordWrap: 'on',
+                fontSize: 12,
+                lineHeight: 1.5,
+                minimap: { enabled: codeStats.totalLines > 500 },
+                folding: true,
+                foldingHighlight: true,
+                foldingStrategy: 'auto',
+                showFoldingControls: 'always',
+                glyphMargin: true,
+                scrollBeyondLastLine: false,
+                padding: { top: 8, bottom: 8 },
+                automaticLayout: true,
+                contextmenu: false,
+                bracketPairColorization: { enabled: selectedFormat === 'json' },
+                formatOnPaste: false,
+                formatOnType: false,
+              }}
+              data-testid={`monaco-editor-code-${selectedFormat}`}
+              onChange={(value) => {
+                if (selectedFormat === 'json') {
+                  setShowHint(false);
+                  onContentChange?.(value ?? '');
+                }
+              }}
+            />
+          </div>
         )}
       </CardContent>
     </Card>
