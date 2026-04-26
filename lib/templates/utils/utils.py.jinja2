@@ -96,7 +96,9 @@ async def init_all_user_vars(user_id: int) -> dict:
     """
     all_vars = dict(user_data.get(user_id, {}))
     # Добавляем системные переменные бота — доступны в URL и текстах узлов
-    all_vars["bot_token"] = BOT_TOKEN or ""
+    # Не перезаписываем bot_token если пользователь уже ввёл свой токен
+    if "bot_token" not in all_vars:
+        all_vars["bot_token"] = BOT_TOKEN or ""
     # Десериализуем строковые JSON-значения обратно в dict/list
     # (Redis FSM и другие хранилища могут сериализовать dict в строку)
     import json as _json_init
