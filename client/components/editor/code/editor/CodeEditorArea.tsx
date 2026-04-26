@@ -3,7 +3,7 @@
  * Отображает сгенерированный код с подсветкой синтаксиса и поддержкой сворачивания
  */
 
-import { MutableRefObject, useEffect, useState } from 'react';
+import { MutableRefObject, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import Editor from '@monaco-editor/react';
 import { Loader2 } from 'lucide-react';
@@ -86,22 +86,6 @@ export function CodeEditorArea({
   areAllCollapsed,
   onContentChange,
 }: CodeEditorAreaProps) {
-  /** Показывать ли подсказку-оверлей (только для JSON, пока не кликнули) */
-  const [showHint, setShowHint] = useState(true);
-
-  // Сбрасываем подсказку при смене формата
-  useEffect(() => {
-    setShowHint(true);
-  }, [selectedFormat]);
-
-  /**
-   * Обрабатывает клик по оверлею — скрывает подсказку и фокусирует редактор
-   */
-  const handleHintClick = () => {
-    setShowHint(false);
-    setTimeout(() => editorRef.current?.focus(), 50);
-  };
-
   // Реагируем на изменение состояния сворачивания извне
   useEffect(() => {
     const editor = editorRef.current;
@@ -117,19 +101,6 @@ export function CodeEditorArea({
   return (
     <Card className="border border-border/50 shadow-sm overflow-hidden h-full flex flex-col">
       <CardContent className="p-0 flex-1 flex flex-col h-full">
-        {selectedFormat === 'json' && showHint && !isLoading && (
-          <div
-            onClick={handleHintClick}
-            className="flex items-center gap-2.5 px-3 py-2 cursor-text border-b border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors"
-          >
-            <i className="fas fa-pencil-alt text-xs text-muted-foreground/60 flex-shrink-0" />
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Здесь хранится структура сценария бота. Отредактируйте JSON и нажмите{' '}
-              <span className="font-medium text-foreground/80">«Применить»</span> — изменения вступят в силу.
-            </p>
-            <i className="fas fa-times text-xs text-muted-foreground/40 flex-shrink-0 ml-auto hover:text-muted-foreground/70" />
-          </div>
-        )}
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex flex-col items-center gap-3">

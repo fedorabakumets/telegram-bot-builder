@@ -242,6 +242,15 @@ export function CodePanel({
                 <CardContent className="space-y-3 xs:space-y-3.5 sm:space-y-4">
                   <BotValidation botData={botDataArray[index]} />
                   <CodeFormatTabs selectedFormat={selectedFormat} projectName={currentProjectName} onFormatChange={handleFormatChange} />
+                  {selectedFormat === 'json' && !editedContent && (
+                    <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-muted/40 border border-border/40">
+                      <i className="fas fa-info-circle text-xs text-muted-foreground/60 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Здесь хранится структура сценария бота. Отредактируйте JSON в редакторе справа и нажмите{' '}
+                        <span className="font-medium text-foreground/80">«Применить»</span> — изменения вступят в силу.
+                      </p>
+                    </div>
+                  )}
                   {selectedFormat === 'json' && (
                     <JsonApplyBar
                       isDirty={!!editedContent && editedContent !== content}
@@ -249,8 +258,7 @@ export function CodePanel({
                       onApply={() => handleApplyJson(index)}
                       onReset={handleResetJson}
                     />
-                  )}
-                  <CodeActions content={content} selectedFormat={selectedFormat} fileName={safeFileName} />
+                  )}                  <CodeActions content={content} selectedFormat={selectedFormat} fileName={safeFileName} />
                   <CodeStats
                     content={content}
                     selectedFormat={selectedFormat}
