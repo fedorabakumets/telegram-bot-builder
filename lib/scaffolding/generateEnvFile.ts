@@ -16,6 +16,7 @@
  * @param redisUrl - URL Redis
  * @param webhookUrl - URL вебхука (если задан — включается webhook режим)
  * @param webhookPort - Порт aiohttp сервера для webhook режима
+ * @param protectContent - Защищать контент от копирования/пересылки
  * @returns Содержимое .env файла
  */
 export function generateEnvFile(
@@ -26,6 +27,7 @@ export function generateEnvFile(
   redisUrl: string = "redis://localhost:6379",
   webhookUrl?: string | null,
   webhookPort?: number | null,
+  protectContent: boolean = false,
 ): string {
   const envLines: string[] = [];
 
@@ -61,6 +63,9 @@ export function generateEnvFile(
   envLines.push('# Локально: redis://localhost:6379');
   envLines.push('# Railway: задаётся автоматически через ${{Redis.REDIS_URL}}');
   envLines.push(`REDIS_URL=${redisUrl}`);
+  envLines.push('');
+  envLines.push('# Защита контента от копирования/пересылки в Telegram');
+  envLines.push(`PROTECT_CONTENT=${protectContent ? 'true' : 'false'}`);
 
   // Webhook режим (опционально)
   if (webhookUrl) {

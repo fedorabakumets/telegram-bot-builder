@@ -566,6 +566,27 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при проверке/добавлении колонки total_execution_seconds в bot_tokens:', error);
     }
 
+    // Миграция: добавление protect_content в bot_tokens если его нет
+    try {
+      const columnCheck = await db.execute(sql`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'bot_tokens'
+        AND column_name = 'protect_content';
+      `);
+
+      if (columnCheck.rows.length === 0) {
+        console.log('🔄 Добавляем колонку protect_content в таблицу bot_tokens...');
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_tokens
+          ADD COLUMN protect_content INTEGER DEFAULT 0;
+        `, "Миграция: добавление protect_content в bot_tokens");
+        console.log('✅ Колонка protect_content успешно добавлена в bot_tokens');
+      }
+    } catch (error) {
+      console.log('⚠️ Ошибка при проверке/добавлении колонки protect_content в bot_tokens:', error);
+    }
+
     // Миграция: добавить project_id в bot_users и обновить первичный ключ
     try {
       const columnCheck = await db.execute(sql`

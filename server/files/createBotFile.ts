@@ -146,6 +146,7 @@ export async function createCompleteBotFiles(
   const webhookBaseUrl = tokenRecord?.webhookBaseUrl ?? null;
   // Порт = 9000 + tokenId (уникальный для каждого бота)
   const webhookPort = launchMode === 'webhook' && webhookBaseUrl ? 9000 + tokenId : null;
+  const protectContent = tokenRecord?.protectContent === 1;
 
   const envContent = generateEnvFile(
     tokenRecord?.token || "YOUR_BOT_TOKEN_HERE",
@@ -155,6 +156,7 @@ export async function createCompleteBotFiles(
     'redis://localhost:6379',
     launchMode === 'webhook' ? webhookBaseUrl : null,
     webhookPort,
+    protectContent,
   );
   const envPath = join(botDir, '.env');
   writeFileSync(envPath, envContent, 'utf8');

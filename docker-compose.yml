@@ -9,18 +9,24 @@ services:
     container_name: bot-builder-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: botbuilder
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: bot-builder-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
 
   # Основное приложение (конструктор ботов)
   app:
@@ -30,19 +36,23 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/botbuilder
-      PGHOST: db
-      PGPORT: 5432
-      PGDATABASE: botbuilder
-      PGUSER: postgres
-      PGPASSWORD: postgres
-      SESSION_SECRET: change-this-secret-in-production
-      NODE_ENV: production
-      PORT: 5000
-      HOST: 0.0.0.0
+      DATABASE_URL: "${DATABASE_URL}"
+      PGHOST: "${PGHOST}"
+      PGPORT: "${PGPORT}"
+      PGDATABASE: "${PGDATABASE}"
+      PGUSER: "${PGUSER}"
+      PGPASSWORD: "${PGPASSWORD}"
+      PGSSLMODE: "${PGSSLMODE}"
+      SESSION_SECRET: "${SESSION_SECRET}"
+      NODE_ENV: "${NODE_ENV}"
+      PORT: "${PORT}"
+      HOST: "${HOST}"
+      REDIS_URL: "${REDIS_URL}"
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     volumes:
       - ./uploads:/app/uploads
       - ./bots:/app/bots
@@ -50,3 +60,5 @@ services:
 volumes:
   postgres_data:
     name: bot-builder-postgres-data
+  redis_data:
+    name: bot-builder-redis-data

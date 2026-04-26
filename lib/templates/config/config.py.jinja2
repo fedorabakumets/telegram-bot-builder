@@ -36,6 +36,43 @@ if os.getenv("DISABLE_ASYNC_LOG", "true").lower() == "true":
 # Создание бота
 bot = Bot(token=BOT_TOKEN)
 
+# Глобальная защита контента от копирования/пересылки
+PROTECT_CONTENT = os.getenv("PROTECT_CONTENT", "false").lower() == "true"
+
+def _protect_content_kwargs(kwargs=None):
+    if kwargs is None:
+        kwargs = {}
+    if PROTECT_CONTENT and "protect_content" not in kwargs:
+        kwargs["protect_content"] = True
+    return kwargs
+
+def _wrap_bot_protect_content(bot_instance):
+    """Добавляет protect_content=True ко всем основным исходящим сообщениям бота."""
+    method_names = [
+        "send_message",
+        "send_photo",
+        "send_video",
+        "send_document",
+        "send_audio",
+        "send_animation",
+        "send_voice",
+        "send_sticker",
+        "send_media_group",
+    ]
+
+    for method_name in method_names:
+        original = getattr(bot_instance, method_name, None)
+        if original is None:
+            continue
+
+        async def protected_send(*args, __original=original, **kwargs):
+            kwargs = _protect_content_kwargs(kwargs)
+            return await __original(*args, **kwargs)
+
+        setattr(bot_instance, method_name, protected_send)
+
+_wrap_bot_protect_content(bot)
+
 {# Список администраторов #}
 # Список администраторов (загружается из .env)
 ADMIN_IDS = [int(x.strip()) for x in os.getenv("ADMIN_IDS", "").replace(" ", "").split(",") if x.strip()]
