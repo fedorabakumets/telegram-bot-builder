@@ -1137,18 +1137,8 @@ export default function Editor() {
   // Определяем содержимое панели кода
   const codeContent = activeProject ? (
     <CodePanel
-      botDataArray={allProjects.length > 0
-        ? allProjects.map(project =>
-            project.id === activeProject.id
-              ? activeProject.data as BotData  // Используем актуальные данные активного проекта
-              : project.data as BotData
-          )
-        : [activeProject.data as BotData]
-      }
-      projectIds={allProjects.length > 0
-        ? allProjects.map(project => project.id)
-        : [activeProject.id]
-      }
+      botDataArray={[activeProject.data as BotData]}
+      projectIds={[activeProject.id]}
       projectName={activeProject.name}
       onClose={handleCloseCodePanel}
       selectedFormat={selectedFormat}
@@ -1339,8 +1329,8 @@ export default function Editor() {
       // Показываем CodePanel поверх sidebar
       <div className="h-full border-r bg-background">
         <CodePanel
-          botDataArray={allProjects.map(project => project.data as BotData)}
-          projectIds={allProjects.map(project => project.id)}
+          botDataArray={[activeProject.data as BotData]}
+          projectIds={[activeProject.id]}
           projectName={activeProject.name}
           onClose={handleToggleCodePanel}
           selectedFormat={selectedFormat}
