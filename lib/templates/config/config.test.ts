@@ -25,7 +25,7 @@ describe('config.py.jinja2 шаблон', () => {
 
         assert.ok(result.includes('BOT_TOKEN = os.getenv("BOT_TOKEN")'));
         assert.ok(result.includes('TOKEN_ID = int(os.getenv("TOKEN_ID", "0"))'));
-        assert.ok(result.includes('PROJECT_ID = 123'));
+        assert.ok(result.includes('PROJECT_ID = int(os.getenv("PROJECT_ID", "123"))'));
         assert.ok(result.includes('DATABASE_URL = os.getenv("DATABASE_URL")'));
         assert.ok(result.includes('db_pool = None'));
       });
@@ -49,7 +49,7 @@ describe('config.py.jinja2 шаблон', () => {
       it('должен генерировать только PROJECT_ID', () => {
         const result = generateConfig(validParamsProjectOnly);
 
-        assert.ok(result.includes('PROJECT_ID = 456'));
+        assert.ok(result.includes('PROJECT_ID = int(os.getenv("PROJECT_ID", "456"))'));
         assert.ok(!result.includes('DATABASE_URL'));
       });
 
@@ -131,7 +131,7 @@ describe('config.py.jinja2 шаблон', () => {
           projectId: null,
         });
 
-        assert.ok(result1.includes('PROJECT_ID = 1'));
+        assert.ok(result1.includes('PROJECT_ID = int(os.getenv("PROJECT_ID", "1"))'));
         assert.ok(!result2.includes('PROJECT_ID ='));
       });
 
@@ -297,8 +297,7 @@ describe('config.py.jinja2 шаблон', () => {
     });
   });
 
-  describe('Webhook режим', () => {
-    it('должен содержать WEBHOOK_URL = os.getenv в сгенерированном коде', () => {
+  describe('Webhook режим', () => {    it('должен содержать WEBHOOK_URL = os.getenv в сгенерированном коде', () => {
       const result = generateConfig({ userDatabaseEnabled: false, projectId: null });
       assert.ok(result.includes('WEBHOOK_URL = os.getenv("WEBHOOK_URL")'));
     });
@@ -322,6 +321,18 @@ describe('config.py.jinja2 шаблон', () => {
         webhookPort: 9000,
       });
       assert.ok(result.success);
+    });
+  });
+
+  describe('PROJECT_ID из env', () => {
+    it('должен читать PROJECT_ID через os.getenv с fallback из генератора', () => {
+      const result = generateConfig({ userDatabaseEnabled: false, projectId: 42 });
+      assert.ok(result.includes('PROJECT_ID = int(os.getenv("PROJECT_ID", "42"))'));
+    });
+
+    it('не должен генерировать PROJECT_ID при projectId = null', () => {
+      const result = generateConfig({ userDatabaseEnabled: false, projectId: null });
+      assert.ok(!result.includes('PROJECT_ID ='));
     });
   });
 });

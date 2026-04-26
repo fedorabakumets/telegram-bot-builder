@@ -99,6 +99,11 @@ async def init_all_user_vars(user_id: int) -> dict:
     # Не перезаписываем bot_token если пользователь уже ввёл свой токен
     if "bot_token" not in all_vars:
         all_vars["bot_token"] = BOT_TOKEN or ""
+    # Добавляем project_id и token_id как системные переменные
+    if "project_id" not in all_vars:
+        all_vars["project_id"] = str(PROJECT_ID) if PROJECT_ID else ""
+    if "token_id" not in all_vars:
+        all_vars["token_id"] = str(TOKEN_ID) if TOKEN_ID else ""
     # Десериализуем строковые JSON-значения обратно в dict/list
     # (Redis FSM и другие хранилища могут сериализовать dict в строку)
     import json as _json_init

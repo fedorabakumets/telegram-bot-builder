@@ -76,7 +76,7 @@ ADMIN_IDS = [int(x.strip()) for x in os.getenv("ADMIN_IDS", "").replace(" ", "")
 # │        Конфигурация проекта             │
 # └─────────────────────────────────────────┘
 # ID проекта для сохранения в базу данных
-PROJECT_ID = 123
+PROJECT_ID = int(os.getenv("PROJECT_ID", "123"))
 logging.info(f"📁 PROJECT_ID: {PROJECT_ID}")
 
 # Директория проекта

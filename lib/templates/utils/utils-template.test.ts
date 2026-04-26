@@ -71,6 +71,18 @@ describe('init_all_user_vars()', () => {
     const r = generateUtils(validParamsDisabled);
     expect(r).not.toContain('bot_users');
   });
+
+  it('добавляет project_id как системную переменную', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).toContain('"project_id" not in all_vars');
+    expect(r).toContain('all_vars["project_id"] = str(PROJECT_ID) if PROJECT_ID else ""');
+  });
+
+  it('добавляет token_id как системную переменную', () => {
+    const r = generateUtils(validParamsDisabled);
+    expect(r).toContain('"token_id" not in all_vars');
+    expect(r).toContain('all_vars["token_id"] = str(TOKEN_ID) if TOKEN_ID else ""');
+  });
 });
 
 // ─── check_auth ───────────────────────────────────────────────────────────────
@@ -121,8 +133,8 @@ describe('replace_variables_in_text()', () => {
 
   it('поддерживает dot-notation для вложенных JSON путей', () => {
     const r = generateUtils(validParamsDisabled);
-    // Функция должна содержать логику разбора пути через точку
-    expect(r).toContain("var_path.split('.')");
+    // Функция должна содержать логику разбора пути через точку (через _re.split)
+    expect(r).toContain("_re.split(r'\\.");
   });
 
   it('разворачивает вложенный путь из JSON-строки', () => {
@@ -145,7 +157,8 @@ describe('replace_variables_in_text()', () => {
 
   it('использует regex для поиска {var} и {var.path}', () => {
     const r = generateUtils(validParamsDisabled);
-    expect(r).toContain(String.raw`r'\{([\w.]+)\}'`);
+    // Паттерн поддерживает {var}, {a.b.c}, {a.b[0][1].c}
+    expect(r).toContain(String.raw`r'\{([\w.\[\]]+)\}'`);
   });
 });
 
