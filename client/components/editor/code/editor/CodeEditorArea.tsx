@@ -158,10 +158,7 @@ export function CodeEditorArea({
               }}
               data-testid={`monaco-editor-code-${selectedFormat}`}
               onChange={(value) => {
-                if (selectedFormat === 'json') {
-                  setShowHint(false);
-                  onContentChange?.(value ?? '');
-                }
+                if (selectedFormat === 'json') onContentChange?.(value ?? '');
               }}
             />
           </div>
