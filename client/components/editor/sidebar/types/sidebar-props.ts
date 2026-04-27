@@ -27,4 +27,8 @@ export interface AppSidebarProps {
   isCollapsed?: boolean;
   /** Переключить свёрнутость сайдбара */
   onToggleCollapsed?: () => void;
+  /** Видима ли шапка */
+  headerVisible?: boolean;
+  /** Переключить видимость шапки */
+  onToggleHeader?: () => void;
 }

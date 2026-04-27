@@ -1544,6 +1544,8 @@ export default function Editor() {
             onLoadTemplate={handleLoadTemplate}
             isCollapsed={isCollapsed}
             onToggleCollapsed={toggleCollapsed}
+            headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? false}
+            onToggleHeader={handleToggleHeader}
           />
           {/** Основная рабочая область */}
           <div className="flex-1 min-w-0 overflow-hidden">

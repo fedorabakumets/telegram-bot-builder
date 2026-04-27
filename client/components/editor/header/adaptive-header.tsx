@@ -108,51 +108,84 @@ export function AdaptiveHeader({
   return (
     <>
       <header className={containerClasses}>
-      {/* BrandSection скрыт — логотип и название перенесены в левый AppSidebar (этап 2) */}
-      <div className="flex items-center gap-1 sm:gap-2 md:gap-1.5 md:order-first flex-shrink-0">
-        {/* Мобильные кнопки компонентов и свойств */}
-        {isMobile && !isVertical && (
-          <MobileHeaderControls
-            onOpenMobileSidebar={onOpenMobileSidebar}
-            onOpenMobileProperties={onOpenMobileProperties}
+        <div className="flex items-center gap-1 sm:gap-2 md:gap-1.5 md:order-first flex-shrink-0">
+          <BrandSection
+            projectName={projectName}
+            botInfo={botInfo}
+            isVertical={isVertical}
+            isCompact={isCompact}
+            isMobile={isMobile}
           />
-        )}
-      </div>
+          <Separator />
+          {/* Мобильные кнопки компонентов и свойств после разделителя */}
+          {isMobile && !isVertical && (
+            <MobileHeaderControls
+              onOpenMobileSidebar={onOpenMobileSidebar}
+              onOpenMobileProperties={onOpenMobileProperties}
+            />
+          )}
+        </div>
 
-      <div className="flex items-center gap-1 lg:gap-2 flex-1">
-        {/* Navigation скрыта — перенесена в левый AppSidebar (этап 2) */}
+        <div className="flex items-center gap-1 lg:gap-2 flex-1">
+          <Navigation
+            currentTab={currentTab}
+            onTabChange={onTabChange}
+            isVertical={isVertical}
+            isCompact={isCompact}
+          />
 
-        {/* DesktopActionsFull скрыт — действия перенесены в левый AppSidebar (этап 2) */}
-      </div>
-      
-      {/* Мобильная кнопка меню */}
-      <div className="lg:hidden">
-        <MobileMenu
-          currentTab={currentTab}
-          onTabChange={onTabChange}
-          onToggleHeader={onToggleHeader}
-          onToggleSidebar={onToggleSidebar}
-          onToggleCanvas={onToggleCanvas}
-          onToggleProperties={onToggleProperties}
-          onToggleCode={onToggleCode}
-          onToggleCodeEditor={onToggleCodeEditor}
-          onOpenFileExplorer={onOpenFileExplorer}
-          onLoadTemplate={onLoadTemplate}
-          onSaveAsTemplate={onSaveAsTemplate}
-          headerVisible={headerVisible}
-          sidebarVisible={sidebarVisible}
-          canvasVisible={canvasVisible}
-          propertiesVisible={propertiesVisible}
-          codeVisible={codeVisible}
-          codeEditorVisible={codeEditorVisible}
-          user={user}
-          isLoading={isLoading}
-          onLogout={logout}
-          onLogin={handleTelegramLogin}
-        />
-      </div>
+          {/* Десктопные/Планшетные действия */}
+          <DesktopActionsFull
+            onToggleHeader={onToggleHeader}
+            onToggleSidebar={onToggleSidebar}
+            onToggleCanvas={onToggleCanvas}
+            onToggleProperties={onToggleProperties}
+            onToggleCode={onToggleCode}
+            onToggleCodeEditor={onToggleCodeEditor}
+            onOpenFileExplorer={onOpenFileExplorer}
+            onLoadTemplate={onLoadTemplate}
+            onSaveAsTemplate={onSaveAsTemplate}
+            headerVisible={headerVisible}
+            sidebarVisible={sidebarVisible}
+            canvasVisible={canvasVisible}
+            propertiesVisible={propertiesVisible}
+            codeVisible={codeVisible}
+            codeEditorVisible={codeEditorVisible}
+            user={user}
+            isLoading={isLoading}
+            onLogout={logout}
+            onLogin={handleTelegramLogin}
+            isVertical={isVertical}
+          />
+        </div>
 
-    </header>
+        {/* Мобильная кнопка меню */}
+        <div className="lg:hidden">
+          <MobileMenu
+            currentTab={currentTab}
+            onTabChange={onTabChange}
+            onToggleHeader={onToggleHeader}
+            onToggleSidebar={onToggleSidebar}
+            onToggleCanvas={onToggleCanvas}
+            onToggleProperties={onToggleProperties}
+            onToggleCode={onToggleCode}
+            onToggleCodeEditor={onToggleCodeEditor}
+            onOpenFileExplorer={onOpenFileExplorer}
+            onLoadTemplate={onLoadTemplate}
+            onSaveAsTemplate={onSaveAsTemplate}
+            headerVisible={headerVisible}
+            sidebarVisible={sidebarVisible}
+            canvasVisible={canvasVisible}
+            propertiesVisible={propertiesVisible}
+            codeVisible={codeVisible}
+            codeEditorVisible={codeEditorVisible}
+            user={user}
+            isLoading={isLoading}
+            onLogout={logout}
+            onLogin={handleTelegramLogin}
+          />
+        </div>
+      </header>
     </>
   );
 }

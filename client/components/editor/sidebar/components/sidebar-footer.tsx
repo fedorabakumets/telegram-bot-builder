@@ -2,7 +2,7 @@
  * @fileoverview Футер сайдбара: переключатель темы и профиль пользователя
  */
 
-import { LogOut, MessageCircle } from 'lucide-react';
+import { LogOut, MessageCircle, PanelTop } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/editor/header/components/theme-toggle';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
@@ -16,6 +16,10 @@ import { isTelegramUser } from '@/types/telegram-user';
 interface SidebarFooterProps {
   /** Свёрнут ли сайдбар */
   isCollapsed?: boolean;
+  /** Видима ли шапка */
+  headerVisible?: boolean;
+  /** Переключить видимость шапки */
+  onToggleHeader?: () => void;
 }
 
 /**
@@ -23,7 +27,7 @@ interface SidebarFooterProps {
  * @param props - Свойства компонента
  * @returns JSX элемент с переключателем темы и профилем
  */
-export function SidebarFooter({ isCollapsed }: SidebarFooterProps) {
+export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: SidebarFooterProps) {
   const { user, logout } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
 
@@ -31,6 +35,22 @@ export function SidebarFooter({ isCollapsed }: SidebarFooterProps) {
 
   return (
     <div className={cn('flex flex-col gap-2', isCollapsed && 'items-center')}>
+      {onToggleHeader && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'h-8 w-8 text-muted-foreground transition-colors',
+            headerVisible
+              ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-500/10'
+              : 'hover:bg-muted/60'
+          )}
+          onClick={onToggleHeader}
+          title={headerVisible ? 'Скрыть шапку' : 'Показать шапку'}
+        >
+          <PanelTop className="h-4 w-4" />
+        </Button>
+      )}
       <ThemeToggle />
 
       {isAuthed ? (
