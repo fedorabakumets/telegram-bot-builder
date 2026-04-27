@@ -19,9 +19,9 @@ export function formatExecutionTime(seconds: number): string {
   const parts = [];
   if (hours > 0) parts.push(`${hours}ч`);
   if (minutes > 0) parts.push(`${minutes}м`);
-  if (secs > 0 && hours === 0) parts.push(`${secs}с`);
+  parts.push(`${secs}с`);
 
-  return parts.length > 0 ? parts.join(' ') : '0с';
+  return parts.join(' ');
 }
 
 /**
