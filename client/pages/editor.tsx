@@ -1293,7 +1293,7 @@ export default function Editor() {
                   onReset={() => handleViewChange('canvas')}
                 />
               </div>
-              <div className="flex-1 min-h-0 p-2">
+              <div className="flex-1 min-h-0">
                 <CodeEditorArea
                   isMobile={false}
                   isLoading={false}
@@ -1305,6 +1305,7 @@ export default function Editor() {
                   setAreAllCollapsed={setAreAllCollapsed}
                   areAllCollapsed={areAllCollapsed}
                   onContentChange={handleJsonChange}
+                  className="border-0 rounded-none shadow-none"
                 />
               </div>
             </div>

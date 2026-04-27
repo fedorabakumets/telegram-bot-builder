@@ -44,9 +44,7 @@ interface CodeStats {
   comments: number;
 }
 
-/**
- * Свойства компонента области редактора кода
- */
+/** Свойства компонента области редактора кода */
 interface CodeEditorAreaProps {
   /** Признак мобильного устройства */
   isMobile: boolean;
@@ -68,6 +66,8 @@ interface CodeEditorAreaProps {
   areAllCollapsed?: boolean;
   /** Колбэк изменения контента (только для редактируемых форматов) */
   onContentChange?: (value: string) => void;
+  /** Дополнительные классы для корневого элемента Card */
+  className?: string;
 }
 
 /**
@@ -85,6 +85,7 @@ export function CodeEditorArea({
   setAreAllCollapsed,
   areAllCollapsed,
   onContentChange,
+  className,
 }: CodeEditorAreaProps) {
   // Реагируем на изменение состояния сворачивания извне
   useEffect(() => {
@@ -99,7 +100,7 @@ export function CodeEditorArea({
   }, [areAllCollapsed, selectedFormat]);
 
   return (
-    <Card className="border border-border/50 shadow-sm overflow-hidden h-full flex flex-col">
+    <Card className={`border border-border/50 shadow-sm overflow-hidden h-full flex flex-col ${className ?? ''}`}>
       <CardContent className="p-0 flex-1 flex flex-col h-full">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
