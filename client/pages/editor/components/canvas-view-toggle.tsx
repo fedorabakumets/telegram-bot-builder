@@ -4,7 +4,7 @@
  */
 
 import { Braces, PenLine } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/utils';
 
 /** Возможные режимы отображения редактора */
 export type CanvasView = 'canvas' | 'json';
