@@ -2,8 +2,8 @@
  * @fileoverview Хук загрузки проекта редактора
  *
  * Управляет загрузкой данных проекта по ID или выбором первого из списка.
- * Ожидает готовности серверной сессии перед первым запросом к API.
- * При пустом списке проектов автоматически создаёт дефолтный проект.
+ * При пустом списке проектов автоматически создаёт дефолтный проект (только для авторизованных).
+ * Гости видят пустой экран без проектов.
  */
 
 import { useEffect, useRef } from 'react';
@@ -73,8 +73,9 @@ const DEFAULT_PROJECT_DATA = {
 
 /**
  * Хук для загрузки данных проекта.
- * Ждёт готовности серверной сессии чтобы проекты создавались с правильным owner_id.
- * Если список проектов пустой — автоматически создаёт первый проект.
+ * Запросы к API делаются сразу — инвалидация кеша после авторизации
+ * гарантирует свежие данные с правильным owner_id.
+ * Автосоздание проекта работает только для авторизованных пользователей.
  *
  * @param options - Параметры загрузки
  * @returns Результат загрузки проекта
@@ -82,34 +83,34 @@ const DEFAULT_PROJECT_DATA = {
 export function useProjectLoader({
   projectId
 }: UseProjectLoaderOptions): UseProjectLoaderResult {
-  const { sessionReady, user } = useTelegramAuth();
+  const { user } = useTelegramAuth();
   const queryClient = useQueryClient();
   const isCreatingRef = useRef(false);
-  /** Авторизованный пользователь — не создаём проект автоматически, у него должны быть свои */
+  /** Авторизованный пользователь — только им создаём проект автоматически */
   const isAuthenticated = user !== null && isTelegramUser(user);
 
   // Загрузка проекта по ID из URL
   const { data: currentProject, isError: projectNotFound } = useQuery<BotProject>({
     queryKey: [`/api/projects/${projectId}`],
-    enabled: !!projectId && sessionReady,
+    enabled: !!projectId,
     staleTime: 30000,
   });
 
-  // Загрузка списка проектов если нет ID в URL — ждём сессии
-  const { data: projectsList } = useQuery<Array<Omit<BotProject, 'data'>>>({
+  // Загрузка списка проектов если нет ID в URL
+  const { data: projectsList, isFetching: isProjectsListFetching } = useQuery<Array<Omit<BotProject, 'data'>>>({
     queryKey: ['/api/projects/list'],
-    enabled: !projectId && sessionReady,
+    enabled: !projectId,
     staleTime: 30000,
   });
 
   // Автосоздание дефолтного проекта если список пустой (только для авторизованных)
   useEffect(() => {
-    if (!sessionReady) return;
     if (projectId) return;
-    if (!isAuthenticated) return;           // гости не получают автопроект
-    if (projectsList === undefined) return; // ещё грузится
-    if (projectsList.length > 0) return;    // проекты есть
-    if (isCreatingRef.current) return;      // уже создаём
+    if (!isAuthenticated) return;                // гости не получают автопроект
+    if (isProjectsListFetching) return;          // ждём завершения запроса
+    if (projectsList === undefined) return;      // ещё не загружено
+    if (projectsList.length > 0) return;         // проекты есть
+    if (isCreatingRef.current) return;           // уже создаём
 
     isCreatingRef.current = true;
     apiRequest('POST', '/api/projects', {
@@ -127,7 +128,7 @@ export function useProjectLoader({
         console.error('Ошибка автосоздания проекта:', e);
         isCreatingRef.current = false;
       });
-  }, [sessionReady, projectId, projectsList, isAuthenticated, queryClient]);
+  }, [projectId, projectsList, isProjectsListFetching, isAuthenticated, queryClient]);
 
   // Эффективный ID проекта
   const effectiveProjectId = projectId || projectsList?.[0]?.id;
@@ -135,7 +136,7 @@ export function useProjectLoader({
   // Загрузка первого проекта если нет ID в URL
   const { data: firstProject } = useQuery<BotProject>({
     queryKey: [`/api/projects/${effectiveProjectId}`],
-    enabled: !projectId && !!effectiveProjectId && sessionReady,
+    enabled: !projectId && !!effectiveProjectId,
     staleTime: 30000,
   });
 

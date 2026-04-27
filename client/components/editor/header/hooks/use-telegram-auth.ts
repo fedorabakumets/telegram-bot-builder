@@ -70,7 +70,9 @@ export function useTelegramAuth() {
         })
           .then(() => {
             setSessionReady(true);
-            // Сессия восстановлена — рефетчим проекты с правильным owner_id
+            // Сессия восстановлена — сбрасываем кеш и рефетчим проекты с правильным owner_id
+            queryClient.removeQueries({ queryKey: ['/api/projects'] });
+            queryClient.removeQueries({ queryKey: ['/api/projects/list'] });
             queryClient.refetchQueries({ queryKey: ['/api/projects'] });
             queryClient.refetchQueries({ queryKey: ['/api/projects/list'] });
           })
@@ -171,7 +173,9 @@ export function useTelegramAuth() {
         if (!data.success) {
           console.error('Ошибка создания серверной сессии:', data.error);
         } else {
-          // Сессия готова — теперь рефетчим проекты с правильным owner_id
+          // Сессия готова — сбрасываем кеш и рефетчим проекты с правильным owner_id
+          queryClient.removeQueries({ queryKey: ['/api/projects'] });
+          queryClient.removeQueries({ queryKey: ['/api/projects/list'] });
           queryClient.refetchQueries({ queryKey: ['/api/projects'] });
           queryClient.refetchQueries({ queryKey: ['/api/projects/list'] });
         }
