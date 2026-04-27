@@ -205,7 +205,8 @@ export default function Editor() {
   // Обработчик логирования действий
   const handleActionLog = useCallback((type: string, description: string) => {
     setActionHistory((prevHistory: ActionHistoryItem[]) => [createActionHistoryItem(type as ActionType, description), ...prevHistory].slice(0, 50));
-  }, [setActionHistory]);
+    setHasLocalChanges(true);
+  }, [setActionHistory, setHasLocalChanges]);
 
   // Callback для получения размеров узлов
   const handleNodeSizesChange = useCallback((nodeSizes: Map<string, { width: number; height: number }>) => {
