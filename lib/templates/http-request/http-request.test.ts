@@ -287,10 +287,10 @@ describe('пагинация', () => {
 
   it('интерактивная пагинация: инициализирует offsetVar в "0" если не задан', () => {
     const code = generateHttpRequest(validParamsInteractivePagination);
-    expect(code).toContain('_all_vars.get("users_offset")');
+    expect(code).toContain('_all_vars.get("users_offset"');
     expect(code).toContain('"0"');
     // Инициализация должна быть ДО подстановки переменных в URL
-    const initIdx = code.indexOf('_all_vars.get("users_offset")');
+    const initIdx = code.indexOf('_all_vars.get("users_offset"');
     const urlIdx = code.indexOf('replace_variables_in_text(_url');
     expect(initIdx).toBeLessThan(urlIdx);
   });
