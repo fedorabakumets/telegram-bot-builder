@@ -1524,8 +1524,8 @@ export function Canvas({
         onToggleCollapse={onToggleCollapse}
       />
 
-      {/* Компонент листов холста - фиксированная панель внизу */}
-      {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && (
+      {/* Компонент листов холста - фиксированная панель внизу, скрыта в JSON режиме */}
+      {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && canvasView !== 'json' && (
         <div data-canvas-sheets className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto">
           <CanvasSheets
             sheets={botData.sheets}
