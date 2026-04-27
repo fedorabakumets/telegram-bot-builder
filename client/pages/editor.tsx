@@ -1293,31 +1293,36 @@ export default function Editor() {
         {/* Контейнер вкладок: relative нужен для absolute-позиционирования JSON-редактора поверх Canvas */}
         <div className="flex-1 min-h-0 relative">
 
-          {/* JSON-редактор — абсолютно поверх Canvas, виден только в json-режиме вкладки editor */}
+          {/**
+           * JSON-редактор — абсолютно перекрывает весь контейнер (inset-0), включая тулбар Canvas.
+           * z-20 выше Canvas (z-10), но ниже тулбара Canvas (z-40) — тулбар остаётся поверх.
+           * Никакого top: 60px: тулбар Canvas рендерится внутри Canvas и не влияет на позицию редактора.
+           */}
           {currentTab === 'editor' && canvasView === 'json' && (
-            <div className="absolute inset-0 z-10 flex flex-col" style={{ top: '60px' }}>
-              <div className="flex-1 min-h-0 bg-background">
-                <CodeEditorArea
-                  isMobile={false}
-                  isLoading={false}
-                  displayContent={jsonContent}
-                  selectedFormat="json"
-                  theme={theme}
-                  editorRef={editorRef}
-                  codeStats={codeStats}
-                  setAreAllCollapsed={setAreAllCollapsed}
-                  areAllCollapsed={areAllCollapsed}
-                  onContentChange={handleJsonChange}
-                  className="border-0 rounded-none shadow-none"
-                />
-              </div>
+            <div className="absolute inset-0 z-20 bg-background flex flex-col">
+              <CodeEditorArea
+                isMobile={false}
+                isLoading={false}
+                displayContent={jsonContent}
+                selectedFormat="json"
+                theme={theme}
+                editorRef={editorRef}
+                codeStats={codeStats}
+                setAreAllCollapsed={setAreAllCollapsed}
+                areAllCollapsed={areAllCollapsed}
+                onContentChange={handleJsonChange}
+                className="border-0 rounded-none shadow-none"
+              />
             </div>
           )}
 
-          {/* Canvas — всегда в DOM пока активна вкладка editor, скрыт в json-режиме.
-              Это сохраняет zoom/pan состояние при переключении между canvas и json видами. */}
+          {/**
+           * Canvas — всегда в DOM пока активна вкладка editor, скрыт через invisible в json-режиме.
+           * Сохраняет zoom/pan и nodeSizes при переключении между canvas и json видами.
+           * absolute inset-0 чтобы не влиять на высоту flex-контейнера.
+           */}
           {currentTab === 'editor' && (
-            <div className={`h-full${canvasView === 'json' ? ' invisible pointer-events-none' : ''}`}>
+            <div className={`absolute inset-0${canvasView === 'json' ? ' invisible pointer-events-none' : ''}`}>
               <Canvas
                 botData={botDataWithSheets || undefined}
                 onBotDataUpdate={handleBotDataUpdate}
