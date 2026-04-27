@@ -59,6 +59,7 @@ import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-p
 import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
 import { useCanvasView } from '@/pages/editor/hooks/use-canvas-view';
 import { JsonApplyBar } from '@/components/editor/code/panel';
+import { StagingBar, useStagingBar } from '@/components/editor/staging';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useMoveNodeToSheet } from '@/components/editor/canvas/canvas/use-move-node-to-sheet';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
@@ -622,6 +623,23 @@ export default function Editor() {
   } = useCanvasView({
     botDataWithSheets,
     onApplyJson: handleApplyJsonToBotData,
+  });
+
+  // Универсальная панель изменений (staging bar)
+  const stagingBar = useStagingBar({
+    hasLocalChanges,
+    actionHistory,
+    onSave: () => updateProjectMutation.mutate({ restartOnUpdate: true }),
+    onDiscard: () => {
+      setHasLocalChanges(false);
+      setActionHistory([]);
+    },
+    isSaving: updateProjectMutation.isPending,
+    isDirty,
+    jsonError,
+    onApplyJson: handleApplyJsonView,
+    onResetJson: () => handleViewChange('canvas'),
+    mode: canvasView,
   });
 
   // Обработчики узлов через хук
@@ -1256,7 +1274,11 @@ export default function Editor() {
         )}
       </div>
     ) : (
-      <div className="h-full flex flex-col">
+      <div className="relative h-full flex flex-col">
+        {/* Универсальная плавающая панель изменений */}
+        {currentTab === 'editor' && (
+          <StagingBar {...stagingBar} actionHistory={actionHistory} />
+        )}
         <div className="flex-1 min-h-0">
           {currentTab === 'editor' && canvasView === 'json' ? (
             // Режим JSON: показываем Monaco Editor с JSON сценария
@@ -1284,8 +1306,8 @@ export default function Editor() {
                 <div className="h-4 w-px bg-slate-300/50 dark:bg-slate-600/50" />
                 <CanvasViewToggle value={canvasView} onChange={handleViewChange} />
               </div>
-              {/* Панель применения изменений JSON — показывается только при изменениях */}
-              {(isDirty || jsonError) && (
+              {/* Панель применения изменений JSON — заменена на StagingBar, оставлено для справки */}
+              {/* {(isDirty || jsonError) && (
                 <div className="px-2 pt-2">
                   <JsonApplyBar
                     isDirty={isDirty}
@@ -1294,7 +1316,7 @@ export default function Editor() {
                     onReset={() => handleViewChange('canvas')}
                   />
                 </div>
-              )}
+              )} */}
               <div className="flex-1 min-h-0">
                 <CodeEditorArea
                   isMobile={false}
