@@ -1,12 +1,12 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
-    "noEmit": true,
-    "esModuleInterop": true
+    "paths": {
+      "@/*": ["../../../../client/*"],
+      "@lib/*": ["../../../../lib/*"],
+      "@shared/*": ["../../../../shared/*"],
+      "@assets/*": ["../../../../attached_assets/*"]
+    }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": ["node_modules"]
+  "include": ["./**/*.ts", "./**/*.tsx"]
 }
