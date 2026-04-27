@@ -93,6 +93,10 @@ interface CanvasToolbarProps {
   canvasView?: CanvasView;
   /** Колбэк смены режима просмотра */
   onViewChange?: (view: CanvasView) => void;
+  /** Все ли блоки JSON свёрнуты */
+  areAllCollapsed?: boolean;
+  /** Колбэк переключения сворачивания блоков JSON */
+  onToggleCollapse?: () => void;
 }
 
 /**
@@ -138,6 +142,8 @@ export function CanvasToolbar({
   handleUndoSelected,
   canvasView,
   onViewChange,
+  areAllCollapsed,
+  onToggleCollapse,
 }: CanvasToolbarProps) {
   return (
     <div data-canvas-toolbar className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{ left: 0, right: 0 }}>
@@ -212,7 +218,22 @@ export function CanvasToolbar({
 
           {/* Переключатель Холст / JSON */}
           {onViewChange && (
-            <div className="ml-auto flex-shrink-0">
+            <div className="ml-auto flex-shrink-0 flex items-center gap-2">
+              {/* Кнопка fold/unfold — только в JSON-режиме */}
+              {canvasView === 'json' && onToggleCollapse && (
+                <button
+                  type="button"
+                  onClick={onToggleCollapse}
+                  className="flex items-center gap-1 h-6 px-2 text-xs rounded-sm border bg-background hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  title={areAllCollapsed ? 'Развернуть всё' : 'Свернуть всё'}
+                >
+                  {areAllCollapsed ? (
+                    <><svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4l4 4 4-4M4 8l4 4 4-4"/></svg>Развернуть</>
+                  ) : (
+                    <><svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6l4-4 4 4M4 10l4 4 4-4"/></svg>Свернуть</>
+                  )}
+                </button>
+              )}
               <CanvasViewToggle value={canvasView ?? 'canvas'} onChange={onViewChange} />
             </div>
           )}

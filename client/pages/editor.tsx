@@ -56,7 +56,6 @@ import { LayoutManager, useLayoutManager } from '@/components/layout/layout-mana
 import { SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
-import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
 import { useCanvasView } from '@/pages/editor/hooks/use-canvas-view';
 import { JsonApplyBar } from '@/components/editor/code/panel';
 import { StagingBar, useStagingBar } from '@/components/editor/staging';
@@ -1296,30 +1295,7 @@ export default function Editor() {
 
           {/* JSON-редактор — абсолютно поверх Canvas, виден только в json-режиме вкладки editor */}
           {currentTab === 'editor' && canvasView === 'json' && (
-            <div className="absolute inset-0 z-10 flex flex-col">
-              {/* Тулбар JSON-режима: кнопки fold/unfold и переключатель вида */}
-              <div className="flex items-center justify-end gap-2 px-4 py-2 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 border-b border-slate-200/50 dark:border-slate-600/50 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setAreAllCollapsed(!areAllCollapsed)}
-                  className="flex items-center gap-1 h-6 px-2 text-xs rounded-sm border bg-background hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                  title={areAllCollapsed ? 'Развернуть всё' : 'Свернуть всё'}
-                >
-                  {areAllCollapsed ? (
-                    <>
-                      <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 4l4 4 4-4M4 8l4 4 4-4"/></svg>
-                      Развернуть
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 6l4-4 4 4M4 10l4 4 4-4"/></svg>
-                      Свернуть
-                    </>
-                  )}
-                </button>
-                <div className="h-4 w-px bg-slate-300/50 dark:bg-slate-600/50" />
-                <CanvasViewToggle value={canvasView} onChange={handleViewChange} />
-              </div>
+            <div className="absolute inset-0 z-10 flex flex-col" style={{ top: 60 }}>
               <div className="flex-1 min-h-0">
                 <CodeEditorArea
                   isMobile={false}
@@ -1391,6 +1367,8 @@ export default function Editor() {
                 onAutoLayout={handleAutoLayout}
                 canvasView={canvasView}
                 onViewChange={currentTab === 'editor' ? handleViewChange : undefined}
+                areAllCollapsed={areAllCollapsed}
+                onToggleCollapse={() => setAreAllCollapsed(!areAllCollapsed)}
               />
             </div>
           )}
@@ -1679,6 +1657,8 @@ export default function Editor() {
                   focusNodeId={focusNodeId}
                   highlightNodeId={highlightNodeId}
                   onAutoLayout={handleAutoLayout}
+                  areAllCollapsed={areAllCollapsed}
+                  onToggleCollapse={() => setAreAllCollapsed(!areAllCollapsed)}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">

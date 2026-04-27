@@ -183,6 +183,10 @@ interface CanvasProps {
   onViewChange?: (view: import('@/pages/editor/components/canvas-view-toggle').CanvasView) => void;
   /** Подавить автоматическое вписывание в экран (например при возврате с JSON) */
   suppressAutoFit?: boolean;
+  /** Все ли блоки JSON свёрнуты (для кнопки в тулбаре) */
+  areAllCollapsed?: boolean;
+  /** Колбэк переключения сворачивания блоков JSON */
+  onToggleCollapse?: () => void;
 }
 
 export function Canvas({
@@ -232,6 +236,8 @@ export function Canvas({
   canvasView,
   onViewChange,
   suppressAutoFit,
+  areAllCollapsed,
+  onToggleCollapse,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1511,6 +1517,8 @@ export function Canvas({
         handleUndoSelected={handleUndoSelected}
         canvasView={canvasView}
         onViewChange={onViewChange}
+        areAllCollapsed={areAllCollapsed}
+        onToggleCollapse={onToggleCollapse}
       />
 
       {/* Компонент листов холста - фиксированная панель внизу */}
