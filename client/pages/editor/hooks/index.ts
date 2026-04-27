@@ -24,3 +24,6 @@ export { useCodeStates } from './use-code-states';
 export { useDialogHandlers } from './use-dialog-handlers';
 export { useMobileHandlers } from './use-mobile-handlers';
 export { useCodePanelHandlers } from './use-code-panel-handlers';
+
+// Хук переключения режима просмотра холста
+export { useCanvasView } from './use-canvas-view';

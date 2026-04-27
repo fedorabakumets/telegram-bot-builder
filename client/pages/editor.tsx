@@ -56,6 +56,8 @@ import { LayoutManager, useLayoutManager } from '@/components/layout/layout-mana
 import { SimpleLayoutCustomizer } from '@/components/layout/simple-layout-customizer';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { MobilePropertiesSheet } from '@/pages/editor/components/mobile/mobile-properties-sheet';
+import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
+import { useCanvasView } from '@/pages/editor/hooks/use-canvas-view';
 import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useMoveNodeToSheet } from '@/components/editor/canvas/canvas/use-move-node-to-sheet';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
@@ -605,6 +607,22 @@ export default function Editor() {
   // Хук перемещения узла между листами
   const { moveNodeToSheet } = useMoveNodeToSheet(botDataWithSheets || undefined, handleBotDataUpdate);
 
+  /**
+   * Хук управления переключением режима просмотра (Холст / JSON)
+   */
+  const {
+    canvasView,
+    jsonContent,
+    handleViewChange,
+    handleJsonChange,
+    handleApplyJson: handleApplyJsonView,
+  } = useCanvasView({
+    loadContent,
+    onApplyJson: handleApplyJsonToBotData,
+    editorRef,
+    isResettingEditorRef,
+  });
+
   // Обработчики узлов через хук
   const {
     handleNodeUpdateWithSheets,
@@ -1106,7 +1124,8 @@ export default function Editor() {
 
 
   // Определяем содержимое панели свойств для переиспользования
-  const propertiesContent = activeProject && currentTab === 'editor' ? (
+  // В режиме JSON скрываем панель свойств
+  const propertiesContent = activeProject && currentTab === 'editor' && canvasView !== 'json' ? (
     <PropertiesPanel
       projectId={activeProject.id}
       selectedNode={selectedNode}
@@ -1236,92 +1255,130 @@ export default function Editor() {
         )}
       </div>
     ) : (
-      <div className="h-full">
-        {currentTab === 'groups' ? (
-          <GroupsPanel
-            projectId={activeProject.id}
-            projectName={activeProject.name}
-          />
-        ) : currentTab === 'editor' ? (
-          <Canvas
-            // Новая система листов
-            botData={botDataWithSheets || undefined}
-            onBotDataUpdate={handleBotDataUpdate}
-            // Существующие пропсы для совместимости
-            nodes={nodes}
-            selectedNodeId={selectedNodeId}
-            onNodeSelect={handleNodeSelect}
-            onNodeAdd={addNode}
-            onNodeDelete={handleNodeDelete}
-            onNodeDuplicate={handleNodeDuplicate}
-            onNodeMove={handleNodeMove}
-            onNodeMoveStart={handleNodeMoveStart}
-            onNodeMoveEnd={handleNodeMoveEnd}
-            onNodesUpdate={updateNodes}
-            onUndo={undo}
-            onRedo={redo}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
-            isSaving={updateProjectMutation.isPending}
-            onCopyToClipboard={copyToClipboard}
-            onPasteFromClipboard={pasteFromClipboard}
-            hasClipboardData={hasClipboardData()}
-            isNodeBeingDragged={isNodeBeingDragged}
-            setIsNodeBeingDragged={setIsNodeBeingDragged}
-            onToggleHeader={handleToggleHeader}
-            onToggleSidebar={handleToggleSidebar}
-            onToggleProperties={handleToggleProperties}
-            onToggleCanvas={handleToggleCanvas}
-            headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-            sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
-            propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
-            canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
-            onOpenMobileSidebar={handleOpenMobileSidebar}
-            onOpenMobileProperties={handleOpenMobileProperties}
-            onNodeSizesChange={handleNodeSizesChange}
-            onActionLog={handleActionLog}
-            actionHistory={actionHistory}
-            onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
-            onConnectionDelete={handleConnectionDelete}
-            onConnectionCreate={saveToHistory}
-            autoFitOnLoad
-            fitTrigger={fitTrigger}
-            focusNodeId={focusNodeId}
-            highlightNodeId={highlightNodeId}
-            onMoveNodeToSheet={moveNodeToSheet}
-            onAutoLayout={handleAutoLayout}
-          />
-        ) : currentTab === 'bot' ? (
-          <div className="h-full">
-            <BotLayout
-              projectId={activeProject.id}
-              projectName={activeProject.name}
-            />
-          </div>
-        ) : currentTab === 'users' ? (
-          <div className="h-full overflow-hidden">
-            <UserDatabasePanel
-              projectId={activeProject.id}
-              projectName={activeProject.name}
-              onOpenDialogPanel={handleOpenDialogPanel}
-              onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
-              selectedTokenId={selectedDatabaseTokenId}
-              onSelectToken={setSelectedDatabaseTokenId}
-            />
-          </div>
-        ) : currentTab === 'user-ids' ? (
-          <UserIdsDatabase />
-        ) : currentTab === 'client-api' ? (
-          <div className="h-full p-6 bg-background overflow-auto">
-            <div className="max-w-3xl mx-auto">
-              <TelegramClientConfig />
+      <div className="h-full flex flex-col">
+        {/* Переключатель Холст / JSON — только на вкладке editor */}
+        {currentTab === 'editor' && (
+          <CanvasViewToggle value={canvasView} onChange={handleViewChange} />
+        )}
+        <div className="flex-1 min-h-0">
+          {currentTab === 'editor' && canvasView === 'json' ? (
+            // Режим JSON: показываем Monaco Editor с JSON сценария
+            <div className="h-full flex flex-col p-2 gap-2">
+              <div className="flex-1 min-h-0">
+                <CodeEditorArea
+                  isMobile={false}
+                  isLoading={isCodeLoading}
+                  displayContent={displayContent}
+                  selectedFormat="json"
+                  theme={theme}
+                  editorRef={editorRef}
+                  codeStats={codeStats}
+                  setAreAllCollapsed={setAreAllCollapsed}
+                  areAllCollapsed={areAllCollapsed}
+                  onContentChange={handleJsonChange}
+                />
+              </div>
+              <div className="flex justify-end gap-2 shrink-0">
+                <button
+                  onClick={() => handleViewChange('canvas')}
+                  className="px-3 py-1.5 text-xs rounded-md border bg-background hover:bg-muted transition-colors"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={handleApplyJsonView}
+                  className="px-3 py-1.5 text-xs rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  Применить
+                </button>
+              </div>
             </div>
-          </div>
-        ) : currentTab === 'export' ? (
-          // Для вкладки Код показываем пустой контейнер (код показывается в CodeEditorArea и CodePanel)
-          <div className="h-full bg-background" />
-        ) : null}
+          ) : currentTab === 'groups' ? (
+            <GroupsPanel
+              projectId={activeProject.id}
+              projectName={activeProject.name}
+            />
+          ) : currentTab === 'editor' ? (
+            <Canvas
+              // Новая система листов
+              botData={botDataWithSheets || undefined}
+              onBotDataUpdate={handleBotDataUpdate}
+              // Существующие пропсы для совместимости
+              nodes={nodes}
+              selectedNodeId={selectedNodeId}
+              onNodeSelect={handleNodeSelect}
+              onNodeAdd={addNode}
+              onNodeDelete={handleNodeDelete}
+              onNodeDuplicate={handleNodeDuplicate}
+              onNodeMove={handleNodeMove}
+              onNodeMoveStart={handleNodeMoveStart}
+              onNodeMoveEnd={handleNodeMoveEnd}
+              onNodesUpdate={updateNodes}
+              onUndo={undo}
+              onRedo={redo}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
+              isSaving={updateProjectMutation.isPending}
+              onCopyToClipboard={copyToClipboard}
+              onPasteFromClipboard={pasteFromClipboard}
+              hasClipboardData={hasClipboardData()}
+              isNodeBeingDragged={isNodeBeingDragged}
+              setIsNodeBeingDragged={setIsNodeBeingDragged}
+              onToggleHeader={handleToggleHeader}
+              onToggleSidebar={handleToggleSidebar}
+              onToggleProperties={handleToggleProperties}
+              onToggleCanvas={handleToggleCanvas}
+              headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+              sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+              propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+              canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+              onOpenMobileSidebar={handleOpenMobileSidebar}
+              onOpenMobileProperties={handleOpenMobileProperties}
+              onNodeSizesChange={handleNodeSizesChange}
+              onActionLog={handleActionLog}
+              actionHistory={actionHistory}
+              onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
+              onConnectionDelete={handleConnectionDelete}
+              onConnectionCreate={saveToHistory}
+              autoFitOnLoad
+              fitTrigger={fitTrigger}
+              focusNodeId={focusNodeId}
+              highlightNodeId={highlightNodeId}
+              onMoveNodeToSheet={moveNodeToSheet}
+              onAutoLayout={handleAutoLayout}
+            />
+          ) : currentTab === 'bot' ? (
+            <div className="h-full">
+              <BotLayout
+                projectId={activeProject.id}
+                projectName={activeProject.name}
+              />
+            </div>
+          ) : currentTab === 'users' ? (
+            <div className="h-full overflow-hidden">
+              <UserDatabasePanel
+                projectId={activeProject.id}
+                projectName={activeProject.name}
+                onOpenDialogPanel={handleOpenDialogPanel}
+                onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
+                selectedTokenId={selectedDatabaseTokenId}
+                onSelectToken={setSelectedDatabaseTokenId}
+              />
+            </div>
+          ) : currentTab === 'user-ids' ? (
+            <UserIdsDatabase />
+          ) : currentTab === 'client-api' ? (
+            <div className="h-full p-6 bg-background overflow-auto">
+              <div className="max-w-3xl mx-auto">
+                <TelegramClientConfig />
+              </div>
+            </div>
+          ) : currentTab === 'export' ? (
+            // Для вкладки Код показываем пустой контейнер (код показывается в CodeEditorArea и CodePanel)
+            <div className="h-full bg-background" />
+          ) : null}
+        </div>
       </div>
     );
 
@@ -1352,7 +1409,7 @@ export default function Editor() {
           }}
         />
       </div>
-    ) : currentTab === 'editor' ? (
+    ) : currentTab === 'editor' && canvasView !== 'json' ? (
       <ComponentsSidebar
         onComponentDrag={handleComponentDrag}
         onComponentAdd={handleComponentAdd}
