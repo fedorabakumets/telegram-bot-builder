@@ -79,8 +79,8 @@ export function useBotMutations({
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.projectId}/tokens`] });
       queryClient.invalidateQueries({ queryKey: ['launch-history', vars.tokenId] });
       const token = findToken(vars.tokenId);
-      if (token && onBotStarted) {
-        onBotStarted(vars.projectId, vars.tokenId, getBotDisplayName(token, `Бот ${vars.tokenId}`));
+      if (onBotStarted) {
+        onBotStarted(vars.projectId, vars.tokenId, token ? getBotDisplayName(token, `Бот ${vars.tokenId}`) : `Бот ${vars.tokenId}`);
       }
     },
     onError: (error: Error) => {
