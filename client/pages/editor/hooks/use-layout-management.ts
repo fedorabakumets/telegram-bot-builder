@@ -83,6 +83,14 @@ export function useLayoutManager(
         if (el.id === 'dialog' || el.id === 'userDetails') {
           return el;
         }
+
+        // Для header применяем ручные изменения всегда
+        if (el.id === 'header') {
+          const manual = manualVisibility.get(el.id);
+          if (manual !== undefined) {
+            return { ...el, visible: manual };
+          }
+        }
         
         // Для sidebar и properties применяем ручные изменения только на вкладке editor
         if ((el.id === 'sidebar' || el.id === 'properties') && currentTab === 'editor') {
