@@ -1284,15 +1284,17 @@ export default function Editor() {
                 <div className="h-4 w-px bg-slate-300/50 dark:bg-slate-600/50" />
                 <CanvasViewToggle value={canvasView} onChange={handleViewChange} />
               </div>
-              {/* Панель применения изменений JSON */}
-              <div className="px-2 pt-2">
-                <JsonApplyBar
-                  isDirty={isDirty}
-                  error={jsonError}
-                  onApply={handleApplyJsonView}
-                  onReset={() => handleViewChange('canvas')}
-                />
-              </div>
+              {/* Панель применения изменений JSON — показывается только при изменениях */}
+              {(isDirty || jsonError) && (
+                <div className="px-2 pt-2">
+                  <JsonApplyBar
+                    isDirty={isDirty}
+                    error={jsonError}
+                    onApply={handleApplyJsonView}
+                    onReset={() => handleViewChange('canvas')}
+                  />
+                </div>
+              )}
               <div className="flex-1 min-h-0">
                 <CodeEditorArea
                   isMobile={false}
