@@ -1295,8 +1295,8 @@ export default function Editor() {
 
           {/* JSON-редактор — абсолютно поверх Canvas, виден только в json-режиме вкладки editor */}
           {currentTab === 'editor' && canvasView === 'json' && (
-            <div className="absolute inset-0 z-10 flex flex-col" style={{ top: 60 }}>
-              <div className="flex-1 min-h-0">
+            <div className="absolute inset-0 z-10 flex flex-col" style={{ top: '60px' }}>
+              <div className="flex-1 min-h-0 bg-background">
                 <CodeEditorArea
                   isMobile={false}
                   isLoading={false}
