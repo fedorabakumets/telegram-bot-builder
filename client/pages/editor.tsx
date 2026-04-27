@@ -1299,7 +1299,7 @@ export default function Editor() {
            * Никакого top: 60px: тулбар Canvas рендерится внутри Canvas и не влияет на позицию редактора.
            */}
           {currentTab === 'editor' && canvasView === 'json' && (
-            <div className="absolute inset-0 z-20 bg-background flex flex-col">
+            <div className="absolute inset-0 z-20 bg-background flex flex-col" style={{ paddingTop: '60px' }}>
               <CodeEditorArea
                 isMobile={false}
                 isLoading={false}
