@@ -1334,10 +1334,8 @@ export default function Editor() {
           {currentTab === 'editor' && (
             <div className={`h-full${canvasView === 'json' ? ' invisible pointer-events-none' : ''}`}>
               <Canvas
-                {/* Новая система листов */}
                 botData={botDataWithSheets || undefined}
                 onBotDataUpdate={handleBotDataUpdate}
-                {/* Существующие пропсы для совместимости */}
                 nodes={nodes}
                 selectedNodeId={selectedNodeId}
                 onNodeSelect={handleNodeSelect}
