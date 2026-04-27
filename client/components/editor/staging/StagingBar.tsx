@@ -140,7 +140,7 @@ function JsonDirtyVariant({ onApply, onReset, onDetails }: JsonDirtyVariantProps
   return (
     <>
       <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
-        <i className="fas fa-pencil-alt text-slate-500 dark:text-slate-400 mr-1.5" />
+        <i className="fas fa-pencil-alt text-violet-500 dark:text-violet-400 mr-1.5" />
         Есть изменения в JSON
       </span>
       <div className="w-px h-4 bg-slate-300 dark:bg-slate-700" />

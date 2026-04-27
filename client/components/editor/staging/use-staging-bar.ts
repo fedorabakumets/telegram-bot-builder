@@ -73,13 +73,17 @@ export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResul
   } = options;
 
   const variant = useMemo<StagingVariant>(() => {
-    if (mode === 'json') return jsonError ? 'json-error' : 'json-dirty';
+    if (mode === 'json') {
+      if (jsonError) return 'json-error';
+      if (isDirty) return 'json-dirty';
+      return 'canvas'; // hasLocalChanges из холста
+    }
     return 'canvas';
-  }, [mode, jsonError]);
+  }, [mode, jsonError, isDirty]);
 
   const isVisible = useMemo(() => {
     if (mode === 'canvas') return hasLocalChanges;
-    return isDirty || !!jsonError;
+    return isDirty || !!jsonError || hasLocalChanges;
   }, [mode, hasLocalChanges, isDirty, jsonError]);
 
   return {
