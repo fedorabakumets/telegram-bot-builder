@@ -14,8 +14,8 @@ export const httpRequestAuthTypeSchema = z.enum(['none', 'basic', 'bearer', 'hea
 /** Схема формата тела запроса */
 export const httpRequestBodyFormatSchema = z.enum(['json', 'form-urlencoded', 'raw']);
 
-/** Схема формата ответа */
-export const httpRequestResponseFormatSchema = z.enum(['autodetect', 'json', 'text']);
+/** Схема формата ответа: autodetect, json, text или file (бинарный файл в base64) */
+export const httpRequestResponseFormatSchema = z.enum(['autodetect', 'json', 'text', 'file']);
 
 /** Схема параметров шаблона http_request */
 export const httpRequestParamsSchema = z.object({
@@ -61,7 +61,7 @@ export const httpRequestParamsSchema = z.object({
   queryParams: z.string().optional().default(''),
   /** Формат тела запроса */
   bodyFormat: httpRequestBodyFormatSchema.optional().default('json'),
-  /** Формат ответа */
+  /** Формат ответа: autodetect, json, text или file (base64-объект) */
   responseFormat: httpRequestResponseFormatSchema.optional().default('autodetect'),
   /** Не падать при HTTP ошибках 4xx/5xx */
   ignoreHttpErrors: z.boolean().optional().default(false),

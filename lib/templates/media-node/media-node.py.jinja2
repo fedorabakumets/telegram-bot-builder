@@ -88,7 +88,16 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     if _raw_media_ref.startswith("{") and _raw_media_ref.endswith("}"):
         _media_var_name = _raw_media_ref[1:-1]
         _media_value = all_user_vars.get(_media_var_name)
-        if isinstance(_media_value, dict):
+        if isinstance(_media_value, dict) and _media_value.get("type") == "file":
+            # Отправка файла из переменной типа file (base64) через BufferedInputFile
+            import base64 as _b64_media
+            from aiogram.types import BufferedInputFile as _BufFile
+            _file_bytes = _b64_media.b64decode(_media_value.get("data", ""))
+            _file_name = _media_value.get("fileName", "file")
+            _buf_file = _BufFile(file=_file_bytes, filename=_file_name)
+            await callback_query.message.answer_document(_buf_file)
+            _has_resolved_media = False  # предотвращаем повторную отправку
+        elif isinstance(_media_value, dict):
             _resolved_media_type = _media_value.get("type", "document")
             _resolved_media = (
                 _media_value.get("value")

@@ -34,7 +34,7 @@
 |---|---|---|---|
 | `queryParams` | JSON string | — | Query параметры `[{key, value}]` |
 | `bodyFormat` | json/form-urlencoded/raw | `json` | Формат тела запроса |
-| `responseFormat` | autodetect/json/text | `autodetect` | Формат ответа |
+| `responseFormat` | autodetect/json/text/file | `autodetect` | Формат ответа. `file` — сохраняет ответ как base64-объект `{type, data, mimeType, fileName}` |
 | `ignoreHttpErrors` | boolean | `false` | Не падать при 4xx/5xx |
 | `ignoreSsl` | boolean | `false` | Игнорировать SSL сертификат |
 | `followRedirects` | boolean | `true` | Следовать редиректам |
@@ -111,6 +111,28 @@
   "responseVariable": "result"
 }
 ```
+
+### Получение файла (base64)
+
+```json
+{
+  "url": "https://api.example.com/export/project.json",
+  "method": "GET",
+  "responseFormat": "file",
+  "responseVariable": "export_file"
+}
+```
+
+Ответ сохраняется в переменную `export_file` как объект:
+```json
+{
+  "type": "file",
+  "data": "base64...",
+  "mimeType": "application/json",
+  "fileName": "project.json"
+}
+```
+Используй медиа-ноду с `{export_file}` для отправки файла пользователю.
 
 ## Подстановка переменных
 
