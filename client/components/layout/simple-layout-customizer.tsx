@@ -231,7 +231,7 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       {/* Диалог настроек - скрыт, доступен только программно */}
       <div className="hidden">
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -532,7 +532,7 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
 
 
       {/* Основной контент */}
-      <div className="h-screen">
+      <div className="h-full">
         {children}
       </div>
     </div>
