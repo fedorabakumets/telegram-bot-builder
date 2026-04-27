@@ -641,7 +641,8 @@ export default function Editor() {
   const stagingBar = useStagingBar({
     hasLocalChanges,
     actionHistory,
-    onSave: () => updateProjectMutation.mutate({ restartOnUpdate: true }),
+    onSave: () => updateProjectMutation.mutate({}),
+    onSaveAndRestart: () => updateProjectMutation.mutate({ restartOnUpdate: true }),
     onDiscard: () => {
       setHasLocalChanges(false);
       setActionHistory([]);

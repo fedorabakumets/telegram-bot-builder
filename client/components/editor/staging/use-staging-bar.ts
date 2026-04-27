@@ -18,6 +18,8 @@ export interface UseStagingBarOptions {
   actionHistory: ActionHistoryItem[];
   /** Колбэк сохранения изменений холста */
   onSave: () => void;
+  /** Колбэк сохранения с перезапуском ботов сценария */
+  onSaveAndRestart: () => void;
   /** Колбэк сброса изменений холста */
   onDiscard: () => void;
   /** Идёт ли сохранение в данный момент */
@@ -46,6 +48,8 @@ export interface UseStagingBarResult {
   changesCount: number;
   /** Колбэк сохранения (canvas) */
   onSave: () => void;
+  /** Колбэк сохранения с перезапуском ботов сценария */
+  onSaveAndRestart: () => void;
   /** Колбэк сброса (canvas) */
   onDiscard: () => void;
   /** Идёт ли сохранение */
@@ -68,7 +72,7 @@ export interface UseStagingBarResult {
  */
 export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResult {
   const {
-    hasLocalChanges, actionHistory, onSave, onDiscard, isSaving,
+    hasLocalChanges, actionHistory, onSave, onSaveAndRestart, onDiscard, isSaving,
     isDirty, jsonError, onApplyJson, onResetJson, mode,
   } = options;
 
@@ -91,6 +95,7 @@ export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResul
     variant,
     changesCount: actionHistory.length,
     onSave,
+    onSaveAndRestart,
     onDiscard,
     isSaving,
     onApplyJson,

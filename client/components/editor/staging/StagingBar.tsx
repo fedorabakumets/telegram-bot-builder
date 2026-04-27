@@ -21,7 +21,7 @@ interface StagingBarProps extends UseStagingBarResult {
  * @returns JSX элемент панели или null если не видима
  */
 export function StagingBar(props: StagingBarProps) {
-  const { isVisible, variant, changesCount, onSave, onDiscard, isSaving,
+  const { isVisible, variant, changesCount, onSave, onSaveAndRestart, onDiscard, isSaving,
     onApplyJson, onResetJson, jsonError, actionHistory, mode } = props;
 
   /** Открыто ли модальное окно деталей */
@@ -43,6 +43,7 @@ export function StagingBar(props: StagingBarProps) {
               changesCount={changesCount}
               isSaving={isSaving}
               onSave={onSave}
+              onSaveAndRestart={onSaveAndRestart}
               onDiscard={onDiscard}
               onDetails={() => setModalOpen(true)}
             />
@@ -84,6 +85,8 @@ interface CanvasVariantProps {
   isSaving: boolean;
   /** Колбэк сохранения */
   onSave: () => void;
+  /** Колбэк сохранения с перезапуском */
+  onSaveAndRestart: () => void;
   /** Колбэк сброса */
   onDiscard: () => void;
   /** Колбэк открытия деталей */
@@ -95,7 +98,7 @@ interface CanvasVariantProps {
  * @param props - Свойства варианта
  * @returns JSX элемент
  */
-function CanvasVariant({ changesCount, isSaving, onSave, onDiscard, onDetails }: CanvasVariantProps) {
+function CanvasVariant({ changesCount, isSaving, onSave, onSaveAndRestart, onDiscard, onDetails }: CanvasVariantProps) {
   return (
     <>
       <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
@@ -116,6 +119,12 @@ function CanvasVariant({ changesCount, isSaving, onSave, onDiscard, onDetails }:
         {isSaving
           ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
           : <><i className="fas fa-floppy-disk mr-1" />Сохранить <kbd className="ml-1 opacity-60 text-[10px]">⇧+↵</kbd></>}
+      </Button>
+      <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
+        className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+        {isSaving
+          ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
+          : <><i className="fas fa-play mr-1" />Запустить</>}
       </Button>
     </>
   );
