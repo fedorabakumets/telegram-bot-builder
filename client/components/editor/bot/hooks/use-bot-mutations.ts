@@ -210,8 +210,14 @@ export function useBotMutations({
   const restartAllBotsMutation = useMutation({
     mutationFn: (pid: number) =>
       apiRequest('POST', `/api/projects/${pid}/bot/restart-all`),
-    onSuccess: (data: { restarted: number }, pid: number) => {
+    onSuccess: (data: { restarted: number; results?: { tokenId: number }[] }, pid: number) => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${pid}/tokens`] });
+      // Очищаем логи для каждого перезапущенного токена
+      if (data.results) {
+        data.results.forEach(r => {
+          onBotStarted?.(pid, r.tokenId, '');
+        });
+      }
       toast({ title: 'Боты перезапущены', description: `Перезапущено: ${data.restarted}` });
     },
     onError: (error: Error) => {
