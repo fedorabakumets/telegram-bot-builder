@@ -15,6 +15,7 @@ import {
   fixtureWithAutoTransition,
   fixtureUploadPaths,
   fixtureEmpty,
+  fixtureFileVariable,
 } from './media-node.fixture';
 
 describe('media-node.py.jinja2 шаблон', () => {
@@ -258,6 +259,33 @@ describe('media-node.py.jinja2 шаблон', () => {
         // @ts-expect-error — намеренно передаём неверные данные
         generateMediaNode({ nodeId: 123, attachedMedia: [] });
       }).toThrow();
+    });
+  });
+
+  describe('Переменная типа file (base64)', () => {
+    it('должен генерировать проверку type == "file" для переменной', () => {
+      const result = generateMediaNode(fixtureFileVariable);
+      expect(result).toContain('_media_value.get("type") == "file"');
+    });
+
+    it('должен генерировать декодирование base64', () => {
+      const result = generateMediaNode(fixtureFileVariable);
+      expect(result).toContain('_b64_media.b64decode');
+    });
+
+    it('должен генерировать BufferedInputFile', () => {
+      const result = generateMediaNode(fixtureFileVariable);
+      expect(result).toContain('BufferedInputFile');
+    });
+
+    it('должен отправлять через answer_document', () => {
+      const result = generateMediaNode(fixtureFileVariable);
+      expect(result).toContain('answer_document(_buf_file)');
+    });
+
+    it('должен использовать fileName из переменной', () => {
+      const result = generateMediaNode(fixtureFileVariable);
+      expect(result).toContain('_media_value.get("fileName"');
     });
   });
 });

@@ -200,6 +200,17 @@ export const validParamsFetchAll: HttpRequestTemplateParams = {
   paginationMaxPages: 10,
 };
 
+/** Параметры: формат ответа file (base64) */
+export const validParamsFileFormat: HttpRequestTemplateParams = {
+  nodeId: 'http_request_file',
+  safeName: 'http_request_file',
+  url: 'https://api.example.com/export/project.json',
+  method: 'GET',
+  timeout: 30,
+  responseVariable: 'export_file',
+  responseFormat: 'file',
+};
+
 /** Узел графа: интерактивная пагинация */
 export const httpRequestNodePagination: Node = {
   id: 'fetch_users',

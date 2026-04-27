@@ -137,6 +137,33 @@
 
 Переменные в URL, заголовках и теле задаются через `{имя_переменной}`.
 
+#### Получение файла (base64)
+
+```json
+{
+  "type": "http_request",
+  "data": {
+    "httpRequestUrl": "https://api.example.com/export/project.json",
+    "httpRequestMethod": "GET",
+    "httpRequestResponseFormat": "file",
+    "httpRequestResponseVariable": "export_file",
+    "autoTransitionTo": "send-file-node"
+  }
+}
+```
+
+При `httpRequestResponseFormat: "file"` ответ сохраняется как объект:
+```json
+{
+  "type": "file",
+  "data": "base64...",
+  "mimeType": "application/json",
+  "fileName": "project.json"
+}
+```
+
+Этот объект можно передать в медиа-ноду через `{export_file}` для отправки файла пользователю.
+
 ### condition — ветвление
 
 ```json
@@ -295,6 +322,21 @@
 - `{username}` — username пользователя
 - `{first_name}`, `{last_name}` — имя пользователя
 - `{callback_data}` — данные нажатой кнопки
+
+---
+
+### Переменная типа `file`
+
+HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет ответ как объект:
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `type` | `"file"` | Маркер типа переменной |
+| `data` | `string` | Содержимое файла в base64 |
+| `mimeType` | `string` | MIME-тип файла |
+| `fileName` | `string` | Имя файла при отправке |
+
+Используется в медиа-ноде через `{имя_переменной}` — файл отправляется через `BufferedInputFile` без сохранения на диск.
 
 ---
 

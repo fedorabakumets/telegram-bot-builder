@@ -28,6 +28,7 @@ import {
   validParamsInteractivePagination,
   validParamsFetchAll,
   httpRequestNodePagination,
+  validParamsFileFormat,
 } from './http-request.fixture';
 
 describe('generateHttpRequest()', () => {
@@ -301,5 +302,47 @@ describe('пагинация', () => {
     expect(params.paginationOffsetVar).toBe('users_offset');
     expect(params.paginationTotalField).toBe('count');
     expect(params.paginationLimit).toBe(10);
+  });
+});
+
+describe('формат ответа file (base64)', () => {
+  it('генерирует чтение бинарных данных через _resp.read()', () => {
+    const code = generateHttpRequest(validParamsFileFormat);
+    expect(code).toContain('_resp_bytes = await _resp.read()');
+  });
+
+  it('генерирует кодирование в base64', () => {
+    const code = generateHttpRequest(validParamsFileFormat);
+    expect(code).toContain('_b64.b64encode(_resp_bytes).decode');
+  });
+
+  it('извлекает Content-Type из заголовков ответа', () => {
+    const code = generateHttpRequest(validParamsFileFormat);
+    expect(code).toContain('Content-Type');
+    expect(code).toContain('_resp_content_type');
+  });
+
+  it('извлекает имя файла из Content-Disposition', () => {
+    const code = generateHttpRequest(validParamsFileFormat);
+    expect(code).toContain('Content-Disposition');
+    expect(code).toContain('_resp_filename');
+  });
+
+  it('формирует объект с полями type, data, mimeType, fileName', () => {
+    const code = generateHttpRequest(validParamsFileFormat);
+    expect(code).toContain('"type": "file"');
+    expect(code).toContain('"data":');
+    expect(code).toContain('"mimeType":');
+    expect(code).toContain('"fileName":');
+  });
+
+  it('сохраняет объект в переменную export_file', () => {
+    const code = generateHttpRequest(validParamsFileFormat);
+    expect(code).toContain('set_user_var(user_id, "export_file", _response_data)');
+  });
+
+  it('НЕ генерирует _resp.json() для формата file', () => {
+    const code = generateHttpRequest(validParamsFileFormat);
+    expect(code).not.toContain('await _resp.json(');
   });
 });

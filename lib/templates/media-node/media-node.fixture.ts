@@ -61,3 +61,9 @@ export const fixtureEmpty: MediaNodeTemplateParams = {
   nodeId: 'media_empty_1',
   attachedMedia: [],
 };
+
+/** Нода с переменной типа file (base64 из HTTP-запроса) */
+export const fixtureFileVariable: MediaNodeTemplateParams = {
+  nodeId: 'media_file_var_1',
+  attachedMedia: ['{export_file}'],
+};
