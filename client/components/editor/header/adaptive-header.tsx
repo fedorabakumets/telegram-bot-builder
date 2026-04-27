@@ -129,29 +129,7 @@ export function AdaptiveHeader({
       <div className="flex items-center gap-1 lg:gap-2 flex-1">
         {/* Navigation скрыта — перенесена в левый AppSidebar (этап 2) */}
 
-        {/* Десктопные/Планшетные действия */}
-        <DesktopActionsFull
-          onToggleHeader={onToggleHeader}
-          onToggleSidebar={onToggleSidebar}
-          onToggleCanvas={onToggleCanvas}
-          onToggleProperties={onToggleProperties}
-          onToggleCode={onToggleCode}
-          onToggleCodeEditor={onToggleCodeEditor}
-          onOpenFileExplorer={onOpenFileExplorer}
-          onLoadTemplate={onLoadTemplate}
-          onSaveAsTemplate={onSaveAsTemplate}
-          headerVisible={headerVisible}
-          sidebarVisible={sidebarVisible}
-          canvasVisible={canvasVisible}
-          propertiesVisible={propertiesVisible}
-          codeVisible={codeVisible}
-          codeEditorVisible={codeEditorVisible}
-          user={user}
-          isLoading={isLoading}
-          onLogout={logout}
-          onLogin={handleTelegramLogin}
-          isVertical={isVertical}
-        />
+        {/* DesktopActionsFull скрыт — действия перенесены в левый AppSidebar (этап 2) */}
       </div>
       
       {/* Мобильная кнопка меню */}
