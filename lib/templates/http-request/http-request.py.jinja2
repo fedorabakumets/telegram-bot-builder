@@ -131,22 +131,27 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
             ) as _resp:
                 _status_code = _resp.status
                 {% if responseFormat == 'file' %}
-                # Читаем ответ как бинарные данные и кодируем в base64
-                _resp_bytes = await _resp.read()
-                import base64 as _b64
-                _resp_content_type = _resp.headers.get('Content-Type', 'application/octet-stream').split(';')[0].strip()
-                _resp_filename = ""
-                _cd = _resp.headers.get('Content-Disposition', '')
-                if 'filename=' in _cd:
-                    _resp_filename = _cd.split('filename=')[-1].strip().strip('"\'')
-                if not _resp_filename:
-                    _resp_filename = _url.split('/')[-1].split('?')[0] or "file"
-                _response_data = {
-                    "type": "file",
-                    "data": _b64.b64encode(_resp_bytes).decode('utf-8'),
-                    "mimeType": _resp_content_type,
-                    "fileName": _resp_filename,
-                }
+                # Читаем ответ как JSON-объект типа file {type, data, mimeType, fileName}
+                # Апишник уже возвращает base64 в поле data — не перекодируем
+                try:
+                    _response_data = await _resp.json(content_type=None)
+                except Exception:
+                    # Fallback: если ответ бинарный — кодируем сами
+                    _resp_bytes = await _resp.read()
+                    import base64 as _b64
+                    _resp_content_type = _resp.headers.get('Content-Type', 'application/octet-stream').split(';')[0].strip()
+                    _resp_filename = ""
+                    _cd = _resp.headers.get('Content-Disposition', '')
+                    if 'filename=' in _cd:
+                        _resp_filename = _cd.split('filename=')[-1].strip().strip('"\'')
+                    if not _resp_filename:
+                        _resp_filename = _url.split('/')[-1].split('?')[0] or "file"
+                    _response_data = {
+                        "type": "file",
+                        "data": _b64.b64encode(_resp_bytes).decode('utf-8'),
+                        "mimeType": _resp_content_type,
+                        "fileName": _resp_filename,
+                    }
                 {% elif responseFormat == 'json' %}
                 _response_data = await _resp.json(content_type=None)
                 {% elif responseFormat == 'text' %}

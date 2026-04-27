@@ -88,6 +88,8 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
     if _raw_media_ref.startswith("{") and _raw_media_ref.endswith("}"):
         _media_var_name = _raw_media_ref[1:-1]
         _media_value = all_user_vars.get(_media_var_name)
+        # Отладочный лог для диагностики переменной типа file
+        logging.info(f"🔍 Медиа-переменная '{_media_var_name}': тип=" + type(_media_value).__name__ + ", значение=" + ('dict с type=' + str(_media_value.get('type')) if isinstance(_media_value, dict) else str(_media_value)[:100] if _media_value else 'None'))
         if isinstance(_media_value, dict) and _media_value.get("type") == "file":
             # Отправка файла из переменной типа file (base64) через BufferedInputFile
             import base64 as _b64_media
@@ -96,7 +98,8 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             _file_name = _media_value.get("fileName", "file")
             _buf_file = _BufFile(file=_file_bytes, filename=_file_name)
             await callback_query.message.answer_document(_buf_file)
-            _has_resolved_media = False  # предотвращаем повторную отправку
+            logging.info(f"✅ Файл '{_file_name}' отправлен через BufferedInputFile ({len(_file_bytes)} байт)")
+            return  # файл отправлен, выходим без лишних проверок
         elif isinstance(_media_value, dict):
             _resolved_media_type = _media_value.get("type", "document")
             _resolved_media = (
@@ -129,6 +132,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
         _has_resolved_media = True
 
     if not _has_resolved_media:
+        logging.warning(f"⚠️ Медиа-переменная {_raw_media_ref} не заполнена. all_user_vars keys: {list(all_user_vars.keys())[:20]}")
         logging.warning(f"Медиа-переменная {_raw_media_ref} не заполнена для узла {{ nodeId }}")
         return
 
