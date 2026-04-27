@@ -685,8 +685,8 @@ export const nodeSchema = z.object({
     httpRequestAuthQueryName: z.string().optional(),
     /** Значение query параметра для query auth */
     httpRequestAuthQueryValue: z.string().optional(),
-    /** Формат ответа: autodetect, json, text */
-    httpRequestResponseFormat: z.enum(['autodetect', 'json', 'text']).default('autodetect').optional(),
+    /** Формат ответа: autodetect, json, text, file (base64) */
+    httpRequestResponseFormat: z.enum(['autodetect', 'json', 'text', 'file']).default('autodetect').optional(),
     /** Не падать при HTTP ошибках (4xx, 5xx) */
     httpRequestIgnoreHttpErrors: z.boolean().default(false).optional(),
     /** Игнорировать ошибки SSL сертификата */

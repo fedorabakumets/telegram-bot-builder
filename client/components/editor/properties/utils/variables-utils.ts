@@ -165,6 +165,8 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
           nodeId: node.id,
           nodeType: 'http_request' as any,
           description: `Ответ HTTP запроса (${data.httpRequestMethod || 'GET'} ${data.httpRequestUrl || ''})`,
+          // Если формат ответа — file, помечаем переменную как медиа-тип file (base64)
+          ...(data.httpRequestResponseFormat === 'file' ? { mediaType: 'file' } : {}),
         });
       }
     }

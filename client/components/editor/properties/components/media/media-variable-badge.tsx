@@ -4,7 +4,7 @@
  * Отображает одну медиа-переменную с иконкой и кнопкой удаления.
  */
 
-import { Image, Video, Music, FileText } from 'lucide-react';
+import { Image, Video, Music, FileText, FileCode } from 'lucide-react';
 import type { ProjectVariable } from '../../utils/variables-utils';
 
 /** Пропсы компонента бейджа */
@@ -28,6 +28,8 @@ export function MediaVariableBadge({ variable, onRemove }: MediaVariableBadgePro
       case 'video': return <Video className="h-3 w-3" />;
       case 'audio': return <Music className="h-3 w-3" />;
       case 'document': return <FileText className="h-3 w-3" />;
+      /** Файл в формате base64 — результат HTTP-запроса с форматом file */
+      case 'file': return <FileCode className="h-3 w-3" />;
       default: return null;
     }
   };
@@ -38,6 +40,8 @@ export function MediaVariableBadge({ variable, onRemove }: MediaVariableBadgePro
       case 'video': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700';
       case 'audio': return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700';
       case 'document': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700';
+      /** Файл в формате base64 — результат HTTP-запроса с форматом file */
+      case 'file': return 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-700';
       default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
     }
   };

@@ -4,7 +4,7 @@
  * @module variable-display-utils
  */
 
-import { Image, Video, Music, FileText } from 'lucide-react';
+import { Image, Video, Music, FileText, FileCode } from 'lucide-react';
 import type { Variable } from '../types';
 
 /**
@@ -18,6 +18,8 @@ export function getMediaIcon(mediaType?: string) {
     case 'video': return <Video className="h-4 w-4 text-purple-500" />;
     case 'audio': return <Music className="h-4 w-4 text-green-500" />;
     case 'document': return <FileText className="h-4 w-4 text-orange-500" />;
+    /** Файл в формате base64 — результат HTTP-запроса с форматом file */
+    case 'file': return <FileCode className="h-4 w-4 text-rose-500" />;
     default: return null;
   }
 }
@@ -33,7 +35,9 @@ export function getBadgeText(variable: Variable): string {
       photo: '🖼️ Фото',
       video: '🎥 Видео',
       audio: '🎵 Аудио',
-      document: '📄 Документ'
+      document: '📄 Документ',
+      /** Файл в формате base64 — результат HTTP-запроса с форматом file */
+      file: '📦 Файл'
     };
     return labels[variable.mediaType];
   }
