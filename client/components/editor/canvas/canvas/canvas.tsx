@@ -181,6 +181,8 @@ interface CanvasProps {
   canvasView?: import('@/pages/editor/components/canvas-view-toggle').CanvasView;
   /** Колбэк смены режима просмотра */
   onViewChange?: (view: import('@/pages/editor/components/canvas-view-toggle').CanvasView) => void;
+  /** Подавить автоматическое вписывание в экран (например при возврате с JSON) */
+  suppressAutoFit?: boolean;
 }
 
 export function Canvas({
@@ -229,6 +231,7 @@ export function Canvas({
   onAutoLayout,
   canvasView,
   onViewChange,
+  suppressAutoFit,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -280,6 +283,13 @@ export function Canvas({
 
     // Ключ текущего набора узлов — срабатываем только при смене набора
     const nodesKey = nodes.map(n => n.id).join(',');
+
+    // Если suppressAutoFit — обновляем ключ чтобы не сработало позже, но не делаем fit
+    if (suppressAutoFit) {
+      lastAutoFitNodesKeyRef.current = nodesKey;
+      return;
+    }
+
     if (nodesKey === lastAutoFitNodesKeyRef.current) return;
 
     // Если был принудительный fit — не ждём nodeSizes, вписываем сразу
@@ -292,7 +302,7 @@ export function Canvas({
     lastAutoFitNodesKeyRef.current = nodesKey;
     const timer = setTimeout(() => fitToContentRef.current(), 150);
     return () => clearTimeout(timer);
-  }, [autoFitOnLoad, nodes, nodeSizes]);
+  }, [autoFitOnLoad, nodes, nodeSizes, suppressAutoFit]);
 
   /**
    * Фокусировка на узле: выделяет узел и центрирует его в видимой области

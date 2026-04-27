@@ -1385,6 +1385,7 @@ export default function Editor() {
               onConnectionDelete={handleConnectionDelete}
               onConnectionCreate={saveToHistory}
               autoFitOnLoad
+              suppressAutoFit={canvasView === 'json'}
               fitTrigger={fitTrigger}
               focusNodeId={focusNodeId}
               highlightNodeId={highlightNodeId}
@@ -1665,6 +1666,7 @@ export default function Editor() {
                   onConnectionDelete={handleConnectionDelete}
                   onConnectionCreate={saveToHistory}
                   autoFitOnLoad
+                  suppressAutoFit={canvasView === 'json'}
                   fitTrigger={fitTrigger}
                   focusNodeId={focusNodeId}
                   highlightNodeId={highlightNodeId}
