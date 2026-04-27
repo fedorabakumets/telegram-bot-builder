@@ -12,6 +12,8 @@ import { CodePanel } from '@/components/editor/code/panel';
 import { ReadmePreview } from '@/components/editor/code/readme';
 import { useCodeGenerator as useCodeGeneratorServer } from '@/components/editor/code/hooks';
 import type { CodeFormat } from '@/components/editor/code/hooks';
+import { AppSidebar } from '@/components/editor/sidebar';
+import { useSidebarState } from '@/components/editor/sidebar/hooks/use-sidebar-state';
 import { ComponentsSidebar } from '@/components/editor/sidebar/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
@@ -108,6 +110,9 @@ export default function Editor() {
 
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
+
+  /** Состояние свёрнутости левого сайдбара */
+  const { isCollapsed, toggleCollapsed } = useSidebarState();
 
   /**
    * Флаг автоматического создания кнопок при добавлении соединений
@@ -1528,6 +1533,20 @@ export default function Editor() {
 
     if (useFlexibleLayout) {
       return (
+        <div className="flex h-screen w-full overflow-hidden">
+          {/** Левый сайдбар навигации */}
+          <AppSidebar
+            projectName={activeProject.name}
+            botInfo={null}
+            currentTab={currentTab}
+            onTabChange={handleTabChange}
+            onSaveAsTemplate={handleSaveAsTemplate}
+            onLoadTemplate={handleLoadTemplate}
+            isCollapsed={isCollapsed}
+            onToggleCollapsed={toggleCollapsed}
+          />
+          {/** Основная рабочая область */}
+          <div className="flex-1 min-w-0 overflow-hidden">
         <SimpleLayoutCustomizer
           config={flexibleLayoutConfig}
           onConfigChange={setFlexibleLayoutConfig}
@@ -1587,6 +1606,8 @@ export default function Editor() {
             currentTab={currentTab}
           />
         </SimpleLayoutCustomizer>
+          </div>
+        </div>
       );
     }
 
