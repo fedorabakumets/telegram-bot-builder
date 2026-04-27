@@ -53,6 +53,9 @@ export function StagingBar(props: StagingBarProps) {
               onApply={onApplyJson}
               onReset={onResetJson}
               onDetails={() => setModalOpen(true)}
+              onSave={onSave}
+              onSaveAndRestart={onSaveAndRestart}
+              isSaving={isSaving}
             />
           )}
           {variant === 'json-error' && (
@@ -138,6 +141,12 @@ interface JsonDirtyVariantProps {
   onReset: () => void;
   /** Колбэк открытия деталей */
   onDetails: () => void;
+  /** Колбэк сохранения на сервер */
+  onSave: () => void;
+  /** Колбэк сохранения с перезапуском ботов */
+  onSaveAndRestart: () => void;
+  /** Идёт ли сохранение */
+  isSaving: boolean;
 }
 
 /**
@@ -145,7 +154,7 @@ interface JsonDirtyVariantProps {
  * @param props - Свойства варианта
  * @returns JSX элемент
  */
-function JsonDirtyVariant({ onApply, onReset, onDetails }: JsonDirtyVariantProps) {
+function JsonDirtyVariant({ onApply, onReset, onDetails, onSave, onSaveAndRestart, isSaving }: JsonDirtyVariantProps) {
   return (
     <>
       <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
@@ -164,6 +173,18 @@ function JsonDirtyVariant({ onApply, onReset, onDetails }: JsonDirtyVariantProps
       <Button size="sm" onClick={onApply}
         className="h-7 px-2.5 text-xs bg-amber-600 hover:bg-amber-700 text-white">
         <i className="fas fa-check mr-1" />Применить
+      </Button>
+      <Button size="sm" onClick={onSave} disabled={isSaving}
+        className="h-7 px-2.5 text-xs bg-violet-600 hover:bg-violet-700 text-white">
+        {isSaving
+          ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
+          : <><i className="fas fa-floppy-disk mr-1" />Сохранить</>}
+      </Button>
+      <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
+        className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
+        {isSaving
+          ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
+          : <><i className="fas fa-play mr-1" />Сохранить и перезапустить</>}
       </Button>
     </>
   );
