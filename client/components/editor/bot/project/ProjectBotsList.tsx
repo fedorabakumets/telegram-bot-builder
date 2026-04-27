@@ -2,7 +2,8 @@
  * @fileoverview Список ботов проекта
  *
  * Отображает карточки всех ботов в проекте.
- * Данные редактирования и мутации берёт из BotControlContext.
+ * Если токенов больше 3 — карточки свёрнуты по умолчанию.
+ * Принимает внешнее состояние сворачивания для синхронизации с родителем.
  *
  * @module ProjectBotsList
  */
@@ -12,9 +13,7 @@ import { useBotControl } from '../bot-control-context';
 import type { BotProject, BotToken } from '@shared/schema';
 import type { BotInfo } from '../profile/BotProfileEditor';
 
-/**
- * Свойства списка ботов проекта
- */
+/** Свойства списка ботов проекта */
 interface ProjectBotsListProps {
   /** Проект */
   project: BotProject;
@@ -22,13 +21,24 @@ interface ProjectBotsListProps {
   projectTokens: BotToken[];
   /** Информация о боте из Telegram API */
   projectBotInfo: BotInfo | undefined;
+  /** Внешнее состояние сворачивания по tokenId */
+  collapsedState?: Record<number, boolean>;
+  /** Колбэк при изменении состояния сворачивания конкретного токена */
+  onCollapseChange?: (tokenId: number, collapsed: boolean) => void;
 }
 
 /**
  * Список ботов проекта
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
-export function ProjectBotsList({ project, projectTokens, projectBotInfo }: ProjectBotsListProps) {
-  const { allBotStatuses, currentElapsedSeconds } = useBotControl();
+export function ProjectBotsList({
+  project, projectTokens, projectBotInfo, collapsedState, onCollapseChange,
+}: ProjectBotsListProps) {
+  const { allBotStatuses } = useBotControl();
+
+  /** По умолчанию сворачиваем если ботов больше 3 */
+  const defaultCollapsedFallback = projectTokens.length > 3;
 
   return (
     <div className="grid gap-4">
@@ -36,9 +46,12 @@ export function ProjectBotsList({ project, projectTokens, projectBotInfo }: Proj
         const tokenStatus = allBotStatuses.find(
           s => s.tokenId === token.id || s.instance?.tokenId === token.id,
         );
-        // Считаем бота запущенным только если статус running из API
-        // currentElapsedSeconds не используем — он не очищается на вкладках где не нажимали стоп
         const isThisTokenRunning = tokenStatus?.status === 'running';
+
+        /** Определяем defaultCollapsed: из внешнего состояния или по умолчанию */
+        const defaultCollapsed = collapsedState
+          ? (collapsedState[token.id] ?? defaultCollapsedFallback)
+          : defaultCollapsedFallback;
 
         return (
           <BotCard
@@ -47,6 +60,8 @@ export function ProjectBotsList({ project, projectTokens, projectBotInfo }: Proj
             project={project}
             projectBotInfo={projectBotInfo}
             isThisTokenRunning={isThisTokenRunning}
+            defaultCollapsed={defaultCollapsed}
+            onCollapseChange={(collapsed) => onCollapseChange?.(token.id, collapsed)}
           />
         );
       })}
