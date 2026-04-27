@@ -41,8 +41,8 @@ function createBaseConfig(isMobile: boolean, currentTab: string): SimpleLayoutCo
 
   return {
     elements: [
-      /** Шапка скрыта на десктопе — навигация перенесена в левый AppSidebar (этап 2) */
-      { id: 'header', type: 'header', name: 'Шапка', position: 'top', size: headerSize, visible: isMobile },
+      /** Шапка видима по умолчанию */
+      { id: 'header', type: 'header', name: 'Шапка', position: 'top', size: headerSize, visible: true },
       { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', position: 'left', size: 20, visible: showPanels },
       { id: 'canvas', type: 'canvas', name: 'Холст', position: 'center', size: 30, visible: showCanvas },
       { id: 'properties', type: 'properties', name: 'Свойства', position: 'right', size: 25, visible: false },

@@ -1534,8 +1534,8 @@ export default function Editor() {
     if (useFlexibleLayout) {
       return (
         <div className="flex h-screen w-full overflow-hidden">
-          {/** Левый сайдбар навигации */}
-          <AppSidebar
+          {/** Левый сайдбар навигации — временно скрыт */}
+          {/* <AppSidebar
             projectName={activeProject.name}
             botInfo={null}
             currentTab={currentTab}
@@ -1546,7 +1546,7 @@ export default function Editor() {
             onToggleCollapsed={toggleCollapsed}
             headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? false}
             onToggleHeader={handleToggleHeader}
-          />
+          /> */}
           {/** Основная рабочая область */}
           <div className="flex-1 min-w-0 overflow-hidden h-full">
         <SimpleLayoutCustomizer
