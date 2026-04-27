@@ -642,7 +642,16 @@ export default function Editor() {
     hasLocalChanges,
     actionHistory,
     onSave: () => updateProjectMutation.mutate({}),
-    onSaveAndRestart: () => updateProjectMutation.mutate({ restartOnUpdate: true }),
+    onSaveAndRestart: () => {
+      // Сохраняем проект, затем перезапускаем все боты сценария
+      updateProjectMutation.mutate({}, {
+        onSuccess: () => {
+          if (activeProject?.id) {
+            apiRequest('POST', `/api/projects/${activeProject.id}/bot/restart-all`).catch(console.error);
+          }
+        },
+      });
+    },
     onDiscard: () => {
       setHasLocalChanges(false);
       setActionHistory([]);
