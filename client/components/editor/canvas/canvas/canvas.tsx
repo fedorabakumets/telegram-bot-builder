@@ -183,12 +183,6 @@ interface CanvasProps {
   onViewChange?: (view: import('@/pages/editor/components/canvas-view-toggle').CanvasView) => void;
   /** Подавить автоматическое вписывание в экран (например при возврате с JSON) */
   suppressAutoFit?: boolean;
-  /** Скрыть содержимое холста (сетку с узлами), оставив тулбар видимым */
-  hideContent?: boolean;
-  /** Все ли блоки JSON свёрнуты (для кнопки в тулбаре) */
-  areAllCollapsed?: boolean;
-  /** Колбэк переключения сворачивания блоков JSON */
-  onToggleCollapse?: () => void;
 }
 
 export function Canvas({
@@ -238,9 +232,6 @@ export function Canvas({
   canvasView,
   onViewChange,
   suppressAutoFit,
-  hideContent,
-  areAllCollapsed,
-  onToggleCollapse,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1408,7 +1399,7 @@ export function Canvas({
 
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
-      <div ref={scrollContainerRef} className="absolute inset-x-0 overflow-auto" style={{ top: 60, bottom: 60, visibility: hideContent ? 'hidden' : undefined }}>
+      <div ref={scrollContainerRef} className="absolute inset-x-0 overflow-auto" style={{ top: 60, bottom: 60 }}>
 
         {/* Enhanced Canvas Grid */}
         <div
@@ -1520,12 +1511,10 @@ export function Canvas({
         handleUndoSelected={handleUndoSelected}
         canvasView={canvasView}
         onViewChange={onViewChange}
-        areAllCollapsed={areAllCollapsed}
-        onToggleCollapse={onToggleCollapse}
       />
 
-      {/* Компонент листов холста - фиксированная панель внизу, скрыта в JSON режиме */}
-      {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && canvasView !== 'json' && (
+      {/* Компонент листов холста - фиксированная панель внизу */}
+      {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && (
         <div data-canvas-sheets className="absolute bottom-0 left-0 right-0 z-30 pointer-events-auto">
           <CanvasSheets
             sheets={botData.sheets}
