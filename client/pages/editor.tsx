@@ -618,7 +618,7 @@ export default function Editor() {
     jsonContent,
     isDirty,
     jsonError,
-    handleViewChange,
+    handleViewChange: handleViewChangeRaw,
     handleJsonChange,
     handleApplyJson: handleApplyJsonView,
     handleApplyJsonInPlace,
@@ -627,6 +627,15 @@ export default function Editor() {
     botDataWithSheets,
     onApplyJson: handleApplyJsonToBotData,
   });
+
+  /**
+   * Обёртка над handleViewChange — при переходе в JSON разворачивает все блоки редактора
+   * @param view - Новый режим просмотра
+   */
+  const handleViewChange = useCallback((view: import('@/pages/editor/components/canvas-view-toggle').CanvasView) => {
+    if (view === 'json') setAreAllCollapsed(false);
+    handleViewChangeRaw(view);
+  }, [handleViewChangeRaw, setAreAllCollapsed]);
 
   // Универсальная панель изменений (staging bar)
   const stagingBar = useStagingBar({
