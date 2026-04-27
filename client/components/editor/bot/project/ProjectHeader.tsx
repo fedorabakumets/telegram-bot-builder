@@ -8,7 +8,7 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { ChevronsDownUp, ChevronsUpDown, RefreshCw } from 'lucide-react';
 
 /** Свойства заголовка проекта */
 interface ProjectHeaderProps {
@@ -22,6 +22,10 @@ interface ProjectHeaderProps {
   onExpandAll?: () => void;
   /** Все ли карточки свёрнуты */
   allCollapsed?: boolean;
+  /** Колбэк для перезапуска всех ботов проекта */
+  onRestartAll?: () => void;
+  /** Идёт ли перезапуск всех ботов */
+  isRestartingAll?: boolean;
 }
 
 /**
@@ -31,6 +35,7 @@ interface ProjectHeaderProps {
  */
 export function ProjectHeader({
   projectName, botsCount, onCollapseAll, onExpandAll, allCollapsed,
+  onRestartAll, isRestartingAll,
 }: ProjectHeaderProps) {
   return (
     <div className="flex items-center justify-between gap-2">
@@ -53,6 +58,19 @@ export function ProjectHeader({
               ? <><ChevronsUpDown className="w-3 h-3 mr-1" />Развернуть все</>
               : <><ChevronsDownUp className="w-3 h-3 mr-1" />Свернуть все</>
             }
+          </Button>
+        )}
+        {botsCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs text-muted-foreground"
+            onClick={onRestartAll}
+            disabled={isRestartingAll}
+            aria-label="Перезапустить всех ботов проекта"
+          >
+            <RefreshCw className={`w-3 h-3 mr-1 ${isRestartingAll ? 'animate-spin' : ''}`} />
+            {isRestartingAll ? 'Перезапуск...' : 'Перезапустить всех'}
           </Button>
         )}
       </div>

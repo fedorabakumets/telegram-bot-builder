@@ -206,6 +206,19 @@ export function useBotMutations({
     },
   });
 
+  /** Мутация перезапуска всех ботов проекта */
+  const restartAllBotsMutation = useMutation({
+    mutationFn: (pid: number) =>
+      apiRequest('POST', `/api/projects/${pid}/bot/restart-all`),
+    onSuccess: (data: { restarted: number }, pid: number) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${pid}/tokens`] });
+      toast({ title: 'Боты перезапущены', description: `Перезапущено: ${data.restarted}` });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Ошибка перезапуска', description: error.message, variant: 'destructive' });
+    },
+  });
+
   /** Мутация привязки существующего токена к новому проекту */
   const attachExistingTokenMutation = useMutation({
     mutationFn: async ({ tokenId, targetProjectId }: { tokenId: number; targetProjectId: number }) => {
@@ -244,6 +257,7 @@ export function useBotMutations({
     parseBotInfoMutation,
     updateBotInfoMutation,
     attachExistingTokenMutation,
+    restartAllBotsMutation,
     isParsingBot,
   };
 }

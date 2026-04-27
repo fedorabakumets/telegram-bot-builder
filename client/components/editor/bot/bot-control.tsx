@@ -98,6 +98,7 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
     parseBotInfoMutation,
     updateBotInfoMutation,
     attachExistingTokenMutation,
+    restartAllBotsMutation,
     isParsingBot,
   } = useBotMutations({
     projectId,
@@ -248,6 +249,7 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
       stopBotMutation,
       deleteBotMutation,
       toggleDatabaseMutation,
+      restartAllBotsMutation,
       setSelectedProject,
       setSelectedBotInfo,
       setIsProfileSheetOpen,

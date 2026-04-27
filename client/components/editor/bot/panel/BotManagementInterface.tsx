@@ -29,7 +29,7 @@ interface BotManagementInterfaceProps {
  * @returns JSX элемент
  */
 export function BotManagementInterface({ projects, allTokens }: BotManagementInterfaceProps) {
-  const { setProjectForNewBot, setShowAddBot, allBotInfos } = useBotControl();
+  const { setProjectForNewBot, setShowAddBot, allBotInfos, restartAllBotsMutation } = useBotControl();
 
   /** Состояние сворачивания карточек: tokenId → collapsed */
   const [collapsedState, setCollapsedState] = useState<Record<number, boolean>>({});
@@ -88,6 +88,8 @@ export function BotManagementInterface({ projects, allTokens }: BotManagementInt
               allCollapsed={allCollapsed}
               onCollapseAll={() => handleCollapseAll(projectTokens)}
               onExpandAll={() => handleExpandAll(projectTokens)}
+              onRestartAll={() => restartAllBotsMutation.mutate(project.id)}
+              isRestartingAll={restartAllBotsMutation.isPending}
             />
 
             {projectTokens.length === 0 ? (
