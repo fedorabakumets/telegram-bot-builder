@@ -1548,7 +1548,7 @@ export default function Editor() {
             onToggleHeader={handleToggleHeader}
           />
           {/** Основная рабочая область */}
-          <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex-1 min-w-0 overflow-hidden h-full">
         <SimpleLayoutCustomizer
           config={flexibleLayoutConfig}
           onConfigChange={setFlexibleLayoutConfig}
