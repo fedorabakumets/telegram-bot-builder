@@ -124,7 +124,7 @@ function CanvasVariant({ changesCount, isSaving, onSave, onSaveAndRestart, onDis
         className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
         {isSaving
           ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
-          : <><i className="fas fa-play mr-1" />Запустить</>}
+          : <><i className="fas fa-play mr-1" />Сохранить и перезапустить</>}
       </Button>
     </>
   );
