@@ -193,7 +193,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   };
 
   return (
-    <div className="h-screen overflow-hidden">
+    <div className="h-full overflow-hidden">
       {createSimpleLayout()}
     </div>
   );
