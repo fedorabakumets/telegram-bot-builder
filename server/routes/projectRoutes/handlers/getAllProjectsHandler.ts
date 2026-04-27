@@ -10,7 +10,6 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
 import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegram/auth-middleware";
-import { ensureDefaultProject } from "../../../utils/ensureDefaultProject";
 
 /**
  * Обрабатывает запрос на получение всех проектов
@@ -34,12 +33,6 @@ export async function getAllProjectsHandler(req: Request, res: Response): Promis
             projects = sessionId
                 ? await storage.getGuestBotProjectsBySession(sessionId)
                 : await storage.getGuestBotProjects();
-
-            // Если у гостя нет проектов — создаём дефолтный для его сессии
-            if (projects.length === 0 && sessionId) {
-                await ensureDefaultProject(sessionId);
-                projects = await storage.getGuestBotProjectsBySession(sessionId);
-            }
         }
 
         res.json(projects);
