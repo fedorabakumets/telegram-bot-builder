@@ -46,7 +46,7 @@ export function ProjectHeader({
         <span className="text-sm text-muted-foreground">
           Ботов: {botsCount}
         </span>
-        {botsCount > 1 && (
+        {botsCount > 0 && (
           <Button
             variant="ghost"
             size="sm"
