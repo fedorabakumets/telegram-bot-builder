@@ -22,7 +22,7 @@ interface StagingBarProps extends UseStagingBarResult {
  */
 export function StagingBar(props: StagingBarProps) {
   const { isVisible, variant, changesCount, onSave, onSaveAndRestart, onDiscard, isSaving,
-    onApplyJson, onResetJson, jsonError, actionHistory, mode } = props;
+    onApplyJson, onResetJson, jsonError, actionHistory, mode, hasLocalChanges, isDirty } = props;
 
   /** Открыто ли модальное окно деталей */
   const [modalOpen, setModalOpen] = useState(false);
@@ -34,8 +34,19 @@ export function StagingBar(props: StagingBarProps) {
     ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/60'
     : 'bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-700/60';
 
+  /** Показывать ли предупреждение о конфликте изменений */
+  const showConflictWarning = mode === 'json' && isDirty && hasLocalChanges;
+
   return (
     <>
+      {showConflictWarning && (
+        <div className="flex items-center justify-center gap-1.5 px-3 py-1 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-800/50 shrink-0">
+          <i className="fas fa-triangle-exclamation text-amber-500 text-xs" />
+          <span className="text-xs text-amber-700 dark:text-amber-300">
+            Есть изменения и на холсте и в JSON — при сохранении победит JSON
+          </span>
+        </div>
+      )}
       <div className={`flex items-center justify-center border-b shrink-0 py-1.5 px-3 ${barClass}`}>
         <div className="flex items-center gap-1.5">
           {variant === 'canvas' && (

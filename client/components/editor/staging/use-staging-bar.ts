@@ -62,6 +62,10 @@ export interface UseStagingBarResult {
   jsonError: string | null;
   /** Текущий режим редактора */
   mode: 'canvas' | 'json';
+  /** Есть ли несохранённые изменения на холсте (для предупреждения о конфликте) */
+  hasLocalChanges: boolean;
+  /** Есть ли несохранённые изменения в JSON (для предупреждения о конфликте) */
+  isDirty: boolean;
 }
 
 /**
@@ -124,5 +128,7 @@ export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResul
     onResetJson,
     jsonError,
     mode,
+    hasLocalChanges,
+    isDirty,
   };
 }
