@@ -183,6 +183,8 @@ interface CanvasProps {
   onViewChange?: (view: import('@/pages/editor/components/canvas-view-toggle').CanvasView) => void;
   /** Подавить автоматическое вписывание в экран (например при возврате с JSON) */
   suppressAutoFit?: boolean;
+  /** Скрыть содержимое холста (сетку с узлами), оставив тулбар видимым */
+  hideContent?: boolean;
   /** Все ли блоки JSON свёрнуты (для кнопки в тулбаре) */
   areAllCollapsed?: boolean;
   /** Колбэк переключения сворачивания блоков JSON */
@@ -236,6 +238,7 @@ export function Canvas({
   canvasView,
   onViewChange,
   suppressAutoFit,
+  hideContent,
   areAllCollapsed,
   onToggleCollapse,
 }: CanvasProps) {
@@ -1405,7 +1408,7 @@ export function Canvas({
 
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
-      <div ref={scrollContainerRef} className="absolute inset-x-0 overflow-auto" style={{ top: 60, bottom: 60 }}>
+      <div ref={scrollContainerRef} className="absolute inset-x-0 overflow-auto" style={{ top: 60, bottom: 60, visibility: hideContent ? 'hidden' : undefined }}>
 
         {/* Enhanced Canvas Grid */}
         <div

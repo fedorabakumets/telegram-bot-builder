@@ -1322,7 +1322,7 @@ export default function Editor() {
            * absolute inset-0 чтобы не влиять на высоту flex-контейнера.
            */}
           {currentTab === 'editor' && (
-            <div className={`absolute inset-0${canvasView === 'json' ? ' invisible pointer-events-none' : ''}`}>
+            <div className="absolute inset-0">
               <Canvas
                 botData={botDataWithSheets || undefined}
                 onBotDataUpdate={handleBotDataUpdate}
@@ -1365,6 +1365,7 @@ export default function Editor() {
                 onConnectionCreate={saveToHistory}
                 autoFitOnLoad
                 suppressAutoFit={canvasView === 'json'}
+                hideContent={canvasView === 'json'}
                 fitTrigger={fitTrigger}
                 focusNodeId={focusNodeId}
                 highlightNodeId={highlightNodeId}
