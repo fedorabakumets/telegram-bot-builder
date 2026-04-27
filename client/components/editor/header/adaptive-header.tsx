@@ -108,16 +108,9 @@ export function AdaptiveHeader({
   return (
     <>
       <header className={containerClasses}>
+      {/* BrandSection скрыт — логотип и название перенесены в левый AppSidebar (этап 2) */}
       <div className="flex items-center gap-1 sm:gap-2 md:gap-1.5 md:order-first flex-shrink-0">
-        <BrandSection
-          projectName={projectName}
-          botInfo={botInfo}
-          isVertical={isVertical}
-          isCompact={isCompact}
-          isMobile={isMobile}
-        />
-        <Separator />
-        {/* Мобильные кнопки компонентов и свойств после разделителя */}
+        {/* Мобильные кнопки компонентов и свойств */}
         {isMobile && !isVertical && (
           <MobileHeaderControls
             onOpenMobileSidebar={onOpenMobileSidebar}
