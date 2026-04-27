@@ -1259,22 +1259,20 @@ export default function Editor() {
             // Режим JSON: показываем Monaco Editor с JSON сценария
             <div className="h-full flex flex-col">
               {/* Тулбар JSON-режима с переключателем и кнопками */}
-              <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 border-b border-slate-200/50 dark:border-slate-600/50 shrink-0">
+              <div className="flex items-center justify-end gap-2 px-4 py-2 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 border-b border-slate-200/50 dark:border-slate-600/50 shrink-0">
+                <button
+                  onClick={() => handleViewChange('canvas')}
+                  className="px-3 py-1.5 text-xs rounded-md border bg-background hover:bg-muted transition-colors"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={handleApplyJsonView}
+                  className="px-3 py-1.5 text-xs rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  Применить
+                </button>
                 <CanvasViewToggle value={canvasView} onChange={handleViewChange} />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleViewChange('canvas')}
-                    className="px-3 py-1.5 text-xs rounded-md border bg-background hover:bg-muted transition-colors"
-                  >
-                    Отмена
-                  </button>
-                  <button
-                    onClick={handleApplyJsonView}
-                    className="px-3 py-1.5 text-xs rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                  >
-                    Применить
-                  </button>
-                </div>
               </div>
               <div className="flex-1 min-h-0 p-2">
                 <CodeEditorArea
