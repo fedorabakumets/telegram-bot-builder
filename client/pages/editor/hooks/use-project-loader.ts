@@ -10,6 +10,7 @@ import { useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BotProject } from '@shared/schema';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { isTelegramUser } from '@/types/telegram-user';
 import { apiRequest } from '@/queryClient';
 
 /** Параметры хука загрузки проекта */
@@ -81,9 +82,11 @@ const DEFAULT_PROJECT_DATA = {
 export function useProjectLoader({
   projectId
 }: UseProjectLoaderOptions): UseProjectLoaderResult {
-  const { sessionReady } = useTelegramAuth();
+  const { sessionReady, user } = useTelegramAuth();
   const queryClient = useQueryClient();
   const isCreatingRef = useRef(false);
+  /** Авторизованный пользователь — не создаём проект автоматически, у него должны быть свои */
+  const isAuthenticated = user !== null && isTelegramUser(user);
 
   // Загрузка проекта по ID из URL
   const { data: currentProject, isError: projectNotFound } = useQuery<BotProject>({
@@ -99,13 +102,14 @@ export function useProjectLoader({
     staleTime: 30000,
   });
 
-  // Автосоздание дефолтного проекта если список пустой
+  // Автосоздание дефолтного проекта если список пустой (только для гостей)
   useEffect(() => {
     if (!sessionReady) return;
     if (projectId) return;
     if (projectsList === undefined) return; // ещё грузится
     if (projectsList.length > 0) return;    // проекты есть
     if (isCreatingRef.current) return;      // уже создаём
+    if (isAuthenticated) return;            // авторизованный — не создаём автоматически
 
     isCreatingRef.current = true;
     apiRequest('POST', '/api/projects', {
