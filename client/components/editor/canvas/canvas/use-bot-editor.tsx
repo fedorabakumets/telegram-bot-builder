@@ -109,6 +109,28 @@ export function useBotEditor(initialData?: BotData) {
   }, [history]);
 
   /**
+   * Откатывает состояние на N шагов назад в истории
+   * Используется для сброса всех несохранённых изменений
+   * @param steps - Количество шагов для отката (по умолчанию 1)
+   */
+  const undoSteps = useCallback((steps: number) => {
+    const currentIndex = historyIndexRef.current;
+    const targetIndex = Math.max(0, currentIndex - steps);
+    const targetState = history[targetIndex];
+    if (!targetState) return;
+
+    isRedoUndoActionRef.current = true;
+    historyIndexRef.current = targetIndex;
+    setHistoryIndex(targetIndex);
+    setSelectedNodeId(null);
+    setNodes(targetState.nodes);
+
+    setTimeout(() => {
+      isRedoUndoActionRef.current = false;
+    }, 100);
+  }, [history]);
+
+  /**
    * Повторяет отмененное действие, переходя к следующему состоянию в истории
    */
   const redo = useCallback(() => {
@@ -596,6 +618,7 @@ export function useBotEditor(initialData?: BotData) {
     hasClipboardData,
     isNodeBeingDragged,
     setIsNodeBeingDragged,
-    saveToHistory
+    saveToHistory,
+    undoSteps,
   };
 }

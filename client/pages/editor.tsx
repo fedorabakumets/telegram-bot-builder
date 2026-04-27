@@ -511,7 +511,8 @@ export default function Editor() {
     hasClipboardData,
     isNodeBeingDragged,
     setIsNodeBeingDragged,
-    saveToHistory
+    saveToHistory,
+    undoSteps,
   } = useBotEditor();
 
   // Вычисляем selectedNode из selectedNodeId и nodes
@@ -653,6 +654,10 @@ export default function Editor() {
       });
     },
     onDiscard: () => {
+      // Откатываем все несохранённые изменения на холсте
+      if (actionHistory.length > 0) {
+        undoSteps(actionHistory.length);
+      }
       setHasLocalChanges(false);
       setActionHistory([]);
     },
