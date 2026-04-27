@@ -177,6 +177,10 @@ interface CanvasProps {
   onMoveNodeToSheet?: (nodeId: string, sheetId: string) => void;
   /** Колбэк для авто-расстановки узлов */
   onAutoLayout?: () => void;
+  /** Текущий режим просмотра холста (Холст / JSON) */
+  canvasView?: import('@/pages/editor/components/canvas-view-toggle').CanvasView;
+  /** Колбэк смены режима просмотра */
+  onViewChange?: (view: import('@/pages/editor/components/canvas-view-toggle').CanvasView) => void;
 }
 
 export function Canvas({
@@ -223,6 +227,8 @@ export function Canvas({
   highlightNodeId,
   onMoveNodeToSheet,
   onAutoLayout,
+  canvasView,
+  onViewChange,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1493,6 +1499,8 @@ export function Canvas({
         toggleActionSelection={toggleActionSelection}
         selectedActionsForUndo={selectedActionsForUndo}
         handleUndoSelected={handleUndoSelected}
+        canvasView={canvasView}
+        onViewChange={onViewChange}
       />
 
       {/* Компонент листов холста - фиксированная панель внизу */}

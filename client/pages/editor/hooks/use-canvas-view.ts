@@ -3,20 +3,16 @@
  * @module UseCanvasView
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import type { CanvasView } from '../components/canvas-view-toggle';
-import type { CodeFormat } from '@/components/editor/code/hooks';
+import type { BotDataWithSheets } from '@shared/schema';
 
 /** Параметры хука useCanvasView */
 interface UseCanvasViewOptions {
-  /** Функция загрузки контента по формату */
-  loadContent: (format: CodeFormat) => Promise<void>;
+  /** Данные бота с листами для сериализации в JSON */
+  botDataWithSheets: BotDataWithSheets | null;
   /** Применить JSON к данным бота */
   onApplyJson: (json: string) => void;
-  /** Ref на Monaco Editor */
-  editorRef: React.MutableRefObject<any>;
-  /** Флаг сброса редактора (игнорировать onChange) */
-  isResettingEditorRef: React.MutableRefObject<boolean>;
 }
 
 /** Результат хука useCanvasView */
@@ -39,61 +35,45 @@ export interface UseCanvasViewResult {
  * @returns Объект с состоянием и обработчиками
  */
 export function useCanvasView({
-  loadContent,
+  botDataWithSheets,
   onApplyJson,
-  editorRef,
-  isResettingEditorRef,
 }: UseCanvasViewOptions): UseCanvasViewResult {
   /** Текущий режим просмотра */
   const [canvasView, setCanvasView] = useState<CanvasView>('canvas');
   /** Редактируемый JSON контент */
   const [jsonContent, setJsonContent] = useState('');
-  /** Флаг что JSON был изменён пользователем */
-  const isDirtyRef = useRef(false);
-
-  /** При переключении на JSON — загружаем контент */
-  useEffect(() => {
-    if (canvasView === 'json') {
-      loadContent('json');
-    }
-  }, [canvasView, loadContent]);
 
   /**
-   * Обрабатывает смену режима просмотра
+   * Обрабатывает смену режима просмотра.
+   * При переключении на JSON — сериализует botDataWithSheets напрямую.
    * @param view - Новый режим
    */
   const handleViewChange = useCallback((view: CanvasView) => {
-    if (view === 'canvas' && isDirtyRef.current && jsonContent) {
-      // При возврате на холст применяем изменения если они есть
-      onApplyJson(jsonContent);
-    }
-    if (view === 'canvas') {
-      isDirtyRef.current = false;
+    if (view === 'json') {
+      const serialized = JSON.stringify(botDataWithSheets, null, 2);
+      setJsonContent(serialized);
+    } else {
       setJsonContent('');
     }
     setCanvasView(view);
-  }, [jsonContent, onApplyJson]);
+  }, [botDataWithSheets]);
 
   /**
    * Обрабатывает изменение JSON в Monaco Editor
    * @param value - Новое значение
    */
   const handleJsonChange = useCallback((value: string) => {
-    if (isResettingEditorRef.current) return;
-    isDirtyRef.current = true;
     setJsonContent(value);
-  }, [isResettingEditorRef]);
+  }, []);
 
   /**
    * Применяет JSON и возвращается на холст
    */
   const handleApplyJson = useCallback(() => {
-    const val = jsonContent || editorRef.current?.getValue() || '';
-    if (val) onApplyJson(val);
-    isDirtyRef.current = false;
+    if (jsonContent) onApplyJson(jsonContent);
     setJsonContent('');
     setCanvasView('canvas');
-  }, [jsonContent, editorRef, onApplyJson]);
+  }, [jsonContent, onApplyJson]);
 
   return { canvasView, jsonContent, handleViewChange, handleJsonChange, handleApplyJson };
 }

@@ -14,6 +14,8 @@ import { ClipboardButtons } from './clipboard-buttons';
 import { InterfaceToggles } from './interface-toggles';
 import { KeyboardShortcutsHelp } from './keyboard-shortcuts-help';
 import { Action } from './canvas';
+import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
+import type { CanvasView } from '@/pages/editor/components/canvas-view-toggle';
 
 /**
  * РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р° РїР°РЅРµР»Рё РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ
@@ -85,8 +87,12 @@ interface CanvasToolbarProps {
   toggleActionSelection: (actionId: string) => void;
   /** Р’С‹Р±СЂР°РЅРЅС‹Рµ РґРµР№СЃС‚РІРёСЏ РґР»СЏ РѕС‚РјРµРЅС‹ */
   selectedActionsForUndo: Set<string>;
-  /** РљРѕР»Р±СЌРє РѕС‚РјРµРЅС‹ РІС‹Р±СЂР°РЅРЅС‹С… РґРµР№СЃС‚РІРёР№ */
+  /** Колбэк отмены выбранных действий */
   handleUndoSelected: () => void;
+  /** Текущий режим просмотра холста */
+  canvasView?: CanvasView;
+  /** Колбэк смены режима просмотра */
+  onViewChange?: (view: CanvasView) => void;
 }
 
 /**
@@ -129,7 +135,9 @@ export function CanvasToolbar({
   handleMouseOverAction,
   toggleActionSelection,
   selectedActionsForUndo,
-  handleUndoSelected
+  handleUndoSelected,
+  canvasView,
+  onViewChange,
 }: CanvasToolbarProps) {
   return (
     <div data-canvas-toolbar className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{ left: 0, right: 0 }}>
@@ -199,8 +207,15 @@ export function CanvasToolbar({
             )}
           </div>
 
-          {/* РЎРїСЂР°РІРєР° */}
+          {/* Справка */}
           <KeyboardShortcutsHelp />
+
+          {/* Переключатель Холст / JSON */}
+          {onViewChange && (
+            <div className="ml-auto flex-shrink-0">
+              <CanvasViewToggle value={canvasView ?? 'canvas'} onChange={onViewChange} />
+            </div>
+          )}
         </div>
       </div>
     </div>
