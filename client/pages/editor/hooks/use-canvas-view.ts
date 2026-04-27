@@ -3,7 +3,7 @@
  * @module UseCanvasView
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { CanvasView } from '../components/canvas-view-toggle';
 import type { BotDataWithSheets } from '@shared/schema';
 
@@ -21,6 +21,10 @@ export interface UseCanvasViewResult {
   canvasView: CanvasView;
   /** Редактируемый JSON контент */
   jsonContent: string;
+  /** Флаг наличия несохранённых изменений */
+  isDirty: boolean;
+  /** Ошибка валидации JSON или null */
+  jsonError: string | null;
   /** Обработчик смены режима */
   handleViewChange: (view: CanvasView) => void;
   /** Обработчик изменения JSON в редакторе */
@@ -42,10 +46,32 @@ export function useCanvasView({
   const [canvasView, setCanvasView] = useState<CanvasView>('canvas');
   /** Редактируемый JSON контент */
   const [jsonContent, setJsonContent] = useState('');
+  /** Флаг наличия несохранённых изменений пользователя */
+  const [isDirty, setIsDirty] = useState(false);
+  /** Ошибка валидации JSON */
+  const [jsonError, setJsonError] = useState<string | null>(null);
+
+  /**
+   * Эффект валидации JSON при каждом изменении содержимого редактора.
+   * Устанавливает jsonError если JSON невалиден.
+   */
+  useEffect(() => {
+    if (!jsonContent) {
+      setJsonError(null);
+      return;
+    }
+    try {
+      JSON.parse(jsonContent);
+      setJsonError(null);
+    } catch (e) {
+      setJsonError(e instanceof Error ? e.message : 'Невалидный JSON');
+    }
+  }, [jsonContent]);
 
   /**
    * Обрабатывает смену режима просмотра.
    * При переключении на JSON — сериализует botDataWithSheets напрямую.
+   * При возврате на холст — сбрасывает isDirty и jsonError.
    * @param view - Новый режим
    */
   const handleViewChange = useCallback((view: CanvasView) => {
@@ -54,26 +80,34 @@ export function useCanvasView({
       setJsonContent(serialized);
     } else {
       setJsonContent('');
+      setIsDirty(false);
+      setJsonError(null);
     }
     setCanvasView(view);
   }, [botDataWithSheets]);
 
   /**
-   * Обрабатывает изменение JSON в Monaco Editor
+   * Обрабатывает изменение JSON в Monaco Editor.
+   * Устанавливает флаг isDirty при первом изменении.
    * @param value - Новое значение
    */
   const handleJsonChange = useCallback((value: string) => {
     setJsonContent(value);
+    setIsDirty(true);
   }, []);
 
   /**
-   * Применяет JSON и возвращается на холст
+   * Применяет JSON и возвращается на холст.
+   * Не применяет если есть ошибка валидации.
    */
   const handleApplyJson = useCallback(() => {
+    if (jsonError) return;
     if (jsonContent) onApplyJson(jsonContent);
     setJsonContent('');
+    setIsDirty(false);
+    setJsonError(null);
     setCanvasView('canvas');
-  }, [jsonContent, onApplyJson]);
+  }, [jsonContent, jsonError, onApplyJson]);
 
-  return { canvasView, jsonContent, handleViewChange, handleJsonChange, handleApplyJson };
+  return { canvasView, jsonContent, isDirty, jsonError, handleViewChange, handleJsonChange, handleApplyJson };
 }
