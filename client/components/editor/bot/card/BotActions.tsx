@@ -16,7 +16,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import { Edit2, Play, Square, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Play, Square, MoreHorizontal, Trash2 } from 'lucide-react';
 
 interface BotActionsProps {
   /** Запущен ли бот */
@@ -66,25 +66,8 @@ export function BotActions({
   const isStoppingThisBot = stopBotMutation.variables?.tokenId === tokenId;
   const isDeletingThisBot = deleteBotMutation.variables === tokenId;
 
-  const editLabel = isProfileLoading
-    ? 'Загрузка информации о боте...'
-    : 'Редактировать профиль бота';
-
   return (
     <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-9 w-9 sm:h-8 sm:w-8 p-0"
-        onClick={onEditProfile}
-        disabled={isProfileLoading}
-        title={editLabel}
-        aria-label={editLabel}
-        data-testid="button-edit-bot-profile"
-      >
-        <Edit2 className="h-4 w-4" />
-      </Button>
-
       {!isBotRunning ? (
         <Button
           size="sm"
