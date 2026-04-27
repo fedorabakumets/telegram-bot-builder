@@ -73,8 +73,7 @@ const DEFAULT_PROJECT_DATA = {
 
 /**
  * Хук для загрузки данных проекта.
- * Запросы к API делаются сразу — инвалидация кеша после авторизации
- * гарантирует свежие данные с правильным owner_id.
+ * Ждёт готовности серверной сессии перед запросом проектов.
  * Автосоздание проекта работает только для авторизованных пользователей.
  *
  * @param options - Параметры загрузки
@@ -83,23 +82,23 @@ const DEFAULT_PROJECT_DATA = {
 export function useProjectLoader({
   projectId
 }: UseProjectLoaderOptions): UseProjectLoaderResult {
-  const { user } = useTelegramAuth();
+  const { user, sessionReady } = useTelegramAuth();
   const queryClient = useQueryClient();
   const isCreatingRef = useRef(false);
   /** Авторизованный пользователь — только им создаём проект автоматически */
   const isAuthenticated = user !== null && isTelegramUser(user);
 
-  // Загрузка проекта по ID из URL
+  // Загрузка проекта по ID из URL — ждём сессии
   const { data: currentProject, isError: projectNotFound } = useQuery<BotProject>({
     queryKey: [`/api/projects/${projectId}`],
-    enabled: !!projectId,
+    enabled: !!projectId && sessionReady,
     staleTime: 30000,
   });
 
-  // Загрузка списка проектов если нет ID в URL
+  // Загрузка списка проектов — ждём готовности серверной сессии
   const { data: projectsList, isFetching: isProjectsListFetching } = useQuery<Array<Omit<BotProject, 'data'>>>({
     queryKey: ['/api/projects/list'],
-    enabled: !projectId,
+    enabled: !projectId && sessionReady,
     staleTime: 30000,
   });
 
@@ -136,7 +135,7 @@ export function useProjectLoader({
   // Загрузка первого проекта если нет ID в URL
   const { data: firstProject } = useQuery<BotProject>({
     queryKey: [`/api/projects/${effectiveProjectId}`],
-    enabled: !projectId && !!effectiveProjectId,
+    enabled: !projectId && !!effectiveProjectId && sessionReady,
     staleTime: 30000,
   });
 
