@@ -3,8 +3,8 @@
  * @module CanvasViewToggle
  */
 
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Braces, PenLine } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 /** Возможные режимы отображения редактора */
 export type CanvasView = 'canvas' | 'json';
@@ -25,27 +25,34 @@ interface CanvasViewToggleProps {
 export function CanvasViewToggle({ value, onChange }: CanvasViewToggleProps) {
   return (
     <div className="flex items-center justify-center px-3 py-1.5 border-b bg-background/80 backdrop-blur-sm">
-      <ToggleGroup
-        type="single"
-        value={value}
-        onValueChange={(v) => { if (v) onChange(v as CanvasView); }}
-        className="h-7 rounded-md border bg-muted p-0.5 gap-0"
-      >
-        <ToggleGroupItem
-          value="canvas"
-          className="h-6 px-3 text-xs rounded-sm data-[state=on]:bg-background data-[state=on]:shadow-sm gap-1.5"
+      <div className="flex h-7 rounded-md border bg-muted p-0.5 gap-0">
+        <button
+          type="button"
+          onClick={() => onChange('canvas')}
+          className={cn(
+            'flex items-center gap-1.5 h-6 px-3 text-xs rounded-sm transition-all',
+            value === 'canvas'
+              ? 'bg-background shadow-sm text-foreground'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
         >
           <PenLine className="h-3 w-3" />
           Холст
-        </ToggleGroupItem>
-        <ToggleGroupItem
-          value="json"
-          className="h-6 px-3 text-xs rounded-sm data-[state=on]:bg-background data-[state=on]:shadow-sm gap-1.5"
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange('json')}
+          className={cn(
+            'flex items-center gap-1.5 h-6 px-3 text-xs rounded-sm transition-all',
+            value === 'json'
+              ? 'bg-background shadow-sm text-foreground'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
         >
           <Braces className="h-3 w-3" />
           JSON
-        </ToggleGroupItem>
-      </ToggleGroup>
+        </button>
+      </div>
     </div>
   );
 }
