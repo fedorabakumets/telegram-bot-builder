@@ -1,8 +1,9 @@
 /**
- * @fileoverview РљРѕРјРїРѕРЅРµРЅС‚ РїР°РЅРµР»Рё РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ С…РѕР»СЃС‚Р°
+ * @fileoverview Компонент панели инструментов холста
  *
- * РЎРѕРґРµСЂР¶РёС‚ РІРµСЂС…РЅСЋСЋ РїР°РЅРµР»СЊ СЃ РєРЅРѕРїРєР°РјРё СѓРїСЂР°РІР»РµРЅРёСЏ РјР°СЃС€С‚Р°Р±РѕРј,
- * РѕС‚РјРµРЅС‹/РїРѕРІС‚РѕСЂР°, РёСЃС‚РѕСЂРёРё РґРµР№СЃС‚РІРёР№ Рё РґСЂСѓРіРёРјРё РёРЅСЃС‚СЂСѓРјРµРЅС‚Р°РјРё.
+ * Содержит верхнюю панель с кнопками управления масштабом,
+ * отмены/повтора, истории действий и другими инструментами.
+ * В JSON-режиме скрывает инструменты холста, оставляя только переключатель.
  */
 
 import { ZoomControls } from './zoom-controls';
@@ -17,75 +18,73 @@ import { Action } from './canvas';
 import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
 import type { CanvasView } from '@/pages/editor/components/canvas-view-toggle';
 
-/**
- * РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р° РїР°РЅРµР»Рё РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ
- */
+/** Свойства компонента панели инструментов */
 interface CanvasToolbarProps {
-  /** РњР°СЃСЃРёРІ СѓР·Р»РѕРІ РЅР° С…РѕР»СЃС‚Рµ */
+  /** Массив узлов на холсте */
   nodes: any[];
-  /** РўРµРєСѓС‰РёР№ РјР°СЃС€С‚Р°Р± РІ РїСЂРѕС†РµРЅС‚Р°С… */
+  /** Текущий масштаб в процентах */
   zoom: number;
-  /** РСЃС‚РѕСЂРёСЏ РґРµР№СЃС‚РІРёР№ */
+  /** История действий */
   actionHistory: Action[];
-  /** Р”РѕСЃС‚СѓРїРЅРѕСЃС‚СЊ РѕС‚РјРµРЅС‹ РґРµР№СЃС‚РІРёСЏ */
+  /** Доступность отмены действия */
   canUndo?: boolean;
-  /** Р”РѕСЃС‚СѓРїРЅРѕСЃС‚СЊ РїРѕРІС‚РѕСЂР° РґРµР№СЃС‚РІРёСЏ */
+  /** Доступность повтора действия */
   canRedo?: boolean;
-  /** Р¤Р»Р°Рі РїСЂРѕС†РµСЃСЃР° СЃРѕС…СЂР°РЅРµРЅРёСЏ */
+  /** Флаг процесса сохранения */
   isSaving?: boolean;
-  /** РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РІС‹Р±СЂР°РЅРЅРѕРіРѕ СѓР·Р»Р° */
+  /** Идентификатор выбранного узла */
   selectedNodeId: string | null;
-  /** РќР°Р»РёС‡РёРµ РґР°РЅРЅС‹С… РІ Р±СѓС„РµСЂРµ РѕР±РјРµРЅР° */
+  /** Наличие данных в буфере обмена */
   hasClipboardData?: boolean;
-  /** Р’РёРґРёРјРѕСЃС‚СЊ Р·Р°РіРѕР»РѕРІРєР° */
+  /** Видимость заголовка */
   headerVisible?: boolean;
-  /** Р’РёРґРёРјРѕСЃС‚СЊ Р±РѕРєРѕРІРѕР№ РїР°РЅРµР»Рё */
+  /** Видимость боковой панели */
   sidebarVisible?: boolean;
-  /** Р’РёРґРёРјРѕСЃС‚СЊ С…РѕР»СЃС‚Р° */
+  /** Видимость холста */
   canvasVisible?: boolean;
-  /** Р’РёРґРёРјРѕСЃС‚СЊ РїР°РЅРµР»Рё СЃРІРѕР№СЃС‚РІ */
+  /** Видимость панели свойств */
   propertiesVisible?: boolean;
-  /** РљРѕР»Р±СЌРє СѓРјРµРЅСЊС€РµРЅРёСЏ РјР°СЃС€С‚Р°Р±Р° */
+  /** Колбэк уменьшения масштаба */
   onZoomOut: () => void;
-  /** РљРѕР»Р±СЌРє СѓРІРµР»РёС‡РµРЅРёСЏ РјР°СЃС€С‚Р°Р±Р° */
+  /** Колбэк увеличения масштаба */
   onZoomIn: () => void;
-  /** РљРѕР»Р±СЌРє СЃР±СЂРѕСЃР° РјР°СЃС€С‚Р°Р±Р° */
+  /** Колбэк сброса масштаба */
   onResetZoom: () => void;
-  /** РљРѕР»Р±СЌРє СѓРјРµСЃС‚РёС‚СЊ РІСЃС‘ */
+  /** Колбэк уместить всё */
   onFitToContent: () => void;
-  /** РљРѕР»Р±СЌРє СѓСЃС‚Р°РЅРѕРІРєРё СѓСЂРѕРІРЅСЏ РјР°СЃС€С‚Р°Р±Р° */
+  /** Колбэк установки уровня масштаба */
   onZoomLevelChange: (level: number) => void;
-  /** РљРѕР»Р±СЌРє РѕС‚РјРµРЅС‹ РґРµР№СЃС‚РІРёСЏ */
+  /** Колбэк отмены действия */
   onUndo?: () => void;
-  /** РљРѕР»Р±СЌРє РїРѕРІС‚РѕСЂР° РґРµР№СЃС‚РІРёСЏ */
+  /** Колбэк повтора действия */
   onRedo?: () => void;
-  /** РљРѕР»Р±СЌРє РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ */
+  /** Колбэк для сохранения */
   onSave?: () => void;
   /** Колбэк для авто-расстановки узлов */
   onAutoLayout?: () => void;
-  /** РљРѕР»Р±СЌРє РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ РІ Р±СѓС„РµСЂ РѕР±РјРµРЅР° */
+  /** Колбэк для копирования в буфер обмена */
   onCopyToClipboard?: (nodeIds: string[]) => void;
-  /** РљРѕР»Р±СЌРє РґР»СЏ РІСЃС‚Р°РІРєРё РёР· Р±СѓС„РµСЂР° РѕР±РјРµРЅР° */
+  /** Колбэк для вставки из буфера обмена */
   onPasteFromClipboard?: (offsetX?: number, offsetY?: number) => void;
-  /** РџРѕР·РёС†РёСЏ РїРѕСЃР»РµРґРЅРµРіРѕ РєР»РёРєР° РґР»СЏ РІСЃС‚Р°РІРєРё */
+  /** Позиция последнего клика для вставки */
   lastClickPosition?: { x: number; y: number };
-  /** Transform РїРѕСЃР»РµРґРЅРµРіРѕ РєР»РёРєР° (pan Рё zoom) */
+  /** Transform последнего клика (pan и zoom) */
   clickTransform?: { pan: { x: number; y: number }; zoom: number };
-  /** РљРѕР»Р±СЌРє РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РІРёРґРёРјРѕСЃС‚Рё Р·Р°РіРѕР»РѕРІРєР° */
+  /** Колбэк переключения видимости заголовка */
   onToggleHeader?: () => void;
-  /** РљРѕР»Р±СЌРє РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РІРёРґРёРјРѕСЃС‚Рё Р±РѕРєРѕРІРѕР№ РїР°РЅРµР»Рё */
+  /** Колбэк переключения видимости боковой панели */
   onToggleSidebar?: () => void;
-  /** РљРѕР»Р±СЌРє РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РІРёРґРёРјРѕСЃС‚Рё С…РѕР»СЃС‚Р° */
+  /** Колбэк переключения видимости холста */
   onToggleCanvas?: () => void;
-  /** РљРѕР»Р±СЌРє РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РІРёРґРёРјРѕСЃС‚Рё РїР°РЅРµР»Рё СЃРІРѕР№СЃС‚РІ */
+  /** Колбэк переключения видимости панели свойств */
   onToggleProperties?: () => void;
-  /** РљРѕР»Р±СЌРє РЅР°С‡Р°Р»Р° РІС‹РґРµР»РµРЅРёСЏ РґРµР№СЃС‚РІРёСЏ */
+  /** Колбэк начала выделения действия */
   handleMouseDownAction: (index: number) => void;
-  /** РљРѕР»Р±СЌРє РІС‹РґРµР»РµРЅРёСЏ РґРёР°РїР°Р·РѕРЅР° РґРµР№СЃС‚РІРёР№ */
+  /** Колбэк выделения диапазона действий */
   handleMouseOverAction: (index: number) => void;
-  /** РљРѕР»Р±СЌРє РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ РІС‹Р±РѕСЂР° РґРµР№СЃС‚РІРёСЏ */
+  /** Колбэк переключения выбора действия */
   toggleActionSelection: (actionId: string) => void;
-  /** Р’С‹Р±СЂР°РЅРЅС‹Рµ РґРµР№СЃС‚РІРёСЏ РґР»СЏ РѕС‚РјРµРЅС‹ */
+  /** Выбранные действия для отмены */
   selectedActionsForUndo: Set<string>;
   /** Колбэк отмены выбранных действий */
   handleUndoSelected: () => void;
@@ -100,10 +99,10 @@ interface CanvasToolbarProps {
 }
 
 /**
- * РљРѕРјРїРѕРЅРµРЅС‚ РїР°РЅРµР»Рё РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ С…РѕР»СЃС‚Р°
- *
- * @param props - РЎРІРѕР№СЃС‚РІР° РєРѕРјРїРѕРЅРµРЅС‚Р°
- * @returns JSX СЌР»РµРјРµРЅС‚ РїР°РЅРµР»Рё РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ
+ * Компонент панели инструментов холста
+ * В JSON-режиме показывает только переключатель и кнопку fold/unfold
+ * @param props - Свойства компонента
+ * @returns JSX элемент панели инструментов
  */
 export function CanvasToolbar({
   nodes,
@@ -145,82 +144,74 @@ export function CanvasToolbar({
   areAllCollapsed,
   onToggleCollapse,
 }: CanvasToolbarProps) {
+  const isJson = canvasView === 'json';
+
   return (
     <div data-canvas-toolbar className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{ left: 0, right: 0 }}>
       <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20 pointer-events-auto">
         <div className="flex items-center canvas-controls overflow-x-auto w-full gap-2 text-sm">
-          <div className="flex items-center flex-shrink-0 gap-2">
-            {/* РљРЅРѕРїРєРё РјР°СЃС€С‚Р°Р±Р° */}
-            <ZoomControls
-              zoom={zoom}
-              canZoomOut={zoom > 1}
-              canZoomIn={zoom < 200}
-              canFitToContent={nodes.length > 0}
-              onZoomOut={onZoomOut}
-              onZoomIn={onZoomIn}
-              onResetZoom={onResetZoom}
-              onFitToContent={onFitToContent}
-              onZoomLevelChange={onZoomLevelChange}
-            />
 
-            {/* РљРЅРѕРїРєРё РѕС‚РјРµРЅС‹/РїРѕРІС‚РѕСЂР° */}
-            <UndoRedoButtons
-              canUndo={canUndo ?? actionHistory.length > 0}
-              canRedo={canRedo}
-              onUndo={onUndo}
-              onRedo={onRedo}
-            />
-
-            {/* РСЃС‚РѕСЂРёСЏ РґРµР№СЃС‚РІРёР№ */}
-            <ActionHistory
-              actionHistory={actionHistory}
-              handleMouseDownAction={handleMouseDownAction}
-              handleMouseOverAction={handleMouseOverAction}
-              toggleActionSelection={toggleActionSelection}
-              selectedActionsForUndo={selectedActionsForUndo}
-              handleUndoSelected={handleUndoSelected}
-            />
-
-            <SaveButton onSave={onSave} isSaving={isSaving} />
-
-            <AutoLayoutButton onAutoLayout={onAutoLayout} />
-
-            {/* РњРµР¶РїСЂРѕРµРєС‚РЅРѕРµ РєРѕРїРёСЂРѕРІР°РЅРёРµ/РІСЃС‚Р°РІРєР° */}
-            <ClipboardButtons
-              onCopyToClipboard={onCopyToClipboard}
-              onPasteFromClipboard={onPasteFromClipboard}
-              lastClickPosition={lastClickPosition}
-              clickTransform={clickTransform}
-              selectedNodeId={selectedNodeId}
-              hasClipboardData={hasClipboardData}
-            />
-
-            {/* Р Р°Р·РґРµР»РёС‚РµР»СЊ */}
-            <div className="h-6 w-px bg-slate-300/50 dark:bg-slate-600/50" />
-
-            {/* РљРЅРѕРїРєРё СѓРїСЂР°РІР»РµРЅРёСЏ РёРЅС‚РµСЂС„РµР№СЃРѕРј */}
-            {headerVisible === false && (onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
-              <InterfaceToggles
-                headerVisible={headerVisible}
-                sidebarVisible={sidebarVisible}
-                canvasVisible={canvasVisible}
-                propertiesVisible={propertiesVisible}
-                onToggleHeader={onToggleHeader}
-                onToggleSidebar={onToggleSidebar}
-                onToggleCanvas={onToggleCanvas}
-                onToggleProperties={onToggleProperties}
+          {/* Инструменты холста — скрыты в JSON-режиме */}
+          {!isJson && (
+            <div className="flex items-center flex-shrink-0 gap-2">
+              <ZoomControls
+                zoom={zoom}
+                canZoomOut={zoom > 1}
+                canZoomIn={zoom < 200}
+                canFitToContent={nodes.length > 0}
+                onZoomOut={onZoomOut}
+                onZoomIn={onZoomIn}
+                onResetZoom={onResetZoom}
+                onFitToContent={onFitToContent}
+                onZoomLevelChange={onZoomLevelChange}
               />
-            )}
-          </div>
+              <UndoRedoButtons
+                canUndo={canUndo ?? actionHistory.length > 0}
+                canRedo={canRedo}
+                onUndo={onUndo}
+                onRedo={onRedo}
+              />
+              <ActionHistory
+                actionHistory={actionHistory}
+                handleMouseDownAction={handleMouseDownAction}
+                handleMouseOverAction={handleMouseOverAction}
+                toggleActionSelection={toggleActionSelection}
+                selectedActionsForUndo={selectedActionsForUndo}
+                handleUndoSelected={handleUndoSelected}
+              />
+              <SaveButton onSave={onSave} isSaving={isSaving} />
+              <AutoLayoutButton onAutoLayout={onAutoLayout} />
+              <ClipboardButtons
+                onCopyToClipboard={onCopyToClipboard}
+                onPasteFromClipboard={onPasteFromClipboard}
+                lastClickPosition={lastClickPosition}
+                clickTransform={clickTransform}
+                selectedNodeId={selectedNodeId}
+                hasClipboardData={hasClipboardData}
+              />
+              <div className="h-6 w-px bg-slate-300/50 dark:bg-slate-600/50" />
+              {headerVisible === false && (onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
+                <InterfaceToggles
+                  headerVisible={headerVisible}
+                  sidebarVisible={sidebarVisible}
+                  canvasVisible={canvasVisible}
+                  propertiesVisible={propertiesVisible}
+                  onToggleHeader={onToggleHeader}
+                  onToggleSidebar={onToggleSidebar}
+                  onToggleCanvas={onToggleCanvas}
+                  onToggleProperties={onToggleProperties}
+                />
+              )}
+            </div>
+          )}
 
-          {/* Справка */}
-          <KeyboardShortcutsHelp />
+          {/* Справка — скрыта в JSON-режиме */}
+          {!isJson && <KeyboardShortcutsHelp />}
 
-          {/* Переключатель Холст / JSON */}
+          {/* Переключатель Холст / JSON + fold/unfold */}
           {onViewChange && (
-            <div className="ml-auto flex-shrink-0 flex items-center gap-2">
-              {/* Кнопка fold/unfold — только в JSON-режиме */}
-              {canvasView === 'json' && onToggleCollapse && (
+            <div className={`flex-shrink-0 flex items-center gap-2 ${isJson ? '' : 'ml-auto'}`}>
+              {isJson && onToggleCollapse && (
                 <button
                   type="button"
                   onClick={onToggleCollapse}
@@ -237,6 +228,7 @@ export function CanvasToolbar({
               <CanvasViewToggle value={canvasView ?? 'canvas'} onChange={onViewChange} />
             </div>
           )}
+
         </div>
       </div>
     </div>
