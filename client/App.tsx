@@ -25,6 +25,7 @@ import { Loader2 } from "lucide-react";
 import { BotLogsProvider } from "./components/editor/bot/contexts/bot-logs-context";
 import { ActiveTerminalsProvider } from "./components/editor/bot/contexts/ActiveTerminalsContext";
 import { SetupGuard } from "@/components/editor/setup";
+import { AuthGuard } from "@/components/editor/auth";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
@@ -76,16 +77,18 @@ function LoadingSpinner() {
 function Router() {
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <SetupGuard>
-        <Switch>
-          <Route path="/projects" component={Home} />
-          <Route path="/templates" component={TemplatesPage} />
-          <Route path="/editor/:id" component={Editor} />
-          <Route path="/projects/:id" component={Editor} />
-          <Route path="/" component={Editor} />
-          <Route component={NotFound} />
-        </Switch>
-      </SetupGuard>
+      <AuthGuard>
+        <SetupGuard>
+          <Switch>
+            <Route path="/projects" component={Home} />
+            <Route path="/templates" component={TemplatesPage} />
+            <Route path="/editor/:id" component={Editor} />
+            <Route path="/projects/:id" component={Editor} />
+            <Route path="/" component={Editor} />
+            <Route component={NotFound} />
+          </Switch>
+        </SetupGuard>
+      </AuthGuard>
     </Suspense>
   );
 }
