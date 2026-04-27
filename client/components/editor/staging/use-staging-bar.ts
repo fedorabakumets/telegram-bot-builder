@@ -3,7 +3,7 @@
  * Объединяет состояния canvas и JSON режимов в единый интерфейс
  */
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import type { ActionHistoryItem } from '@/pages/editor/types/action-history-item';
 
 /** Вариант отображения панели */
@@ -90,12 +90,34 @@ export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResul
     return isDirty || !!jsonError || hasLocalChanges;
   }, [mode, hasLocalChanges, isDirty, jsonError]);
 
+  /**
+   * В json-dirty режиме сначала применяет JSON, затем сохраняет.
+   * В canvas режиме — просто сохраняет.
+   */
+  const handleSave = useCallback(() => {
+    if (mode === 'json' && isDirty) {
+      onApplyJson();
+    }
+    onSave();
+  }, [mode, isDirty, onApplyJson, onSave]);
+
+  /**
+   * В json-dirty режиме сначала применяет JSON, затем сохраняет и перезапускает.
+   * В canvas режиме — просто сохраняет и перезапускает.
+   */
+  const handleSaveAndRestart = useCallback(() => {
+    if (mode === 'json' && isDirty) {
+      onApplyJson();
+    }
+    onSaveAndRestart();
+  }, [mode, isDirty, onApplyJson, onSaveAndRestart]);
+
   return {
     isVisible,
     variant,
     changesCount: actionHistory.length,
-    onSave,
-    onSaveAndRestart,
+    onSave: handleSave,
+    onSaveAndRestart: handleSaveAndRestart,
     onDiscard,
     isSaving,
     onApplyJson,

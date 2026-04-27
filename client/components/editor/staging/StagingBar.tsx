@@ -50,7 +50,6 @@ export function StagingBar(props: StagingBarProps) {
           )}
           {variant === 'json-dirty' && (
             <JsonDirtyVariant
-              onApply={onApplyJson}
               onReset={onResetJson}
               onDetails={() => setModalOpen(true)}
               onSave={onSave}
@@ -135,15 +134,13 @@ function CanvasVariant({ changesCount, isSaving, onSave, onSaveAndRestart, onDis
 
 /** Свойства варианта json-dirty */
 interface JsonDirtyVariantProps {
-  /** Колбэк применения JSON */
-  onApply: () => void;
   /** Колбэк сброса JSON */
   onReset: () => void;
   /** Колбэк открытия деталей */
   onDetails: () => void;
-  /** Колбэк сохранения на сервер */
+  /** Колбэк сохранения на сервер (с применением JSON) */
   onSave: () => void;
-  /** Колбэк сохранения с перезапуском ботов */
+  /** Колбэк сохранения с перезапуском ботов (с применением JSON) */
   onSaveAndRestart: () => void;
   /** Идёт ли сохранение */
   isSaving: boolean;
@@ -154,7 +151,7 @@ interface JsonDirtyVariantProps {
  * @param props - Свойства варианта
  * @returns JSX элемент
  */
-function JsonDirtyVariant({ onApply, onReset, onDetails, onSave, onSaveAndRestart, isSaving }: JsonDirtyVariantProps) {
+function JsonDirtyVariant({ onReset, onDetails, onSave, onSaveAndRestart, isSaving }: JsonDirtyVariantProps) {
   return (
     <>
       <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
@@ -169,10 +166,6 @@ function JsonDirtyVariant({ onApply, onReset, onDetails, onSave, onSaveAndRestar
       <Button size="sm" variant="ghost" onClick={onReset}
         className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
         Сбросить
-      </Button>
-      <Button size="sm" onClick={onApply}
-        className="h-7 px-2.5 text-xs bg-amber-600 hover:bg-amber-700 text-white">
-        <i className="fas fa-check mr-1" />Применить
       </Button>
       <Button size="sm" onClick={onSave} disabled={isSaving}
         className="h-7 px-2.5 text-xs bg-violet-600 hover:bg-violet-700 text-white">
