@@ -22,7 +22,7 @@
 | `.mp4`, `.avi`, `.mov`            | `answer_video`   | `InputMediaVideo`  |
 | `.mp3`, `.wav`, `.ogg`            | `answer_audio`   | `InputMediaAudio`  |
 | остальные                         | `answer_document`| `InputMediaDocument`|
-| `{переменная}` с `type: "file"`   | `answer_document` через `BufferedInputFile` | — |
+| `{переменная}` с `type: "file"` | `answer_photo` / `answer_audio` / `answer_video` / `answer_document` через `BufferedInputFile` (выбор по `mimeType`) | — |
 
 ## Поведение
 
@@ -31,7 +31,7 @@
 - **0 файлов** — генерируется `pass` (нет отправки)
 - **`/uploads/` пути** — используется `FSInputFile(get_upload_file_path(...))`
 - **Автопереход** — генерирует `FakeCallbackQuery` и вызов следующего обработчика
-- **Переменная типа `file`** — если переменная содержит объект `{type: "file", data, mimeType, fileName}`, файл отправляется через `BufferedInputFile` (без сохранения на диск)
+- **Переменная типа `file`** — если переменная содержит объект `{type: "file", data, mimeType, fileName}`, метод отправки выбирается по `mimeType`: `image/*` → `answer_photo`, `audio/*` → `answer_audio`, `video/*` → `answer_video`, остальное → `answer_document`
 
 ## Пример использования
 

@@ -67,3 +67,21 @@ export const fixtureFileVariable: MediaNodeTemplateParams = {
   nodeId: 'media_file_var_1',
   attachedMedia: ['{export_file}'],
 };
+
+/** Нода с переменной типа file — изображение (image/png) */
+export const fixtureFileVariableImage: MediaNodeTemplateParams = {
+  nodeId: 'media_file_img_1',
+  attachedMedia: ['{qr_code}'],
+};
+
+/** Нода с переменной типа file — аудио (audio/mpeg) */
+export const fixtureFileVariableAudio: MediaNodeTemplateParams = {
+  nodeId: 'media_file_audio_1',
+  attachedMedia: ['{track_file}'],
+};
+
+/** Нода с переменной типа file — видео (video/mp4) */
+export const fixtureFileVariableVideo: MediaNodeTemplateParams = {
+  nodeId: 'media_file_video_1',
+  attachedMedia: ['{video_file}'],
+};

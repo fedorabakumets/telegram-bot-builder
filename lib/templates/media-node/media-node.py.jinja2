@@ -97,8 +97,16 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             _file_bytes = _b64_media.b64decode(_media_value.get("data", ""))
             _file_name = _media_value.get("fileName", "file")
             _buf_file = _BufFile(file=_file_bytes, filename=_file_name)
-            await callback_query.message.answer_document(_buf_file)
-            logging.info(f"✅ Файл '{_file_name}' отправлен через BufferedInputFile ({len(_file_bytes)} байт)")
+            _mime = _media_value.get("mimeType", "")
+            if "image" in _mime:
+                await callback_query.message.answer_photo(_buf_file)
+            elif "audio" in _mime:
+                await callback_query.message.answer_audio(_buf_file)
+            elif "video" in _mime:
+                await callback_query.message.answer_video(_buf_file)
+            else:
+                await callback_query.message.answer_document(_buf_file)
+            logging.info(f"✅ Файл '{_file_name}' ({_mime}) отправлен через BufferedInputFile ({len(_file_bytes)} байт)")
             return  # файл отправлен, выходим без лишних проверок
         elif isinstance(_media_value, dict):
             _resolved_media_type = _media_value.get("type", "document")

@@ -16,6 +16,9 @@ import {
   fixtureUploadPaths,
   fixtureEmpty,
   fixtureFileVariable,
+  fixtureFileVariableImage,
+  fixtureFileVariableAudio,
+  fixtureFileVariableVideo,
 } from './media-node.fixture';
 
 describe('media-node.py.jinja2 шаблон', () => {
@@ -278,9 +281,27 @@ describe('media-node.py.jinja2 шаблон', () => {
       expect(result).toContain('BufferedInputFile');
     });
 
-    it('должен отправлять через answer_document', () => {
+    it('должен отправлять через answer_document для неизвестного mimeType', () => {
       const result = generateMediaNode(fixtureFileVariable);
       expect(result).toContain('answer_document(_buf_file)');
+    });
+
+    it('должен выбирать answer_photo для image/* mimeType', () => {
+      const result = generateMediaNode(fixtureFileVariableImage);
+      expect(result).toContain('"image" in _mime');
+      expect(result).toContain('answer_photo(_buf_file)');
+    });
+
+    it('должен выбирать answer_audio для audio/* mimeType', () => {
+      const result = generateMediaNode(fixtureFileVariableAudio);
+      expect(result).toContain('"audio" in _mime');
+      expect(result).toContain('answer_audio(_buf_file)');
+    });
+
+    it('должен выбирать answer_video для video/* mimeType', () => {
+      const result = generateMediaNode(fixtureFileVariableVideo);
+      expect(result).toContain('"video" in _mime');
+      expect(result).toContain('answer_video(_buf_file)');
     });
 
     it('должен использовать fileName из переменной', () => {
