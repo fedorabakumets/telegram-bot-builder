@@ -29,8 +29,8 @@ export function BotControlPanelHeader({ onConnectBot }: BotControlPanelHeaderPro
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
       <div className="min-w-0">
         <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-            <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-600/15 dark:bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+            <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <h2 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-foreground">
             Боты
