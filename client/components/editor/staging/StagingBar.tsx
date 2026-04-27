@@ -38,22 +38,24 @@ export function StagingBar(props: StagingBarProps) {
 
   return (
     <>
-      <div className={`flex items-center gap-1.5 px-3 py-1.5 border-b shrink-0 ${barClass}`}>
-        {variant === 'canvas' && (
-          <CanvasVariant
-            changesCount={changesCount}
-            isSaving={isSaving}
-            onSave={onSave}
-            onDiscard={onDiscard}
-            onDetails={() => setModalOpen(true)}
-          />
-        )}
-        {variant === 'json-dirty' && (
-          <JsonDirtyVariant onApply={onApplyJson} onReset={onResetJson} />
-        )}
-        {variant === 'json-error' && (
-          <JsonErrorVariant error={jsonError} onReset={onResetJson} />
-        )}
+      <div className={`flex items-center justify-center border-b shrink-0 py-1.5 px-3 ${barClass}`}>
+        <div className="flex items-center gap-1.5">
+          {variant === 'canvas' && (
+            <CanvasVariant
+              changesCount={changesCount}
+              isSaving={isSaving}
+              onSave={onSave}
+              onDiscard={onDiscard}
+              onDetails={() => setModalOpen(true)}
+            />
+          )}
+          {variant === 'json-dirty' && (
+            <JsonDirtyVariant onApply={onApplyJson} onReset={onResetJson} />
+          )}
+          {variant === 'json-error' && (
+            <JsonErrorVariant error={jsonError} onReset={onResetJson} />
+          )}
+        </div>
       </div>
 
       <ChangesModal
@@ -103,7 +105,7 @@ function CanvasVariant({ changesCount, isSaving, onSave, onDiscard, onDetails }:
         Сбросить
       </Button>
       <Button size="sm" onClick={onSave} disabled={isSaving}
-        className="h-7 px-2.5 text-xs bg-violet-600 hover:bg-violet-700 text-white ml-auto">
+        className="h-7 px-2.5 text-xs bg-violet-600 hover:bg-violet-700 text-white">
         {isSaving
           ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
           : <><i className="fas fa-floppy-disk mr-1" />Сохранить <kbd className="ml-1 opacity-60 text-[10px]">⇧+↵</kbd></>}
@@ -124,7 +126,7 @@ function JsonDirtyVariant({ onApply, onReset }: { onApply: () => void; onReset: 
         <i className="fas fa-pencil-alt text-amber-500 dark:text-amber-400 mr-1.5" />
         Есть изменения в JSON
       </span>
-      <div className="w-px h-4 bg-amber-200 dark:bg-slate-700 ml-auto" />
+      <div className="w-px h-4 bg-amber-200 dark:bg-slate-700" />
       <Button size="sm" variant="ghost" onClick={onReset}
         className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
         Сбросить
@@ -149,7 +151,7 @@ function JsonErrorVariant({ error, onReset }: { error: string | null; onReset: (
         <i className="fas fa-exclamation-circle text-red-500 dark:text-red-400 mr-1.5" />
         {error ?? 'Невалидный JSON'}
       </span>
-      <div className="w-px h-4 bg-red-200 dark:bg-slate-700 ml-auto" />
+      <div className="w-px h-4 bg-red-200 dark:bg-slate-700" />
       <Button size="sm" variant="ghost" onClick={onReset}
         className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
         Сбросить
