@@ -620,7 +620,7 @@ export default function Editor() {
     isDirty,
     jsonError,
     handleViewChange: handleViewChangeRaw,
-    handleJsonChange,
+    handleJsonChange: handleJsonChangeRaw,
     handleApplyJson: handleApplyJsonView,
     handleApplyJsonInPlace,
     handleResetJson,
@@ -628,6 +628,17 @@ export default function Editor() {
     botDataWithSheets,
     onApplyJson: handleApplyJsonToBotData,
   });
+
+  /**
+   * Обёртка над handleJsonChange — при первом изменении добавляет запись в историю действий
+   * @param value - Новое содержимое JSON редактора
+   */
+  const handleJsonChange = useCallback((value: string) => {
+    if (!isDirty) {
+      handleActionLog('update', 'Изменён JSON сценария');
+    }
+    handleJsonChangeRaw(value);
+  }, [isDirty, handleJsonChangeRaw, handleActionLog]);
 
   /**
    * Обёртка над handleViewChange — при переходе в JSON разворачивает все блоки редактора
