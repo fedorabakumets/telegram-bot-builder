@@ -1,5 +1,5 @@
 /**
- * @fileoverview Плавающая панель изменений редактора
+ * @fileoverview Панель изменений редактора — встроенная полоса сверху
  * Адаптируется под canvas, json-dirty и json-error варианты
  */
 
@@ -16,7 +16,7 @@ interface StagingBarProps extends UseStagingBarResult {
 }
 
 /**
- * Плавающая панель изменений, позиционированная внизу по центру редактора
+ * Панель изменений — встроенная полоса сверху контента редактора
  * @param props - Свойства компонента
  * @returns JSX элемент панели или null если не видима
  */
@@ -29,19 +29,16 @@ export function StagingBar(props: StagingBarProps) {
 
   if (!isVisible) return null;
 
+  /** Цвета фона и бордера в зависимости от варианта */
+  const barClass = variant === 'json-error'
+    ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/60'
+    : variant === 'json-dirty'
+      ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60'
+      : 'bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-700/60';
+
   return (
     <>
-      <div
-        className={`
-          absolute bottom-4 left-1/2 -translate-x-1/2 z-50
-          flex items-center gap-1.5 px-2 py-1.5 rounded-xl shadow-lg
-          backdrop-blur-md border transition-all duration-300
-          translate-y-0 opacity-100
-          bg-slate-900/95 border-slate-700/60 dark:bg-slate-900/95
-          light:bg-white/95 light:border-slate-200/80
-        `}
-        style={{ pointerEvents: 'auto' }}
-      >
+      <div className={`flex items-center gap-1.5 px-3 py-1.5 border-b shrink-0 ${barClass}`}>
         {variant === 'canvas' && (
           <CanvasVariant
             changesCount={changesCount}
@@ -92,21 +89,21 @@ interface CanvasVariantProps {
 function CanvasVariant({ changesCount, isSaving, onSave, onDiscard, onDetails }: CanvasVariantProps) {
   return (
     <>
-      <span className="text-xs text-slate-300 px-1.5 whitespace-nowrap">
-        <i className="fas fa-pencil text-violet-400 mr-1.5" />
+      <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
+        <i className="fas fa-pencil text-violet-500 dark:text-violet-400 mr-1.5" />
         {changesCount > 0 ? `${changesCount} изменений` : 'Есть изменения'}
       </span>
-      <div className="w-px h-4 bg-slate-700" />
+      <div className="w-px h-4 bg-slate-300 dark:bg-slate-700" />
       <Button size="sm" variant="ghost" onClick={onDetails}
-        className="h-7 px-2 text-xs text-slate-300 hover:text-white hover:bg-slate-700">
+        className="h-7 px-2 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
         Детали
       </Button>
       <Button size="sm" variant="ghost" onClick={onDiscard}
-        className="h-7 px-2 text-xs text-slate-400 hover:text-white hover:bg-slate-700">
+        className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
         Сбросить
       </Button>
       <Button size="sm" onClick={onSave} disabled={isSaving}
-        className="h-7 px-2.5 text-xs bg-violet-600 hover:bg-violet-700 text-white">
+        className="h-7 px-2.5 text-xs bg-violet-600 hover:bg-violet-700 text-white ml-auto">
         {isSaving
           ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
           : <><i className="fas fa-floppy-disk mr-1" />Сохранить <kbd className="ml-1 opacity-60 text-[10px]">⇧+↵</kbd></>}
@@ -123,13 +120,13 @@ function CanvasVariant({ changesCount, isSaving, onSave, onDiscard, onDetails }:
 function JsonDirtyVariant({ onApply, onReset }: { onApply: () => void; onReset: () => void }) {
   return (
     <>
-      <span className="text-xs text-amber-300 px-1.5 whitespace-nowrap">
-        <i className="fas fa-pencil-alt text-amber-400 mr-1.5" />
+      <span className="text-xs text-amber-700 dark:text-amber-300 px-1.5 whitespace-nowrap">
+        <i className="fas fa-pencil-alt text-amber-500 dark:text-amber-400 mr-1.5" />
         Есть изменения в JSON
       </span>
-      <div className="w-px h-4 bg-slate-700" />
+      <div className="w-px h-4 bg-amber-200 dark:bg-slate-700 ml-auto" />
       <Button size="sm" variant="ghost" onClick={onReset}
-        className="h-7 px-2 text-xs text-slate-400 hover:text-white hover:bg-slate-700">
+        className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
         Сбросить
       </Button>
       <Button size="sm" onClick={onApply}
@@ -148,13 +145,13 @@ function JsonDirtyVariant({ onApply, onReset }: { onApply: () => void; onReset: 
 function JsonErrorVariant({ error, onReset }: { error: string | null; onReset: () => void }) {
   return (
     <>
-      <span className="text-xs text-red-300 px-1.5 max-w-xs truncate">
-        <i className="fas fa-exclamation-circle text-red-400 mr-1.5" />
+      <span className="text-xs text-red-700 dark:text-red-300 px-1.5 max-w-xs truncate">
+        <i className="fas fa-exclamation-circle text-red-500 dark:text-red-400 mr-1.5" />
         {error ?? 'Невалидный JSON'}
       </span>
-      <div className="w-px h-4 bg-slate-700" />
+      <div className="w-px h-4 bg-red-200 dark:bg-slate-700 ml-auto" />
       <Button size="sm" variant="ghost" onClick={onReset}
-        className="h-7 px-2 text-xs text-slate-400 hover:text-white hover:bg-slate-700">
+        className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
         Сбросить
       </Button>
     </>

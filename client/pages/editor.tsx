@@ -1274,8 +1274,8 @@ export default function Editor() {
         )}
       </div>
     ) : (
-      <div className="relative h-full flex flex-col">
-        {/* Универсальная плавающая панель изменений */}
+      <div className="h-full flex flex-col">
+        {/* Универсальная панель изменений сверху */}
         {currentTab === 'editor' && (
           <StagingBar {...stagingBar} actionHistory={actionHistory} />
         )}
