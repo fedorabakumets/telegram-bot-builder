@@ -31,6 +31,10 @@ export interface UseCanvasViewResult {
   handleJsonChange: (value: string) => void;
   /** Применить JSON и вернуться на холст */
   handleApplyJson: () => void;
+  /** Применить JSON без смены режима (остаться в JSON) */
+  handleApplyJsonInPlace: () => void;
+  /** Сбросить изменения JSON без смены режима */
+  handleResetJson: () => void;
 }
 
 /**
@@ -109,5 +113,26 @@ export function useCanvasView({
     setCanvasView('canvas');
   }, [jsonContent, jsonError, onApplyJson]);
 
-  return { canvasView, jsonContent, isDirty, jsonError, handleViewChange, handleJsonChange, handleApplyJson };
+  /**
+   * Применяет JSON без смены режима — остаётся в JSON редакторе.
+   * Обновляет jsonContent актуальными данными после применения.
+   */
+  const handleApplyJsonInPlace = useCallback(() => {
+    if (jsonError) return;
+    if (jsonContent) onApplyJson(jsonContent);
+    setIsDirty(false);
+  }, [jsonContent, jsonError, onApplyJson]);
+
+  /**
+   * Сбрасывает изменения JSON без смены режима.
+   * Восстанавливает содержимое редактора из текущих botDataWithSheets.
+   */
+  const handleResetJson = useCallback(() => {
+    const serialized = JSON.stringify(botDataWithSheets, null, 2);
+    setJsonContent(serialized);
+    setIsDirty(false);
+    setJsonError(null);
+  }, [botDataWithSheets]);
+
+  return { canvasView, jsonContent, isDirty, jsonError, handleViewChange, handleJsonChange, handleApplyJson, handleApplyJsonInPlace, handleResetJson };
 }

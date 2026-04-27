@@ -620,6 +620,8 @@ export default function Editor() {
     handleViewChange,
     handleJsonChange,
     handleApplyJson: handleApplyJsonView,
+    handleApplyJsonInPlace,
+    handleResetJson,
   } = useCanvasView({
     botDataWithSheets,
     onApplyJson: handleApplyJsonToBotData,
@@ -637,8 +639,8 @@ export default function Editor() {
     isSaving: updateProjectMutation.isPending,
     isDirty,
     jsonError,
-    onApplyJson: handleApplyJsonView,
-    onResetJson: () => handleViewChange('canvas'),
+    onApplyJson: handleApplyJsonInPlace,
+    onResetJson: handleResetJson,
     mode: canvasView,
   });
 
