@@ -210,7 +210,7 @@ export function CanvasToolbar({
 
           {/* Переключатель Холст / JSON + fold/unfold */}
           {onViewChange && (
-            <div className={`flex-shrink-0 flex items-center gap-2 ${isJson ? '' : 'ml-auto'}`}>
+            <div className="ml-auto flex-shrink-0 flex items-center gap-2">
               {isJson && onToggleCollapse && (
                 <button
                   type="button"
