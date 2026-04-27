@@ -12,7 +12,7 @@
  * @module BotCard
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { BotCardHeader } from './BotCardHeader';
@@ -60,6 +60,11 @@ export function BotCard({
 
   /** Свёрнута ли карточка */
   const [isCollapsed, setIsCollapsed] = useState<boolean>(defaultCollapsed);
+
+  // Синхронизируем с внешним состоянием при его изменении (кнопка "Свернуть все")
+  useEffect(() => {
+    setIsCollapsed(defaultCollapsed);
+  }, [defaultCollapsed]);
 
   /** Имеет ли текущий пользователь права управления проектом */
   const canManage = user && isTelegramUser(user) ? (user.id === project.ownerId || true) : false;
