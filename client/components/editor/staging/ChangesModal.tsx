@@ -1,6 +1,6 @@
 /**
- * @fileoverview Модальное окно деталей изменений холста
- * Показывает список действий из истории с иконками типов
+ * @fileoverview Модальное окно деталей изменений редактора
+ * В canvas-режиме показывает список действий; в json-режиме — информационное сообщение
  */
 
 import {
@@ -16,12 +16,14 @@ interface ChangesModalProps {
   open: boolean;
   /** Колбэк закрытия */
   onClose: () => void;
-  /** Колбэк сохранения */
+  /** Колбэк сохранения (только для canvas-режима) */
   onSave: () => void;
   /** Идёт ли сохранение */
   isSaving: boolean;
   /** История действий для отображения */
   actionHistory: ActionHistoryItem[];
+  /** Режим редактора: canvas или json */
+  mode: 'canvas' | 'json';
 }
 
 /**
@@ -43,11 +45,11 @@ function getActionIcon(type: ActionType) {
 }
 
 /**
- * Модальное окно со списком изменений холста
+ * Модальное окно со списком изменений
  * @param props - Свойства компонента
  * @returns JSX элемент диалога
  */
-export function ChangesModal({ open, onClose, onSave, isSaving, actionHistory }: ChangesModalProps) {
+export function ChangesModal({ open, onClose, onSave, isSaving, actionHistory, mode }: ChangesModalProps) {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-md">
@@ -59,7 +61,9 @@ export function ChangesModal({ open, onClose, onSave, isSaving, actionHistory }:
         </DialogHeader>
 
         <div className="max-h-72 overflow-y-auto space-y-0.5 py-1">
-          {actionHistory.length === 0 ? (
+          {mode === 'json' && actionHistory.length === 0 ? (
+            <p className="text-xs text-slate-400 text-center py-6">Изменения применены к JSON редактору</p>
+          ) : actionHistory.length === 0 ? (
             <p className="text-xs text-slate-400 text-center py-6">Нет изменений</p>
           ) : actionHistory.map((item) => {
             const { icon, color, bg } = getActionIcon(item.type);
@@ -81,12 +85,14 @@ export function ChangesModal({ open, onClose, onSave, isSaving, actionHistory }:
 
         <DialogFooter className="gap-2">
           <Button variant="ghost" size="sm" onClick={onClose}>Закрыть</Button>
-          <Button size="sm" onClick={onSave} disabled={isSaving}
-            className="bg-violet-600 hover:bg-violet-700 text-white">
-            {isSaving
-              ? <><i className="fas fa-spinner fa-spin mr-1.5" />Сохранение…</>
-              : <><i className="fas fa-floppy-disk mr-1.5" />Сохранить</>}
-          </Button>
+          {actionHistory.length > 0 && (
+            <Button size="sm" onClick={onSave} disabled={isSaving}
+              className="bg-violet-600 hover:bg-violet-700 text-white">
+              {isSaving
+                ? <><i className="fas fa-spinner fa-spin mr-1.5" />Сохранение…</>
+                : <><i className="fas fa-floppy-disk mr-1.5" />Сохранить</>}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

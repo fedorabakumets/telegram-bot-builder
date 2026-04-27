@@ -56,6 +56,8 @@ export interface UseStagingBarResult {
   onResetJson: () => void;
   /** Текст ошибки JSON */
   jsonError: string | null;
+  /** Текущий режим редактора */
+  mode: 'canvas' | 'json';
 }
 
 /**
@@ -90,5 +92,6 @@ export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResul
     onApplyJson,
     onResetJson,
     jsonError,
+    mode,
   };
 }

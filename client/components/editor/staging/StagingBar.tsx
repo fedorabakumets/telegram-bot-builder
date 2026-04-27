@@ -22,19 +22,17 @@ interface StagingBarProps extends UseStagingBarResult {
  */
 export function StagingBar(props: StagingBarProps) {
   const { isVisible, variant, changesCount, onSave, onDiscard, isSaving,
-    onApplyJson, onResetJson, jsonError, actionHistory } = props;
+    onApplyJson, onResetJson, jsonError, actionHistory, mode } = props;
 
   /** Открыто ли модальное окно деталей */
   const [modalOpen, setModalOpen] = useState(false);
 
   if (!isVisible) return null;
 
-  /** Цвета фона и бордера в зависимости от варианта */
+  /** Нейтральный фон для canvas и json-dirty; красный для json-error */
   const barClass = variant === 'json-error'
     ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/60'
-    : variant === 'json-dirty'
-      ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60'
-      : 'bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-700/60';
+    : 'bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-700/60';
 
   return (
     <>
@@ -50,10 +48,18 @@ export function StagingBar(props: StagingBarProps) {
             />
           )}
           {variant === 'json-dirty' && (
-            <JsonDirtyVariant onApply={onApplyJson} onReset={onResetJson} />
+            <JsonDirtyVariant
+              onApply={onApplyJson}
+              onReset={onResetJson}
+              onDetails={() => setModalOpen(true)}
+            />
           )}
           {variant === 'json-error' && (
-            <JsonErrorVariant error={jsonError} onReset={onResetJson} />
+            <JsonErrorVariant
+              error={jsonError}
+              onReset={onResetJson}
+              onDetails={() => setModalOpen(true)}
+            />
           )}
         </div>
       </div>
@@ -64,6 +70,7 @@ export function StagingBar(props: StagingBarProps) {
         onSave={() => { setModalOpen(false); onSave(); }}
         isSaving={isSaving}
         actionHistory={actionHistory}
+        mode={mode}
       />
     </>
   );
@@ -114,19 +121,33 @@ function CanvasVariant({ changesCount, isSaving, onSave, onDiscard, onDetails }:
   );
 }
 
+/** Свойства варианта json-dirty */
+interface JsonDirtyVariantProps {
+  /** Колбэк применения JSON */
+  onApply: () => void;
+  /** Колбэк сброса JSON */
+  onReset: () => void;
+  /** Колбэк открытия деталей */
+  onDetails: () => void;
+}
+
 /**
  * Вариант панели для json-dirty режима
- * @param props - Колбэки применения и сброса
+ * @param props - Свойства варианта
  * @returns JSX элемент
  */
-function JsonDirtyVariant({ onApply, onReset }: { onApply: () => void; onReset: () => void }) {
+function JsonDirtyVariant({ onApply, onReset, onDetails }: JsonDirtyVariantProps) {
   return (
     <>
-      <span className="text-xs text-amber-700 dark:text-amber-300 px-1.5 whitespace-nowrap">
-        <i className="fas fa-pencil-alt text-amber-500 dark:text-amber-400 mr-1.5" />
+      <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
+        <i className="fas fa-pencil-alt text-slate-500 dark:text-slate-400 mr-1.5" />
         Есть изменения в JSON
       </span>
-      <div className="w-px h-4 bg-amber-200 dark:bg-slate-700" />
+      <div className="w-px h-4 bg-slate-300 dark:bg-slate-700" />
+      <Button size="sm" variant="ghost" onClick={onDetails}
+        className="h-7 px-2 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+        Детали
+      </Button>
       <Button size="sm" variant="ghost" onClick={onReset}
         className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
         Сбросить
@@ -139,12 +160,22 @@ function JsonDirtyVariant({ onApply, onReset }: { onApply: () => void; onReset: 
   );
 }
 
+/** Свойства варианта json-error */
+interface JsonErrorVariantProps {
+  /** Текст ошибки валидации */
+  error: string | null;
+  /** Колбэк сброса JSON */
+  onReset: () => void;
+  /** Колбэк открытия деталей */
+  onDetails: () => void;
+}
+
 /**
  * Вариант панели для json-error режима
- * @param props - Текст ошибки и колбэк сброса
+ * @param props - Свойства варианта
  * @returns JSX элемент
  */
-function JsonErrorVariant({ error, onReset }: { error: string | null; onReset: () => void }) {
+function JsonErrorVariant({ error, onReset, onDetails }: JsonErrorVariantProps) {
   return (
     <>
       <span className="text-xs text-red-700 dark:text-red-300 px-1.5 max-w-xs truncate">
@@ -152,6 +183,10 @@ function JsonErrorVariant({ error, onReset }: { error: string | null; onReset: (
         {error ?? 'Невалидный JSON'}
       </span>
       <div className="w-px h-4 bg-red-200 dark:bg-slate-700" />
+      <Button size="sm" variant="ghost" onClick={onDetails}
+        className="h-7 px-2 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+        Детали
+      </Button>
       <Button size="sm" variant="ghost" onClick={onReset}
         className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
         Сбросить
