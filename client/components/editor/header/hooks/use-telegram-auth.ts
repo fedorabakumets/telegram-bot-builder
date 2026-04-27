@@ -68,7 +68,12 @@ export function useTelegramAuth() {
             photo_url: parsedUser.photoUrl,
           }),
         })
-          .then(() => { setSessionReady(true); })
+          .then(() => {
+            setSessionReady(true);
+            // Сессия восстановлена — рефетчим проекты с правильным owner_id
+            queryClient.refetchQueries({ queryKey: ['/api/projects'] });
+            queryClient.refetchQueries({ queryKey: ['/api/projects/list'] });
+          })
           .catch(e => {
             console.error('Ошибка восстановления серверной сессии:', e);
             setSessionReady(true); // разблокируем запросы даже при ошибке
@@ -148,6 +153,7 @@ export function useTelegramAuth() {
     }
 
     // Создаём серверную сессию — без этого owner_id проектов остаётся null
+    // Рефетч проектов выполняется ПОСЛЕ успешного создания сессии
     fetch('/api/auth/telegram', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -164,6 +170,10 @@ export function useTelegramAuth() {
       .then(data => {
         if (!data.success) {
           console.error('Ошибка создания серверной сессии:', data.error);
+        } else {
+          // Сессия готова — теперь рефетчим проекты с правильным owner_id
+          queryClient.refetchQueries({ queryKey: ['/api/projects'] });
+          queryClient.refetchQueries({ queryKey: ['/api/projects/list'] });
         }
       })
       .catch(e => console.error('Ошибка POST /api/auth/telegram:', e));
