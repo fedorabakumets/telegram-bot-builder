@@ -83,8 +83,9 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
     clearLogs(`${projectId}-${tokenId}`);
   };
 
-  // Обработчик остановки бота
+  // Обработчик остановки бота — очищаем логи и обновляем статус терминала
   const handleBotStopped = (projectId: number, tokenId: number) => {
+    clearLogs(`${projectId}-${tokenId}`);
     updateTerminalStatus(projectId, tokenId, false);
   };
 
