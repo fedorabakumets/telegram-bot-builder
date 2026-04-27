@@ -332,11 +332,6 @@ async function initializeComponents() {
 
       // После готовности БД запускаем критически важные компоненты сначала
       await Promise.all([
-        // Создание проекта по умолчанию (быстро)
-        ensureDefaultProject().then(() => {
-          console.log('✅ Default project ready');
-        }).catch(err => console.error('❌ Default project failed:', err)),
-
         // Очистка состояний ботов пропускается — восстановление выполняется
         // в restoreRunningBots после старта сервера (server/index.ts)
 

@@ -102,14 +102,14 @@ export function useProjectLoader({
     staleTime: 30000,
   });
 
-  // Автосоздание дефолтного проекта если список пустой (только для гостей)
+  // Автосоздание дефолтного проекта если список пустой (только для авторизованных)
   useEffect(() => {
     if (!sessionReady) return;
     if (projectId) return;
+    if (!isAuthenticated) return;           // гости не получают автопроект
     if (projectsList === undefined) return; // ещё грузится
     if (projectsList.length > 0) return;    // проекты есть
     if (isCreatingRef.current) return;      // уже создаём
-    if (isAuthenticated) return;            // авторизованный — не создаём автоматически
 
     isCreatingRef.current = true;
     apiRequest('POST', '/api/projects', {
@@ -121,14 +121,13 @@ export function useProjectLoader({
         queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], [newProject]);
         queryClient.setQueryData<BotProject[]>(['/api/projects'], [newProject]);
         queryClient.setQueryData<BotProject>([`/api/projects/${newProject.id}`], newProject);
-        // Инвалидируем чтобы сайдбар подхватил новый проект
         queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       })
       .catch(e => {
         console.error('Ошибка автосоздания проекта:', e);
         isCreatingRef.current = false;
       });
-  }, [sessionReady, projectId, projectsList, queryClient]);
+  }, [sessionReady, projectId, projectsList, isAuthenticated, queryClient]);
 
   // Эффективный ID проекта
   const effectiveProjectId = projectId || projectsList?.[0]?.id;
