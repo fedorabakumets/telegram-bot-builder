@@ -127,12 +127,7 @@ export function AdaptiveHeader({
       </div>
 
       <div className="flex items-center gap-1 lg:gap-2 flex-1">
-        <Navigation
-          currentTab={currentTab}
-          onTabChange={onTabChange}
-          isVertical={isVertical}
-          isCompact={isCompact}
-        />
+        {/* Navigation скрыта — перенесена в левый AppSidebar (этап 2) */}
 
         {/* Десктопные/Планшетные действия */}
         <DesktopActionsFull
