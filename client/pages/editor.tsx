@@ -1282,10 +1282,12 @@ export default function Editor() {
         {currentTab === 'editor' && (
           <StagingBar {...stagingBar} actionHistory={actionHistory} />
         )}
-        <div className="flex-1 min-h-0">
-          {currentTab === 'editor' && canvasView === 'json' ? (
-            // Режим JSON: показываем Monaco Editor с JSON сценария
-            <div className="h-full flex flex-col">
+        {/* Контейнер вкладок: relative нужен для absolute-позиционирования JSON-редактора поверх Canvas */}
+        <div className="flex-1 min-h-0 relative">
+
+          {/* JSON-редактор — абсолютно поверх Canvas, виден только в json-режиме вкладки editor */}
+          {currentTab === 'editor' && canvasView === 'json' && (
+            <div className="absolute inset-0 z-10 flex flex-col">
               {/* Тулбар JSON-режима: кнопки fold/unfold и переключатель вида */}
               <div className="flex items-center justify-end gap-2 px-4 py-2 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 border-b border-slate-200/50 dark:border-slate-600/50 shrink-0">
                 <button
@@ -1309,17 +1311,6 @@ export default function Editor() {
                 <div className="h-4 w-px bg-slate-300/50 dark:bg-slate-600/50" />
                 <CanvasViewToggle value={canvasView} onChange={handleViewChange} />
               </div>
-              {/* Панель применения изменений JSON — заменена на StagingBar, оставлено для справки */}
-              {/* {(isDirty || jsonError) && (
-                <div className="px-2 pt-2">
-                  <JsonApplyBar
-                    isDirty={isDirty}
-                    error={jsonError}
-                    onApply={handleApplyJsonView}
-                    onReset={() => handleViewChange('canvas')}
-                  />
-                </div>
-              )} */}
               <div className="flex-1 min-h-0">
                 <CodeEditorArea
                   isMobile={false}
@@ -1336,72 +1327,83 @@ export default function Editor() {
                 />
               </div>
             </div>
-          ) : currentTab === 'groups' ? (
+          )}
+
+          {/* Canvas — всегда в DOM пока активна вкладка editor, скрыт в json-режиме.
+              Это сохраняет zoom/pan состояние при переключении между canvas и json видами. */}
+          {currentTab === 'editor' && (
+            <div className={`h-full${canvasView === 'json' ? ' invisible pointer-events-none' : ''}`}>
+              <Canvas
+                {/* Новая система листов */}
+                botData={botDataWithSheets || undefined}
+                onBotDataUpdate={handleBotDataUpdate}
+                {/* Существующие пропсы для совместимости */}
+                nodes={nodes}
+                selectedNodeId={selectedNodeId}
+                onNodeSelect={handleNodeSelect}
+                onNodeAdd={addNode}
+                onNodeDelete={handleNodeDelete}
+                onNodeDuplicate={handleNodeDuplicate}
+                onNodeMove={handleNodeMove}
+                onNodeMoveStart={handleNodeMoveStart}
+                onNodeMoveEnd={handleNodeMoveEnd}
+                onNodesUpdate={updateNodes}
+                onUndo={undo}
+                onRedo={redo}
+                canUndo={canUndo}
+                canRedo={canRedo}
+                onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
+                isSaving={updateProjectMutation.isPending}
+                onCopyToClipboard={copyToClipboard}
+                onPasteFromClipboard={pasteFromClipboard}
+                hasClipboardData={hasClipboardData()}
+                isNodeBeingDragged={isNodeBeingDragged}
+                setIsNodeBeingDragged={setIsNodeBeingDragged}
+                onToggleHeader={handleToggleHeader}
+                onToggleSidebar={handleToggleSidebar}
+                onToggleProperties={handleToggleProperties}
+                onToggleCanvas={handleToggleCanvas}
+                headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+                sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+                propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+                canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+                onOpenMobileSidebar={handleOpenMobileSidebar}
+                onOpenMobileProperties={handleOpenMobileProperties}
+                onNodeSizesChange={handleNodeSizesChange}
+                onActionLog={handleActionLog}
+                actionHistory={actionHistory}
+                onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
+                onConnectionDelete={handleConnectionDelete}
+                onConnectionCreate={saveToHistory}
+                autoFitOnLoad
+                suppressAutoFit={canvasView === 'json'}
+                fitTrigger={fitTrigger}
+                focusNodeId={focusNodeId}
+                highlightNodeId={highlightNodeId}
+                onMoveNodeToSheet={moveNodeToSheet}
+                onAutoLayout={handleAutoLayout}
+                canvasView={canvasView}
+                onViewChange={currentTab === 'editor' ? handleViewChange : undefined}
+              />
+            </div>
+          )}
+
+          {/* Остальные вкладки */}
+          {currentTab === 'groups' && (
             <GroupsPanel
               projectId={activeProject.id}
               projectName={activeProject.name}
             />
-          ) : currentTab === 'editor' ? (
-            <Canvas
-              // Новая система листов
-              botData={botDataWithSheets || undefined}
-              onBotDataUpdate={handleBotDataUpdate}
-              // Существующие пропсы для совместимости
-              nodes={nodes}
-              selectedNodeId={selectedNodeId}
-              onNodeSelect={handleNodeSelect}
-              onNodeAdd={addNode}
-              onNodeDelete={handleNodeDelete}
-              onNodeDuplicate={handleNodeDuplicate}
-              onNodeMove={handleNodeMove}
-              onNodeMoveStart={handleNodeMoveStart}
-              onNodeMoveEnd={handleNodeMoveEnd}
-              onNodesUpdate={updateNodes}
-              onUndo={undo}
-              onRedo={redo}
-              canUndo={canUndo}
-              canRedo={canRedo}
-              onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
-              isSaving={updateProjectMutation.isPending}
-              onCopyToClipboard={copyToClipboard}
-              onPasteFromClipboard={pasteFromClipboard}
-              hasClipboardData={hasClipboardData()}
-              isNodeBeingDragged={isNodeBeingDragged}
-              setIsNodeBeingDragged={setIsNodeBeingDragged}
-              onToggleHeader={handleToggleHeader}
-              onToggleSidebar={handleToggleSidebar}
-              onToggleProperties={handleToggleProperties}
-              onToggleCanvas={handleToggleCanvas}
-              headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-              sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
-              propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
-              canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
-              onOpenMobileSidebar={handleOpenMobileSidebar}
-              onOpenMobileProperties={handleOpenMobileProperties}
-              onNodeSizesChange={handleNodeSizesChange}
-              onActionLog={handleActionLog}
-              actionHistory={actionHistory}
-              onActionHistoryRemove={(ids) => setActionHistory((prev: ActionHistoryItem[]) => prev.filter(a => !ids.has(a.id)))}
-              onConnectionDelete={handleConnectionDelete}
-              onConnectionCreate={saveToHistory}
-              autoFitOnLoad
-              suppressAutoFit={canvasView === 'json'}
-              fitTrigger={fitTrigger}
-              focusNodeId={focusNodeId}
-              highlightNodeId={highlightNodeId}
-              onMoveNodeToSheet={moveNodeToSheet}
-              onAutoLayout={handleAutoLayout}
-              canvasView={canvasView}
-              onViewChange={currentTab === 'editor' ? handleViewChange : undefined}
-            />
-          ) : currentTab === 'bot' ? (
+          )}
+          {currentTab === 'bot' && (
             <div className="h-full">
               <BotLayout
                 projectId={activeProject.id}
                 projectName={activeProject.name}
               />
             </div>
-          ) : currentTab === 'users' ? (
+          )}
+          {currentTab === 'users' && (
             <div className="h-full overflow-hidden">
               <UserDatabasePanel
                 projectId={activeProject.id}
@@ -1412,18 +1414,17 @@ export default function Editor() {
                 onSelectToken={setSelectedDatabaseTokenId}
               />
             </div>
-          ) : currentTab === 'user-ids' ? (
-            <UserIdsDatabase />
-          ) : currentTab === 'client-api' ? (
+          )}
+          {currentTab === 'user-ids' && <UserIdsDatabase />}
+          {currentTab === 'client-api' && (
             <div className="h-full p-6 bg-background overflow-auto">
               <div className="max-w-3xl mx-auto">
                 <TelegramClientConfig />
               </div>
             </div>
-          ) : currentTab === 'export' ? (
-            // Для вкладки Код показываем пустой контейнер (код показывается в CodeEditorArea и CodePanel)
-            <div className="h-full bg-background" />
-          ) : null}
+          )}
+          {/* Для вкладки Экспорт показываем пустой контейнер */}
+          {currentTab === 'export' && <div className="h-full bg-background" />}
         </div>
       </div>
     );
