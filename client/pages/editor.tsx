@@ -1454,7 +1454,7 @@ export default function Editor() {
           }}
         />
       </div>
-    ) : currentTab === 'editor' && canvasView !== 'json' ? (
+    ) : currentTab === 'editor' ? (
       <ComponentsSidebar
         onComponentDrag={handleComponentDrag}
         onComponentAdd={handleComponentAdd}
