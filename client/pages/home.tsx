@@ -56,6 +56,13 @@ export default function Home() {
   const { handleTelegramLogin } = useTelegramLogin();
   const isGuestUser = !user || isGuest(user);
 
+  // Редирект если проектов нет
+  useEffect(() => {
+    if (!isAuthLoading && !isLoading && !isGuestUser && projects.length === 0) {
+      setLocation('/not-found');
+    }
+  }, [isAuthLoading, isLoading, isGuestUser, projects.length]);
+
   const form = useForm<CreateProjectForm>({
     resolver: zodResolver(createProjectSchema),
     defaultValues: { name: '', description: '' },
@@ -308,9 +315,7 @@ export default function Home() {
         </div>
 
         {/* Список проектов */}
-        {projects.length === 0 ? (
-          <>{setLocation('/not-found')}</>
-        ) : (
+        {projects.length === 0 ? null : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
               <Card key={project.id} className="group hover:shadow-lg transition-shadow">
