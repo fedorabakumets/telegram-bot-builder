@@ -24,12 +24,6 @@ declare global {
 export function authMiddleware(req: Request, _res: Response, next: NextFunction) {
   if (req.session?.telegramUser) {
     req.user = req.session.telegramUser;
-    console.log(`🔐 Auth: User ${req.user.id} (sid=${req.session.id?.slice(0,8)})`);
-  } else {
-    // Логируем только API запросы проектов для диагностики
-    if (req.path.includes('/projects')) {
-      console.log(`🔓 Auth: No user in session (sid=${req.session?.id?.slice(0,8) ?? 'none'}, path=${req.path})`);
-    }
   }
   next();
 }
