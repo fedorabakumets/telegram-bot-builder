@@ -913,6 +913,50 @@ function anchorKeyboardNodes(
 }
 
 /**
+ * Разрешает коллизии между всеми узлами в одном X-столбце после финальной расстановки.
+ * Сортирует по Y и раздвигает перекрывающиеся узлы вниз.
+ *
+ * @param positions - Карта позиций узлов (изменяется на месте)
+ * @param nodes - Все узлы canvas
+ * @param opts - Параметры раскладки
+ */
+function resolveColumnCollisions(
+  positions: Map<string, { x: number; y: number }>,
+  nodes: Node[],
+  opts: HierarchicalLayoutOptions,
+): void {
+  /** Группируем узлы по X-столбцу */
+  const byColumn = new Map<number, string[]>();
+  for (const node of nodes) {
+    const pos = positions.get(node.id);
+    if (!pos) continue;
+    if (!byColumn.has(pos.x)) byColumn.set(pos.x, []);
+    byColumn.get(pos.x)!.push(node.id);
+  }
+
+  for (const [, columnIds] of byColumn) {
+    if (columnIds.length < 2) continue;
+
+    /** Сортируем по текущей Y-позиции */
+    columnIds.sort((a, b) => (positions.get(a)?.y ?? 0) - (positions.get(b)?.y ?? 0));
+
+    /** Проходим сверху вниз и сдвигаем если перекрываются */
+    for (let i = 1; i < columnIds.length; i += 1) {
+      const prevId = columnIds[i - 1];
+      const currId = columnIds[i];
+      const prevPos = positions.get(prevId)!;
+      const prevSize = getNodeSize(prevId, opts);
+      const currPos = positions.get(currId)!;
+
+      const minY = prevPos.y + prevSize.height + opts.verticalSpacing;
+      if (currPos.y < minY) {
+        positions.set(currId, { x: currPos.x, y: minY });
+      }
+    }
+  }
+}
+
+/**
  * Группирует узлы по слоям.
  */
 function buildLayers(nodes: Node[], layerMap: Map<string, number>): Node[][] {
@@ -978,6 +1022,7 @@ export function createHierarchicalLayout(
   }
 
   anchorKeyboardNodes(positions, graph, opts);
+  resolveColumnCollisions(positions, nodes, opts);
 
   const isolatedX = opts.startX + (layers.length + 1) * (opts.nodeWidth + opts.horizontalSpacing);
   let isolatedY = opts.startY;
