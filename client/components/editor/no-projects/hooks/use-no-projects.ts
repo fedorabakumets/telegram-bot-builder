@@ -3,10 +3,12 @@
  * @module components/editor/no-projects/hooks/use-no-projects
  */
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/queryClient';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { isGuest } from '@/types/telegram-user';
 
 /**
  * Результат хука экрана без проектов
@@ -39,7 +41,8 @@ export function useNoProjects(): UseNoProjectsResult {
   const [isImporting, setIsImporting] = useState(false);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { user } = useTelegramAuth();
+  const telegramId = user && !isGuest(user) ? (user as any).id : null;
 
   /** Открывает диалог создания проекта */
   const handleCreateProject = () => setIsCreateOpen(true);
@@ -58,9 +61,11 @@ export function useNoProjects(): UseNoProjectsResult {
 
   /**
    * Открывает input[type=file] для выбора project.json.
-   * После выбора отправляет POST /api/projects/import, инвалидирует кеш и редиректит в редактор.
+   * Отправляет POST /api/bot/projects/import?telegram_id=..., редиректит в редактор.
    */
   const handleImport = () => {
+    if (!telegramId) return;
+
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json,application/json';
@@ -73,7 +78,7 @@ export function useNoProjects(): UseNoProjectsResult {
       try {
         const text = await file.text();
         const json = JSON.parse(text);
-        const result = await apiRequest('POST', '/api/projects/import', json) as { id: number };
+        const result = await apiRequest('POST', `/api/bot/projects/import?telegram_id=${telegramId}`, json) as { id: number };
         await queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
         setLocation(`/editor/${result.id}`);
       } catch (e) {
