@@ -230,7 +230,8 @@ export function useBotMutations({
     mutationFn: async ({ tokenId, targetProjectId }: { tokenId: number; targetProjectId: number }) => {
       const source = allTokensFlatFull.find(t => t.id === tokenId);
       if (!source) throw new Error('Токен не найден');
-      const { projectId: _pid, ...tokenData } = source;
+      // Не передаём ownerId — сервер сам определит из сессии или проекта
+      const { projectId: _pid, ownerId: _oid, id: _id, ...tokenData } = source;
       return apiRequest('POST', `/api/projects/${targetProjectId}/tokens`, {
         ...tokenData,
         isDefault: 0,

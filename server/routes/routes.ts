@@ -896,11 +896,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Игнорируем ownerId из body, используем только из сессии
+      // Fallback: если сессия не читается — берём owner_id из проекта
       const { ownerId: _ignored, ...bodyData } = req.body;
+      const sessionOwnerId = getOwnerIdFromRequest(req);
+      let resolvedOwnerId: number | null = sessionOwnerId;
+      if (resolvedOwnerId === null) {
+        const proj = await storage.getBotProject(projectId);
+        resolvedOwnerId = proj?.ownerId ?? null;
+      }
       const tokenData = insertBotTokenSchema.parse({
         ...bodyData,
         projectId,
-        ownerId: getOwnerIdFromRequest(req)
+        ownerId: resolvedOwnerId
       }) as StorageBotTokenInput;
 
       // Если botUsername не передан — автоматически получаем данные бота из Telegram
