@@ -2,7 +2,7 @@
   "sheets": [
     {
       "id": "89cdbb72-42ff-4747-81b3-1b65c3e7fad3",
-      "name": "Список",
+      "name": "Список проектов",
       "nodes": [
         {
           "id": "trigger-start",
