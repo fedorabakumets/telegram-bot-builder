@@ -889,8 +889,12 @@ function anchorKeyboardNodes(
   opts: HierarchicalLayoutOptions,
   layerX: number[] = [],
 ): void {
-  /** Допуск по X для считания двух узлов «одним столбцом» */
-  const X_TOLERANCE = 20;
+  /**
+   * Допуск по X: два узла считаются «одним столбцом» если их X отличается
+   * не более чем на половину horizontalSpacing. Это покрывает случай когда
+   * keyboard якорится между слоями (offset = 0.75 * spacing).
+   */
+  const X_TOLERANCE = Math.round(opts.horizontalSpacing * 0.6);
 
   /** Сначала расставляем каждый keyboard рядом со своим host */
   for (const [keyboardId, hostId] of graph.keyboardHostByKeyboardId) {
