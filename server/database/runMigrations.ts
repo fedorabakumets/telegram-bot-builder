@@ -61,6 +61,20 @@ const CREATE_APP_SETTINGS_TABLE = `
 `;
 
 /**
+ * SQL для заполнения owner_id в bot_tokens из bot_projects.
+ * Исправляет старые записи где owner_id = NULL, хотя проект имеет владельца.
+ * Безопасно запускать повторно — обновляет только NULL-записи.
+ */
+const REPAIR_BOT_TOKENS_OWNER_ID = `
+  UPDATE bot_tokens t
+  SET owner_id = p.owner_id
+  FROM bot_projects p
+  WHERE t.project_id = p.id
+    AND t.owner_id IS NULL
+    AND p.owner_id IS NOT NULL;
+`;
+
+/**
  * Запускает все необходимые миграции базы данных
  * @returns Promise<void>
  */
@@ -75,6 +89,8 @@ export async function runMigrations(): Promise<void> {
     console.log("[Migrations] Колонка launch_id в bot_logs готова");
     await client.query(CREATE_APP_SETTINGS_TABLE);
     console.log("[Migrations] Таблица app_settings готова");
+    const repairResult = await client.query(REPAIR_BOT_TOKENS_OWNER_ID);
+    console.log(`[Migrations] Repair bot_tokens.owner_id: обновлено ${repairResult.rowCount ?? 0} записей`);
   } catch (err) {
     console.error("[Migrations] Ошибка выполнения миграций:", err);
   } finally {
