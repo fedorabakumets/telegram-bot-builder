@@ -873,14 +873,13 @@ function reduceLayerCrossings(
  * Якорит связанные keyboard-ноды рядом с их message-хостами,
  * затем разрешает коллизии между keyboard-нодами в одном X-столбце.
  *
- * Keyboard ставится сразу правее хоста, но не попадает в X-диапазон
- * ни одного из слоёв (где стоят другие узлы). Если попадает — сдвигается
- * в середину промежутка между слоями.
+ * Keyboard ставится после самого дальнего слоя среди целей его кнопок,
+ * чтобы не накладываться ни на один узел-цель (http_request, input, condition).
  *
  * @param positions - Карта позиций узлов (изменяется на месте)
  * @param graph - Граф раскладки
  * @param opts - Параметры раскладки
- * @param layerX - Массив X-координат слоёв
+ * @param layerX - Массив X-координат слоёв (для вычисления позиции keyboard)
  * @param layerMap - Карта слоёв по ID узла
  */
 function anchorKeyboardNodes(
@@ -888,40 +887,47 @@ function anchorKeyboardNodes(
   graph: LayoutGraph,
   opts: HierarchicalLayoutOptions,
   layerX: number[] = [],
-  _layerMap: Map<string, number> = new Map(),
+  layerMap: Map<string, number> = new Map(),
 ): void {
-  /**
-   * Проверяет, попадает ли X в диапазон [lx, lx + nodeWidth] какого-либо слоя.
-   * Используем nodeWidth как приблизительную ширину слоя.
-   */
-  const collidesWithLayer = (x: number): number | null => {
-    for (const lx of layerX) {
-      if (x >= lx - 4 && x <= lx + opts.nodeWidth + 4) return lx;
-    }
-    return null;
-  };
-
-  /** Расставляем каждый keyboard рядом со своим host, избегая X слоёв */
+  /** Сначала расставляем каждый keyboard рядом со своим host */
   for (const [keyboardId, hostId] of graph.keyboardHostByKeyboardId) {
     const hostPosition = positions.get(hostId);
     if (!hostPosition) continue;
 
-    const hostNode = graph.nodesById.get(hostId);
-    const hostSize = getNodeSize(hostId, opts, hostNode);
-    const xOffset = Math.max(56, Math.round(opts.horizontalSpacing * 0.75));
-    let keyboardX = hostPosition.x + hostSize.width + xOffset;
+    const keyboardNode = graph.nodesById.get(keyboardId);
+    const keyboardButtons = Array.isArray((keyboardNode?.data as any)?.buttons)
+      ? (keyboardNode!.data as any).buttons as any[]
+      : [];
 
     /**
-     * Если keyboard попадает в X-диапазон слоя — сдвигаем его в середину
-     * промежутка между этим слоем и следующим. Повторяем до свободного места.
+     * Keyboard ставится после самого дальнего слоя среди целей кнопок хоста.
+     * Это гарантирует что keyboard не накладывается ни на один узел-цель.
+     *
+     * Алгоритм:
+     * 1. Берём все цели кнопок keyboard-ноды
+     * 2. Находим максимальный layerIndex среди них
+     * 3. Ставим keyboard на X слоя (maxTargetLayer + 1)
+     * Если целей нет — ставим на слой (hostLayer + 2).
      */
-    let attempts = 0;
-    while (attempts < layerX.length + 1) {
-      const collidingLx = collidesWithLayer(keyboardX);
-      if (collidingLx === null) break;
-      /** Ставим keyboard в середину промежутка после коллизионного слоя */
-      keyboardX = collidingLx + opts.nodeWidth + Math.round(opts.horizontalSpacing / 2);
-      attempts += 1;
+    const hostLayer = layerMap.get(hostId) ?? 0;
+    let maxTargetLayer = hostLayer + 1;
+    for (const btn of keyboardButtons) {
+      if (btn?.action === 'goto' && btn?.target) {
+        const targetLayer = layerMap.get(btn.target);
+        if (targetLayer !== undefined && targetLayer > maxTargetLayer) {
+          maxTargetLayer = targetLayer;
+        }
+      }
+    }
+
+    const keyboardLayerIndex = maxTargetLayer + 1;
+    let keyboardX: number;
+    if (keyboardLayerIndex < layerX.length) {
+      keyboardX = layerX[keyboardLayerIndex];
+    } else {
+      /** Нет готового слоя — ставим правее последнего */
+      const lastLayerX = layerX.length > 0 ? layerX[layerX.length - 1] : opts.startX;
+      keyboardX = lastLayerX + opts.nodeWidth + opts.horizontalSpacing;
     }
 
     positions.set(keyboardId, {
@@ -931,25 +937,31 @@ function anchorKeyboardNodes(
   }
 
   /**
-   * Группируем keyboard-ноды по X-столбцу и разрешаем перекрытия по Y.
+   * Группируем keyboard-ноды по X-столбцу и разрешаем перекрытия:
+   * сортируем по Y их host-а, затем раздвигаем вниз если перекрываются.
    */
   const byColumn = new Map<number, string[]>();
   for (const [keyboardId] of graph.keyboardHostByKeyboardId) {
     const pos = positions.get(keyboardId);
     if (!pos) continue;
-    if (!byColumn.has(pos.x)) byColumn.set(pos.x, []);
-    byColumn.get(pos.x)!.push(keyboardId);
+    const col = pos.x;
+    if (!byColumn.has(col)) byColumn.set(col, []);
+    byColumn.get(col)!.push(keyboardId);
   }
 
   for (const [, columnIds] of byColumn) {
     if (columnIds.length < 2) continue;
 
+    /** Сортируем по Y хоста, чтобы порядок был предсказуемым */
     columnIds.sort((a, b) => {
-      const yA = positions.get(graph.keyboardHostByKeyboardId.get(a)!)?.y ?? 0;
-      const yB = positions.get(graph.keyboardHostByKeyboardId.get(b)!)?.y ?? 0;
+      const hostA = graph.keyboardHostByKeyboardId.get(a)!;
+      const hostB = graph.keyboardHostByKeyboardId.get(b)!;
+      const yA = positions.get(hostA)?.y ?? 0;
+      const yB = positions.get(hostB)?.y ?? 0;
       return yA - yB;
     });
 
+    /** Проходим сверху вниз и сдвигаем если перекрываются */
     for (let i = 1; i < columnIds.length; i += 1) {
       const prevId = columnIds[i - 1];
       const currId = columnIds[i];
@@ -957,6 +969,7 @@ function anchorKeyboardNodes(
       const prevNode = graph.nodesById.get(prevId);
       const prevSize = getNodeSize(prevId, opts, prevNode);
       const currPos = positions.get(currId)!;
+
       const minY = prevPos.y + prevSize.height + opts.verticalSpacing;
       if (currPos.y < minY) {
         positions.set(currId, { x: currPos.x, y: minY });
