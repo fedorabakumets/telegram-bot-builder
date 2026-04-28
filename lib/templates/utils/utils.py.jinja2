@@ -226,6 +226,9 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
         # Сначала ищем точное совпадение в плоском словаре (включая ключи вида a.b[0].c)
         val = variables.get(var_path)
         if val is not None:
+            # dict/list сериализуем как валидный JSON, не Python repr
+            if isinstance(val, (dict, list)):
+                return _json.dumps(val, ensure_ascii=False)
             return str(val)
         # Если нет точного совпадения — пробуем обойти путь вручную
         # Разбиваем путь на сегменты: "a.b[0][1].c" → ["a", "b", "[0]", "[1]", "c"]
