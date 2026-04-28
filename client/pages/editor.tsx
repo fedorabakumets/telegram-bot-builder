@@ -700,18 +700,11 @@ export default function Editor() {
       setActionHistory([]);
     },
     isSaving: updateProjectMutation.isPending,
-    // isDirty объединяет оба источника: JSON-режим холста и редактирование JSON в CodePanel
-    isDirty: isDirty || !!editedJsonContent,
+    isDirty,
     jsonError,
-    onApplyJson: editedJsonContent ? () => handleApplyJsonToBotData(editedJsonContent) : handleApplyJsonInPlace,
-    onResetJson: editedJsonContent ? () => {
-      isResettingEditorRef.current = true;
-      setEditedJsonContent('');
-      editorRef.current?.setValue(displayContent);
-      setTimeout(() => { isResettingEditorRef.current = false; }, 0);
-    } : handleResetJson,
-    // Если есть правки в CodePanel — показываем json-режим плашки даже на холсте
-    mode: (editedJsonContent && canvasView === 'canvas') ? 'json' : canvasView,
+    onApplyJson: handleApplyJsonInPlace,
+    onResetJson: handleResetJson,
+    mode: canvasView,
   });
 
   // Обработчики узлов через хук
