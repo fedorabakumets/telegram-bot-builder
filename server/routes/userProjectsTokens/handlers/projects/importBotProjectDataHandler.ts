@@ -84,12 +84,24 @@ export async function importBotProjectDataHandler(req: Request, res: Response): 
         const parsedData = parseRequestBody(req.body);
 
         if (parsedData === null) {
+            console.error("importBotProjectDataHandler: body parse failed", {
+                bodyType: typeof req.body,
+                bodyKeys: req.body && typeof req.body === "object" ? Object.keys(req.body) : "n/a",
+                bodyPreview: typeof req.body === "string" ? req.body.slice(0, 200) : String(req.body).slice(0, 200),
+                contentType: req.headers["content-type"],
+            });
             res.status(400).json({ error: "Тело запроса обязательно и должно быть валидным JSON" });
             return;
         }
 
         // Валидация структуры: обязателен массив sheets (BotDataWithSheets)
         if (typeof parsedData !== "object" || !Array.isArray(parsedData.sheets)) {
+            console.error("importBotProjectDataHandler: invalid structure", {
+                parsedType: typeof parsedData,
+                hasSheets: parsedData && "sheets" in parsedData,
+                sheetsType: parsedData && typeof parsedData.sheets,
+                keys: parsedData && typeof parsedData === "object" ? Object.keys(parsedData) : "n/a",
+            });
             res.status(400).json({ error: "Неверная структура проекта: ожидается поле sheets (массив)" });
             return;
         }
