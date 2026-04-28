@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -56,13 +56,6 @@ export default function Home() {
   const { handleTelegramLogin } = useTelegramLogin();
   const isGuestUser = !user || isGuest(user);
 
-  // Редирект если проектов нет
-  useEffect(() => {
-    if (!isAuthLoading && !isLoading && !isGuestUser && projects.length === 0) {
-      setLocation('/not-found');
-    }
-  }, [isAuthLoading, isLoading, isGuestUser, projects.length]);
-
   const form = useForm<CreateProjectForm>({
     resolver: zodResolver(createProjectSchema),
     defaultValues: { name: '', description: '' },
@@ -74,6 +67,16 @@ export default function Home() {
     queryFn: () => apiRequest('GET', '/api/projects/list'),
     enabled: !isGuestUser,
   });
+
+  /**
+   * Редирект на страницу 404 если авторизованный пользователь не имеет проектов.
+   * Срабатывает только после завершения загрузки авторизации и данных проектов.
+   */
+  useEffect(() => {
+    if (!isAuthLoading && !isLoading && !isGuestUser && projects.length === 0) {
+      setLocation('/not-found');
+    }
+  }, [isAuthLoading, isLoading, isGuestUser, projects.length, setLocation]);
 
   // Создание нового проекта
   const createProjectMutation = useMutation({
