@@ -52,7 +52,7 @@ export default function Home() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user, isLoading: isAuthLoading } = useTelegramAuth();
+  const { user, isLoading: isAuthLoading, sessionReady } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
   const isGuestUser = !user || isGuest(user);
 
@@ -73,10 +73,10 @@ export default function Home() {
    * Срабатывает только после завершения загрузки авторизации и данных проектов.
    */
   useEffect(() => {
-    if (!isAuthLoading && !isLoading && !isGuestUser && projects.length === 0) {
+    if (sessionReady && !isLoading && !isGuestUser && projects.length === 0) {
       setLocation('/not-found');
     }
-  }, [isAuthLoading, isLoading, isGuestUser, projects.length, setLocation]);
+  }, [sessionReady, isLoading, isGuestUser, projects.length, setLocation]);
 
   // Создание нового проекта
   const createProjectMutation = useMutation({
