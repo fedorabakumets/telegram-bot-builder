@@ -44,7 +44,7 @@ import { setupAuthRoutes } from "./setupAuthRoutes";
 import { setupBotIntegrationRoutes } from "./setupBotIntegrationRoutes";
 import { setupGithubPushRoute } from './setupGithubPushRoute';
 import { setupWebhookRoutes } from './setupWebhookRoutes';
-import { getRedisPublisher } from "../redis/redisClient";
+import { getRedisPublisher, waitForRedisInit } from "../redis/redisClient";
 import { setupProjectRoutes } from "./setupProjectRoutes";
 import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes";
 import { setupUserTemplateRoutes } from "./setupUserTemplateRoutes";
@@ -402,6 +402,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Создаём store: Redis если доступен, иначе PostgreSQL (fallback)
+  // Ждём завершения инициализации Redis перед проверкой — иначе race condition
+  await waitForRedisInit();
   let store: session.Store;
   const redisClient = getRedisPublisher();
   if (redisClient) {

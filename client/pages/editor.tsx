@@ -207,55 +207,9 @@ export default function Editor() {
     handleOpenMobileProperties,
   } = useMobileHandlers({ setShowMobileSidebar, setShowMobileProperties });
 
-  /**
-   * Ref для дебаунса схлопывания move/move_end записей.
-   * Хранит таймер последнего незафиксированного перемещения.
-   */
-  const moveDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  /**
-   * Типы действий, которые схлопываются если идут подряд с одинаковым описанием.
-   * Вместо добавления новой записи обновляется timestamp существующей.
-   */
-  const COLLAPSIBLE_TYPES = new Set(['move', 'move_end', 'update']);
-
-  /**
-   * Обработчик логирования действий с поддержкой схлопывания однотипных записей.
-   * Для типов move/move_end/update: если последняя запись того же типа и описания —
-   * обновляет её timestamp вместо добавления дубликата.
-   * Для move дополнительно применяется дебаунс 300мс.
-   * @param type - Тип действия
-   * @param description - Описание действия
-   */
+  // Обработчик логирования действий
   const handleActionLog = useCallback((type: string, description: string) => {
-    const actionType = type as ActionType;
-
-    // Для move — дебаунс: откладываем запись на 300мс, отменяем предыдущий таймер
-    if (actionType === 'move') {
-      if (moveDebounceRef.current) clearTimeout(moveDebounceRef.current);
-      moveDebounceRef.current = setTimeout(() => {
-        moveDebounceRef.current = null;
-        setActionHistory((prev: ActionHistoryItem[]) => {
-          const last = prev[0];
-          // Схлопываем: если последняя запись того же типа и описания — обновляем timestamp
-          if (last && last.type === actionType && last.description === description) {
-            return [{ ...last, timestamp: Date.now() }, ...prev.slice(1)];
-          }
-          return [createActionHistoryItem(actionType, description), ...prev].slice(0, 50);
-        });
-        setHasLocalChanges(true);
-      }, 300);
-      return;
-    }
-
-    setActionHistory((prev: ActionHistoryItem[]) => {
-      const last = prev[0];
-      // Схлопываем однотипные подряд идущие записи с одинаковым описанием
-      if (last && COLLAPSIBLE_TYPES.has(actionType) && last.type === actionType && last.description === description) {
-        return [{ ...last, timestamp: Date.now() }, ...prev.slice(1)];
-      }
-      return [createActionHistoryItem(actionType, description), ...prev].slice(0, 50);
-    });
+    setActionHistory((prevHistory: ActionHistoryItem[]) => [createActionHistoryItem(type as ActionType, description), ...prevHistory].slice(0, 50));
     setHasLocalChanges(true);
   }, [setActionHistory, setHasLocalChanges]);
 

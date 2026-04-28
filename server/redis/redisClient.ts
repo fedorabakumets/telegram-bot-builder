@@ -90,9 +90,18 @@ function getRedisSubscriber(): RedisClient | null {
   return redisSubscriber;
 }
 
-// Инициализируем при загрузке модуля
-initRedisClients().catch((err) =>
+/** Promise инициализации Redis — позволяет дождаться завершения перед использованием */
+const redisInitPromise: Promise<void> = initRedisClients().catch((err) =>
   console.error('[Redis] Ошибка инициализации:', err)
 );
 
-export { redisPublisher, redisSubscriber, isRedisAvailable, getRedisPublisher, getRedisSubscriber };
+/**
+ * Ожидает завершения инициализации Redis-клиентов.
+ * Используется в местах где нужен актуальный статус Redis до синхронного вызова.
+ * @returns Promise завершения инициализации
+ */
+async function waitForRedisInit(): Promise<void> {
+  await redisInitPromise;
+}
+
+export { redisPublisher, redisSubscriber, isRedisAvailable, getRedisPublisher, getRedisSubscriber, waitForRedisInit };
