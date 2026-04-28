@@ -873,24 +873,22 @@ function reduceLayerCrossings(
  * Якорит связанные keyboard-ноды рядом с их message-хостами,
  * затем разрешает коллизии между keyboard-нодами в одном X-столбце.
  *
- * После якорения проверяет, не совпадает ли X keyboard-ноды с X одного из слоёв
- * (где могут стоять input/condition/message узлы). Если совпадает — сдвигает
- * keyboard правее, чтобы не перекрываться с узлами этого слоя.
+ * Keyboard ставится строго после слоя (hostLayer+1), чтобы не накладываться
+ * на узлы-цели кнопок, которые тоже находятся в этом слое.
  *
  * @param positions - Карта позиций узлов (изменяется на месте)
  * @param graph - Граф раскладки
  * @param opts - Параметры раскладки
- * @param layerX - Массив X-координат слоёв (для проверки коллизий по X)
+ * @param layerX - Массив X-координат слоёв (для вычисления позиции keyboard)
+ * @param layerMap - Карта слоёв по ID узла
  */
 function anchorKeyboardNodes(
   positions: Map<string, { x: number; y: number }>,
   graph: LayoutGraph,
   opts: HierarchicalLayoutOptions,
   layerX: number[] = [],
+  layerMap: Map<string, number> = new Map(),
 ): void {
-  /** Допуск для считания двух X одним столбцом */
-  const X_TOLERANCE = 8;
-
   /** Сначала расставляем каждый keyboard рядом со своим host */
   for (const [keyboardId, hostId] of graph.keyboardHostByKeyboardId) {
     const hostPosition = positions.get(hostId);
@@ -899,23 +897,29 @@ function anchorKeyboardNodes(
     const hostNode = graph.nodesById.get(hostId);
     const hostSize = getNodeSize(hostId, opts, hostNode);
     const xOffset = Math.max(56, Math.round(opts.horizontalSpacing * 0.75));
-    let keyboardX = hostPosition.x + hostSize.width + xOffset;
 
     /**
-     * Если вычисленный X keyboard совпадает с X одного из слоёв (допуск 8px),
-     * сдвигаем keyboard правее чтобы не накладываться на узлы этого слоя.
-     * Повторяем пока не найдём свободный X.
+     * Keyboard ставится после слоя (hostLayer+1), где стоят цели кнопок.
+     * Это гарантирует что keyboard не накладывается на http_request / condition
+     * которые тоже являются дочерними узлами того же message-хоста.
+     *
+     * Если layerX не содержит нужного слоя — fallback на hostX + width + offset.
      */
-    let shifted = true;
-    while (shifted) {
-      shifted = false;
-      for (const lx of layerX) {
-        if (Math.abs(keyboardX - lx) <= X_TOLERANCE) {
-          keyboardX = lx + opts.nodeWidth + opts.horizontalSpacing;
-          shifted = true;
-          break;
-        }
-      }
+    const hostLayer = layerMap.get(hostId) ?? 0;
+    const targetLayer = hostLayer + 1; // слой где стоят цели кнопок
+    const afterTargetLayer = targetLayer + 1; // keyboard идёт после него
+
+    let keyboardX: number;
+    if (afterTargetLayer < layerX.length) {
+      /** Берём X слоя после целей кнопок */
+      keyboardX = layerX[afterTargetLayer];
+    } else if (targetLayer < layerX.length) {
+      /** Нет слоя после целей — ставим правее последнего слоя */
+      const lastLayerX = layerX[layerX.length - 1];
+      keyboardX = lastLayerX + opts.nodeWidth + opts.horizontalSpacing;
+    } else {
+      /** Fallback: рядом с хостом */
+      keyboardX = hostPosition.x + hostSize.width + xOffset;
     }
 
     positions.set(keyboardId, {
@@ -1155,7 +1159,7 @@ export function createHierarchicalLayout(
     }
   }
 
-  anchorKeyboardNodes(positions, graph, opts, layerX);
+  anchorKeyboardNodes(positions, graph, opts, layerX, layerMap);
   resolveColumnCollisions(positions, nodes, opts);
   resolveBoundingBoxCollisions(positions, nodes, opts);
 
