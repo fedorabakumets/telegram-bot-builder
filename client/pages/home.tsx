@@ -309,17 +309,7 @@ export default function Home() {
 
         {/* Список проектов */}
         {projects.length === 0 ? (
-          <div className="text-center py-12">
-            <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Нет проектов</h3>
-            <p className="text-muted-foreground mb-4">
-              Создайте свой первый проект для начала работы
-            </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Создать проект
-            </Button>
-          </div>
+          <>{setLocation('/not-found')}</>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
