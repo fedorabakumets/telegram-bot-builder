@@ -26,9 +26,11 @@ import { BotLogsProvider } from "./components/editor/bot/contexts/bot-logs-conte
 import { ActiveTerminalsProvider } from "./components/editor/bot/contexts/ActiveTerminalsContext";
 import { SetupGuard } from "@/components/editor/setup";
 import { AuthGuard } from "@/components/editor/auth";
+import { NoProjectsScreen } from "@/components/editor/no-projects";
 import { useTelegramAuth } from "@/components/editor/header/hooks/use-telegram-auth";
 import { isGuest } from "@/types/telegram-user";
 import { apiRequest } from "@/queryClient";
+import { useState } from "react";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
@@ -70,12 +72,12 @@ function LoadingSpinner() {
 }
 
 /**
- * Гард редиректа: если авторизованный пользователь не имеет проектов — редирект на /not-found
+ * Гард проектов: если авторизованный пользователь не имеет проектов — показывает NoProjectsScreen
  */
 function ProjectsGuard({ children }: { children: React.ReactNode }) {
-  const [, setLocation] = useLocation();
   const { user, sessionReady } = useTelegramAuth();
   const isGuestUser = !user || isGuest(user);
+  const [showNoProjects, setShowNoProjects] = useState(false);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['/api/projects/list'],
@@ -84,10 +86,12 @@ function ProjectsGuard({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    if (sessionReady && !isLoading && !isGuestUser && projects.length === 0) {
-      setLocation('/not-found');
+    if (sessionReady && !isLoading && !isGuestUser) {
+      setShowNoProjects(projects.length === 0);
     }
   }, [sessionReady, isLoading, isGuestUser, projects.length]);
+
+  if (showNoProjects) return <NoProjectsScreen />;
 
   return <>{children}</>;
 }

@@ -73,7 +73,6 @@ export default function Home() {
    * Срабатывает только после завершения загрузки авторизации и данных проектов.
    */
   useEffect(() => {
-    console.log('[redirect check]', { sessionReady, isLoading, isGuestUser, projectsLen: projects.length });
     if (sessionReady && !isLoading && !isGuestUser && projects.length === 0) {
       setLocation('/not-found');
     }
