@@ -52,7 +52,7 @@ export default function Home() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user } = useTelegramAuth();
+  const { user, isLoading: isAuthLoading } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
   const isGuestUser = !user || isGuest(user);
 
@@ -184,7 +184,7 @@ export default function Home() {
   };
 
 
-  if (isLoading) {
+  if (isAuthLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
