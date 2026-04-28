@@ -1026,6 +1026,11 @@ function resolveColumnCollisions(
  * Для каждой пары узлов, чьи прямоугольники пересекаются, сдвигает нижний узел вниз.
  * Это ловит случаи когда keyboard-нода оказалась рядом с узлом другого слоя.
  *
+ * ВАЖНО: сдвиг применяется только если узлы находятся в одном «логическом столбце»
+ * (|aPos.x - bPos.x| < X_TOLERANCE). Узлы из разных слоёв (разный X) не трогаем —
+ * иначе широкие узлы из соседних слоёв ошибочно считаются перекрывающимися и
+ * весь граф схлопывается в вертикальный столбец.
+ *
  * @param positions - Карта позиций узлов (изменяется на месте)
  * @param nodes - Все узлы canvas
  * @param opts - Параметры раскладки
@@ -1036,6 +1041,13 @@ function resolveBoundingBoxCollisions(
   opts: HierarchicalLayoutOptions,
 ): void {
   const nodeIds = nodes.map(n => n.id).filter(id => positions.has(id));
+
+  /**
+   * Допуск по X: два узла считаются «одним столбцом» только если их левые края
+   * отличаются не более чем на это значение. Узлы из разных слоёв имеют разный X
+   * и не должны влиять друг на друга по вертикали.
+   */
+  const X_TOLERANCE = 8;
 
   /** Несколько проходов чтобы цепочки сдвигов устоялись */
   for (let pass = 0; pass < 3; pass += 1) {
@@ -1051,14 +1063,21 @@ function resolveBoundingBoxCollisions(
       for (let j = i + 1; j < nodeIds.length; j += 1) {
         const bId = nodeIds[j];
         const bPos = positions.get(bId)!;
+
+        /**
+         * Узлы из разных слоёв (разный X) не сдвигаем — они не конкурируют
+         * за вертикальное пространство. Без этой проверки широкие узлы
+         * (шире расстояния между слоями) ошибочно считаются перекрывающимися.
+         */
+        if (Math.abs(aPos.x - bPos.x) > X_TOLERANCE) continue;
+
         const bNode = nodes.find(n => n.id === bId);
         const bSize = getNodeSize(bId, opts, bNode);
 
-        /** Проверяем пересечение прямоугольников с зазором */
-        const overlapX = aPos.x < bPos.x + bSize.width && aPos.x + aSize.width > bPos.x;
+        /** Проверяем пересечение прямоугольников по Y (X уже проверен выше) */
         const overlapY = aPos.y < bPos.y + bSize.height && aPos.y + aSize.height > bPos.y;
 
-        if (overlapX && overlapY) {
+        if (overlapY) {
           /** Сдвигаем нижний узел (b) вниз чтобы устранить перекрытие */
           const minY = aPos.y + aSize.height + opts.verticalSpacing;
           positions.set(bId, { x: bPos.x, y: minY });
