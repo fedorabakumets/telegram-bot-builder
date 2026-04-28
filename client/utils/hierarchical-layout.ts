@@ -119,9 +119,34 @@ const CONTENT_TYPES = new Set([
 
 /**
  * Возвращает размер узла, учитывая реальные измерения canvas.
+ * Если реальные размеры не переданы — оценивает высоту по типу и количеству кнопок.
+ *
+ * @param nodeId - Идентификатор узла
+ * @param options - Параметры раскладки
+ * @param node - Узел (опционально, для оценки высоты по содержимому)
+ * @returns Размер узла
  */
-function getNodeSize(nodeId: string, options: HierarchicalLayoutOptions): { width: number; height: number } {
-  return options.nodeSizes?.get(nodeId) || { width: options.nodeWidth, height: options.nodeHeight };
+function getNodeSize(
+  nodeId: string,
+  options: HierarchicalLayoutOptions,
+  node?: Node,
+): { width: number; height: number } {
+  if (options.nodeSizes?.has(nodeId)) {
+    return options.nodeSizes.get(nodeId)!;
+  }
+
+  /** Оцениваем высоту по типу и количеству кнопок если нет реальных размеров */
+  if (node) {
+    const buttons = Array.isArray((node.data as any)?.buttons) ? (node.data as any).buttons : [];
+    const buttonCount = buttons.length;
+    if (node.type === 'keyboard' || node.type === 'message') {
+      /** Каждая кнопка добавляет ~60px к базовой высоте */
+      const estimated = options.nodeHeight + buttonCount * 60;
+      return { width: options.nodeWidth, height: estimated };
+    }
+  }
+
+  return { width: options.nodeWidth, height: options.nodeHeight };
 }
 
 /**
@@ -862,7 +887,8 @@ function anchorKeyboardNodes(
     const hostPosition = positions.get(hostId);
     if (!hostPosition) continue;
 
-    const hostSize = getNodeSize(hostId, opts);
+    const hostNode = graph.nodesById.get(hostId);
+    const hostSize = getNodeSize(hostId, opts, hostNode);
     const xOffset = Math.max(56, Math.round(opts.horizontalSpacing * 0.75));
 
     positions.set(keyboardId, {
@@ -901,7 +927,8 @@ function anchorKeyboardNodes(
       const prevId = columnIds[i - 1];
       const currId = columnIds[i];
       const prevPos = positions.get(prevId)!;
-      const prevSize = getNodeSize(prevId, opts);
+      const prevNode = graph.nodesById.get(prevId);
+      const prevSize = getNodeSize(prevId, opts, prevNode);
       const currPos = positions.get(currId)!;
 
       const minY = prevPos.y + prevSize.height + opts.verticalSpacing;
@@ -914,7 +941,7 @@ function anchorKeyboardNodes(
 
 /**
  * Разрешает коллизии между всеми узлами в одном X-столбце после финальной расстановки.
- * Сортирует по Y и раздвигает перекрывающиеся узлы вниз.
+ * Группирует узлы по близким X (допуск 8px), сортирует по Y и раздвигает перекрытия.
  *
  * @param positions - Карта позиций узлов (изменяется на месте)
  * @param nodes - Все узлы canvas
@@ -925,16 +952,26 @@ function resolveColumnCollisions(
   nodes: Node[],
   opts: HierarchicalLayoutOptions,
 ): void {
-  /** Группируем узлы по X-столбцу */
-  const byColumn = new Map<number, string[]>();
-  for (const node of nodes) {
-    const pos = positions.get(node.id);
-    if (!pos) continue;
-    if (!byColumn.has(pos.x)) byColumn.set(pos.x, []);
-    byColumn.get(pos.x)!.push(node.id);
+  /** Допуск для считания двух X одним столбцом */
+  const X_TOLERANCE = 8;
+
+  /** Собираем уникальные X-значения и группируем близкие */
+  const nodeIds = nodes.map(n => n.id).filter(id => positions.has(id));
+  const visited = new Set<string>();
+  const columns: string[][] = [];
+
+  for (const id of nodeIds) {
+    if (visited.has(id)) continue;
+    const x = positions.get(id)!.x;
+    const group = nodeIds.filter(otherId => {
+      if (visited.has(otherId)) return false;
+      return Math.abs((positions.get(otherId)?.x ?? 0) - x) <= X_TOLERANCE;
+    });
+    for (const gid of group) visited.add(gid);
+    columns.push(group);
   }
 
-  for (const [, columnIds] of byColumn) {
+  for (const columnIds of columns) {
     if (columnIds.length < 2) continue;
 
     /** Сортируем по текущей Y-позиции */
@@ -945,7 +982,8 @@ function resolveColumnCollisions(
       const prevId = columnIds[i - 1];
       const currId = columnIds[i];
       const prevPos = positions.get(prevId)!;
-      const prevSize = getNodeSize(prevId, opts);
+      const prevNode = nodes.find(n => n.id === prevId);
+      const prevSize = getNodeSize(prevId, opts, prevNode);
       const currPos = positions.get(currId)!;
 
       const minY = prevPos.y + prevSize.height + opts.verticalSpacing;
