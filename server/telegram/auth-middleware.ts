@@ -22,14 +22,15 @@ declare global {
  * Если пользователь авторизован через Telegram, его данные будут доступны в req.user
  */
 export function authMiddleware(req: Request, _res: Response, next: NextFunction) {
-  // Проверяем наличие данных Telegram пользователя в сессии
   if (req.session?.telegramUser) {
     req.user = req.session.telegramUser;
-    // console.log(`🔐 Auth middleware: User ${req.user.id} found in session`);
+    console.log(`🔐 Auth: User ${req.user.id} (sid=${req.session.id?.slice(0,8)})`);
   } else {
-    // console.log(`🔓 Auth middleware: No user in session`);
+    // Логируем только API запросы проектов для диагностики
+    if (req.path.includes('/projects')) {
+      console.log(`🔓 Auth: No user in session (sid=${req.session?.id?.slice(0,8) ?? 'none'}, path=${req.path})`);
+    }
   }
-
   next();
 }
 
