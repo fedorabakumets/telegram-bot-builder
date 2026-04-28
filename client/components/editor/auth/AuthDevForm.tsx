@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { queryClient } from '@/queryClient';
+import { invalidateAuthQueries } from '@/utils/invalidate-auth-queries';
 
 /**
  * Форма входа по Telegram ID для dev-режима.

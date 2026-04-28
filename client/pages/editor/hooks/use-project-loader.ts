@@ -106,6 +106,7 @@ export function useProjectLoader({
   useEffect(() => {
     if (projectId) return;
     if (!isAuthenticated) return;                // гости не получают автопроект
+    if (!sessionReady) return;                   // ждём готовности сессии
     if (isProjectsListFetching) return;          // ждём завершения запроса
     if (projectsList === undefined) return;      // ещё не загружено
     if (projectsList.length > 0) return;         // проекты есть
@@ -127,7 +128,7 @@ export function useProjectLoader({
         console.error('Ошибка автосоздания проекта:', e);
         isCreatingRef.current = false;
       });
-  }, [projectId, projectsList, isProjectsListFetching, isAuthenticated, queryClient]);
+  }, [projectId, projectsList, isProjectsListFetching, isAuthenticated, sessionReady, queryClient]);
 
   // Эффективный ID проекта
   const effectiveProjectId = projectId || projectsList?.[0]?.id;
