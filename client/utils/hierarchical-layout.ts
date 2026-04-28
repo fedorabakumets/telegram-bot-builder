@@ -845,32 +845,70 @@ function reduceLayerCrossings(
 }
 
 /**
- * Якорит связанные keyboard-ноды рядом с их message-хостами.
+ * Якорит связанные keyboard-ноды рядом с их message-хостами,
+ * затем разрешает коллизии между keyboard-нодами в одном X-столбце.
+ *
+ * @param positions - Карта позиций узлов (изменяется на месте)
+ * @param graph - Граф раскладки
+ * @param opts - Параметры раскладки
  */
 function anchorKeyboardNodes(
   positions: Map<string, { x: number; y: number }>,
   graph: LayoutGraph,
   opts: HierarchicalLayoutOptions,
 ): void {
+  /** Сначала расставляем каждый keyboard рядом со своим host */
   for (const [keyboardId, hostId] of graph.keyboardHostByKeyboardId) {
-    const keyboardPosition = positions.get(keyboardId);
     const hostPosition = positions.get(hostId);
-    const hostNode = graph.nodesById.get(hostId);
-    const keyboardNode = graph.nodesById.get(keyboardId);
-
-    if (!keyboardPosition || !hostPosition || !hostNode || !keyboardNode) continue;
+    if (!hostPosition) continue;
 
     const hostSize = getNodeSize(hostId, opts);
-    const keyboardSize = getNodeSize(keyboardId, opts);
-    // Держим keyboard визуально рядом с host, но оставляем более заметный зазор,
-    // чтобы узлы не выглядели "слипшимися".
     const xOffset = Math.max(56, Math.round(opts.horizontalSpacing * 0.75));
-    const yOffset = Math.max(0, Math.round((hostSize.height - keyboardSize.height) / 2));
 
     positions.set(keyboardId, {
       x: hostPosition.x + hostSize.width + xOffset,
-      y: hostPosition.y + yOffset,
+      y: hostPosition.y,
     });
+  }
+
+  /**
+   * Группируем keyboard-ноды по X-столбцу и разрешаем перекрытия:
+   * сортируем по Y их host-а, затем раздвигаем вниз если перекрываются.
+   */
+  const byColumn = new Map<number, string[]>();
+  for (const [keyboardId] of graph.keyboardHostByKeyboardId) {
+    const pos = positions.get(keyboardId);
+    if (!pos) continue;
+    const col = pos.x;
+    if (!byColumn.has(col)) byColumn.set(col, []);
+    byColumn.get(col)!.push(keyboardId);
+  }
+
+  for (const [, columnIds] of byColumn) {
+    if (columnIds.length < 2) continue;
+
+    /** Сортируем по Y хоста, чтобы порядок был предсказуемым */
+    columnIds.sort((a, b) => {
+      const hostA = graph.keyboardHostByKeyboardId.get(a)!;
+      const hostB = graph.keyboardHostByKeyboardId.get(b)!;
+      const yA = positions.get(hostA)?.y ?? 0;
+      const yB = positions.get(hostB)?.y ?? 0;
+      return yA - yB;
+    });
+
+    /** Проходим сверху вниз и сдвигаем если перекрываются */
+    for (let i = 1; i < columnIds.length; i += 1) {
+      const prevId = columnIds[i - 1];
+      const currId = columnIds[i];
+      const prevPos = positions.get(prevId)!;
+      const prevSize = getNodeSize(prevId, opts);
+      const currPos = positions.get(currId)!;
+
+      const minY = prevPos.y + prevSize.height + opts.verticalSpacing;
+      if (currPos.y < minY) {
+        positions.set(currId, { x: currPos.x, y: minY });
+      }
+    }
   }
 }
 
