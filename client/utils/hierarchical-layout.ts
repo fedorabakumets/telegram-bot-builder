@@ -873,15 +873,24 @@ function reduceLayerCrossings(
  * Якорит связанные keyboard-ноды рядом с их message-хостами,
  * затем разрешает коллизии между keyboard-нодами в одном X-столбце.
  *
+ * После якорения проверяет, не совпадает ли X keyboard-ноды с X одного из слоёв
+ * (где могут стоять input/condition/message узлы). Если совпадает — сдвигает
+ * keyboard правее, чтобы не перекрываться с узлами этого слоя.
+ *
  * @param positions - Карта позиций узлов (изменяется на месте)
  * @param graph - Граф раскладки
  * @param opts - Параметры раскладки
+ * @param layerX - Массив X-координат слоёв (для проверки коллизий по X)
  */
 function anchorKeyboardNodes(
   positions: Map<string, { x: number; y: number }>,
   graph: LayoutGraph,
   opts: HierarchicalLayoutOptions,
+  layerX: number[] = [],
 ): void {
+  /** Допуск для считания двух X одним столбцом */
+  const X_TOLERANCE = 8;
+
   /** Сначала расставляем каждый keyboard рядом со своим host */
   for (const [keyboardId, hostId] of graph.keyboardHostByKeyboardId) {
     const hostPosition = positions.get(hostId);
@@ -890,9 +899,27 @@ function anchorKeyboardNodes(
     const hostNode = graph.nodesById.get(hostId);
     const hostSize = getNodeSize(hostId, opts, hostNode);
     const xOffset = Math.max(56, Math.round(opts.horizontalSpacing * 0.75));
+    let keyboardX = hostPosition.x + hostSize.width + xOffset;
+
+    /**
+     * Если вычисленный X keyboard совпадает с X одного из слоёв (допуск 8px),
+     * сдвигаем keyboard правее чтобы не накладываться на узлы этого слоя.
+     * Повторяем пока не найдём свободный X.
+     */
+    let shifted = true;
+    while (shifted) {
+      shifted = false;
+      for (const lx of layerX) {
+        if (Math.abs(keyboardX - lx) <= X_TOLERANCE) {
+          keyboardX = lx + opts.nodeWidth + opts.horizontalSpacing;
+          shifted = true;
+          break;
+        }
+      }
+    }
 
     positions.set(keyboardId, {
-      x: hostPosition.x + hostSize.width + xOffset,
+      x: keyboardX,
       y: hostPosition.y,
     });
   }
@@ -940,8 +967,8 @@ function anchorKeyboardNodes(
 }
 
 /**
- * Разрешает коллизии между всеми узлами в одном X-столбце после финальной расстановки.
- * Группирует узлы по близким X (допуск 8px), сортирует по Y и раздвигает перекрытия.
+ * Разрешает коллизии между всеми узлами по реальным bounding box (x, y, width, height).
+ * Группирует узлы по близким X (допуск 8px), сортирует по Y и раздвигает перекрытия вниз.
  *
  * @param positions - Карта позиций узлов (изменяется на месте)
  * @param nodes - Все узлы canvas
@@ -995,7 +1022,57 @@ function resolveColumnCollisions(
 }
 
 /**
+ * Финальный проход: разрешает перекрытия по реальным bounding box между всеми узлами.
+ * Для каждой пары узлов, чьи прямоугольники пересекаются, сдвигает нижний узел вниз.
+ * Это ловит случаи когда keyboard-нода оказалась рядом с узлом другого слоя.
+ *
+ * @param positions - Карта позиций узлов (изменяется на месте)
+ * @param nodes - Все узлы canvas
+ * @param opts - Параметры раскладки
+ */
+function resolveBoundingBoxCollisions(
+  positions: Map<string, { x: number; y: number }>,
+  nodes: Node[],
+  opts: HierarchicalLayoutOptions,
+): void {
+  const nodeIds = nodes.map(n => n.id).filter(id => positions.has(id));
+
+  /** Несколько проходов чтобы цепочки сдвигов устоялись */
+  for (let pass = 0; pass < 3; pass += 1) {
+    /** Сортируем по Y чтобы сдвигать вниз предсказуемо */
+    nodeIds.sort((a, b) => (positions.get(a)?.y ?? 0) - (positions.get(b)?.y ?? 0));
+
+    for (let i = 0; i < nodeIds.length; i += 1) {
+      const aId = nodeIds[i];
+      const aPos = positions.get(aId)!;
+      const aNode = nodes.find(n => n.id === aId);
+      const aSize = getNodeSize(aId, opts, aNode);
+
+      for (let j = i + 1; j < nodeIds.length; j += 1) {
+        const bId = nodeIds[j];
+        const bPos = positions.get(bId)!;
+        const bNode = nodes.find(n => n.id === bId);
+        const bSize = getNodeSize(bId, opts, bNode);
+
+        /** Проверяем пересечение прямоугольников с зазором */
+        const overlapX = aPos.x < bPos.x + bSize.width && aPos.x + aSize.width > bPos.x;
+        const overlapY = aPos.y < bPos.y + bSize.height && aPos.y + aSize.height > bPos.y;
+
+        if (overlapX && overlapY) {
+          /** Сдвигаем нижний узел (b) вниз чтобы устранить перекрытие */
+          const minY = aPos.y + aSize.height + opts.verticalSpacing;
+          positions.set(bId, { x: bPos.x, y: minY });
+        }
+      }
+    }
+  }
+}
+/**
  * Группирует узлы по слоям.
+ *
+ * @param nodes - Все узлы canvas
+ * @param layerMap - Карта слоёв по ID узла
+ * @returns Массив слоёв, каждый слой — массив узлов
  */
 function buildLayers(nodes: Node[], layerMap: Map<string, number>): Node[][] {
   const maxLayer = Math.max(...layerMap.values());
@@ -1059,8 +1136,9 @@ export function createHierarchicalLayout(
     }
   }
 
-  anchorKeyboardNodes(positions, graph, opts);
+  anchorKeyboardNodes(positions, graph, opts, layerX);
   resolveColumnCollisions(positions, nodes, opts);
+  resolveBoundingBoxCollisions(positions, nodes, opts);
 
   const isolatedX = opts.startX + (layers.length + 1) * (opts.nodeWidth + opts.horizontalSpacing);
   let isolatedY = opts.startY;
