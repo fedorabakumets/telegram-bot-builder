@@ -17,6 +17,9 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import type { BotProject } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
+import { isGuest } from '@/types/telegram-user';
 
 const createProjectSchema = z.object({
   name: z.string().min(1, 'Название проекта обязательно'),
@@ -49,25 +52,20 @@ export default function Home() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useTelegramAuth();
+  const { handleTelegramLogin } = useTelegramLogin();
+  const isGuestUser = !user || isGuest(user);
 
   const form = useForm<CreateProjectForm>({
     resolver: zodResolver(createProjectSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-    },
+    defaultValues: { name: '', description: '' },
   });
 
-  // Загрузка списка проектов (только метаданные, без data)
+  // Загрузка списка проектов
   const { data: projects = [], isLoading } = useQuery<BotProject[]>({
     queryKey: ['/api/projects/list'],
-    queryFn: async () => {
-      // Для гостей: передаем список сохраненных IDs проектов
-      const myProjectIds = localStorage.getItem('myProjectIds');
-      const idsParam = myProjectIds ? `?ids=${myProjectIds}` : '';
-      const response = await fetch(`/api/projects/list${idsParam}`);
-      return response.json();
-    }
+    queryFn: () => apiRequest('GET', '/api/projects/list'),
+    enabled: !isGuestUser,
   });
 
   // Создание нового проекта
@@ -104,21 +102,11 @@ export default function Home() {
       }
     }),
     onSuccess: (newProject: BotProject) => {
-      // Сохраняем ID проекта в список "моих" для гостей
-      const myProjectIds = localStorage.getItem('myProjectIds') || '';
-      const ids = new Set(myProjectIds.split(',').filter(Boolean).map(Number));
-      ids.add(newProject.id);
-      localStorage.setItem('myProjectIds', Array.from(ids).join(','));
-      
       queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      toast({
-        title: "Проект создан",
-        description: `Проект "${newProject.name}" успешно создан`,
-      });
+      toast({ title: "Проект создан", description: `Проект "${newProject.name}" успешно создан` });
       setIsCreateDialogOpen(false);
       form.reset();
-      // Переходим в редактор нового проекта
       setLocation(`/editor/${newProject.id}`);
     },
     onError: () => {
@@ -209,7 +197,21 @@ export default function Home() {
     );
   }
 
-
+  // Гость — показываем экран входа
+  if (isGuestUser) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-sm px-4">
+          <Bot className="h-16 w-16 text-muted-foreground mx-auto" />
+          <h2 className="text-2xl font-bold">BotCraft Studio</h2>
+          <p className="text-muted-foreground">Войдите через Telegram чтобы управлять своими проектами</p>
+          <Button onClick={handleTelegramLogin} size="lg" className="w-full">
+            Войти через Telegram
+          </Button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-background">
       {/* Заголовок */}

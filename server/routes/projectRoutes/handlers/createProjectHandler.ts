@@ -12,7 +12,7 @@ import { insertBotProjectSchema } from "@shared/schema";
 import { z } from "zod";
 import { storage } from "../../../storages/storage";
 import type { StorageBotProjectInput } from "../../../storages/storageTypes";
-import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegram/auth-middleware";
+import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 
 /**
  * Обрабатывает запрос на создание проекта
@@ -24,16 +24,21 @@ import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegra
  */
 export async function createProjectHandler(req: Request, res: Response): Promise<void> {
     try {
+        const ownerId = getOwnerIdFromRequest(req);
+
+        // Гостям создание проектов запрещено
+        if (ownerId === null) {
+            res.status(401).json({ message: "Требуется авторизация через Telegram" });
+            return;
+        }
+
         const { ownerId: _ignored, ...bodyData } = req.body;
         const validatedData = insertBotProjectSchema.parse(bodyData) as StorageBotProjectInput;
-
-        const ownerId = getOwnerIdFromRequest(req);
-        const sessionId = ownerId === null ? getSessionIdFromRequest(req) : null;
 
         const projectData: StorageBotProjectInput = {
             ...validatedData,
             ownerId,
-            sessionId,
+            sessionId: null,
         };
 
         const project = await storage.createBotProject(projectData);
