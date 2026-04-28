@@ -670,9 +670,24 @@ export default function Editor() {
       });
     },
     onDiscard: () => {
-      // Откатываем все несохранённые изменения на холсте
-      if (actionHistory.length > 0) {
-        undoSteps(actionHistory.length);
+      // Восстанавливаем данные из кэша сервера — это корректно сбрасывает все листы,
+      // а не только текущий (undoSteps откатывал nodes только активного листа)
+      if (activeProject?.id) {
+        const savedProject = queryClient.getQueryData<BotProject>([`/api/projects/${activeProject.id}`]);
+        const savedData = savedProject?.data as any;
+        if (savedData) {
+          let sheetsData: BotDataWithSheets;
+          if (SheetsManager.isNewFormat(savedData)) {
+            sheetsData = savedData;
+          } else {
+            sheetsData = SheetsManager.migrateLegacyData(savedData as BotData);
+          }
+          setBotDataWithSheets(sheetsData);
+          const activeSheet = SheetsManager.getActiveSheet(sheetsData);
+          if (activeSheet) {
+            setBotData({ nodes: activeSheet.nodes }, undefined, undefined, true);
+          }
+        }
       }
       setHasLocalChanges(false);
       setActionHistory([]);
