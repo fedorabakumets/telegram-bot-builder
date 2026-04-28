@@ -13,9 +13,9 @@
  * @date 2026
  */
 
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "@/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/editor/header/utils/theme-provider";
@@ -26,6 +26,9 @@ import { BotLogsProvider } from "./components/editor/bot/contexts/bot-logs-conte
 import { ActiveTerminalsProvider } from "./components/editor/bot/contexts/ActiveTerminalsContext";
 import { SetupGuard } from "@/components/editor/setup";
 import { AuthGuard } from "@/components/editor/auth";
+import { useTelegramAuth } from "@/components/editor/header/hooks/use-telegram-auth";
+import { isGuest } from "@/types/telegram-user";
+import { apiRequest } from "@/queryClient";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
@@ -67,6 +70,29 @@ function LoadingSpinner() {
 }
 
 /**
+ * Гард редиректа: если авторизованный пользователь не имеет проектов — редирект на /not-found
+ */
+function ProjectsGuard({ children }: { children: React.ReactNode }) {
+  const [, setLocation] = useLocation();
+  const { user, sessionReady } = useTelegramAuth();
+  const isGuestUser = !user || isGuest(user);
+
+  const { data: projects = [], isLoading } = useQuery({
+    queryKey: ['/api/projects/list'],
+    queryFn: () => apiRequest('GET', '/api/projects/list'),
+    enabled: sessionReady && !isGuestUser,
+  });
+
+  useEffect(() => {
+    if (sessionReady && !isLoading && !isGuestUser && projects.length === 0) {
+      setLocation('/not-found');
+    }
+  }, [sessionReady, isLoading, isGuestUser, projects.length]);
+
+  return <>{children}</>;
+}
+
+/**
  * @brief Компонент маршрутизации приложения
  *
  * Определяет маршруты приложения и сопоставляет их с соответствующими компонентами.
@@ -79,14 +105,16 @@ function Router() {
     <Suspense fallback={<LoadingSpinner />}>
       <AuthGuard>
         <SetupGuard>
-          <Switch>
-            <Route path="/projects" component={Home} />
-            <Route path="/templates" component={TemplatesPage} />
-            <Route path="/editor/:id" component={Editor} />
-            <Route path="/projects/:id" component={Editor} />
-            <Route path="/" component={Editor} />
-            <Route component={NotFound} />
-          </Switch>
+          <ProjectsGuard>
+            <Switch>
+              <Route path="/projects" component={Home} />
+              <Route path="/templates" component={TemplatesPage} />
+              <Route path="/editor/:id" component={Editor} />
+              <Route path="/projects/:id" component={Editor} />
+              <Route path="/" component={Editor} />
+              <Route component={NotFound} />
+            </Switch>
+          </ProjectsGuard>
         </SetupGuard>
       </AuthGuard>
     </Suspense>
