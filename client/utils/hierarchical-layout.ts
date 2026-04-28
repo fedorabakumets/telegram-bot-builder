@@ -873,13 +873,14 @@ function reduceLayerCrossings(
  * Якорит связанные keyboard-ноды рядом с их message-хостами,
  * затем разрешает коллизии между keyboard-нодами в одном X-столбце.
  *
- * Keyboard ставится после самого дальнего слоя среди целей его кнопок,
- * чтобы не накладываться ни на один узел-цель (http_request, input, condition).
+ * Keyboard ставится как можно ближе к хосту (hostX + width + offset),
+ * но сдвигается правее если на этом X уже стоит другой узел который
+ * перекрывается по Y (например input или http_request из того же слоя).
  *
  * @param positions - Карта позиций узлов (изменяется на месте)
  * @param graph - Граф раскладки
  * @param opts - Параметры раскладки
- * @param layerX - Массив X-координат слоёв (для вычисления позиции keyboard)
+ * @param layerX - Массив X-координат слоёв
  * @param layerMap - Карта слоёв по ID узла
  */
 function anchorKeyboardNodes(
@@ -887,81 +888,85 @@ function anchorKeyboardNodes(
   graph: LayoutGraph,
   opts: HierarchicalLayoutOptions,
   layerX: number[] = [],
-  layerMap: Map<string, number> = new Map(),
 ): void {
+  /** Допуск по X для считания двух узлов «одним столбцом» */
+  const X_TOLERANCE = 20;
+
   /** Сначала расставляем каждый keyboard рядом со своим host */
   for (const [keyboardId, hostId] of graph.keyboardHostByKeyboardId) {
     const hostPosition = positions.get(hostId);
     if (!hostPosition) continue;
 
+    const hostNode = graph.nodesById.get(hostId);
+    const hostSize = getNodeSize(hostId, opts, hostNode);
     const keyboardNode = graph.nodesById.get(keyboardId);
-    const keyboardButtons = Array.isArray((keyboardNode?.data as any)?.buttons)
-      ? (keyboardNode!.data as any).buttons as any[]
-      : [];
+    const keyboardSize = getNodeSize(keyboardId, opts, keyboardNode);
+    const xOffset = Math.max(56, Math.round(opts.horizontalSpacing * 0.75));
+
+    /** Желаемый X — рядом с хостом */
+    let keyboardX = hostPosition.x + hostSize.width + xOffset;
+    const keyboardY = hostPosition.y;
 
     /**
-     * Keyboard ставится после самого дальнего слоя среди целей кнопок хоста.
-     * Это гарантирует что keyboard не накладывается ни на один узел-цель.
-     *
-     * Алгоритм:
-     * 1. Берём все цели кнопок keyboard-ноды
-     * 2. Находим максимальный layerIndex среди них
-     * 3. Ставим keyboard на X слоя (maxTargetLayer + 1)
-     * Если целей нет — ставим на слой (hostLayer + 2).
+     * Проверяем: есть ли на желаемом X другой узел который перекрывается по Y.
+     * Если да — сдвигаем keyboard на следующий доступный X из layerX,
+     * или за последний слой если ничего не подходит.
      */
-    const hostLayer = layerMap.get(hostId) ?? 0;
-    let maxTargetLayer = hostLayer + 1;
-    for (const btn of keyboardButtons) {
-      if (btn?.action === 'goto' && btn?.target) {
-        const targetLayer = layerMap.get(btn.target);
-        if (targetLayer !== undefined && targetLayer > maxTargetLayer) {
-          maxTargetLayer = targetLayer;
+    const hasCollision = (candidateX: number): boolean => {
+      for (const [otherId, otherPos] of positions) {
+        if (otherId === keyboardId || otherId === hostId) continue;
+        if (Math.abs(otherPos.x - candidateX) > X_TOLERANCE) continue;
+        const otherNode = graph.nodesById.get(otherId);
+        const otherSize = getNodeSize(otherId, opts, otherNode);
+        /** Проверяем перекрытие по Y с зазором */
+        const overlapY = keyboardY < otherPos.y + otherSize.height + opts.verticalSpacing
+          && keyboardY + keyboardSize.height + opts.verticalSpacing > otherPos.y;
+        if (overlapY) return true;
+      }
+      return false;
+    };
+
+    if (hasCollision(keyboardX)) {
+      /** Ищем первый X из layerX правее желаемого без коллизий */
+      let found = false;
+      for (const lx of layerX) {
+        if (lx > keyboardX - X_TOLERANCE && !hasCollision(lx)) {
+          keyboardX = lx;
+          found = true;
+          break;
         }
+      }
+      if (!found) {
+        /** Fallback: правее последнего слоя */
+        const lastLx = layerX.length > 0 ? layerX[layerX.length - 1] : keyboardX;
+        keyboardX = lastLx + opts.nodeWidth + opts.horizontalSpacing;
       }
     }
 
-    const keyboardLayerIndex = maxTargetLayer + 1;
-    let keyboardX: number;
-    if (keyboardLayerIndex < layerX.length) {
-      keyboardX = layerX[keyboardLayerIndex];
-    } else {
-      /** Нет готового слоя — ставим правее последнего */
-      const lastLayerX = layerX.length > 0 ? layerX[layerX.length - 1] : opts.startX;
-      keyboardX = lastLayerX + opts.nodeWidth + opts.horizontalSpacing;
-    }
-
-    positions.set(keyboardId, {
-      x: keyboardX,
-      y: hostPosition.y,
-    });
+    positions.set(keyboardId, { x: keyboardX, y: keyboardY });
   }
 
   /**
-   * Группируем keyboard-ноды по X-столбцу и разрешаем перекрытия:
+   * Группируем keyboard-ноды по X-столбцу и разрешаем перекрытия между ними:
    * сортируем по Y их host-а, затем раздвигаем вниз если перекрываются.
    */
   const byColumn = new Map<number, string[]>();
   for (const [keyboardId] of graph.keyboardHostByKeyboardId) {
     const pos = positions.get(keyboardId);
     if (!pos) continue;
-    const col = pos.x;
-    if (!byColumn.has(col)) byColumn.set(col, []);
-    byColumn.get(col)!.push(keyboardId);
+    if (!byColumn.has(pos.x)) byColumn.set(pos.x, []);
+    byColumn.get(pos.x)!.push(keyboardId);
   }
 
   for (const [, columnIds] of byColumn) {
     if (columnIds.length < 2) continue;
 
-    /** Сортируем по Y хоста, чтобы порядок был предсказуемым */
     columnIds.sort((a, b) => {
-      const hostA = graph.keyboardHostByKeyboardId.get(a)!;
-      const hostB = graph.keyboardHostByKeyboardId.get(b)!;
-      const yA = positions.get(hostA)?.y ?? 0;
-      const yB = positions.get(hostB)?.y ?? 0;
+      const yA = positions.get(graph.keyboardHostByKeyboardId.get(a)!)?.y ?? 0;
+      const yB = positions.get(graph.keyboardHostByKeyboardId.get(b)!)?.y ?? 0;
       return yA - yB;
     });
 
-    /** Проходим сверху вниз и сдвигаем если перекрываются */
     for (let i = 1; i < columnIds.length; i += 1) {
       const prevId = columnIds[i - 1];
       const currId = columnIds[i];
@@ -969,7 +974,6 @@ function anchorKeyboardNodes(
       const prevNode = graph.nodesById.get(prevId);
       const prevSize = getNodeSize(prevId, opts, prevNode);
       const currPos = positions.get(currId)!;
-
       const minY = prevPos.y + prevSize.height + opts.verticalSpacing;
       if (currPos.y < minY) {
         positions.set(currId, { x: currPos.x, y: minY });
@@ -1167,7 +1171,7 @@ export function createHierarchicalLayout(
     }
   }
 
-  anchorKeyboardNodes(positions, graph, opts, layerX, layerMap);
+  anchorKeyboardNodes(positions, graph, opts, layerX);
   resolveColumnCollisions(positions, nodes, opts);
   resolveBoundingBoxCollisions(positions, nodes, opts);
 
