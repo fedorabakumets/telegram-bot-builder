@@ -101,6 +101,8 @@ interface CanvasProps {
   onNodesUpdate?: (nodes: Node[]) => void;
   /** Колбэк для отмены действия */
   onUndo?: () => void;
+  /** Колбэк для отката на N шагов назад */
+  onUndoSteps?: (steps: number) => void;
   /** Колбэк для повтора действия */
   onRedo?: () => void;
   /** Доступность отмены */
@@ -199,6 +201,7 @@ export function Canvas({
   onNodeMoveEnd,
   onNodesUpdate,
   onUndo,
+  onUndoSteps,
   onRedo,
   canUndo,
   canRedo,
@@ -525,23 +528,43 @@ export function Canvas({
     onConnectionComplete: handleConnectionComplete,
   });
 
-  // Функция для отмены выбранных действий
+  /**
+   * Выполняет реальный откат состояния холста на N шагов назад.
+   * Находит индекс самой ранней выбранной записи в истории действий
+   * и откатывает ровно столько шагов через undoSteps (или последовательные undo).
+   * После отката удаляет выбранные записи из UI-истории.
+   */
   const handleUndoSelected = useCallback(() => {
     if (selectedActionsForUndo.size === 0) return;
-    if (onUndo) {
-      // onUndo() не принимает параметр количества шагов, а React батчит синхронные вызовы,
-      // поэтому цикл вызовов применял бы только первый undo. Вызываем один раз.
+
+    // Находим индекс самой ранней (последней по индексу) выбранной записи
+    // actionHistory[0] — самое новое действие, actionHistory[N-1] — самое старое
+    let earliestIndex = -1;
+    for (let i = actionHistory.length - 1; i >= 0; i--) {
+      if (selectedActionsForUndo.has(actionHistory[i].id)) {
+        earliestIndex = i;
+        break;
+      }
+    }
+
+    // Количество шагов = индекс самой ранней записи + 1
+    // (откатываем до состояния ДО этого действия)
+    const stepsToUndo = earliestIndex >= 0 ? earliestIndex + 1 : selectedActionsForUndo.size;
+
+    if (onUndoSteps) {
+      onUndoSteps(stepsToUndo);
+    } else if (onUndo) {
       onUndo();
     }
-    // Удаляем выбранные записи из истории
+
+    // Удаляем выбранные записи из UI-истории
     if (onActionHistoryRemove) {
       onActionHistoryRemove(selectedActionsForUndo);
     } else {
-      // Локальная история
       setLocalActionHistory(prev => prev.filter(a => !selectedActionsForUndo.has(a.id)));
     }
     setSelectedActionsForUndo(new Set());
-  }, [selectedActionsForUndo, onUndo, onActionHistoryRemove]);
+  }, [selectedActionsForUndo, actionHistory, onUndoSteps, onUndo, onActionHistoryRemove]);
 
   // Toggle selection for an action
   const toggleActionSelection = useCallback((actionId: string) => {

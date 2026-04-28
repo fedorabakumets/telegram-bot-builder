@@ -1387,6 +1387,7 @@ export default function Editor() {
                 onNodeMoveEnd={handleNodeMoveEnd}
                 onNodesUpdate={updateNodes}
                 onUndo={undo}
+                onUndoSteps={undoSteps}
                 onRedo={redo}
                 canUndo={canUndo}
                 canRedo={canRedo}
