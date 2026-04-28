@@ -30,7 +30,6 @@ import { NoProjectsScreen } from "@/components/editor/no-projects";
 import { useTelegramAuth } from "@/components/editor/header/hooks/use-telegram-auth";
 import { isGuest } from "@/types/telegram-user";
 import { apiRequest } from "@/queryClient";
-import { useState } from "react";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
@@ -72,24 +71,24 @@ function LoadingSpinner() {
 }
 
 /**
- * Гард проектов: если авторизованный пользователь не имеет проектов — показывает NoProjectsScreen
+ * Гард проектов: если авторизованный пользователь не имеет проектов — показывает NoProjectsScreen.
+ * Не срабатывает на страницах /templates и /not-found.
  */
 function ProjectsGuard({ children }: { children: React.ReactNode }) {
+  const [location] = useLocation();
   const { user, sessionReady } = useTelegramAuth();
   const isGuestUser = !user || isGuest(user);
-  const [showNoProjects, setShowNoProjects] = useState(false);
+
+  // На этих страницах гард не блокирует
+  const isExcluded = location.startsWith('/templates') || location.startsWith('/not-found');
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['/api/projects/list'],
     queryFn: () => apiRequest('GET', '/api/projects/list'),
-    enabled: sessionReady && !isGuestUser,
+    enabled: sessionReady && !isGuestUser && !isExcluded,
   });
 
-  useEffect(() => {
-    if (sessionReady && !isLoading && !isGuestUser) {
-      setShowNoProjects(projects.length === 0);
-    }
-  }, [sessionReady, isLoading, isGuestUser, projects.length]);
+  const showNoProjects = sessionReady && !isLoading && !isGuestUser && !isExcluded && projects.length === 0;
 
   if (showNoProjects) return <NoProjectsScreen />;
 

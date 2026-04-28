@@ -5,6 +5,7 @@
 
 import { useState, useRef } from 'react';
 import { useLocation } from 'wouter';
+import { useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/queryClient';
 
 /**
@@ -37,6 +38,7 @@ export function useNoProjects(): UseNoProjectsResult {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   /** Открывает диалог создания проекта */
@@ -55,36 +57,33 @@ export function useNoProjects(): UseNoProjectsResult {
   };
 
   /**
-   * Открывает скрытый input[type=file] для выбора project.json.
-   * После выбора файла отправляет POST /api/projects/import.
+   * Открывает input[type=file] для выбора project.json.
+   * После выбора отправляет POST /api/projects/import, инвалидирует кеш и редиректит в редактор.
    */
   const handleImport = () => {
-    if (!fileInputRef.current) {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json,application/json';
-      fileInputRef.current = input;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
 
-      input.onchange = async () => {
-        const file = input.files?.[0];
-        if (!file) return;
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
 
-        setIsImporting(true);
-        try {
-          const text = await file.text();
-          const json = JSON.parse(text);
-          await apiRequest('POST', '/api/projects/import', json);
-          setLocation('/projects');
-        } catch {
-          // Ошибка импорта — молча игнорируем, пользователь увидит что ничего не изменилось
-        } finally {
-          setIsImporting(false);
-          fileInputRef.current = null;
-        }
-      };
-    }
+      setIsImporting(true);
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        const result = await apiRequest('POST', '/api/projects/import', json) as { id: number };
+        await queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
+        setLocation(`/editor/${result.id}`);
+      } catch (e) {
+        console.error('Ошибка импорта проекта:', e);
+      } finally {
+        setIsImporting(false);
+      }
+    };
 
-    fileInputRef.current.click();
+    input.click();
   };
 
   return {
