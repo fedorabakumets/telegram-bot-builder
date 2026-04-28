@@ -1043,11 +1043,13 @@ export function Canvas({
     
     
     const handleKeyDown = (e: KeyboardEvent) => {
-      
-      
+      // В JSON-режиме не перехватываем горячие клавиши — Monaco Editor должен их обрабатывать сам
+      if (canvasView === 'json') return;
+
       // Проверяем, что фокус не находится на input или textarea
       const target = e.target as HTMLElement;
-      const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true';
+      const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true'
+        || !!target.closest('.monaco-editor');
 
       if (!isInputField) {
         // Обработка клавиши Delete для удаления выбранного узла
@@ -1192,7 +1194,7 @@ export function Canvas({
       document.removeEventListener('gesturechange', handleGesture);
       document.removeEventListener('gestureend', handleGesture);
     };
-  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate, nodes, addAction, getPastePosition, onPasteFromClipboard, onCopyToClipboard]);
+  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate, nodes, addAction, getPastePosition, onPasteFromClipboard, onCopyToClipboard, canvasView]);
 
 
 
