@@ -671,7 +671,8 @@ export default function Editor() {
     },
     onDiscard: () => {
       // Восстанавливаем данные из кэша сервера — это корректно сбрасывает все листы,
-      // а не только текущий (undoSteps откатывал nodes только активного листа)
+      // а не только текущий (undoSteps откатывал nodes только активного листа).
+      // Сохраняем текущий activeSheetId чтобы остаться на том же листе после сброса.
       if (activeProject?.id) {
         const savedProject = queryClient.getQueryData<BotProject>([`/api/projects/${activeProject.id}`]);
         const savedData = savedProject?.data as any;
@@ -681,6 +682,12 @@ export default function Editor() {
             sheetsData = savedData;
           } else {
             sheetsData = SheetsManager.migrateLegacyData(savedData as BotData);
+          }
+          // Остаёмся на текущем листе если он существует в сохранённых данных
+          const currentSheetId = botDataWithSheets?.activeSheetId;
+          const sheetExists = currentSheetId && sheetsData.sheets.some(s => s.id === currentSheetId);
+          if (sheetExists) {
+            sheetsData = SheetsManager.setActiveSheet(sheetsData, currentSheetId!);
           }
           setBotDataWithSheets(sheetsData);
           const activeSheet = SheetsManager.getActiveSheet(sheetsData);
