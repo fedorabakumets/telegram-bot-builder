@@ -2,16 +2,12 @@
  * @fileoverview Хук загрузки проекта редактора
  *
  * Управляет загрузкой данных проекта по ID или выбором первого из списка.
- * При пустом списке проектов автоматически создаёт дефолтный проект (только для авторизованных).
- * Гости видят пустой экран без проектов.
+ * Гости и новые пользователи видят пустой экран без проектов.
  */
 
-import { useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BotProject } from '@shared/schema';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
-import { isTelegramUser } from '@/types/telegram-user';
-import { apiRequest } from '@/queryClient';
 
 /** Параметры хука загрузки проекта */
 interface UseProjectLoaderOptions {
@@ -33,48 +29,9 @@ interface UseProjectLoaderResult {
   isProjectNotFound: boolean;
 }
 
-/** Стартовые данные нового проекта по умолчанию — новый формат с sheets */
-const DEFAULT_PROJECT_DATA = {
-  version: 2,
-  activeSheetId: 'sheet-1',
-  sheets: [
-    {
-      id: 'sheet-1',
-      name: 'Лист 1',
-      nodes: [
-        {
-          id: 'start-message',
-          type: 'message' as const,
-          position: { x: 400, y: 300 },
-          data: {
-            messageText: 'Привет! Я ваш новый бот. Нажмите /help для получения помощи.',
-            keyboardType: 'none' as const,
-            buttons: [],
-            showInMenu: true,
-          },
-        },
-        {
-          id: 'start-command-trigger',
-          type: 'command_trigger' as const,
-          position: { x: 100, y: 300 },
-          data: {
-            command: '/start',
-            description: 'Запустить бота',
-            showInMenu: true,
-            autoTransitionTo: 'start-message',
-            sourceNodeId: 'start-message',
-          },
-        },
-      ],
-      connections: [],
-    },
-  ],
-};
-
 /**
  * Хук для загрузки данных проекта.
  * Ждёт готовности серверной сессии перед запросом проектов.
- * Автосоздание проекта работает только для авторизованных пользователей.
  *
  * @param options - Параметры загрузки
  * @returns Результат загрузки проекта
@@ -82,11 +39,8 @@ const DEFAULT_PROJECT_DATA = {
 export function useProjectLoader({
   projectId
 }: UseProjectLoaderOptions): UseProjectLoaderResult {
-  const { user, sessionReady } = useTelegramAuth();
+  const { sessionReady } = useTelegramAuth();
   const queryClient = useQueryClient();
-  const isCreatingRef = useRef(false);
-  /** Авторизованный пользователь — только им создаём проект автоматически */
-  const isAuthenticated = user !== null && isTelegramUser(user);
 
   // Загрузка проекта по ID из URL — ждём сессии
   const { data: currentProject, isError: projectNotFound } = useQuery<BotProject>({
@@ -96,39 +50,11 @@ export function useProjectLoader({
   });
 
   // Загрузка списка проектов — ждём готовности серверной сессии
-  const { data: projectsList, isFetching: isProjectsListFetching } = useQuery<Array<Omit<BotProject, 'data'>>>({
+  const { data: projectsList } = useQuery<Array<Omit<BotProject, 'data'>>>({
     queryKey: ['/api/projects/list'],
     enabled: !projectId && sessionReady,
     staleTime: 30000,
   });
-
-  // Автосоздание дефолтного проекта если список пустой (только для авторизованных)
-  useEffect(() => {
-    if (projectId) return;
-    if (!isAuthenticated) return;                // гости не получают автопроект
-    if (!sessionReady) return;                   // ждём готовности сессии
-    if (isProjectsListFetching) return;          // ждём завершения запроса
-    if (projectsList === undefined) return;      // ещё не загружено
-    if (projectsList.length > 0) return;         // проекты есть
-    if (isCreatingRef.current) return;           // уже создаём
-
-    isCreatingRef.current = true;
-    apiRequest('POST', '/api/projects', {
-      name: 'Новый бот 1',
-      description: '',
-      data: DEFAULT_PROJECT_DATA,
-    })
-      .then((newProject: BotProject) => {
-        queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], [newProject]);
-        queryClient.setQueryData<BotProject[]>(['/api/projects'], [newProject]);
-        queryClient.setQueryData<BotProject>([`/api/projects/${newProject.id}`], newProject);
-        queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      })
-      .catch(e => {
-        console.error('Ошибка автосоздания проекта:', e);
-        isCreatingRef.current = false;
-      });
-  }, [projectId, projectsList, isProjectsListFetching, isAuthenticated, sessionReady, queryClient]);
 
   // Эффективный ID проекта
   const effectiveProjectId = projectId || projectsList?.[0]?.id;
