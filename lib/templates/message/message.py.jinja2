@@ -360,7 +360,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         {%- endif %}
         logging.info(f"📤 Отправлено получателю {_rchat}")
     except Exception as _re:
-        logging.error(f"❌ Ошибка отправки получателю {{ recipient.chatId }}: {_re}")
+        logging.error(f"❌ Ошибка отправки получателю {_rchat}: {_re}")
     {%- elif recipient.type == 'admin_ids' %}
     # Отправка администраторам (получатель {{ loop.index }})
     for _admin_id in ADMIN_IDS:

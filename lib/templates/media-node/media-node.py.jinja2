@@ -284,7 +284,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
 {%- endif %}
         logging.info(f"📤 Медиа отправлено получателю {_rchat}")
     except Exception as _re:
-        logging.error(f"❌ Ошибка отправки медиа получателю {{ recipient.chatId }}: {_re}")
+        logging.error(f"❌ Ошибка отправки медиа получателю {_rchat}: {_re}")
 {%- endif %}
 {%- endfor %}
 {%- endif %}{# /hasChatIdRecipients #}
