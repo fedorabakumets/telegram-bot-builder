@@ -73,6 +73,7 @@ function LoadingSpinner() {
 /**
  * Гард проектов: если авторизованный пользователь не имеет проектов — показывает NoProjectsScreen.
  * Не срабатывает на страницах /templates и /not-found.
+ * Во время загрузки не рендерит ничего — предотвращает мигание между страницами.
  */
 function ProjectsGuard({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -87,6 +88,9 @@ function ProjectsGuard({ children }: { children: React.ReactNode }) {
     queryFn: () => apiRequest('GET', '/api/projects/list'),
     enabled: sessionReady && !isGuestUser && !isExcluded,
   });
+
+  // Пока сессия не готова или идёт загрузка — не рендерим ничего, чтобы не было мигания
+  if (!isExcluded && !isGuestUser && (!sessionReady || isLoading)) return null;
 
   const showNoProjects = sessionReady && !isLoading && !isGuestUser && !isExcluded && projects.length === 0;
 

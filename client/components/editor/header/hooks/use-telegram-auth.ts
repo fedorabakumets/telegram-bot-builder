@@ -42,14 +42,10 @@ export function useTelegramAuth() {
       // Если нет сохранённого пользователя — устанавливаем гостя
       setUser(parsedUser ?? GUEST_USER);
 
-      // Singleton restoreSession гарантирует единственный fetch за жизнь страницы
+      // Singleton restoreSession гарантирует единственный fetch за жизнь страницы.
+      // После завершения просто разблокируем запросы — invalidateQueries уже сделан внутри restoreSession.
       if (parsedUser && !checkIsGuest(parsedUser)) {
-        restoreSession(parsedUser).finally(() => {
-          // Каждый экземпляр хука сбрасывает кеш перед своим первым запросом
-          queryClient.removeQueries({ queryKey: ['/api/projects'] });
-          queryClient.removeQueries({ queryKey: ['/api/projects/list'] });
-          setSessionReady(true);
-        });
+        restoreSession(parsedUser).finally(() => setSessionReady(true));
       } else {
         // Гость — сразу разрешаем запросы
         setSessionReady(true);
