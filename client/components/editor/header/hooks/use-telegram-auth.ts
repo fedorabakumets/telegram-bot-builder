@@ -78,8 +78,12 @@ export function useTelegramAuth() {
             console.error('Ошибка восстановления серверной сессии:', e);
             setSessionReady(true); // разблокируем запросы даже при ошибке
           });
+      } else if (parsedUser && !checkIsGuest(parsedUser) && sessionRestoreAttempted) {
+        // Другой экземпляр хука уже запустил восстановление — ждём его завершения
+        // чтобы не делать GET /api/projects до готовности сессии
+        sessionRestorePromise!.then(() => setSessionReady(true)).catch(() => setSessionReady(true));
       } else {
-        // Гость или сессия уже восстанавливалась — сразу разрешаем запросы
+        // Гость — сразу разрешаем запросы
         setSessionReady(true);
       }
     } catch (e) {
