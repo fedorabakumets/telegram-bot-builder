@@ -56,18 +56,22 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
         const existingUserId = req.session.telegramUser?.id;
         const isSameUser = existingUserId && Number(existingUserId) === Number(userData.id);
 
+        console.log(`[auth] existingUserId=${existingUserId} newId=${userData.id} isSameUser=${isSameUser} sessionId=${req.session.id}`);
+
         if (isSameUser) {
             // Тот же пользователь — обновляем данные без смены session ID.
             // Регенерация не нужна: браузер уже имеет правильный cookie,
             // смена ID вызовет race condition между Set-Cookie и следующим запросом.
             req.session.telegramUser = userData;
             await saveSession(req);
+            console.log(`[auth] same user — session updated, id unchanged: ${req.session.id}`);
         } else {
             // Новый пользователь или смена аккаунта — регенерируем для безопасности
             const oldSessionId = req.session.id;
             await regenerateSession(req);
             req.session.telegramUser = userData;
             await saveSession(req);
+            console.log(`[auth] new user — session regenerated: ${oldSessionId} → ${req.session.id}`);
 
             if (oldSessionId) {
                 await storage.migrateGuestProjects(oldSessionId, userData.id);
