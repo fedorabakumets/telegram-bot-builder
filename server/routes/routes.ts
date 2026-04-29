@@ -463,8 +463,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Middleware для отключения кэширования на /api/media/*
-  app.use("/api/media", (_req, res, next) => {
+  // Отключаем HTTP-кеширование для всех API роутов — ответы зависят от сессии пользователя
+  app.use("/api", (_req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
