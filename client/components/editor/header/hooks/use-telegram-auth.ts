@@ -9,6 +9,7 @@ import type { AppUser, TelegramUser } from '@/types/telegram-user';
 import { isGuest as checkIsGuest, isTelegramUser } from '@/types/telegram-user';
 import { invalidateAuthQueries } from '@/utils/invalidate-auth-queries';
 import { clearUserCache } from '@/utils/invalidate-auth-queries';
+import { restoreSession, resetSessionRestore } from '@/utils/session-restore';
 
 export type { TelegramUser, AppUser };
 
@@ -21,18 +22,6 @@ const AUTH_EVENT = 'telegram-auth-change';
 /** Объект гостевого пользователя */
 const GUEST_USER: AppUser = { isGuest: true };
 
-/** Флаг предотвращения повторного восстановления сессии при монтировании */
-let sessionRestoreAttempted = false;
-/** Промис восстановления сессии — позволяет другим хукам дождаться его завершения */
-let sessionRestorePromise: Promise<void> | null = null;
-
-/**
- * Возвращает промис восстановления серверной сессии.
- * Используется для ожидания готовности сессии перед первым запросом к API.
- */
-export function getSessionRestorePromise(): Promise<void> {
-  return sessionRestorePromise ?? Promise.resolve();
-}
 
 /**
  * Хук управления авторизацией.
@@ -53,35 +42,14 @@ export function useTelegramAuth() {
       // Если нет сохранённого пользователя — устанавливаем гостя
       setUser(parsedUser ?? GUEST_USER);
 
-      // Восстанавливаем серверную сессию только один раз за жизнь страницы
-      if (parsedUser && !checkIsGuest(parsedUser) && !sessionRestoreAttempted) {
-        sessionRestoreAttempted = true;
-        sessionRestorePromise = fetch('/api/auth/telegram', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            id: parsedUser.id,
-            first_name: parsedUser.firstName,
-            last_name: parsedUser.lastName,
-            username: parsedUser.username,
-            photo_url: parsedUser.photoUrl,
-          }),
-        })
-          .then(() => {
-            // Сначала сбрасываем кеш, потом разрешаем запросы — избегаем гонки
-            queryClient.removeQueries({ queryKey: ['/api/projects'] });
-            queryClient.removeQueries({ queryKey: ['/api/projects/list'] });
-            setSessionReady(true);
-          })
-          .catch(e => {
-            console.error('Ошибка восстановления серверной сессии:', e);
-            setSessionReady(true); // разблокируем запросы даже при ошибке
-          });
-      } else if (parsedUser && !checkIsGuest(parsedUser) && sessionRestoreAttempted) {
-        // Другой экземпляр хука уже запустил восстановление — ждём его завершения
-        // чтобы не делать GET /api/projects до готовности сессии
-        sessionRestorePromise!.then(() => setSessionReady(true)).catch(() => setSessionReady(true));
+      // Singleton restoreSession гарантирует единственный fetch за жизнь страницы
+      if (parsedUser && !checkIsGuest(parsedUser)) {
+        restoreSession(parsedUser).finally(() => {
+          // Каждый экземпляр хука сбрасывает кеш перед своим первым запросом
+          queryClient.removeQueries({ queryKey: ['/api/projects'] });
+          queryClient.removeQueries({ queryKey: ['/api/projects/list'] });
+          setSessionReady(true);
+        });
       } else {
         // Гость — сразу разрешаем запросы
         setSessionReady(true);
@@ -208,6 +176,8 @@ export function useTelegramAuth() {
     setUser(GUEST_USER);
     try {
       localStorage.removeItem(STORAGE_KEY);
+      // Сбрасываем singleton сессии — при следующем логине восстановление запустится заново
+      resetSessionRestore();
       // Очищаем весь кеш пользователя при выходе
       clearUserCache(queryClient);
       invalidateAuthQueries(queryClient);
