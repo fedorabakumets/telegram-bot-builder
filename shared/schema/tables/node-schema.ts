@@ -634,6 +634,8 @@ export const nodeSchema = z.object({
       threadId: z.string().optional(),
       /** Добавить префикс -100 для групп/каналов */
       isGroup: z.boolean().optional().default(false),
+      /** Токен бота для отправки (опционально, по умолчанию — токен текущего бота) */
+      botToken: z.string().optional(),
     })).optional().default([]),
     /** Целевой чат для отправки (legacy) */
     messageSendTarget: z.string().optional(),

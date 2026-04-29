@@ -127,6 +127,31 @@ function RecipientCard({
               onSelect={(v) => onUpdate({ threadId: `{${v}}` })}
             />
           </div>
+
+          {/* Разделитель */}
+          <div className="border-t border-blue-200/30 dark:border-blue-800/30 my-1" />
+
+          {/* Токен бота */}
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-muted-foreground w-16 flex-shrink-0">
+              <i className="fas fa-key mr-1 text-[10px]" />
+              Токен:
+            </span>
+            <Input
+              value={recipient.botToken ?? ''}
+              onChange={(e) => onUpdate({ botToken: e.target.value })}
+              placeholder="{bot_token} или токен бота"
+              className="flex-1 h-8 text-sm"
+            />
+            <VariableSelector
+              availableVariables={textVariables}
+              onSelect={(v) => onUpdate({ botToken: `{${v}}` })}
+            />
+          </div>
+          <p className="text-[10px] text-slate-400 px-1">
+            По умолчанию — токен текущего бота. Используй переменную{' '}
+            <span className="font-mono">{'{token_status.instance.token}'}</span> для отправки через другой бот.
+          </p>
         </div>
       )}
 

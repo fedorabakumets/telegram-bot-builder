@@ -17,6 +17,8 @@ export interface MessageSendRecipient {
   threadId?: string;
   /** Это группа или канал (добавляет -100 к ID автоматически) */
   isGroup?: boolean;
+  /** Токен бота для отправки (опционально). По умолчанию — токен текущего бота */
+  botToken?: string;
 }
 
 /**
@@ -47,6 +49,7 @@ export function normalizeRecipient(raw: Partial<MessageSendRecipient>, index: nu
     chatId: typeof raw.chatId === 'string' ? raw.chatId : '',
     threadId: typeof raw.threadId === 'string' ? raw.threadId : '',
     isGroup: raw.isGroup === true,
+    botToken: typeof raw.botToken === 'string' ? raw.botToken : '',
   };
 }
 
