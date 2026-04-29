@@ -50,11 +50,11 @@ export function restoreSession(user: StoredUser): Promise<void> {
     }),
   })
     .then(() => {
-      // Инвалидируем кеш проектов один раз после восстановления сессии.
-      // Используем invalidateQueries вместо removeQueries — не вызывает немедленный рефетч,
-      // только помечает данные устаревшими для следующего обращения.
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
+      // Удаляем кеш проектов после восстановления сессии — он принадлежал предыдущей сессии.
+      // removeQueries (не invalidate) — чтобы первый запрос после setSessionReady
+      // гарантированно пошёл на сервер, а не вернул устаревший [] из кеша.
+      queryClient.removeQueries({ queryKey: ['/api/projects'] });
+      queryClient.removeQueries({ queryKey: ['/api/projects/list'] });
     })
     .catch(e => {
       console.error('Ошибка восстановления серверной сессии:', e);
