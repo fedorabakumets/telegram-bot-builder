@@ -53,14 +53,25 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
             return;
         }
 
-        const oldSessionId = req.session.id;
+        const existingUserId = req.session.telegramUser?.id;
+        const isSameUser = existingUserId && Number(existingUserId) === Number(userData.id);
 
-        await regenerateSession(req);
-        req.session.telegramUser = userData;
-        await saveSession(req);
+        if (isSameUser) {
+            // Тот же пользователь — обновляем данные без смены session ID.
+            // Регенерация не нужна: браузер уже имеет правильный cookie,
+            // смена ID вызовет race condition между Set-Cookie и следующим запросом.
+            req.session.telegramUser = userData;
+            await saveSession(req);
+        } else {
+            // Новый пользователь или смена аккаунта — регенерируем для безопасности
+            const oldSessionId = req.session.id;
+            await regenerateSession(req);
+            req.session.telegramUser = userData;
+            await saveSession(req);
 
-        if (oldSessionId) {
-            await storage.migrateGuestProjects(oldSessionId, userData.id);
+            if (oldSessionId) {
+                await storage.migrateGuestProjects(oldSessionId, userData.id);
+            }
         }
 
         console.log(`✅ Telegram авторизация: ${first_name} (@${username}), ID: ${userData.id}`);
