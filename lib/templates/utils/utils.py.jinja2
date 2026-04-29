@@ -152,7 +152,10 @@ async def init_all_user_vars(user_id: int) -> dict:
                 _neg_idx = _li - len(_obj)
                 if _neg_idx != _li:
                     _flatten_dict(f"{_prefix}[{_neg_idx}]", _lv, _result, _depth + 1, _max_depth)
-        elif isinstance(_obj, (str, int, float, bool)) and _obj is not None:
+        elif _obj is None:
+            # None явно записывается как "" чтобы перезаписать устаревшее значение из предыдущего запроса
+            _result[_prefix] = ""
+        elif isinstance(_obj, (str, int, float, bool)):
             _result[_prefix] = str(_obj)
     _flat_keys = {}
     for _k, _v in list(all_vars.items()):
