@@ -535,12 +535,21 @@ export class DatabaseStorage implements IStorage {
       .from(projectCollaborators)
       .where(eq(projectCollaborators.userId, ownerId));
 
-    return await this.db.select().from(botProjects)
+    // Сначала проверяем коллабораторов отдельно для диагностики
+    const collabRows = await this.db
+      .select({ projectId: projectCollaborators.projectId })
+      .from(projectCollaborators)
+      .where(eq(projectCollaborators.userId, ownerId));
+    console.log(`[getUserBotProjects] ownerId=${ownerId} typeof=${typeof ownerId} collabRows=${JSON.stringify(collabRows)}`);
+
+    const result = await this.db.select().from(botProjects)
       .where(or(
         eq(botProjects.ownerId, ownerId),
         inArray(botProjects.id, collaboratorProjects)
       ))
       .orderBy(desc(botProjects.createdAt));
+    console.log(`[getUserBotProjects] result.length=${result.length} ids=${result.map(p => p.id)}`);
+    return result;
   }
 
   /**

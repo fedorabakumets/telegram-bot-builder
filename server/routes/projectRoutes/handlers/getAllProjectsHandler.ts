@@ -22,7 +22,11 @@ import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegra
 export async function getAllProjectsHandler(req: Request, res: Response): Promise<void> {
     try {
         const ownerId = getOwnerIdFromRequest(req);
-        console.log(`[projects] ownerId=${ownerId} typeof=${typeof ownerId} session=${JSON.stringify(req.session?.telegramUser?.id)}`);
+        const sessionUser = req.session?.telegramUser;
+        console.log(`[projects] ownerId=${ownerId} typeof=${typeof ownerId}`);
+        console.log(`[projects] session.telegramUser=${JSON.stringify(sessionUser)}`);
+        console.log(`[projects] req.user=${JSON.stringify(req.user)}`);
+        console.log(`[projects] session.id=${req.session?.id}`);
         let projects;
 
         if (ownerId !== null) {
