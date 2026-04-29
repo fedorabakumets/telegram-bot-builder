@@ -17,6 +17,8 @@ const mediaSendRecipientSchema = z.object({
   threadId: z.string().optional(),
   /** Добавить префикс -100 для групп/каналов */
   isGroup: z.boolean().optional().default(false),
+  /** Токен бота для отправки (опционально) */
+  botToken: z.string().optional(),
 });
 
 /** Схема для валидации параметров медиа-ноды */

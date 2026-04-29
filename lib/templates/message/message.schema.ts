@@ -128,6 +128,8 @@ export const messageParamsSchema = z.object({
     threadId: z.string().optional(),
     /** Это группа или канал — добавить -100 к ID */
     isGroup: z.boolean().optional().default(false),
+    /** Токен бота для отправки (опционально) */
+    botToken: z.string().optional(),
   })).optional().default([]),
   /**
    * Паттерн для декоратора @dp.callback_query.

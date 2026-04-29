@@ -84,6 +84,15 @@ export const validParamsWithRecipients: MessageTemplateParams = {
   ],
 };
 
+/** Параметры с botToken у получателя */
+export const validParamsWithBotToken: MessageTemplateParams = {
+  nodeId: 'msg_bot_token',
+  messageText: 'Уведомление через другой бот',
+  messageSendRecipients: [
+    { id: 'r1', type: 'chat_id', chatId: '{target_user_id}', botToken: '{token_status.instance.token}' },
+  ],
+};
+
 /** Ожидаемый вывод: базовое сообщение */
 export const expectedOutputBasic = `
 @dp.callback_query(lambda c: c.data == "msg_123" or c.data.startswith("msg_123_btn_"))

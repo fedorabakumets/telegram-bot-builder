@@ -245,14 +245,16 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {# ------------------------------------------------------------------ #}
     {%- set parse_mode_arg = ', parse_mode="HTML"' if formatMode == 'html' else (', parse_mode="Markdown"' if formatMode == 'markdown' else '') %}
     {%- set effectiveKeyboard = 'ReplyKeyboardRemove()' if (hasHideAfterClickIncoming and keyboardType == 'none') else 'keyboard' %}
-    async def _send_to_{{ nodeId|replace('-', '_') }}(_target_chat_id, _thread_id=None):
+    async def _send_to_{{ nodeId|replace('-', '_') }}(_target_chat_id, _thread_id=None, _bot=None):
         """
-        Отправляет сообщение (с медиа или без) в указанный чат.
+        Отправляет сообщение (с медиа или без) в указанный чат через указанный бот (или глобальный).
 
         @param _target_chat_id - Идентификатор целевого чата
         @param _thread_id - Идентификатор треда (для групп с топиками), None если не нужен
+        @param _bot - Экземпляр бота для отправки; если None — используется глобальный bot
         @returns Объект отправленного сообщения или None при ошибке
         """
+        _b = _bot if _bot is not None else bot
         try:
 {%- if (attachedMedia and attachedMedia|length > 0) or (imageUrl and imageUrl != 'undefined') or videoUrl or audioUrl or documentUrl %}
 {%- if imageUrl and imageUrl != 'undefined' %}
@@ -260,54 +262,54 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             image_path = get_upload_file_path("{{ imageUrl }}")
             if not os.path.exists(image_path):
                 logging.error(f"❌ Медиафайл не найден: {image_path} (узел {{ nodeId }})")
-                return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
-            return await bot.send_photo(_target_chat_id, FSInputFile(image_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_photo(_target_chat_id, FSInputFile(image_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- elif '{' in imageUrl and '}' in imageUrl %}
             {# imageUrl содержит переменную вида {var.path} — подставляем через replace_variables_in_text #}
             _image_url_resolved = replace_variables_in_text("{{ imageUrl }}", all_user_vars, {})
             if _image_url_resolved and _image_url_resolved != "{{ imageUrl }}":
-                return await bot.send_photo(_target_chat_id, _image_url_resolved, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                return await _b.send_photo(_target_chat_id, _image_url_resolved, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             else:
                 logging.warning(f"⚠️ Не удалось разрешить переменную imageUrl: {{ imageUrl | replace('{', '{{') | replace('}', '}}') }} (узел {{ nodeId }})")
-                return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- else %}
-            return await bot.send_photo(_target_chat_id, "{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_photo(_target_chat_id, "{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
 {%- elif videoUrl %}
 {%- if isLocalVideoUrl %}
             video_path = get_upload_file_path("{{ videoUrl }}")
             if not os.path.exists(video_path):
                 logging.error(f"❌ Медиафайл не найден: {video_path} (узел {{ nodeId }})")
-                return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
-            return await bot.send_video(_target_chat_id, FSInputFile(video_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_video(_target_chat_id, FSInputFile(video_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- else %}
-            return await bot.send_video(_target_chat_id, "{{ videoUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_video(_target_chat_id, "{{ videoUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
 {%- elif audioUrl %}
 {%- if isLocalAudioUrl %}
             audio_path = get_upload_file_path("{{ audioUrl }}")
             if not os.path.exists(audio_path):
                 logging.error(f"❌ Медиафайл не найден: {audio_path} (узел {{ nodeId }})")
-                return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
-            return await bot.send_audio(_target_chat_id, FSInputFile(audio_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_audio(_target_chat_id, FSInputFile(audio_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- else %}
-            return await bot.send_audio(_target_chat_id, "{{ audioUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_audio(_target_chat_id, "{{ audioUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
 {%- elif documentUrl %}
 {%- if isLocalDocumentUrl %}
             doc_path = get_upload_file_path("{{ documentUrl }}")
             if not os.path.exists(doc_path):
                 logging.error(f"❌ Медиафайл не найден: {doc_path} (узел {{ nodeId }})")
-                return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
-            return await bot.send_document(_target_chat_id, FSInputFile(doc_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_document(_target_chat_id, FSInputFile(doc_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- else %}
-            return await bot.send_document(_target_chat_id, "{{ documentUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_document(_target_chat_id, "{{ documentUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
 {%- else %}
-            return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
 {%- else %}
-            return await bot.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
         except Exception as _send_err:
             logging.error(f"❌ Ошибка отправки в {_target_chat_id}: {_send_err}")
@@ -349,7 +351,13 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         _rthread_int = None
         {%- endif %}
         _rchat_id = int(_rchat) if _rchat.lstrip('-').isdigit() else _rchat
+        {%- if recipient.botToken %}
+        _rbot_token = replace_variables_in_text("{{ recipient.botToken }}", all_user_vars, {})
+        _rbot = Bot(token=_rbot_token) if _rbot_token and _rbot_token.strip() else None
+        await _send_to_{{ nodeId|replace('-', '_') }}(_rchat_id, _rthread_int, _bot=_rbot)
+        {%- else %}
         await _send_to_{{ nodeId|replace('-', '_') }}(_rchat_id, _rthread_int)
+        {%- endif %}
         logging.info(f"📤 Отправлено получателю {_rchat}")
     except Exception as _re:
         logging.error(f"❌ Ошибка отправки получателю {{ recipient.chatId }}: {_re}")

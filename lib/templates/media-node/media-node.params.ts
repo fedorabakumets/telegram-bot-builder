@@ -18,6 +18,8 @@ export interface MediaSendRecipient {
   threadId?: string;
   /** Добавить префикс -100 для групп/каналов */
   isGroup?: boolean;
+  /** Токен бота для отправки (опционально). По умолчанию — глобальный bot */
+  botToken?: string;
 }
 
 /** Параметры для генерации обработчика медиа-ноды */

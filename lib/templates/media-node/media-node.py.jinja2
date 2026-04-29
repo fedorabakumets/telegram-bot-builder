@@ -196,13 +196,15 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
 
 {#- Вспомогательная функция для отправки дополнительным chat_id получателям -#}
 {%- if hasChatIdRecipients %}
-    async def _send_media_to_{{ nodeId|safe_name }}(_target_chat_id, _thread_id=None):
+    async def _send_media_to_{{ nodeId|safe_name }}(_target_chat_id, _thread_id=None, _bot=None):
         """
-        Отправляет медиафайлы в указанный чат (для дополнительных получателей).
+        Отправляет медиафайлы в указанный чат через указанный бот (или глобальный).
 
         @param _target_chat_id - Идентификатор целевого чата
         @param _thread_id - Идентификатор топика (для групп), None если не нужен
+        @param _bot - Экземпляр бота для отправки; если None — используется глобальный bot
         """
+        _b = _bot if _bot is not None else bot
         try:
 {%- if attachedMedia and attachedMedia | length == 1 %}
 {%- set url = attachedMedia[0] %}
@@ -217,13 +219,13 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             elif _mv:
                 _rval = _mv
             if _rtype == "photo":
-                await bot.send_photo(_target_chat_id, _rval, message_thread_id=_thread_id)
+                await _b.send_photo(_target_chat_id, _rval, message_thread_id=_thread_id)
             elif _rtype == "video":
-                await bot.send_video(_target_chat_id, _rval, message_thread_id=_thread_id)
+                await _b.send_video(_target_chat_id, _rval, message_thread_id=_thread_id)
             elif _rtype == "audio":
-                await bot.send_audio(_target_chat_id, _rval, message_thread_id=_thread_id)
+                await _b.send_audio(_target_chat_id, _rval, message_thread_id=_thread_id)
             else:
-                await bot.send_document(_target_chat_id, _rval, message_thread_id=_thread_id)
+                await _b.send_document(_target_chat_id, _rval, message_thread_id=_thread_id)
 {%- else %}
 {%- set mtype = get_media_type(url) | trim %}
 {%- if '/uploads/' in url %}
@@ -231,9 +233,9 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             if not os.path.exists(_fp):
                 logging.error(f"❌ Медиафайл не найден: {_fp} (узел {{ nodeId }})")
                 return
-            await bot.send_{{ mtype }}(_target_chat_id, FSInputFile(_fp), message_thread_id=_thread_id)
+            await _b.send_{{ mtype }}(_target_chat_id, FSInputFile(_fp), message_thread_id=_thread_id)
 {%- else %}
-            await bot.send_{{ mtype }}(_target_chat_id, "{{ url|e }}", message_thread_id=_thread_id)
+            await _b.send_{{ mtype }}(_target_chat_id, "{{ url|e }}", message_thread_id=_thread_id)
 {%- endif %}
 {%- endif %}
 {%- elif attachedMedia and attachedMedia | length > 1 %}
@@ -249,7 +251,7 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
 {%- endif %}
 {%- endfor %}
             if _mg:
-                await bot.send_media_group(_target_chat_id, _mg, message_thread_id=_thread_id)
+                await _b.send_media_group(_target_chat_id, _mg, message_thread_id=_thread_id)
 {%- else %}
             pass
 {%- endif %}
@@ -273,7 +275,13 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
         _rthread_int = None
 {%- endif %}
         _rchat_id = int(_rchat) if _rchat.lstrip('-').isdigit() else _rchat
+{%- if recipient.botToken %}
+        _rbot_token = replace_variables_in_text("{{ recipient.botToken }}", all_user_vars, {})
+        _rbot = Bot(token=_rbot_token) if _rbot_token and _rbot_token.strip() else None
+        await _send_media_to_{{ nodeId|safe_name }}(_rchat_id, _rthread_int, _bot=_rbot)
+{%- else %}
         await _send_media_to_{{ nodeId|safe_name }}(_rchat_id, _rthread_int)
+{%- endif %}
         logging.info(f"📤 Медиа отправлено получателю {_rchat}")
     except Exception as _re:
         logging.error(f"❌ Ошибка отправки медиа получателю {{ recipient.chatId }}: {_re}")

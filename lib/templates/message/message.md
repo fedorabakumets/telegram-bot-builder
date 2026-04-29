@@ -65,6 +65,8 @@ interface MessageSendRecipient {
   chatId?: string;
   /** ID топика или {переменная} */
   threadId?: string;
+  /** Токен бота для отправки. Если задан — создаётся `Bot(token=...)` на лету. По умолчанию — глобальный `bot`. */
+  botToken?: string;
 }
 ```
 

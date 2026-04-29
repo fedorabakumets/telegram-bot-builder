@@ -85,3 +85,12 @@ export const fixtureFileVariableVideo: MediaNodeTemplateParams = {
   nodeId: 'media_file_video_1',
   attachedMedia: ['{video_file}'],
 };
+
+/** Нода с botToken у получателя */
+export const fixtureWithBotToken: MediaNodeTemplateParams = {
+  nodeId: 'media_bot_token',
+  attachedMedia: ['https://example.com/photo.jpg'],
+  messageSendRecipients: [
+    { id: 'r1', type: 'chat_id', chatId: '{target_user_id}', botToken: '{token_status.instance.token}' },
+  ],
+};

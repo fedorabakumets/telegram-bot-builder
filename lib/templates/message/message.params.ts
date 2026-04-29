@@ -158,5 +158,7 @@ export interface MessageTemplateParams {
     chatId?: string;
     /** ID топика или {переменная} */
     threadId?: string;
+    /** Токен бота для отправки (опционально). По умолчанию — глобальный bot */
+    botToken?: string;
   }>;
 }
