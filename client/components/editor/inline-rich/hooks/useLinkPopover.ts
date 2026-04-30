@@ -61,19 +61,38 @@ export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
   const [currentUrl, setCurrentUrl] = useState('');
   const [position, setPosition] = useState<PopoverPosition>({ left: 0, top: 0 });
 
-  /** Вычисляет позицию попапа над выделением или над кнопкой */
+  /**
+   * Вычисляет позицию попапа над выделением
+   * @param rect - Прямоугольник выделения (viewport-координаты)
+   * @returns Позиция попапа
+   */
   const calcPosition = useCallback((rect: DOMRect): PopoverPosition => {
-    const POPUP_HEIGHT = 48;
-    const MARGIN = 8;
+    const POPUP_HEIGHT = 44;
+    const MARGIN = 6;
+    // position: fixed — координаты уже относительно viewport, scrollX/Y не нужны
+    const top = rect.top - POPUP_HEIGHT - MARGIN;
     return {
-      left: Math.max(8, rect.left + window.scrollX),
-      top: rect.top + window.scrollY - POPUP_HEIGHT - MARGIN
+      left: Math.max(8, Math.min(rect.left, window.innerWidth - 280)),
+      // Если нет места сверху — показываем снизу
+      top: top < 8 ? rect.bottom + MARGIN : top
     };
   }, []);
 
   const openLinkPopover = useCallback(() => {
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
+
+    // Если нет выделения — всё равно открываем попап по центру экрана
+    if (!selection || selection.rangeCount === 0) {
+      savedRangeRef.current = null;
+      savedAnchorRef.current = null;
+      setCurrentUrl('');
+      setPosition({
+        left: Math.max(8, window.innerWidth / 2 - 140),
+        top: Math.max(8, window.innerHeight / 2 - 22)
+      });
+      setIsOpen(true);
+      return;
+    }
 
     const range = selection.getRangeAt(0);
     savedRangeRef.current = range.cloneRange();
@@ -94,10 +113,16 @@ export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
       setCurrentUrl('');
     }
 
-    // Позиционируем попап
+    // Позиционируем попап над выделением
     const rect = range.getBoundingClientRect();
     if (rect.width > 0 || rect.height > 0) {
       setPosition(calcPosition(rect));
+    } else {
+      // Нет видимого выделения — центрируем
+      setPosition({
+        left: Math.max(8, window.innerWidth / 2 - 140),
+        top: Math.max(8, window.innerHeight / 2 - 22)
+      });
     }
 
     setIsOpen(true);

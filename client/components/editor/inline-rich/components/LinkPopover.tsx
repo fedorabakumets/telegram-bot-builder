@@ -52,16 +52,22 @@ export function LinkPopover({
     }
   }, [isOpen, currentUrl]);
 
-  // Закрытие по клику вне попапа
+  // Закрытие по клику вне попапа — используем setTimeout чтобы не закрыться сразу при открытии
   useEffect(() => {
     if (!isOpen) return;
+    let mounted = false;
+    const timer = setTimeout(() => { mounted = true; }, 100);
     const handleMouseDown = (e: MouseEvent) => {
+      if (!mounted) return;
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         onClose();
       }
     };
     document.addEventListener('mousedown', handleMouseDown);
-    return () => document.removeEventListener('mousedown', handleMouseDown);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleMouseDown);
+    };
   }, [isOpen, onClose]);
 
   // Закрытие по Escape
@@ -76,7 +82,8 @@ export function LinkPopover({
     <div
       ref={containerRef}
       style={{ position: 'fixed', left: position.left, top: position.top, zIndex: 9999 }}
-      className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg px-2 py-1.5"
+      className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl px-2 py-1.5"
+      onMouseDown={(e) => e.stopPropagation()}
     >
       <Input
         ref={inputRef}
