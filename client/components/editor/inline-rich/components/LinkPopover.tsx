@@ -1,9 +1,10 @@
 /**
  * @fileoverview Попап для вставки и редактирования гиперссылки
- * @description Позиционируется над выделением, содержит поле URL и кнопки подтверждения/удаления
+ * @description Рендерится через Portal в document.body, позиционируется над выделением
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,9 +29,10 @@ export interface LinkPopoverProps {
 }
 
 /**
- * Попап для ввода и редактирования URL гиперссылки
+ * Попап для ввода и редактирования URL гиперссылки.
+ * Рендерится через Portal в document.body чтобы избежать проблем с z-index и overflow.
  * @param props - Свойства компонента
- * @returns JSX элемент попапа или null если закрыт
+ * @returns Portal с попапом или null если закрыт
  */
 export function LinkPopover({
   isOpen,
@@ -44,7 +46,7 @@ export function LinkPopover({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Синхронизируем поле с текущим URL при открытии
+  /** Синхронизируем поле с текущим URL при открытии */
   useEffect(() => {
     if (isOpen) {
       setUrl(currentUrl);
@@ -52,13 +54,13 @@ export function LinkPopover({
     }
   }, [isOpen, currentUrl]);
 
-  // Закрытие по клику вне попапа — используем setTimeout чтобы не закрыться сразу при открытии
+  /** Закрытие по клику вне попапа — задержка чтобы не закрыться сразу при открытии */
   useEffect(() => {
     if (!isOpen) return;
-    let mounted = false;
-    const timer = setTimeout(() => { mounted = true; }, 100);
+    let active = false;
+    const timer = setTimeout(() => { active = true; }, 150);
     const handleMouseDown = (e: MouseEvent) => {
-      if (!mounted) return;
+      if (!active) return;
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         onClose();
       }
@@ -70,7 +72,7 @@ export function LinkPopover({
     };
   }, [isOpen, onClose]);
 
-  // Закрытие по Escape
+  /** Закрытие по Escape, применение по Enter */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') { onClose(); return; }
     if (e.key === 'Enter') { e.preventDefault(); onApply(url); }
@@ -78,10 +80,11 @@ export function LinkPopover({
 
   if (!isOpen) return null;
 
-  return (
+  /** Рендерим через Portal прямо в body — никакой вложенности, никаких конфликтов */
+  return createPortal(
     <div
       ref={containerRef}
-      style={{ position: 'fixed', left: position.left, top: position.top, zIndex: 9999 }}
+      style={{ position: 'fixed', left: position.left, top: position.top, zIndex: 99999 }}
       className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl px-2 py-1.5"
       onMouseDown={(e) => e.stopPropagation()}
     >
@@ -113,6 +116,7 @@ export function LinkPopover({
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
