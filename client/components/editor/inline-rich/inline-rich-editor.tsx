@@ -60,6 +60,7 @@ export function InlineRichEditor(props: InlineRichEditorWithFiltersProps) {
         onKeyDown={handleKeyDown}
         placeholder={props.placeholder || 'Введите текст сообщения...'}
         innerRef={editorRef}
+        onLinkClick={linkPopover.openLinkPopover}
       >
         <StatsBar wordCount={wordCount} charCount={charCount} />
       </EditorContent>
