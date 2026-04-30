@@ -76,6 +76,7 @@ export function Toolbar({
                   ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200/80 dark:hover:bg-blue-800/50"
                   : "hover:bg-slate-200/60 dark:hover:bg-slate-700/60"
               )}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => applyFormatting(format)} title={`${format.name} (${format.shortcut})`}>
               <format.icon className={cn(
                 "h-3.5 w-3.5",
@@ -111,6 +112,7 @@ export function Toolbar({
           const isActive = activeFormats?.has(format.command) ?? false;
           return (
             <Button key={format.command} variant="ghost" size="sm"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => applyFormatting(format)}
               className={cn(
                 "h-8 sm:h-9 w-8 sm:w-9 p-0 transition-colors",
