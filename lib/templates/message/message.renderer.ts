@@ -13,6 +13,46 @@ import { buildStaticRowsAroundDynamic } from '../keyboard/keyboard-layout-rows';
 import type { Node } from '@shared/schema';
 
 /**
+ * Список HTML-тегов, поддерживаемых Telegram Bot API.
+ * Используется для авто-определения режима форматирования.
+ */
+const TELEGRAM_HTML_TAG_PATTERN = /<(b|i|u|s|a|code|pre|blockquote|tg-spoiler)[\s>\/]/i;
+
+/**
+ * Проверяет, содержит ли текст HTML-теги, поддерживаемые Telegram.
+ * @param text - Текст сообщения для проверки
+ * @returns true если найден хотя бы один Telegram HTML-тег
+ */
+function containsTelegramHtmlTags(text: string): boolean {
+  return TELEGRAM_HTML_TAG_PATTERN.test(text);
+}
+
+/**
+ * Определяет эффективный режим форматирования для узла.
+ * Если `formatMode` явно задан — использует его.
+ * Если `formatMode` отсутствует (undefined/null) и текст содержит HTML-теги — возвращает 'html'.
+ * @param formatMode - Явно заданный режим форматирования (может быть undefined)
+ * @param messageText - Текст сообщения
+ * @returns Эффективный режим форматирования
+ */
+function resolveFormatMode(
+  formatMode: string | undefined | null,
+  messageText: string | undefined,
+): 'html' | 'markdown' | 'none' {
+  const VALID_FORMAT_MODES = ['html', 'markdown', 'none'] as const;
+  // Если formatMode явно задан и валиден — используем его без изменений
+  if (VALID_FORMAT_MODES.includes(formatMode as any)) {
+    return formatMode as 'html' | 'markdown' | 'none';
+  }
+  // formatMode отсутствует (undefined/null/невалидное значение) —
+  // проверяем наличие HTML-тегов в тексте для авто-определения
+  if (messageText && containsTelegramHtmlTags(messageText)) {
+    return 'html';
+  }
+  return 'none';
+}
+
+/**
  * Генерация Python кода обработчика сообщения с валидацией параметров
  * @param params - Параметры сообщения
  * @returns Сгенерированный Python код
@@ -28,11 +68,10 @@ import type { Node } from '@shared/schema';
  * ```
  */
 export function generateMessage(params: MessageTemplateParams): string {
-  const VALID_FORMAT_MODES = ['html', 'markdown', 'none'] as const;
-  /** Нормализуем params до передачи в схему — убираем невалидные значения */
+  /** Нормализуем params до передачи в схему — авто-определяем HTML если formatMode отсутствует */
   const normalizedParams = {
     ...params,
-    formatMode: VALID_FORMAT_MODES.includes(params.formatMode as any) ? params.formatMode : 'none',
+    formatMode: resolveFormatMode(params.formatMode, params.messageText),
   };
   const normalizedDynamicButtons = normalizeDynamicButtonsConfig(normalizedParams.dynamicButtons);
   const useDynamicButtons = shouldUseDynamicButtons({
