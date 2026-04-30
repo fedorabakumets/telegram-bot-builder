@@ -24,7 +24,7 @@ export function InlineRichEditor(props: InlineRichEditorWithFiltersProps) {
     undo, redo, canUndo, canRedo,
     applyFormatting, handleKeyDown,
     copyFormatted, insertVariable, handleInput,
-    linkPopover
+    linkPopover, activeFormats
   } = useInlineRichEditor(props);
 
   const { variables, variableFilters, handleApplyFilter } = useVariableFilters({
@@ -46,6 +46,7 @@ export function InlineRichEditor(props: InlineRichEditorWithFiltersProps) {
         copyFormatted={copyFormatted}
         availableVariables={props.availableVariables || []}
         insertVariable={insertVariable}
+        activeFormats={activeFormats}
       />
       <LinkInputRow
         isOpen={linkPopover.isOpen}

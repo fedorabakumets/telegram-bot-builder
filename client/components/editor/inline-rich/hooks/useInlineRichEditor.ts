@@ -16,6 +16,7 @@ import { useClipboard } from './useClipboard';
 import { useEditorInput } from './useEditorInput';
 import { useLinkPopover } from './useLinkPopover';
 import type { UseLinkPopoverReturn } from './useLinkPopover';
+import { useActiveFormats } from './useActiveFormats';
 import { valueToHtml, htmlToValue } from '../html-converter';
 import { formatOptions } from '../format-options';
 
@@ -49,6 +50,8 @@ export interface UseInlineRichEditorReturn {
   canRedo: boolean;
   /** Данные попапа ссылки */
   linkPopover: UseLinkPopoverReturn;
+  /** Набор активных команд форматирования в позиции курсора */
+  activeFormats: Set<string>;
 }
 
 /**
@@ -118,6 +121,8 @@ export function useInlineRichEditor(
     setIsFormatting
   });
 
+  const activeFormats = useActiveFormats(editorRef);
+
   return {
     editorRef,
     wordCount,
@@ -131,6 +136,7 @@ export function useInlineRichEditor(
     handleInput,
     canUndo: undoStack.length > 0,
     canRedo: redoStack.length > 0,
-    linkPopover
+    linkPopover,
+    activeFormats
   };
 }
