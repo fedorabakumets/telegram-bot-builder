@@ -127,14 +127,31 @@ export function useFormatting({
         selection.removeAllRanges();
         selection.addRange(range);
       } else if (format.command === 'spoiler' && selectedText) {
-        /** Оборачиваем выделенный текст в Telegram-тег спойлера */
-        const spoilerElement = document.createElement('tg-spoiler');
-        spoilerElement.textContent = selectedText;
-        range.deleteContents();
-        range.insertNode(spoilerElement);
-        range.selectNode(spoilerElement);
-        selection.removeAllRanges();
-        selection.addRange(range);
+        /**
+         * Toggle спойлера: если выделение уже внутри <tg-spoiler> — снимаем тег,
+         * заменяя его текстовым содержимым. Иначе — оборачиваем.
+         */
+        const ancestor = range.commonAncestorContainer;
+        const existingSpoiler =
+          ancestor.nodeName === 'TG-SPOILER'
+            ? (ancestor as Element)
+            : (ancestor as Element).closest?.('tg-spoiler') ??
+              (ancestor.parentElement?.closest('tg-spoiler') ?? null);
+
+        if (existingSpoiler) {
+          // Снимаем спойлер: заменяем <tg-spoiler> его текстовым содержимым
+          const textNode = document.createTextNode(existingSpoiler.textContent ?? '');
+          existingSpoiler.parentNode?.replaceChild(textNode, existingSpoiler);
+        } else {
+          // Оборачиваем выделенный текст в Telegram-тег спойлера
+          const spoilerElement = document.createElement('tg-spoiler');
+          spoilerElement.textContent = selectedText;
+          range.deleteContents();
+          range.insertNode(spoilerElement);
+          range.selectNode(spoilerElement);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
       }
 
       setTimeout(() => {
