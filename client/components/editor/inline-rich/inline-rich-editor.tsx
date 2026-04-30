@@ -11,6 +11,7 @@ import { Toolbar } from './components/Toolbar';
 import { EditorContent } from './components/EditorContent';
 import { StatsBar } from './components/StatsBar';
 import { UsedVariablesList } from './components/UsedVariablesList';
+import { LinkInputRow } from './components/LinkInputRow';
 
 /**
  * Компонент встроенного редактора с поддержкой форматирования и фильтров переменных
@@ -45,7 +46,13 @@ export function InlineRichEditor(props: InlineRichEditorWithFiltersProps) {
         copyFormatted={copyFormatted}
         availableVariables={props.availableVariables || []}
         insertVariable={insertVariable}
-        linkPopover={linkPopover}
+      />
+      <LinkInputRow
+        isOpen={linkPopover.isOpen}
+        currentUrl={linkPopover.currentUrl}
+        onApply={linkPopover.applyLink}
+        onRemove={linkPopover.removeLink}
+        onClose={linkPopover.closeLinkPopover}
       />
       <EditorContent
         value={props.value}

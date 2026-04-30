@@ -1,37 +1,25 @@
 /**
- * @fileoverview Хук управления попапом вставки/редактирования гиперссылки
+ * @fileoverview Хук управления inline-строкой вставки/редактирования гиперссылки
  * @description Сохраняет выделение, определяет текущую ссылку, применяет и удаляет <a>
  */
 
 import { useRef, useState, useCallback } from 'react';
 
 /**
- * Позиция попапа на экране
- */
-export interface PopoverPosition {
-  /** Отступ от левого края экрана */
-  left: number;
-  /** Отступ от верхнего края экрана */
-  top: number;
-}
-
-/**
  * Результат работы хука useLinkPopover
  */
 export interface UseLinkPopoverReturn {
-  /** Открыт ли попап */
+  /** Открыта ли строка ввода */
   isOpen: boolean;
   /** Текущий URL в поле ввода */
   currentUrl: string;
-  /** Позиция попапа */
-  position: PopoverPosition;
-  /** Открыть попап */
+  /** Открыть строку ввода */
   openLinkPopover: () => void;
   /** Применить ссылку */
   applyLink: (url: string) => void;
   /** Удалить ссылку */
   removeLink: () => void;
-  /** Закрыть попап */
+  /** Закрыть строку ввода */
   closeLinkPopover: () => void;
 }
 
@@ -49,47 +37,29 @@ function getAnchorElement(node: Node | null): HTMLAnchorElement | null {
 }
 
 /**
- * Хук управления попапом вставки и редактирования гиперссылки
+ * Хук управления inline-строкой вставки и редактирования гиперссылки
  * @param onInput - Callback для синхронизации значения редактора после изменений
- * @returns Объект с состоянием и методами попапа
+ * @returns Объект с состоянием и методами строки ввода
  */
 export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
+  /** Сохранённый Range выделения на момент открытия */
   const savedRangeRef = useRef<Range | null>(null);
+  /** Сохранённый элемент <a> если курсор стоял внутри ссылки */
   const savedAnchorRef = useRef<HTMLAnchorElement | null>(null);
 
   const [isOpen, setIsOpen] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
-  const [position, setPosition] = useState<PopoverPosition>({ left: 0, top: 0 });
 
   /**
-   * Вычисляет позицию попапа над выделением
-   * @param rect - Прямоугольник выделения (viewport-координаты)
-   * @returns Позиция попапа
+   * Открывает строку ввода, сохраняя текущее выделение и URL существующей ссылки
    */
-  const calcPosition = useCallback((rect: DOMRect): PopoverPosition => {
-    const POPUP_HEIGHT = 44;
-    const MARGIN = 6;
-    // position: fixed — координаты уже относительно viewport, scrollX/Y не нужны
-    const top = rect.top - POPUP_HEIGHT - MARGIN;
-    return {
-      left: Math.max(8, Math.min(rect.left, window.innerWidth - 280)),
-      // Если нет места сверху — показываем снизу
-      top: top < 8 ? rect.bottom + MARGIN : top
-    };
-  }, []);
-
   const openLinkPopover = useCallback(() => {
     const selection = window.getSelection();
 
-    // Если нет выделения — всё равно открываем попап по центру экрана
     if (!selection || selection.rangeCount === 0) {
       savedRangeRef.current = null;
       savedAnchorRef.current = null;
       setCurrentUrl('');
-      setPosition({
-        left: Math.max(8, window.innerWidth / 2 - 140),
-        top: Math.max(8, window.innerHeight / 2 - 22)
-      });
       setIsOpen(true);
       return;
     }
@@ -97,7 +67,7 @@ export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
     const range = selection.getRangeAt(0);
     savedRangeRef.current = range.cloneRange();
 
-    // Если выделение пустое — проверяем, стоит ли курсор внутри <a>
+    // Если курсор стоит внутри <a> — подставляем её href
     const anchorEl = getAnchorElement(range.commonAncestorContainer);
     if (anchorEl) {
       savedAnchorRef.current = anchorEl;
@@ -113,21 +83,13 @@ export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
       setCurrentUrl('');
     }
 
-    // Позиционируем попап над выделением
-    const rect = range.getBoundingClientRect();
-    if (rect.width > 0 || rect.height > 0) {
-      setPosition(calcPosition(rect));
-    } else {
-      // Нет видимого выделения — центрируем
-      setPosition({
-        left: Math.max(8, window.innerWidth / 2 - 140),
-        top: Math.max(8, window.innerHeight / 2 - 22)
-      });
-    }
-
     setIsOpen(true);
-  }, [calcPosition]);
+  }, []);
 
+  /**
+   * Применяет введённый URL: создаёт новую ссылку или обновляет существующую
+   * @param url - URL для вставки
+   */
   const applyLink = useCallback((url: string) => {
     const range = savedRangeRef.current;
     if (!range || !url.trim()) {
@@ -159,6 +121,9 @@ export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
     setTimeout(onInput, 0);
   }, [onInput]);
 
+  /**
+   * Удаляет ссылку, заменяя <a> на текстовый узел
+   */
   const removeLink = useCallback(() => {
     const anchorEl = savedAnchorRef.current;
     if (anchorEl) {
@@ -169,6 +134,9 @@ export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
     setIsOpen(false);
   }, [onInput]);
 
+  /**
+   * Закрывает строку ввода без применения изменений
+   */
   const closeLinkPopover = useCallback(() => {
     setIsOpen(false);
   }, []);
@@ -176,7 +144,6 @@ export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
   return {
     isOpen,
     currentUrl,
-    position,
     openLinkPopover,
     applyLink,
     removeLink,
