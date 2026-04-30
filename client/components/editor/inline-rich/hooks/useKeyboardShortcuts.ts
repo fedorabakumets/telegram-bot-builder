@@ -18,6 +18,8 @@ export interface UseKeyboardShortcutsOptions {
   redo: () => void;
   /** Массив опций форматирования */
   formatOptions: FormatOption[];
+  /** Callback для открытия попапа ссылки (Ctrl+K) */
+  onLinkShortcut?: () => void;
 }
 
 /**
@@ -29,7 +31,8 @@ export function useKeyboardShortcuts({
   applyFormatting,
   undo,
   redo,
-  formatOptions
+  formatOptions,
+  onLinkShortcut
 }: UseKeyboardShortcutsOptions) {
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!e.ctrlKey && !e.metaKey) return;
@@ -43,6 +46,13 @@ export function useKeyboardShortcuts({
       q: 5, // quote
       h: 6  // heading
     };
+
+    // Горячая клавиша для ссылки (Ctrl+K)
+    if (key === 'k') {
+      e.preventDefault();
+      onLinkShortcut?.();
+      return;
+    }
 
     // Обработка форматирования
     if (formatMap[key] !== undefined) {
@@ -67,7 +77,7 @@ export function useKeyboardShortcuts({
         undo();
       }
     }
-  }, [applyFormatting, undo, redo, formatOptions]);
+  }, [applyFormatting, undo, redo, formatOptions, onLinkShortcut]);
 
   return { handleKeyDown };
 }

@@ -14,6 +14,8 @@ import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useVariableInsert } from './useVariableInsert';
 import { useClipboard } from './useClipboard';
 import { useEditorInput } from './useEditorInput';
+import { useLinkPopover } from './useLinkPopover';
+import type { UseLinkPopoverReturn } from './useLinkPopover';
 import { valueToHtml, htmlToValue } from '../html-converter';
 import { formatOptions } from '../format-options';
 
@@ -45,6 +47,8 @@ export interface UseInlineRichEditorReturn {
   canUndo: boolean;
   /** Доступен ли redo */
   canRedo: boolean;
+  /** Данные попапа ссылки */
+  linkPopover: UseLinkPopoverReturn;
 }
 
 /**
@@ -82,20 +86,24 @@ export function useInlineRichEditor(
     setIsFormatting
   });
 
+  const linkPopover = useLinkPopover(handleInput);
+
   const { applyFormatting } = useFormatting({
     editorRef,
     saveToUndoStack,
     handleInput,
     toast,
     onFormatModeChange: props.onFormatModeChange,
-    setIsFormatting
+    setIsFormatting,
+    onLinkCommand: linkPopover.openLinkPopover
   });
 
   const { handleKeyDown } = useKeyboardShortcuts({
     applyFormatting,
     undo,
     redo,
-    formatOptions
+    formatOptions,
+    onLinkShortcut: linkPopover.openLinkPopover
   });
 
   const { copyFormatted } = useClipboard({ editorRef, toast });
@@ -122,6 +130,7 @@ export function useInlineRichEditor(
     insertVariable,
     handleInput,
     canUndo: undoStack.length > 0,
-    canRedo: redoStack.length > 0
+    canRedo: redoStack.length > 0,
+    linkPopover
   };
 }

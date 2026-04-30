@@ -11,6 +11,7 @@ import {
   Code,
   Quote,
   Heading3,
+  Link,
   LucideIcon
 } from 'lucide-react';
 
@@ -91,5 +92,13 @@ export const formatOptions: FormatOption[] = [
     shortcut: 'Ctrl+H',
     markdown: '# заголовок',
     html: '<h3>заголовок</h3>'
+  },
+  {
+    command: 'link',
+    icon: Link,
+    name: 'Ссылка',
+    shortcut: 'Ctrl+K',
+    markdown: '[текст](url)',
+    html: '<a href="url">текст</a>'
   }
 ];

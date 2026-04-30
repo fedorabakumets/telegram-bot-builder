@@ -22,7 +22,8 @@ export function InlineRichEditor(props: InlineRichEditorWithFiltersProps) {
     editorRef, wordCount, charCount,
     undo, redo, canUndo, canRedo,
     applyFormatting, handleKeyDown,
-    copyFormatted, insertVariable, handleInput
+    copyFormatted, insertVariable, handleInput,
+    linkPopover
   } = useInlineRichEditor(props);
 
   const { variables, variableFilters, handleApplyFilter } = useVariableFilters({
@@ -44,6 +45,7 @@ export function InlineRichEditor(props: InlineRichEditorWithFiltersProps) {
         copyFormatted={copyFormatted}
         availableVariables={props.availableVariables || []}
         insertVariable={insertVariable}
+        linkPopover={linkPopover}
       />
       <EditorContent
         value={props.value}

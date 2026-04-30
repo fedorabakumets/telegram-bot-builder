@@ -23,6 +23,8 @@ export interface UseFormattingOptions {
   onFormatModeChange?: (formatMode: 'html' | 'markdown' | 'none') => void;
   /** Флаг установки форматирования */
   setIsFormatting: (value: boolean) => void;
+  /** Callback для открытия попапа вставки ссылки */
+  onLinkCommand?: () => void;
 }
 
 /**
@@ -63,10 +65,17 @@ export function useFormatting({
   handleInput,
   toast,
   onFormatModeChange,
-  setIsFormatting
+  setIsFormatting,
+  onLinkCommand
 }: UseFormattingOptions) {
   const applyFormatting = useCallback((format: FormatOption) => {
     if (!editorRef.current) return;
+
+    // Команда ссылки делегируется внешнему попапу
+    if (format.command === 'link') {
+      onLinkCommand?.();
+      return;
+    }
 
     saveToUndoStack();
     setIsFormatting(true);
