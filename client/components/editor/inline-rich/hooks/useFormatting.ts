@@ -1,6 +1,7 @@
 /**
  * @fileoverview Хук для применения форматирования к тексту
- * @description Обрабатывает применение стилей (жирный, курсив и т.д.) к выделенному тексту
+ * @description Обрабатывает применение стилей с поддержкой toggle:
+ * повторное нажатие на активный формат снимает его.
  */
 
 import { useCallback } from 'react';
@@ -28,15 +29,87 @@ export interface UseFormattingOptions {
 }
 
 /**
- * Оборачивает выделенный текст в HTML-тег
- * @param tagName - Имя тега для оборачивания
+ * Маппинг команд форматирования на HTML-теги для оборачивания
  */
-function wrapSelection(tagName: string): void {
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) return;
-  const range = selection.getRangeAt(0);
-  const selectedText = range.toString();
-  if (!selectedText) return;
+const FORMAT_TAG_MAP: Record<string, string> = {
+  bold: 'strong',
+  italic: 'em',
+  underline: 'u',
+  strikethrough: 's',
+  code: 'code',
+  quote: 'blockquote',
+  heading: 'h3',
+  spoiler: 'tg-spoiler',
+};
+
+/**
+ * Маппинг команд на теги для поиска существующего форматирования (включая алиасы)
+ * Используется при toggle — нужно найти любой вариант тега
+ */
+const COMMAND_TO_TAGS: Record<string, string[]> = {
+  bold: ['strong', 'b'],
+  italic: ['em', 'i'],
+  underline: ['u'],
+  strikethrough: ['s', 'strike', 'del'],
+  code: ['code', 'pre'],
+  quote: ['blockquote'],
+  heading: ['h3', 'h4', 'h5'],
+  spoiler: ['tg-spoiler'],
+};
+
+/**
+ * Ищет ближайший родительский элемент с одним из указанных тегов
+ * @param node - Начальный узел
+ * @param tagNames - Список имён тегов (в нижнем регистре)
+ * @param editor - Корневой элемент редактора (граница поиска)
+ * @returns Найденный элемент или null
+ */
+function findAncestorByTags(
+  node: Node | null,
+  tagNames: string[],
+  editor: HTMLElement
+): Element | null {
+  let current = node?.nodeType === Node.TEXT_NODE
+    ? node.parentElement
+    : node as Element | null;
+
+  while (current && current !== editor) {
+    if (tagNames.includes(current.tagName.toLowerCase())) return current;
+    current = current.parentElement;
+  }
+  return null;
+}
+
+/**
+ * Снимает форматирование: заменяет элемент его текстовым содержимым
+ * и восстанавливает выделение на этом тексте.
+ * @param el - Элемент для удаления
+ * @param selection - Текущее выделение
+ */
+function unwrapElement(el: Element, selection: Selection): void {
+  const text = el.textContent ?? '';
+  const textNode = document.createTextNode(text);
+  el.parentNode?.replaceChild(textNode, el);
+  const newRange = document.createRange();
+  newRange.selectNode(textNode);
+  selection.removeAllRanges();
+  selection.addRange(newRange);
+}
+
+/**
+ * Оборачивает выделенный текст в новый элемент с указанным тегом
+ * и восстанавливает выделение на нём.
+ * @param tagName - Имя тега
+ * @param selectedText - Выделенный текст
+ * @param range - Текущий Range
+ * @param selection - Текущее выделение
+ */
+function wrapWithTag(
+  tagName: string,
+  selectedText: string,
+  range: Range,
+  selection: Selection
+): void {
   const el = document.createElement(tagName);
   el.textContent = selectedText;
   range.deleteContents();
@@ -46,18 +119,10 @@ function wrapSelection(tagName: string): void {
   selection.addRange(range);
 }
 
-/** Маппинг команд форматирования на HTML-теги */
-const FORMAT_TAG_MAP: Record<string, string> = {
-  bold: 'strong',
-  italic: 'em',
-  underline: 'u',
-  strikethrough: 's'
-};
-
 /**
- * Хук для применения форматирования к выделенному тексту
+ * Хук для применения форматирования к выделенному тексту с поддержкой toggle
  * @param options - Параметры хука
- * @returns Функция applyFormatting для применения форматирования
+ * @returns Функция applyFormatting для применения/снятия форматирования
  */
 export function useFormatting({
   editorRef,
@@ -98,72 +163,29 @@ export function useFormatting({
     try {
       const range = selection.getRangeAt(0);
       const selectedText = range.toString();
+      const editor = editorRef.current;
 
       const tagName = FORMAT_TAG_MAP[format.command];
-      if (tagName) {
-        wrapSelection(tagName);
-      } else if (format.command === 'code' && selectedText) {
-        const codeElement = document.createElement('code');
-        codeElement.textContent = selectedText;
-        range.deleteContents();
-        range.insertNode(codeElement);
-        range.selectNode(codeElement);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      } else if (format.command === 'quote' && selectedText) {
-        const quoteElement = document.createElement('blockquote');
-        quoteElement.textContent = selectedText;
-        range.deleteContents();
-        range.insertNode(quoteElement);
-        range.selectNode(quoteElement);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      } else if (format.command === 'heading' && selectedText) {
-        const headingElement = document.createElement('h3');
-        headingElement.textContent = selectedText;
-        range.deleteContents();
-        range.insertNode(headingElement);
-        range.selectNode(headingElement);
-        selection.removeAllRanges();
-        selection.addRange(range);
-      } else if (format.command === 'spoiler' && selectedText) {
-        /**
-         * Toggle спойлера:
-         * - если выделение внутри <tg-spoiler> → снимаем тег
-         * - иначе → оборачиваем в <tg-spoiler>
-         */
-        const ancestor = range.commonAncestorContainer;
-        const existingSpoiler: Element | null =
-          ancestor.nodeName === 'TG-SPOILER'
-            ? (ancestor as Element)
-            : (ancestor as Element).closest?.('tg-spoiler') ??
-              (ancestor.parentElement?.closest('tg-spoiler') ?? null);
+      const searchTags = COMMAND_TO_TAGS[format.command];
 
-        if (existingSpoiler) {
-          // Снимаем спойлер: заменяем <tg-spoiler> его текстовым содержимым
-          const text = existingSpoiler.textContent ?? '';
-          const textNode = document.createTextNode(text);
-          existingSpoiler.parentNode?.replaceChild(textNode, existingSpoiler);
-          // Восстанавливаем выделение на том же тексте
-          const newRange = document.createRange();
-          newRange.selectNode(textNode);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-        } else {
-          // Оборачиваем выделенный текст в Telegram-тег спойлера
-          const spoilerElement = document.createElement('tg-spoiler');
-          spoilerElement.textContent = selectedText;
-          range.deleteContents();
-          range.insertNode(spoilerElement);
-          range.selectNode(spoilerElement);
-          selection.removeAllRanges();
-          selection.addRange(range);
+      if (tagName && searchTags) {
+        // Ищем существующий родительский элемент с этим форматом
+        const existing = findAncestorByTags(
+          range.commonAncestorContainer,
+          searchTags,
+          editor
+        );
+
+        if (existing) {
+          // Toggle OFF — снимаем форматирование
+          unwrapElement(existing, selection);
+        } else if (selectedText) {
+          // Toggle ON — оборачиваем выделенный текст
+          wrapWithTag(tagName, selectedText, range, selection);
         }
       }
 
-      setTimeout(() => {
-        handleInput();
-      }, 0);
+      setTimeout(() => { handleInput(); }, 0);
     } catch (e) {
       toast({
         title: "Ошибка форматирования",
@@ -173,7 +195,7 @@ export function useFormatting({
     }
 
     setTimeout(() => setIsFormatting(false), 100);
-  }, [editorRef, saveToUndoStack, handleInput, toast, onFormatModeChange, setIsFormatting]);
+  }, [editorRef, saveToUndoStack, handleInput, toast, onFormatModeChange, setIsFormatting, onLinkCommand]);
 
   return { applyFormatting };
 }
