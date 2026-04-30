@@ -40,7 +40,11 @@ export function useEditorInput({
     const html = editorRef.current.innerHTML;
     const text = htmlToValue(html, enableMarkdown);
     onChange(text);
-    setTimeout(() => setIsFormatting(false), 0);
+    // Сбрасываем флаг через requestAnimationFrame — после того как React
+    // обработает новый value и useEditorSync пропустит перезапись DOM
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setIsFormatting(false));
+    });
   }, [editorRef, htmlToValue, onChange, enableMarkdown, setIsFormatting]);
 
   return { handleInput };

@@ -230,6 +230,8 @@ export function useFormatting({
         }
       }
 
+      // isFormattingRef уже true — handleInput вызовет onChange,
+      // useEditorSync увидит флаг и не перезапишет DOM
       setTimeout(() => { handleInput(); }, 0);
     } catch (e) {
       toast({
@@ -239,7 +241,9 @@ export function useFormatting({
       });
     }
 
-    setTimeout(() => setIsFormatting(false), 100);
+    // Держим флаг форматирования дольше чтобы useEditorSync не перезаписал DOM
+    // пока React не обработает новый value
+    setTimeout(() => setIsFormatting(false), 200);
   }, [editorRef, saveToUndoStack, handleInput, toast, onFormatModeChange, setIsFormatting, onLinkCommand, restoreSavedRange]);
 
   return { applyFormatting, saveSelectionOnBlur };
