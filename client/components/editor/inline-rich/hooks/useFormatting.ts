@@ -128,11 +128,12 @@ export function useFormatting({
         selection.addRange(range);
       } else if (format.command === 'spoiler' && selectedText) {
         /**
-         * Toggle спойлера: если выделение уже внутри <tg-spoiler> — снимаем тег,
-         * заменяя его текстовым содержимым. Иначе — оборачиваем.
+         * Toggle спойлера:
+         * - если выделение внутри <tg-spoiler> → снимаем тег
+         * - иначе → оборачиваем в <tg-spoiler>
          */
         const ancestor = range.commonAncestorContainer;
-        const existingSpoiler =
+        const existingSpoiler: Element | null =
           ancestor.nodeName === 'TG-SPOILER'
             ? (ancestor as Element)
             : (ancestor as Element).closest?.('tg-spoiler') ??
@@ -140,8 +141,14 @@ export function useFormatting({
 
         if (existingSpoiler) {
           // Снимаем спойлер: заменяем <tg-spoiler> его текстовым содержимым
-          const textNode = document.createTextNode(existingSpoiler.textContent ?? '');
+          const text = existingSpoiler.textContent ?? '';
+          const textNode = document.createTextNode(text);
           existingSpoiler.parentNode?.replaceChild(textNode, existingSpoiler);
+          // Восстанавливаем выделение на том же тексте
+          const newRange = document.createRange();
+          newRange.selectNode(textNode);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
         } else {
           // Оборачиваем выделенный текст в Telegram-тег спойлера
           const spoilerElement = document.createElement('tg-spoiler');
