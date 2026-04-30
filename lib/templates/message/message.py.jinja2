@@ -324,14 +324,6 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     )
     {%- endif %}{# /hasUserRecipient #}
 
-    {# Сохранение ID отправленного сообщения в переменную #}
-    {%- if saveMessageIdTo %}
-    if sent_message and hasattr(sent_message, 'message_id'):
-        user_data[user_id]["{{ saveMessageIdTo }}"] = sent_message.message_id
-        await set_user_var(user_id, "{{ saveMessageIdTo }}", sent_message.message_id)
-        logging.info(f"💾 ID сообщения сохранён в переменную '{{ saveMessageIdTo }}': {sent_message.message_id}")
-    {%- endif %}
-
     {# Отправка дополнительным получателям (chat_id / admin_ids) #}
     {%- if messageSendRecipients and messageSendRecipients|length > 0 %}
     {%- for recipient in messageSendRecipients %}
@@ -354,9 +346,13 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         {%- if recipient.botToken %}
         _rbot_token = replace_variables_in_text("{{ recipient.botToken }}", all_user_vars, {})
         _rbot = Bot(token=_rbot_token) if _rbot_token and _rbot_token.strip() else None
-        await _send_to_{{ nodeId|replace('-', '_') }}(_rchat_id, _rthread_int, _bot=_rbot)
+        _rsent = await _send_to_{{ nodeId|replace('-', '_') }}(_rchat_id, _rthread_int, _bot=_rbot)
         {%- else %}
-        await _send_to_{{ nodeId|replace('-', '_') }}(_rchat_id, _rthread_int)
+        _rsent = await _send_to_{{ nodeId|replace('-', '_') }}(_rchat_id, _rthread_int)
+        {%- endif %}
+        {%- if saveMessageIdTo %}
+        if sent_message is None and _rsent and hasattr(_rsent, 'message_id'):
+            sent_message = _rsent
         {%- endif %}
         logging.info(f"📤 Отправлено получателю {_rchat}")
     except Exception as _re:
@@ -371,6 +367,14 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             logging.error(f"❌ Ошибка отправки администратору {_admin_id}: {_e_admin_{{ loop.index }}}")
     {%- endif %}
     {%- endfor %}
+    {%- endif %}
+
+    {# Сохранение ID отправленного сообщения в переменную (после всех отправок) #}
+    {%- if saveMessageIdTo %}
+    if sent_message and hasattr(sent_message, 'message_id'):
+        user_data[user_id]["{{ saveMessageIdTo }}"] = sent_message.message_id
+        await set_user_var(user_id, "{{ saveMessageIdTo }}", sent_message.message_id)
+        logging.info(f"💾 ID сообщения сохранён в переменную '{{ saveMessageIdTo }}': {sent_message.message_id}")
     {%- endif %}
 
     {# Лог отправленных кнопок #}
