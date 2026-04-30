@@ -251,7 +251,8 @@ export async function startBot(projectId: number, token: string, tokenId: number
     assets.forEach((asset: string) => console.log(`     * ${asset}`));
 
     // Устанавливаем зависимости из requirements.txt перед запуском бота
-    const skipPipInstall = process.env.SKIP_PIP_INSTALL === 'true';
+    // По умолчанию pip install пропускается — зависимости устанавливаются вручную
+    const skipPipInstall = process.env.SKIP_PIP_INSTALL !== 'false';
     if (!skipPipInstall) {
     try {
       const { execSync } = await import('child_process');
