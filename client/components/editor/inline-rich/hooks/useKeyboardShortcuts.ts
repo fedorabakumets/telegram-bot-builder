@@ -1,6 +1,7 @@
 /**
  * @fileoverview Хук для обработки горячих клавиш форматирования
- * @description Обрабатывает комбинации Ctrl/Cmd+клавиша для быстрого форматирования
+ * @description Обрабатывает комбинации Ctrl/Cmd+клавиша для быстрого форматирования.
+ * Включает поддержку Ctrl+Shift+S для вставки спойлера.
  */
 
 import { useCallback } from 'react';
@@ -65,6 +66,15 @@ export function useKeyboardShortcuts({
     if (key === 'x' && e.shiftKey) {
       e.preventDefault();
       applyFormatting(formatOptions[3]);
+      return;
+    }
+
+    // Обработка спойлера (Ctrl+Shift+S)
+    if (key === 's' && e.shiftKey) {
+      e.preventDefault();
+      /** Ищем опцию спойлера по команде, не по индексу */
+      const spoilerOption = formatOptions.find(f => f.command === 'spoiler');
+      if (spoilerOption) applyFormatting(spoilerOption);
       return;
     }
 

@@ -1,6 +1,7 @@
 /**
  * @fileoverview Утилиты конвертации между текстом и HTML
- * @description Преобразование Markdown ↔ HTML для contenteditable редактора
+ * @description Преобразование Markdown ↔ HTML для contenteditable редактора.
+ * Поддерживает Telegram-специфичные теги: tg-spoiler и синтаксис ||спойлер||.
  */
 
 import { decodeHtmlEntities } from './utils/html-entities';
@@ -24,6 +25,8 @@ export function valueToHtml(text: string, enableMarkdown: boolean): string {
       .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
       .replace(/__(.*?)__/g, '<u>$1</u>')
       .replace(/~~(.*?)~~/g, '<s>$1</s>')
+      /** Синтаксис спойлера Telegram: ||текст|| → <tg-spoiler> */
+      .replace(/\|\|(.*?)\|\|/g, '<tg-spoiler>$1</tg-spoiler>')
       .replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">$1</code>')
       .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
       .replace(/^# (.+)$/gm, '<h3>$1</h3>')
@@ -56,6 +59,8 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
       .replace(/<em[^>]*>(.*?)<\/em>/g, '*$1*')
       .replace(/<u[^>]*>(.*?)<\/u>/g, '__$1__')
       .replace(/<s[^>]*>(.*?)<\/s>/g, '~~$1~~')
+      /** Спойлер в Markdown-режиме: <tg-spoiler> → ||текст|| */
+      .replace(/<tg-spoiler[^>]*>(.*?)<\/tg-spoiler>/g, '||$1||')
       .replace(/<code[^>]*>(.*?)<\/code>/g, '`$1`')
       .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/g, '> $1')
       .replace(/<h3[^>]*>(.*?)<\/h3>/g, '# $1')
@@ -72,6 +77,8 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
       .replace(/<em[^>]*>(.*?)<\/em>/g, '<i>$1</i>')
       .replace(/<u[^>]*>(.*?)<\/u>/g, '<u>$1</u>')
       .replace(/<s[^>]*>(.*?)<\/s>/g, '<s>$1</s>')
+      /** Спойлер в HTML-режиме: сохраняем тег tg-spoiler для Telegram */
+      .replace(/<tg-spoiler[^>]*>(.*?)<\/tg-spoiler>/g, '<tg-spoiler>$1</tg-spoiler>')
       .replace(/<code[^>]*>(.*?)<\/code>/g, '<code>$1</code>')
       .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/g, '<blockquote>$1</blockquote>')
       .replace(/<h[3-5][^>]*>(.*?)<\/h[3-5]>/g, '<b>$1</b>')

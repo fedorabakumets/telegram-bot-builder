@@ -1,6 +1,7 @@
 /**
  * @fileoverview Конфигурация опций форматирования текста
- * @description Содержит настройки для кнопок форматирования с иконками и горячими клавишами
+ * @description Содержит настройки для кнопок форматирования с иконками и горячими клавишами.
+ * Включает поддержку Telegram-специфичных тегов: tg-spoiler.
  */
 
 import {
@@ -12,6 +13,7 @@ import {
   Quote,
   Heading3,
   Link,
+  EyeOff,
   LucideIcon
 } from 'lucide-react';
 
@@ -68,6 +70,15 @@ export const formatOptions: FormatOption[] = [
     shortcut: 'Ctrl+Shift+X',
     markdown: '~~текст~~',
     html: '<s>текст</s>'
+  },
+  {
+    /** Telegram-специфичный тег скрытого текста (спойлер) */
+    command: 'spoiler',
+    icon: EyeOff,
+    name: 'Спойлер',
+    shortcut: 'Ctrl+Shift+S',
+    markdown: '||текст||',
+    html: '<tg-spoiler>текст</tg-spoiler>'
   },
   {
     command: 'code',

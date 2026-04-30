@@ -126,6 +126,15 @@ export function useFormatting({
         range.selectNode(headingElement);
         selection.removeAllRanges();
         selection.addRange(range);
+      } else if (format.command === 'spoiler' && selectedText) {
+        /** Оборачиваем выделенный текст в Telegram-тег спойлера */
+        const spoilerElement = document.createElement('tg-spoiler');
+        spoilerElement.textContent = selectedText;
+        range.deleteContents();
+        range.insertNode(spoilerElement);
+        range.selectNode(spoilerElement);
+        selection.removeAllRanges();
+        selection.addRange(range);
       }
 
       setTimeout(() => {
