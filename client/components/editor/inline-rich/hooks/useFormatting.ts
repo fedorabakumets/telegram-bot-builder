@@ -2,9 +2,11 @@
  * @fileoverview Хук для применения форматирования к тексту
  * @description Обрабатывает применение стилей с поддержкой toggle:
  * повторное нажатие на активный формат снимает его.
+ * Сохраняет Range при потере фокуса редактором, чтобы клик по кнопке
+ * тулбара не терял выделение.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import type { FormatOption } from '../format-options';
 import type { ToastFn } from '../utils/toast-types';
 
@@ -122,7 +124,7 @@ function wrapWithTag(
 /**
  * Хук для применения форматирования к выделенному тексту с поддержкой toggle
  * @param options - Параметры хука
- * @returns Функция applyFormatting для применения/снятия форматирования
+ * @returns Функция applyFormatting и обработчик onBlur для сохранения выделения
  */
 export function useFormatting({
   editorRef,
@@ -133,6 +135,35 @@ export function useFormatting({
   setIsFormatting,
   onLinkCommand
 }: UseFormattingOptions) {
+  /** Сохранённый Range — восстанавливается при клике по кнопке тулбара */
+  const savedRangeRef = useRef<Range | null>(null);
+
+  /**
+   * Сохраняет текущее выделение при потере фокуса редактором.
+   * Вызывается из onBlur contenteditable div.
+   */
+  const saveSelectionOnBlur = useCallback(() => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      savedRangeRef.current = selection.getRangeAt(0).cloneRange();
+    }
+  }, []);
+
+  /**
+   * Восстанавливает сохранённое выделение в редакторе.
+   * @returns Range или null если нет сохранённого выделения
+   */
+  const restoreSavedRange = useCallback((): Range | null => {
+    const saved = savedRangeRef.current;
+    if (!saved) return null;
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(saved);
+    }
+    return saved;
+  }, []);
+
   const applyFormatting = useCallback((format: FormatOption) => {
     if (!editorRef.current) return;
 
@@ -149,8 +180,19 @@ export function useFormatting({
       onFormatModeChange('html');
     }
 
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) {
+    // Пробуем получить текущее выделение, если нет — восстанавливаем сохранённое
+    let selection = window.getSelection();
+    let range: Range | null = null;
+
+    if (selection && selection.rangeCount > 0 && selection.toString().length > 0) {
+      range = selection.getRangeAt(0);
+    } else {
+      // Фокус ушёл на кнопку — восстанавливаем сохранённый Range
+      range = restoreSavedRange();
+      selection = window.getSelection();
+    }
+
+    if (!range || !selection) {
       toast({
         title: "Нет выделения",
         description: "Выделите текст для форматирования или поставьте курсор в нужное место",
@@ -161,7 +203,6 @@ export function useFormatting({
     }
 
     try {
-      const range = selection.getRangeAt(0);
       const selectedText = range.toString();
       const editor = editorRef.current;
 
@@ -183,6 +224,10 @@ export function useFormatting({
           // Toggle ON — оборачиваем выделенный текст
           wrapWithTag(tagName, selectedText, range, selection);
         }
+        // Обновляем сохранённый Range после изменения
+        if (selection.rangeCount > 0) {
+          savedRangeRef.current = selection.getRangeAt(0).cloneRange();
+        }
       }
 
       setTimeout(() => { handleInput(); }, 0);
@@ -195,7 +240,7 @@ export function useFormatting({
     }
 
     setTimeout(() => setIsFormatting(false), 100);
-  }, [editorRef, saveToUndoStack, handleInput, toast, onFormatModeChange, setIsFormatting, onLinkCommand]);
+  }, [editorRef, saveToUndoStack, handleInput, toast, onFormatModeChange, setIsFormatting, onLinkCommand, restoreSavedRange]);
 
-  return { applyFormatting };
+  return { applyFormatting, saveSelectionOnBlur };
 }

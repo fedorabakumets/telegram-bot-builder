@@ -52,6 +52,8 @@ export interface UseInlineRichEditorReturn {
   linkPopover: UseLinkPopoverReturn;
   /** Набор активных команд форматирования в позиции курсора */
   activeFormats: Set<string>;
+  /** Обработчик потери фокуса редактором — сохраняет выделение */
+  saveSelectionOnBlur: () => void;
 }
 
 /**
@@ -91,7 +93,7 @@ export function useInlineRichEditor(
 
   const linkPopover = useLinkPopover(handleInput);
 
-  const { applyFormatting } = useFormatting({
+  const { applyFormatting, saveSelectionOnBlur } = useFormatting({
     editorRef,
     saveToUndoStack,
     handleInput,
@@ -137,6 +139,7 @@ export function useInlineRichEditor(
     canUndo: undoStack.length > 0,
     canRedo: redoStack.length > 0,
     linkPopover,
-    activeFormats
+    activeFormats,
+    saveSelectionOnBlur
   };
 }

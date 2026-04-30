@@ -24,7 +24,7 @@ export function InlineRichEditor(props: InlineRichEditorWithFiltersProps) {
     undo, redo, canUndo, canRedo,
     applyFormatting, handleKeyDown,
     copyFormatted, insertVariable, handleInput,
-    linkPopover, activeFormats
+    linkPopover, activeFormats, saveSelectionOnBlur
   } = useInlineRichEditor(props);
 
   const { variables, variableFilters, handleApplyFilter } = useVariableFilters({
@@ -62,6 +62,7 @@ export function InlineRichEditor(props: InlineRichEditorWithFiltersProps) {
         placeholder={props.placeholder || 'Введите текст сообщения...'}
         innerRef={editorRef}
         onLinkClick={linkPopover.openLinkPopover}
+        onBlur={saveSelectionOnBlur}
       >
         <StatsBar wordCount={wordCount} charCount={charCount} />
       </EditorContent>
