@@ -5,6 +5,7 @@
  */
 
 import { decodeHtmlEntities } from './utils/html-entities';
+import { escapeHtmlContent } from './utils/escape-html-content';
 import { highlightVariables, unwrapVariables } from './utils/highlight-variables';
 
 /**
@@ -71,6 +72,10 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
       .replace(/<div[^>]*>/g, '\n')
       .replace(/<\/div>/g, '');
   } else {
+    // Экранируем спецсимволы в текстовых узлах до замены тегов,
+    // чтобы <, > и & в пользовательском тексте не ломали Telegram HTML-парсер
+    text = escapeHtmlContent(text);
+
     // Даже без Markdown сохраняем теги форматирования для Telegram
     text = text
       .replace(/<strong[^>]*>(.*?)<\/strong>/g, '<b>$1</b>')
