@@ -17,10 +17,16 @@ interface KeyRef {
 }
 
 /**
- * CSS-класс для инлайн-кода и блоков pre
+ * CSS-класс для инлайн-кода (`<code>`) — моноширинный инлайн
  */
 const CODE_CLASS =
   'bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono';
+
+/**
+ * CSS-класс для блока кода (`<pre>`) — тёмный блок с зелёным текстом
+ */
+const PRE_CLASS =
+  'block my-1.5 px-3 py-2 rounded-lg bg-slate-900 dark:bg-slate-950 border border-slate-700/60 text-emerald-400 dark:text-emerald-300 font-mono text-xs leading-relaxed overflow-x-auto whitespace-pre';
 
 /**
  * CSS-класс для блока цитаты
@@ -84,8 +90,10 @@ function nodeToJsx(node: Node, keyRef: KeyRef): JSX.Element | null {
       return <span key={keyRef.current++} className="line-through">{children}</span>;
 
     case 'CODE':
-    case 'PRE':
       return <code key={keyRef.current++} className={CODE_CLASS}>{children}</code>;
+
+    case 'PRE':
+      return <pre key={keyRef.current++} className={PRE_CLASS}>{children}</pre>;
 
     case 'BLOCKQUOTE':
       return (
