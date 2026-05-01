@@ -102,24 +102,29 @@ function unwrapElement(el: Element, selection: Selection): void {
 }
 
 /**
- * Оборачивает выделенный текст в новый элемент с указанным тегом
- * и восстанавливает выделение на нём.
+ * Оборачивает выделенный текст в новый элемент с указанным тегом.
+ * Использует surroundContents чтобы не удалять и не пересоздавать текстовые узлы —
+ * это сохраняет валидность Range-ов хранящихся в savedRangeRef.
+ * Если surroundContents бросает исключение (выделение пересекает границы элементов),
+ * падаем обратно на extractContents + appendChild.
  * @param tagName - Имя тега
- * @param selectedText - Выделенный текст
- * @param range - Текущий Range
+ * @param range - Текущий Range с выделенным текстом
  * @param selection - Текущее выделение
  */
 function wrapWithTag(
   tagName: string,
-  selectedText: string,
   range: Range,
   selection: Selection
 ): void {
   const el = document.createElement(tagName);
-  el.textContent = selectedText;
-  range.deleteContents();
-  range.insertNode(el);
-  range.selectNode(el);
+  try {
+    range.surroundContents(el);
+  } catch {
+    // Выделение пересекает границы элементов — используем extractContents
+    el.appendChild(range.extractContents());
+    range.insertNode(el);
+  }
+  range.selectNodeContents(el);
   selection.removeAllRanges();
   selection.addRange(range);
 }
@@ -227,17 +232,23 @@ export function useFormatting({
           unwrapElement(existing, selection);
         } else if (selectedText) {
           // Toggle ON — оборачиваем выделенный текст
-          wrapWithTag(tagName, selectedText, range, selection);
-        }
-        // Обновляем сохранённый Range после изменения
-        if (selection.rangeCount > 0) {
-          savedRangeRef.current = selection.getRangeAt(0).cloneRange();
+          wrapWithTag(tagName, range, selection);
         }
       }
 
       // isFormattingRef уже true — handleInput вызовет onChange,
-      // useEditorSync увидит флаг и не перезапишет DOM
-      setTimeout(() => { handleInput(); }, 0);
+      // useEditorSync увидит флаг и не перезапишет DOM.
+      // После handleInput сохраняем актуальный Range — DOM уже стабилен.
+      setTimeout(() => {
+        handleInput();
+        // Сохраняем Range после того как handleInput завершил работу с DOM
+        requestAnimationFrame(() => {
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+            savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+          }
+        });
+      }, 0);
     } catch (e) {
       toast({
         title: "Ошибка форматирования",
