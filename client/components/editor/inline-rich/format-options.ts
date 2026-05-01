@@ -83,7 +83,7 @@ export const formatOptions: FormatOption[] = [
   {
     command: 'code',
     icon: Code,
-    name: 'Код',
+    name: 'Моноширинный',
     shortcut: 'Ctrl+E',
     markdown: '`код`',
     html: '<code>код</code>'
