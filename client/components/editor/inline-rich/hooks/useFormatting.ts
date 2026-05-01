@@ -2,13 +2,87 @@
  * @fileoverview Хук для применения форматирования к тексту
  * @description Обрабатывает применение стилей с поддержкой toggle:
  * повторное нажатие на активный формат снимает его.
- * Сохраняет Range при потере фокуса редактором, чтобы клик по кнопке
- * тулбара не терял выделение.
+ * Сохраняет выделение по абсолютным текстовым позициям, чтобы после
+ * ре-рендера DOM (useEditorSync) Range оставался валидным.
  */
 
 import { useCallback, useRef } from 'react';
 import type { FormatOption } from '../format-options';
 import type { ToastFn } from '../utils/toast-types';
+
+/**
+ * Абсолютные текстовые позиции выделения (инвариантны к пересозданию DOM)
+ */
+interface SavedSelection {
+  /** Начало выделения в тексте редактора */
+  start: number;
+  /** Конец выделения в тексте редактора */
+  end: number;
+}
+
+/**
+ * Вычисляет абсолютную позицию узла+смещения в тексте редактора
+ * @param container - Корневой элемент редактора
+ * @param node - Узел курсора
+ * @param offset - Смещение внутри узла
+ * @returns Абсолютная позиция в тексте
+ */
+function getAbsoluteOffset(container: HTMLElement, node: Node, offset: number): number {
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+  let total = 0;
+  while (walker.nextNode()) {
+    if (walker.currentNode === node) return total + offset;
+    total += walker.currentNode.textContent?.length ?? 0;
+  }
+  return total;
+}
+
+/**
+ * Восстанавливает Range по абсолютным позициям в тексте редактора
+ * @param container - Корневой элемент редактора
+ * @param start - Начало выделения
+ * @param end - Конец выделения
+ * @returns Восстановленный Range или null
+ */
+function restoreRangeByOffsets(
+  container: HTMLElement,
+  start: number,
+  end: number
+): Range | null {
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+  let total = 0;
+  let startNode: Node | null = null;
+  let startOff = 0;
+  let endNode: Node | null = null;
+  let endOff = 0;
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    const len = node.textContent?.length ?? 0;
+
+    if (!startNode && total + len >= start) {
+      startNode = node;
+      startOff = start - total;
+    }
+    if (!endNode && total + len >= end) {
+      endNode = node;
+      endOff = end - total;
+    }
+    if (startNode && endNode) break;
+    total += len;
+  }
+
+  if (!startNode || !endNode) return null;
+
+  try {
+    const range = document.createRange();
+    range.setStart(startNode, startOff);
+    range.setEnd(endNode, endOff);
+    return range;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Параметры хука useFormatting
@@ -135,34 +209,51 @@ export function useFormatting({
   setIsFormatting,
   onLinkCommand
 }: UseFormattingOptions) {
-  /** Сохранённый Range — восстанавливается при клике по кнопке тулбара */
-  const savedRangeRef = useRef<Range | null>(null);
+  /**
+   * Сохранённое выделение в виде абсолютных текстовых позиций.
+   * Инвариантно к пересозданию DOM при ре-рендере React.
+   */
+  const savedSelectionRef = useRef<SavedSelection | null>(null);
 
   /**
    * Сохраняет текущее выделение при потере фокуса редактором.
    * Вызывается из onBlur contenteditable div.
    */
   const saveSelectionOnBlur = useCallback(() => {
+    const editor = editorRef.current;
     const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      savedRangeRef.current = selection.getRangeAt(0).cloneRange();
+    if (!editor || !selection || selection.rangeCount === 0) return;
+
+    try {
+      const range = selection.getRangeAt(0);
+      const start = getAbsoluteOffset(editor, range.startContainer, range.startOffset);
+      const end = getAbsoluteOffset(editor, range.endContainer, range.endOffset);
+      savedSelectionRef.current = { start, end };
+    } catch {
+      // Игнорируем ошибки при сохранении
     }
-  }, []);
+  }, [editorRef]);
 
   /**
-   * Восстанавливает сохранённое выделение в редакторе.
+   * Восстанавливает сохранённое выделение по абсолютным позициям.
+   * Работает корректно даже после пересоздания DOM.
    * @returns Range или null если нет сохранённого выделения
    */
   const restoreSavedRange = useCallback((): Range | null => {
-    const saved = savedRangeRef.current;
-    if (!saved) return null;
+    const editor = editorRef.current;
+    const saved = savedSelectionRef.current;
+    if (!editor || !saved) return null;
+
+    const range = restoreRangeByOffsets(editor, saved.start, saved.end);
+    if (!range) return null;
+
     const selection = window.getSelection();
     if (selection) {
       selection.removeAllRanges();
-      selection.addRange(saved);
+      selection.addRange(range);
     }
-    return saved;
-  }, []);
+    return range;
+  }, [editorRef]);
 
   const applyFormatting = useCallback((format: FormatOption) => {
     if (!editorRef.current) return;
