@@ -37,10 +37,17 @@ function getAnchorElement(node: Node | null): HTMLAnchorElement | null {
 }
 
 /**
- * Хук управления inline-строкой вставки и редактирования гиперссылки
- * @param onInput - Callback для синхронизации значения редактора после изменений
- * @returns Объект с состоянием и методами строки ввода
+ * Нормализует URL: добавляет https:// если нет протокола
+ * @param url - Введённый пользователем URL
+ * @returns URL с протоколом
  */
+function normalizeUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return trimmed;
+  // Если уже есть протокол (http://, https://, tg://, mailto: и т.д.) — не трогаем
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
 export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
   /** Сохранённый Range выделения на момент открытия */
   const savedRangeRef = useRef<Range | null>(null);
@@ -87,7 +94,8 @@ export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
   }, []);
 
   /**
-   * Применяет введённый URL: создаёт новую ссылку или обновляет существующую
+   * Применяет введённый URL: создаёт новую ссылку или обновляет существующую.
+   * Автоматически добавляет https:// если протокол не указан.
    * @param url - URL для вставки
    */
   const applyLink = useCallback((url: string) => {
@@ -96,6 +104,8 @@ export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
       setIsOpen(false);
       return;
     }
+
+    const normalizedUrl = normalizeUrl(url);
 
     // Восстанавливаем выделение
     const selection = window.getSelection();
@@ -108,11 +118,11 @@ export function useLinkPopover(onInput: () => void): UseLinkPopoverReturn {
 
     // Если курсор был внутри существующей ссылки — обновляем href
     if (savedAnchorRef.current) {
-      savedAnchorRef.current.href = url;
+      savedAnchorRef.current.href = normalizedUrl;
     } else {
       const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.textContent = selectedText || url;
+      anchor.href = normalizedUrl;
+      anchor.textContent = selectedText || normalizedUrl;
       range.deleteContents();
       range.insertNode(anchor);
     }
