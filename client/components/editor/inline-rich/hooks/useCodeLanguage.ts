@@ -4,7 +4,7 @@
  * класс language-XXX к вложенному <code>. Аналог useLinkPopover для ссылок.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 /**
  * Результат работы хука useCodeLanguage
@@ -18,6 +18,8 @@ export interface UseCodeLanguageReturn {
   applyLanguage: (lang: string) => void;
   /** Удалить языковую обёртку <code> из блока <pre> */
   removeLanguage: () => void;
+  /** Ref для контейнера CodeLanguageRow — предотвращает закрытие при фокусе на нём */
+  rowRef: React.RefObject<HTMLDivElement>;
 }
 
 /**
@@ -59,9 +61,18 @@ export function useCodeLanguage(
   const [isOpen, setIsOpen] = useState(false);
   /** Текущий язык блока */
   const [currentLanguage, setCurrentLanguage] = useState('');
+  /** Ref на DOM-контейнер CodeLanguageRow — нужен чтобы не закрывать при фокусе на нём */
+  const rowRef = useRef<HTMLDivElement>(null);
+  /** Сохранённый <pre> элемент — используется в applyLanguage после потери выделения */
+  const savedPreRef = useRef<HTMLElement | null>(null);
 
   /** Обновляет состояние при изменении выделения */
   const handleSelectionChange = useCallback(() => {
+    // Если фокус находится внутри строки ввода языка — не закрываем
+    if (rowRef.current && rowRef.current.contains(document.activeElement)) {
+      return;
+    }
+
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
       setIsOpen(false);
@@ -71,6 +82,7 @@ export function useCodeLanguage(
     const pre = getPreElement(range.commonAncestorContainer);
 
     if (pre && editorRef.current?.contains(pre)) {
+      savedPreRef.current = pre;
       setCurrentLanguage(readLanguageFromPre(pre));
       setIsOpen(true);
     } else {
@@ -88,19 +100,23 @@ export function useCodeLanguage(
   }, [handleSelectionChange]);
 
   /**
-   * Применяет язык к текущему блоку <pre>
+   * Применяет язык к текущему блоку <pre>.
+   * Использует savedPreRef если выделение уже потеряно (фокус на поле ввода).
    * @param lang - Название языка (пустая строка — удаляет обёртку)
    */
   const applyLanguage = useCallback((lang: string) => {
+    // Пробуем получить <pre> из текущего выделения, иначе из сохранённого ref
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-    const pre = getPreElement(selection.getRangeAt(0).commonAncestorContainer);
+    let pre: HTMLElement | null = null;
+    if (selection && selection.rangeCount > 0) {
+      pre = getPreElement(selection.getRangeAt(0).commonAncestorContainer);
+    }
+    if (!pre) pre = savedPreRef.current;
     if (!pre) return;
 
     const trimmed = lang.trim();
 
     if (!trimmed) {
-      // Убираем <code> обёртку, оставляем только текст
       const code = pre.querySelector('code');
       if (code) {
         const text = code.textContent ?? '';
@@ -110,10 +126,8 @@ export function useCodeLanguage(
     } else {
       const existingCode = pre.querySelector('code');
       if (existingCode) {
-        // Обновляем класс существующего <code>
         existingCode.className = `language-${trimmed}`;
       } else {
-        // Оборачиваем содержимое <pre> в <code>
         const code = document.createElement('code');
         code.className = `language-${trimmed}`;
         code.innerHTML = pre.innerHTML;
@@ -133,5 +147,5 @@ export function useCodeLanguage(
     applyLanguage('');
   }, [applyLanguage]);
 
-  return { isOpen, currentLanguage, applyLanguage, removeLanguage };
+  return { isOpen, currentLanguage, applyLanguage, removeLanguage, rowRef };
 }

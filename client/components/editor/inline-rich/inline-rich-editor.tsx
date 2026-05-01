@@ -61,6 +61,7 @@ export function InlineRichEditor(props: InlineRichEditorWithFiltersProps) {
         currentLanguage={codeLanguage.currentLanguage}
         onApply={codeLanguage.applyLanguage}
         onRemove={codeLanguage.removeLanguage}
+        containerRef={codeLanguage.rowRef}
       />
       <EditorContent
         value={props.value}

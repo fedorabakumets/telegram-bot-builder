@@ -21,6 +21,8 @@ export interface CodeLanguageRowProps {
   onApply: (lang: string) => void;
   /** Callback удаления языка */
   onRemove: () => void;
+  /** Ref на контейнер — предотвращает закрытие при фокусе на поле ввода */
+  containerRef?: React.RefObject<HTMLDivElement>;
 }
 
 /**
@@ -33,7 +35,8 @@ export function CodeLanguageRow({
   isOpen,
   currentLanguage,
   onApply,
-  onRemove
+  onRemove,
+  containerRef
 }: CodeLanguageRowProps) {
   const [lang, setLang] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,7 +66,7 @@ export function CodeLanguageRow({
   if (!isOpen) return null;
 
   return (
-    <div className="flex items-center gap-2 px-1 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-900/10">
+    <div ref={containerRef} className="flex items-center gap-2 px-1 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-900/10">
       {/* Иконка кода слева */}
       <Code2 className="h-4 w-4 text-emerald-400 shrink-0" />
 
