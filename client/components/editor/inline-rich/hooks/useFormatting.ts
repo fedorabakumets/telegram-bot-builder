@@ -40,7 +40,6 @@ const FORMAT_TAG_MAP: Record<string, string> = {
   strikethrough: 's',
   code: 'code',
   quote: 'blockquote',
-  heading: 'h3',
   spoiler: 'tg-spoiler',
 };
 
@@ -55,7 +54,6 @@ const COMMAND_TO_TAGS: Record<string, string[]> = {
   strikethrough: ['s', 'strike', 'del'],
   code: ['code', 'pre'],
   quote: ['blockquote'],
-  heading: ['h3', 'h4', 'h5'],
   spoiler: ['tg-spoiler'],
 };
 

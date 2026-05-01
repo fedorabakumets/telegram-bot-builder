@@ -11,7 +11,6 @@ import {
   Strikethrough,
   Code,
   Quote,
-  Heading3,
   Link,
   EyeOff,
   LucideIcon
@@ -95,14 +94,6 @@ export const formatOptions: FormatOption[] = [
     shortcut: 'Ctrl+Q',
     markdown: '> цитата',
     html: '<blockquote>цитата</blockquote>'
-  },
-  {
-    command: 'heading',
-    icon: Heading3,
-    name: 'Заголовок',
-    shortcut: 'Ctrl+H',
-    markdown: '# заголовок',
-    html: '<h3>заголовок</h3>'
   },
   {
     command: 'link',

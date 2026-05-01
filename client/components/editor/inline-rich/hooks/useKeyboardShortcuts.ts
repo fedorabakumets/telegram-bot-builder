@@ -45,7 +45,6 @@ export function useKeyboardShortcuts({
       u: 2, // underline
       e: 4, // code
       q: 5, // quote
-      h: 6  // heading
     };
 
     // Горячая клавиша для ссылки (Ctrl+K)
