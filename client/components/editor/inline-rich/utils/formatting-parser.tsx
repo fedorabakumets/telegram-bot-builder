@@ -26,7 +26,7 @@ const CODE_CLASS =
  * CSS-класс для блока кода (`<pre>`) — тёмный блок с зелёным текстом
  */
 const PRE_CLASS =
-  'block my-1.5 px-3 py-2 rounded-lg bg-slate-900 dark:bg-slate-950 border border-slate-700/60 text-emerald-400 dark:text-emerald-300 font-mono text-xs leading-relaxed overflow-x-auto whitespace-pre';
+  'block my-1.5 px-3 py-2 rounded-lg bg-slate-900 dark:bg-slate-950 border border-slate-700/60 text-emerald-400 dark:text-emerald-300 font-mono text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap break-words';
 
 /**
  * CSS-класс для блока цитаты
