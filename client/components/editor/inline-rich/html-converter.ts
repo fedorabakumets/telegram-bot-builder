@@ -9,6 +9,22 @@ import { escapeHtmlContent } from './utils/escape-html-content';
 import { highlightVariables, unwrapVariables } from './utils/highlight-variables';
 
 /**
+ * Заменяет \n на <br> только вне тегов <pre>.
+ * Внутри <pre> переносы строк сохраняются как есть — CSS white-space:pre их отображает.
+ * @param html - HTML строка
+ * @returns HTML строка с <br> вместо \n вне блоков <pre>
+ */
+function replaceNewlinesOutsidePre(html: string): string {
+  // Разбиваем по тегам <pre>...</pre> (с флагом s для многострочного содержимого)
+  const parts = html.split(/(<pre[\s\S]*?<\/pre>)/gi);
+  return parts.map((part, i) => {
+    // Нечётные индексы — это сами блоки <pre>...</pre>, не трогаем
+    if (i % 2 === 1) return part;
+    return part.replace(/\n/g, '<br>');
+  }).join('');
+}
+
+/**
  * Преобразует текст в HTML для отображения в contenteditable
  * @param text - Исходный текст
  * @param enableMarkdown - Включить поддержку Markdown
@@ -33,10 +49,10 @@ export function valueToHtml(text: string, enableMarkdown: boolean): string {
       .replace(/^# (.+)$/gm, '<h3>$1</h3>')
       .replace(/^## (.+)$/gm, '<h4>$1</h4>')
       .replace(/^### (.+)$/gm, '<h5>$1</h5>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-      .replace(/\n/g, '<br>');
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    html = replaceNewlinesOutsidePre(html);
   } else {
-    html = html.replace(/\n/g, '<br>');
+    html = replaceNewlinesOutsidePre(html);
   }
 
   return highlightVariables(html);
@@ -84,8 +100,11 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
       .replace(/<s[^>]*>(.*?)<\/s>/g, '<s>$1</s>')
       /** Спойлер в HTML-режиме: сохраняем тег tg-spoiler для Telegram */
       .replace(/<tg-spoiler[^>]*>(.*?)<\/tg-spoiler>/g, '<tg-spoiler>$1</tg-spoiler>')
-      /** Блок кода: <pre> сохраняем как есть для Telegram (флаг s — dotAll для многострочного текста) */
-      .replace(/<pre[^>]*>(.*?)<\/pre>/gs, '<pre>$1</pre>')
+      /** Блок кода: <pre> сохраняем как есть для Telegram (флаг s — dotAll для многострочного текста).
+       * <br> внутри <pre> конвертируем обратно в \n перед сохранением. */
+      .replace(/<pre[^>]*>(.*?)<\/pre>/gs, (_, inner) =>
+        `<pre>${inner.replace(/<br\s*\/?>/gi, '\n')}</pre>`
+      )
       .replace(/<code[^>]*>(.*?)<\/code>/g, '<code>$1</code>')
       .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/g, '<blockquote>$1</blockquote>')
       .replace(/<h[3-5][^>]*>(.*?)<\/h[3-5]>/g, '<b>$1</b>')
