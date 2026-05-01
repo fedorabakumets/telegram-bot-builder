@@ -9,19 +9,15 @@ import { escapeHtmlContent } from './utils/escape-html-content';
 import { highlightVariables, unwrapVariables } from './utils/highlight-variables';
 
 /**
- * Заменяет \n на <br> только вне тегов <pre>.
- * Внутри <pre> переносы строк сохраняются как есть — CSS white-space:pre их отображает.
+ * Заменяет \n на <br> во всём HTML, включая содержимое тегов <pre>.
+ * Браузер в contenteditable игнорирует \n в innerHTML даже при white-space:pre,
+ * поэтому переносы нужно явно конвертировать в <br>.
+ * При обратной конвертации (htmlToValue) <br> внутри <pre> возвращаются в \n.
  * @param html - HTML строка
- * @returns HTML строка с <br> вместо \n вне блоков <pre>
+ * @returns HTML строка с <br> вместо всех \n
  */
 function replaceNewlinesOutsidePre(html: string): string {
-  // Разбиваем по тегам <pre>...</pre> (с флагом s для многострочного содержимого)
-  const parts = html.split(/(<pre[\s\S]*?<\/pre>)/gi);
-  return parts.map((part, i) => {
-    // Нечётные индексы — это сами блоки <pre>...</pre>, не трогаем
-    if (i % 2 === 1) return part;
-    return part.replace(/\n/g, '<br>');
-  }).join('');
+  return html.replace(/\n/g, '<br>');
 }
 
 /**
