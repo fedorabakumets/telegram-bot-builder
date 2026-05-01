@@ -97,10 +97,18 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
       /** Спойлер в HTML-режиме: сохраняем тег tg-spoiler для Telegram */
       .replace(/<tg-spoiler[^>]*>(.*?)<\/tg-spoiler>/g, '<tg-spoiler>$1</tg-spoiler>')
       /** Блок кода: <pre> сохраняем как есть для Telegram (флаг s — dotAll для многострочного текста).
+       * Если внутри <pre> есть <code class="language-XXX"> — сохраняем обёртку с классом.
        * <br> внутри <pre> конвертируем обратно в \n перед сохранением. */
-      .replace(/<pre[^>]*>(.*?)<\/pre>/gs, (_, inner) =>
-        `<pre>${inner.replace(/<br\s*\/?>/gi, '\n')}</pre>`
-      )
+      .replace(/<pre[^>]*>(.*?)<\/pre>/gs, (_, inner) => {
+        // Проверяем наличие <code class="language-XXX">
+        const langMatch = inner.match(/<code[^>]*class="language-([^"]+)"[^>]*>([\s\S]*?)<\/code>/);
+        if (langMatch) {
+          const lang = langMatch[1];
+          const codeContent = langMatch[2].replace(/<br\s*\/?>/gi, '\n');
+          return `<pre><code class="language-${lang}">${codeContent}</code></pre>`;
+        }
+        return `<pre>${inner.replace(/<br\s*\/?>/gi, '\n')}</pre>`;
+      })
       .replace(/<code[^>]*>(.*?)<\/code>/g, '<code>$1</code>')
       .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/g, '<blockquote>$1</blockquote>')
       .replace(/<h[3-5][^>]*>(.*?)<\/h[3-5]>/g, '<b>$1</b>')

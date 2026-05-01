@@ -29,6 +29,12 @@ const PRE_CLASS =
   'block my-1.5 px-3 py-2 rounded-lg bg-slate-900 dark:bg-slate-950 border border-slate-700/60 text-emerald-400 dark:text-emerald-300 font-mono text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap break-words';
 
 /**
+ * CSS-класс для бейджа языка программирования над блоком кода
+ */
+const LANG_BADGE_CLASS =
+  'inline-block mb-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-700/80 text-slate-300 border border-slate-600/50 select-none';
+
+/**
  * CSS-класс для блока цитаты
  */
 const BLOCKQUOTE_CLASS =
@@ -92,8 +98,20 @@ function nodeToJsx(node: Node, keyRef: KeyRef): JSX.Element | null {
     case 'CODE':
       return <code key={keyRef.current++} className={CODE_CLASS}>{children}</code>;
 
-    case 'PRE':
-      return <pre key={keyRef.current++} className={PRE_CLASS}>{children}</pre>;
+    case 'PRE': {
+      // Проверяем наличие дочернего <code class="language-XXX">
+      const codeChild = el.querySelector('code[class*="language-"]');
+      const langMatch = codeChild?.className.match(/language-(\S+)/);
+      const lang = langMatch ? langMatch[1] : null;
+      return (
+        <div key={keyRef.current++} className="my-1.5">
+          {lang && (
+            <span className={LANG_BADGE_CLASS}>{lang}</span>
+          )}
+          <pre className={PRE_CLASS}>{children}</pre>
+        </div>
+      );
+    }
 
     case 'BLOCKQUOTE':
       return (
