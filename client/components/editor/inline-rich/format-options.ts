@@ -66,7 +66,7 @@ export const formatOptions: FormatOption[] = [
     command: 'strikethrough',
     icon: Strikethrough,
     name: 'Зачеркнутый',
-    shortcut: 'Ctrl+Shift+X',
+    shortcut: 'Ctrl+Shift+5',
     markdown: '~~текст~~',
     html: '<s>текст</s>'
   },
