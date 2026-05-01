@@ -84,6 +84,8 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
       .replace(/<s[^>]*>(.*?)<\/s>/g, '<s>$1</s>')
       /** Спойлер в HTML-режиме: сохраняем тег tg-spoiler для Telegram */
       .replace(/<tg-spoiler[^>]*>(.*?)<\/tg-spoiler>/g, '<tg-spoiler>$1</tg-spoiler>')
+      /** Блок кода: <pre> сохраняем как есть для Telegram (флаг s — dotAll для многострочного текста) */
+      .replace(/<pre[^>]*>(.*?)<\/pre>/gs, '<pre>$1</pre>')
       .replace(/<code[^>]*>(.*?)<\/code>/g, '<code>$1</code>')
       .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/g, '<blockquote>$1</blockquote>')
       .replace(/<h[3-5][^>]*>(.*?)<\/h[3-5]>/g, '<b>$1</b>')

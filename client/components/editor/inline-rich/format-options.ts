@@ -13,6 +13,7 @@ import {
   Quote,
   Link,
   EyeOff,
+  SquareCode,
   LucideIcon
 } from 'lucide-react';
 
@@ -86,6 +87,15 @@ export const formatOptions: FormatOption[] = [
     shortcut: 'Ctrl+E',
     markdown: '`код`',
     html: '<code>код</code>'
+  },
+  {
+    /** Блок кода Telegram: <pre> — моноширинный блок с кнопкой Copy */
+    command: 'codeblock',
+    icon: SquareCode,
+    name: 'Блок кода',
+    shortcut: 'Ctrl+Shift+E',
+    markdown: '```\nкод\n```',
+    html: '<pre>код</pre>'
   },
   {
     command: 'quote',

@@ -19,7 +19,7 @@ const TAG_TO_COMMAND: Record<string, string> = {
   'STRIKE': 'strikethrough',
   'DEL': 'strikethrough',
   'CODE': 'code',
-  'PRE': 'code',
+  'PRE': 'codeblock',
   'BLOCKQUOTE': 'quote',
   'H3': 'heading',
   'H4': 'heading',

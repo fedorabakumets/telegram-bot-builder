@@ -39,6 +39,7 @@ const FORMAT_TAG_MAP: Record<string, string> = {
   underline: 'u',
   strikethrough: 's',
   code: 'code',
+  codeblock: 'pre',
   quote: 'blockquote',
   spoiler: 'tg-spoiler',
 };
@@ -52,7 +53,8 @@ const COMMAND_TO_TAGS: Record<string, string[]> = {
   italic: ['em', 'i'],
   underline: ['u'],
   strikethrough: ['s', 'strike', 'del'],
-  code: ['code', 'pre'],
+  code: ['code'],
+  codeblock: ['pre'],
   quote: ['blockquote'],
   spoiler: ['tg-spoiler'],
 };

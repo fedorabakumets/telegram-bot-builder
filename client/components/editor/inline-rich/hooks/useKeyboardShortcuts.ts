@@ -59,10 +59,11 @@ export function useKeyboardShortcuts({
 
     // Ctrl+Shift+5 — зачёркивание, Ctrl+Shift+S — спойлер
     if (e.shiftKey) {
-      /** Digit5 — зачёркивание (как в Notion/Slack), KeyS — спойлер */
+      /** Digit5 — зачёркивание (как в Notion/Slack), KeyS — спойлер, KeyE — блок кода */
       const shiftCodeMap: Record<string, string> = {
         Digit5: 'strikethrough',
         KeyS: 'spoiler',
+        KeyE: 'codeblock',
       };
       const command = shiftCodeMap[code];
       if (command) {
