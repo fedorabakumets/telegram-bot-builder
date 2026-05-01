@@ -1,7 +1,8 @@
 /**
  * @fileoverview Единый парсер HTML → JSX для форматированного текста
  * @description Преобразует HTML-строку в массив JSX-элементов через DOMParser.
- * Поддерживает все теги форматирования Telegram и Markdown, включая tg-spoiler.
+ * Поддерживает все теги форматирования Telegram и Markdown, включая tg-spoiler
+ * и blockquote expandable (раскрывающаяся цитата).
  * @module formatting-parser
  */
 
@@ -39,6 +40,13 @@ const LANG_BADGE_CLASS =
  */
 const BLOCKQUOTE_CLASS =
   'border-l-4 border-blue-500 pl-3 my-2 italic text-slate-600 dark:text-slate-400';
+
+/**
+ * CSS-класс для раскрывающейся цитаты Telegram (<blockquote expandable>).
+ * Визуально отличается синей пунктирной рамкой.
+ */
+const EXPANDABLE_BLOCKQUOTE_CLASS =
+  'border-l-4 border-blue-400 pl-3 my-2 italic text-slate-600 dark:text-slate-400 relative';
 
 /**
  * CSS-класс для спойлера в режиме просмотра (FormattedText).
@@ -113,12 +121,17 @@ function nodeToJsx(node: Node, keyRef: KeyRef): JSX.Element | null {
       );
     }
 
-    case 'BLOCKQUOTE':
+    case 'BLOCKQUOTE': {
+      const isExpandable = el.hasAttribute('expandable');
       return (
-        <blockquote key={keyRef.current++} className={BLOCKQUOTE_CLASS}>
+        <blockquote key={keyRef.current++} className={isExpandable ? EXPANDABLE_BLOCKQUOTE_CLASS : BLOCKQUOTE_CLASS}>
+          {isExpandable && (
+            <span className="text-[10px] text-blue-400 font-medium not-italic block mb-1">▼ Раскрывающаяся цитата</span>
+          )}
           {children}
         </blockquote>
       );
+    }
 
     case 'A': {
       const href = (el as HTMLAnchorElement).getAttribute('href') ?? '#';

@@ -1,13 +1,15 @@
 /**
  * @fileoverview Хук определения активных форматов по позиции курсора
  * @description Слушает selectionchange и обходит DOM вверх от курсора,
- * собирая набор активных тегов форматирования
+ * собирая набор активных тегов форматирования.
+ * Различает обычную цитату и раскрывающуюся по атрибуту expandable.
  */
 
 import { useState, useEffect, useCallback } from 'react';
 
 /**
- * Маппинг тегов DOM → команды форматирования
+ * Маппинг тегов DOM → команды форматирования.
+ * BLOCKQUOTE обрабатывается отдельно — зависит от атрибута expandable.
  */
 const TAG_TO_COMMAND: Record<string, string> = {
   'STRONG': 'bold',
@@ -20,7 +22,6 @@ const TAG_TO_COMMAND: Record<string, string> = {
   'DEL': 'strikethrough',
   'CODE': 'code',
   'PRE': 'codeblock',
-  'BLOCKQUOTE': 'quote',
   'H3': 'heading',
   'H4': 'heading',
   'H5': 'heading',
@@ -66,8 +67,18 @@ export function useActiveFormats(editorRef: React.RefObject<HTMLDivElement>): Se
     const active = new Set<string>();
     let current: Element | null = node;
     while (current && current !== editor) {
-      const command = TAG_TO_COMMAND[current.tagName?.toUpperCase()];
-      if (command) active.add(command);
+      const tag = current.tagName?.toUpperCase();
+      if (tag === 'BLOCKQUOTE') {
+        // Различаем обычную и раскрывающуюся цитату по атрибуту expandable
+        if (current.hasAttribute('expandable')) {
+          active.add('expandable-quote');
+        } else {
+          active.add('quote');
+        }
+      } else {
+        const command = TAG_TO_COMMAND[tag];
+        if (command) active.add(command);
+      }
       current = current.parentElement;
     }
 

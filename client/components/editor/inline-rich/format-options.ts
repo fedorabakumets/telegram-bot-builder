@@ -1,7 +1,7 @@
 /**
  * @fileoverview Конфигурация опций форматирования текста
  * @description Содержит настройки для кнопок форматирования с иконками и горячими клавишами.
- * Включает поддержку Telegram-специфичных тегов: tg-spoiler.
+ * Включает поддержку Telegram-специфичных тегов: tg-spoiler, blockquote expandable.
  */
 
 import {
@@ -14,6 +14,7 @@ import {
   Link,
   EyeOff,
   SquareCode,
+  TextQuote,
   LucideIcon
 } from 'lucide-react';
 
@@ -104,6 +105,15 @@ export const formatOptions: FormatOption[] = [
     shortcut: 'Ctrl+Q',
     markdown: '> цитата',
     html: '<blockquote>цитата</blockquote>'
+  },
+  {
+    /** Раскрывающаяся цитата Telegram: <blockquote expandable> — сворачивается с кнопкой "Показать больше" */
+    command: 'expandable-quote',
+    icon: TextQuote,
+    name: 'Раскрывающаяся цитата',
+    shortcut: 'Ctrl+Shift+Q',
+    markdown: '> цитата',
+    html: '<blockquote expandable>цитата</blockquote>'
   },
   {
     command: 'link',

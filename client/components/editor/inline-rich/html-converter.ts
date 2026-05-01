@@ -1,7 +1,7 @@
 /**
  * @fileoverview Утилиты конвертации между текстом и HTML
  * @description Преобразование Markdown ↔ HTML для contenteditable редактора.
- * Поддерживает Telegram-специфичные теги: tg-spoiler и синтаксис ||спойлер||.
+ * Поддерживает Telegram-специфичные теги: tg-spoiler, blockquote expandable.
  */
 
 import { decodeHtmlEntities } from './utils/html-entities';
@@ -110,6 +110,9 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
         return `<pre>${inner.replace(/<br\s*\/?>/gi, '\n')}</pre>`;
       })
       .replace(/<code[^>]*>(.*?)<\/code>/g, '<code>$1</code>')
+      /** Раскрывающаяся цитата — должна идти ПЕРВОЙ, до обычного blockquote */
+      .replace(/<blockquote\s+expandable[^>]*>(.*?)<\/blockquote>/gs, '<blockquote expandable>$1</blockquote>')
+      /** Обычная цитата */
       .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/g, '<blockquote>$1</blockquote>')
       .replace(/<h[3-5][^>]*>(.*?)<\/h[3-5]>/g, '<b>$1</b>')
       .replace(/<br\s*\/?>/g, '\n')

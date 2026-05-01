@@ -1,7 +1,7 @@
 /**
  * @fileoverview Хук для обработки горячих клавиш форматирования
  * @description Обрабатывает комбинации Ctrl/Cmd+клавиша для быстрого форматирования.
- * Включает поддержку Ctrl+Shift+S для вставки спойлера.
+ * Включает поддержку Ctrl+Shift+S для вставки спойлера и Ctrl+Shift+Q для раскрывающейся цитаты.
  */
 
 import { useCallback } from 'react';
@@ -57,13 +57,14 @@ export function useKeyboardShortcuts({
       return;
     }
 
-    // Ctrl+Shift+5 — зачёркивание, Ctrl+Shift+S — спойлер
+    // Ctrl+Shift+5 — зачёркивание, Ctrl+Shift+S — спойлер, Ctrl+Shift+Q — раскрывающаяся цитата
     if (e.shiftKey) {
-      /** Digit5 — зачёркивание (как в Notion/Slack), KeyS — спойлер, KeyE — блок кода */
+      /** Digit5 — зачёркивание (как в Notion/Slack), KeyS — спойлер, KeyE — блок кода, KeyQ — раскрывающаяся цитата */
       const shiftCodeMap: Record<string, string> = {
         Digit5: 'strikethrough',
         KeyS: 'spoiler',
         KeyE: 'codeblock',
+        KeyQ: 'expandable-quote',
       };
       const command = shiftCodeMap[code];
       if (command) {

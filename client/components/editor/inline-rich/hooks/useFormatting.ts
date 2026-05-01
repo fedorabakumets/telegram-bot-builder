@@ -4,6 +4,7 @@
  * повторное нажатие на активный формат снимает его.
  * Сохраняет Range при потере фокуса редактором, чтобы клик по кнопке
  * тулбара не терял выделение.
+ * Поддерживает раскрывающуюся цитату Telegram: <blockquote expandable>.
  */
 
 import { useCallback, useRef } from 'react';
@@ -31,7 +32,8 @@ export interface UseFormattingOptions {
 }
 
 /**
- * Маппинг команд форматирования на HTML-теги для оборачивания
+ * Маппинг команд форматирования на HTML-теги для оборачивания.
+ * Команды expandable-quote и quote обрабатываются отдельной логикой.
  */
 const FORMAT_TAG_MAP: Record<string, string> = {
   bold: 'strong',
@@ -45,8 +47,9 @@ const FORMAT_TAG_MAP: Record<string, string> = {
 };
 
 /**
- * Маппинг команд на теги для поиска существующего форматирования (включая алиасы)
- * Используется при toggle — нужно найти любой вариант тега
+ * Маппинг команд на теги для поиска существующего форматирования (включая алиасы).
+ * Используется при toggle — нужно найти любой вариант тега.
+ * expandable-quote ищет тот же blockquote, различие — по атрибуту expandable.
  */
 const COMMAND_TO_TAGS: Record<string, string[]> = {
   bold: ['strong', 'b'],
@@ -56,6 +59,7 @@ const COMMAND_TO_TAGS: Record<string, string[]> = {
   code: ['code'],
   codeblock: ['pre'],
   quote: ['blockquote'],
+  'expandable-quote': ['blockquote'],
   spoiler: ['tg-spoiler'],
 };
 
@@ -219,8 +223,56 @@ export function useFormatting({
       const tagName = FORMAT_TAG_MAP[format.command];
       const searchTags = COMMAND_TO_TAGS[format.command];
 
-      if (tagName && searchTags) {
-        // Ищем существующий родительский элемент с этим форматом
+      if (format.command === 'expandable-quote') {
+        // Специальная логика для раскрывающейся цитаты
+        const existing = findAncestorByTags(
+          range.commonAncestorContainer,
+          ['blockquote'],
+          editor
+        );
+        if (existing) {
+          if (existing.hasAttribute('expandable')) {
+            // Уже expandable → снимаем форматирование полностью
+            unwrapElement(existing, selection);
+          } else {
+            // Обычная цитата → добавляем атрибут expandable
+            existing.setAttribute('expandable', '');
+          }
+        } else if (selectedText) {
+          // Нет цитаты → создаём <blockquote expandable>
+          const el = document.createElement('blockquote');
+          el.setAttribute('expandable', '');
+          try {
+            range.surroundContents(el);
+          } catch {
+            el.appendChild(range.extractContents());
+            range.insertNode(el);
+          }
+          range.selectNodeContents(el);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      } else if (format.command === 'quote') {
+        // Специальная логика для обычной цитаты
+        const existing = findAncestorByTags(
+          range.commonAncestorContainer,
+          ['blockquote'],
+          editor
+        );
+        if (existing) {
+          if (existing.hasAttribute('expandable')) {
+            // Раскрывающаяся цитата → убираем атрибут expandable
+            existing.removeAttribute('expandable');
+          } else {
+            // Обычная цитата → снимаем форматирование
+            unwrapElement(existing, selection);
+          }
+        } else if (selectedText) {
+          // Нет цитаты → создаём обычный <blockquote>
+          wrapWithTag('blockquote', range, selection);
+        }
+      } else if (tagName && searchTags) {
+        // Стандартная логика для остальных команд
         const existing = findAncestorByTags(
           range.commonAncestorContainer,
           searchTags,
