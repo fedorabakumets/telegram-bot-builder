@@ -38,17 +38,19 @@ export function useKeyboardShortcuts({
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!e.ctrlKey && !e.metaKey) return;
 
+    /** e.code не зависит от раскладки клавиатуры (ru/en), e.key — зависит */
     const key = e.key.toLowerCase();
+    const code = e.code; // например 'KeyX', 'KeyS', 'KeyZ', 'KeyK'
 
     // Горячая клавиша для ссылки (Ctrl+K)
-    if (key === 'k') {
+    if (code === 'KeyK' || key === 'k') {
       e.preventDefault();
       onLinkShortcut?.();
       return;
     }
 
-    // Обработка отмены/повтора
-    if (key === 'z') {
+    // Обработка отмены/повтора (Ctrl+Z / Ctrl+Shift+Z)
+    if (code === 'KeyZ' || key === 'z') {
       e.preventDefault();
       if (e.shiftKey) redo();
       else undo();
@@ -57,11 +59,11 @@ export function useKeyboardShortcuts({
 
     // Ctrl+Shift+X — зачёркивание, Ctrl+Shift+S — спойлер
     if (e.shiftKey) {
-      const shiftMap: Record<string, string> = {
-        x: 'strikethrough',
-        s: 'spoiler',
+      const shiftCodeMap: Record<string, string> = {
+        KeyX: 'strikethrough',
+        KeyS: 'spoiler',
       };
-      const command = shiftMap[key];
+      const command = shiftCodeMap[code];
       if (command) {
         e.preventDefault();
         const option = formatOptions.find(f => f.command === command);
@@ -70,16 +72,16 @@ export function useKeyboardShortcuts({
       return;
     }
 
-    /** Маппинг клавиши → команда форматирования (без Shift) */
-    const keyMap: Record<string, string> = {
-      b: 'bold',
-      i: 'italic',
-      u: 'underline',
-      e: 'code',
-      q: 'quote',
+    /** Маппинг code → команда форматирования (без Shift) */
+    const codeMap: Record<string, string> = {
+      KeyB: 'bold',
+      KeyI: 'italic',
+      KeyU: 'underline',
+      KeyE: 'code',
+      KeyQ: 'quote',
     };
 
-    const command = keyMap[key];
+    const command = codeMap[code];
     if (command) {
       e.preventDefault();
       const option = formatOptions.find(f => f.command === command);
