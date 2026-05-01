@@ -39,13 +39,6 @@ export function useKeyboardShortcuts({
     if (!e.ctrlKey && !e.metaKey) return;
 
     const key = e.key.toLowerCase();
-    const formatMap: Record<string, number> = {
-      b: 0, // bold
-      i: 1, // italic
-      u: 2, // underline
-      e: 4, // code
-      q: 5, // quote
-    };
 
     // Горячая клавиша для ссылки (Ctrl+K)
     if (key === 'k') {
@@ -54,37 +47,43 @@ export function useKeyboardShortcuts({
       return;
     }
 
-    // Обработка форматирования
-    if (formatMap[key] !== undefined) {
-      e.preventDefault();
-      applyFormatting(formatOptions[formatMap[key]]);
-      return;
-    }
-
-    // Обработка зачёркивания (Ctrl+Shift+X)
-    if (key === 'x' && e.shiftKey) {
-      e.preventDefault();
-      applyFormatting(formatOptions[3]);
-      return;
-    }
-
-    // Обработка спойлера (Ctrl+Shift+S)
-    if (key === 's' && e.shiftKey) {
-      e.preventDefault();
-      /** Ищем опцию спойлера по команде, не по индексу */
-      const spoilerOption = formatOptions.find(f => f.command === 'spoiler');
-      if (spoilerOption) applyFormatting(spoilerOption);
-      return;
-    }
-
     // Обработка отмены/повтора
     if (key === 'z') {
       e.preventDefault();
-      if (e.shiftKey) {
-        redo();
-      } else {
-        undo();
+      if (e.shiftKey) redo();
+      else undo();
+      return;
+    }
+
+    // Ctrl+Shift+X — зачёркивание, Ctrl+Shift+S — спойлер
+    if (e.shiftKey) {
+      const shiftMap: Record<string, string> = {
+        x: 'strikethrough',
+        s: 'spoiler',
+      };
+      const command = shiftMap[key];
+      if (command) {
+        e.preventDefault();
+        const option = formatOptions.find(f => f.command === command);
+        if (option) applyFormatting(option);
       }
+      return;
+    }
+
+    /** Маппинг клавиши → команда форматирования (без Shift) */
+    const keyMap: Record<string, string> = {
+      b: 'bold',
+      i: 'italic',
+      u: 'underline',
+      e: 'code',
+      q: 'quote',
+    };
+
+    const command = keyMap[key];
+    if (command) {
+      e.preventDefault();
+      const option = formatOptions.find(f => f.command === command);
+      if (option) applyFormatting(option);
     }
   }, [applyFormatting, undo, redo, formatOptions, onLinkShortcut]);
 
