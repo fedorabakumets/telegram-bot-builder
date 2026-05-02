@@ -56,28 +56,34 @@ export function migrateCommandsToCommandTriggers(nodes: Node[]): Node[] {
    * Дедупликация: если для одной команды есть несколько command_trigger узлов —
    * оставляем только тот у которого autoTransitionTo указывает НЕ на start/command узел
    * (т.е. уже перенаправлен на condition), либо первый найденный.
+   *
+   * Узлы с разными deepLinkParam считаются разными точками входа и не дедуплицируются —
+   * это позволяет иметь несколько /start узлов с разными deep link параметрами.
    */
   const sourceNodeIds = new Set(
     nodes.filter(hasTriggerableCommand).map(n => n.id)
   );
-  const seenCommands = new Map<string, string>(); // command → id первого триггера
+  const seenCommands = new Map<string, string>(); // "command::deepLinkParam" → id первого триггера
   const deduped = nodes.filter(n => {
     if (n.type !== 'command_trigger') return true;
     const cmd: string = (n.data as any).command || '';
     if (!cmd) return true;
+    /** Ключ дедупликации: команда + deepLinkParam — узлы с разными параметрами не дедуплицируются */
+    const deepLinkParam: string = (n.data as any).deepLinkParam || '';
+    const dedupKey = `${cmd}::${deepLinkParam}`;
     const autoTo: string = (n.data as any).autoTransitionTo || '';
     // Предпочитаем триггер у которого autoTransitionTo НЕ ведёт на start/command узел
-    if (!seenCommands.has(cmd)) {
-      seenCommands.set(cmd, n.id);
+    if (!seenCommands.has(dedupKey)) {
+      seenCommands.set(dedupKey, n.id);
       return true;
     }
-    // Уже есть триггер для этой команды — оставляем "лучший"
-    const existingId = seenCommands.get(cmd)!;
+    // Уже есть триггер для этой команды с таким же deepLinkParam — оставляем "лучший"
+    const existingId = seenCommands.get(dedupKey)!;
     const existing = nodes.find(x => x.id === existingId)!;
     const existingAutoTo: string = (existing.data as any).autoTransitionTo || '';
     // Если текущий ведёт на condition (не на start/command) — он лучше
     if (!sourceNodeIds.has(autoTo) && sourceNodeIds.has(existingAutoTo)) {
-      seenCommands.set(cmd, n.id);
+      seenCommands.set(dedupKey, n.id);
       // Удаляем старый из результата — заменяем текущим
       return true;
     }
