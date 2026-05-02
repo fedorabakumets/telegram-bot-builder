@@ -33,6 +33,8 @@ export interface ConditionBranch {
   value2?: string;
   /** ID целевого узла для перехода по этой ветке */
   target?: string;
+  /** Режим проверки нескольких каналов: "all" — все, "any" — хотя бы один */
+  subscriptionMode?: 'all' | 'any';
 }
 
 /**

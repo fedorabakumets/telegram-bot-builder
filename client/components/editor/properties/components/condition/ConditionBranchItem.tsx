@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { Node } from '@shared/schema';
 import type { ConditionBranch, ConditionOperator } from '@shared/types/condition-node';
 import { formatNodeDisplay } from '../../utils/node-formatters';
+import { SubscriptionChannelsInput } from './SubscriptionChannelsInput';
 
 interface ConditionBranchItemProps {
   /** Ветка условия */
@@ -55,44 +56,24 @@ const SELECTABLE_OPERATORS: ConditionOperator[] = [
   'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed', 'else',
 ];
 
-/** Системные операторы, не требующие переменной и значения */
 
-function normalizeSubscriptionValue(rawValue: string): string {
-  const trimmed = rawValue.trim();
-
-  if (!trimmed) return '';
-
-  const telegramLinkMatch = trimmed.match(/^(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/(.+)$/i);
-  if (telegramLinkMatch) {
-    const path = telegramLinkMatch[1].split(/[?#]/)[0].replace(/^\/+|\/+$/g, '');
-
-    if (!path) return '';
-    if (path.startsWith('+') || path.toLowerCase().startsWith('joinchat/')) {
-      return trimmed;
-    }
-
-    const slug = path.split('/').pop()?.trim();
-    if (slug && /^[a-zA-Z0-9_]+$/.test(slug)) {
-      return `@${slug}`;
-    }
-
-    return trimmed;
-  }
-
-  if (trimmed.startsWith('@')) {
-    const username = trimmed.slice(1).trim();
-    return /^[a-zA-Z0-9_]+$/.test(username) ? `@${username}` : trimmed;
-  }
-
-  if (/^[a-zA-Z0-9_]+$/.test(trimmed)) {
-    return `@${trimmed}`;
-  }
-
-  return trimmed;
-}
-
-/** Генерирует текст выбранного оператора с подстановкой имени переменной */
-export function getSelectedLabel(operator: ConditionOperator, variable: string, value: string, value2?: string): string {
+/**
+ * Генерирует текст выбранного оператора с подстановкой имени переменной.
+ * Для операторов подписки поддерживает несколько каналов через запятую.
+ * @param operator - Оператор ветки условия
+ * @param variable - Имя переменной узла
+ * @param value - Значение (для подписки — каналы через запятую)
+ * @param value2 - Второе значение (для оператора between)
+ * @param subscriptionMode - Режим проверки нескольких каналов
+ * @returns Человекочитаемая строка описания условия
+ */
+export function getSelectedLabel(
+  operator: ConditionOperator,
+  variable: string,
+  value: string,
+  value2?: string,
+  subscriptionMode?: 'all' | 'any',
+): string {
   const varName = variable.replace(/[{}]/g, '').trim() || 'переменная';
   switch (operator) {
     case 'filled':       return `Если переменная "${varName}" введена`;
@@ -108,16 +89,45 @@ export function getSelectedLabel(operator: ConditionOperator, variable: string, 
     case 'is_admin':     return 'Если пользователь — администратор бота';
     case 'is_premium':   return 'Если пользователь — Telegram Premium';
     case 'is_bot':       return 'Если пользователь — бот';
-    case 'is_subscribed': return `Если пользователь подписан на канал "${value || '...'}"`;
-    case 'is_not_subscribed': return `Если пользователь не подписан на канал "${value || '...'}"`;
+    case 'is_subscribed':     return buildSubscriptionLabel(value, subscriptionMode, false);
+    case 'is_not_subscribed': return buildSubscriptionLabel(value, subscriptionMode, true);
     default:             return OPERATOR_LABELS[operator];
   }
+}
+
+/**
+ * Формирует метку для операторов подписки с учётом числа каналов и режима.
+ * @param value - Каналы через запятую
+ * @param mode - Режим all/any
+ * @param negated - true для is_not_subscribed
+ * @returns Строка описания условия подписки
+ */
+function buildSubscriptionLabel(value: string, mode: 'all' | 'any' | undefined, negated: boolean): string {
+  const channels = value ? value.split(',').map(c => c.trim()).filter(Boolean) : [];
+  if (channels.length === 0) return negated ? 'Если пользователь не подписан на канал' : 'Если пользователь подписан на канал';
+  if (channels.length === 1) {
+    return negated
+      ? `Не подписан на ${channels[0]}`
+      : `Подписан на ${channels[0]}`;
+  }
+  const list = channels.join(', ');
+  if (mode === 'any') {
+    return negated
+      ? `Не подписан ни на один из: ${list}`
+      : `Подписан хотя бы на один из: ${list}`;
+  }
+  // mode === 'all' (по умолчанию)
+  return negated
+    ? `Не подписан на все: ${list}`
+    : `Подписан на все: ${list}`;
 }
 
 /**
  * Компонент отдельной ветки условия.
  * Для ветки else показывает статичный текст "Иначе".
  * Для остальных веток отображает выбор оператора, поле значения и текст сообщения.
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
 export function ConditionBranchItem({ branch, variable, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
   /** Операторы, которым требуется одно текстовое значение. */
@@ -134,8 +144,12 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
     onNodeUpdate(messageNode.id, { messageText: value });
   };
 
-  const handleSubscriptionValueChange = (value: string) => {
-    onChange(branch.id, 'value', normalizeSubscriptionValue(value));
+  /**
+   * Обрабатывает изменение режима подписки (all/any).
+   * @param mode - Новый режим проверки каналов
+   */
+  const handleModeChange = (mode: 'all' | 'any') => {
+    onChange(branch.id, 'subscriptionMode' as any, mode);
   };
 
   return (
@@ -147,12 +161,12 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
           onValueChange={(value) => onChange(branch.id, 'operator', value)}
         >
           <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 min-w-[120px] flex-1">
-            <SelectValue>{getSelectedLabel(branch.operator, variable, branch.value, branch.value2)}</SelectValue>
+            <SelectValue>{getSelectedLabel(branch.operator, variable, branch.value, branch.value2, branch.subscriptionMode)}</SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
             {SELECTABLE_OPERATORS.map(op => (
               <SelectItem key={op} value={op}>
-                <span className="text-xs text-violet-700 dark:text-violet-300">{getSelectedLabel(op, variable, branch.value, branch.value2)}</span>
+                <span className="text-xs text-violet-700 dark:text-violet-300">{getSelectedLabel(op, variable, branch.value, branch.value2, branch.subscriptionMode)}</span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -161,7 +175,7 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
           <Input
             value={branch.value}
             onChange={e => onChange(branch.id, 'value', e.target.value)}
-            placeholder={isBetween ? 'от' : isSubscriptionOperator ? 'ссылка, @name, name...' : 'введите значение'}
+            placeholder={isBetween ? 'от' : 'введите значение'}
             className="text-sm h-7 flex-1"
           />
         )}
@@ -182,17 +196,14 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
-        {isSubscriptionOperator && needsValue && (
-          <div className="w-full basis-full space-y-1">
-            <Input
+        {isSubscriptionOperator && (
+          <div className="w-full basis-full">
+            <SubscriptionChannelsInput
               value={branch.value}
-              onChange={e => handleSubscriptionValueChange(e.target.value)}
-              placeholder="ссылка, @name, name..."
-              className="text-sm h-7 w-full"
+              subscriptionMode={branch.subscriptionMode}
+              onValueChange={(val) => onChange(branch.id, 'value', val)}
+              onModeChange={handleModeChange}
             />
-            <p className="text-xs text-violet-500/80 dark:text-violet-300/70">
-              Ссылка и имя автоматически приводятся к виду `@username`, остальные форматы сохраняются как есть
-            </p>
           </div>
         )}
       </div>

@@ -36,9 +36,12 @@ interface ConditionNodePreviewProps {
 /**
  * Возвращает человекочитаемое описание оператора ветки для превью на холсте.
  * Использует ту же функцию getSelectedLabel, что и панель свойств.
+ * @param branch - Ветка условия
+ * @param variable - Имя переменной узла
+ * @returns Строка описания условия
  */
 function getBranchOperatorLabel(branch: ConditionBranch, variable: string): string {
-  return getSelectedLabel(branch.operator, variable, branch.value ?? '', branch.value2);
+  return getSelectedLabel(branch.operator, variable, branch.value ?? '', branch.value2, branch.subscriptionMode);
 }
 
 /**
