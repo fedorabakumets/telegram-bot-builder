@@ -1,10 +1,17 @@
 /**
- * @fileoverview Селектор токена бота для вкладки базы данных пользователей
+ * @fileoverview Компактный inline-селектор токена бота
+ * @description Отображает Select с иконкой бота без лишних блоков и описаний
  */
 
 import { BotToken } from '@shared/schema';
 import { Bot } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 /**
  * Пропсы селектора токена бота
@@ -27,22 +34,15 @@ function getTokenLabel(token: BotToken): string {
   if (token.botFirstName && token.botUsername) {
     return `${token.botFirstName} (@${token.botUsername})`;
   }
-
-  if (token.botFirstName) {
-    return token.botFirstName;
-  }
-
-  if (token.botUsername) {
-    return `@${token.botUsername}`;
-  }
-
+  if (token.botFirstName) return token.botFirstName;
+  if (token.botUsername) return `@${token.botUsername}`;
   return token.name || `Бот #${token.id}`;
 }
 
 /**
- * Отображает выбор бота для будущей сегментации базы пользователей
+ * Компактный inline-селектор бота для панели базы данных
  * @param props - Пропсы компонента
- * @returns JSX элемент селектора токенов
+ * @returns JSX элемент селектора или заглушка при отсутствии ботов
  */
 export function BotTokenSelector({
   tokens,
@@ -51,24 +51,22 @@ export function BotTokenSelector({
 }: BotTokenSelectorProps): React.JSX.Element {
   if (tokens.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border/70 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-        У проекта пока нет добавленных ботов для выбора.
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Bot className="w-3.5 h-3.5" />
+        <span>Нет ботов</span>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-border/60 bg-background/80 p-3 shadow-sm">
-      <div className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
-        <Bot className="h-4 w-4 text-cyan-600" />
-        Бот для просмотра базы
-      </div>
+    <div className="flex items-center gap-1.5">
+      <Bot className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
       <Select
         value={selectedTokenId ? String(selectedTokenId) : undefined}
         onValueChange={(value) => onSelect(Number(value))}
       >
-        <SelectTrigger className="h-11 rounded-xl border-border/70 bg-background">
-          <SelectValue placeholder="Выберите бота" />
+        <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px] max-w-[180px]">
+          <SelectValue placeholder="Бот" />
         </SelectTrigger>
         <SelectContent>
           {tokens.map((token) => (
@@ -78,9 +76,6 @@ export function BotTokenSelector({
           ))}
         </SelectContent>
       </Select>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Интерфейс выбора уже подготовлен. Разделение данных по выбранному боту подключим на следующем шаге.
-      </p>
     </div>
   );
 }

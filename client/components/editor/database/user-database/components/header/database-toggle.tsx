@@ -1,9 +1,8 @@
 /**
- * @fileoverview Компонент переключателя статуса базы данных
- * @description Позволяет включать/выключать базу данных пользователей
+ * @fileoverview Компактный переключатель статуса базы данных
+ * @description Отображается как маленький бейдж со свитчем: "✅ Включена" / "❌ Выключена"
  */
 
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
 /**
@@ -19,7 +18,7 @@ interface DatabaseToggleProps {
 }
 
 /**
- * Компонент переключателя базы данных
+ * Компактный бейдж-переключатель базы данных
  * @param props - Пропсы компонента
  * @returns JSX компонент переключателя
  */
@@ -30,28 +29,22 @@ export function DatabaseToggle({
 }: DatabaseToggleProps): React.JSX.Element {
   return (
     <div
-      className={`flex items-center gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border-2 transition-all duration-300 backdrop-blur-sm ${
+      className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium transition-colors ${
         isDatabaseEnabled
-          ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 shadow-emerald-500/10 shadow-lg'
-          : 'bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/30 shadow-rose-500/10 shadow-lg'
+          ? 'border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30'
+          : 'border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/30'
       }`}
       data-testid="database-toggle-container"
     >
-      <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${isDatabaseEnabled ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-      <Label
-        htmlFor="db-toggle"
-        className={`text-sm font-semibold cursor-pointer whitespace-nowrap ${
-          isDatabaseEnabled ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'
-        }`}
-      >
-        {isDatabaseEnabled ? 'Активна' : 'Отключена'}
-      </Label>
+      <span>{isDatabaseEnabled ? '✅' : '❌'}</span>
+      <span className="whitespace-nowrap">{isDatabaseEnabled ? 'Включена' : 'Выключена'}</span>
       <Switch
         id="db-toggle"
         data-testid="switch-database-toggle"
         checked={isDatabaseEnabled}
         onCheckedChange={onToggle}
         disabled={isPending}
+        className="scale-75 origin-right"
       />
     </div>
   );
