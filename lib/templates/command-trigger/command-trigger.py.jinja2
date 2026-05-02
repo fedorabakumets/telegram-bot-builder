@@ -57,21 +57,28 @@ async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message
     mock_callback = MockCallback("{{ entry.targetNodeId }}", message.from_user, message)
     await handle_callback_{{ sanitized_target_id }}(mock_callback, state=state)
 
-{%- if entry.deepLinkParam and entry.deepLinkParam | trim %}
-{%- set sanitized_node_id = entry.nodeId | safe_name -%}
-{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+{% endfor %}
+
+{# Единый роутер deep link — генерируется если есть хотя бы один deep link триггер #}
+{%- set deepLinkEntries = commandTriggerEntries | selectattr("deepLinkParam") | list -%}
+
+{%- if deepLinkEntries | length > 0 %}
 
 @dp.message(CommandStart(deep_link=True))
-async def command_trigger_{{ sanitized_node_id }}_deeplink_handler(message: types.Message, command: CommandObject, state: FSMContext = None):
+async def deep_link_router(message: types.Message, command: CommandObject, state: FSMContext = None):
+    args = command.args or ""
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} перешёл по deep link: '{args}'")
+
+    {% for entry in deepLinkEntries -%}
+    {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
     {%- if entry.deepLinkMatchMode == 'startsWith' %}
-    if command.args and command.args.startswith("{{ entry.deepLinkParam }}"):
+    if args and args.startswith("{{ entry.deepLinkParam }}"):
     {%- else %}
-    if command.args == "{{ entry.deepLinkParam }}":
+    if args == "{{ entry.deepLinkParam }}":
     {%- endif %}
-        user_id = message.from_user.id
-        logging.info(f"Пользователь {user_id} перешёл по deep link '{{ entry.deepLinkParam }}'")
         {%- if entry.deepLinkSaveToVar and entry.deepLinkVarName %}
-        await set_user_var(user_id, "{{ entry.deepLinkVarName }}", command.args)
+        await set_user_var(user_id, "{{ entry.deepLinkVarName }}", args)
         {%- endif %}
 
         class MockCallback:
@@ -93,6 +100,7 @@ async def command_trigger_{{ sanitized_node_id }}_deeplink_handler(message: type
 
         mock_callback = MockCallback("{{ entry.targetNodeId }}", message.from_user, message)
         await handle_callback_{{ sanitized_target_id }}(mock_callback, state=state)
+        return
 
+    {% endfor %}
 {%- endif %}
-{% endfor %}
