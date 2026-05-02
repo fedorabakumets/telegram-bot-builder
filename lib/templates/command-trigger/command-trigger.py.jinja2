@@ -140,8 +140,12 @@ async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message
     {%- endif %}
     {%- if cmd == 'start' %}
     # Сохраняем utm_source = "direct" при первом визите через /start (не перезаписываем)
-    if not user_data.get(user_id, {}).get("utm_source"):
+    existing_utm = user_data.get(user_id, {}).get("utm_source")
+    if not existing_utm:
         await set_user_var(user_id, "utm_source", "direct")
+        logging.info(f"🔗 [DeepLink] Прямой /start — utm_source записан: 'direct' для {user_id}")
+    else:
+        logging.info(f"🔗 [DeepLink] Прямой /start — utm_source уже есть: '{existing_utm}' для {user_id}")
     {%- endif %}
 
     class MockCallback:
