@@ -22,4 +22,8 @@ export interface UserDatabasePanelProps {
   availableTokens?: BotToken[];
   /** Обработчик выбора токена бота */
   onSelectToken?: (tokenId: number | null) => void;
+  /** Список всех проектов для выбора */
+  allProjects?: Array<{ id: number; name: string }>;
+  /** Обработчик смены проекта */
+  onProjectChange?: (projectId: number) => void;
 }

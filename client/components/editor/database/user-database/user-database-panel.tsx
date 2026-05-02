@@ -31,6 +31,8 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     selectedTokenId: selectedTokenIdProp,
     availableTokens: availableTokensProp,
     onSelectToken,
+    allProjects,
+    onProjectChange,
   } = props;
 
   const { containerRef, visibleColumns } = useResponsive();
@@ -187,6 +189,8 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
         project={project}
         variableToQuestionMap={variableToQuestionMap}
         visibleColumns={visibleColumns}
+        allProjects={allProjects}
+        onProjectChange={onProjectChange}
       />
     </div>
   );

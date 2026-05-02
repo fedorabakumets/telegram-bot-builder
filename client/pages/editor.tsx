@@ -1467,6 +1467,10 @@ export default function Editor() {
                 onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
                 selectedTokenId={selectedDatabaseTokenId}
                 onSelectToken={setSelectedDatabaseTokenId}
+                allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                onProjectChange={(projectId) => {
+                  setLocation(`/projects/${projectId}`);
+                }}
               />
             </div>
           )}
@@ -1765,6 +1769,10 @@ export default function Editor() {
                     onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
                     selectedTokenId={selectedDatabaseTokenId}
                     onSelectToken={setSelectedDatabaseTokenId}
+                    allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                    onProjectChange={(projectId) => {
+                      setLocation(`/projects/${projectId}`);
+                    }}
                   />
                 </div>
               ) : currentTab === 'groups' ? (

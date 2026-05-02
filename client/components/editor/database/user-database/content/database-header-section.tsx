@@ -9,6 +9,7 @@ import {
   DatabaseHeader,
   DatabaseToggle,
   HeaderActions,
+  ProjectSelector,
 } from '../components/header';
 import { DatabaseContentProps } from './database-content-props';
 
@@ -27,6 +28,8 @@ interface DatabaseHeaderSectionProps
     | 'toggleDatabaseMutation'
     | 'handleRefresh'
     | 'deleteAllUsersMutation'
+    | 'allProjects'
+    | 'onProjectChange'
   > {
   /** Данные проекта */
   project: BotProject | null;
@@ -48,7 +51,13 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
     toggleDatabaseMutation,
     handleRefresh,
     deleteAllUsersMutation,
+    allProjects,
+    onProjectChange,
   } = props;
+
+  /** Показывать селектор проекта только если передан список из более чем одного проекта */
+  const showProjectSelector =
+    allProjects !== undefined && allProjects.length > 1 && onProjectChange !== undefined;
 
   return (
     <div className="border-b border-border/50 bg-card w-full px-3 py-2 sm:px-4 sm:py-3">
@@ -59,10 +68,18 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
 
       {/* Строка 2: проект, бот, статус БД, удалить */}
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        {/* Название проекта */}
-        <span className="text-xs text-muted-foreground whitespace-nowrap">
-          Проект: <span className="font-medium text-foreground">{projectName}</span>
-        </span>
+        {/* Селектор проекта — только если доступно несколько проектов */}
+        {showProjectSelector ? (
+          <ProjectSelector
+            projects={allProjects!}
+            selectedProjectId={projectId}
+            onSelect={onProjectChange!}
+          />
+        ) : (
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            Проект: <span className="font-medium text-foreground">{projectName}</span>
+          </span>
+        )}
 
         <span className="text-border/60 hidden sm:inline">·</span>
 
