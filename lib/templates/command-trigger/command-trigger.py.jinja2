@@ -36,6 +36,11 @@ async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message
         await message.answer("❌ Сначала запустите бота: /start")
         return
     {%- endif %}
+    {%- if cmd == 'start' %}
+    # Сохраняем utm_source = "direct" при первом визите через /start (не перезаписываем)
+    if not user_data.get(user_id, {}).get("utm_source"):
+        await set_user_var(user_id, "utm_source", "direct")
+    {%- endif %}
 
     class MockCallback:
         def __init__(self, data, user, msg):
@@ -69,6 +74,10 @@ async def deep_link_router(message: types.Message, command: CommandObject, state
     args = command.args or ""
     user_id = message.from_user.id
     logging.info(f"Пользователь {user_id} перешёл по deep link: '{args}'")
+
+    # Сохраняем utm_source только при первом визите (не перезаписываем — первое касание важнее)
+    if not user_data.get(user_id, {}).get("utm_source"):
+        await set_user_var(user_id, "utm_source", args if args else "direct")
 
     {% for entry in deepLinkEntries -%}
     {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}

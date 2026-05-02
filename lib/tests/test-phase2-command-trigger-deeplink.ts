@@ -6,13 +6,20 @@
  *   P01: deepLinkParam заполнен → генерируется deep_link_router
  *   P02: режим exact → if args == "ref": внутри deep_link_router
  *   P03: режим startsWith → if args and args.startswith("ref_"): внутри deep_link_router
- *   P04: deepLinkSaveToVar=true + deepLinkVarName → await set_user_var(...) внутри роутера
+ *   P04: deepLinkSaveToVar=true + deepLinkVarName → оба set_user_var: referrer_id и utm_source
  *   P05: deepLinkSaveToVar=false → нет set_user_var в роутере
  *   P06: deepLinkParam пустой → нет deep_link_router
  *   P07: deepLinkParam не задан → нет deep_link_router
  *   P08: синтаксис Python OK с deep link
  *   P09: два узла /start с разными deepLinkParam → один deep_link_router с двумя ветками
  *   P10: CommandObject импортируется когда есть deep link триггер
+ *
+ * Блок Q: utm_source — автосохранение при первом визите
+ *   Q01: deep link с параметром → utm_source сохраняется как значение параметра
+ *   Q02: deep link без совпадения → utm_source всё равно сохраняется до веток
+ *   Q03: обычный /start без deep link → utm_source = "direct" сохраняется
+ *   Q04: utm_source не перезаписывается — проверка условия user_data.get в коде
+ *   Q05: синтаксис Python OK с utm_source логикой
  */
 
 import fs from 'fs';
@@ -205,7 +212,7 @@ test('P03', 'режим startsWith → if args and args.startswith("ref_"): вн
   ok(code.includes('args and'), 'проверка args and должна быть в коде');
 });
 
-test('P04', 'deepLinkSaveToVar=true + deepLinkVarName → await set_user_var(user_id, "referrer_id", args)', () => {
+test('P04', 'deepLinkSaveToVar=true + deepLinkVarName → оба set_user_var: referrer_id и utm_source', () => {
   const p = makeCleanProject([
     makeTriggerNode('t1', '/start', 'msg1', {
       deepLinkParam: 'ref',
@@ -216,10 +223,12 @@ test('P04', 'deepLinkSaveToVar=true + deepLinkVarName → await set_user_var(use
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'p04');
-  ok(code.includes('set_user_var(user_id, "referrer_id", args)'), 'await set_user_var(...) должен быть в коде');
+  // Кастомная переменная сохраняется дополнительно к utm_source, а не вместо него
+  ok(code.includes('set_user_var(user_id, "referrer_id", args)'), 'кастомная переменная должна быть');
+  ok(code.includes('"utm_source"'), 'utm_source тоже должен сохраняться');
 });
 
-test('P05', 'deepLinkSaveToVar=false → нет set_user_var в роутере', () => {
+test('P05', 'deepLinkSaveToVar=false → кастомная переменная НЕ сохраняется, utm_source сохраняется', () => {
   const p = makeCleanProject([
     makeTriggerNode('t1', '/start', 'msg1', {
       deepLinkParam: 'ref',
@@ -230,15 +239,10 @@ test('P05', 'deepLinkSaveToVar=false → нет set_user_var в роутере',
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'p05');
-  // Ищем тело deep_link_router (от его def до конца файла или следующего async def)
-  const routerMarker = 'async def deep_link_router';
-  const routerIdx = code.indexOf(routerMarker);
-  ok(routerIdx !== -1, 'deep_link_router должен быть в коде');
-  const nextAsyncDef = code.indexOf('\nasync def ', routerIdx + routerMarker.length);
-  const routerBody = nextAsyncDef > 0
-    ? code.substring(routerIdx, nextAsyncDef)
-    : code.substring(routerIdx);
-  ok(!routerBody.includes('set_user_var('), 'set_user_var НЕ должен вызываться в теле роутера');
+  // utm_source всегда сохраняется — это ожидаемое поведение
+  ok(code.includes('"utm_source"'), 'utm_source должен сохраняться в роутере');
+  // Кастомная переменная referrer_id НЕ должна сохраняться при deepLinkSaveToVar=false
+  ok(!code.includes('set_user_var(user_id, "referrer_id"'), 'кастомная переменная referrer_id НЕ должна вызываться');
 });
 
 test('P06', 'deepLinkParam пустой → нет deep_link_router', () => {
@@ -302,6 +306,84 @@ test('P10', 'CommandObject импортируется когда есть deep l
   ]);
   const code = gen(p, 'p10');
   ok(code.includes('CommandObject'), 'CommandObject должен быть импортирован');
+});
+
+// ─── Блок Q: utm_source ───────────────────────────────────────────────────────
+
+console.log('\n── Блок Q: utm_source — автосохранение при первом визите ─────────────');
+
+test('Q01', 'deep link с параметром → utm_source сохраняется как значение параметра', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('t1', '/start', 'msg1', {
+      deepLinkParam: 'ref_123',
+      deepLinkMatchMode: 'exact',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'q01');
+  // utm_source должен сохраняться через args if args else "direct"
+  ok(code.includes('"utm_source"'), 'utm_source должен быть в коде роутера');
+  ok(code.includes('args if args else "direct"'), 'логика args if args else "direct" должна быть');
+});
+
+test('Q02', 'deep link без совпадения → utm_source всё равно сохраняется до веток', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('t1', '/start', 'msg1', {
+      deepLinkParam: 'known_param',
+      deepLinkMatchMode: 'exact',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'q02');
+  // utm_source должен быть ДО первой ветки if args ==
+  const utmIdx = code.indexOf('"utm_source"');
+  const firstBranchIdx = code.indexOf('if args ==');
+  ok(utmIdx !== -1, 'utm_source должен быть в коде');
+  ok(firstBranchIdx !== -1, 'ветка if args == должна быть в коде');
+  ok(utmIdx < firstBranchIdx, 'utm_source должен сохраняться ДО веток маршрутизации');
+});
+
+test('Q03', 'обычный /start без deep link → utm_source = "direct" сохраняется', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('t1', '/start', 'msg1'),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'q03');
+  // В обычном /start обработчике тоже должен быть utm_source = "direct"
+  ok(code.includes('"utm_source"'), 'utm_source должен быть в обработчике /start');
+  ok(code.includes('"direct"'), 'значение "direct" должно быть в коде');
+});
+
+test('Q04', 'utm_source не перезаписывается — проверка условия user_data.get в коде', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('t1', '/start', 'msg1', {
+      deepLinkParam: 'ref',
+      deepLinkMatchMode: 'exact',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'q04');
+  // Должна быть проверка на существующее значение (не перезаписываем)
+  ok(
+    code.includes('user_data.get(user_id, {}).get("utm_source")'),
+    'проверка user_data.get(user_id, {}).get("utm_source") должна быть в коде'
+  );
+});
+
+test('Q05', 'синтаксис Python OK с utm_source логикой', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('t1', '/start', 'msg1', {
+      deepLinkParam: 'ref_',
+      deepLinkMatchMode: 'startsWith',
+      deepLinkSaveToVar: true,
+      deepLinkVarName: 'referrer_id',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'q05');
+  ok(code.includes('"utm_source"'), 'utm_source должен быть в коде');
+  const r = checkSyntax(code, 'q05');
+  ok(r.ok, `Синтаксическая ошибка с utm_source логикой:\n${r.error}`);
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────
