@@ -152,9 +152,22 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
     onChange(branch.id, 'subscriptionMode' as any, mode);
   };
 
+  /** JSX кнопки удаления ветки — передаётся в SubscriptionChannelsInput для subscription-операторов */
+  const deleteButtonJsx = (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => onDelete(branch.id)}
+      className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
+      title="Удалить ветку"
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </Button>
+  );
+
   return (
     <div className="rounded-lg border p-3 space-y-2 border-violet-200 bg-violet-50/50 dark:bg-violet-900/10 dark:border-violet-800/40">
-      {/* Заголовок ветки: выбор оператора для всех веток включая else */}
+      {/* Строка с селектом оператора + кнопка удаления (только для не-subscription операторов) */}
       <div className="flex flex-wrap items-start gap-2">
         <Select
           value={branch.operator}
@@ -171,42 +184,42 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
             ))}
           </SelectContent>
         </Select>
-        {!isSubscriptionOperator && needsValue && (
+        {/* Кнопка удаления — только для не-subscription операторов; для subscription передаётся внутрь компонента */}
+        {!isSubscriptionOperator && (
+          <div className="ml-auto">{deleteButtonJsx}</div>
+        )}
+      </div>
+
+      {/* Поля значений — только для не-subscription операторов */}
+      {!isSubscriptionOperator && needsValue && (
+        <div className="flex flex-wrap gap-2">
           <Input
             value={branch.value}
             onChange={e => onChange(branch.id, 'value', e.target.value)}
             placeholder={isBetween ? 'от' : 'введите значение'}
             className="text-sm h-7 flex-1"
           />
-        )}
-        {isBetween && (
-          <Input
-            value={branch.value2 ?? ''}
-            onChange={e => onChange(branch.id, 'value2', e.target.value)}
-            placeholder="до"
-            className="text-sm h-7 flex-1"
-          />
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onDelete(branch.id)}
-          className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 ml-auto shrink-0"
-          title="Удалить ветку"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-        {isSubscriptionOperator && (
-          <div className="w-full basis-full">
-            <SubscriptionChannelsInput
-              value={branch.value}
-              subscriptionMode={branch.subscriptionMode}
-              onValueChange={(val) => onChange(branch.id, 'value', val)}
-              onModeChange={handleModeChange}
+          {isBetween && (
+            <Input
+              value={branch.value2 ?? ''}
+              onChange={e => onChange(branch.id, 'value2', e.target.value)}
+              placeholder="до"
+              className="text-sm h-7 flex-1"
             />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+
+      {/* Для subscription-операторов — компонент с chips, полем ввода и кнопкой удаления */}
+      {isSubscriptionOperator && (
+        <SubscriptionChannelsInput
+          value={branch.value}
+          subscriptionMode={branch.subscriptionMode}
+          onValueChange={(val) => onChange(branch.id, 'value', val)}
+          onModeChange={handleModeChange}
+          deleteButton={deleteButtonJsx}
+        />
+      )}
 
       {/* Поле ID целевого узла для перехода */}
       <div className="space-y-1">

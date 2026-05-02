@@ -1,9 +1,10 @@
 /**
  * @fileoverview Chips-инпут для ввода нескольких Telegram-каналов/групп.
  * Используется в ветках условия is_subscribed / is_not_subscribed.
+ * Первая строка содержит селект режима all/any (при 2+ каналах) и кнопку удаления ветки.
  * @module components/editor/properties/components/condition/SubscriptionChannelsInput
  */
-import { useState, KeyboardEvent } from 'react';
+import React, { useState, KeyboardEvent } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -19,6 +20,8 @@ interface SubscriptionChannelsInputProps {
   onValueChange: (value: string) => void;
   /** Вызывается при изменении режима проверки */
   onModeChange: (mode: 'all' | 'any') => void;
+  /** Готовый JSX элемент кнопки удаления ветки — рендерится в первой строке справа */
+  deleteButton?: React.ReactNode;
 }
 
 /**
@@ -51,8 +54,10 @@ export function normalizeSubscriptionValue(rawValue: string): string {
 
 /**
  * Chips-инпут для ввода нескольких Telegram-каналов.
- * Каналы отображаются как chips с кнопкой удаления.
- * При наличии 2+ каналов показывает селект режима all/any.
+ * Строка 1: селект режима all/any (при 2+ каналах) + кнопка удаления справа.
+ * Строка 2: chips каналов.
+ * Строка 3: поле ввода нового канала.
+ * Строка 4: подсказка про администратора.
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
@@ -61,6 +66,7 @@ export function SubscriptionChannelsInput({
   subscriptionMode = 'all',
   onValueChange,
   onModeChange,
+  deleteButton,
 }: SubscriptionChannelsInputProps) {
   /** Текущий текст в поле ввода нового канала */
   const [inputValue, setInputValue] = useState('');
@@ -77,8 +83,7 @@ export function SubscriptionChannelsInput({
       setInputValue('');
       return;
     }
-    const updated = [...channels, normalized];
-    onValueChange(updated.join(','));
+    onValueChange([...channels, normalized].join(','));
     setInputValue('');
   };
 
@@ -87,8 +92,7 @@ export function SubscriptionChannelsInput({
    * @param index - Индекс удаляемого канала
    */
   const removeChannel = (index: number) => {
-    const updated = channels.filter((_, i) => i !== index);
-    onValueChange(updated.join(','));
+    onValueChange(channels.filter((_, i) => i !== index).join(','));
   };
 
   /**
@@ -104,7 +108,28 @@ export function SubscriptionChannelsInput({
 
   return (
     <div className="w-full space-y-2">
-      {/* Chips существующих каналов */}
+      {/* Строка 1: селект режима (если 2+ каналов) + кнопка удаления справа */}
+      <div className="flex items-center gap-2">
+        {channels.length >= 2 && (
+          <Select value={subscriptionMode} onValueChange={v => onModeChange(v as 'all' | 'any')}>
+            <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 w-auto min-w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
+              <SelectItem value="all">
+                <span className="text-xs text-violet-700 dark:text-violet-300">Подписан на все каналы</span>
+              </SelectItem>
+              <SelectItem value="any">
+                <span className="text-xs text-violet-700 dark:text-violet-300">Подписан хотя бы на один</span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+        {/* Кнопка удаления — всегда справа через ml-auto */}
+        {deleteButton && <div className="ml-auto">{deleteButton}</div>}
+      </div>
+
+      {/* Строка 2: chips существующих каналов */}
       {channels.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {channels.map((ch, i) => (
@@ -126,37 +151,20 @@ export function SubscriptionChannelsInput({
         </div>
       )}
 
-      {/* Поле ввода нового канала */}
+      {/* Строка 3: поле ввода нового канала */}
       <Input
         value={inputValue}
         onChange={e => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={addChannel}
-        placeholder="@channel, t.me/channel, name..."
+        placeholder="+ Добавить канал"
         className="text-sm h-7 w-full"
       />
 
-      {/* Подсказка */}
+      {/* Строка 4: подсказка про администратора */}
       <p className="text-xs text-violet-500/80 dark:text-violet-300/70">
         Бот должен быть администратором группы для проверки членства
       </p>
-
-      {/* Селект режима — только при 2+ каналах */}
-      {channels.length >= 2 && (
-        <Select value={subscriptionMode} onValueChange={v => onModeChange(v as 'all' | 'any')}>
-          <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
-            <SelectItem value="all">
-              <span className="text-xs text-violet-700 dark:text-violet-300">Подписан на все каналы</span>
-            </SelectItem>
-            <SelectItem value="any">
-              <span className="text-xs text-violet-700 dark:text-violet-300">Подписан хотя бы на один</span>
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      )}
     </div>
   );
 }
