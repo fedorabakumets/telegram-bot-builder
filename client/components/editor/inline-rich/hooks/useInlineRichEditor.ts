@@ -58,6 +58,8 @@ export interface UseInlineRichEditorReturn {
   activeFormats: Set<string>;
   /** Обработчик потери фокуса редактором — сохраняет выделение */
   saveSelectionOnBlur: () => void;
+  /** Обработчик вставки текста — сохраняет состояние в undo стек перед вставкой */
+  handlePaste: () => void;
 }
 
 /**
@@ -130,6 +132,14 @@ export function useInlineRichEditor(
 
   const activeFormats = useActiveFormats(editorRef);
 
+  /**
+   * Сохраняет текущее состояние в undo стек перед вставкой текста,
+   * чтобы вставку можно было отменить кнопкой Undo
+   */
+  const handlePaste = useCallback(() => {
+    saveToUndoStack();
+  }, [saveToUndoStack]);
+
   return {
     editorRef,
     wordCount,
@@ -146,6 +156,7 @@ export function useInlineRichEditor(
     linkPopover,
     codeLanguage,
     activeFormats,
-    saveSelectionOnBlur
+    saveSelectionOnBlur,
+    handlePaste
   };
 }

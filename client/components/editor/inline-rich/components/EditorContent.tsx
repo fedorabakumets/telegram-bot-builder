@@ -27,6 +27,8 @@ export interface EditorContentProps {
   onLinkClick?: () => void;
   /** Callback при потере фокуса — сохраняет текущее выделение */
   onBlur?: () => void;
+  /** Callback перед вставкой текста — сохраняет состояние в undo стек */
+  onPaste?: (e: React.ClipboardEvent) => void;
 }
 
 /**
@@ -40,7 +42,8 @@ export function EditorContent({
   innerRef,
   children,
   onLinkClick,
-  onBlur
+  onBlur,
+  onPaste
 }: EditorContentProps) {
   /**
    * Перехватывает клик по <a> внутри contenteditable.
@@ -80,6 +83,7 @@ export function EditorContent({
         onKeyDown={onKeyDown}
         onClick={handleClick}
         onBlur={onBlur}
+        onPaste={onPaste}
         className="min-h-[80px] sm:min-h-[100px] max-h-[200px] overflow-y-auto p-3 sm:p-4 w-full text-sm sm:text-base bg-transparent text-slate-900 dark:text-slate-100 focus:outline-none whitespace-pre-wrap selection:bg-blue-200 dark:selection:bg-blue-900 [&_tg-spoiler]:inline [&_tg-spoiler]:blur-sm [&_tg-spoiler]:bg-slate-300/70 [&_tg-spoiler]:dark:bg-slate-600/70 [&_tg-spoiler]:rounded [&_tg-spoiler]:px-0.5 [&_tg-spoiler]:cursor-pointer [&_tg-spoiler]:transition-[filter] [&_tg-spoiler]:duration-200 hover:[&_tg-spoiler]:blur-none [&_a]:text-blue-500 [&_a]:dark:text-blue-400 [&_a]:underline [&_a]:decoration-blue-400/60 [&_a]:dark:decoration-blue-500/60 [&_a]:underline-offset-2 [&_a]:cursor-pointer [&_pre]:block [&_pre]:my-2 [&_pre]:px-3 [&_pre]:py-2.5 [&_pre]:rounded-lg [&_pre]:bg-slate-900 [&_pre]:dark:bg-slate-950 [&_pre]:border [&_pre]:border-slate-700/60 [&_pre]:dark:border-slate-600/40 [&_pre]:text-emerald-400 [&_pre]:dark:text-emerald-300 [&_pre]:font-mono [&_pre]:text-xs [&_pre]:leading-relaxed [&_pre]:overflow-x-auto [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_blockquote]:border-l-4 [&_blockquote]:border-blue-500 [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:italic [&_blockquote]:text-slate-600 [&_blockquote]:dark:text-slate-400"
         style={{
           lineHeight: '1.5',
