@@ -20,6 +20,13 @@
  *   Q03: обычный /start без deep link → utm_source = "direct" сохраняется
  *   Q04: utm_source не перезаписывается — проверка условия user_data.get в коде
  *   Q05: синтаксис Python OK с utm_source логикой
+ *
+ * Блок R: Fallback в deep_link_router
+ *   R01: два /start с параметрами + один без → fallback идёт на узел без параметра
+ *   R02: все /start с параметрами → fallback идёт на первый /start (любой)
+ *   R03: нет узлов /start вообще → нет fallback кода в роутере
+ *   R04: fallback содержит logging.info с упоминанием "не распознан"
+ *   R05: синтаксис Python OK с fallback
  */
 
 import fs from 'fs';
@@ -384,6 +391,93 @@ test('Q05', 'синтаксис Python OK с utm_source логикой', () => {
   ok(code.includes('"utm_source"'), 'utm_source должен быть в коде');
   const r = checkSyntax(code, 'q05');
   ok(r.ok, `Синтаксическая ошибка с utm_source логикой:\n${r.error}`);
+});
+
+// ─── Блок R: Fallback ────────────────────────────────────────────────────────
+
+console.log('\n── Блок R: Fallback в deep_link_router ───────────────────────────────');
+
+/**
+ * R01: два /start с параметрами + один без → fallback идёт на узел без параметра
+ */
+test('R01', 'два /start с параметрами + один без → fallback на узел без параметра', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('t1', '/start', 'msg1', { deepLinkParam: 'ref' }),
+    makeTriggerNode('t2', '/start', 'msg2', { deepLinkParam: 'promo' }),
+    makeTriggerNode('t3', '/start', 'msg3'),  // без параметра — это fallback
+    makeMessageNode('msg1', 'Реф'),
+    makeMessageNode('msg2', 'Промо'),
+    makeMessageNode('msg3', 'Дефолт'),
+  ]);
+  const code = gen(p, 'r01');
+  // Fallback должен вести на msg3 (узел без параметра)
+  ok(code.includes('handle_callback_msg3'), 'fallback должен вести на msg3');
+  ok(code.includes('не распознан'), 'logging.info с "не распознан" должен быть');
+  const r = checkSyntax(code, 'r01');
+  ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
+});
+
+/**
+ * R02: все узлы /start с параметрами → fallback идёт на первый /start (любой)
+ */
+test('R02', 'все /start с параметрами → fallback на первый /start', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('t1', '/start', 'msg1', { deepLinkParam: 'ref' }),
+    makeTriggerNode('t2', '/start', 'msg2', { deepLinkParam: 'promo' }),
+    makeMessageNode('msg1', 'Реф'),
+    makeMessageNode('msg2', 'Промо'),
+  ]);
+  const code = gen(p, 'r02');
+  // Fallback должен вести на первый /start — msg1
+  ok(code.includes('handle_callback_msg1'), 'fallback должен вести на msg1 (первый /start)');
+  ok(code.includes('не распознан'), 'logging.info с "не распознан" должен быть');
+  const r = checkSyntax(code, 'r02');
+  ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
+});
+
+/**
+ * R03: нет узлов /start вообще → нет fallback кода в роутере
+ */
+test('R03', 'нет узлов /start → нет fallback кода в роутере', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('t1', '/help', 'msg1', { deepLinkParam: 'ref' }),
+    makeMessageNode('msg1', 'Помощь'),
+  ]);
+  const code = gen(p, 'r03');
+  // Fallback не должен генерироваться если нет /start узлов
+  ok(!code.includes('не распознан'), 'fallback logging.info НЕ должен быть без /start узлов');
+});
+
+/**
+ * R04: fallback содержит logging.info с упоминанием "не распознан"
+ */
+test('R04', 'fallback содержит logging.info с "не распознан"', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('t1', '/start', 'msg1', { deepLinkParam: 'ref' }),
+    makeTriggerNode('t2', '/start', 'msg2'),  // без параметра — fallback
+    makeMessageNode('msg1', 'Реф'),
+    makeMessageNode('msg2', 'Дефолт'),
+  ]);
+  const code = gen(p, 'r04');
+  ok(code.includes('logging.info'), 'logging.info должен быть в fallback');
+  ok(code.includes('не распознан'), '"не распознан" должно быть в logging.info');
+});
+
+/**
+ * R05: синтаксис Python OK с fallback
+ */
+test('R05', 'синтаксис Python OK с fallback', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('t1', '/start', 'msg1', { deepLinkParam: 'ref', deepLinkMatchMode: 'exact' }),
+    makeTriggerNode('t2', '/start', 'msg2', { deepLinkParam: 'promo', deepLinkMatchMode: 'exact' }),
+    makeTriggerNode('t3', '/start', 'msg3'),  // fallback
+    makeMessageNode('msg1', 'Реф'),
+    makeMessageNode('msg2', 'Промо'),
+    makeMessageNode('msg3', 'Дефолт'),
+  ]);
+  const code = gen(p, 'r05');
+  const r = checkSyntax(code, 'r05');
+  ok(r.ok, `Синтаксическая ошибка с fallback:\n${r.error}`);
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

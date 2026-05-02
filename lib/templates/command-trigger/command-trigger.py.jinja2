@@ -112,4 +112,52 @@ async def deep_link_router(message: types.Message, command: CommandObject, state
         return
 
     {% endfor %}
+    {#
+      Fallback: параметр deep link не совпал ни с одной веткой.
+      Ищем первый /start узел без deepLinkParam, затем любой /start.
+      Используем set в цикле — в данной версии Nunjucks это работает корректно.
+      Не используем | trim на deepLinkParam напрямую — падает на undefined.
+    #}
+    {%- set fallbackEntry = null -%}
+    {%- for entry in commandTriggerEntries -%}
+      {%- if entry.command == '/start' and not entry.deepLinkParam -%}
+        {%- if not fallbackEntry -%}
+          {%- set fallbackEntry = entry -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if not fallbackEntry -%}
+      {%- for entry in commandTriggerEntries -%}
+        {%- if entry.command == '/start' -%}
+          {%- if not fallbackEntry -%}
+            {%- set fallbackEntry = entry -%}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+    {%- if fallbackEntry %}
+    # Fallback: параметр не совпал — переходим на дефолтный /start сценарий
+    logging.info(f"Deep link параметр '{args}' не распознан, переход на дефолтный сценарий")
+    {%- set fallback_target_id = fallbackEntry.targetNodeId | safe_name %}
+
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self._is_fake = True
+            self.from_user = user
+            self.message = msg
+
+        async def answer(self, *args, **kwargs):
+            pass
+
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+
+    mock_callback = MockCallback("{{ fallbackEntry.targetNodeId }}", message.from_user, message)
+    await handle_callback_{{ fallback_target_id }}(mock_callback, state=state)
+    {%- endif %}
 {%- endif %}
