@@ -1048,8 +1048,13 @@ export function Canvas({
 
       // Проверяем, что фокус не находится на input или textarea
       const target = e.target as HTMLElement;
-      const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true'
-        || !!target.closest('.monaco-editor');
+      const isInputField =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.contentEditable === 'true' ||
+        !!target.closest('[contenteditable="true"]') ||
+        !!target.closest('.monaco-editor') ||
+        !!target.closest('[data-properties-panel]');
 
       if (!isInputField) {
         // Обработка клавиши Delete для удаления выбранного узла
@@ -1063,6 +1068,17 @@ export function Canvas({
       }
 
       if (e.ctrlKey || e.metaKey) {
+        // Если фокус в поле ввода — пропускаем команды холста.
+        // Исключение: Ctrl+S (сохранение) работает всегда.
+        if (isInputField) {
+          const key = e.key.toLowerCase();
+          if ((key === 's' || key === 'ы') && onSave && !isSaving) {
+            e.preventDefault();
+            onSave();
+          }
+          return;
+        }
+
         // Обработка Ctrl+Shift+C/V в первую очередь (межпроектное копирование)
         if (e.shiftKey) {
           switch (e.key) {
