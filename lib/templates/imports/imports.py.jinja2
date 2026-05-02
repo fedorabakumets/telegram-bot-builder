@@ -39,7 +39,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from typing import Optional, Callable, Awaitable, Any
 
 from dotenv import load_dotenv
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart, Command, CommandObject
 
 {%- if userDatabaseEnabled %}
 
@@ -83,8 +83,3 @@ from aiogram.fsm.state import State, StatesGroup
 
 import re
 from types import SimpleNamespace
-
-{%- if hasDeepLinkTriggers %}
-from aiogram.types import Message
-from aiogram.filters import CommandObject
-{%- endif %}
