@@ -658,3 +658,79 @@ export const nodesWithConditionMixedSubscription: Node[] = [
   makeNode('msg_filled', 'message', {}),
   makeNode('msg_other', 'message', {}),
 ];
+
+// ─── Фикстуры для нескольких каналов (multi-channel) ─────────────────────────
+
+/** Несколько каналов, subscriptionMode: 'all' */
+export const validParamsIsSubscribedMultipleAll: ConditionTemplateParams = {
+  entries: [{
+    nodeId: 'condition_multi_all',
+    variable: '',
+    branches: [
+      { id: 'b1', operator: 'is_subscribed', value: '@chan1,@chan2,@chan3', subscriptionMode: 'all', target: 'msg_ok' },
+      { id: 'b2', operator: 'else', value: '', target: 'msg_fail' },
+    ],
+  }],
+};
+
+/** Несколько каналов, subscriptionMode: 'any' */
+export const validParamsIsSubscribedMultipleAny: ConditionTemplateParams = {
+  entries: [{
+    nodeId: 'condition_multi_any',
+    variable: '',
+    branches: [
+      { id: 'b1', operator: 'is_subscribed', value: '@chan1,@chan2', subscriptionMode: 'any', target: 'msg_ok' },
+      { id: 'b2', operator: 'else', value: '', target: 'msg_fail' },
+    ],
+  }],
+};
+
+/** is_not_subscribed, несколько каналов, subscriptionMode: 'all' */
+export const validParamsIsNotSubscribedMultipleAll: ConditionTemplateParams = {
+  entries: [{
+    nodeId: 'condition_not_multi_all',
+    variable: '',
+    branches: [
+      { id: 'b1', operator: 'is_not_subscribed', value: '@chan1,@chan2', subscriptionMode: 'all', target: 'msg_ok' },
+      { id: 'b2', operator: 'else', value: '', target: 'msg_fail' },
+    ],
+  }],
+};
+
+/** is_not_subscribed, несколько каналов, subscriptionMode: 'any' */
+export const validParamsIsNotSubscribedMultipleAny: ConditionTemplateParams = {
+  entries: [{
+    nodeId: 'condition_not_multi_any',
+    variable: '',
+    branches: [
+      { id: 'b1', operator: 'is_not_subscribed', value: '@chan1,@chan2', subscriptionMode: 'any', target: 'msg_ok' },
+      { id: 'b2', operator: 'else', value: '', target: 'msg_fail' },
+    ],
+  }],
+};
+
+/** Node-фикстура: is_subscribed с несколькими каналами, mode=all */
+export const nodesWithConditionIsSubscribedMultipleAll: Node[] = [
+  makeNode('condition_multi_all', 'condition', {
+    variable: '',
+    branches: [
+      { id: 'b1', label: 'Подписан на все', operator: 'is_subscribed', value: '@chan1,@chan2,@chan3', subscriptionMode: 'all', target: 'msg_ok' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_fail' },
+    ],
+  }),
+  makeNode('msg_ok', 'message', {}),
+  makeNode('msg_fail', 'message', {}),
+];
+
+/** Node-фикстура: is_subscribed с несколькими каналами, mode=any */
+export const nodesWithConditionIsSubscribedMultipleAny: Node[] = [
+  makeNode('condition_multi_any', 'condition', {
+    variable: '',
+    branches: [
+      { id: 'b1', label: 'Подписан хотя бы на один', operator: 'is_subscribed', value: '@chan1,@chan2', subscriptionMode: 'any', target: 'msg_ok' },
+      { id: 'b2', label: 'Иначе', operator: 'else', value: '', target: 'msg_fail' },
+    ],
+  }),
+  makeNode('msg_ok', 'message', {}),
+  makeNode('msg_fail', 'message', {}),
+];

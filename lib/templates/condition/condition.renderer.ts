@@ -62,6 +62,11 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
       const targetNode = b.target ? validNodes.find(n => n.id === b.target) : undefined;
       const targetNodeType = targetNode?.type ?? 'message';
 
+      /** Список каналов из value (разделённых запятой) */
+      const rawValue = b.value ?? '';
+      const hasMultipleChannels = rawValue.includes(',');
+      const channels = sanitizeValue(rawValue).split(',').map((c: string) => c.trim()).filter(Boolean);
+
       return {
         id: b.id ?? '',
         operator: b.operator,
@@ -73,6 +78,9 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
         isFirstString,
         isFirstSystem,
         isFirstConditional: isFirstNumeric || isFirstString,
+        subscriptionMode: b.subscriptionMode ?? 'all',
+        hasMultipleChannels,
+        channels,
       };
     });
 
@@ -113,6 +121,18 @@ function enrichEntries(entries: ConditionEntry[]): any[] {
       if (isFirstString) firstStringSeen = true;
       const isFirstSystem = SYSTEM_OPS.has(b.operator) && !firstSystemSeen;
       if (isFirstSystem) firstSystemSeen = true;
+
+      const sanitizeValue = (v: string) => (v ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '');
+
+      /** Список каналов из value (разделённых запятой) */
+      const rawValue = b.value ?? '';
+      const hasMultipleChannels = rawValue.includes(',');
+      const channels = sanitizeValue(rawValue).split(',').map((c: string) => c.trim()).filter(Boolean);
+
       return {
         ...b,
         /** Тип целевого узла сохраняется из исходной ветки если уже есть */
@@ -121,6 +141,9 @@ function enrichEntries(entries: ConditionEntry[]): any[] {
         isFirstString,
         isFirstSystem,
         isFirstConditional: isFirstNumeric || isFirstString,
+        subscriptionMode: b.subscriptionMode ?? 'all',
+        hasMultipleChannels,
+        channels,
       };
     });
 

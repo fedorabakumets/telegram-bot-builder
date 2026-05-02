@@ -15,6 +15,8 @@ export interface ConditionBranchEntry {
   value2?: string;
   /** ID целевого узла для перехода */
   target?: string;
+  /** Режим проверки нескольких каналов: "all" — все, "any" — хотя бы один */
+  subscriptionMode?: 'all' | 'any';
 }
 
 /** Один узел условия */

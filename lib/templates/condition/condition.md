@@ -122,6 +122,42 @@ async def handle_callback_condition_mixed(callback_query):
 - Если **все** ветки (кроме `else`) являются системными — поле "Переменная" скрывается.
 - Если есть хотя бы одна не-системная ветка — поле "Переменная" отображается.
 
+### Поле `subscriptionMode` (для `is_subscribed` / `is_not_subscribed`)
+
+Если в поле `value` указано несколько каналов через запятую (`"@chan1,@chan2,@chan3"`), поведение определяется полем `subscriptionMode`:
+
+| Значение | Описание                                  | Генерируемый Python-код                                                                |
+|----------|-------------------------------------------|----------------------------------------------------------------------------------------|
+| `'all'`  | Пользователь подписан на **все** каналы   | `(await _is_user_subscribed("@c1") and await _is_user_subscribed("@c2") and ...)`      |
+| `'any'`  | Пользователь подписан хотя бы на **один** | `(await _is_user_subscribed("@c1") or await _is_user_subscribed("@c2") or ...)`        |
+
+По умолчанию (если `subscriptionMode` не указан) используется `'all'`. Если `value` содержит один канал — `subscriptionMode` игнорируется.
+
+#### Пример — несколько каналов, mode=all
+
+```python
+if (await _is_user_subscribed("@chan1") and await _is_user_subscribed("@chan2") and await _is_user_subscribed("@chan3")):
+    await handle_callback_msg_ok(callback_query, state=state)
+else:
+    await handle_callback_msg_fail(callback_query, state=state)
+```
+
+#### Пример — несколько каналов, mode=any
+
+```python
+if (await _is_user_subscribed("@chan1") or await _is_user_subscribed("@chan2")):
+    await handle_callback_msg_ok(callback_query, state=state)
+else:
+    await handle_callback_msg_fail(callback_query, state=state)
+```
+
+#### Пример — is_not_subscribed, несколько каналов, mode=all
+
+```python
+if (not await _is_user_subscribed("@chan1") and not await _is_user_subscribed("@chan2")):
+    await handle_callback_msg_ok(callback_query, state=state)
+```
+
 ## Пример входных данных
 
 ```ts

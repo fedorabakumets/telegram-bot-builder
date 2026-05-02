@@ -667,3 +667,60 @@ describe('conditionParamsSchema — is_subscribed / is_not_subscribed', () => {
     expect(conditionParamsSchema.safeParse(validParamsMixedSubscribedAndVar).success).toBe(true);
   });
 });
+
+// ─── Импорт фикстур для multi-channel ────────────────────────────────────────
+import {
+  validParamsIsSubscribedMultipleAll,
+  validParamsIsSubscribedMultipleAny,
+  validParamsIsNotSubscribedMultipleAll,
+  validParamsIsNotSubscribedMultipleAny,
+  nodesWithConditionIsSubscribedMultipleAll,
+  nodesWithConditionIsSubscribedMultipleAny,
+} from './condition.fixture';
+
+describe('generateConditionHandlers() — is_subscribed multi-channel', () => {
+  it('subscriptionMode all — генерирует and-цепочку', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsSubscribedMultipleAll);
+    expect(r).toContain('await _is_user_subscribed("@chan1")');
+    expect(r).toContain('await _is_user_subscribed("@chan2")');
+    expect(r).toContain('await _is_user_subscribed("@chan3")');
+    expect(r).toContain(' and ');
+  });
+
+  it('subscriptionMode any — генерирует or-цепочку', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsSubscribedMultipleAny);
+    expect(r).toContain('await _is_user_subscribed("@chan1")');
+    expect(r).toContain('await _is_user_subscribed("@chan2")');
+    expect(r).toContain(' or ');
+  });
+
+  it('is_not_subscribed all — генерирует not and-цепочку', () => {
+    const r = generateConditionHandlers(validParamsIsNotSubscribedMultipleAll);
+    expect(r).toContain('not await _is_user_subscribed("@chan1")');
+    expect(r).toContain(' and ');
+  });
+
+  it('is_not_subscribed any — генерирует not or-цепочку', () => {
+    const r = generateConditionHandlers(validParamsIsNotSubscribedMultipleAny);
+    expect(r).toContain('not await _is_user_subscribed("@chan1")');
+    expect(r).toContain(' or ');
+  });
+
+  it('один канал без subscriptionMode — поведение как раньше', () => {
+    const r = generateConditionHandlers(nodesWithConditionIsSubscribedSystem);
+    expect(r).toContain('await _is_user_subscribed("@my_channel")');
+    // Проверяем что строка с условием не содержит and/or цепочку
+    const condLine = r.split('\n').find(l => l.includes('if await _is_user_subscribed') || l.includes('elif await _is_user_subscribed'));
+    expect(condLine).toBeDefined();
+    expect(condLine).not.toContain(' and ');
+    expect(condLine).not.toContain(' or ');
+  });
+
+  it('schema принимает subscriptionMode all', () => {
+    expect(conditionParamsSchema.safeParse(validParamsIsSubscribedMultipleAll).success).toBe(true);
+  });
+
+  it('schema принимает subscriptionMode any', () => {
+    expect(conditionParamsSchema.safeParse(validParamsIsSubscribedMultipleAny).success).toBe(true);
+  });
+});

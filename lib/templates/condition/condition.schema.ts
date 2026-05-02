@@ -17,6 +17,8 @@ export const conditionBranchEntrySchema = z.object({
   value2: z.string().optional(),
   /** ID целевого узла */
   target: z.string().optional(),
+  /** Режим проверки нескольких каналов: "all" — все, "any" — хотя бы один */
+  subscriptionMode: z.enum(['all', 'any']).optional(),
 });
 
 /** Zod-схема одного узла условия */
