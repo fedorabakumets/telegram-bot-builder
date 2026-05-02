@@ -108,26 +108,28 @@ export function SubscriptionChannelsInput({
 
   return (
     <div className="w-full space-y-2">
-      {/* Строка 1: селект режима (если 2+ каналов) + кнопка удаления справа */}
-      <div className="flex items-center gap-2">
-        {channels.length >= 2 && (
-          <Select value={subscriptionMode} onValueChange={v => onModeChange(v as 'all' | 'any')}>
-            <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 w-auto min-w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
-              <SelectItem value="all">
-                <span className="text-xs text-violet-700 dark:text-violet-300">Подписан на все каналы</span>
-              </SelectItem>
-              <SelectItem value="any">
-                <span className="text-xs text-violet-700 dark:text-violet-300">Подписан хотя бы на один</span>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        )}
-        {/* Кнопка удаления — всегда справа через ml-auto */}
+      {/* Строка 1: селект режима (если 2+ каналов) + кнопка удаления справа — только если есть что показать */}
+      {(channels.length >= 2 || deleteButton) && (
+        <div className="flex items-center gap-2">
+          {channels.length >= 2 && (
+            <Select value={subscriptionMode} onValueChange={v => onModeChange(v as 'all' | 'any')}>
+              <SelectTrigger className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border border-violet-300/40 dark:border-violet-700/40 hover:border-violet-400/60 focus:border-violet-500 focus:ring-2 focus:ring-violet-400/30 rounded-md text-violet-900 dark:text-violet-50 w-auto min-w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gradient-to-br from-violet-50/95 to-purple-50/90 dark:from-slate-900/95 dark:to-slate-800/95 border border-violet-200/50 dark:border-violet-800/50 shadow-xl">
+                <SelectItem value="all">
+                  <span className="text-xs text-violet-700 dark:text-violet-300">Подписан на все каналы</span>
+                </SelectItem>
+                <SelectItem value="any">
+                  <span className="text-xs text-violet-700 dark:text-violet-300">Подписан хотя бы на один</span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        {/* Кнопка удаления — для subscription передаётся в первую строку вместе с селектом оператора */}
         {deleteButton && <div className="ml-auto">{deleteButton}</div>}
-      </div>
+        </div>
+      )}
 
       {/* Строка 2: chips существующих каналов */}
       {channels.length > 0 && (
@@ -163,7 +165,7 @@ export function SubscriptionChannelsInput({
 
       {/* Строка 4: подсказка про администратора */}
       <p className="text-xs text-violet-500/80 dark:text-violet-300/70">
-        Бот должен быть администратором группы для проверки членства
+        Для проверки членства в группе бот должен быть её администратором. Для каналов это не требуется.
       </p>
     </div>
   );

@@ -184,10 +184,8 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
             ))}
           </SelectContent>
         </Select>
-        {/* Кнопка удаления — только для не-subscription операторов; для subscription передаётся внутрь компонента */}
-        {!isSubscriptionOperator && (
-          <div className="ml-auto">{deleteButtonJsx}</div>
-        )}
+        {/* Кнопка удаления — для не-subscription в этой строке, для subscription — в строке с селектом оператора */}
+        <div className="ml-auto">{deleteButtonJsx}</div>
       </div>
 
       {/* Поля значений — только для не-subscription операторов */}
@@ -210,14 +208,13 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
         </div>
       )}
 
-      {/* Для subscription-операторов — компонент с chips, полем ввода и кнопкой удаления */}
+      {/* Для subscription-операторов — компонент с chips и полем ввода (без deleteButton — кнопка уже в строке выше) */}
       {isSubscriptionOperator && (
         <SubscriptionChannelsInput
           value={branch.value}
           subscriptionMode={branch.subscriptionMode}
           onValueChange={(val) => onChange(branch.id, 'value', val)}
           onModeChange={handleModeChange}
-          deleteButton={deleteButtonJsx}
         />
       )}
 
