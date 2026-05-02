@@ -73,21 +73,30 @@ async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message
 async def deep_link_router(message: types.Message, command: CommandObject, state: FSMContext = None):
     args = command.args or ""
     user_id = message.from_user.id
-    logging.info(f"Пользователь {user_id} перешёл по deep link: '{args}'")
+    username = message.from_user.username or message.from_user.first_name or str(user_id)
+    logging.info(f"🔗 [DeepLink] Пользователь {user_id} (@{username}) перешёл по deep link: '{args}'")
 
     # Сохраняем utm_source только при первом визите (не перезаписываем — первое касание важнее)
-    if not user_data.get(user_id, {}).get("utm_source"):
-        await set_user_var(user_id, "utm_source", args if args else "direct")
+    existing_utm = user_data.get(user_id, {}).get("utm_source")
+    if not existing_utm:
+        new_utm = args if args else "direct"
+        await set_user_var(user_id, "utm_source", new_utm)
+        logging.info(f"🔗 [DeepLink] utm_source записан: '{new_utm}' для пользователя {user_id}")
+    else:
+        logging.info(f"🔗 [DeepLink] utm_source уже есть: '{existing_utm}' — не перезаписываем")
 
     {% for entry in deepLinkEntries -%}
     {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
     {%- if entry.deepLinkMatchMode == 'startsWith' %}
     if args and args.startswith("{{ entry.deepLinkParam }}"):
+        logging.info(f"🔗 [DeepLink] Совпадение (startsWith '{{ entry.deepLinkParam }}'): args='{args}' → узел {{ entry.targetNodeId }}")
     {%- else %}
     if args == "{{ entry.deepLinkParam }}":
+        logging.info(f"🔗 [DeepLink] Совпадение (exact '{{ entry.deepLinkParam }}'): args='{args}' → узел {{ entry.targetNodeId }}")
     {%- endif %}
         {%- if entry.deepLinkSaveToVar and entry.deepLinkVarName %}
         await set_user_var(user_id, "{{ entry.deepLinkVarName }}", args)
+        logging.info(f"🔗 [DeepLink] Переменная '{{ entry.deepLinkVarName }}' = '{args}' сохранена для {user_id}")
         {%- endif %}
 
         class MockCallback:
@@ -137,6 +146,7 @@ async def deep_link_router(message: types.Message, command: CommandObject, state
     {%- endif -%}
     {%- if fallbackEntry %}
     # Fallback: параметр не совпал — переходим на дефолтный /start сценарий
+    logging.warning(f"🔗 [DeepLink] Параметр '{args}' не распознан ни одной веткой — fallback на узел {{ fallbackEntry.targetNodeId }}")
     logging.info(f"Deep link параметр '{args}' не распознан, переход на дефолтный сценарий")
     {%- set fallback_target_id = fallbackEntry.targetNodeId | safe_name %}
 
