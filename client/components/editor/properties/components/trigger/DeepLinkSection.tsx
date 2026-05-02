@@ -80,18 +80,25 @@ export function DeepLinkSection({
       </div>
 
       {/* Сохранить в переменную */}
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="deepLinkSaveToVar"
-          checked={deepLinkSaveToVar}
-          onChange={(e) => onChange({ deepLinkSaveToVar: e.target.checked })}
-          className="w-4 h-4 rounded border border-sky-400 dark:border-sky-600 bg-white dark:bg-slate-800 accent-sky-500 cursor-pointer"
-        />
-        <Label htmlFor="deepLinkSaveToVar" className="text-xs cursor-pointer">
+      <button
+        type="button"
+        onClick={() => onChange({ deepLinkSaveToVar: !deepLinkSaveToVar })}
+        className="flex items-center gap-2 w-full text-left group"
+      >
+        {/* Toggle */}
+        <div className={`relative w-8 h-4 rounded-full transition-colors flex-shrink-0 ${
+          deepLinkSaveToVar
+            ? 'bg-sky-500'
+            : 'bg-slate-600 dark:bg-slate-700'
+        }`}>
+          <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${
+            deepLinkSaveToVar ? 'translate-x-4' : 'translate-x-0.5'
+          }`} />
+        </div>
+        <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
           Сохранить в переменную
-        </Label>
-      </div>
+        </span>
+      </button>
 
       {/* Имя переменной */}
       {deepLinkSaveToVar && (
