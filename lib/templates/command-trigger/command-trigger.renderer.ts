@@ -34,6 +34,10 @@ export function collectCommandTriggerEntries(nodes: Node[]): CommandTriggerEntry
       requiresAuth: node.data.requiresAuth,
       targetNodeId,
       targetNodeType,
+      deepLinkMatchMode: (node.data as any).deepLinkMatchMode,
+      deepLinkParam: (node.data as any).deepLinkParam,
+      deepLinkSaveToVar: (node.data as any).deepLinkSaveToVar,
+      deepLinkVarName: (node.data as any).deepLinkVarName,
     });
   }
 

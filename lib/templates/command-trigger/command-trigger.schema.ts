@@ -14,6 +14,14 @@ export const commandTriggerEntrySchema = z.object({
   requiresAuth: z.boolean().optional(),
   targetNodeId: z.string().min(1),
   targetNodeType: z.string().min(1),
+  /** Режим совпадения deep link параметра: точное или по префиксу */
+  deepLinkMatchMode: z.enum(['exact', 'startsWith']).optional(),
+  /** Параметр deep link, например "ref" или "ref_" */
+  deepLinkParam: z.string().optional(),
+  /** Сохранять значение параметра в переменную пользователя */
+  deepLinkSaveToVar: z.boolean().optional(),
+  /** Имя переменной для сохранения значения deep link */
+  deepLinkVarName: z.string().optional(),
 });
 
 export const commandTriggerParamsSchema = z.object({

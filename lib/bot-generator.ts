@@ -207,6 +207,7 @@ function generateCodeSections(
       hasReplyKeyboard: flags.hasReplyKeyboardResult,
       hasLocalMediaFiles: flags.hasLocalMediaFilesResult,
       hasBotCommands: flags.hasBotCommandsResult,
+      hasDeepLinkTriggers: flags.hasDeepLinkTriggersResult,
     })
   );
 

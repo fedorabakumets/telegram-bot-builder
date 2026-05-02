@@ -31,4 +31,6 @@ export interface ImportsTemplateParams {
   hasLocalMediaFiles?: boolean;
   /** Есть ли команды бота */
   hasBotCommands?: boolean;
+  /** Есть ли deep link триггеры (нужен CommandObject) */
+  hasDeepLinkTriggers?: boolean;
 }

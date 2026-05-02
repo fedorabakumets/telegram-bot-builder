@@ -16,6 +16,7 @@
   @param {boolean} hasLocalMediaFiles - Есть ли локальные медиа файлы (нужен FSInputFile)
   @param {boolean} hasBotCommands - Есть ли команды для BotCommand (нужен BotCommand)
   @param {boolean} hasHttpRequestNodes - Есть ли узлы HTTP запросов (нужен aiohttp)
+  @param {boolean} hasDeepLinkTriggers - Есть ли deep link триггеры (нужен CommandObject)
 #}
 
 import asyncio
@@ -82,3 +83,8 @@ from aiogram.fsm.state import State, StatesGroup
 
 import re
 from types import SimpleNamespace
+
+{%- if hasDeepLinkTriggers %}
+from aiogram.types import Message
+from aiogram.filters import CommandObject
+{%- endif %}

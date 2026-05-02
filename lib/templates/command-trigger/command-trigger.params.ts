@@ -21,6 +21,14 @@ export interface CommandTriggerEntry {
   targetNodeId: string;
   /** Тип целевого узла */
   targetNodeType: string;
+  /** Режим совпадения deep link параметра: точное или по префиксу */
+  deepLinkMatchMode?: 'exact' | 'startsWith';
+  /** Параметр deep link, например "ref" или "ref_" */
+  deepLinkParam?: string;
+  /** Сохранять значение параметра в переменную пользователя */
+  deepLinkSaveToVar?: boolean;
+  /** Имя переменной для сохранения значения deep link */
+  deepLinkVarName?: string;
 }
 
 /** Параметры для генерации всех обработчиков командных триггеров */

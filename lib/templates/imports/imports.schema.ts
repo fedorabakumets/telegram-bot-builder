@@ -33,6 +33,8 @@ export const importsParamsSchema = z.object({
   hasLocalMediaFiles: z.boolean().default(false),
   /** Есть ли команды для BotCommand (нужен BotCommand) */
   hasBotCommands: z.boolean().default(false),
+  /** Есть ли deep link триггеры (нужен CommandObject) */
+  hasDeepLinkTriggers: z.boolean().default(false),
 });
 
 /** Тип параметров импортов (выведен из схемы) */

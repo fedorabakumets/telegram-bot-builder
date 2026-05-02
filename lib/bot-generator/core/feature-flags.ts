@@ -30,6 +30,8 @@ export interface FeatureFlags {
   hasReplyKeyboardResult: boolean;
   hasLocalMediaFilesResult: boolean;
   hasBotCommandsResult: boolean;
+  /** Есть ли deep link триггеры (нужен CommandObject) */
+  hasDeepLinkTriggersResult: boolean;
 }
 
 /**
@@ -134,5 +136,10 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
     hasReplyKeyboardResult: hasReplyKeyboardButtons(nodes),
     hasLocalMediaFilesResult: hasLocalMediaFiles(nodes),
     hasBotCommandsResult: hasBotCommands(nodes),
+    hasDeepLinkTriggersResult: nodes.some(
+      n => n.type === 'command_trigger' &&
+           (n.data as any)?.deepLinkParam &&
+           String((n.data as any).deepLinkParam).trim().length > 0
+    ),
   };
 }
