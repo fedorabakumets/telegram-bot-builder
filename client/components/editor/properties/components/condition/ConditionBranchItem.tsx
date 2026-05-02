@@ -45,8 +45,8 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
   'is_admin': 'Если пользователь — администратор бота',
   'is_premium': 'Если пользователь — Telegram Premium',
   'is_bot': 'Если пользователь — бот',
-  'is_subscribed': 'Если пользователь подписан на канал',
-  'is_not_subscribed': 'Если пользователь не подписан на канал',
+  'is_subscribed': 'Если пользователь подписан на канал / состоит в группе',
+  'is_not_subscribed': 'Если пользователь не подписан на канал / не состоит в группе',
   'else': 'Во всех остальных случаях',
 };
 
@@ -104,7 +104,7 @@ export function getSelectedLabel(
  */
 function buildSubscriptionLabel(value: string, mode: 'all' | 'any' | undefined, negated: boolean): string {
   const channels = value ? value.split(',').map(c => c.trim()).filter(Boolean) : [];
-  if (channels.length === 0) return negated ? 'Если пользователь не подписан на канал' : 'Если пользователь подписан на канал';
+  if (channels.length === 0) return negated ? 'Если пользователь не подписан на канал / не состоит в группе' : 'Если пользователь подписан на канал / состоит в группе';
   if (channels.length === 1) {
     return negated
       ? `Не подписан на ${channels[0]}`
