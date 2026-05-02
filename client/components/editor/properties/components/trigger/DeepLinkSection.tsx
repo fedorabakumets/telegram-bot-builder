@@ -9,7 +9,6 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 
 /**
  * Пропсы компонента DeepLinkSection
@@ -82,10 +81,12 @@ export function DeepLinkSection({
 
       {/* Сохранить в переменную */}
       <div className="flex items-center gap-2">
-        <Checkbox
+        <input
+          type="checkbox"
           id="deepLinkSaveToVar"
           checked={deepLinkSaveToVar}
-          onCheckedChange={(checked) => onChange({ deepLinkSaveToVar: Boolean(checked) })}
+          onChange={(e) => onChange({ deepLinkSaveToVar: e.target.checked })}
+          className="w-4 h-4 rounded border border-sky-400 dark:border-sky-600 bg-white dark:bg-slate-800 accent-sky-500 cursor-pointer"
         />
         <Label htmlFor="deepLinkSaveToVar" className="text-xs cursor-pointer">
           Сохранить в переменную
