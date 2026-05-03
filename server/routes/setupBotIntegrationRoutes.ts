@@ -10,6 +10,7 @@
 
 import type { Express } from "express";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
+import { getTelegramFileHandler } from "./botIntegration/handlers/botData/getTelegramFileHandler";
 import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, saveMessageHandler, deleteMessagesHandler } from "./botIntegration/handlers/messages";
 import { registerTelegramMediaHandler } from "./botIntegration/handlers/media";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler } from "./botIntegration/handlers/groups";
@@ -60,6 +61,16 @@ export function setupBotIntegrationRoutes(app: Express) {
      * @route GET /api/projects/:projectId/users/:userId/avatar
      */
     app.get("/api/projects/:projectId/users/:userId/avatar", getAvatarHandler);
+
+    /**
+     * Обработчик маршрута GET /api/projects/:projectId/telegram-file
+     *
+     * Проксирует файл из Telegram CDN, скрывая токен бота от клиента.
+     * Используется для отображения входящих фото в диалоге.
+     *
+     * @route GET /api/projects/:projectId/telegram-file?fileId=...
+     */
+    app.get("/api/projects/:projectId/telegram-file", getTelegramFileHandler);
 
     /**
      * Обработчик маршрута GET /api/projects/:projectId/users/:userId/messages

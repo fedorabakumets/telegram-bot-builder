@@ -56,7 +56,12 @@ export function MessageBubble({ message, index, user, bot, projectId }: MessageB
         />
 
         <div className="flex flex-col gap-1">
-          <MessageMedia media={message.media} />
+          <MessageMedia
+            media={message.media}
+            messageData={message.messageData}
+            projectId={projectId}
+            tokenId={message.tokenId ?? undefined}
+          />
 
           <FormattedText text={message.messageText} messageType={messageType} />
 
