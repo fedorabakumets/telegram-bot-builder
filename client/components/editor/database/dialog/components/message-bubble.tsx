@@ -35,12 +35,33 @@ interface MessageBubbleProps {
 }
 
 /**
+ * Медиа-плейсхолдеры — текст который не нужно показывать если есть медиа
+ */
+const MEDIA_PLACEHOLDERS = new Set(['[Фото]', '[медиа]', '[Photo]']);
+
+/**
+ * Проверяет есть ли медиа для отображения (локальное или через file_id)
+ * @param message - Сообщение
+ * @returns true если есть что показать
+ */
+function hasVisibleMedia(message: BotMessageWithMedia): boolean {
+  if (Array.isArray(message.media) && message.media.length > 0) return true;
+  const data = message.messageData as Record<string, unknown> | null;
+  return !!(data?.photo && typeof (data.photo as any)?.file_id === 'string');
+}
+
+/**
  * Компонент отображения одного сообщения
  */
 export function MessageBubble({ message, index, user, bot, projectId }: MessageBubbleProps) {
   const isBot = message.messageType === 'bot';
   const isUser = message.messageType === 'user';
   const messageType: 'bot' | 'user' = isBot ? 'bot' : 'user';
+
+  /** Скрываем текст-плейсхолдер если медиа отображается */
+  const displayText = hasVisibleMedia(message) && MEDIA_PLACEHOLDERS.has(message.messageText ?? '')
+    ? null
+    : message.messageText;
 
   return (
     <div
@@ -63,7 +84,7 @@ export function MessageBubble({ message, index, user, bot, projectId }: MessageB
             tokenId={message.tokenId ?? undefined}
           />
 
-          <FormattedText text={message.messageText} messageType={messageType} />
+          <FormattedText text={displayText} messageType={messageType} />
 
           {isBot && hasButtons(message) && (
             <MessageButtons buttons={getButtons(message)} index={index} />
