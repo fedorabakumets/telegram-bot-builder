@@ -32,11 +32,11 @@ const minimalProject = {
 };
 
 /**
- * Загружает реальный проект из bots/новый/новый.json
+ * Загружает реальный проект из bots/новый_бот_1_238_150/project.json
  * @returns Объект проекта
  */
 function loadRealProject(): unknown {
-  return JSON.parse(fs.readFileSync('bots/новый/новый.json', 'utf-8'));
+  return JSON.parse(fs.readFileSync('bots/новый_бот_1_238_150/project.json', 'utf-8'));
 }
 
 /**
@@ -380,8 +380,10 @@ test('I08', 'userDatabaseEnabled: true → Redis publish происходит П
   ok(publishIdx > insertIdx, 'Redis publish должен быть ПОСЛЕ INSERT');
 });
 
-test('I09', 'userDatabaseEnabled: false → НЕТ _redis_client.publish в save_message_to_api', () => {
-  ok(!codeNoDb.includes('_redis_client.publish'), '_redis_client.publish НЕ должен быть без DB');
+test('I09', 'userDatabaseEnabled: false → НЕТ bot:message: канала в коде', () => {
+  // _redis_client.publish используется для bot:started/bot:stopped даже без DB,
+  // но канал bot:message: должен появляться только при userDatabaseEnabled=true
+  ok(!codeNoDb.includes('bot:message:'), 'канал bot:message: НЕ должен быть без DB');
 });
 
 test('I10', 'userDatabaseEnabled: true → синтаксис Python OK с Redis publish', () => {
