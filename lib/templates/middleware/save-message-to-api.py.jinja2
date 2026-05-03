@@ -1,10 +1,13 @@
 {#
-  Функция сохранения сообщений в базу данных напрямую через asyncpg
+  Функция сохранения сообщений в базу данных напрямую через asyncpg.
+  После успешного сохранения публикует событие в Redis для мгновенного уведомления UI.
 #}
 
 # Функция для сохранения сообщений в базу данных напрямую (без API)
 async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
-    """Сохраняет сообщение в базу данных напрямую через asyncpg"""
+    """Сохраняет сообщение в базу данных напрямую через asyncpg.
+    После успешного сохранения публикует событие в Redis канал bot:message:{PROJECT_ID}:{TOKEN_ID}.
+    """
     if not db_pool:
         return None
     try:
@@ -27,6 +30,27 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
             tg_message_id = (message_data or {}).get("message_id")
             tg_mid_str = f", tg_message_id={tg_message_id}" if tg_message_id else ""
             logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result['id']}{tg_mid_str})")
+
+            # Публикуем событие в Redis для мгновенного уведомления UI (fire-and-forget)
+            if _redis_client:
+                try:
+                    _redis_payload = json.dumps({
+                        "userId": str(user_id),
+                        "messageType": message_type,
+                        "messageText": message_text,
+                        "messageData": message_data or {},
+                        "nodeId": node_id,
+                        "id": result['id'],
+                        "createdAt": result['created_at'].isoformat() if result['created_at'] else None,
+                    }, ensure_ascii=False)
+                    await _redis_client.publish(
+                        f"bot:message:{PROJECT_ID}:{TOKEN_ID}",
+                        _redis_payload
+                    )
+                    logging.debug(f"📡 Redis publish: bot:message:{PROJECT_ID}:{TOKEN_ID}")
+                except Exception as _re:
+                    logging.debug(f"⚠️ Redis publish не удался (не критично): {_re}")
+
             return {"id": result['id'], "user_id": result['user_id'], "message_type": result['message_type'], "created_at": result['created_at']}
     except Exception as e:
         logging.error(f"❌ Ошибка сохранения сообщения в БД: {e}")
@@ -36,6 +60,7 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
 def _fire_save_message(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
     """Запускает save_message_to_api в фоне (fire-and-forget).
     Не блокирует выполнение — сообщение сохраняется асинхронно.
+    После сохранения в БД автоматически публикует событие в Redis.
 
     @param user_id - Идентификатор пользователя
     @param message_type - Тип сообщения: "user" или "bot"
@@ -53,3 +78,84 @@ def _fire_save_message(user_id: str, message_type: str, message_text: str = None
         ))
     except Exception as e:
         logging.warning(f"⚠️ _fire_save_message: не удалось создать задачу: {e}")
+
+{% if saveIncomingMedia %}
+async def _save_incoming_photo_to_db(file_id: str, photo_meta: dict):
+    """Скачивает входящее фото с Telegram и сохраняет в media_files + bot_message_media.
+    Вызывается fire-and-forget после сохранения сообщения в БД.
+    Ждёт появления записи сообщения в БД (до 3 секунд).
+    """
+    if not db_pool:
+        return
+    try:
+        import aiohttp as _aiohttp
+
+        # Получаем file_path от Telegram
+        _tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={file_id}"
+        async with _aiohttp.ClientSession() as _session:
+            async with _session.get(_tg_url) as _resp:
+                _tg_data = await _resp.json()
+                if not _tg_data.get("ok"):
+                    logging.warning(f"⚠️ Telegram getFile failed: {_tg_data}")
+                    return
+                _file_path = _tg_data["result"]["file_path"]
+                _file_size = _tg_data["result"].get("file_size", 0)
+
+            # Скачиваем файл
+            _download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{_file_path}"
+            async with _session.get(_download_url) as _dl_resp:
+                _file_bytes = await _dl_resp.read()
+
+        # Сохраняем файл на диск
+        import os as _os
+        _date_str = __import__('datetime').datetime.now().strftime('%Y-%m-%d')
+        _uploads_dir = _os.path.join(PROJECT_DIR, '..', '..', 'uploads', str(PROJECT_ID), _date_str)
+        _os.makedirs(_uploads_dir, exist_ok=True)
+        _file_name = f"photo_{file_id[-20:].replace('-', '_')}.jpg"
+        _local_path = _os.path.join(_uploads_dir, _file_name)
+        with open(_local_path, 'wb') as _f:
+            _f.write(_file_bytes)
+
+        _rel_path = f"uploads/{PROJECT_ID}/{_date_str}/{_file_name}"
+        _url = f"/{_rel_path}"
+
+        # Ждём появления последнего сообщения от пользователя в БД (до 3 сек)
+        _msg_id = None
+        async with db_pool.acquire() as _conn:
+            for _ in range(6):
+                _row = await _conn.fetchrow(
+                    "SELECT id FROM bot_messages WHERE project_id=$1 AND token_id=$2 AND message_type='user' ORDER BY created_at DESC LIMIT 1",
+                    PROJECT_ID, TOKEN_ID
+                )
+                if _row:
+                    _msg_id = _row['id']
+                    break
+                await __import__('asyncio').sleep(0.5)
+
+            if not _msg_id:
+                logging.warning("⚠️ _save_incoming_photo_to_db: сообщение не найдено в БД")
+                return
+
+            # Сохраняем в media_files
+            _media_row = await _conn.fetchrow(
+                """INSERT INTO media_files (project_id, file_name, file_type, file_path, file_size, mime_type, url, is_public, usage_count)
+                   VALUES ($1, $2, 'photo', $3, $4, 'image/jpeg', $5, 0, 0)
+                   RETURNING id""",
+                PROJECT_ID, _file_name, _rel_path, _file_size, _url
+            )
+            _media_id = _media_row['id']
+
+            # Связываем с сообщением
+            await _conn.execute(
+                "INSERT INTO bot_message_media (message_id, media_file_id, media_kind, order_index) VALUES ($1, $2, 'photo', 0)",
+                _msg_id, _media_id
+            )
+            await _conn.execute(
+                "UPDATE bot_messages SET primary_media_id=$1 WHERE id=$2",
+                _media_id, _msg_id
+            )
+            logging.info(f"📸 Фото сохранено: {_url} (message_id={_msg_id})")
+
+    except Exception as _e:
+        logging.debug(f"⚠️ _save_incoming_photo_to_db не удалось: {_e}")
+{% endif %}

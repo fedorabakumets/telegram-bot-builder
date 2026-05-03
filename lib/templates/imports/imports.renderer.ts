@@ -45,6 +45,7 @@ export function generateImports(params: ImportsTemplateParams): string {
     hasReplyKeyboard: params.hasReplyKeyboard ?? false,
     hasLocalMediaFiles: params.hasLocalMediaFiles ?? false,
     hasBotCommands: params.hasBotCommands ?? false,
+    hasDeepLinkTriggers: params.hasDeepLinkTriggers ?? false,
   });
   return renderPartialTemplate('imports/imports.py.jinja2', validated);
 }

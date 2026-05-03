@@ -9,5 +9,6 @@
   "files.associations": {
     "package.json": "json"
   },
-  "typescript.autoClosingTags": false
+  "typescript.autoClosingTags": false,
+  "kiro.model": "auto"
 }

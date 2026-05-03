@@ -15,6 +15,7 @@ import type { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { TriggerTargetSelector } from './TriggerTargetSelector';
+import { DeepLinkSection } from './DeepLinkSection';
 import { formatNodeDisplay as defaultFormatNodeDisplay } from '../../utils/node-formatters';
 
 /**
@@ -35,10 +36,10 @@ interface CommandTriggerConfigurationProps {
  * Компонент настройки узла триггера команды
  *
  * Отображает поля: команда, описание для BotFather,
- * флаги "показывать в меню" и "только приватные чаты".
+ * блок Deep Link (только для /start) и выбор следующего узла.
  *
- * @param props - Пропсы компонента
- * @returns JSX-элемент панели настроек триггера
+ * @param props - Свойства компонента
+ * @returns JSX элемент панели настроек триггера
  */
 export function CommandTriggerConfiguration({
   selectedNode,
@@ -46,6 +47,16 @@ export function CommandTriggerConfiguration({
   getAllNodesFromAllSheets,
   formatNodeDisplay = defaultFormatNodeDisplay,
 }: CommandTriggerConfigurationProps) {
+  const isStartCommand = selectedNode.data?.command === '/start';
+
+  /**
+   * Обновляет поля Deep Link в данных узла
+   * @param updates - Частичные обновления полей Deep Link
+   */
+  function handleDeepLinkChange(updates: Record<string, unknown>) {
+    onNodeUpdate(selectedNode.id, updates);
+  }
+
   return (
     <div className="space-y-4 p-4">
       {/* Команда */}
@@ -68,6 +79,17 @@ export function CommandTriggerConfiguration({
           placeholder="Описание команды"
         />
       </div>
+
+      {/* Deep Link — только для команды /start */}
+      {isStartCommand && (
+        <DeepLinkSection
+          deepLinkMatchMode={selectedNode.data?.deepLinkMatchMode ?? 'exact'}
+          deepLinkParam={selectedNode.data?.deepLinkParam ?? ''}
+          deepLinkSaveToVar={selectedNode.data?.deepLinkSaveToVar ?? false}
+          deepLinkVarName={selectedNode.data?.deepLinkVarName ?? ''}
+          onChange={handleDeepLinkChange}
+        />
+      )}
 
       {/* Следующий узел — задаёт выходное соединение (жёлтая линия на холсте) */}
       <TriggerTargetSelector

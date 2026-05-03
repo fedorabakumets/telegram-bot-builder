@@ -1,6 +1,6 @@
 /**
  * @fileoverview Подписчик Redis Pub/Sub для событий платформы.
- * Слушает каналы bot:started, bot:stopped, bot:error и пробрасывает
+ * Слушает каналы bot:started, bot:stopped, bot:error, bot:message и пробрасывает
  * события в broadcastProjectEvent для рассылки WebSocket-клиентам.
  * @module server/redis/redisPlatformSubscriber
  */
@@ -22,6 +22,7 @@ const CHANNEL_TYPE_MAP: Record<string, ProjectEvent['type']> = {
   'bot:started': 'bot-started',
   'bot:stopped': 'bot-stopped',
   'bot:error': 'bot-error',
+  'bot:message': 'new-message',
 };
 
 /**
@@ -31,6 +32,15 @@ const CHANNEL_TYPE_MAP: Record<string, ProjectEvent['type']> = {
  */
 function isLogsChannel(channel: string): boolean {
   return channel.startsWith('bot:logs:');
+}
+
+/**
+ * Проверяет, относится ли канал к сообщениям диалога.
+ * @param channel - Имя Redis-канала
+ * @returns `true`, если канал начинается с `bot:message:`
+ */
+function isMessageChannel(channel: string): boolean {
+  return channel.startsWith('bot:message:');
 }
 
 /**
@@ -44,7 +54,7 @@ function parseChannel(channel: string): {
   projectId: number;
   tokenId: number;
 } | null {
-  // Формат: bot:started:123:456
+  // Формат: bot:started:123:456 или bot:message:123:456
   const parts = channel.split(':');
   if (parts.length < 4) return null;
 

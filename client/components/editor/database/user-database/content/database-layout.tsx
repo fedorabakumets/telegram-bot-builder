@@ -10,6 +10,7 @@ import { DatabaseStatsSection } from './database-stats-section';
 import { DatabaseFiltersSection } from './database-filters-section';
 import { DatabaseTabs } from './database-tabs';
 import { DatabaseDisabled } from '../components/header';
+import { SaveMediaToggle } from '../components/SaveMediaToggle';
 
 /**
  * Компонент контента панели базы данных
@@ -22,6 +23,7 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
     isMobile,
     project,
     visibleColumns,
+    saveIncomingMedia,
     ...restProps
   } = props;
 
@@ -37,6 +39,11 @@ export function DatabaseContent(props: DatabaseContentProps): React.JSX.Element 
         {isDatabaseEnabled && (
           <div className="flex-1 flex flex-col min-h-0 w-full">
             <DatabaseStatsSection stats={restProps.stats} />
+            <SaveMediaToggle
+              projectId={restProps.projectId}
+              tokenId={restProps.selectedTokenId}
+              saveIncomingMedia={saveIncomingMedia ?? null}
+            />
             <DatabaseFiltersSection {...restProps} />
             <DatabaseTabs 
               {...restProps} 

@@ -32,11 +32,11 @@ const minimalProject = {
 };
 
 /**
- * Загружает реальный проект из bots/новый/новый.json
+ * Загружает реальный проект из bots/новый_бот_1_238_150/project.json
  * @returns Объект проекта
  */
 function loadRealProject(): unknown {
-  return JSON.parse(fs.readFileSync('bots/новый/новый.json', 'utf-8'));
+  return JSON.parse(fs.readFileSync('bots/новый_бот_1_238_150/project.json', 'utf-8'));
 }
 
 /**
@@ -334,6 +334,60 @@ test('H07', 'синтаксис Python OK с _RedisLogHandler', () => {
 
 test('H08', 'синтаксис Python OK с _RedisLogHandler + БД', () => {
   syntax(codeWithDb, 'h08');
+});
+
+// ══ Блок I: Redis publish в save_message_to_api ════════════════════════════════
+console.log('\n══ Блок I: Redis publish в save_message_to_api ════════════════════════');
+
+test('I01', 'userDatabaseEnabled: true → save_message_to_api содержит _redis_client.publish', () => {
+  ok(codeWithDb.includes('_redis_client.publish'), '_redis_client.publish должен быть в коде при DB');
+});
+
+test('I02', 'userDatabaseEnabled: true → Redis publish использует канал bot:message:', () => {
+  ok(codeWithDb.includes('bot:message:'), 'канал bot:message: должен быть в коде');
+});
+
+test('I03', 'userDatabaseEnabled: true → Redis payload содержит поле userId', () => {
+  ok(codeWithDb.includes('"userId"'), 'поле userId должно быть в Redis payload');
+});
+
+test('I04', 'userDatabaseEnabled: true → Redis payload содержит поле messageType', () => {
+  ok(codeWithDb.includes('"messageType"'), 'поле messageType должно быть в Redis payload');
+});
+
+test('I05', 'userDatabaseEnabled: true → Redis payload содержит поле messageText', () => {
+  ok(codeWithDb.includes('"messageText"'), 'поле messageText должно быть в Redis payload');
+});
+
+test('I06', 'userDatabaseEnabled: true → Redis payload содержит поле createdAt', () => {
+  ok(codeWithDb.includes('"createdAt"'), 'поле createdAt должно быть в Redis payload');
+});
+
+test('I07', 'userDatabaseEnabled: true → Redis publish обёрнут в try/except (не блокирует БД)', () => {
+  const publishIdx = codeWithDb.indexOf('_redis_client.publish');
+  ok(publishIdx !== -1, '_redis_client.publish должен быть в коде');
+  const tryBeforePublish = codeWithDb.lastIndexOf('try:', publishIdx);
+  const exceptAfterPublish = codeWithDb.indexOf('except Exception as _re', publishIdx);
+  ok(tryBeforePublish !== -1 && tryBeforePublish < publishIdx, 'try: должен быть перед publish');
+  ok(exceptAfterPublish !== -1, 'except Exception as _re должен быть после publish');
+});
+
+test('I08', 'userDatabaseEnabled: true → Redis publish происходит ПОСЛЕ INSERT', () => {
+  const insertIdx = codeWithDb.indexOf('INSERT INTO bot_messages');
+  const publishIdx = codeWithDb.indexOf('_redis_client.publish');
+  ok(insertIdx !== -1, 'INSERT INTO bot_messages должен быть в коде');
+  ok(publishIdx !== -1, '_redis_client.publish должен быть в коде');
+  ok(publishIdx > insertIdx, 'Redis publish должен быть ПОСЛЕ INSERT');
+});
+
+test('I09', 'userDatabaseEnabled: false → НЕТ bot:message: канала в коде', () => {
+  // _redis_client.publish используется для bot:started/bot:stopped даже без DB,
+  // но канал bot:message: должен появляться только при userDatabaseEnabled=true
+  ok(!codeNoDb.includes('bot:message:'), 'канал bot:message: НЕ должен быть без DB');
+});
+
+test('I10', 'userDatabaseEnabled: true → синтаксис Python OK с Redis publish', () => {
+  syntax(codeWithDb, 'i10');
 });
 
 // ══ Итог ══════════════════════════════════════════════════════════════════════

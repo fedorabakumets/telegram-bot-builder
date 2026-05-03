@@ -18,9 +18,10 @@ interface FormattedTextProps {
 }
 
 /**
- * Компонент текста с поддержкой HTML-форматирования
+ * Компонент текста с поддержкой HTML-форматирования.
+ * Возвращает null если текст пустой или отсутствует.
  * @param props - Свойства компонента
- * @returns JSX-элемент с форматированным текстом
+ * @returns JSX-элемент с форматированным текстом или null
  */
 export function FormattedText({ text, messageType }: FormattedTextProps) {
   const isBot = messageType === 'bot';
@@ -30,6 +31,9 @@ export function FormattedText({ text, messageType }: FormattedTextProps) {
     if (typeof text !== 'string' || !text.trim()) return null;
     return parseHTML(text.trimEnd());
   }, [text]);
+
+  // Не рендерим пустой блок
+  if (!formattedContent) return null;
 
   return (
     <div

@@ -1,7 +1,18 @@
+/**
+ * @fileoverview Генераторы дополнительных файлов проекта Python-бота
+ * @module lib/scaffolding/generateRequirementsTxt
+ */
+
 // ============================================================================
 // ГЕНЕРАТОРЫ ДОПОЛНИТЕЛЬНЫХ ФАЙЛОВ ПРОЕКТА
 // ============================================================================
 
+/**
+ * Генерирует содержимое requirements.txt для Python-бота.
+ * Включает все необходимые зависимости с совместимыми версиями,
+ * не требующими компиляции Rust.
+ * @returns Строка с зависимостями в формате pip requirements
+ */
 export function generateRequirementsTxt(): string {
   const lines = [
     '# Telegram Bot Requirements - Updated compatible versions',
@@ -19,7 +30,7 @@ export function generateRequirementsTxt(): string {
     'google-auth>=2.0.0',
     'gspread>=6.0.0',
     'telethon>=1.42.0  # For Client API (Userbot) broadcast functionality',
-    'redis>=7.4.0  # Для Redis кэша и FSM хранилища (опционально, нужен REDIS_URL в .env)',
+    'redis>=5.0.0  # Для Redis кэша, FSM хранилища и Pub/Sub уведомлений (redis[asyncio] включён)',
     '',
     '# Note: These versions have pre-compiled wheels and do not require Rust',
     '# If you still encounter issues, try:',
@@ -27,7 +38,6 @@ export function generateRequirementsTxt(): string {
     '# pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles asyncpg',
     '',
     '# Optional dependencies for extended functionality',
-    'redis>=7.4.0  # Для Redis кэша и FSM хранилища (опционально, нужен REDIS_URL в .env)',
     '# motor>=3.3.2  # For MongoDB',
     '# pillow>=10.1.0  # For image processing'
   ];

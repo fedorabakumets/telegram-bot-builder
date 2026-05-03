@@ -34,10 +34,13 @@ export function useUsers(params: UseUsersParams) {
     queryKey: [requestUrl, selectedTokenId],
     queryFn: async () => {
       const response = await fetch(requestUrl, { credentials: 'include' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
     },
+    enabled: !!projectId,
     staleTime: 0,
     gcTime: 0,
+    retry: false,
   });
 
   return { users, isUsersLoading: isLoading, refetchUsers: refetch };

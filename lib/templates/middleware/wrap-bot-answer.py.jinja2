@@ -106,13 +106,23 @@ def _wrap_message_answer(bot_instance):
     async def _patched_answer_video(self, video, *args, caption=None, node_id=None, **kwargs):
         result = await _orig_answer_video(self, video, *args, caption=caption, **kwargs)
         try:
+            message_data_obj = {"message_id": result.message_id if result else None}
+            if result and hasattr(result, "video") and result.video:
+                message_data_obj["video"] = {
+                    "file_id": result.video.file_id,
+                    "width": result.video.width,
+                    "height": result.video.height,
+                    "duration": result.video.duration,
+                    "mime_type": result.video.mime_type if hasattr(result.video, "mime_type") else None,
+                    "file_size": result.video.file_size if hasattr(result.video, "file_size") else None,
+                }
             # Сохраняем исходящее видео бота асинхронно (fire-and-forget)
             _fire_save_message(
                 user_id=str(self.chat.id),
                 message_type="bot",
                 message_text=caption or "[Видео]",
                 node_id=node_id,
-                message_data={"message_id": result.message_id if result else None},
+                message_data=message_data_obj,
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования message.answer_video: {e}")
@@ -134,13 +144,22 @@ def _wrap_message_answer(bot_instance):
     async def _patched_answer_audio(self, audio, *args, caption=None, node_id=None, **kwargs):
         result = await _orig_answer_audio(self, audio, *args, caption=caption, **kwargs)
         try:
+            message_data_obj = {"message_id": result.message_id if result else None}
+            if result and hasattr(result, "audio") and result.audio:
+                message_data_obj["audio"] = {
+                    "file_id": result.audio.file_id,
+                    "duration": result.audio.duration,
+                    "mime_type": result.audio.mime_type if hasattr(result.audio, "mime_type") else None,
+                    "file_size": result.audio.file_size if hasattr(result.audio, "file_size") else None,
+                    "title": result.audio.title if hasattr(result.audio, "title") else None,
+                }
             # Сохраняем исходящее аудио бота асинхронно (fire-and-forget)
             _fire_save_message(
                 user_id=str(self.chat.id),
                 message_type="bot",
                 message_text=caption or "[Аудио]",
                 node_id=node_id,
-                message_data={"message_id": result.message_id if result else None},
+                message_data=message_data_obj,
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования message.answer_audio: {e}")
@@ -162,13 +181,21 @@ def _wrap_message_answer(bot_instance):
     async def _patched_answer_document(self, document, *args, caption=None, node_id=None, **kwargs):
         result = await _orig_answer_document(self, document, *args, caption=caption, **kwargs)
         try:
+            message_data_obj = {"message_id": result.message_id if result else None}
+            if result and hasattr(result, "document") and result.document:
+                message_data_obj["document"] = {
+                    "file_id": result.document.file_id,
+                    "file_name": result.document.file_name if hasattr(result.document, "file_name") else None,
+                    "mime_type": result.document.mime_type if hasattr(result.document, "mime_type") else None,
+                    "file_size": result.document.file_size if hasattr(result.document, "file_size") else None,
+                }
             # Сохраняем исходящий документ бота асинхронно (fire-and-forget)
             _fire_save_message(
                 user_id=str(self.chat.id),
                 message_type="bot",
                 message_text=caption or "[Документ]",
                 node_id=node_id,
-                message_data={"message_id": result.message_id if result else None},
+                message_data=message_data_obj,
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования message.answer_document: {e}")

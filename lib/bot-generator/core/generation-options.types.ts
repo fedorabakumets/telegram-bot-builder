@@ -34,6 +34,8 @@ export interface GenerationOptions {
   webhookUrl?: string | null;
   /** Порт aiohttp сервера для webhook режима */
   webhookPort?: number | null;
+  /** Сохранять входящие фото от пользователей в БД */
+  saveIncomingMedia?: boolean;
 }
 
 /**
@@ -51,6 +53,7 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   autoRegisterUsers: false,
   webhookUrl: null,
   webhookPort: null,
+  saveIncomingMedia: false,
 } as const;
 
 /**

@@ -22,12 +22,14 @@ import { renderPartialTemplate } from '../template-renderer';
  * @param hasInlineButtonsValue - Генерировать callback_query_logging_middleware
  * @param projectId - ID проекта для save_message_to_api
  * @param autoRegisterUsers - Генерировать register_user_middleware (по умолчанию true)
+ * @param saveIncomingMedia - Генерировать логику скачивания входящих фото (по умолчанию false)
  */
 export function generateMessageLoggingCode(
   userDatabaseEnabled: boolean,
   hasInlineButtonsValue: boolean,
   projectId: number | null,
-  autoRegisterUsers: boolean = true
+  autoRegisterUsers: boolean = true,
+  saveIncomingMedia: boolean = false
 ): string {
   let code = '';
 
@@ -36,10 +38,11 @@ export function generateMessageLoggingCode(
     userDatabaseEnabled,
     hasInlineButtons: hasInlineButtonsValue,
     autoRegisterUsers,
+    saveIncomingMedia,
   });
 
   if (userDatabaseEnabled) {
-    code += renderPartialTemplate('middleware/save-message-to-api.py.jinja2', { projectId });
+    code += renderPartialTemplate('middleware/save-message-to-api.py.jinja2', { projectId, saveIncomingMedia });
     code += renderPartialTemplate('middleware/answer-with-logging.py.jinja2', {});
     code += renderPartialTemplate('middleware/send-message-with-logging.py.jinja2', {});
     code += renderPartialTemplate('middleware/send-photo-with-logging.py.jinja2', {});

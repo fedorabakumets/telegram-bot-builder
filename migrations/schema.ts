@@ -51,6 +51,8 @@ export const botTokens = pgTable("bot_tokens", {
 	autoRestart: integer("auto_restart").default(0),
 	maxRestartAttempts: integer("max_restart_attempts").default(3),
 	logLevel: text("log_level").default("WARNING"),
+	protectContent: integer("protect_content").default(0),
+	saveIncomingMedia: integer("save_incoming_media").default(0),
 	executionMode: text("execution_mode").default("polling"),
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow(),

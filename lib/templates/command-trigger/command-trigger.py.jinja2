@@ -10,13 +10,181 @@
     - targetNodeType: string  — тип целевого узла
     - adminOnly: bool         — только администраторы
     - requiresAuth: bool      — требуется авторизация
+    - deepLinkMatchMode: str  — режим совпадения: 'exact' или 'startsWith'
+    - deepLinkParam: str      — параметр deep link, например "ref" или "ref_"
+    - deepLinkSaveToVar: bool — сохранять значение в переменную
+    - deepLinkVarName: str    — имя переменной для сохранения
 #}
 
-# Обработчики командных триггеров
+{# Единый роутер deep link — регистрируется ПЕРВЫМ чтобы иметь приоритет над CommandStart(deep_link=False) #}
+{%- set deepLinkEntries = commandTriggerEntries | selectattr("deepLinkParam") | list -%}
+
+{%- if deepLinkEntries | length > 0 %}
+
+@dp.message(CommandStart(deep_link=True))
+async def deep_link_router(message: types.Message, command: CommandObject, state: FSMContext = None):
+    args = command.args or ""
+    user_id = message.from_user.id
+    username = message.from_user.username or message.from_user.first_name or str(user_id)
+    logging.info(f"🔗 [DeepLink] Пользователь {user_id} (@{username}) перешёл по deep link: '{args}'")
+
+    # Сохраняем utm_source только при первом визите (не перезаписываем — первое касание важнее)
+    existing_utm = user_data.get(user_id, {}).get("utm_source")
+    if not existing_utm:
+        new_utm = args if args else "direct"
+        await set_user_var(user_id, "utm_source", new_utm)
+        logging.info(f"🔗 [DeepLink] utm_source записан: '{new_utm}' для пользователя {user_id}")
+    else:
+        logging.info(f"🔗 [DeepLink] utm_source уже есть: '{existing_utm}' — не перезаписываем")
+
+    {% for entry in deepLinkEntries -%}
+    {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+    {%- if entry.deepLinkMatchMode == 'startsWith' %}
+    if args and args.startswith("{{ entry.deepLinkParam }}"):
+        logging.info(f"🔗 [DeepLink] Совпадение (startsWith '{{ entry.deepLinkParam }}'): args='{args}' → узел {{ entry.targetNodeId }}")
+    {%- else %}
+    if args == "{{ entry.deepLinkParam }}":
+        logging.info(f"🔗 [DeepLink] Совпадение (exact '{{ entry.deepLinkParam }}'): args='{args}' → узел {{ entry.targetNodeId }}")
+    {%- endif %}
+        {%- if entry.deepLinkSaveToVar and entry.deepLinkVarName %}
+        await set_user_var(user_id, "{{ entry.deepLinkVarName }}", args)
+        logging.info(f"🔗 [DeepLink] Переменная '{{ entry.deepLinkVarName }}' = '{args}' сохранена для {user_id}")
+        {%- endif %}
+
+        class MockCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self._is_fake = True
+                self.from_user = user
+                self.message = msg
+
+            async def answer(self, *args, **kwargs):
+                pass
+
+            async def edit_text(self, text, **kwargs):
+                try:
+                    return await self.message.edit_text(text, **kwargs)
+                except Exception as e:
+                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                    return await self.message.answer(text, **kwargs)
+
+        mock_callback = MockCallback("{{ entry.targetNodeId }}", message.from_user, message)
+        await handle_callback_{{ sanitized_target_id }}(mock_callback, state=state)
+        return
+
+    {% endfor %}
+    {%- set fallbackEntry = null -%}
+    {%- for entry in commandTriggerEntries -%}
+      {%- if entry.command == '/start' and not entry.deepLinkParam -%}
+        {%- if not fallbackEntry -%}
+          {%- set fallbackEntry = entry -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if not fallbackEntry -%}
+      {%- for entry in commandTriggerEntries -%}
+        {%- if entry.command == '/start' -%}
+          {%- if not fallbackEntry -%}
+            {%- set fallbackEntry = entry -%}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+    {%- if fallbackEntry %}
+    # Fallback: параметр не совпал — переходим на дефолтный /start сценарий
+    logging.warning(f"🔗 [DeepLink] Параметр '{args}' не распознан ни одной веткой — fallback на узел {{ fallbackEntry.targetNodeId }}")
+    {%- set fallback_target_id = fallbackEntry.targetNodeId | safe_name %}
+
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self._is_fake = True
+            self.from_user = user
+            self.message = msg
+
+        async def answer(self, *args, **kwargs):
+            pass
+
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+
+    mock_callback = MockCallback("{{ fallbackEntry.targetNodeId }}", message.from_user, message)
+    await handle_callback_{{ fallback_target_id }}(mock_callback, state=state)
+    {%- endif %}
+{%- endif %}
+
+{# Единый роутер прямого /start (без параметра) — регистрируется ВТОРЫМ после deep_link_router #}
+{%- set startEntries = commandTriggerEntries | selectattr("command", "equalto", "/start") | list -%}
+{%- set defaultStartEntry = null -%}
+{%- for entry in startEntries -%}
+  {%- if not entry.deepLinkParam and not defaultStartEntry -%}
+    {%- set defaultStartEntry = entry -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if not defaultStartEntry -%}
+  {%- for entry in startEntries -%}
+    {%- if not defaultStartEntry -%}
+      {%- set defaultStartEntry = entry -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- if defaultStartEntry %}
+{%- set default_start_target_id = defaultStartEntry.targetNodeId | safe_name %}
+
+@dp.message(CommandStart(deep_link=False))
+async def start_command_handler(message: types.Message, state: FSMContext = None):
+    user_id = message.from_user.id
+    logging.info(f"Пользователь {user_id} вызвал команду '/start' — триггер узла {{ defaultStartEntry.nodeId }}")
+    {%- if defaultStartEntry.adminOnly %}
+    if not await is_admin(user_id):
+        await message.answer("❌ У вас нет прав для выполнения этой команды")
+        return
+    {%- endif %}
+    {%- if defaultStartEntry.requiresAuth %}
+    if not await check_auth(user_id):
+        await message.answer("❌ Сначала запустите бота: /start")
+        return
+    {%- endif %}
+    # Сохраняем utm_source = "direct" при первом визите через /start (не перезаписываем)
+    existing_utm = user_data.get(user_id, {}).get("utm_source")
+    if not existing_utm:
+        await set_user_var(user_id, "utm_source", "direct")
+        logging.info(f"🔗 [DeepLink] Прямой /start — utm_source записан: 'direct' для {user_id}")
+    else:
+        logging.info(f"🔗 [DeepLink] Прямой /start — utm_source уже есть: '{existing_utm}' для {user_id}")
+
+    class MockCallback:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self._is_fake = True
+            self.from_user = user
+            self.message = msg
+
+        async def answer(self, *args, **kwargs):
+            pass
+
+        async def edit_text(self, text, **kwargs):
+            try:
+                return await self.message.edit_text(text, **kwargs)
+            except Exception as e:
+                logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                return await self.message.answer(text, **kwargs)
+
+    mock_callback = MockCallback("{{ defaultStartEntry.targetNodeId }}", message.from_user, message)
+    await handle_callback_{{ default_start_target_id }}(mock_callback, state=state)
+{%- endif %}
+
+# Обработчики остальных командных триггеров (не /start)
 {% for entry in commandTriggerEntries -%}
 {%- set sanitized_node_id = entry.nodeId | safe_name -%}
 {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
 {%- set cmd = entry.command | replace('/', '') -%}
+{%- if cmd != 'start' %}
 
 @dp.message(Command("{{ cmd }}"))
 async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message, state: FSMContext = None):
@@ -52,5 +220,5 @@ async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message
 
     mock_callback = MockCallback("{{ entry.targetNodeId }}", message.from_user, message)
     await handle_callback_{{ sanitized_target_id }}(mock_callback, state=state)
-
+{%- endif %}
 {% endfor %}

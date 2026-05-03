@@ -16,6 +16,7 @@
   @param {boolean} hasLocalMediaFiles - Есть ли локальные медиа файлы (нужен FSInputFile)
   @param {boolean} hasBotCommands - Есть ли команды для BotCommand (нужен BotCommand)
   @param {boolean} hasHttpRequestNodes - Есть ли узлы HTTP запросов (нужен aiohttp)
+  @param {boolean} hasDeepLinkTriggers - Есть ли deep link триггеры (нужен CommandObject)
 #}
 
 import asyncio
@@ -38,7 +39,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from typing import Optional, Callable, Awaitable, Any
 
 from dotenv import load_dotenv
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart, Command, CommandObject
 
 {%- if userDatabaseEnabled %}
 

@@ -9,6 +9,10 @@
 | Параметр | Тип | По умолчанию | Описание |
 |----------|-----|--------------|----------|
 | `userDatabaseEnabled` | `boolean` | `false` | Включена ли база данных пользователей |
+| `hasMessageLogging` | `boolean` | `false` | Генерировать функцию `log_message` |
+| `hasUserIdsTable` | `boolean` | `false` | Генерировать функцию `get_user_ids_from_db` |
+| `hasTelegramSettingsTable` | `boolean` | `false` | Создавать таблицу `user_telegram_settings` |
+| `hasUserDataAccess` | `boolean` | `false` | Генерировать функции чтения/записи переменных |
 
 ## Использование
 
@@ -189,3 +193,9 @@ database/
 - [`config.py.jinja2`](../config/config.md) — шаблон конфигурации
 - [`utils.py.jinja2`](../utils/utils.md) — шаблон утилит
 - [`main.py.jinja2`](../main/main.md) — шаблон запуска
+
+## Интеграция с Redis
+
+Функция `init_database()` инициализирует только PostgreSQL пул. Redis инициализируется отдельно через `init_redis_client()` из `config.py.jinja2`, которая вызывается в `main()` перед стартом бота.
+
+После инициализации Redis клиент доступен через глобальную переменную `_redis_client`. Функция `save_message_to_api` использует его для публикации событий в канал `bot:message:{PROJECT_ID}:{TOKEN_ID}`.

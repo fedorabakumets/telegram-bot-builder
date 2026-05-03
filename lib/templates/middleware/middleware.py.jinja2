@@ -93,6 +93,72 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
             if not message_text or message_text == "[медиа]":
                 message_text = "[Фото]"
 
+        # Проверяем наличие видео
+        elif event.video:
+            message_data["video"] = {
+                "file_id": event.video.file_id,
+                "file_unique_id": event.video.file_unique_id,
+                "width": event.video.width,
+                "height": event.video.height,
+                "duration": event.video.duration,
+                "file_size": event.video.file_size if hasattr(event.video, "file_size") else None,
+                "mime_type": event.video.mime_type if hasattr(event.video, "mime_type") else None,
+            }
+            if not message_text or message_text == "[медиа]":
+                message_text = "[Видео]"
+
+        # Проверяем наличие аудио
+        elif event.audio:
+            message_data["audio"] = {
+                "file_id": event.audio.file_id,
+                "file_unique_id": event.audio.file_unique_id,
+                "duration": event.audio.duration,
+                "file_size": event.audio.file_size if hasattr(event.audio, "file_size") else None,
+                "mime_type": event.audio.mime_type if hasattr(event.audio, "mime_type") else None,
+                "title": event.audio.title if hasattr(event.audio, "title") else None,
+                "performer": event.audio.performer if hasattr(event.audio, "performer") else None,
+            }
+            if not message_text or message_text == "[медиа]":
+                message_text = "[Аудио]"
+
+        # Проверяем наличие голосового сообщения
+        elif event.voice:
+            message_data["voice"] = {
+                "file_id": event.voice.file_id,
+                "file_unique_id": event.voice.file_unique_id,
+                "duration": event.voice.duration,
+                "file_size": event.voice.file_size if hasattr(event.voice, "file_size") else None,
+                "mime_type": event.voice.mime_type if hasattr(event.voice, "mime_type") else None,
+            }
+            if not message_text or message_text == "[медиа]":
+                message_text = "[Голосовое]"
+
+        # Проверяем наличие документа
+        elif event.document:
+            message_data["document"] = {
+                "file_id": event.document.file_id,
+                "file_unique_id": event.document.file_unique_id,
+                "file_name": event.document.file_name if hasattr(event.document, "file_name") else None,
+                "file_size": event.document.file_size if hasattr(event.document, "file_size") else None,
+                "mime_type": event.document.mime_type if hasattr(event.document, "mime_type") else None,
+            }
+            if not message_text or message_text == "[медиа]":
+                message_text = "[Документ]"
+
+        # Проверяем наличие стикера
+        elif event.sticker:
+            message_data["sticker"] = {
+                "file_id": event.sticker.file_id,
+                "file_unique_id": event.sticker.file_unique_id,
+                "width": event.sticker.width,
+                "height": event.sticker.height,
+                "is_animated": event.sticker.is_animated if hasattr(event.sticker, "is_animated") else False,
+                "is_video": event.sticker.is_video if hasattr(event.sticker, "is_video") else False,
+                "emoji": event.sticker.emoji if hasattr(event.sticker, "emoji") else None,
+            }
+            if not message_text or message_text == "[медиа]":
+                message_text = "[Стикер]"
+
         # Сохраняем сообщение в базу данных асинхронно (fire-and-forget)
         _fire_save_message(
             user_id=user_id,
@@ -100,6 +166,11 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
             message_text=message_text,
             message_data=message_data,
         )
+{% if saveIncomingMedia %}
+        # Если включено сохранение фото — скачиваем и сохраняем в фоне (fire-and-forget)
+        if photo_file_id:
+            asyncio.create_task(_save_incoming_photo_to_db(photo_file_id, message_data.get("photo", {})))
+{% endif %}
 
     except Exception as e:
         logging.error(f"Ошибка в middleware сохранения сообщений: {e}")

@@ -11,6 +11,8 @@ export const middlewareParamsSchema = z.object({
   userDatabaseEnabled: z.boolean().optional().default(false),
   /** Автоматически регистрировать пользователей при первом обращении */
   autoRegisterUsers: z.boolean().optional().default(false),
+  /** Сохранять входящие фото от пользователей в БД */
+  saveIncomingMedia: z.boolean().optional().default(false),
 });
 
 /** Тип параметров middleware (выведен из схемы) */

@@ -109,6 +109,8 @@ export interface GeneratePythonCodeOptions {
   webhookUrl?: string | null;
   /** Порт aiohttp сервера */
   webhookPort?: number | null;
+  /** Сохранять входящие фото от пользователей в БД */
+  saveIncomingMedia?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -159,6 +161,7 @@ function buildGenerationContext(
     autoRegisterUsers = false,
     webhookUrl = null,
     webhookPort = null,
+    saveIncomingMedia = false,
   } = options;
 
   const genOptions: GenerationOptions = {
@@ -170,6 +173,7 @@ function buildGenerationContext(
     autoRegisterUsers,
     webhookUrl,
     webhookPort,
+    saveIncomingMedia,
   };
 
   const context = createGenerationContext(botData, botName, groups, genOptions);
@@ -207,6 +211,7 @@ function generateCodeSections(
       hasReplyKeyboard: flags.hasReplyKeyboardResult,
       hasLocalMediaFiles: flags.hasLocalMediaFilesResult,
       hasBotCommands: flags.hasBotCommandsResult,
+      hasDeepLinkTriggers: flags.hasDeepLinkTriggersResult,
     })
   );
 
@@ -239,7 +244,8 @@ function generateCodeSections(
           userDatabaseEnabled,
           hasInlineButtons(nodes),
           context.projectId,
-          autoRegisterUsers
+          autoRegisterUsers,
+          !!context.options.saveIncomingMedia
         )
       : ''
   );
