@@ -25,7 +25,6 @@ export async function getMessagesHandler(req: Request, res: Response): Promise<v
         const userId = req.params.userId;
         const tokenId = getRequestTokenId(req);
         const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
-        const order = req.query.order === 'desc' ? 'desc' : 'asc';
         const messageType = req.query.messageType === 'user' || req.query.messageType === 'bot' 
             ? req.query.messageType 
             : undefined;
@@ -35,8 +34,9 @@ export async function getMessagesHandler(req: Request, res: Response): Promise<v
             return;
         }
 
-        const messages = await storage.getBotMessagesWithMedia(projectId, userId, limit, order, messageType, tokenId);
-        res.json(messages);
+        // Всегда берём последние N сообщений (DESC), затем реверсируем для хронологического порядка
+        const messages = await storage.getBotMessagesWithMedia(projectId, userId, limit, 'desc', messageType, tokenId);
+        res.json(messages.reverse());
     } catch (error) {
         console.error("Ошибка получения сообщений:", error);
         res.status(500).json({ message: "Не удалось получить сообщения" });
