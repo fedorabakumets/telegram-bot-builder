@@ -209,29 +209,44 @@ export function MessageMedia({ media, messageData, projectId, tokenId }: Message
 
   const sticker = extractMedia(messageData, 'sticker');
   if (sticker?.file_id) {
+    const stickerUrl = buildProxyUrl(sticker.file_id, projectId, tokenId);
     if (sticker.is_video) {
       return (
-        <div className="max-w-[120px]">
-          <video
-            src={buildProxyUrl(sticker.file_id, projectId, tokenId)}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-auto"
-          />
-        </div>
+        <>
+          <div
+            className="max-w-[120px] cursor-zoom-in"
+            onClick={() => setLightboxSrc(stickerUrl)}
+          >
+            <video
+              src={stickerUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-auto pointer-events-none"
+            />
+          </div>
+          {lightboxSrc && (
+            <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+          )}
+        </>
       );
     }
     return (
-      <div className="max-w-[120px]">
-        <img
-          src={buildProxyUrl(sticker.file_id, projectId, tokenId)}
-          alt={sticker.emoji || 'Стикер'}
-          className="w-full h-auto"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-        />
-      </div>
+      <>
+        <div className="max-w-[120px]">
+          <img
+            src={stickerUrl}
+            alt={sticker.emoji || 'Стикер'}
+            className="w-full h-auto cursor-zoom-in"
+            onClick={() => setLightboxSrc(stickerUrl)}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
+        </div>
+        {lightboxSrc && (
+          <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+        )}
+      </>
     );
   }
 
