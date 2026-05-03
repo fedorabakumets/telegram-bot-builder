@@ -23,7 +23,7 @@ import { eq } from "drizzle-orm";
 import { cleanupBotStates } from "../bots/cleanupBotStates";
 import { stopBot } from "../bots/stopBot";
 import dbRoutes from "../database/db-routes";
-import { db } from "../database/db";
+import { db, pool as dbPool } from "../database/db";
 import { initializeDatabaseTables } from "../database/init-db";
 import { ensureDefaultProject } from "../utils/ensureDefaultProject";
 import { downloadFileFromUrl } from "../files/downloadFileFromUrl";
@@ -2175,13 +2175,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       console.log(`Fetching users for project ${projectId}`);
 
-      // Connect directly to PostgreSQL to get data from bot_users table
-      const { Pool } = await import('pg');
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL
-      });
-
-      const result = await pool.query(`
+      const result = await dbPool.query(`
         SELECT
           ROW_NUMBER() OVER (ORDER BY bu.last_interaction DESC) AS id,
           bu.user_id::text AS "userId",
@@ -2209,8 +2203,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         GROUP BY bu.user_id, bu.username, bu.first_name, bu.last_name, bu.avatar_url, bu.registered_at, bu.last_interaction, bu.user_data, bu.is_active, bu.is_bot
         ORDER BY bu.last_interaction DESC
       `, [projectId, tokenId]);
-
-      // НЕ закрываем пул - он нужен для других запросов
 
       console.log(`Found ${result.rows.length} users for project ${projectId}`);
       res.json(result.rows);
@@ -2243,13 +2235,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
 
     try {
-      // Use direct PostgreSQL query on bot_users table
-      const { Pool } = await import('pg');
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL
-      });
-
-      const result = await pool.query(`
+      // Используем общий пул соединений для запроса к bot_users
+      const result = await dbPool.query(`
         SELECT
           COUNT(DISTINCT bu.user_id) as "totalUsers",
           COUNT(DISTINCT bu.user_id) FILTER (WHERE bu.is_active = 1) as "activeUsers",
@@ -2280,12 +2267,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Error fetching user stats:", error);
       // Fallback to user_bot_data table if bot_users doesn't exist
       try {
-        const { Pool } = await import('pg');
-        const pool = new Pool({
-          connectionString: process.env.DATABASE_URL
-        });
-
-        const result = await pool.query(`
+        const fallbackResult = await dbPool.query(`
           SELECT 
             COUNT(*) as "totalUsers",
             COUNT(*) FILTER (WHERE is_active = 1) as "activeUsers",
@@ -2299,9 +2281,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             AND ($2::integer IS NULL OR token_id = $2)
         `, [req.params.id, tokenId]);
 
-        // НЕ закрываем пул - он нужен для других запросов
-
-        const stats = result.rows[0];
+        const stats = fallbackResult.rows[0];
         Object.keys(stats).forEach(key => {
           if (typeof stats[key] === 'string' && !isNaN(stats[key] as any)) {
             stats[key] = parseInt(stats[key] as any);
@@ -2320,13 +2300,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const projectId = parseInt(req.params.id);
 
-      // Подключаемся напрямую к PostgreSQL для получения ответов пользователей из bot_users
-      const { Pool } = await import('pg');
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL
-      });
-
-      const result = await pool.query(`
+      // Используем общий пул соединений
+      const result = await dbPool.query(`
         SELECT 
           user_id,
           username,
@@ -2341,8 +2316,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           AND user_data != '{}'
         ORDER BY last_interaction DESC
       `, [projectId]);
-
-      // НЕ закрываем пул - он нужен для других запросов
 
       // Обрабатываем и структурируем ответы
       const processedResponses = result.rows.map(user => {
@@ -2505,11 +2478,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
     try {
       effectiveTokenId = await resolveEffectiveProjectTokenId(projectId, requestedTokenId);
-      // Подключаемся напрямую к PostgreSQL для обновления данных в bot_users
-      const { Pool } = await import('pg');
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL
-      });
+      // Используем общий пул соединений для обновления bot_users
 
       // Проверяем какие поля можно обновить
       const updateFields = [];
@@ -2542,8 +2511,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       console.log('Updating user:', userId, 'with query:', query, 'values:', values);
 
-      const result = await pool.query(query, values);
-      // НЕ закрываем пул - он нужен для других запросов
+      const result = await dbPool.query(query, values);
 
       console.log('Update result:', result.rows.length, 'rows affected');
 
@@ -2587,15 +2555,11 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const requestedTokenId = getRequestTokenId(req);
       const tokenId = await resolveEffectiveProjectTokenId(projectId, requestedTokenId);
 
-      // Подключение к PostgreSQL для прямого удаления
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-      });
-
+      // Используем общий пул соединений для удаления
       try {
         // Удаляем сообщения пользователя из таблицы bot_messages
         try {
-          const deleteMessagesResult = await pool.query(
+          const deleteMessagesResult = await dbPool.query(
             `DELETE FROM bot_messages WHERE user_id = $1 AND project_id = $2 AND token_id = $3`,
             [id, projectId, tokenId]
           );
@@ -2606,19 +2570,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
 
         // Пытаемся удалить из bot_users если пользователь передал user_id
-        const deleteResult = await pool.query(
+        const deleteResult = await dbPool.query(
           `DELETE FROM bot_users WHERE user_id = $1 AND project_id = $2 AND token_id = $3`,
           [id, projectId, tokenId]
         );
-
-        // НЕ закрываем пул - он нужен для других запросов
 
         if (deleteResult.rowCount && deleteResult.rowCount > 0) {
           console.log(`Deleted user ${id} from bot_users table`);
           return res.json({ message: "User data deleted successfully" });
         }
       } catch (dbError) {
-        // НЕ закрываем пул - он нужен для других запросов
         console.log("bot_users table not found, falling back to user_bot_data");
       }
 
@@ -2658,14 +2619,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       let totalDeleted = 0;
 
-      // Подключение к PostgreSQL
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-      });
-
       try {
-        // Удаляем в??ех поль??ова??ел????й из таблицы bot_users для данного проекта
-        const deleteResult = await pool.query(
+        // Удаляем всех пользователей из таблицы bot_users для данного проекта
+        const deleteResult = await dbPool.query(
           tokenId
             ? `DELETE FROM bot_users WHERE project_id = $1 AND token_id = $2`
             : `DELETE FROM bot_users WHERE project_id = $1`,
@@ -2678,11 +2634,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         console.log("bot_users table not found or error:", (dbError as any).message);
       }
 
-      // НЕ закрываем пул - он нужен для других запросов
-
       // Удаляем сообщения из таблицы bot_messages
       try {
-        const deleteMessagesResult = await pool.query(
+        const deleteMessagesResult = await dbPool.query(
           tokenId
             ? `DELETE FROM bot_messages WHERE project_id = $1 AND token_id = $2`
             : `DELETE FROM bot_messages WHERE project_id = $1`,
