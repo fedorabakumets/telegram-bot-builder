@@ -38,6 +38,20 @@ interface NewMessageEvent {
 }
 
 /**
+ * Результат хука useDialogLiveMessages
+ */
+export interface UseDialogLiveMessagesResult {
+  /** Массив живых сообщений из WebSocket и оптимистичных */
+  liveMessages: BotMessageWithMedia[];
+  /** Сбрасывает накопленные live-сообщения (при смене пользователя) */
+  resetLiveMessages: () => void;
+  /** Добавляет оптимистичное сообщение в список и возвращает временный id */
+  addOptimisticMessage: (msg: BotMessageWithMedia) => void;
+  /** Удаляет оптимистичное сообщение по временному id (откат при ошибке) */
+  removeOptimisticMessage: (tempId: number) => void;
+}
+
+/**
  * Преобразует событие new-message в формат BotMessageWithMedia
  * @param event - Событие из WebSocket
  * @param projectId - Идентификатор проекта
@@ -66,19 +80,18 @@ function eventToMessage(
 
 /**
  * Хук подписки на живые сообщения диалога через WebSocket.
- * Подключается к общему WS-каналу и фильтрует события new-message
- * по projectId, tokenId и userId.
+ * Поддерживает оптимистичное добавление исходящих сообщений с откатом при ошибке.
  *
  * @param projectId - Идентификатор проекта
  * @param selectedTokenId - Идентификатор выбранного токена
  * @param userId - Идентификатор пользователя (строка или число)
- * @returns Объект с массивом живых сообщений и функцией сброса
+ * @returns Объект с массивом живых сообщений, функцией сброса и функциями оптимистичного обновления
  */
 export function useDialogLiveMessages(
   projectId: number,
   selectedTokenId?: number | null,
   userId?: string | number | null,
-) {
+): UseDialogLiveMessagesResult {
   const [liveMessages, setLiveMessages] = useState<BotMessageWithMedia[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -87,6 +100,24 @@ export function useDialogLiveMessages(
   /** Сбрасывает накопленные live-сообщения (при смене пользователя) */
   const resetLiveMessages = useCallback(() => {
     setLiveMessages([]);
+  }, []);
+
+  /**
+   * Добавляет оптимистичное сообщение в список live-сообщений.
+   * Сообщение должно иметь отрицательный id (Date.now() * -1).
+   * @param msg - Оптимистичное сообщение для добавления
+   */
+  const addOptimisticMessage = useCallback((msg: BotMessageWithMedia) => {
+    setLiveMessages((prev) => [...prev, msg]);
+  }, []);
+
+  /**
+   * Удаляет оптимистичное сообщение по временному id.
+   * Вызывается при ошибке отправки для отката UI.
+   * @param tempId - Временный отрицательный id оптимистичного сообщения
+   */
+  const removeOptimisticMessage = useCallback((tempId: number) => {
+    setLiveMessages((prev) => prev.filter((m) => m.id !== tempId));
   }, []);
 
   useEffect(() => {
@@ -121,7 +152,7 @@ export function useDialogLiveMessages(
 
           const newMsg = eventToMessage(msg as NewMessageEvent, projectId, selectedTokenId);
           setLiveMessages((prev) => {
-            // Дедупликация по id
+            // Дедупликация по id (реальные id всегда положительные)
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
@@ -151,5 +182,5 @@ export function useDialogLiveMessages(
     };
   }, [projectId, selectedTokenId, userId]);
 
-  return { liveMessages, resetLiveMessages };
+  return { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage };
 }

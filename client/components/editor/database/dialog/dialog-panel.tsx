@@ -95,11 +95,8 @@ export function DialogPanel({
     },
   });
 
-  const { liveMessages, resetLiveMessages } = useDialogLiveMessages(
-    projectId,
-    selectedTokenId,
-    user?.userId,
-  );
+  const { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage } =
+    useDialogLiveMessages(projectId, selectedTokenId, user?.userId);
 
   /** Объединённые и дедуплицированные сообщения */
   const messages = useMemo(
@@ -131,12 +128,15 @@ export function DialogPanel({
     }, 100);
   }, [messagesLoading, messages.length]);
 
-  const sendMessageMutation = useSendMessage(
+  const sendMessageMutation = useSendMessage({
     projectId,
     selectedTokenId,
-    user?.userId ? Number(user.userId) : undefined,
-    () => refetchMessages(),
-  );
+    userId: user?.userId ? Number(user.userId) : undefined,
+    userIdStr: user?.userId ? String(user.userId) : undefined,
+    onSent: refetchMessages,
+    addOptimisticMessage,
+    removeOptimisticMessage,
+  });
 
   if (!user) {
     return <NoUserSelected />;
