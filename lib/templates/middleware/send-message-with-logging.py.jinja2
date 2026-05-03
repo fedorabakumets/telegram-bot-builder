@@ -168,3 +168,160 @@ def _wrap_bot_send_media_group(bot_instance):
         return result
 
     bot_instance.send_media_group = send_media_group_with_logging
+
+
+def _wrap_bot_send_video(bot_instance):
+    """Оборачивает bot.send_video для логирования исходящих видео с сохранением file_id"""
+    original_send_video = bot_instance.send_video
+
+    async def send_video_with_logging(chat_id, video, *args, caption=None, node_id=None, **kwargs):
+        """Обёртка для bot.send_video с автоматическим сохранением и регистрацией медиа"""
+        result = await original_send_video(chat_id, video, *args, caption=caption, **kwargs)
+        try:
+            message_data_obj = {"message_id": result.message_id if result else None}
+            if result and hasattr(result, "video") and result.video:
+                message_data_obj["video"] = {
+                    "file_id": result.video.file_id,
+                    "file_unique_id": result.video.file_unique_id,
+                    "width": result.video.width,
+                    "height": result.video.height,
+                    "duration": result.video.duration,
+                    "mime_type": result.video.mime_type if hasattr(result.video, "mime_type") else None,
+                    "file_size": result.video.file_size if hasattr(result.video, "file_size") else None,
+                }
+            if "reply_markup" in kwargs:
+                try:
+                    reply_markup = kwargs["reply_markup"]
+                    buttons_data = []
+                    if hasattr(reply_markup, "inline_keyboard"):
+                        for row in reply_markup.inline_keyboard:
+                            for btn in row:
+                                button_info = {"text": btn.text}
+                                if hasattr(btn, "url") and btn.url:
+                                    button_info["url"] = btn.url
+                                if hasattr(btn, "callback_data") and btn.callback_data:
+                                    button_info["callback_data"] = btn.callback_data
+                                buttons_data.append(button_info)
+                        if buttons_data:
+                            message_data_obj["buttons"] = buttons_data
+                            message_data_obj["keyboard_type"] = "inline"
+                except Exception as e:
+                    logging.warning(f"Не удалось извлечь кнопки из send_video: {e}")
+            # Сохраняем исходящее видео бота асинхронно (fire-and-forget)
+            _fire_save_message(
+                user_id=str(chat_id),
+                message_type="bot",
+                message_text=caption or "[Видео]",
+                node_id=node_id,
+                message_data=message_data_obj,
+            )
+        except Exception as e:
+            logging.warning(f"Ошибка логирования send_video: {e}")
+        # Вызываем обработчики триггеров исходящих сообщений
+        try:
+            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
+            if _omt_handlers:
+                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
+                if _omt_user_id > 0:
+                    for _omt_handler in _omt_handlers:
+                        try:
+                            await _omt_handler(_omt_user_id, result.message_id if result else None, caption or "[Видео]", chat_id=_omt_user_id)
+                        except Exception as _omt_e:
+                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+        except Exception as _omt_outer_e:
+            logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
+        return result
+
+    bot_instance.send_video = send_video_with_logging
+
+
+def _wrap_bot_send_audio(bot_instance):
+    """Оборачивает bot.send_audio для логирования исходящих аудио с сохранением file_id"""
+    original_send_audio = bot_instance.send_audio
+
+    async def send_audio_with_logging(chat_id, audio, *args, caption=None, node_id=None, **kwargs):
+        """Обёртка для bot.send_audio с автоматическим сохранением и регистрацией медиа"""
+        result = await original_send_audio(chat_id, audio, *args, caption=caption, **kwargs)
+        try:
+            message_data_obj = {"message_id": result.message_id if result else None}
+            if result and hasattr(result, "audio") and result.audio:
+                message_data_obj["audio"] = {
+                    "file_id": result.audio.file_id,
+                    "file_unique_id": result.audio.file_unique_id,
+                    "duration": result.audio.duration,
+                    "mime_type": result.audio.mime_type if hasattr(result.audio, "mime_type") else None,
+                    "file_size": result.audio.file_size if hasattr(result.audio, "file_size") else None,
+                    "title": result.audio.title if hasattr(result.audio, "title") else None,
+                    "performer": result.audio.performer if hasattr(result.audio, "performer") else None,
+                }
+            # Сохраняем исходящее аудио бота асинхронно (fire-and-forget)
+            _fire_save_message(
+                user_id=str(chat_id),
+                message_type="bot",
+                message_text=caption or "[Аудио]",
+                node_id=node_id,
+                message_data=message_data_obj,
+            )
+        except Exception as e:
+            logging.warning(f"Ошибка логирования send_audio: {e}")
+        # Вызываем обработчики триггеров исходящих сообщений
+        try:
+            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
+            if _omt_handlers:
+                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
+                if _omt_user_id > 0:
+                    for _omt_handler in _omt_handlers:
+                        try:
+                            await _omt_handler(_omt_user_id, result.message_id if result else None, caption or "[Аудио]", chat_id=_omt_user_id)
+                        except Exception as _omt_e:
+                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+        except Exception as _omt_outer_e:
+            logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
+        return result
+
+    bot_instance.send_audio = send_audio_with_logging
+
+
+def _wrap_bot_send_document(bot_instance):
+    """Оборачивает bot.send_document для логирования исходящих документов с сохранением file_id"""
+    original_send_document = bot_instance.send_document
+
+    async def send_document_with_logging(chat_id, document, *args, caption=None, node_id=None, **kwargs):
+        """Обёртка для bot.send_document с автоматическим сохранением и регистрацией медиа"""
+        result = await original_send_document(chat_id, document, *args, caption=caption, **kwargs)
+        try:
+            message_data_obj = {"message_id": result.message_id if result else None}
+            if result and hasattr(result, "document") and result.document:
+                message_data_obj["document"] = {
+                    "file_id": result.document.file_id,
+                    "file_unique_id": result.document.file_unique_id,
+                    "file_name": result.document.file_name if hasattr(result.document, "file_name") else None,
+                    "mime_type": result.document.mime_type if hasattr(result.document, "mime_type") else None,
+                    "file_size": result.document.file_size if hasattr(result.document, "file_size") else None,
+                }
+            # Сохраняем исходящий документ бота асинхронно (fire-and-forget)
+            _fire_save_message(
+                user_id=str(chat_id),
+                message_type="bot",
+                message_text=caption or "[Документ]",
+                node_id=node_id,
+                message_data=message_data_obj,
+            )
+        except Exception as e:
+            logging.warning(f"Ошибка логирования send_document: {e}")
+        # Вызываем обработчики триггеров исходящих сообщений
+        try:
+            _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
+            if _omt_handlers:
+                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
+                if _omt_user_id > 0:
+                    for _omt_handler in _omt_handlers:
+                        try:
+                            await _omt_handler(_omt_user_id, result.message_id if result else None, caption or "[Документ]", chat_id=_omt_user_id)
+                        except Exception as _omt_e:
+                            logging.warning(f"Ошибка в outgoing_message_trigger handler: {_omt_e}")
+        except Exception as _omt_outer_e:
+            logging.warning(f"Ошибка при вызове outgoing_message_trigger handlers: {_omt_outer_e}")
+        return result
+
+    bot_instance.send_document = send_document_with_logging
