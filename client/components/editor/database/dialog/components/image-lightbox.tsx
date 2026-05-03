@@ -1,5 +1,5 @@
 /**
- * @fileoverview Компонент лайтбокса для просмотра изображений на весь экран
+ * @fileoverview Компонент лайтбокса для просмотра изображений и видео на весь экран
  * @module client/components/editor/database/dialog/components/image-lightbox
  */
 
@@ -10,21 +10,23 @@ import { X } from 'lucide-react';
  * Свойства компонента лайтбокса
  */
 interface ImageLightboxProps {
-  /** URL изображения для отображения */
+  /** URL медиафайла для отображения */
   src: string;
   /** Alt текст изображения */
   alt?: string;
+  /** Тип медиа: 'image' или 'video'. По умолчанию 'image' */
+  mediaType?: 'image' | 'video';
   /** Колбэк закрытия лайтбокса */
   onClose: () => void;
 }
 
 /**
- * Лайтбокс для просмотра изображения на весь экран.
+ * Лайтбокс для просмотра изображения или видео на весь экран.
  * Закрывается по клику на фон, кнопку ✕ или клавишу Escape.
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function ImageLightbox({ src, alt = 'Изображение', onClose }: ImageLightboxProps) {
+export function ImageLightbox({ src, alt = 'Изображение', mediaType = 'image', onClose }: ImageLightboxProps) {
   /** Закрытие по Escape */
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose();
@@ -54,14 +56,27 @@ export function ImageLightbox({ src, alt = 'Изображение', onClose }: 
         <X className="h-5 w-5" />
       </button>
 
-      {/* Изображение — клик по нему не закрывает лайтбокс */}
-      <img
-        src={src}
-        alt={alt}
-        className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-        data-testid="lightbox-image"
-      />
+      {/* Медиа-контент — клик по нему не закрывает лайтбокс */}
+      {mediaType === 'video' ? (
+        <video
+          src={src}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+          data-testid="lightbox-video"
+        />
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+          data-testid="lightbox-image"
+        />
+      )}
     </div>
   );
 }

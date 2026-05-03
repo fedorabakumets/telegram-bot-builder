@@ -227,7 +227,7 @@ export function MessageMedia({ media, messageData, projectId, tokenId }: Message
             />
           </div>
           {lightboxSrc && (
-            <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+            <ImageLightbox src={lightboxSrc} mediaType="video" onClose={() => setLightboxSrc(null)} />
           )}
         </>
       );
