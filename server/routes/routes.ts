@@ -2177,31 +2177,26 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const result = await dbPool.query(`
         SELECT
-          ROW_NUMBER() OVER (ORDER BY bu.last_interaction DESC) AS id,
-          bu.user_id::text AS "userId",
-          bu.username AS "userName",
-          bu.first_name AS "firstName",
-          bu.last_name AS "lastName",
-          bu.avatar_url AS "avatarUrl",
-          bu.registered_at AS "registeredAt",
-          bu.registered_at AS "createdAt",
-          bu.last_interaction AS "lastInteraction",
-          COALESCE(COUNT(bm.id), 0)::integer AS "interactionCount",
-          bu.user_data AS "userData",
-          CASE WHEN bu.is_active = 1 THEN TRUE ELSE FALSE END AS "isActive",
+          ROW_NUMBER() OVER (ORDER BY last_interaction DESC) AS id,
+          user_id::text AS "userId",
+          username AS "userName",
+          first_name AS "firstName",
+          last_name AS "lastName",
+          avatar_url AS "avatarUrl",
+          registered_at AS "registeredAt",
+          registered_at AS "createdAt",
+          last_interaction AS "lastInteraction",
+          COALESCE(interaction_count, 0)::integer AS "interactionCount",
+          user_data AS "userData",
+          CASE WHEN is_active = 1 THEN TRUE ELSE FALSE END AS "isActive",
           FALSE AS "isPremium",
           FALSE AS "isBlocked",
-          CASE WHEN bu.is_bot = 1 THEN TRUE ELSE FALSE END AS "isBot"
-        FROM bot_users bu
-        LEFT JOIN bot_messages bm
-          ON bm.user_id = bu.user_id::text
-          AND bm.project_id = $1
-          AND ($2::integer IS NULL OR bm.token_id = $2)
-        WHERE bu.is_bot = 0
-          AND bu.project_id = $1
-          AND ($2::integer IS NULL OR bu.token_id = $2)
-        GROUP BY bu.user_id, bu.username, bu.first_name, bu.last_name, bu.avatar_url, bu.registered_at, bu.last_interaction, bu.user_data, bu.is_active, bu.is_bot
-        ORDER BY bu.last_interaction DESC
+          CASE WHEN is_bot = 1 THEN TRUE ELSE FALSE END AS "isBot"
+        FROM bot_users
+        WHERE is_bot = 0
+          AND project_id = $1
+          AND ($2::integer IS NULL OR token_id = $2)
+        ORDER BY last_interaction DESC
       `, [projectId, tokenId]);
 
       console.log(`Found ${result.rows.length} users for project ${projectId}`);
@@ -2235,23 +2230,23 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
 
     try {
-      // Используем общий пул соединений для запроса к bot_users
+      // Используем общий пул соединений для запроса к bot_users.
+      // JOIN с bot_messages убран — используем денормализованный interaction_count из bot_users.
       const result = await dbPool.query(`
         SELECT
-          COUNT(DISTINCT bu.user_id) as "totalUsers",
-          COUNT(DISTINCT bu.user_id) FILTER (WHERE bu.is_active = 1) as "activeUsers",
-          COUNT(DISTINCT bu.user_id) FILTER (WHERE bu.is_active = 0) as "blockedUsers",
+          COUNT(*) as "totalUsers",
+          COUNT(*) FILTER (WHERE is_active = 1) as "activeUsers",
+          COUNT(*) FILTER (WHERE is_active = 0) as "blockedUsers",
           0 as "premiumUsers",
-          COUNT(DISTINCT bu.user_id) FILTER (WHERE bu.user_data IS NOT NULL AND bu.user_data != '{}') as "usersWithResponses",
-          COALESCE(COUNT(bm.id), 0) as "totalInteractions",
-          CASE WHEN COUNT(DISTINCT bu.user_id) > 0 THEN COALESCE(COUNT(bm.id)::float / COUNT(DISTINCT bu.user_id), 0) ELSE 0 END as "avgInteractionsPerUser"
-        FROM bot_users bu
-        LEFT JOIN bot_messages bm
-          ON bm.user_id = bu.user_id::text
-          AND bm.project_id = $1
-          AND ($2::integer IS NULL OR bm.token_id = $2)
-        WHERE bu.project_id = $1
-          AND ($2::integer IS NULL OR bu.token_id = $2)
+          COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}') as "usersWithResponses",
+          COALESCE(SUM(interaction_count), 0) as "totalInteractions",
+          CASE WHEN COUNT(*) > 0
+            THEN COALESCE(SUM(interaction_count)::float / COUNT(*), 0)
+            ELSE 0
+          END as "avgInteractionsPerUser"
+        FROM bot_users
+        WHERE project_id = $1
+          AND ($2::integer IS NULL OR token_id = $2)
       `, [projectId, tokenId]);
 
       const stats = result.rows[0];
