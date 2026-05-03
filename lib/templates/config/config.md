@@ -205,6 +205,16 @@ if WEBHOOK_URL and not REDIS_URL:
     raise RuntimeError("REDIS_URL обязателен при использовании webhook режима")
 ```
 
+### Redis клиент (_redis_client)
+```typescript
+// Инициализируется в main() через await init_redis_client()
+// Используется в save_message_to_api для Pub/Sub уведомлений
+if (REDIS_URL) {
+  _redis_client = redis.asyncio.from_url(REDIS_URL)
+  await _redis_client.ping()  // проверка подключения
+}
+```
+
 ## Тесты
 
 ### Запуск тестов

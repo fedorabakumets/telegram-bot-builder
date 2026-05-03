@@ -970,6 +970,83 @@ test('K10', 'message + отдельная reply keyboard-нода + DB → callb
   ok(code.includes('KeyboardButton'), 'KeyboardButton должен быть');
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК N: Redis Pub/Sub в save_message_to_api
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок N: Redis Pub/Sub в save_message_to_api ───────────────────');
+
+test('N01', 'userDatabaseEnabled: true → save_message_to_api содержит _redis_client', () => {
+  const code = genDB(makeSimpleProject(), 'n01');
+  ok(code.includes('_redis_client'), '_redis_client должен быть в коде при DB');
+});
+
+test('N02', 'userDatabaseEnabled: true → save_message_to_api содержит redis publish', () => {
+  const code = genDB(makeSimpleProject(), 'n02');
+  ok(code.includes('_redis_client.publish'), '_redis_client.publish должен быть в save_message_to_api');
+});
+
+test('N03', 'userDatabaseEnabled: true → Redis publish использует канал bot:message:', () => {
+  const code = genDB(makeSimpleProject(), 'n03');
+  ok(code.includes('bot:message:'), 'канал bot:message: должен быть в коде');
+});
+
+test('N04', 'userDatabaseEnabled: true → Redis publish payload содержит userId', () => {
+  const code = genDB(makeSimpleProject(), 'n04');
+  ok(code.includes('"userId"'), 'поле userId должно быть в Redis payload');
+});
+
+test('N05', 'userDatabaseEnabled: true → Redis publish payload содержит messageType', () => {
+  const code = genDB(makeSimpleProject(), 'n05');
+  ok(code.includes('"messageType"'), 'поле messageType должно быть в Redis payload');
+});
+
+test('N06', 'userDatabaseEnabled: true → Redis publish payload содержит messageText', () => {
+  const code = genDB(makeSimpleProject(), 'n06');
+  ok(code.includes('"messageText"'), 'поле messageText должно быть в Redis payload');
+});
+
+test('N07', 'userDatabaseEnabled: true → Redis publish payload содержит createdAt', () => {
+  const code = genDB(makeSimpleProject(), 'n07');
+  ok(code.includes('"createdAt"'), 'поле createdAt должно быть в Redis payload');
+});
+
+test('N08', 'userDatabaseEnabled: true → Redis publish обёрнут в try/except (не блокирует БД)', () => {
+  const code = genDB(makeSimpleProject(), 'n08');
+  // Проверяем что publish внутри try/except
+  const publishIdx = code.indexOf('_redis_client.publish');
+  const tryBeforePublish = code.lastIndexOf('try:', publishIdx);
+  const exceptAfterPublish = code.indexOf('except Exception as _re', publishIdx);
+  ok(publishIdx !== -1, '_redis_client.publish должен быть в коде');
+  ok(tryBeforePublish !== -1 && tryBeforePublish < publishIdx, 'try: должен быть перед publish');
+  ok(exceptAfterPublish !== -1, 'except Exception as _re должен быть после publish');
+});
+
+test('N09', 'userDatabaseEnabled: true → Redis publish происходит ПОСЛЕ INSERT (после result)', () => {
+  const code = genDB(makeSimpleProject(), 'n09');
+  const insertIdx = code.indexOf('INSERT INTO bot_messages');
+  const publishIdx = code.indexOf('_redis_client.publish');
+  ok(insertIdx !== -1, 'INSERT INTO bot_messages должен быть в коде');
+  ok(publishIdx !== -1, '_redis_client.publish должен быть в коде');
+  ok(publishIdx > insertIdx, 'Redis publish должен быть ПОСЛЕ INSERT');
+});
+
+test('N10', 'userDatabaseEnabled: true → синтаксис Python OK с Redis publish', () => {
+  const code = genDB(makeSimpleProject(), 'n10');
+  syntax(code, 'n10');
+});
+
+test('N11', 'userDatabaseEnabled: false → НЕТ _redis_client.publish в save_message_to_api', () => {
+  const code = gen(makeSimpleProject(), 'n11');
+  ok(!code.includes('_redis_client.publish'), '_redis_client.publish НЕ должен быть без DB');
+});
+
+test('N12', 'userDatabaseEnabled: true + inline → Redis publish есть, синтаксис OK', () => {
+  const code = genDB(makeInlineProject(), 'n12');
+  ok(code.includes('_redis_client.publish'), '_redis_client.publish должен быть');
+  syntax(code, 'n12');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 const total  = results.length;

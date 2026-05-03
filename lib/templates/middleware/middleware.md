@@ -126,3 +126,36 @@ middleware/
 - `message.answer_document` → через `_patched_answer_document`
 
 Каждый обработчик получает: `user_id`, `message_id` (для `forward_message`), `text/caption`, `chat_id`.
+
+
+## Интеграция с Redis Pub/Sub (живой диалог)
+
+При `userDatabaseEnabled=true` функция `save_message_to_api` после успешного сохранения в PostgreSQL публикует событие в Redis канал `bot:message:{PROJECT_ID}:{TOKEN_ID}`.
+
+### Payload события
+
+```json
+{
+  "userId": "123456789",
+  "messageType": "user",
+  "messageText": "Привет!",
+  "messageData": { "message_id": 456 },
+  "nodeId": null,
+  "id": 789,
+  "createdAt": "2026-05-03T14:30:00.000000"
+}
+```
+
+### Поведение
+
+- Публикация выполняется **после** успешного INSERT — данные гарантированно в БД
+- Если Redis недоступен — ошибка логируется на уровне DEBUG, сохранение в БД не прерывается
+- Node.js сервер подписан на паттерн `bot:message:*` через `redisPlatformSubscriber`
+- При получении события сервер рассылает его через WebSocket всем подключённым клиентам
+- `DialogPanel` в UI получает событие и мгновенно добавляет сообщение без HTTP refetch
+
+### Канал Redis
+
+Формат: `bot:message:{PROJECT_ID}:{TOKEN_ID}`
+
+Пример: `bot:message:1:2` — проект 1, токен 2.

@@ -1,10 +1,13 @@
 {#
-  Функция сохранения сообщений в базу данных напрямую через asyncpg
+  Функция сохранения сообщений в базу данных напрямую через asyncpg.
+  После успешного сохранения публикует событие в Redis для мгновенного уведомления UI.
 #}
 
 # Функция для сохранения сообщений в базу данных напрямую (без API)
 async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
-    """Сохраняет сообщение в базу данных напрямую через asyncpg"""
+    """Сохраняет сообщение в базу данных напрямую через asyncpg.
+    После успешного сохранения публикует событие в Redis канал bot:message:{PROJECT_ID}:{TOKEN_ID}.
+    """
     if not db_pool:
         return None
     try:
@@ -27,6 +30,27 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
             tg_message_id = (message_data or {}).get("message_id")
             tg_mid_str = f", tg_message_id={tg_message_id}" if tg_message_id else ""
             logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result['id']}{tg_mid_str})")
+
+            # Публикуем событие в Redis для мгновенного уведомления UI (fire-and-forget)
+            if _redis_client:
+                try:
+                    _redis_payload = json.dumps({
+                        "userId": str(user_id),
+                        "messageType": message_type,
+                        "messageText": message_text,
+                        "messageData": message_data or {},
+                        "nodeId": node_id,
+                        "id": result['id'],
+                        "createdAt": result['created_at'].isoformat() if result['created_at'] else None,
+                    }, ensure_ascii=False)
+                    await _redis_client.publish(
+                        f"bot:message:{PROJECT_ID}:{TOKEN_ID}",
+                        _redis_payload
+                    )
+                    logging.debug(f"📡 Redis publish: bot:message:{PROJECT_ID}:{TOKEN_ID}")
+                except Exception as _re:
+                    logging.debug(f"⚠️ Redis publish не удался (не критично): {_re}")
+
             return {"id": result['id'], "user_id": result['user_id'], "message_type": result['message_type'], "created_at": result['created_at']}
     except Exception as e:
         logging.error(f"❌ Ошибка сохранения сообщения в БД: {e}")
@@ -36,6 +60,7 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
 def _fire_save_message(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):
     """Запускает save_message_to_api в фоне (fire-and-forget).
     Не блокирует выполнение — сообщение сохраняется асинхронно.
+    После сохранения в БД автоматически публикует событие в Redis.
 
     @param user_id - Идентификатор пользователя
     @param message_type - Тип сообщения: "user" или "bot"
