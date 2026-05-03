@@ -93,12 +93,12 @@ export function SaveMediaToggle({ projectId, tokenId, saveIncomingMedia }: SaveM
           htmlFor={`save-media-db-${tokenId}`}
           className="text-sm font-medium cursor-pointer"
         >
-          {localEnabled ? 'Сохранять медиа' : 'Медиа не сохраняется'}
+          {localEnabled ? 'Сохранять входящие фото' : 'Фото не сохраняются'}
         </Label>
         <p className="text-xs text-muted-foreground mt-0.5">
           {localEnabled
-            ? 'Входящие фото от пользователей будут сохраняться локально'
-            : 'Входящие фото от пользователей не сохраняются'}
+            ? 'Фото от пользователей будут скачиваться и храниться на сервере'
+            : 'Фото от пользователей не сохраняются на сервере'}
         </p>
       </div>
       <Switch

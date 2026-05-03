@@ -112,12 +112,12 @@ export function BotSaveMediaToggle({
               localEnabled ? 'text-blue-700 dark:text-blue-300' : 'text-muted-foreground'
             }`}
           >
-            {localEnabled ? 'Сохранять медиа' : 'Медиа не сохраняется'}
+            {localEnabled ? 'Сохранять входящие фото' : 'Фото не сохраняются'}
           </Label>
           <p className="text-xs text-muted-foreground/70 mt-0.5">
             {localEnabled
-              ? 'Входящие фото от пользователей будут сохраняться локально'
-              : 'Входящие фото от пользователей не сохраняются'}
+              ? 'Фото от пользователей будут скачиваться и храниться на сервере'
+              : 'Фото от пользователей не сохраняются на сервере'}
           </p>
         </div>
         <Switch
