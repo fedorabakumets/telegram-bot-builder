@@ -1199,6 +1199,67 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Обновление настройки сохранения входящих медиафайлов для токена бота
+   * PUT /api/projects/:projectId/tokens/:tokenId/save-incoming-media
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/save-incoming-media", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
+      const { saveIncomingMedia } = req.body as { saveIncomingMedia: number };
+
+      if (saveIncomingMedia !== 0 && saveIncomingMedia !== 1) {
+        return res.status(400).json({ message: "saveIncomingMedia должен быть 0 или 1" });
+      }
+
+      const updated = await storage.updateBotToken(tokenId, { saveIncomingMedia });
+      if (!updated) {
+        return res.status(404).json({ message: "Токен не найден" });
+      }
+
+      try {
+        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
+        const { join } = await import('path');
+        const botsDir = join(process.cwd(), 'bots');
+
+        if (existsSync(botsDir)) {
+          const dirs = readdirSync(botsDir, { withFileTypes: true });
+
+          for (const dir of dirs) {
+            if (!dir.isDirectory()) continue;
+
+            const envPath = join(botsDir, dir.name, '.env');
+            if (!existsSync(envPath)) continue;
+
+            const content = readFileSync(envPath, 'utf8');
+            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
+
+            const line = `SAVE_INCOMING_MEDIA=${saveIncomingMedia === 1 ? 'true' : 'false'}`;
+            let updatedContent = content;
+
+            if (/^SAVE_INCOMING_MEDIA=.*/m.test(updatedContent)) {
+              updatedContent = updatedContent.replace(/^SAVE_INCOMING_MEDIA=.*/m, line);
+            } else {
+              updatedContent = `${updatedContent.trim()}\n\n# Сохранение входящих медиафайлов от пользователей\n${line}\n`;
+            }
+
+            if (updatedContent !== content) {
+              writeFileSync(envPath, updatedContent, 'utf8');
+              console.log(`✅ SAVE_INCOMING_MEDIA обновлён в ${envPath}: ${saveIncomingMedia}`);
+            }
+          }
+        }
+      } catch (envErr) {
+        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
+      }
+
+      res.json({ success: true, saveIncomingMedia });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка обновления настройки сохранения медиа" });
+    }
+  });
+
+  /**
    * Обновление уровня логирования для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/log-level
    */
