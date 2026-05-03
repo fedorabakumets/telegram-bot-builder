@@ -4,6 +4,9 @@
  * Приоритет: локально сохранённый файл → Telegram CDN через прокси.
  */
 
+import { useState } from 'react';
+import { ImageLightbox } from './image-lightbox';
+
 /**
  * Тип медиа из messageData
  */
@@ -94,21 +97,29 @@ function formatFileSize(bytes?: number): string {
  * @returns JSX элемент или null
  */
 export function MessageMedia({ media, messageData, projectId, tokenId }: MessageMediaProps) {
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+
   // Приоритет 1: локально сохранённые файлы из media_files
   if (Array.isArray(media) && media.length > 0) {
     return (
-      <div className="rounded-lg overflow-hidden max-w-[200px] space-y-1">
-        {media.map((m, idx) => (
-          <img
-            key={idx}
-            src={m.url}
-            alt="Photo"
-            className="w-full h-auto rounded-lg"
-            data-testid={`dialog-photo-${m.messageId}-${idx}`}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-          />
-        ))}
-      </div>
+      <>
+        <div className="rounded-lg overflow-hidden max-w-[200px] space-y-1">
+          {media.map((m, idx) => (
+            <img
+              key={idx}
+              src={m.url}
+              alt="Фото"
+              className="w-full h-auto rounded-lg cursor-zoom-in"
+              data-testid={`dialog-photo-${m.messageId}-${idx}`}
+              onClick={() => setLightboxSrc(m.url)}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          ))}
+        </div>
+        {lightboxSrc && (
+          <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+        )}
+      </>
     );
   }
 
@@ -117,15 +128,22 @@ export function MessageMedia({ media, messageData, projectId, tokenId }: Message
   // Приоритет 2: медиа из Telegram CDN через прокси
   const photo = extractMedia(messageData, 'photo');
   if (photo?.file_id) {
+    const proxyUrl = buildProxyUrl(photo.file_id, projectId, tokenId);
     return (
-      <div className="rounded-lg overflow-hidden max-w-[200px]">
-        <img
-          src={buildProxyUrl(photo.file_id, projectId, tokenId)}
-          alt="Фото"
-          className="w-full h-auto rounded-lg"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-        />
-      </div>
+      <>
+        <div className="rounded-lg overflow-hidden max-w-[200px]">
+          <img
+            src={proxyUrl}
+            alt="Фото"
+            className="w-full h-auto rounded-lg cursor-zoom-in"
+            onClick={() => setLightboxSrc(proxyUrl)}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
+        </div>
+        {lightboxSrc && (
+          <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+        )}
+      </>
     );
   }
 
