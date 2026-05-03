@@ -86,4 +86,6 @@ export interface DatabaseContentProps {
   allProjects?: Array<{ id: number; name: string }>;
   /** Обработчик смены проекта */
   onProjectChange?: (projectId: number) => void;
+  /** Флаг сохранения входящих медиафайлов (0 = выключено, 1 = включено) */
+  saveIncomingMedia?: number | null;
 }

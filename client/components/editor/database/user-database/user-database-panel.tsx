@@ -42,8 +42,7 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     selectedTokenIdProp ?? null
   );
   const resolvedSelectedTokenId = selectedTokenIdProp ?? internalSelectedTokenId;
-  const { state, setters } = useUserDatabasePanelState();
-  const isMobile = useIsMobile();
+  const { state, setters } = useUserDatabasePanelState();  const isMobile = useIsMobile();
   const { toast } = useToast();
 
   const {
@@ -130,6 +129,10 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     undefined
   );
 
+  /** Флаг сохранения медиафайлов для выбранного токена */
+  const selectedToken = projectTokens.find((t) => t.id === resolvedSelectedTokenId);
+  const saveIncomingMedia = selectedToken?.saveIncomingMedia ?? 0;
+
   /**
    * Обновляет выбранный токен локально и снаружи
    * @param tokenId - Новый идентификатор токена
@@ -191,6 +194,7 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
         visibleColumns={visibleColumns}
         allProjects={allProjects}
         onProjectChange={onProjectChange}
+        saveIncomingMedia={saveIncomingMedia}
       />
     </div>
   );
