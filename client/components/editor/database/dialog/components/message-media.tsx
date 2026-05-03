@@ -235,5 +235,24 @@ export function MessageMedia({ media, messageData, projectId, tokenId }: Message
     );
   }
 
+  // Fallback: медиа есть в данных, но показать нельзя (нет projectId или file_id) — показываем плейсхолдер
+  /** Метки для каждого типа медиа */
+  const MEDIA_TYPE_LABELS: Record<string, string> = {
+    photo: '[Фото]',
+    video: '[Видео]',
+    audio: '[Аудио]',
+    voice: '[Голосовое]',
+    document: '[Документ]',
+    sticker: '[Стикер]',
+  };
+  const data = messageData as Record<string, unknown> | null;
+  if (data) {
+    for (const [type, label] of Object.entries(MEDIA_TYPE_LABELS)) {
+      if (data[type]) {
+        return <span className="text-xs text-muted-foreground italic">{label}</span>;
+      }
+    }
+  }
+
   return null;
 }
