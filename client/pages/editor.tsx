@@ -1469,6 +1469,7 @@ export default function Editor() {
                 onSelectToken={setSelectedDatabaseTokenId}
                 allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
                 onProjectChange={(projectId) => {
+                  setSelectedDatabaseTokenId(null);
                   setLocation(`/projects/${projectId}`);
                 }}
               />
@@ -1771,6 +1772,7 @@ export default function Editor() {
                     onSelectToken={setSelectedDatabaseTokenId}
                     allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
                     onProjectChange={(projectId) => {
+                      setSelectedDatabaseTokenId(null);
                       setLocation(`/projects/${projectId}`);
                     }}
                   />
