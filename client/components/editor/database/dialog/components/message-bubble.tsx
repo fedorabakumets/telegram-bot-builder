@@ -37,7 +37,7 @@ interface MessageBubbleProps {
 /**
  * Медиа-плейсхолдеры — текст который не нужно показывать если есть медиа
  */
-const MEDIA_PLACEHOLDERS = new Set(['[Фото]', '[медиа]', '[Photo]']);
+const MEDIA_PLACEHOLDERS = new Set(['[Фото]', '[медиа]', '[Photo]', '[Видео]', '[Аудио]', '[Голосовое]', '[Документ]', '[Стикер]']);
 
 /**
  * Проверяет есть ли медиа для отображения (локальное или через file_id)
@@ -47,7 +47,10 @@ const MEDIA_PLACEHOLDERS = new Set(['[Фото]', '[медиа]', '[Photo]']);
 function hasVisibleMedia(message: BotMessageWithMedia): boolean {
   if (Array.isArray(message.media) && message.media.length > 0) return true;
   const data = message.messageData as Record<string, unknown> | null;
-  return !!(data?.photo && typeof (data.photo as any)?.file_id === 'string');
+  if (!data) return false;
+  return ['photo', 'video', 'audio', 'voice', 'document', 'sticker'].some(
+    (type) => data[type] && typeof (data[type] as any)?.file_id === 'string'
+  );
 }
 
 /**

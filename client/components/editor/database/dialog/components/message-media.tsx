@@ -1,14 +1,34 @@
 /**
  * @fileoverview Компонент медиафайлов сообщения
- * Отображает фото из сообщения — из локального хранилища или через Telegram CDN прокси.
+ * Отображает все типы медиа: фото, видео, аудио, голосовые, документы, стикеры.
+ * Приоритет: локально сохранённый файл → Telegram CDN через прокси.
  */
 
 /**
- * Данные фото из Telegram (хранятся в messageData.photo)
+ * Тип медиа из messageData
  */
-interface TelegramPhotoMeta {
+type MediaType = 'photo' | 'video' | 'audio' | 'voice' | 'document' | 'sticker';
+
+/**
+ * Метаданные медиафайла из Telegram
+ */
+interface TelegramMediaMeta {
   /** Идентификатор файла в Telegram */
   file_id?: string;
+  /** Длительность в секундах (для аудио/видео/голосовых) */
+  duration?: number;
+  /** Имя файла (для документов) */
+  file_name?: string;
+  /** Размер файла в байтах */
+  file_size?: number;
+  /** MIME тип */
+  mime_type?: string;
+  /** Эмодзи стикера */
+  emoji?: string;
+  /** Анимированный ли стикер */
+  is_animated?: boolean;
+  /** Видео-стикер */
+  is_video?: boolean;
 }
 
 /**
@@ -22,7 +42,7 @@ interface MessageMediaProps {
     /** Идентификатор сообщения */
     messageId?: number;
   }>;
-  /** Дополнительные данные сообщения (содержит photo.file_id для входящих фото) */
+  /** Дополнительные данные сообщения (содержит медиа-метаданные) */
   messageData?: unknown;
   /** Идентификатор проекта (для прокси-роута) */
   projectId?: number;
@@ -31,20 +51,45 @@ interface MessageMediaProps {
 }
 
 /**
- * Извлекает file_id фото из messageData если оно есть
- * @param messageData - Данные сообщения в произвольном формате
- * @returns file_id или null
+ * Строит URL прокси для получения файла из Telegram CDN
+ * @param fileId - Идентификатор файла в Telegram
+ * @param projectId - Идентификатор проекта
+ * @param tokenId - Идентификатор токена
+ * @returns URL прокси-роута
  */
-function extractPhotoFileId(messageData: unknown): string | null {
-  if (!messageData || typeof messageData !== "object") return null;
+function buildProxyUrl(fileId: string, projectId: number, tokenId?: number): string {
+  const tokenParam = tokenId ? `&tokenId=${tokenId}` : '';
+  return `/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(fileId)}${tokenParam}`;
+}
+
+/**
+ * Извлекает медиа-данные из messageData по типу
+ * @param messageData - Данные сообщения
+ * @param type - Тип медиа
+ * @returns Метаданные или null
+ */
+function extractMedia(messageData: unknown, type: MediaType): TelegramMediaMeta | null {
+  if (!messageData || typeof messageData !== 'object') return null;
   const data = messageData as Record<string, unknown>;
-  const photo = data.photo as TelegramPhotoMeta | undefined;
-  return photo?.file_id ?? null;
+  const meta = data[type] as TelegramMediaMeta | undefined;
+  return meta?.file_id ? meta : null;
+}
+
+/**
+ * Форматирует размер файла в читаемый вид
+ * @param bytes - Размер в байтах
+ * @returns Строка вида "1.2 MB"
+ */
+function formatFileSize(bytes?: number): string {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /**
  * Компонент отображения медиафайлов сообщения.
- * Приоритет: локально сохранённый файл → Telegram CDN через прокси.
+ * Поддерживает: фото, видео, аудио, голосовые, документы, стикеры.
  * @param props - Свойства компонента
  * @returns JSX элемент или null
  */
@@ -60,31 +105,113 @@ export function MessageMedia({ media, messageData, projectId, tokenId }: Message
             alt="Photo"
             className="w-full h-auto rounded-lg"
             data-testid={`dialog-photo-${m.messageId}-${idx}`}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
         ))}
       </div>
     );
   }
 
-  // Приоритет 2: фото из Telegram CDN через прокси (file_id из messageData)
-  const fileId = extractPhotoFileId(messageData);
-  if (fileId && projectId) {
-    const tokenParam = tokenId ? `&tokenId=${tokenId}` : "";
-    const proxyUrl = `/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(fileId)}${tokenParam}`;
+  if (!projectId) return null;
 
+  // Приоритет 2: медиа из Telegram CDN через прокси
+  const photo = extractMedia(messageData, 'photo');
+  if (photo?.file_id) {
     return (
       <div className="rounded-lg overflow-hidden max-w-[200px]">
         <img
-          src={proxyUrl}
-          alt="Photo"
+          src={buildProxyUrl(photo.file_id, projectId, tokenId)}
+          alt="Фото"
           className="w-full h-auto rounded-lg"
-          data-testid={`dialog-photo-tg-${fileId.slice(-8)}`}
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        />
+      </div>
+    );
+  }
+
+  const video = extractMedia(messageData, 'video');
+  if (video?.file_id) {
+    return (
+      <div className="rounded-lg overflow-hidden max-w-[280px]">
+        <video
+          src={buildProxyUrl(video.file_id, projectId, tokenId)}
+          controls
+          className="w-full h-auto rounded-lg"
+          preload="metadata"
+        />
+      </div>
+    );
+  }
+
+  const audio = extractMedia(messageData, 'audio');
+  if (audio?.file_id) {
+    return (
+      <div className="rounded-lg bg-muted/40 p-2 max-w-[280px]">
+        <audio
+          src={buildProxyUrl(audio.file_id, projectId, tokenId)}
+          controls
+          className="w-full"
+          preload="metadata"
+        />
+      </div>
+    );
+  }
+
+  const voice = extractMedia(messageData, 'voice');
+  if (voice?.file_id) {
+    return (
+      <div className="rounded-lg bg-muted/40 p-2 max-w-[280px]">
+        <audio
+          src={buildProxyUrl(voice.file_id, projectId, tokenId)}
+          controls
+          className="w-full"
+          preload="metadata"
+        />
+      </div>
+    );
+  }
+
+  const document = extractMedia(messageData, 'document');
+  if (document?.file_id) {
+    const sizeStr = formatFileSize(document.file_size);
+    return (
+      <a
+        href={buildProxyUrl(document.file_id, projectId, tokenId)}
+        download={document.file_name || 'document'}
+        className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm hover:bg-muted/60 transition-colors max-w-[280px]"
+      >
+        <span className="text-lg">📎</span>
+        <span className="flex-1 truncate text-xs">
+          {document.file_name || 'Документ'}
+          {sizeStr && <span className="text-muted-foreground ml-1">({sizeStr})</span>}
+        </span>
+      </a>
+    );
+  }
+
+  const sticker = extractMedia(messageData, 'sticker');
+  if (sticker?.file_id) {
+    if (sticker.is_video) {
+      return (
+        <div className="max-w-[120px]">
+          <video
+            src={buildProxyUrl(sticker.file_id, projectId, tokenId)}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-auto"
+          />
+        </div>
+      );
+    }
+    return (
+      <div className="max-w-[120px]">
+        <img
+          src={buildProxyUrl(sticker.file_id, projectId, tokenId)}
+          alt={sticker.emoji || 'Стикер'}
+          className="w-full h-auto"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
         />
       </div>
     );
