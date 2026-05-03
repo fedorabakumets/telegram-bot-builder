@@ -9,4 +9,6 @@ export interface MiddlewareTemplateParams {
   userDatabaseEnabled?: boolean;
   /** Автоматически регистрировать пользователей при первом обращении */
   autoRegisterUsers?: boolean;
+  /** Сохранять входящие фото от пользователей в БД */
+  saveIncomingMedia?: boolean;
 }

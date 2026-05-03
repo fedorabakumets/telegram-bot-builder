@@ -17,6 +17,7 @@
  * @param webhookUrl - URL вебхука (если задан — включается webhook режим)
  * @param webhookPort - Порт aiohttp сервера для webhook режима
  * @param protectContent - Защищать контент от копирования/пересылки
+ * @param saveIncomingMedia - Сохранять входящие фото от пользователей
  * @returns Содержимое .env файла
  */
 export function generateEnvFile(
@@ -28,6 +29,7 @@ export function generateEnvFile(
   webhookUrl?: string | null,
   webhookPort?: number | null,
   protectContent: boolean = false,
+  saveIncomingMedia: boolean = false,
 ): string {
   const envLines: string[] = [];
 
@@ -66,6 +68,9 @@ export function generateEnvFile(
   envLines.push('');
   envLines.push('# Защита контента от копирования/пересылки в Telegram');
   envLines.push(`PROTECT_CONTENT=${protectContent ? 'true' : 'false'}`);
+  envLines.push('');
+  envLines.push('# Сохранение входящих фото от пользователей (true/false)');
+  envLines.push(`SAVE_INCOMING_MEDIA=${saveIncomingMedia ? 'true' : 'false'}`);
 
   // Webhook режим (опционально)
   if (webhookUrl) {

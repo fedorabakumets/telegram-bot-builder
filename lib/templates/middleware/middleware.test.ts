@@ -155,8 +155,8 @@ describe('middlewareParamsSchema', () => {
     expect(middlewareParamsSchema.safeParse({ userDatabaseEnabled: null }).success).toBe(false);
   });
 
-  it('имеет 2 поля', () => {
-    expect(Object.keys(middlewareParamsSchema.shape).length).toBe(2);
+  it('имеет 3 поля', () => {
+    expect(Object.keys(middlewareParamsSchema.shape).length).toBe(3);
   });
 });
 
@@ -176,6 +176,40 @@ describe('stale_update_filter_middleware', () => {
   it('содержит MAX_UPDATE_AGE_SECONDS', () => {
     const r = generateMiddleware(validParamsEnabled);
     expect(r).toContain('MAX_UPDATE_AGE_SECONDS');
+  });
+});
+
+// ─── saveIncomingMedia ────────────────────────────────────────────────────────
+
+describe('saveIncomingMedia', () => {
+  it('генерирует _save_incoming_photo_to_db при saveIncomingMedia=true', () => {
+    const r = generateMessageLoggingCode(true, false, null, true, true);
+    expect(r).toContain('_save_incoming_photo_to_db');
+  });
+
+  it('не генерирует _save_incoming_photo_to_db при saveIncomingMedia=false', () => {
+    const r = generateMessageLoggingCode(true, false, null, true, false);
+    expect(r).not.toContain('_save_incoming_photo_to_db');
+  });
+
+  it('содержит asyncio.create_task при saveIncomingMedia=true', () => {
+    const r = generateMessageLoggingCode(true, false, null, true, true);
+    expect(r).toContain('asyncio.create_task(_save_incoming_photo_to_db');
+  });
+
+  it('не содержит asyncio.create_task для фото при saveIncomingMedia=false', () => {
+    const r = generateMessageLoggingCode(true, false, null, true, false);
+    expect(r).not.toContain('asyncio.create_task(_save_incoming_photo_to_db');
+  });
+
+  it('содержит INSERT INTO media_files при saveIncomingMedia=true', () => {
+    const r = generateMessageLoggingCode(true, false, null, true, true);
+    expect(r).toContain('INSERT INTO media_files');
+  });
+
+  it('содержит INSERT INTO bot_message_media при saveIncomingMedia=true', () => {
+    const r = generateMessageLoggingCode(true, false, null, true, true);
+    expect(r).toContain('INSERT INTO bot_message_media');
   });
 });
 

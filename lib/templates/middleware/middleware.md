@@ -13,6 +13,7 @@
 |----------|-----|--------------|----------|
 | `userDatabaseEnabled` | `boolean` | `false` | Включить логирование через БД |
 | `autoRegisterUsers` | `boolean` | `false` | Генерировать `register_user_middleware` |
+| `saveIncomingMedia` | `boolean` | `false` | Скачивать и сохранять входящие фото в БД |
 
 ## Использование
 
@@ -24,6 +25,9 @@ const code = generateMessageLoggingCode(false, false, null, true);
 
 // С БД — авторегистрация + логирование
 const code = generateMessageLoggingCode(true, true, projectId, true);
+
+// С БД + сохранение входящих фото
+const code = generateMessageLoggingCode(true, false, projectId, true, true);
 ```
 
 ## Поведение register_user_middleware
@@ -159,3 +163,41 @@ middleware/
 Формат: `bot:message:{PROJECT_ID}:{TOKEN_ID}`
 
 Пример: `bot:message:1:2` — проект 1, токен 2.
+
+## Сохранение входящих фото (saveIncomingMedia)
+
+При `saveIncomingMedia=true` в `message_logging_middleware` добавляется вызов:
+
+```python
+if photo_file_id:
+    asyncio.create_task(_save_incoming_photo_to_db(photo_file_id, message_data.get("photo", {})))
+```
+
+Функция `_save_incoming_photo_to_db` (из `save-message-to-api.py.jinja2`):
+1. Получает `file_path` через Telegram API (`getFile`)
+2. Скачивает файл через `aiohttp`
+3. Сохраняет на диск в `uploads/{PROJECT_ID}/{date}/photo_{file_id}.jpg`
+4. Ждёт появления записи сообщения в `bot_messages` (до 3 сек, 6 попыток × 0.5с)
+5. Вставляет запись в `media_files`
+6. Связывает через `bot_message_media` и обновляет `primary_media_id` в `bot_messages`
+
+### Переменная окружения
+
+```env
+SAVE_INCOMING_MEDIA=true
+```
+
+Читается в боте как:
+```python
+os.getenv("SAVE_INCOMING_MEDIA", "false").lower() == "true"
+```
+
+### Зависимости
+
+- `aiohttp` — уже присутствует в `requirements.txt`
+- `asyncpg` — используется через `db_pool`
+- Таблицы: `media_files`, `bot_message_media`, `bot_messages`
+
+### Поведение при ошибках
+
+Все ошибки логируются на уровне `DEBUG` — функция fire-and-forget, не прерывает обработку сообщений.

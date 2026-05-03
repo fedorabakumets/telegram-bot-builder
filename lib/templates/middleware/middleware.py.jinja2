@@ -100,6 +100,11 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
             message_text=message_text,
             message_data=message_data,
         )
+{% if saveIncomingMedia %}
+        # Если включено сохранение фото — скачиваем и сохраняем в фоне (fire-and-forget)
+        if photo_file_id:
+            asyncio.create_task(_save_incoming_photo_to_db(photo_file_id, message_data.get("photo", {})))
+{% endif %}
 
     except Exception as e:
         logging.error(f"Ошибка в middleware сохранения сообщений: {e}")

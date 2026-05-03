@@ -78,3 +78,84 @@ def _fire_save_message(user_id: str, message_type: str, message_text: str = None
         ))
     except Exception as e:
         logging.warning(f"⚠️ _fire_save_message: не удалось создать задачу: {e}")
+
+{% if saveIncomingMedia %}
+async def _save_incoming_photo_to_db(file_id: str, photo_meta: dict):
+    """Скачивает входящее фото с Telegram и сохраняет в media_files + bot_message_media.
+    Вызывается fire-and-forget после сохранения сообщения в БД.
+    Ждёт появления записи сообщения в БД (до 3 секунд).
+    """
+    if not db_pool:
+        return
+    try:
+        import aiohttp as _aiohttp
+
+        # Получаем file_path от Telegram
+        _tg_url = f"https://api.telegram.org/bot{BOT_TOKEN}/getFile?file_id={file_id}"
+        async with _aiohttp.ClientSession() as _session:
+            async with _session.get(_tg_url) as _resp:
+                _tg_data = await _resp.json()
+                if not _tg_data.get("ok"):
+                    logging.warning(f"⚠️ Telegram getFile failed: {_tg_data}")
+                    return
+                _file_path = _tg_data["result"]["file_path"]
+                _file_size = _tg_data["result"].get("file_size", 0)
+
+            # Скачиваем файл
+            _download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{_file_path}"
+            async with _session.get(_download_url) as _dl_resp:
+                _file_bytes = await _dl_resp.read()
+
+        # Сохраняем файл на диск
+        import os as _os
+        _date_str = __import__('datetime').datetime.now().strftime('%Y-%m-%d')
+        _uploads_dir = _os.path.join(PROJECT_DIR, '..', '..', 'uploads', str(PROJECT_ID), _date_str)
+        _os.makedirs(_uploads_dir, exist_ok=True)
+        _file_name = f"photo_{file_id[-20:].replace('-', '_')}.jpg"
+        _local_path = _os.path.join(_uploads_dir, _file_name)
+        with open(_local_path, 'wb') as _f:
+            _f.write(_file_bytes)
+
+        _rel_path = f"uploads/{PROJECT_ID}/{_date_str}/{_file_name}"
+        _url = f"/{_rel_path}"
+
+        # Ждём появления последнего сообщения от пользователя в БД (до 3 сек)
+        _msg_id = None
+        async with db_pool.acquire() as _conn:
+            for _ in range(6):
+                _row = await _conn.fetchrow(
+                    "SELECT id FROM bot_messages WHERE project_id=$1 AND token_id=$2 AND message_type='user' ORDER BY created_at DESC LIMIT 1",
+                    PROJECT_ID, TOKEN_ID
+                )
+                if _row:
+                    _msg_id = _row['id']
+                    break
+                await __import__('asyncio').sleep(0.5)
+
+            if not _msg_id:
+                logging.warning("⚠️ _save_incoming_photo_to_db: сообщение не найдено в БД")
+                return
+
+            # Сохраняем в media_files
+            _media_row = await _conn.fetchrow(
+                """INSERT INTO media_files (project_id, file_name, file_type, file_path, file_size, mime_type, url, is_public, usage_count)
+                   VALUES ($1, $2, 'photo', $3, $4, 'image/jpeg', $5, 0, 0)
+                   RETURNING id""",
+                PROJECT_ID, _file_name, _rel_path, _file_size, _url
+            )
+            _media_id = _media_row['id']
+
+            # Связываем с сообщением
+            await _conn.execute(
+                "INSERT INTO bot_message_media (message_id, media_file_id, media_kind, order_index) VALUES ($1, $2, 'photo', 0)",
+                _msg_id, _media_id
+            )
+            await _conn.execute(
+                "UPDATE bot_messages SET primary_media_id=$1 WHERE id=$2",
+                _media_id, _msg_id
+            )
+            logging.info(f"📸 Фото сохранено: {_url} (message_id={_msg_id})")
+
+    except Exception as _e:
+        logging.debug(f"⚠️ _save_incoming_photo_to_db не удалось: {_e}")
+{% endif %}

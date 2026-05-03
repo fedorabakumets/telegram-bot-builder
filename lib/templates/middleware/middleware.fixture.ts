@@ -36,3 +36,17 @@ export const invalidParamsWrongType = {
 
 /** Невалидные параметры: отсутствует поле */
 export const invalidParamsMissingField = {};
+
+/** Валидные параметры: БД включена, авторегистрация включена, сохранение фото включено */
+export const validParamsWithSaveMedia: MiddlewareTemplateParams = {
+  userDatabaseEnabled: true,
+  autoRegisterUsers: true,
+  saveIncomingMedia: true,
+};
+
+/** Валидные параметры: БД включена, авторегистрация включена, сохранение фото выключено */
+export const validParamsNoSaveMedia: MiddlewareTemplateParams = {
+  userDatabaseEnabled: true,
+  autoRegisterUsers: true,
+  saveIncomingMedia: false,
+};
