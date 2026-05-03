@@ -230,6 +230,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
       enableLogging: false,
       enableGroupHandlers: false,
       groups: [],
+      saveIncomingMedia: tokenSettings?.saveIncomingMedia === 1,
     });
     
     // Проверяем, содержит ли код функции БД
