@@ -20,7 +20,7 @@ export interface LogoProps {
 /**
  * Логотип Telegram с градиентным фоном
  */
-export function Logo({ className, isVertical, isCompact }: LogoProps) {
+export function Logo({ className, isCompact }: LogoProps) {
   return (
     <div
       className={cn(
