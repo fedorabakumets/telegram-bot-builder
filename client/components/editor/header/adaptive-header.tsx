@@ -58,7 +58,7 @@ export function AdaptiveHeader({
 
   // Классы для контейнера с адаптивной высотой для мобильных устройств
   const containerClasses = [
-    'bg-background dark:bg-slate-950 relative z-50',
+    'bg-background dark:bg-slate-950 border-b border-border/50 relative z-50',
     isVertical ? 'h-full w-full border-r flex flex-col' : `h-14 flex items-center justify-between gap-2 px-3 lg:px-4`,
     isCompact ? 'text-sm' : ''
   ].join(' ');

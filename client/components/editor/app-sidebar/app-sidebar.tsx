@@ -40,7 +40,7 @@ export function AppSidebar({
     >
       {/* Бренд + кнопка сворачивания */}
       <div className={cn(
-        'h-14 px-3 flex items-center flex-shrink-0',
+        'p-3 flex items-center',
         isCollapsed ? 'justify-center' : 'justify-between'
       )}>
         {!isCollapsed && (
