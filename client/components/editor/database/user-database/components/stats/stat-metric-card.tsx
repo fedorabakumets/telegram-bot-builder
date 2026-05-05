@@ -30,6 +30,8 @@ export interface StatMetricCardProps {
   lineColor?: string;
   /** Дополнительный элемент под заголовком (например переключатель периода) */
   headerExtra?: React.ReactNode;
+  /** Гранулярность для правильного форматирования дат на графике */
+  chartGranularity?: string;
 }
 
 /**
@@ -61,7 +63,7 @@ function TrendIcon({ trend }: { trend?: 'up' | 'down' | 'neutral' }) {
  * @returns JSX элемент карточки
  */
 export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
-  const { title, value, subtitle, trend, sparklineData, formatValue, gradientId: gradientIdProp, lineColor, headerExtra } = props;
+  const { title, value, subtitle, trend, sparklineData, formatValue, gradientId: gradientIdProp, lineColor, headerExtra, chartGranularity } = props;
   const fmt = formatValue ?? defaultFormat;
   const displayValue = value !== undefined ? fmt(value) : '—';
 
@@ -94,7 +96,7 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
 
       {/* График на всю ширину карточки */}
       {hasChart && (
-        <SparklineChart data={sparklineData!} gradientId={gradientId} lineColor={lineColor} />
+        <SparklineChart data={sparklineData!} gradientId={gradientId} lineColor={lineColor} granularity={chartGranularity} />
       )}
     </div>
   );

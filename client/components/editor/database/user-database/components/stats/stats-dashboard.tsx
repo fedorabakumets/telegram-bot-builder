@@ -116,6 +116,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         trend={weeklyMessages > 0 ? 'up' : 'neutral'}
         gradientId="msgActivity"
         lineColor="#10b981"
+        chartGranularity={msgGranularity}
         headerExtra={
           <ActivityGranularitySelector
             value={msgGranularity}

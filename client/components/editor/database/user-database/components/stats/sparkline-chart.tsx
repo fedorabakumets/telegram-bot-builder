@@ -23,21 +23,20 @@ const GW = VW - PL - 4;
 const GH = VH - PB - PT;
 
 /**
- * Форматирует дату или datetime в короткий вид.
- * Если строка содержит время (ISO с T) — показывает "14:32", иначе "25 апр."
- * @param dateStr - Строка даты "YYYY-MM-DD" или ISO datetime
+ * Форматирует дату по гранулярности данных.
+ * Для минут/часов показывает время "14:32", для дней/недель/месяцев — "25 апр."
+ * @param dateStr - ISO строка даты от бэкенда
+ * @param granularity - Гранулярность: '1m' | '5m' | '1h' | '1d' | '7d' | '30d'
  * @returns Отформатированная строка
  */
-function fmtDate(dateStr: string): string {
-  if (dateStr.includes('T')) {
-    // ISO datetime — показываем время
-    const d = new Date(dateStr);
+function fmtDate(dateStr: string, granularity?: string): string {
+  const d = new Date(dateStr);
+  if (granularity === '1m' || granularity === '5m' || granularity === '1h') {
+    // Минуты и часы — показываем время "14:32"
     return d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
   }
-  return new Date(dateStr).toLocaleDateString('ru', {
-    day: 'numeric',
-    month: 'short',
-  });
+  // Дни, недели, месяцы — показываем дату "25 апр."
+  return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
 }
 
 /**
@@ -50,6 +49,8 @@ export interface SparklineChartProps {
   gradientId: string;
   /** Цвет линии и градиента (по умолчанию #3b82f6 — синий) */
   lineColor?: string;
+  /** Гранулярность данных для правильного форматирования дат: '1m' | '5m' | '1h' | '1d' | '7d' | '30d' */
+  granularity?: string;
 }
 
 /**
@@ -90,7 +91,7 @@ function calcY(count: number, max: number): number {
  * @param props - Свойства компонента
  * @returns SVG-график или null если данных недостаточно
  */
-export function SparklineChart({ data, gradientId, lineColor = '#3b82f6' }: SparklineChartProps): React.JSX.Element | null {
+export function SparklineChart({ data, gradientId, lineColor = '#3b82f6', granularity }: SparklineChartProps): React.JSX.Element | null {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   if (!data || data.length < 2) return null;
@@ -174,13 +175,13 @@ export function SparklineChart({ data, gradientId, lineColor = '#3b82f6' }: Spar
 
         {/* Подписи по оси X */}
         <text x={PL} y={VH - 2} fontSize="9" fill="rgba(255,255,255,0.4)">
-          {fmtDate(data[0].date)}
+          {fmtDate(data[0].date, granularity)}
         </text>
         <text x={calcX(midIdx, total)} y={VH - 2} fontSize="9" fill="rgba(255,255,255,0.4)" textAnchor="middle">
-          {fmtDate(data[midIdx].date)}
+          {fmtDate(data[midIdx].date, granularity)}
         </text>
         <text x={VW - 4} y={VH - 2} fontSize="9" fill="rgba(255,255,255,0.4)" textAnchor="end">
-          {fmtDate(data[total - 1].date)}
+          {fmtDate(data[total - 1].date, granularity)}
         </text>
       </svg>
 
@@ -190,7 +191,7 @@ export function SparklineChart({ data, gradientId, lineColor = '#3b82f6' }: Spar
           className="pointer-events-none absolute z-10 rounded-md border bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md"
           style={{ left: tooltip.x + 8, top: Math.max(0, tooltip.y - 32) }}
         >
-          <span className="opacity-60">{fmtDate(tooltip.point.date)}</span>
+          <span className="opacity-60">{fmtDate(tooltip.point.date, granularity)}</span>
           <span className="ml-2 font-semibold">{tooltip.point.count}</span>
         </div>
       )}

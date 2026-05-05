@@ -77,6 +77,7 @@ export function useMessagesActivity(params: UseMessagesActivityParams) {
     staleTime: 0,
     gcTime: 0,
     retry: false,
+    refetchOnMount: true,
     placeholderData: undefined,
   });
 
