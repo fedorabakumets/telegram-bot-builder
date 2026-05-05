@@ -32,8 +32,7 @@ export function AppSidebar({
     <aside
       className={cn(
         'h-full flex flex-col z-40',
-        'bg-gradient-to-b from-background via-background/95 to-background/90',
-        'dark:from-slate-950 dark:via-slate-950/95 dark:to-slate-900/90',
+        'bg-background dark:bg-slate-950',
         'border-r border-border/50',
         'transition-all duration-300',
         isCollapsed ? 'w-14' : 'w-80'
