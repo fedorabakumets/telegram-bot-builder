@@ -68,3 +68,5 @@ export function SidebarNav({ currentTab, onTabChange, isCollapsed }: SidebarNavP
         );
       })}
     </nav>
+  );
+}
