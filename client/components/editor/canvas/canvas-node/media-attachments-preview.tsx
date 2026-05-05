@@ -157,13 +157,7 @@ export function MediaAttachmentsPreview({ node, projectId }: MediaAttachmentsPre
               {canPreview ? (
                 // Превью через прокси
                 mediaType === 'video' ? (
-                  <video
-                    src={`${proxyUrl}#t=0.1`}
-                    className="w-full h-auto max-h-48 object-cover"
-                    muted
-                    preload="metadata"
-                    onError={(e) => { (e.target as HTMLVideoElement).style.display = 'none'; }}
-                  />
+                  <VideoPreview src={proxyUrl} />
                 ) : (
                   <img
                     src={proxyUrl}
