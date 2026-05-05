@@ -36,7 +36,7 @@ export function AppSidebar({
         'dark:from-slate-950 dark:via-slate-950/95 dark:to-slate-900/90',
         'border-r border-border/50',
         'transition-all duration-300',
-        isCollapsed ? 'w-14' : 'w-72'
+        isCollapsed ? 'w-14' : 'w-80'
       )}
     >
       {/* Бренд */}
