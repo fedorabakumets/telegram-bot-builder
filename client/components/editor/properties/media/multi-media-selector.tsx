@@ -14,9 +14,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MediaManager } from "./media-manager";
 import { UrlDownloader } from "./url-downloader";
 import { MediaFilesList } from "./media-files-list";
+import { FileIdInput } from "./file-id-input";
 import type { MediaFile } from "@shared/schema";
 import type { MediaFileData } from "./media-files-list";
-import { Upload, Plus, LinkIcon } from "lucide-react";
+import { Upload, Plus, LinkIcon, Hash } from "lucide-react";
 import { uploadImageFromUrl } from "@lib/bot-generator/media/uploadImageFromUrl";
 import { toast } from "@/hooks/use-toast";
 import { useMediaFiles } from "../hooks/use-media";
@@ -57,6 +58,8 @@ export function MultiMediaSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [urlInput, setUrlInput] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  /** Тип медиа для вкладки Telegram file_id */
+  const [fileIdMediaType, setFileIdMediaType] = useState<'photo' | 'video' | 'audio' | 'document'>('photo');
 
   // Проверяем, включена ли клавиатура (для определения скрытых файлов)
   const hasKeyboard = keyboardType === 'inline' || keyboardType === 'reply';
@@ -73,6 +76,24 @@ export function MultiMediaSelector({
 
   /** Формируем массив файлов с реальными именами и типами из БД (если доступны) */
   const files: MediaFileData[] = value.map((url, index) => {
+    // Обрабатываем JSON-запись Telegram file_id
+    if (url.startsWith('{"__type":"file_id"')) {
+      try {
+        const parsed = JSON.parse(url);
+        return {
+          url,
+          fileName: `Telegram file_id (${parsed.mediaType || 'медиа'})`,
+          fileType: parsed.mediaType || 'photo',
+          telegramFileId: null,
+          isHidden: hasKeyboard && index > 0,
+          mediaFileId: undefined,
+          thumbnailMediaId: null,
+          thumbnailUrl: thumbnailsMap[url] ?? null,
+          thumbnailDirectUrl: null,
+          projectId,
+        };
+      } catch { /* fallthrough */ }
+    }
     const dbFile = dbFileByUrl.get(url);
     return {
       url,
@@ -231,7 +252,7 @@ export function MultiMediaSelector({
             </DialogHeader>
 
             <Tabs defaultValue="upload" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="upload" className="flex items-center gap-2">
                   <Upload className="w-4 h-4" />
                   Загрузить
@@ -239,6 +260,10 @@ export function MultiMediaSelector({
                 <TabsTrigger value="url" className="flex items-center gap-2">
                   <LinkIcon className="w-4 h-4" />
                   По URL
+                </TabsTrigger>
+                <TabsTrigger value="fileid" className="flex items-center gap-2">
+                  <Hash className="w-4 h-4" />
+                  Telegram file_id
                 </TabsTrigger>
               </TabsList>
 
@@ -255,6 +280,18 @@ export function MultiMediaSelector({
                     setIsOpen(false);
                   }}
                   onClose={() => setIsOpen(false)}
+                />
+              </TabsContent>
+
+              <TabsContent value="fileid" className="mt-4">
+                <FileIdInput
+                  projectId={projectId}
+                  mediaType={fileIdMediaType}
+                  onMediaTypeChange={setFileIdMediaType}
+                  onAdd={(entry) => {
+                    onChange([...value, entry]);
+                    setIsOpen(false);
+                  }}
                 />
               </TabsContent>
             </Tabs>
@@ -277,10 +314,18 @@ function isVariablePlaceholder(url: string): boolean {
 /**
  * Определяет тип медиа по URL или расширению файла.
  * Переменные вида {var.path} считаются фото по умолчанию.
+ * JSON-записи Telegram file_id возвращают тип из поля mediaType.
  * @param url - URL или путь к файлу
- * @returns Тип медиа: 'image' | 'video' | 'audio' | 'document'
+ * @returns Тип медиа: 'photo' | 'image' | 'video' | 'audio' | 'document'
  */
 function getMediaTypeByUrl(url: string): string {
+  // JSON-запись Telegram file_id
+  if (url.startsWith('{"__type":"file_id"')) {
+    try {
+      const parsed = JSON.parse(url);
+      return parsed.mediaType || 'photo';
+    } catch { return 'photo'; }
+  }
   // Переменные вида {var.path} считаем фото по умолчанию
   if (isVariablePlaceholder(url)) return 'photo';
   const ext = url.split('.').pop()?.toLowerCase() || '';
