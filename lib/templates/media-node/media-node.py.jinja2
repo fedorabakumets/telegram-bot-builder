@@ -291,31 +291,41 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
 {%- endif %}
 
 {%- elif attachedMedia and attachedMedia | length > 1 %}
-    # Отправка медиагруппы
+    # Отправка медиагруппы с поддержкой кеша file_id
     _media_group = []
+    # Индексы элементов, которые реально попали в группу (для сопоставления с ответом)
+    _media_group_urls = []
 {%- for url in attachedMedia %}
 {%- set cls = get_input_media_class(url) | trim %}
+{%- set mtype_g = get_media_type(url) | trim %}
 {%- if '/uploads/' in url %}
     _fp_{{ loop.index }} = get_upload_file_path("{{ url }}")
     if not os.path.exists(_fp_{{ loop.index }}):
         logging.error(f"❌ Медиафайл не найден: {_fp_{{ loop.index }}} (узел {{ nodeId }}, индекс {{ loop.index0 }})")
     else:
-        _media_group.append({{ cls }}(media=FSInputFile(_fp_{{ loop.index }})))
+        _cached_fid_g_{{ loop.index }} = _media_file_id_cache.get("{{ url }}")
+        if _cached_fid_g_{{ loop.index }}:
+            logging.info(f"📎 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] через in-memory file_id")
+            _media_group.append({{ cls }}(media=_cached_fid_g_{{ loop.index }}))
+        else:
+            logging.info(f"📤 Узел {{ nodeId }}: медиагруппа[{{ loop.index0 }}] через FSInputFile (первая отправка)")
+            _media_group.append({{ cls }}(media=FSInputFile(_fp_{{ loop.index }})))
+        _media_group_urls.append("{{ url|e }}")
 {%- else %}
     _media_group.append({{ cls }}(media="{{ url|e }}"))
+    _media_group_urls.append("{{ url|e }}")
 {%- endif %}
 {%- endfor %}
     if not _media_group:
         logging.error(f"❌ Все медиафайлы недоступны для узла {{ nodeId }}")
         return
     _sent_group = await callback_query.message.answer_media_group(_media_group)
-    # Сохраняем file_id каждого файла из медиагруппы в БД
-    if _sent_group and db_pool:
-        _media_urls = [{% for url in attachedMedia %}"{{ url|e }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+    # Сохраняем file_id каждого файла из медиагруппы в кеш и БД
+    if _sent_group:
         for _gi, _gmsg in enumerate(_sent_group):
-            if _gi >= len(_media_urls):
+            if _gi >= len(_media_group_urls):
                 break
-            _gurl = _media_urls[_gi]
+            _gurl = _media_group_urls[_gi]
             _gfid = None
             try:
                 if _gmsg.photo:
@@ -329,15 +339,18 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             except Exception:
                 pass
             if _gfid:
-                try:
-                    async with db_pool.acquire() as _conn:
-                        await _conn.execute(
-                            "UPDATE media_files SET telegram_file_id = $1 WHERE url = $2 AND project_id = $3",
-                            _gfid, _gurl, PROJECT_ID
-                        )
-                        logging.info(f"💾 file_id сохранён в БД для {_gurl[:40]}")
-                except Exception as _db_err:
-                    logging.warning(f"⚠️ Не удалось сохранить file_id медиагруппы: {_db_err}")
+                _media_file_id_cache[_gurl] = _gfid
+                logging.info(f"✅ Узел {{ nodeId }}: медиагруппа[{_gi}] file_id={_gfid[:20]}... для {_gurl[:40]}")
+                if db_pool:
+                    try:
+                        async with db_pool.acquire() as _conn:
+                            await _conn.execute(
+                                "INSERT INTO media_files (project_id, file_name, file_type, file_path, file_size, mime_type, url, telegram_file_id, is_public, usage_count) VALUES ($1, $2, 'document', $2, 0, 'application/octet-stream', $3, $4, 0, 0) ON CONFLICT (url, project_id) DO UPDATE SET telegram_file_id = EXCLUDED.telegram_file_id",
+                                PROJECT_ID, _gurl, _gurl, _gfid
+                            )
+                            logging.info(f"💾 file_id медиагруппы сохранён в БД для {_gurl[:40]}")
+                    except Exception as _db_err:
+                        logging.warning(f"⚠️ Не удалось сохранить file_id медиагруппы: {_db_err}")
 
 {%- else %}
     # Нет медиафайлов для отправки
@@ -385,25 +398,69 @@ async def handle_callback_{{ nodeId|safe_name }}(callback_query: types.CallbackQ
             if not os.path.exists(_fp):
                 logging.error(f"❌ Медиафайл не найден: {_fp} (узел {{ nodeId }})")
                 return
-            await _b.send_{{ mtype }}(_target_chat_id, FSInputFile(_fp), message_thread_id=_thread_id)
+            _cached_fid_r = _media_file_id_cache.get("{{ url }}")
+            if _cached_fid_r:
+                logging.info(f"📎 Узел {{ nodeId }}: доп. получатель — отправка через in-memory file_id")
+                _sent_r = await _b.send_{{ mtype }}(_target_chat_id, _cached_fid_r, message_thread_id=_thread_id)
+            else:
+                logging.info(f"📤 Узел {{ nodeId }}: доп. получатель — первая отправка через FSInputFile")
+                _sent_r = await _b.send_{{ mtype }}(_target_chat_id, FSInputFile(_fp), message_thread_id=_thread_id)
+                _new_fid_r = _extract_file_id_from_message(_sent_r, "{{ mtype }}")
+                if _new_fid_r:
+                    _media_file_id_cache["{{ url }}"] = _new_fid_r
+                    logging.info(f"✅ Узел {{ nodeId }}: доп. получатель — file_id={_new_fid_r[:20]}... сохранён в кеш")
+                    if db_pool:
+                        try:
+                            async with db_pool.acquire() as _conn:
+                                await _conn.execute(
+                                    "UPDATE media_files SET telegram_file_id = $1 WHERE url = $2 AND project_id = $3",
+                                    _new_fid_r, "{{ url }}", PROJECT_ID
+                                )
+                        except Exception as _db_err_r:
+                            logging.warning(f"⚠️ Не удалось сохранить file_id в БД (доп. получатель): {_db_err_r}")
 {%- else %}
             await _b.send_{{ mtype }}(_target_chat_id, "{{ url|e }}", message_thread_id=_thread_id)
 {%- endif %}
 {%- endif %}
 {%- elif attachedMedia and attachedMedia | length > 1 %}
             _mg = []
+            _mg_urls = []
 {%- for url in attachedMedia %}
 {%- set cls = get_input_media_class(url) | trim %}
+{%- set mtype_r = get_media_type(url) | trim %}
 {%- if '/uploads/' in url %}
             _fp2_{{ loop.index }} = get_upload_file_path("{{ url }}")
             if os.path.exists(_fp2_{{ loop.index }}):
-                _mg.append({{ cls }}(media=FSInputFile(_fp2_{{ loop.index }})))
+                _cached_fid_mg_{{ loop.index }} = _media_file_id_cache.get("{{ url }}")
+                if _cached_fid_mg_{{ loop.index }}:
+                    _mg.append({{ cls }}(media=_cached_fid_mg_{{ loop.index }}))
+                else:
+                    _mg.append({{ cls }}(media=FSInputFile(_fp2_{{ loop.index }})))
+                _mg_urls.append("{{ url|e }}")
 {%- else %}
             _mg.append({{ cls }}(media="{{ url|e }}"))
+            _mg_urls.append("{{ url|e }}")
 {%- endif %}
 {%- endfor %}
             if _mg:
-                await _b.send_media_group(_target_chat_id, _mg, message_thread_id=_thread_id)
+                _sent_mg = await _b.send_media_group(_target_chat_id, _mg, message_thread_id=_thread_id)
+                # Кешируем file_id из ответа медиагруппы (доп. получатель)
+                if _sent_mg:
+                    for _mgi, _mgmsg in enumerate(_sent_mg):
+                        if _mgi >= len(_mg_urls):
+                            break
+                        _mgurl = _mg_urls[_mgi]
+                        _mgfid = None
+                        try:
+                            if _mgmsg.photo: _mgfid = _mgmsg.photo[-1].file_id
+                            elif _mgmsg.video: _mgfid = _mgmsg.video.file_id
+                            elif _mgmsg.audio: _mgfid = _mgmsg.audio.file_id
+                            elif _mgmsg.document: _mgfid = _mgmsg.document.file_id
+                        except Exception:
+                            pass
+                        if _mgfid and _mgurl not in _media_file_id_cache:
+                            _media_file_id_cache[_mgurl] = _mgfid
+                            logging.info(f"✅ Узел {{ nodeId }}: доп. получатель медиагруппа[{_mgi}] file_id={_mgfid[:20]}...")
 {%- else %}
             pass
 {%- endif %}
