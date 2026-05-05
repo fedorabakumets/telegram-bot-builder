@@ -1283,6 +1283,9 @@ export default function Editor() {
       <AdaptiveHeader
         config={layoutConfig}
         projectName={activeProject.name}
+        projects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+        currentProjectId={activeProject.id}
+        onProjectChange={handleProjectSelect}
         currentTab={currentTab}
         onTabChange={handleTabChange}
         onExport={() => { }}
@@ -1653,6 +1656,9 @@ export default function Editor() {
             <AdaptiveHeader
               config={layoutConfig}
               projectName={activeProject.name}
+              projects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+              currentProjectId={activeProject.id}
+              onProjectChange={handleProjectSelect}
               currentTab={currentTab}
               onTabChange={handleTabChange}
               onExport={() => { }}

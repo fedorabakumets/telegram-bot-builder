@@ -17,6 +17,12 @@ export interface AdaptiveHeaderProps {
   projectName: string;
   /** Информация о боте */
   botInfo?: BotInfo | null;
+  /** Список всех проектов для переключателя */
+  projects?: Array<{ id: number; name: string }>;
+  /** ID текущего проекта */
+  currentProjectId?: number;
+  /** Обработчик переключения проекта */
+  onProjectChange?: (projectId: number) => void;
   /** Текущая активная вкладка */
   currentTab: HeaderTab;
   /** Обработчик изменения вкладки */

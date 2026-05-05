@@ -10,11 +10,15 @@ import { DesktopActionsFull } from './components/desktop-actions-full';
 import { Separator } from './components/separator';
 import { MobileHeaderControls } from './components/mobile-header-controls';
 import { MobileMenu } from './components/mobile-menu';
+import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 
 export function AdaptiveHeader({
   config,
   projectName,
   botInfo,
+  projects,
+  currentProjectId,
+  onProjectChange,
   currentTab,
   onTabChange,
   onSaveAsTemplate,
@@ -104,6 +108,15 @@ export function AdaptiveHeader({
       <header className={containerClasses}>
         <div className="flex items-center gap-1 sm:gap-2 md:gap-1.5 md:order-first flex-shrink-0">
           {/* BrandSection скрыт — перенесён в боковое меню */}
+          <Separator />
+          {/* Переключатель проекта */}
+          {projects && projects.length > 1 && currentProjectId && onProjectChange && (
+            <ProjectSelector
+              projects={projects}
+              selectedProjectId={currentProjectId}
+              onSelect={onProjectChange}
+            />
+          )}
           <Separator />
           {/* Мобильные кнопки компонентов и свойств после разделителя */}
           {isMobile && !isVertical && (
