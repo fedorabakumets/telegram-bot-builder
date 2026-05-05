@@ -18,6 +18,7 @@
  * @param webhookPort - Порт aiohttp сервера для webhook режима
  * @param protectContent - Защищать контент от копирования/пересылки
  * @param saveIncomingMedia - Сохранять входящие фото от пользователей
+ * @param tokenId - ID токена бота в системе (для сегментации данных в БД)
  * @returns Содержимое .env файла
  */
 export function generateEnvFile(
@@ -30,6 +31,7 @@ export function generateEnvFile(
   webhookPort?: number | null,
   protectContent: boolean = false,
   saveIncomingMedia: boolean = false,
+  tokenId: number = 0,
 ): string {
   const envLines: string[] = [];
 
@@ -42,6 +44,9 @@ export function generateEnvFile(
   envLines.push('');
   envLines.push('# ID проекта');
   envLines.push(`PROJECT_ID=${projectId}`);
+  envLines.push('');
+  envLines.push('# ID токена бота (для сегментации данных в БД и Redis)');
+  envLines.push(`TOKEN_ID=${tokenId}`);
   envLines.push('');
   envLines.push('# URL API сервера');
   envLines.push('API_BASE_URL=http://localhost:5000');

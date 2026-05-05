@@ -159,6 +159,7 @@ export async function createCompleteBotFiles(
     webhookPort,
     protectContent,
     saveIncomingMedia,
+    tokenId,
   );
   const envPath = join(botDir, '.env');
   writeFileSync(envPath, envContent, 'utf8');
