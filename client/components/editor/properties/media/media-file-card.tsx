@@ -204,7 +204,14 @@ export function MediaFileCard({
             )}
           </div>
           <p className="text-xs text-emerald-700/70 dark:text-emerald-300/70 truncate mt-0.5">{fileType.toUpperCase()}</p>
-          <p className="text-xs text-emerald-600/50 dark:text-emerald-400/50 truncate mt-1">{url}</p>
+          {/* Для JSON file_id записей не показываем сырой JSON — только краткое описание */}
+          {!fileIdsByToken ? (
+            <p className="text-xs text-emerald-600/50 dark:text-emerald-400/50 truncate mt-1">{url}</p>
+          ) : (
+            <p className="text-xs text-emerald-600/50 dark:text-emerald-400/50 mt-1">
+              file_id · {Object.keys(fileIdsByToken).length} {Object.keys(fileIdsByToken).length === 1 ? 'токен' : 'токена'}
+            </p>
+          )}
         </div>
 
         {/* Actions */}
@@ -236,8 +243,8 @@ export function MediaFileCard({
               <i className="fas fa-tag text-xs mr-1"></i>{tag}
             </Badge>
           ))}
-          {/* Telegram File ID */}
-          {telegramFileId !== undefined && (
+          {/* Telegram File ID — скрываем если есть fileIdsByToken (они показываются ниже) */}
+          {telegramFileId !== undefined && !fileIdsByToken && (
             <div className="flex items-center gap-2 pt-1">
               <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0">🤖 File ID:</span>
               {telegramFileId ? (
@@ -275,7 +282,10 @@ export function MediaFileCard({
                 </div>
               ) : Object.entries(fileIdsByToken).map(([tokenId, fileId]) => (
                 <div key={tokenId} className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0 truncate max-w-[120px]" title={tokenNameById[tokenId] ?? `Token ${tokenId}`}>
+                  <span
+                    className="text-xs text-slate-500 dark:text-slate-400 shrink-0 truncate max-w-[160px] cursor-default"
+                    title={tokenNameById[tokenId] ?? `Token ${tokenId}`}
+                  >
                     🤖 {tokenNameById[tokenId] ?? `Token ${tokenId}`}:
                   </span>
                   <span className="text-xs font-mono text-slate-600 dark:text-slate-300 truncate flex-1">
