@@ -265,7 +265,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _cached_fid = _media_file_id_cache.get("{{ imageUrl }}")
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка фото через in-memory file_id (без перегенерации)")
-                return await _b.send_photo(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                _sent_result = await _b.send_photo(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+                return _sent_result
             logging.info(f"📤 Узел {{ nodeId }}: отправка фото через FSInputFile")
             _sent_photo = await _b.send_photo(_target_chat_id, FSInputFile(image_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_photo and _sent_photo.photo:
@@ -282,12 +284,16 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                             logging.info(f"💾 file_id сохранён в БД для {{ imageUrl }}")
                     except Exception as _db_err:
                         logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
-            return _sent_photo
+            _sent_result = _sent_photo
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- elif '{' in imageUrl and '}' in imageUrl %}
             {# imageUrl содержит переменную вида {var.path} — подставляем через replace_variables_in_text #}
             _image_url_resolved = replace_variables_in_text("{{ imageUrl }}", all_user_vars, {})
             if _image_url_resolved and _image_url_resolved != "{{ imageUrl }}":
-                return await _b.send_photo(_target_chat_id, _image_url_resolved, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                _sent_result = await _b.send_photo(_target_chat_id, _image_url_resolved, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+                return _sent_result
             else:
                 logging.warning(f"⚠️ Не удалось разрешить переменную imageUrl: {{ imageUrl | replace('{', '{{') | replace('}', '}}') }} (узел {{ nodeId }})")
                 return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
@@ -295,12 +301,16 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- set _cached_img_fid = (telegramFileIds or {})[imageUrl] if telegramFileIds and imageUrl in telegramFileIds else '' %}
 {%- if _cached_img_fid %}
             logging.info(f"📎 Узел {{ nodeId }}: отправка фото через кэшированный file_id={{ _cached_img_fid }}...")
-            return await _b.send_photo(_target_chat_id, "{{ _cached_img_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            _sent_result = await _b.send_photo(_target_chat_id, "{{ _cached_img_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- else %}
             _rt_fid = _media_file_id_cache.get("{{ imageUrl }}")
             if _rt_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка фото через in-memory file_id (без перегенерации)")
-                return await _b.send_photo(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                _sent_result = await _b.send_photo(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+                return _sent_result
             logging.info(f"📤 Узел {{ nodeId }}: первая отправка фото по URL, file_id будет получен из ответа")
             _sent_photo = await _b.send_photo(_target_chat_id, "{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_photo and _sent_photo.photo:
@@ -317,7 +327,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                             logging.info(f"💾 file_id сохранён в БД для {{ imageUrl }}")
                     except Exception as _db_err:
                         logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
-            return _sent_photo
+            _sent_result = _sent_photo
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- endif %}
 {%- endif %}
 {%- elif videoUrl %}
@@ -348,7 +360,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- else %}
                 logging.info(f"🖼 Узел {{ nodeId }}: обложка не установлена")
 {%- endif %}
-                return await _b.send_video(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
+                _sent_result = await _b.send_video(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+                return _sent_result
             logging.info(f"📤 Узел {{ nodeId }}: отправка видео через FSInputFile")
 {%- if _vid_thumb_fid %}
             logging.info(f"🖼 Узел {{ nodeId }}: обложка через file_id={{ _vid_thumb_fid }}...")
@@ -391,12 +405,16 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                         except Exception as _db_err:
                             logging.warning(f"⚠️ Не удалось сохранить file_id обложки в БД: {_db_err}")
 {%- endif %}
-            return _sent_video
+            _sent_result = _sent_video
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- else %}
 {%- set _cached_vid_fid = (telegramFileIds or {})[videoUrl] if telegramFileIds and videoUrl in telegramFileIds else '' %}
 {%- if _cached_vid_fid %}
             logging.info(f"📎 Узел {{ nodeId }}: отправка видео через кэшированный file_id={{ _cached_vid_fid }}...")
-            return await _b.send_video(_target_chat_id, "{{ _cached_vid_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
+            _sent_result = await _b.send_video(_target_chat_id, "{{ _cached_vid_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- else %}
             _rt_fid = _media_file_id_cache.get("{{ videoUrl }}")
             if _rt_fid:
@@ -408,7 +426,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- else %}
                 logging.info(f"🖼 Узел {{ nodeId }}: обложка не установлена")
 {%- endif %}
-                return await _b.send_video(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
+                _sent_result = await _b.send_video(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+                return _sent_result
             logging.info(f"📤 Узел {{ nodeId }}: первая отправка видео по URL, file_id будет получен из ответа")
 {%- if _vid_thumb_fid %}
             logging.info(f"🖼 Узел {{ nodeId }}: обложка через file_id={{ _vid_thumb_fid }}...")
@@ -451,7 +471,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                         except Exception as _db_err:
                             logging.warning(f"⚠️ Не удалось сохранить file_id обложки в БД: {_db_err}")
 {%- endif %}
-            return _sent_video
+            _sent_result = _sent_video
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- endif %}
 {%- endif %}
 {%- elif audioUrl %}
@@ -463,7 +485,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _cached_fid = _media_file_id_cache.get("{{ audioUrl }}")
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка аудио через in-memory file_id (без перегенерации)")
-                return await _b.send_audio(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                _sent_result = await _b.send_audio(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+                return _sent_result
             logging.info(f"📤 Узел {{ nodeId }}: отправка аудио через FSInputFile")
             _sent_audio = await _b.send_audio(_target_chat_id, FSInputFile(audio_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_audio and _sent_audio.audio:
@@ -480,17 +504,23 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                             logging.info(f"💾 file_id сохранён в БД для {{ audioUrl }}")
                     except Exception as _db_err:
                         logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
-            return _sent_audio
+            _sent_result = _sent_audio
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- else %}
 {%- set _cached_aud_fid = (telegramFileIds or {})[audioUrl] if telegramFileIds and audioUrl in telegramFileIds else '' %}
 {%- if _cached_aud_fid %}
             logging.info(f"📎 Узел {{ nodeId }}: отправка аудио через кэшированный file_id={{ _cached_aud_fid }}...")
-            return await _b.send_audio(_target_chat_id, "{{ _cached_aud_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            _sent_result = await _b.send_audio(_target_chat_id, "{{ _cached_aud_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- else %}
             _rt_fid = _media_file_id_cache.get("{{ audioUrl }}")
             if _rt_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка аудио через in-memory file_id (без перегенерации)")
-                return await _b.send_audio(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                _sent_result = await _b.send_audio(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+                return _sent_result
             logging.info(f"📤 Узел {{ nodeId }}: первая отправка аудио по URL, file_id будет получен из ответа")
             _sent_audio = await _b.send_audio(_target_chat_id, "{{ audioUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_audio and _sent_audio.audio:
@@ -507,7 +537,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                             logging.info(f"💾 file_id сохранён в БД для {{ audioUrl }}")
                     except Exception as _db_err:
                         logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
-            return _sent_audio
+            _sent_result = _sent_audio
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- endif %}
 {%- endif %}
 {%- elif documentUrl %}
@@ -519,7 +551,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _cached_fid = _media_file_id_cache.get("{{ documentUrl }}")
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка документа через in-memory file_id (без перегенерации)")
-                return await _b.send_document(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                _sent_result = await _b.send_document(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+                return _sent_result
             logging.info(f"📤 Узел {{ nodeId }}: отправка документа через FSInputFile")
             _sent_doc = await _b.send_document(_target_chat_id, FSInputFile(doc_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_doc and _sent_doc.document:
@@ -536,17 +570,23 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                             logging.info(f"💾 file_id сохранён в БД для {{ documentUrl }}")
                     except Exception as _db_err:
                         logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
-            return _sent_doc
+            _sent_result = _sent_doc
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- else %}
 {%- set _cached_doc_fid = (telegramFileIds or {})[documentUrl] if telegramFileIds and documentUrl in telegramFileIds else '' %}
 {%- if _cached_doc_fid %}
             logging.info(f"📎 Узел {{ nodeId }}: отправка документа через кэшированный file_id={{ _cached_doc_fid }}...")
-            return await _b.send_document(_target_chat_id, "{{ _cached_doc_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            _sent_result = await _b.send_document(_target_chat_id, "{{ _cached_doc_fid }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- else %}
             _rt_fid = _media_file_id_cache.get("{{ documentUrl }}")
             if _rt_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка документа через in-memory file_id (без перегенерации)")
-                return await _b.send_document(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                _sent_result = await _b.send_document(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+                return _sent_result
             logging.info(f"📤 Узел {{ nodeId }}: первая отправка документа по URL, file_id будет получен из ответа")
             _sent_doc = await _b.send_document(_target_chat_id, "{{ documentUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_doc and _sent_doc.document:
@@ -563,7 +603,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                             logging.info(f"💾 file_id сохранён в БД для {{ documentUrl }}")
                     except Exception as _db_err:
                         logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
-            return _sent_doc
+            _sent_result = _sent_doc
+{%- filter indent(12) %}{% include 'message/partials/send-extra-file-ids.py.jinja2' %}{% endfilter %}
+            return _sent_result
 {%- endif %}
 {%- endif %}
 {%- else %}
@@ -580,19 +622,22 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                         _media_type = _fid_data.get("mediaType", "photo")
                         logging.info(f"📎 Узел {{ nodeId }}: отправка {_media_type} через file_id={_fid[:20]}... (TOKEN_ID={TOKEN_ID})")
                         if _media_type == "photo":
-                            return await _b.send_photo(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                            _sent_result = await _b.send_photo(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
                         elif _media_type == "video":
-                            return await _b.send_video(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                            _sent_result = await _b.send_video(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
                         elif _media_type == "audio":
-                            return await _b.send_audio(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                            _sent_result = await _b.send_audio(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
                         else:
-                            return await _b.send_document(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                            _sent_result = await _b.send_document(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
                     else:
                         logging.warning(f"⚠️ Узел {{ nodeId }}: нет file_id для TOKEN_ID={TOKEN_ID} в записи file_id")
             except (json.JSONDecodeError, AttributeError):
                 pass
 {%- endif %}
 {%- endfor %}
+            # Возвращаем результат последней отправки file_id (если была) или отправляем текст
+            if locals().get('_sent_result') is not None:
+                return _sent_result
 {%- endif %}
             return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
