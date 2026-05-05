@@ -75,6 +75,24 @@ export function resolveMediaUrls(data: any): {
 
   // Для определения типа медиа используем только обычные URL (не JSON file_id)
   const regularUrls = urlStrings.filter(u => !u.startsWith('{"__type":"file_id"'));
+  const fileIdUrls = urlStrings.filter(u => u.startsWith('{"__type":"file_id"'));
+
+  // Если есть JSON file_id вместе с обычными URL — оставляем всё в attachedMediaUrls
+  // для генерации медиагруппы в шаблоне (не разбиваем на videoUrl/imageUrl)
+  if (fileIdUrls.length > 0 && regularUrls.length > 0) {
+    return {
+      imageUrl: '',
+      videoUrl: '',
+      audioUrl: '',
+      documentUrl: '',
+      attachedMediaUrls: urlStrings,
+      isLocalImageUrl: false,
+      isLocalVideoUrl: false,
+      isLocalAudioUrl: false,
+      isLocalDocumentUrl: false,
+    };
+  }
+
   const firstForType = regularUrls.length > 0 ? regularUrls[0].toLowerCase() : '';
   const isPhoto = firstForType ? /\.(jpg|jpeg|png|webp)(\?|#|$)/.test(firstForType) : false;
   const isVideo = firstForType ? /\.(mp4|mov|avi|mkv|webm|3gp|flv)(\?|#|$)/.test(firstForType) : false;
