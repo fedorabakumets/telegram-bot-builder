@@ -10,7 +10,7 @@
  * @module MediaFileCard
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,30 @@ import type { BotToken } from "@shared/schema";
  */
 function isVariablePlaceholder(url: string): boolean {
   return url.startsWith('{') && url.endsWith('}');
+}
+
+/**
+ * Строит URL прокси для превью Telegram file_id
+ * @param fileIdsByToken - Маппинг tokenId → file_id
+ * @param tokens - Токены проекта (для выбора дефолтного)
+ * @param projectId - ID проекта
+ * @returns URL прокси или null
+ */
+function buildFileIdPreviewUrl(
+  fileIdsByToken: Record<string, string>,
+  tokens: BotToken[],
+  projectId: number
+): string | null {
+  const entries = Object.entries(fileIdsByToken);
+  if (entries.length === 0) return null;
+
+  /** Выбираем дефолтный токен, иначе первый доступный */
+  const defaultToken = tokens.find(t => t.isDefault === 1);
+  const [tokenId, fileId] = defaultToken && fileIdsByToken[String(defaultToken.id)]
+    ? [String(defaultToken.id), fileIdsByToken[String(defaultToken.id)]]
+    : entries[0];
+
+  return `/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(fileId)}&tokenId=${tokenId}`;
 }
 
 /** Пропсы компонента MediaFileCard */
@@ -100,6 +124,8 @@ export function MediaFileCard({
   const [copied, setCopied] = useState(false);
   /** Маппинг tokenId → флаг копирования для множественных file_id */
   const [copiedTokenId, setCopiedTokenId] = useState<string | null>(null);
+  /** Флаг ошибки загрузки превью через прокси (fallback на иконку) */
+  const [previewError, setPreviewError] = useState(false);
 
   /** Загружаем токены проекта для отображения имени бота рядом с file_id */
   const { data: tokens = [] } = useQuery<BotToken[]>({
@@ -121,6 +147,17 @@ export function MediaFileCard({
     });
     return map;
   }, [tokens]);
+
+  /** URL прокси для превью JSON file_id медиа (null если недоступно) */
+  const previewProxyUrl = useMemo(() => {
+    if (!fileIdsByToken || !projectId || Object.keys(fileIdsByToken).length === 0) return null;
+    return buildFileIdPreviewUrl(fileIdsByToken, tokens, projectId);
+  }, [fileIdsByToken, tokens, projectId]);
+
+  /** Сбрасываем ошибку превью при смене прокси URL */
+  useEffect(() => {
+    setPreviewError(false);
+  }, [previewProxyUrl]);
 
   const handlePreview = () => {
     if (onPreview) {
@@ -160,7 +197,28 @@ export function MediaFileCard({
       <div className="flex items-start gap-3">
         {/* Preview */}
         <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-lg bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
-          {fileType === 'image' || fileType === 'photo' ? (
+          {/* Для JSON file_id — показываем превью через прокси если доступен */}
+          {fileIdsByToken && previewProxyUrl && !previewError ? (
+            (fileType === 'photo' || fileType === 'image') ? (
+              <img
+                src={previewProxyUrl}
+                alt={fileName}
+                className="w-full h-full object-cover"
+                onError={() => setPreviewError(true)}
+              />
+            ) : fileType === 'video' ? (
+              <video
+                src={`${previewProxyUrl}#t=0.1`}
+                className="w-full h-full object-cover"
+                muted
+                preload="metadata"
+                onError={() => setPreviewError(true)}
+              />
+            ) : (
+              // Для audio/document — иконка (нет визуального превью)
+              <span className="text-lg sm:text-xl">{FILE_ICONS[fileType] || '📎'}</span>
+            )
+          ) : fileType === 'image' || fileType === 'photo' ? (
             isVariablePlaceholder(url) ? (
               // Переменная — показываем иконку вместо img
               <span className="text-lg">🖼️</span>
