@@ -1,1 +1,38 @@
-{# @deprecated Этот partial больше не используется. Логика объединена в основной шаблон. #}
+{#
+  @fileoverview Макрос отправки дополнительных JSON file_id из attachedMedia.
+  Используется после отправки основного медиа (imageUrl/videoUrl/audioUrl/documentUrl),
+  чтобы не пропустить file_id-элементы при наличии обычного URL в том же attachedMedia.
+
+  Переменные из внешней области видимости:
+    - attachedMedia: список медиа-элементов ноды
+    - nodeId: идентификатор узла
+    - _b: экземпляр бота
+    - _target_chat_id: идентификатор чата
+    - _thread_id: идентификатор треда (или None)
+    - TOKEN_ID: идентификатор токена бота
+#}
+{%- for _mediaItem in (attachedMedia or []) %}
+{%- if '"__type":"file_id"' in _mediaItem %}
+            {# Дополнительная отправка JSON file_id из attachedMedia (без caption и keyboard) #}
+            try:
+                _fid_data = json.loads("""{{ _mediaItem }}""")
+                if _fid_data.get("__type") == "file_id":
+                    _fid_map = _fid_data.get("fileIdsByToken", {})
+                    _fid = _fid_map.get(str(TOKEN_ID))
+                    if _fid:
+                        _media_type = _fid_data.get("mediaType", "photo")
+                        logging.info(f"📎 Узел {{ nodeId }}: доп. отправка {_media_type} через file_id={_fid[:20]}... (TOKEN_ID={TOKEN_ID})")
+                        if _media_type == "photo":
+                            await _b.send_photo(_target_chat_id, _fid, caption=None, reply_markup=None, message_thread_id=_thread_id)
+                        elif _media_type == "video":
+                            await _b.send_video(_target_chat_id, _fid, caption=None, reply_markup=None, message_thread_id=_thread_id)
+                        elif _media_type == "audio":
+                            await _b.send_audio(_target_chat_id, _fid, caption=None, reply_markup=None, message_thread_id=_thread_id)
+                        else:
+                            await _b.send_document(_target_chat_id, _fid, caption=None, reply_markup=None, message_thread_id=_thread_id)
+                    else:
+                        logging.warning(f"⚠️ Узел {{ nodeId }}: нет file_id для TOKEN_ID={TOKEN_ID}")
+            except (json.JSONDecodeError, AttributeError):
+                pass
+{%- endif %}
+{%- endfor %}
