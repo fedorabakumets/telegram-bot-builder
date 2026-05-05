@@ -85,6 +85,8 @@ export function MultiMediaSelector({
           fileName: `Telegram file_id (${parsed.mediaType || 'медиа'})`,
           fileType: parsed.mediaType || 'photo',
           telegramFileId: null,
+          /** Маппинг tokenId → file_id из JSON-записи */
+          fileIdsByToken: (parsed.fileIdsByToken as Record<string, string>) || {},
           isHidden: hasKeyboard && index > 0,
           mediaFileId: undefined,
           thumbnailMediaId: null,

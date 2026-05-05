@@ -22,6 +22,8 @@ export interface MediaFileData {
   tags?: string[];
   /** Кэшированный Telegram file_id (появляется после первой отправки ботом) */
   telegramFileId?: string | null;
+  /** Маппинг tokenId → file_id для JSON file_id записей */
+  fileIdsByToken?: Record<string, string>;
   /** Флаг скрытого файла */
   isHidden?: boolean;
   /** ID видеофайла в БД (нужен для установки обложки) */
