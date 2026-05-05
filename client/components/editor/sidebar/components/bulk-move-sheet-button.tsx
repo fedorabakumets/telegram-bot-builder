@@ -3,7 +3,6 @@
  * @module components/editor/sidebar/components/bulk-move-sheet-button
  */
 
-import React, { useState, useRef, useEffect } from 'react';
 import { Share2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
