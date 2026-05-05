@@ -22,15 +22,8 @@ export interface NavigationProps {
   className?: string;
 }
 
-/** Элементы навигации */
-const NAV_ITEMS = [
-  { key: 'editor' as HeaderTab, label: 'Редактор' },
-  { key: 'export' as HeaderTab, label: 'Код' },
-  { key: 'bot' as HeaderTab, label: 'Бот' },
-  { key: 'users' as HeaderTab, label: 'Пользователи' },
-  // Временно скрыто: { key: 'user-ids' as HeaderTab, label: 'База ID' },
-  // Временно скрыто: { key: 'client-api' as HeaderTab, label: 'Client API' },
-] as const;
+/** Элементы навигации — скрыты в шапке, перенесены в боковое меню */
+const NAV_ITEMS: never[] = [];
 
 /**
  * Навигация по вкладкам редактора
