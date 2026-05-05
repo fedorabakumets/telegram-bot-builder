@@ -42,11 +42,15 @@ function isVariablePlaceholder(url: string): boolean {
 /**
  * Определяет тип медиа по URL или расширению файла.
  * Переменные вида {var.path} считаются фото по умолчанию.
+ * JSON-записи Telegram file_id возвращают тип из поля mediaType.
  * @param url - URL или путь к файлу
  * @returns Тип медиа: 'image' | 'video' | 'audio' | 'document'
  */
 function getMediaTypeByUrl(url: string): string {
   if (isVariablePlaceholder(url)) return 'photo';
+  if (url.startsWith('{"__type":"file_id"')) {
+    try { return JSON.parse(url).mediaType || 'photo'; } catch { return 'photo'; }
+  }
   const ext = url.split('.').pop()?.toLowerCase() || '';
   if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) return 'image';
   if (['mp4', 'avi', 'mov', 'webm'].includes(ext)) return 'video';
@@ -113,9 +117,10 @@ export function MediaAttachmentsPreview({ node }: MediaAttachmentsPreviewProps) 
     ? [attachedMedia[0]]
     : attachedMedia;
 
-  // Включаем обычные URL, /uploads/ пути и переменные-плейсхолдеры
+  // Включаем обычные URL, /uploads/ пути, переменные и JSON file_id записи
   const mediaUrls = mediaToDisplay.filter(url =>
-    url.startsWith('/uploads/') || url.startsWith('http') || isVariablePlaceholder(url)
+    url.startsWith('/uploads/') || url.startsWith('http') ||
+    isVariablePlaceholder(url) || url.startsWith('{"__type":"file_id"')
   );
 
   if (mediaUrls.length === 0) {
@@ -125,6 +130,24 @@ export function MediaAttachmentsPreview({ node }: MediaAttachmentsPreviewProps) 
   return (
     <div className="mb-4 space-y-2">
       {mediaUrls.map((url, index) => {
+        // JSON file_id — показываем карточку с типом медиа
+        if (url.startsWith('{"__type":"file_id"')) {
+          let mediaType = 'photo';
+          try { mediaType = JSON.parse(url).mediaType || 'photo'; } catch {}
+          const icon = FILE_ICONS[mediaType] || '📎';
+          return (
+            <div key={url + index} className="rounded-lg border-2 border-violet-200 dark:border-violet-700/50 p-3 bg-violet-50/50 dark:bg-violet-900/20">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-violet-900 dark:text-violet-100 truncate">Telegram file_id ({mediaType})</p>
+                  <p className="text-xs text-violet-700/70 dark:text-violet-300/70">Отправка без скачивания</p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
         // Переменная — показываем бейдж без попытки загрузить как img
         if (isVariablePlaceholder(url)) {
           return (

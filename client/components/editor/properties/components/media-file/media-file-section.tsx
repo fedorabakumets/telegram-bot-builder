@@ -38,10 +38,14 @@ interface MediaFileSectionProps {
 }
 
 /**
- * Определяет тип медиа по URL или расширению файла
+ * Определяет тип медиа по URL или расширению файла.
+ * JSON-записи Telegram file_id возвращают тип из поля mediaType.
  * @param url - URL или путь к файлу
  */
 function getMediaTypeByUrl(url: string): string {
+  if (url.startsWith('{"__type":"file_id"')) {
+    try { return JSON.parse(url).mediaType || 'photo'; } catch { return 'photo'; }
+  }
   const ext = url.split('.').pop()?.toLowerCase() || '';
   if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) return 'image';
   if (['mp4', 'avi', 'mov', 'webm'].includes(ext)) return 'video';
