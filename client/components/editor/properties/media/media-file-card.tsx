@@ -310,8 +310,8 @@ export function MediaFileCard({
         </div>
       )}
 
-      {/* Выбор обложки для видео */}
-      {fileType === 'video' && projectId && (
+      {/* Выбор обложки для видео — только для обычных файлов, не для JSON file_id записей */}
+      {fileType === 'video' && projectId && !fileIdsByToken && (
         <div className="mt-2">
           <ThumbnailSelector
             currentThumbnailUrl={thumbnailUrl}
