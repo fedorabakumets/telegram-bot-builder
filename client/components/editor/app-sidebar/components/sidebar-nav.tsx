@@ -5,7 +5,7 @@
 import { LayoutDashboard, Code2, Bot, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/utils';
-import type { HeaderTab } from '../../sidebar/types';
+import type { HeaderTab } from '../types';
 
 /**
  * Пропсы компонента SidebarNav

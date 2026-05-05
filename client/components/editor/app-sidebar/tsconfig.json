@@ -1,6 +1,7 @@
 {
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
+    "types": ["vite/client"],
     "paths": {
       "@/*": ["../../../../client/*"],
       "@lib/*": ["../../../../lib/*"],

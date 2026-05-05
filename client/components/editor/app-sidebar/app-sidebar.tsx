@@ -4,12 +4,12 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/utils/utils';
-import { SidebarBrand } from '../sidebar/components/sidebar-brand';
-import { SidebarNav } from '../sidebar/components/sidebar-nav';
-import { SidebarActions } from '../sidebar/components/sidebar-actions';
-import { SidebarFooter } from '../sidebar/components/sidebar-footer';
-import { SidebarSeparator } from '../sidebar/components/sidebar-separator';
-import type { AppSidebarProps } from '../sidebar/types';
+import { SidebarBrand } from './components/sidebar-brand';
+import { SidebarNav } from './components/sidebar-nav';
+import { SidebarActions } from './components/sidebar-actions';
+import { SidebarFooter } from './components/sidebar-footer';
+import { SidebarSeparator } from './components/sidebar-separator';
+import type { AppSidebarProps } from './types';
 
 /**
  * Главный компонент сайдбара редактора

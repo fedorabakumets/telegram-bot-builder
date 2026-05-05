@@ -3,7 +3,7 @@
  */
 
 import { cn } from '@/utils/utils';
-import type { BotInfo } from '../../sidebar/types';
+import type { BotInfo } from '../types';
 
 /**
  * Пропсы компонента SidebarBrand
