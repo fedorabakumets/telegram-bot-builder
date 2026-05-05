@@ -27,7 +27,7 @@ export function SidebarBrand({ projectName, botInfo, isCollapsed }: SidebarBrand
     <BrandSection
       projectName={projectName}
       botInfo={botInfo}
-      isVertical={!isCollapsed}
+      isVertical={false}
       isCompact={isCollapsed}
     />
   );
