@@ -39,21 +39,25 @@ export function AppSidebar({
         isCollapsed ? 'w-14' : 'w-80'
       )}
     >
-      {/* Бренд */}
-      <div className="p-3 flex items-center justify-between">
-        <SidebarBrand
-          projectName={projectName}
-          botInfo={botInfo}
-          isCollapsed={isCollapsed}
-        />
-        {/* Кнопка сворачивания */}
+      {/* Бренд + кнопка сворачивания */}
+      <div className={cn(
+        'p-3 flex items-center',
+        isCollapsed ? 'justify-center' : 'justify-between'
+      )}>
+        {!isCollapsed && (
+          <SidebarBrand
+            projectName={projectName}
+            botInfo={botInfo}
+            isCollapsed={isCollapsed}
+          />
+        )}
+        {/* Кнопка сворачивания — всегда видна */}
         {onToggleCollapsed && (
           <button
             onClick={onToggleCollapsed}
             className={cn(
               'flex-shrink-0 h-6 w-6 rounded flex items-center justify-center',
-              'text-muted-foreground hover:bg-muted/60 transition-colors',
-              isCollapsed && 'mx-auto mt-1'
+              'text-muted-foreground hover:bg-muted/60 transition-colors'
             )}
           >
             {isCollapsed
