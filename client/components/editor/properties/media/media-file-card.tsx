@@ -28,25 +28,22 @@ function isVariablePlaceholder(url: string): boolean {
 }
 
 /**
- * Строит URL прокси для превью Telegram file_id
+ * Строит URL прокси для превью Telegram file_id.
+ * Берёт первую доступную пару tokenId → fileId из маппинга —
+ * все они валидны, так как пользователь явно указал file_id для каждого токена.
  * @param fileIdsByToken - Маппинг tokenId → file_id
- * @param tokens - Токены проекта (для выбора дефолтного)
  * @param projectId - ID проекта
  * @returns URL прокси или null
  */
 function buildFileIdPreviewUrl(
   fileIdsByToken: Record<string, string>,
-  tokens: BotToken[],
   projectId: number
 ): string | null {
   const entries = Object.entries(fileIdsByToken);
   if (entries.length === 0) return null;
 
-  /** Выбираем дефолтный токен, иначе первый доступный */
-  const defaultToken = tokens.find(t => t.isDefault === 1);
-  const [tokenId, fileId] = defaultToken && fileIdsByToken[String(defaultToken.id)]
-    ? [String(defaultToken.id), fileIdsByToken[String(defaultToken.id)]]
-    : entries[0];
+  /** Берём первую доступную пару — все токены валидны */
+  const [tokenId, fileId] = entries[0];
 
   return `/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(fileId)}&tokenId=${tokenId}`;
 }
@@ -151,8 +148,8 @@ export function MediaFileCard({
   /** URL прокси для превью JSON file_id медиа (null если недоступно) */
   const previewProxyUrl = useMemo(() => {
     if (!fileIdsByToken || !projectId || Object.keys(fileIdsByToken).length === 0) return null;
-    return buildFileIdPreviewUrl(fileIdsByToken, tokens, projectId);
-  }, [fileIdsByToken, tokens, projectId]);
+    return buildFileIdPreviewUrl(fileIdsByToken, projectId);
+  }, [fileIdsByToken, projectId]);
 
   /** Сбрасываем ошибку превью при смене прокси URL */
   useEffect(() => {
