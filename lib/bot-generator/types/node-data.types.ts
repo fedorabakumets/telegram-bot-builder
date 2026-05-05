@@ -116,7 +116,13 @@ export interface NodeData {
     value: string;
   }>;
 
-  /** Прикреплённые медиа */
+  /**
+   * Прикреплённые медиафайлы.
+   * Каждый элемент — строка одного из форматов:
+   * - URL или путь: `"/uploads/123/file.mp4"`, `"https://..."`
+   * - Переменная: `"{var.photo}"`
+   * - Telegram file_id по токенам (JSON): `'{"__type":"file_id","mediaType":"photo","fileIdsByToken":{"42":"AgACAgI..."}}'`
+   */
   attachedMedia?: string[];
 
   // --- Отображение в меню ---

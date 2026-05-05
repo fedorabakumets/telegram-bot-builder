@@ -519,7 +519,13 @@ export const nodeSchema = z.object({
     adminChatIdSource: z.enum(['manual', 'variable', 'current_chat']).default('current_chat'),
     /** Имя переменной с ID чата */
     adminChatVariableName: z.string().optional(),
-    /** Массив URL прикреплённых медиафайлов */
+    /**
+     * Массив прикреплённых медиафайлов.
+     * Каждый элемент — строка одного из форматов:
+     * - URL или путь: `"/uploads/123/file.mp4"`, `"https://..."`
+     * - Переменная: `"{var.photo}"`
+     * - Telegram file_id по токенам (JSON): `'{"__type":"file_id","mediaType":"photo","fileIdsByToken":{"42":"AgACAgI..."}}'`
+     */
     attachedMedia: z.array(z.string()).default([]),
     /** Произвольный текст (используется в некоторых узлах) */
     text: z.string().optional(),
