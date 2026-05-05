@@ -46,8 +46,6 @@ export function AppSidebar({
       )}>
         {!isCollapsed && (
           <SidebarBrand
-            projectName={projectName}
-            botInfo={botInfo}
             isCollapsed={isCollapsed}
           />
         )}

@@ -107,18 +107,7 @@ export function AdaptiveHeader({
     <>
       <header className={containerClasses}>
         <div className="flex items-center gap-0 md:order-first flex-shrink-0">
-          {/* Лого + название бренда */}
-          <div className="flex items-center gap-1.5 px-1">
-            <Logo isCompact />
-            <span className="text-sm font-medium text-muted-foreground hidden sm:inline">BotCraft</span>
-          </div>
-
-          {/* Разделитель в стиле хлебных крошек */}
-          {projects && projects.length > 0 && currentProjectId && onProjectChange && (
-            <span className="text-muted-foreground/40 text-sm mx-1">/</span>
-          )}
-
-          {/* Переключатель проекта */}
+          {/* Переключатель проекта — без лого, лого живёт в сайдбаре */}
           {projects && projects.length > 0 && currentProjectId && onProjectChange && (
             <ProjectSwitcher
               projects={projects}
