@@ -42,7 +42,7 @@
 | `documentUrl` | `string` | - | URL документа |
 | `videoUrl` | `string` | - | URL видео |
 | `audioUrl` | `string` | - | URL аудио |
-| `attachedMedia` | `string[]` | `[]` | Прикреплённые медиа |
+| `attachedMedia` | `string[]` | `[]` | Прикреплённые медиа. Каждый элемент — URL/путь, переменная `{var}`, или JSON file_id: `{"__type":"file_id","mediaType":"photo","fileIdsByToken":{"42":"AgACAgI..."}}` |
 | `enableConditionalMessages` | `boolean` | `false` | Условные сообщения включены |
 | `conditionalMessages` | `any[]` | `[]` | Массив условных сообщений |
 | `fallbackMessage` | `string` | - | Запасное сообщение |
@@ -322,6 +322,25 @@ if (enableAutoTransition && autoTransitionTo) {
 
 - [`command-trigger.py.jinja2`](../command-trigger/command-trigger.md) — шаблон входа по команде
 - [`keyboard.py.jinja2`](../keyboard/keyboard.md) — шаблон клавиатуры
+
+## Telegram file_id в attachedMedia
+
+Элемент `attachedMedia` может быть JSON-строкой с Telegram file_id:
+
+```json
+{"__type":"file_id","mediaType":"photo","fileIdsByToken":{"42":"AgACAgI...","87":"BgACBgI..."}}
+```
+
+- `mediaType` — тип медиа: `"photo"`, `"video"`, `"audio"`, `"document"`
+- `fileIdsByToken` — словарь `tokenId → file_id`; ключ — строковый ID токена из таблицы `bot_tokens`
+
+При генерации кода шаблон создаёт Python код, который в рантайме:
+1. Парсит JSON через `json.loads()`
+2. Читает `TOKEN_ID` из env (уже доступен как глобальная переменная)
+3. Берёт нужный file_id из `fileIdsByToken[str(TOKEN_ID)]`
+4. Вызывает `send_photo` / `send_video` / `send_audio` / `send_document`
+
+Если для текущего `TOKEN_ID` file_id не найден — логирует предупреждение и продолжает без медиа.
 
 ## Dynamic keyboard flow
 

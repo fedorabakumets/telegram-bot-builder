@@ -7,6 +7,7 @@ import { Node } from '@shared/schema';
  * из узлов проекта. Поддерживает различные форматы именования переменных:
  * - image_url_*, video_url_*, audio_url_*, document_url_*
  * - imageUrlVar_*, videoUrlVar_*, audioUrlVar_*, documentUrlVar_*
+ * - JSON file_id: `{"__type":"file_id","mediaType":"photo","fileIdsByToken":{...}}`
  *
  * @module collect-media-variables
  */
@@ -49,6 +50,14 @@ export function collectMediaVariables(nodes: Node[]): Map<string, { type: string
           mediaType = 'audio';
         } else if (mediaVar.startsWith('document_url_') || mediaVar.startsWith('documentUrlVar')) {
           mediaType = 'document';
+        } else if (mediaVar.startsWith('{"__type":"file_id"')) {
+          // JSON-запись Telegram file_id — тип берём из поля mediaType
+          try {
+            const parsed = JSON.parse(mediaVar);
+            mediaType = parsed.mediaType || 'photo';
+          } catch {
+            mediaType = 'photo';
+          }
         } else if (mediaVar.startsWith('http://') || mediaVar.startsWith('https://') || mediaVar.startsWith('/uploads/')) {
           const ext = mediaVar.split('.').pop()?.toLowerCase() || '';
           if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) {

@@ -567,6 +567,33 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- endif %}
 {%- endif %}
 {%- else %}
+{%- if attachedMedia and attachedMedia|length > 0 %}
+{%- for mediaItem in attachedMedia %}
+{%- if '"__type":"file_id"' in mediaItem %}
+            {# Обработка JSON file_id из attachedMedia — выбор file_id по TOKEN_ID в рантайме #}
+            try:
+                _fid_data = json.loads('{{ mediaItem | replace("'", "\\'") }}')
+                if _fid_data.get("__type") == "file_id":
+                    _fid_map = _fid_data.get("fileIdsByToken", {})
+                    _fid = _fid_map.get(str(TOKEN_ID))
+                    if _fid:
+                        _media_type = _fid_data.get("mediaType", "photo")
+                        logging.info(f"📎 Узел {{ nodeId }}: отправка {_media_type} через file_id={_fid[:20]}... (TOKEN_ID={TOKEN_ID})")
+                        if _media_type == "photo":
+                            return await _b.send_photo(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                        elif _media_type == "video":
+                            return await _b.send_video(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                        elif _media_type == "audio":
+                            return await _b.send_audio(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                        else:
+                            return await _b.send_document(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                    else:
+                        logging.warning(f"⚠️ Узел {{ nodeId }}: нет file_id для TOKEN_ID={TOKEN_ID} в записи file_id")
+            except (json.JSONDecodeError, AttributeError):
+                pass
+{%- endif %}
+{%- endfor %}
+{%- endif %}
             return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
 {%- else %}
