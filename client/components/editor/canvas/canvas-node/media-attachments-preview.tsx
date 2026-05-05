@@ -15,6 +15,8 @@ import { VideoPreview } from './video-preview';
 interface MediaAttachmentsPreviewProps {
   /** Узел с прикреплёнными медиафайлами */
   node: Node;
+  /** ID проекта (для превью Telegram file_id через прокси) */
+  projectId?: number;
 }
 
 /** Иконки для типов файлов */
@@ -104,7 +106,7 @@ function VideoWithThumbnail({ src, thumbnailUrl }: { src: string; thumbnailUrl?:
  * @param props - Свойства компонента
  * @returns JSX элемент или null если нет медиафайлов
  */
-export function MediaAttachmentsPreview({ node }: MediaAttachmentsPreviewProps) {
+export function MediaAttachmentsPreview({ node, projectId }: MediaAttachmentsPreviewProps) {
   const attachedMedia = node.data.attachedMedia as string[] | undefined;
 
   if (!attachedMedia || attachedMedia.length === 0) {
@@ -130,20 +132,56 @@ export function MediaAttachmentsPreview({ node }: MediaAttachmentsPreviewProps) 
   return (
     <div className="mb-4 space-y-2">
       {mediaUrls.map((url, index) => {
-        // JSON file_id — показываем карточку с типом медиа
+        // JSON file_id — показываем превью через прокси или карточку с типом медиа
         if (url.startsWith('{"__type":"file_id"')) {
           let mediaType = 'photo';
-          try { mediaType = JSON.parse(url).mediaType || 'photo'; } catch {}
+          let fileIdsByToken: Record<string, string> = {};
+          try {
+            const parsed = JSON.parse(url);
+            mediaType = parsed.mediaType || 'photo';
+            fileIdsByToken = parsed.fileIdsByToken || {};
+          } catch {}
           const icon = FILE_ICONS[mediaType] || '📎';
+
+          // Строим прокси URL если есть projectId и хотя бы один file_id
+          const entries = Object.entries(fileIdsByToken);
+          const proxyUrl = projectId && entries.length > 0
+            ? `/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(entries[0][1])}&tokenId=${entries[0][0]}`
+            : null;
+
+          // Для фото/видео показываем превью через прокси, для остальных — иконку
+          const canPreview = proxyUrl && (mediaType === 'photo' || mediaType === 'image' || mediaType === 'video');
+
           return (
-            <div key={url + index} className="rounded-lg border-2 border-violet-200 dark:border-violet-700/50 p-3 bg-violet-50/50 dark:bg-violet-900/20">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-violet-900 dark:text-violet-100 truncate">Telegram file_id ({mediaType})</p>
-                  <p className="text-xs text-violet-700/70 dark:text-violet-300/70">Отправка без скачивания</p>
+            <div key={url + index} className="rounded-lg border-2 border-violet-200 dark:border-violet-700/50 overflow-hidden bg-violet-50/50 dark:bg-violet-900/20">
+              {canPreview ? (
+                // Превью через прокси
+                mediaType === 'video' ? (
+                  <video
+                    src={`${proxyUrl}#t=0.1`}
+                    className="w-full h-auto max-h-48 object-cover"
+                    muted
+                    preload="metadata"
+                    onError={(e) => { (e.target as HTMLVideoElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <img
+                    src={proxyUrl}
+                    alt={`file_id ${mediaType}`}
+                    className="w-full h-auto max-h-48 object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                )
+              ) : (
+                // Fallback: иконка для аудио/документов или когда нет projectId
+                <div className="p-3 flex items-center gap-3">
+                  <span className="text-2xl">{icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-violet-900 dark:text-violet-100 truncate">Telegram file_id ({mediaType})</p>
+                    <p className="text-xs text-violet-700/70 dark:text-violet-300/70">Отправка без скачивания</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           );
         }

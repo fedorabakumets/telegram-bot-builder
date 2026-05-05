@@ -1440,6 +1440,7 @@ export default function Editor() {
                 onAutoLayout={handleAutoLayout}
                 canvasView={canvasView}
                 onViewChange={currentTab === 'editor' ? handleViewChange : undefined}
+                projectId={activeProject?.id}
               />
             </div>
           )}
@@ -1753,6 +1754,7 @@ export default function Editor() {
                   focusNodeId={focusNodeId}
                   highlightNodeId={highlightNodeId}
                   onAutoLayout={handleAutoLayout}
+                  projectId={activeProject?.id}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">

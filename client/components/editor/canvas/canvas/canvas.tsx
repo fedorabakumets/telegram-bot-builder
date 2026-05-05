@@ -185,6 +185,8 @@ interface CanvasProps {
   onViewChange?: (view: import('@/pages/editor/components/canvas-view-toggle').CanvasView) => void;
   /** Подавить автоматическое вписывание в экран (например при возврате с JSON) */
   suppressAutoFit?: boolean;
+  /** ID проекта (для превью Telegram file_id через прокси) */
+  projectId?: number;
 }
 
 export function Canvas({
@@ -235,6 +237,7 @@ export function Canvas({
   canvasView,
   onViewChange,
   suppressAutoFit,
+  projectId,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1501,6 +1504,7 @@ export function Canvas({
             sheets={availableSheets}
             onMoveNodeToSheet={onMoveNodeToSheet}
             highlightNodeId={highlightNodeId}
+            projectId={projectId}
           />
           {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">

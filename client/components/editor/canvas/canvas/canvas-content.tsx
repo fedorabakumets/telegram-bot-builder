@@ -68,6 +68,8 @@ interface CanvasContentProps {
   sheets?: Array<{ id: string; name: string }>;
   /** Колбэк перемещения узла в другой лист */
   onMoveNodeToSheet?: (nodeId: string, sheetId: string) => void;
+  /** ID проекта (для превью Telegram file_id через прокси) */
+  projectId?: number;
 }
 
 /**
@@ -100,6 +102,7 @@ export function CanvasContent({
   highlightNodeId,
   sheets,
   onMoveNodeToSheet,
+  projectId,
 }: CanvasContentProps) {
   /**
    * Получение всех узлов со всех листов для отображения связей
@@ -226,6 +229,7 @@ export function CanvasContent({
           onButtonPortMount={handleButtonPortMount}
           sheets={sheets}
           onMoveToSheet={onMoveNodeToSheet ? (sheetId) => onMoveNodeToSheet(node.id, sheetId) : undefined}
+          projectId={projectId}
         />
       ))}
     </div>
