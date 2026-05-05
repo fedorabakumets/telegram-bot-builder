@@ -666,12 +666,12 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             {# Локальный файл из /uploads/ — добавляем через FSInputFile #}
             _fp_mg_{{ loop.index }} = get_upload_file_path("{{ mediaItem }}")
             if os.path.exists(_fp_mg_{{ loop.index }}):
-{%- set _mg_ext = mediaItem.split('.')[-1].lower() %}
-{%- if _mg_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+{%- set _mi_lower = mediaItem | lower %}
+{%- if '.jpg' in _mi_lower or '.jpeg' in _mi_lower or '.png' in _mi_lower or '.gif' in _mi_lower or '.webp' in _mi_lower %}
                 _mg_items.append(InputMediaPhoto(media=FSInputFile(_fp_mg_{{ loop.index }})))
-{%- elif _mg_ext in ['mp4', 'avi', 'mov', 'webm'] %}
+{%- elif '.mp4' in _mi_lower or '.avi' in _mi_lower or '.mov' in _mi_lower or '.webm' in _mi_lower %}
                 _mg_items.append(InputMediaVideo(media=FSInputFile(_fp_mg_{{ loop.index }})))
-{%- elif _mg_ext in ['mp3', 'wav', 'ogg'] %}
+{%- elif '.mp3' in _mi_lower or '.wav' in _mi_lower or '.ogg' in _mi_lower %}
                 _mg_items.append(InputMediaAudio(media=FSInputFile(_fp_mg_{{ loop.index }})))
 {%- else %}
                 _mg_items.append(InputMediaDocument(media=FSInputFile(_fp_mg_{{ loop.index }})))
@@ -680,12 +680,12 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 logging.error(f"❌ Медиафайл не найден: {_fp_mg_{{ loop.index }}} (узел {{ nodeId }})")
 {%- else %}
             {# Обычный URL — определяем тип по расширению #}
-{%- set _mg_ext = mediaItem.split('.')[-1].lower() %}
-{%- if _mg_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
+{%- set _mi_lower = mediaItem | lower %}
+{%- if '.jpg' in _mi_lower or '.jpeg' in _mi_lower or '.png' in _mi_lower or '.gif' in _mi_lower or '.webp' in _mi_lower %}
             _mg_items.append(InputMediaPhoto(media="{{ mediaItem|e }}"))
-{%- elif _mg_ext in ['mp4', 'avi', 'mov', 'webm'] %}
+{%- elif '.mp4' in _mi_lower or '.avi' in _mi_lower or '.mov' in _mi_lower or '.webm' in _mi_lower %}
             _mg_items.append(InputMediaVideo(media="{{ mediaItem|e }}"))
-{%- elif _mg_ext in ['mp3', 'wav', 'ogg'] %}
+{%- elif '.mp3' in _mi_lower or '.wav' in _mi_lower or '.ogg' in _mi_lower %}
             _mg_items.append(InputMediaAudio(media="{{ mediaItem|e }}"))
 {%- else %}
             _mg_items.append(InputMediaDocument(media="{{ mediaItem|e }}"))
