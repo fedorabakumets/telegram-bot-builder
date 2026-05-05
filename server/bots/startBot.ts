@@ -446,9 +446,11 @@ export async function startBot(projectId: number, token: string, tokenId: number
           if (instance) {
             // Не перезаписываем маркер __server_restart__ — он нужен для восстановления после деплоя
             if (instance.errorMessage !== '__server_restart__') {
+              // code === null означает завершение по сигналу (SIGTERM/SIGKILL от stopBot) — не ошибка
+              const isCrashExit = code !== null && code !== 0;
               await storage.updateBotInstance(instance.id, {
                 status: 'stopped',
-                errorMessage: code !== 0 ? `Процесс завершен с кодом ${code}` : null
+                errorMessage: isCrashExit ? `Процесс завершен с кодом ${code}` : null
               });
             }
           }

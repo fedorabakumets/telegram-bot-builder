@@ -23,6 +23,9 @@ import { getRedisPublisher } from "../redis/redisClient";
  */
 function isAbruptShutdown(errorMessage: string | null | undefined): boolean {
   if (!errorMessage) return false;
+  // "Процесс завершен с кодом null" — это завершение по сигналу (SIGTERM/SIGKILL от stopBot),
+  // не считается внезапным крашем и не должно триггерить восстановление
+  if (errorMessage.includes("с кодом null")) return false;
   return errorMessage.includes("Процесс завершен с кодом");
 }
 
