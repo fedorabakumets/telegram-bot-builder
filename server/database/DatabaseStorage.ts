@@ -1237,6 +1237,28 @@ export class DatabaseStorage implements IStorage {
       .insert(botMessages)
       .values(insertMessage)
       .returning();
+
+    // Обновляем interaction_count и last_interaction в bot_users при каждом сохранении сообщения.
+    // Это необходимо чтобы /users/stats корректно считал totalInteractions через SUM(interaction_count).
+    // Обновляем только если запись пользователя существует (игнорируем ошибки — не блокируем сохранение).
+    try {
+      await this.db
+        .update(botUsers)
+        .set({
+          interactionCount: sql`${botUsers.interactionCount} + 1`,
+          lastInteraction: new Date(),
+        })
+        .where(
+          and(
+            eq(botUsers.projectId, insertMessage.projectId),
+            eq(botUsers.userId, Number(insertMessage.userId)),
+            ...(insertMessage.tokenId ? [eq(botUsers.tokenId, insertMessage.tokenId)] : []),
+          ),
+        );
+    } catch (err) {
+      console.warn('[createBotMessage] не удалось обновить interaction_count:', err);
+    }
+
     return message;
   }
 
