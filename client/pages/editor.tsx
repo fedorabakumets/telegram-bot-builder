@@ -12,7 +12,7 @@ import { CodePanel } from '@/components/editor/code/panel';
 import { ReadmePreview } from '@/components/editor/code/readme';
 import { useCodeGenerator as useCodeGeneratorServer } from '@/components/editor/code/hooks';
 import type { CodeFormat } from '@/components/editor/code/hooks';
-import { AppSidebar } from '@/components/editor/sidebar';
+import { AppSidebar } from '@/components/editor/app-sidebar';
 import { useSidebarState } from '@/components/editor/app-sidebar/hooks/use-sidebar-state';
 import { ComponentsSidebar } from '@/components/editor/sidebar/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
@@ -1559,8 +1559,8 @@ export default function Editor() {
       return (
         <UserMessagesLiveProvider projectId={activeProject.id}>
         <div className="flex h-screen w-full overflow-hidden">
-          {/** Левый сайдбар навигации — временно скрыт */}
-          {/* <AppSidebar
+          {/** Левый сайдбар навигации */}
+          <AppSidebar
             projectName={activeProject.name}
             botInfo={null}
             currentTab={currentTab}
@@ -1571,7 +1571,7 @@ export default function Editor() {
             onToggleCollapsed={toggleCollapsed}
             headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? false}
             onToggleHeader={handleToggleHeader}
-          /> */}
+          />
           {/** Основная рабочая область */}
           <div className="flex-1 min-w-0 overflow-hidden h-full">
         <SimpleLayoutCustomizer
