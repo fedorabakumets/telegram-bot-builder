@@ -609,38 +609,92 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- endif %}
 {%- endif %}
 {%- else %}
+{#
+  Ветка: нет imageUrl/videoUrl/audioUrl/documentUrl — только attachedMedia.
+  Логика определяется в рантайме Python:
+    0 элементов → send_message
+    1 элемент   → одиночная отправка (file_id или файл/URL)
+    2+ элементов → send_media_group; клавиатура отправляется отдельным сообщением
+#}
 {%- if attachedMedia and attachedMedia|length > 0 %}
-{%- for mediaItem in attachedMedia %}
-{%- if '"__type":"file_id"' in mediaItem %}
-            {# Обработка JSON file_id из attachedMedia — выбор file_id по TOKEN_ID в рантайме #}
+            {# Собираем медиагруппу из attachedMedia в рантайме #}
+            _mg_items = []
+{%- for _mi in attachedMedia %}
+{%- if '"__type":"file_id"' in _mi %}
+            {# Элемент {{ loop.index }}: JSON file_id — тип определяется в рантайме #}
             try:
-                _fid_data = json.loads("""{{ mediaItem }}""")
-                if _fid_data.get("__type") == "file_id":
-                    _fid_map = _fid_data.get("fileIdsByToken", {})
-                    _fid = _fid_map.get(str(TOKEN_ID))
-                    if _fid:
-                        _media_type = _fid_data.get("mediaType", "photo")
-                        logging.info(f"📎 Узел {{ nodeId }}: отправка {_media_type} через file_id={_fid[:20]}... (TOKEN_ID={TOKEN_ID})")
-                        if _media_type == "photo":
-                            _sent_result = await _b.send_photo(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
-                        elif _media_type == "video":
-                            _sent_result = await _b.send_video(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
-                        elif _media_type == "audio":
-                            _sent_result = await _b.send_audio(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                _fid_data_{{ loop.index }} = json.loads("""{{ _mi }}""")
+                if _fid_data_{{ loop.index }}.get("__type") == "file_id":
+                    _fid_{{ loop.index }} = _fid_data_{{ loop.index }}.get("fileIdsByToken", {}).get(str(TOKEN_ID))
+                    if _fid_{{ loop.index }}:
+                        _mtype_{{ loop.index }} = _fid_data_{{ loop.index }}.get("mediaType", "photo")
+                        if _mtype_{{ loop.index }} == "photo":
+                            _mg_items.append(InputMediaPhoto(media=_fid_{{ loop.index }}))
+                        elif _mtype_{{ loop.index }} == "video":
+                            _mg_items.append(InputMediaVideo(media=_fid_{{ loop.index }}))
+                        elif _mtype_{{ loop.index }} == "audio":
+                            _mg_items.append(InputMediaAudio(media=_fid_{{ loop.index }}))
                         else:
-                            _sent_result = await _b.send_document(_target_chat_id, _fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                            _mg_items.append(InputMediaDocument(media=_fid_{{ loop.index }}))
                     else:
-                        logging.warning(f"⚠️ Узел {{ nodeId }}: нет file_id для TOKEN_ID={TOKEN_ID} в записи file_id")
+                        logging.warning(f"⚠️ Узел {{ nodeId }}: нет file_id для TOKEN_ID={TOKEN_ID} (элемент {{ loop.index }})")
             except (json.JSONDecodeError, AttributeError):
                 pass
+{%- elif '/uploads/' in _mi %}
+            {# Элемент {{ loop.index }}: локальный файл из /uploads/ #}
+{%- set _u = _mi | lower %}
+{%- if '.jpg' in _u or '.jpeg' in _u or '.png' in _u or '.gif' in _u or '.webp' in _u %}
+{%- set _media_class = 'InputMediaPhoto' %}
+{%- elif '.mp4' in _u or '.avi' in _u or '.mov' in _u %}
+{%- set _media_class = 'InputMediaVideo' %}
+{%- elif '.mp3' in _u or '.wav' in _u or '.ogg' in _u %}
+{%- set _media_class = 'InputMediaAudio' %}
+{%- else %}
+{%- set _media_class = 'InputMediaDocument' %}
+{%- endif %}
+            _fp_{{ loop.index }} = get_upload_file_path("{{ _mi }}")
+            if os.path.exists(_fp_{{ loop.index }}):
+                _mg_items.append({{ _media_class }}(media=FSInputFile(_fp_{{ loop.index }})))
+{%- else %}
+            {# Элемент {{ loop.index }}: внешний URL или переменная — пропускаем переменные #}
+{%- set _u = _mi | lower %}
+{%- if '.jpg' in _u or '.jpeg' in _u or '.png' in _u or '.gif' in _u or '.webp' in _u %}
+{%- set _media_class = 'InputMediaPhoto' %}
+{%- elif '.mp4' in _u or '.avi' in _u or '.mov' in _u %}
+{%- set _media_class = 'InputMediaVideo' %}
+{%- elif '.mp3' in _u or '.wav' in _u or '.ogg' in _u %}
+{%- set _media_class = 'InputMediaAudio' %}
+{%- else %}
+{%- set _media_class = 'InputMediaDocument' %}
+{%- endif %}
+            if not ("{{" in """{{ _mi }}""" and "}}" in """{{ _mi }}"""):
+                _mg_items.append({{ _media_class }}(media="{{ _mi }}"))
 {%- endif %}
 {%- endfor %}
-            # Возвращаем результат последней отправки file_id (если была) или отправляем текст
-            if locals().get('_sent_result') is not None:
+            {# Добавляем caption к первому элементу #}
+            if _mg_items:
+                _mg_items[0] = _mg_items[0].__class__(media=_mg_items[0].media, caption=text{{ parse_mode_arg }})
+            {# Отправка: медиагруппа (2+), одиночный элемент (1) или текст (0) #}
+            if len(_mg_items) >= 2:
+                logging.info(f"📎 Узел {{ nodeId }}: отправка медиагруппы из {len(_mg_items)} файлов")
+                _sent_result = (await _b.send_media_group(_target_chat_id, _mg_items, message_thread_id=_thread_id) or [None])[0]
+                {# reply_markup не поддерживается в send_media_group — отправляем клавиатуру отдельно #}
+                if {{ effectiveKeyboard }} is not None:
+                    await _b.send_message(_target_chat_id, "​", reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
                 return _sent_result
+            elif len(_mg_items) == 1:
+                {# Одиночная отправка с caption и keyboard #}
+                _single = _mg_items[0]
+                if isinstance(_single, InputMediaPhoto):
+                    return await _b.send_photo(_target_chat_id, _single.media, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                elif isinstance(_single, InputMediaVideo):
+                    return await _b.send_video(_target_chat_id, _single.media, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                elif isinstance(_single, InputMediaAudio):
+                    return await _b.send_audio(_target_chat_id, _single.media, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                else:
+                    return await _b.send_document(_target_chat_id, _single.media, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
             return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
-{%- endif %}
 {%- else %}
             return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}

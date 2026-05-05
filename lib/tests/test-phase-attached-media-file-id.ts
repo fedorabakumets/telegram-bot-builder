@@ -288,6 +288,28 @@ test('D04', 'URL + JSON file_id — оба присутствуют в коде 
   ok(jsonLoadsIdx > sendVideoIdx, 'json.loads должен идти ПОСЛЕ send_video (не в else-ветке)');
 });
 
+test('D05', '/uploads/ + JSON file_id → send_media_group в коде', () => {
+  const node = {
+    id: 'msg1',
+    type: 'message',
+    position: { x: 0, y: 0 },
+    data: {
+      messageText: 'Тест',
+      buttons: [],
+      keyboardType: 'none',
+      attachedMedia: [
+        '/uploads/239/video.mp4',
+        JSON.stringify({ __type: 'file_id', mediaType: 'video', fileIdsByToken: { '151': 'BAACAgI_test' } }),
+      ],
+    },
+  };
+  const code = gen(makeProject([node]), 'd05');
+  ok(code.includes('send_media_group'), 'send_media_group должен быть в коде');
+  ok(code.includes('InputMediaVideo'), 'InputMediaVideo должен быть в коде');
+  ok(code.includes('BAACAgI_test'), 'file_id должен быть в коде');
+  syntax(code, 'd05');
+});
+
 // ════════════════════════════════════════════════════════════════════════════
 // Итоги
 // ════════════════════════════════════════════════════════════════════════════
