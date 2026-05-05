@@ -62,13 +62,7 @@ export function AdaptiveHeader({
   if (isVertical) {
     return (
       <header className={containerClasses}>
-        <BrandSection
-          projectName={projectName}
-          botInfo={botInfo}
-          isVertical={isVertical}
-          isCompact={isCompact}
-          isMobile={isMobile}
-        />
+        {/* BrandSection скрыт — перенесён в боковое меню */}
         <Separator />
         <div className="flex-1 overflow-y-auto">
           <Navigation
@@ -109,13 +103,7 @@ export function AdaptiveHeader({
     <>
       <header className={containerClasses}>
         <div className="flex items-center gap-1 sm:gap-2 md:gap-1.5 md:order-first flex-shrink-0">
-          <BrandSection
-            projectName={projectName}
-            botInfo={botInfo}
-            isVertical={isVertical}
-            isCompact={isCompact}
-            isMobile={isMobile}
-          />
+          {/* BrandSection скрыт — перенесён в боковое меню */}
           <Separator />
           {/* Мобильные кнопки компонентов и свойств после разделителя */}
           {isMobile && !isVertical && (
