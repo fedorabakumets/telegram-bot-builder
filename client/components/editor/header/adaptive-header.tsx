@@ -4,13 +4,13 @@ import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-
 import { useTelegramAuthListener } from '@/components/editor/header/hooks/use-telegram-auth-listener';
 import { useMiniAppAuth } from '@/components/editor/header/hooks/use-mini-app-auth';
 import type { AdaptiveHeaderProps } from './types';
-import { BrandSection } from './components/brand-section';
 import { Navigation } from './components/navigation';
 import { DesktopActionsFull } from './components/desktop-actions-full';
 import { Separator } from './components/separator';
 import { MobileHeaderControls } from './components/mobile-header-controls';
 import { MobileMenu } from './components/mobile-menu';
-import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
+import { Logo } from './components/logo';
+import { ProjectSwitcher } from './components/project-switcher';
 
 export function AdaptiveHeader({
   config,
@@ -106,17 +106,27 @@ export function AdaptiveHeader({
   return (
     <>
       <header className={containerClasses}>
-        <div className="flex items-center gap-1 sm:gap-2 md:gap-1.5 md:order-first flex-shrink-0">
-          {/* BrandSection скрыт — перенесён в боковое меню */}
-          <Separator />
+        <div className="flex items-center gap-0 md:order-first flex-shrink-0">
+          {/* Лого + название бренда */}
+          <div className="flex items-center gap-1.5 px-1">
+            <Logo isCompact />
+            <span className="text-sm font-medium text-muted-foreground hidden sm:inline">BotCraft</span>
+          </div>
+
+          {/* Разделитель в стиле хлебных крошек */}
+          {projects && projects.length > 0 && currentProjectId && onProjectChange && (
+            <span className="text-muted-foreground/40 text-sm mx-1">/</span>
+          )}
+
           {/* Переключатель проекта */}
-          {projects && projects.length > 1 && currentProjectId && onProjectChange && (
-            <ProjectSelector
+          {projects && projects.length > 0 && currentProjectId && onProjectChange && (
+            <ProjectSwitcher
               projects={projects}
-              selectedProjectId={currentProjectId}
+              currentProjectId={currentProjectId}
               onSelect={onProjectChange}
             />
           )}
+
           <Separator />
           {/* Мобильные кнопки компонентов и свойств после разделителя */}
           {isMobile && !isVertical && (
