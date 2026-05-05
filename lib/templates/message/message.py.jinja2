@@ -614,7 +614,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- if '"__type":"file_id"' in mediaItem %}
             {# Обработка JSON file_id из attachedMedia — выбор file_id по TOKEN_ID в рантайме #}
             try:
-                _fid_data = json.loads('{{ mediaItem | replace("'", "\\'") }}')
+                _fid_data = json.loads("""{{ mediaItem }}""")
                 if _fid_data.get("__type") == "file_id":
                     _fid_map = _fid_data.get("fileIdsByToken", {})
                     _fid = _fid_map.get(str(TOKEN_ID))

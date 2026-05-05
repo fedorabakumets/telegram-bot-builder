@@ -15,7 +15,7 @@
 {%- if '"__type":"file_id"' in _mediaItem %}
             {# Дополнительная отправка JSON file_id из attachedMedia (без caption и keyboard) #}
             try:
-                _fid_data = json.loads('{{ _mediaItem | replace("'", "\\'") }}')
+                _fid_data = json.loads("""{{ _mediaItem }}""")
                 if _fid_data.get("__type") == "file_id":
                     _fid_map = _fid_data.get("fileIdsByToken", {})
                     _fid = _fid_map.get(str(TOKEN_ID))
