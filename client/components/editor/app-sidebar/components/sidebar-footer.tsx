@@ -1,10 +1,9 @@
 /**
- * @fileoverview Футер сайдбара: переключатель темы и профиль пользователя
+ * @fileoverview Футер сайдбара: профиль пользователя и кнопка шапки
  */
 
 import { LogOut, MessageCircle, PanelTop } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/editor/header/components/theme-toggle';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import { cn } from '@/utils/utils';
@@ -23,9 +22,9 @@ interface SidebarFooterProps {
 }
 
 /**
- * Футер сайдбара с темой и авторизацией
+ * Футер сайдбара с профилем пользователя
  * @param props - Свойства компонента
- * @returns JSX элемент с переключателем темы и профилем
+ * @returns JSX элемент с профилем и кнопкой шапки
  */
 export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: SidebarFooterProps) {
   const { user, logout } = useTelegramAuth();
@@ -51,7 +50,6 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
           <PanelTop className="h-4 w-4" />
         </Button>
       )}
-      <ThemeToggle />
 
       {isAuthed ? (
         <div className={cn('flex items-center gap-2', isCollapsed && 'justify-center')}>
