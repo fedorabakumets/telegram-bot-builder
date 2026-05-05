@@ -8,5 +8,4 @@
       "@assets/*": ["../../../../attached_assets/*"]
     }
   },
-  "include": ["./**/*.ts", "./**/*.tsx"]
-}
+  "include": ["./**/*.ts", "./**/*.tsx", "../app-sidebar/components/sidebar-nav.tsx", "../app-sidebar/components/sidebar-brand.tsx", "../app-sidebar/hooks/use-sidebar-state.ts", "../app-sidebar/types/inde

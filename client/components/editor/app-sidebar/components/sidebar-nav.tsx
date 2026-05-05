@@ -5,7 +5,7 @@
 import { LayoutDashboard, Code2, Bot, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/utils';
-import type { HeaderTab } from '../types';
+import type { HeaderTab } from '../../sidebar/types';
 
 /**
  * Пропсы компонента SidebarNav
@@ -68,5 +68,3 @@ export function SidebarNav({ currentTab, onTabChange, isCollapsed }: SidebarNavP
         );
       })}
     </nav>
-  );
-}

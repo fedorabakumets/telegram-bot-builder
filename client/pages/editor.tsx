@@ -13,7 +13,7 @@ import { ReadmePreview } from '@/components/editor/code/readme';
 import { useCodeGenerator as useCodeGeneratorServer } from '@/components/editor/code/hooks';
 import type { CodeFormat } from '@/components/editor/code/hooks';
 import { AppSidebar } from '@/components/editor/sidebar';
-import { useSidebarState } from '@/components/editor/sidebar/hooks/use-sidebar-state';
+import { useSidebarState } from '@/components/editor/app-sidebar/hooks/use-sidebar-state';
 import { ComponentsSidebar } from '@/components/editor/sidebar/components-sidebar';
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
