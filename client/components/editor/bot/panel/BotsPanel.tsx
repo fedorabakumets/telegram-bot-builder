@@ -30,7 +30,7 @@ interface BotStatusResponse {
  * Панель ботов
  */
 export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
-  const { addTerminal, updateTerminalStatus, removeTerminal, terminals } = useActiveTerminals();
+  const { addTerminal, updateTerminalStatus, removeTerminal } = useActiveTerminals();
   const { clearLogs } = useBotLogs();
 
   // Получаем токены проекта
@@ -52,25 +52,24 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
   // Инициализируем терминалы при загрузке для запущенных ботов
   useEffect(() => {
     if (tokens.length === 0) return;
+    // Ждём пока все статусы загрузятся
+    const allLoaded = tokenStatuses.every(s => !s.isLoading);
+    if (!allLoaded) return;
+
     tokens.forEach((token: BotToken, index: number) => {
       const statusResponse = tokenStatuses[index]?.data as BotStatusResponse | undefined;
       if (statusResponse?.status === 'running') {
-        const alreadyOpen = terminals.some(
-          t => t.projectId === token.projectId && t.tokenId === token.id && t.tabType !== 'history'
-        );
-        if (!alreadyOpen) {
-          addTerminal({
-            projectId: token.projectId,
-            tokenId: token.id,
-            botName: getBotDisplayName(token, `${projectName} #${token.id}`),
-            isRunning: true
-          });
-        }
+        addTerminal({
+          projectId: token.projectId,
+          tokenId: token.id,
+          botName: getBotDisplayName(token, `${projectName} #${token.id}`),
+          isRunning: true
+        });
       }
     });
   // Используем JSON.stringify для стабильного сравнения статусов без spread в зависимостях
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokens, JSON.stringify(tokenStatuses.map(s => (s.data as BotStatusResponse | undefined)?.status))]);
+  }, [tokens, JSON.stringify(tokenStatuses.map(s => ({ status: (s.data as BotStatusResponse | undefined)?.status, loading: s.isLoading })))]);
 
   // Обработчик запуска бота
   const handleBotStarted = (projectId: number, tokenId: number, botName: string) => {
