@@ -92,37 +92,11 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
         // bot info retrieved
         const botInfo = result.result;
 
-        let photoUrl = null;
-        if (botInfo.photo && botInfo.photo.big_file_id) {
-            try {
-                const photoStartTime = Date.now();
-                const fileResponse = await fetchWithProxy(`https://api.telegram.org/bot${defaultToken.token}/getFile`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        file_id: botInfo.photo.big_file_id
-                    }),
-                    signal: AbortSignal.timeout(5000)
-                });
-
-                const fileResult = await fileResponse.json();
-                // photo response received
-
-                if (fileResponse.ok && fileResult.result && fileResult.result.file_path) {
-                    photoUrl = `https://api.telegram.org/file/bot${defaultToken.token}/${fileResult.result.file_path}`;
-                    // photo url obtained
-                }
-            } catch (photoError) {
-                const photoErrorMessage = photoError instanceof Error ? photoError.message : 'Unknown error';
-                console.warn(`[Telegram API] Failed to get bot photo for ${maskedToken}: ${photoErrorMessage}`);
-            }
-        }
-
         const responseData = {
             ...botInfo,
-            photoUrl: photoUrl
+            // Не возвращаем прямой URL Telegram — он протухает и раскрывает токен.
+            // Клиент использует прокси /api/projects/:id/users/bot/avatar
+            photoUrl: botInfo.photo ? true : null
         };
 
         res.json(responseData);

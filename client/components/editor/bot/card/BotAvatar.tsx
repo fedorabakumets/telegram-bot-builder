@@ -1,54 +1,55 @@
 /**
  * @fileoverview Компонент аватарки бота
  *
- * Отображает аватарку бота напрямую по URL без прокси.
+ * Отображает аватарку бота через серверный прокси.
  * Fallback — инициалы или иконка бота.
  *
  * @module BotAvatar
  */
 
 import { useRef } from 'react';
-import { useBotData } from '../../database/dialog/hooks/use-bot-data';
 
 /**
  * Свойства аватарки бота
  */
 interface BotAvatarProps {
-  /** URL фото профиля */
-  photoUrl?: string | null;
+  /** Наличие фото (true = есть фото, null/undefined = нет) */
+  photoUrl?: string | null | boolean;
   /** Имя бота (для инициалов) */
   botName: string;
   /** Размер в пикселях */
   size?: number;
   /** Дополнительный CSS-класс */
   className?: string;
-  /** ID проекта для загрузки аватарки через API */
+  /** ID проекта для прокси аватарки */
   projectId?: number;
+  /** ID бота (не используется, оставлен для совместимости) */
+  botId?: string;
 }
 
 /**
- * Аватарка бота — показывает фото напрямую по URL, без прокси
+ * Аватарка бота — загружает через серверный прокси /api/projects/:id/users/bot/avatar
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function BotAvatar({ photoUrl, botName, size = 40, className = '', projectId }: BotAvatarProps) {
-  const { bot: botData } = useBotData(projectId || 0);
+  /** Флаг наличия фото — true если photoUrl не пустой */
+  const hasPhoto = !!photoUrl && !!projectId;
 
-  const rawPhotoUrl = photoUrl;  // Используем только явно переданный URL, без фоллбэка на данные проекта
+  /** Стабилизируем URL — не сбрасываем при рефетче */
+  const stableRef = useRef<string | null>(null);
+  const proxyUrl = hasPhoto ? `/api/projects/${projectId}/users/bot/avatar` : null;
+  if (proxyUrl) stableRef.current = proxyUrl;
+  const resolvedUrl = proxyUrl || stableRef.current;
 
-  // Стабилизируем — не сбрасываем в null если уже было значение (защита от мигания при рефетче)
-  const stableRef = useRef<string | null | undefined>(undefined);
-  if (rawPhotoUrl) stableRef.current = rawPhotoUrl;
-  const resolvedPhotoUrl = rawPhotoUrl || stableRef.current;
-
-  if (resolvedPhotoUrl) {
+  if (resolvedUrl) {
     return (
       <div
         className={`relative rounded-full overflow-hidden flex-shrink-0 ${className}`}
         style={{ width: size, height: size }}
       >
         <img
-          src={resolvedPhotoUrl}
+          src={resolvedUrl}
           alt={`${botName} avatar`}
           className="w-full h-full object-cover"
         />
