@@ -4,7 +4,6 @@
  */
 
 import { cn } from '@/utils/utils';
-import { VersionBadge } from '@/components/editor/header/components/version-badge';
 
 /**
  * Пропсы компонента SidebarBrand
@@ -28,12 +27,9 @@ export function SidebarBrand({ isCollapsed }: SidebarBrandProps) {
       </div>
 
       {!isCollapsed && (
-        <>
-          <span className="text-sm font-bold bg-gradient-to-r from-blue-500 to-blue-400 bg-clip-text text-transparent leading-tight whitespace-nowrap">
-            BotCraft Studio
-          </span>
-          <VersionBadge version="2.1.9.0.8" />
-        </>
+        <span className="text-sm font-bold bg-gradient-to-r from-blue-500 to-blue-400 bg-clip-text text-transparent leading-tight whitespace-nowrap">
+          BotCraft Studio
+        </span>
       )}
     </div>
   );
