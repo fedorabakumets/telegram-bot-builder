@@ -68,8 +68,9 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
         }
       }
     });
+  // Используем JSON.stringify для стабильного сравнения статусов без spread в зависимостях
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokens, ...tokenStatuses.map(s => (s.data as BotStatusResponse | undefined)?.status)]);
+  }, [tokens, JSON.stringify(tokenStatuses.map(s => (s.data as BotStatusResponse | undefined)?.status))]);
 
   // Обработчик запуска бота
   const handleBotStarted = (projectId: number, tokenId: number, botName: string) => {
