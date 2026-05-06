@@ -12,6 +12,17 @@
 import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
 import { TerminalLine, TerminalHandle } from './terminalTypes';
 
+/** Счётчик для генерации уникальных id строк терминала */
+let lineIdCounter = 0;
+
+/**
+ * Генерирует уникальный id для строки терминала
+ * @returns Уникальная строка id
+ */
+function generateLineId(): string {
+  return `${Date.now()}-${++lineIdCounter}`;
+}
+
 interface UseTerminalMethodsParams {
   logKey: string | null;
   wsConnection?: WebSocket | null;
@@ -62,7 +73,7 @@ export function useTerminalMethods({
    */
   const addLine = (content: string, type: 'stdout' | 'stderr' = 'stdout', sendToServerFlag: boolean = true) => {
     const newLine: TerminalLine = {
-      id: Date.now().toString(),
+      id: generateLineId(),
       content,
       type,
       timestamp: new Date()
@@ -82,7 +93,7 @@ export function useTerminalMethods({
    */
   const addLineLocal = (content: string, type: 'stdout' | 'stderr' = 'stdout', timestamp?: Date) => {
     const newLine: TerminalLine = {
-      id: Date.now().toString(),
+      id: generateLineId(),
       content,
       type,
       timestamp: timestamp ?? new Date()
