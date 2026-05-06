@@ -52,7 +52,7 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
       )}
 
       {isAuthed ? (
-        <div className={cn('flex items-center gap-2', isCollapsed && 'justify-center')}>
+        <div className={cn('flex items-center gap-2', isCollapsed ? 'justify-center' : '')}>
           {/* Аватар пользователя */}
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
             <span className="text-white text-xs font-medium">
@@ -60,18 +60,20 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
             </span>
           </div>
           {!isCollapsed && (
-            <span className="text-sm text-foreground truncate flex-1">
-              {(user as any).firstName}
-            </span>
+            <>
+              <span className="text-sm text-foreground truncate flex-1">
+                {(user as any).firstName}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
+                onClick={logout}
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
-            onClick={logout}
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
         </div>
       ) : (
         <Button
