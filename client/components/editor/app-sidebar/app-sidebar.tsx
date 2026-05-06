@@ -65,8 +65,6 @@ export function AppSidebar({
         )}
       </div>
 
-      <SidebarSeparator />
-
       {/* Основной контент */}
       <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1">
         <SidebarNav
