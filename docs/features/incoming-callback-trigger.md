@@ -140,10 +140,14 @@ async def incoming_callback_trigger_handler(callback_query: types.CallbackQuery)
 | `client/components/editor/canvas/canvas-node/node-colors.ts` | ~1 строка | Добавить цветовой градиент для иконки на холсте |
 | `client/components/editor/canvas/canvas-node/node-header.tsx` | ~5 строк | Добавить `case 'new_type'` в `renderTitle()` с текстом и цветом |
 | `client/components/editor/properties/components/layout/properties-header.tsx` | ~3 строки | Добавить в `nodeTypeNames`, `nodeIcons`, `nodeColors` для шапки панели свойств |
+| `client/components/editor/properties/utils/variables-utils.ts` | ~10 строк | Добавить блок извлечения переменных из нового типа узла (если узел сохраняет результат в переменную) |
+| `client/components/editor/inline-rich/components/variable-display-utils.tsx` | ~2 строки | Добавить бейдж в `getBadgeText()` и блок отображения в `getNodeInfo()` для нового типа узла |
 
 > **Важно:** `node-icons.ts` и `node-colors.ts` отвечают за иконку/цвет блока на **холсте** (NodeHeader).
 > `properties-header.tsx` отвечает за иконку/цвет/название в **шапке панели свойств** (селектор типа узла).
-> Оба места нужно обновлять при добавлении любого нового типа узла.
+> `variables-utils.ts` отвечает за то, чтобы переменная из узла **появилась в селекторе переменных**.
+> `variable-display-utils.tsx` отвечает за **отображение переменной** в дропдауне — иконку, бейдж, описание.
+> Все четыре места нужно обновлять при добавлении узла, который сохраняет результат в переменную.
 
 ---
 
