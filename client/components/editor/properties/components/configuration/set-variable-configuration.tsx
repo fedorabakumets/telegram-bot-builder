@@ -3,6 +3,7 @@
  *
  * Отображает список пар «переменная → значение» с возможностью
  * добавления, изменения и удаления строк, а также выбор следующего узла.
+ * Поддерживает вставку переменных через селектор.
  *
  * @module components/editor/properties/components/configuration/set-variable-configuration
  */
@@ -14,6 +15,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 import { getNodeTypeLabel } from '../../utils/node-formatters';
+import { VariableNameInput } from '../variables/variable-name-input';
+import { VariableSelector } from '../variables/variable-selector';
+import type { Variable } from '../../../inline-rich/types';
 
 /** Одно присваивание переменной */
 interface Assignment {
@@ -35,20 +39,12 @@ interface SetVariableConfigurationProps {
   getAllNodesFromAllSheets: Array<{ node: Node; sheetName: string }>;
   /** Функция форматирования отображения узла */
   formatNodeDisplay: (node: Node, sheetName: string) => string;
+  /** Доступные переменные проекта */
+  textVariables: Variable[];
 }
 
-/**
- * Строка одного присваивания переменной
- *
- * @param props - Пропсы строки
- * @returns JSX-элемент строки
- */
-function AssignmentRow({
-  assignment,
-  onChange,
-  onRemove,
-  canRemove,
-}: {
+/** Пропсы строки присваивания */
+interface AssignmentRowProps {
   /** Данные присваивания */
   assignment: Assignment;
   /** Обработчик изменения поля */
@@ -57,22 +53,54 @@ function AssignmentRow({
   onRemove: (id: string) => void;
   /** Можно ли удалить строку */
   canRemove: boolean;
-}) {
+  /** Доступные переменные для вставки */
+  textVariables: Variable[];
+}
+
+/**
+ * Строка одного присваивания переменной
+ *
+ * @param props - Пропсы строки
+ * @returns JSX-элемент строки
+ */
+function AssignmentRow({ assignment, onChange, onRemove, canRemove, textVariables }: AssignmentRowProps) {
+  /**
+   * Вставляет переменную в поле значения в формате {varName}
+   * @param varName - имя переменной для вставки
+   */
+  const handleInsertVariable = (varName: string) => {
+    const wrapped = `{${varName}}`;
+    onChange(assignment.id, 'value', assignment.value + wrapped);
+  };
+
   return (
-    <div className="flex items-center gap-2">
-      <Input
-        placeholder="имя_переменной"
-        value={assignment.variable}
-        onChange={(e) => onChange(assignment.id, 'variable', e.target.value)}
-        className="flex-1 font-mono text-xs h-8"
-      />
+    <div className="flex items-center gap-1.5">
+      {/* Поле имени переменной с селектором */}
+      <div className="flex-1">
+        <VariableNameInput
+          value={assignment.variable}
+          availableVariables={textVariables}
+          onChange={(val) => onChange(assignment.id, 'variable', val)}
+          placeholder="имя_переменной"
+        />
+      </div>
+
       <span className="text-muted-foreground text-xs flex-shrink-0">→</span>
-      <Input
-        placeholder="значение или {переменная}"
-        value={assignment.value}
-        onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
-        className="flex-1 text-xs h-8"
-      />
+
+      {/* Поле значения с кнопкой вставки переменной */}
+      <div className="flex-1 flex items-center gap-1">
+        <Input
+          placeholder="значение или {переменная}"
+          value={assignment.value}
+          onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
+          className="flex-1 text-xs h-8"
+        />
+        <VariableSelector
+          availableVariables={textVariables}
+          onSelect={handleInsertVariable}
+        />
+      </div>
+
       {canRemove && (
         <Button
           variant="ghost"
@@ -98,6 +126,7 @@ export function SetVariableConfiguration({
   onNodeUpdate,
   getAllNodesFromAllSheets,
   formatNodeDisplay,
+  textVariables,
 }: SetVariableConfigurationProps) {
   const data = selectedNode.data as any;
   const assignments: Assignment[] = data?.assignments || [];
@@ -179,6 +208,7 @@ export function SetVariableConfiguration({
                 onChange={handleChange}
                 onRemove={handleRemove}
                 canRemove={assignments.length > 1}
+                textVariables={textVariables}
               />
             ))
           )}
