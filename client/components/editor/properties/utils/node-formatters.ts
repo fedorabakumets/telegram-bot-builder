@@ -52,9 +52,10 @@ export function getNodeTypeLabel(type: Node['type']): string {
     answer_callback_query: 'Уведомление inline кнопки',
     edit_message: 'Редактировать сообщение',
     set_variable: 'Установить переменные',
-  };
+    psql_query: 'SQL-запрос',
+  } as Partial<Record<Node['type'] | string, string>>;
 
-  return types[type] || type;
+  return (types as Record<string, string>)[type as string] || type;
 }
 
 function getNodeContent(node: Node): string {

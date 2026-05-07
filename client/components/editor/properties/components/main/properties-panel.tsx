@@ -64,6 +64,7 @@ import { GetManagedBotTokenConfiguration } from '../configuration/get-managed-bo
 import { AnswerCallbackQueryConfiguration } from '../action/AnswerCallbackQueryConfiguration';
 import { EditMessageConfiguration } from '../action/EditMessageConfiguration';
 import { SetVariableConfiguration } from '../configuration/set-variable-configuration';
+import { PsqlQueryConfiguration } from '../configuration/psql-query-configuration';
 import type { Variable } from '../../../inline-rich/types';
 
 /**
@@ -370,7 +371,7 @@ export function PropertiesPanel({
         <div className="space-y-0">
 
           {/* Basic Settings Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»Р° СЂР°СЃСЃС‹Р»РєР°, client_auth, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
-          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (selectedNode.type as any) !== 'set_variable' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
+          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (selectedNode.type as any) !== 'set_variable' && (selectedNode.type as any) !== 'psql_query' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <BasicSettingsSection
               selectedNode={selectedNode}
               projectId={projectId}
@@ -562,6 +563,18 @@ export function PropertiesPanel({
               formatNodeDisplay={formatNodeDisplay}
               textVariables={textVariables as Variable[]}
             />
+          )}
+
+          {/* SQL Query Section */}
+          {(selectedNode.type as any) === 'psql_query' && (
+            <div className="w-full bg-gradient-to-br from-violet-50/40 to-purple-50/20 dark:from-violet-950/30 dark:to-purple-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-violet-200/40 dark:border-violet-800/40 backdrop-blur-sm">
+              <PsqlQueryConfiguration
+                selectedNode={selectedNode}
+                onNodeUpdate={onNodeUpdate}
+                getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+                formatNodeDisplay={formatNodeDisplay}
+              />
+            </div>
           )}
 
           {/* Trigger Section - С‚РѕР»СЊРєРѕ РґР»СЏ СѓР·Р»РѕРІ-С‚СЂРёРіРіРµСЂРѕРІ */}

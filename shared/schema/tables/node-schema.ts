@@ -62,7 +62,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -717,6 +717,14 @@ export const nodeSchema = z.object({
     httpRequestPaginationMaxPages: z.number().default(20).optional(),
     /** Словарь обложек медиафайлов: ключ — URL видео, значение — URL обложки */
     attachedMediaThumbnails: z.record(z.string(), z.string()).optional().default({}),
+    /** SQL-запрос для узла psql_query, поддерживает {переменные} */
+    query: z.string().default(''),
+    /** Переменная для сохранения результата запроса */
+    saveResultTo: z.string().default(''),
+    /** Формат результата: json — массив объектов, text — строка, first_row — первая строка, affected — количество строк */
+    resultFormat: z.enum(['json', 'text', 'first_row', 'affected']).default('first_row'),
+    /** Шаблон строки для формата text, например "{name} — {value}" */
+    textTemplate: z.string().default(''),
     /** Присваивания переменных для узла set_variable */
     assignments: z.array(z.object({
       /** Уникальный идентификатор присваивания */

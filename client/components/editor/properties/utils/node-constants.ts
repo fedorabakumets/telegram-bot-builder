@@ -40,6 +40,7 @@ export const MANAGEMENT_NODE_TYPES = [
   'http_request',
   'get_managed_bot_token' as any,
   'set_variable' as any,
+  'psql_query' as any,
 ] as const;
 
 /**

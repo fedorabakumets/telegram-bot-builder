@@ -44,6 +44,7 @@ import { GetManagedBotTokenPreview } from './get-managed-bot-token-preview';
 import { AnswerCallbackQueryPreview } from './answer-callback-query-preview';
 import { EditMessagePreview } from './edit-message-preview';
 import { SetVariablePreview } from './set-variable-preview';
+import { PsqlQueryPreview } from './psql-query-preview';
 import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
 
 /**
@@ -613,6 +614,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Set Variable Preview */}
         {(node.type as any) === 'set_variable' && <SetVariablePreview node={node} />}
+
+        {/* SQL Query Preview */}
+        {(node.type as any) === 'psql_query' && <PsqlQueryPreview node={node} />}
 
         {/* Condition Node Preview */}
         {node.type === 'condition' && (
