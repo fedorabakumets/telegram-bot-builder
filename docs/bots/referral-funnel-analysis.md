@@ -121,3 +121,67 @@ check-subscription (is_subscribed)
 ## Итог
 
 Конструктор покрывает **~85% заказа**. Остаток — счётчик подписок и админ-функции — закрывается через HTTP-узлы + минимальный бэкенд (Вариант A+B, ~6–9 часов).
+
+---
+
+## Standalone-поставка (Docker без платформы)
+
+Когда заказчик получает только папку с кодом, инициализацию БД нужно добавить в саму папку бота — платформа (`server/database/init-db.ts`) в этом случае не участвует.
+
+### Что нужно добавить в папку бота
+
+**`docker-compose.yml`** — поднимает всё одной командой:
+```yaml
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: botdb
+      POSTGRES_USER: bot
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bot -d botdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    # опционально — нужен только при webhook-режиме
+
+  bot:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+```
+
+**`init_db.py`** — урезанная версия `server/database/init-db.ts`, только нужные таблицы:
+- `bot_users` — пользователи с `deep_link_param`, `referrer_id`, `registered_at`
+- `user_bot_data` — переменные пользователя (FSM через PostgresStorage)
+- `bot_messages` — история сообщений (опционально)
+
+Запускается один раз перед стартом через entrypoint:
+```dockerfile
+CMD ["sh", "-c", "python init_db.py && python bot.py"]
+```
+
+**`.env.example`** — добавить переменные:
+```
+DATABASE_URL=postgresql://bot:password@postgres:5432/botdb
+REDIS_URL=redis://redis:6379
+BOT_TOKEN=
+ADMIN_IDS=
+PROJECT_ID=1
+TOKEN_ID=1
+```
+
+### Redis — обязателен или нет?
+
+| Режим | Redis |
+|---|---|
+| Polling (стандартный) | ❌ не нужен — FSM живёт в PostgreSQL через `PostgresStorage` |
+| Webhook | ✅ обязателен — FSM должен жить между апдейтами разных процессов |
+
+Для большинства заказчиков polling достаточен → **минимальная поставка: только PostgreSQL + бот**.
