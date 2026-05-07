@@ -3,7 +3,6 @@
  *
  * Отображает список пар «переменная → значение» с возможностью
  * добавления, изменения и удаления строк, а также выбор следующего узла.
- * Поддерживает вставку переменных через селектор.
  *
  * @module components/editor/properties/components/configuration/set-variable-configuration
  */
@@ -13,23 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2 } from 'lucide-react';
-import { getNodeTypeLabel } from '../../utils/node-formatters';
-import { VariableNameInput } from '../variables/variable-name-input';
-import { VariableSelector } from '../variables/variable-selector';
+import { Plus } from 'lucide-react';
+import { AssignmentRow } from './assignment-row';
+import type { Assignment } from './assignment-row';
 import type { Variable } from '../../../inline-rich/types';
-
-/** Одно присваивание переменной */
-interface Assignment {
-  /** Уникальный идентификатор */
-  id: string;
-  /** Имя переменной */
-  variable: string;
-  /** Значение или шаблон */
-  value: string;
-  /** Режим: "text" — шаблон, "expression" — арифметическое выражение */
-  mode: 'text' | 'expression';
-}
 
 /** Пропсы компонента SetVariableConfiguration */
 interface SetVariableConfigurationProps {
@@ -45,81 +31,8 @@ interface SetVariableConfigurationProps {
   textVariables: Variable[];
 }
 
-/** Пропсы строки присваивания */
-interface AssignmentRowProps {
-  /** Данные присваивания */
-  assignment: Assignment;
-  /** Обработчик изменения поля */
-  onChange: (id: string, field: 'variable' | 'value', val: string) => void;
-  /** Обработчик удаления */
-  onRemove: (id: string) => void;
-  /** Можно ли удалить строку */
-  canRemove: boolean;
-  /** Доступные переменные для вставки */
-  textVariables: Variable[];
-}
-
-/**
- * Строка одного присваивания переменной
- *
- * @param props - Пропсы строки
- * @returns JSX-элемент строки
- */
-function AssignmentRow({ assignment, onChange, onRemove, canRemove, textVariables }: AssignmentRowProps) {
-  /**
-   * Вставляет переменную в поле значения в формате {varName}
-   * @param varName - имя переменной для вставки
-   */
-  const handleInsertVariable = (varName: string) => {
-    const wrapped = `{${varName}}`;
-    onChange(assignment.id, 'value', assignment.value + wrapped);
-  };
-
-  return (
-    <div className="flex items-center gap-1.5">
-      {/* Поле имени переменной с селектором */}
-      <div className="flex-1">
-        <VariableNameInput
-          value={assignment.variable}
-          availableVariables={textVariables}
-          onChange={(val) => onChange(assignment.id, 'variable', val)}
-          placeholder="имя_переменной"
-        />
-      </div>
-
-      <span className="text-muted-foreground text-xs flex-shrink-0">→</span>
-
-      {/* Поле значения с кнопкой вставки переменной */}
-      <div className="flex-1 flex items-center gap-1">
-        <Input
-          placeholder="значение или {переменная}"
-          value={assignment.value}
-          onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
-          className="flex-1 text-xs h-8"
-        />
-        <VariableSelector
-          availableVariables={textVariables}
-          onSelect={handleInsertVariable}
-        />
-      </div>
-
-      {canRemove && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-destructive"
-          onClick={() => onRemove(assignment.id)}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      )}
-    </div>
-  );
-}
-
 /**
  * Панель конфигурации узла установки переменных
- *
  * @param props - Пропсы компонента
  * @returns JSX-элемент панели свойств
  */
@@ -142,10 +55,10 @@ export function SetVariableConfiguration({
   /**
    * Обновляет поле конкретного присваивания
    * @param id - ID присваивания
-   * @param field - поле для изменения
+   * @param field - поле для изменения (variable, value или mode)
    * @param val - новое значение
    */
-  const handleChange = (id: string, field: 'variable' | 'value', val: string) => {
+  const handleChange = (id: string, field: 'variable' | 'value' | 'mode', val: string) => {
     const updated = assignments.map((a) =>
       a.id === id ? { ...a, [field]: val } : a
     );
@@ -163,13 +76,14 @@ export function SetVariableConfiguration({
   };
 
   /**
-   * Добавляет новое пустое присваивание
+   * Добавляет новое пустое присваивание с режимом text по умолчанию
    */
   const handleAdd = () => {
     const newAssignment: Assignment = {
       id: `assign_${Date.now()}`,
       variable: '',
       value: '',
+      mode: 'text',
     };
     onNodeUpdate(selectedNode.id, {
       assignments: [...assignments, newAssignment],
