@@ -20,8 +20,20 @@ export interface MobileNavigationProps {
   className?: string;
 }
 
-/** Элементы навигации — скрыты в шапке, перенесены в боковое меню */
-const NAV_ITEMS: never[] = [];
+/** Элемент навигации */
+interface NavItem {
+  /** Ключ вкладки */
+  key: HeaderTab;
+  /** Отображаемое название */
+  label: string;
+}
+
+/** Элементы навигации в шапке */
+const NAV_ITEMS: NavItem[] = [
+  { key: 'editor', label: 'Редактор' },
+  { key: 'bot', label: 'Бот' },
+  { key: 'users', label: 'Пользователи' },
+];
 
 /**
  * Мобильная навигация по вкладкам (сетка 2 колонки)
