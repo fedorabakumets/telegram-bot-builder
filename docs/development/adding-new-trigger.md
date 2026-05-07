@@ -276,6 +276,19 @@ export function has{Name}Nodes(nodes: Node[]): boolean {
 }
 ```
 
+### `lib/templates/keyboard-handlers/interactive-callback-handlers/interactive-callback-handlers.renderer.ts`
+Добавить тип в константу `NODE_TYPES_WITH_DEDICATED_HANDLERS`:
+```ts
+const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
+  // ...существующие типы...
+  '{type_name}', // собственный обработчик генерируется шаблоном {name}.py.jinja2
+]);
+```
+
+Это обязательно для **любого узла-действия или триггера с собственным шаблоном**.
+Без этого `interactive-callback-handlers.renderer.ts` создаст дублирующий пустой обработчик
+для узлов, на которые ведут кнопки или автопереходы.
+
 ---
 
 ## 4. Особенности для разных типов триггеров
@@ -299,8 +312,8 @@ export function has{Name}Nodes(nodes: Node[]): boolean {
 |-----|-----------|
 | Новых файлов в папке шаблона | 8 |
 | Новый фазовый тест | 1 |
-| Редактируемых файлов | 2 |
-| **Итого** | **11** |
+| Редактируемых файлов | 3 |
+| **Итого** | **12** |
 
 ---
 
@@ -316,7 +329,8 @@ export function has{Name}Nodes(nodes: Node[]): boolean {
 8. `index.ts` — реэкспорт
 9. `node-handlers.dispatcher.ts` — интеграция
 10. `node-predicates.ts` — предикат
-11. `test-phase-{name}.ts` — фазовый тест
+11. `interactive-callback-handlers.renderer.ts` — добавить тип в `NODE_TYPES_WITH_DEDICATED_HANDLERS`
+12. `test-phase-{name}.ts` — фазовый тест
 
 ---
 
@@ -365,6 +379,14 @@ export function has{Name}Nodes(nodes: Node[]): boolean {
 | `client/components/editor/canvas/canvas-node/node-icons.ts` | Добавить иконку |
 | `client/components/editor/canvas/canvas-node/node-colors.ts` | Добавить цветовую схему |
 
+### Генератор
+| Файл | Изменение |
+|------|-----------|
+| `lib/templates/{name}/` | Создать папку шаблона (params, schema, jinja2, renderer, fixture, test, md, index) |
+| `lib/templates/node-handlers/node-handlers.dispatcher.ts` | Импорт + блок вызова + пропуск в forEach |
+| `lib/templates/filters/node-predicates.ts` | Добавить предикат `has{Name}Nodes` |
+| `lib/templates/keyboard-handlers/interactive-callback-handlers/interactive-callback-handlers.renderer.ts` | Добавить тип в `NODE_TYPES_WITH_DEDICATED_HANDLERS` |
+
 ### Переменные (только если узел сохраняет результат)
 | Файл | Изменение |
 |------|-----------|
@@ -382,3 +404,7 @@ export function has{Name}Nodes(nodes: Node[]): boolean {
 5. `properties-panel.tsx`, `properties-header.tsx`, `node-constants.ts`, `node-formatters.ts` — интеграция в панель
 6. `{name}-preview.tsx`, `canvas-node.tsx`, `node-header.tsx`, `node-icons.ts`, `node-colors.ts` — канвас
 7. `variables-utils.ts`, `variable-display-utils.tsx` — переменные (если нужно)
+8. `lib/templates/{name}/` — папка шаблона генератора
+9. `node-handlers.dispatcher.ts` — интеграция в диспетчер
+10. `node-predicates.ts` — предикат
+11. `interactive-callback-handlers.renderer.ts` — добавить тип в `NODE_TYPES_WITH_DEDICATED_HANDLERS`
