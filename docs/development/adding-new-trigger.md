@@ -101,10 +101,51 @@ type: z.enum([..., 'managed_bot_updated_trigger'])
 
 ## 5. Переменные
 
+### `client/components/editor/properties/utils/variables-utils.ts`
+Добавить блок извлечения переменных из нод нового типа (аналогично `callback_trigger`).
+
+Если узел **сохраняет результат в переменную** (поле `saveResultTo`, `httpRequestResponseVariable` и т.д.) — добавить блок:
+```ts
+allNodes.forEach(node => {
+  if ((node.type as string) !== 'new_type') return;
+  const data = node.data as any;
+  if (!data.saveResultTo?.trim()) return;
+  const key = `new_type__${node.id}`;
+  if (!variablesMap.has(key)) {
+    variablesMap.set(key, {
+      name: data.saveResultTo,
+      nodeId: node.id,
+      nodeType: 'new_type' as any,
+      sourceTable: 'bot_users',
+      description: `Описание результата`,
+    });
+  }
+});
+```
+
 ### `client/components/editor/inline-rich/components/variable-display-utils.tsx`
 Два места:
-1. `getBadgeText` — добавить бейдж для нового типа
-2. `getNodeInfo` — добавить case для отображения описания переменной
+
+**1. `getBadgeText()`** — добавить бейдж для нового типа:
+```ts
+const labels: Record<string, string> = {
+  // ...существующие...
+  new_type: '🔣 Метка',
+};
+```
+
+**2. `getNodeInfo()`** — добавить блок отображения описания переменной в дропдауне:
+```tsx
+if ((variable.nodeType as string) === 'new_type') {
+  return (
+    <div className="text-[10px] text-violet-500 dark:text-violet-400 mt-0.5 truncate">
+      🔣 {variable.description}
+    </div>
+  );
+}
+```
+
+> Без этих изменений переменная будет показываться с иконкой `📌` и ID узла вместо нормального описания.
 
 ---
 
@@ -276,3 +317,68 @@ export function has{Name}Nodes(nodes: Node[]): boolean {
 9. `node-handlers.dispatcher.ts` — интеграция
 10. `node-predicates.ts` — предикат
 11. `test-phase-{name}.ts` — фазовый тест
+
+---
+
+# Добавление нового узла-действия (не триггера)
+
+Узлы-действия — это узлы которые **выполняют операцию** и опционально сохраняют результат в переменную.
+Примеры: `psql_query`, `http_request`, `set_variable`, `get_managed_bot_token`.
+
+В отличие от триггеров, они:
+- Не регистрируются как `TRIGGER_NODE_TYPES` — добавляются в `MANAGEMENT_NODE_TYPES`
+- Не имеют порта `trigger-next` на холсте
+- Не скрывают `NodeHeader` (если нет кастомного превью)
+- Могут сохранять результат в переменную
+
+---
+
+## Чеклист файлов для узла-действия
+
+### Схема
+| Файл | Изменение |
+|------|-----------|
+| `shared/schema/tables/node-schema.ts` | Добавить тип в `z.enum([...])`, добавить поля данных |
+
+### Сайдбар
+| Файл | Изменение |
+|------|-----------|
+| `client/components/editor/sidebar/massive/{category}/{name}.ts` | Новый файл — `ComponentDefinition` |
+| `client/components/editor/sidebar/massive/{category}/index.ts` | Реэкспорт |
+| `client/components/editor/sidebar/constants.ts` | Добавить в нужную категорию |
+
+### Панель свойств
+| Файл | Изменение |
+|------|-----------|
+| `client/components/editor/properties/components/configuration/{Name}Configuration.tsx` | Новый файл — UI панели свойств |
+| `client/components/editor/properties/components/main/properties-panel.tsx` | Импорт + блок рендера + исключить из `BasicSettingsSection` |
+| `client/components/editor/properties/components/layout/properties-header.tsx` | `nodeTypeNames`, `nodeIcons`, `nodeColors` |
+| `client/components/editor/properties/utils/node-constants.ts` | Добавить в `MANAGEMENT_NODE_TYPES` |
+| `client/components/editor/properties/utils/node-formatters.ts` | Добавить в `getNodeTypeLabel()` |
+
+### Канвас
+| Файл | Изменение |
+|------|-----------|
+| `client/components/editor/canvas/canvas-node/{name}-preview.tsx` | Новый файл — превью на холсте |
+| `client/components/editor/canvas/canvas-node/canvas-node.tsx` | Импорт + рендер превью |
+| `client/components/editor/canvas/canvas-node/node-header.tsx` | Добавить `case 'new_type'` в `renderTitle()` |
+| `client/components/editor/canvas/canvas-node/node-icons.ts` | Добавить иконку |
+| `client/components/editor/canvas/canvas-node/node-colors.ts` | Добавить цветовую схему |
+
+### Переменные (только если узел сохраняет результат)
+| Файл | Изменение |
+|------|-----------|
+| `client/components/editor/properties/utils/variables-utils.ts` | Добавить блок извлечения переменной |
+| `client/components/editor/inline-rich/components/variable-display-utils.tsx` | `getBadgeText()` + `getNodeInfo()` |
+
+---
+
+## Порядок реализации (узел-действие)
+
+1. `node-schema.ts` — тип + поля
+2. `sidebar/massive/{category}/{name}.ts` + `index.ts` — определение в палитре
+3. `sidebar/constants.ts` — регистрация в категории
+4. `{Name}Configuration.tsx` — UI панели свойств
+5. `properties-panel.tsx`, `properties-header.tsx`, `node-constants.ts`, `node-formatters.ts` — интеграция в панель
+6. `{name}-preview.tsx`, `canvas-node.tsx`, `node-header.tsx`, `node-icons.ts`, `node-colors.ts` — канвас
+7. `variables-utils.ts`, `variable-display-utils.tsx` — переменные (если нужно)
