@@ -116,6 +116,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             Редактировать сообщение
           </span>
         );
+      /** Заголовок узла установки переменных */
+      case 'set_variable' as any:
+        return (
+          <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+            Установить переменные
+          </span>
+        );
       /** Заголовок триггера обновления управляемого бота */
       case 'managed_bot_updated_trigger' as any:
         return (

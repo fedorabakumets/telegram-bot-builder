@@ -558,6 +558,8 @@ export function PropertiesPanel({
             <SetVariableConfiguration
               selectedNode={selectedNode}
               onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
             />
           )}
 

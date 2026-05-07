@@ -64,4 +64,6 @@ export const nodeIcons: Record<string, string> = {
   answer_callback_query: 'fas fa-bell',
   /** Иконка узла редактирования сообщения */
   edit_message: 'fas fa-pen',
+  /** Иконка узла установки переменных */
+  set_variable: 'fas fa-pen',
 };
