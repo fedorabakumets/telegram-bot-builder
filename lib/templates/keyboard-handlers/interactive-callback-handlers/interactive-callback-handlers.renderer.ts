@@ -29,6 +29,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'http_request', // собственный обработчик генерируется шаблоном http-request.py.jinja2
   'group_message_trigger', // собственный обработчик генерируется шаблоном group-message-trigger.py.jinja2
   'set_variable', // собственный обработчик генерируется шаблоном set-variable.py.jinja2
+  'psql_query', // собственный обработчик генерируется шаблоном psql-query.py.jinja2
 ]);
 
 /**
