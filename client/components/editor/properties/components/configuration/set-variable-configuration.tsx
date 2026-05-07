@@ -66,7 +66,7 @@ function AssignmentRow({
         onChange={(e) => onChange(assignment.id, 'variable', e.target.value)}
         className="flex-1 font-mono text-xs h-8"
       />
-      <span className="text-muted-foreground text-xs flex-shrink-0">←</span>
+      <span className="text-muted-foreground text-xs flex-shrink-0">→</span>
       <Input
         placeholder="значение или {переменная}"
         value={assignment.value}
@@ -163,7 +163,7 @@ export function SetVariableConfiguration({
       {/* Список присваиваний */}
       <div className="space-y-2">
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Переменная ← Значение
+          Переменная → Значение
         </Label>
 
         <div className="space-y-2">
