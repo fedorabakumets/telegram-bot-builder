@@ -12,6 +12,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
     """Узел set_variable: устанавливает переменные пользователя."""
     try:
         user_id = callback_query.from_user.id
+        logging.info(f"📝 set_variable [{{ nodeId }}]: начало установки переменных для пользователя {user_id}")
         if user_id not in user_data:
             user_data[user_id] = {}
         {% for assignment in assignments %}
@@ -19,16 +20,22 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         {%- if assignment.mode == 'expression' %}
         # Вычисляем арифметическое выражение
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
-        user_data[user_id]["{{ safe_var }}"] = _eval_expr({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        _sv_old_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}")
+        _sv_expr_{{ loop.index }} = {{ assignment.value | tojson }}
+        user_data[user_id]["{{ safe_var }}"] = _eval_expr(_sv_expr_{{ loop.index }}, _sv_vars_{{ loop.index }})
+        logging.info(f"📝 set_variable [{{ nodeId }}]: «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (было: {_sv_old_{{ loop.index }}!r}, выражение: {_sv_expr_{{ loop.index }}!r})")
         {%- else %}
         # Устанавливаем переменную через шаблон
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_old_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}")
         user_data[user_id]["{{ safe_var }}"] = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        logging.info(f"📝 set_variable [{{ nodeId }}]: «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (было: {_sv_old_{{ loop.index }}!r})")
         {%- endif %}
         {% endfor %}
-        logging.info(f"✅ set_variable {{ nodeId }}: установлено {{ assignments | length }} переменных для {user_id}")
+        logging.info(f"✅ set_variable [{{ nodeId }}]: установлено {{ assignments | length }} переменных для {user_id}")
         {% if autoTransitionTo %}
         {%- set safe_target = autoTransitionTo | safe_name %}
+        logging.info(f"⚡ set_variable [{{ nodeId }}]: автопереход → {{ autoTransitionTo }} для {user_id}")
         # Автопереход к следующему узлу
         class FakeCallback:
             def __init__(self, data, user, msg):
@@ -42,4 +49,4 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         await handle_callback_{{ safe_target }}(fake_cb, state=state)
         {% endif %}
     except Exception as e:
-        logging.error(f"❌ Ошибка в set_variable {{ nodeId }}: {e}")
+        logging.error(f"❌ Ошибка в set_variable [{{ nodeId }}]: {e}")
