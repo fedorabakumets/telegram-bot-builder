@@ -35,6 +35,7 @@ import { generateOutgoingMessageTriggerHandlers } from '../outgoing-message-trig
 import { generateManagedBotUpdatedTriggerHandlers } from '../managed-bot-updated-trigger/managed-bot-updated-trigger.renderer';
 import { generateAnswerCallbackQuery } from '../answer-callback-query/answer-callback-query.renderer';
 import { generateEditMessageHandlers } from '../edit-message';
+import { generateSetVariableHandlers } from '../set-variable/set-variable.renderer';
 import { generateGetManagedBotToken } from '../get-managed-bot-token/get-managed-bot-token.renderer';
 import { generateGroupMessageTriggerHandlers } from '../group-message-trigger';
 import { generateConditionHandlers } from '../condition/condition.renderer';
@@ -412,9 +413,16 @@ export function generateNodeHandlers(
     editMessageCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Обработчики узлов set_variable ---
+  const setVariableCode = generateSetVariableHandlers(nodes);
+  if (setVariableCode) {
+    codeLines.push('\n# Обработчики узлов установки переменных');
+    setVariableCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   nodes.forEach((node: Node) => {
     // Пропускаем триггеры — они уже обработаны выше
-    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message') {
+    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message' || (node.type as any) === 'set_variable') {
       return;
     }
 

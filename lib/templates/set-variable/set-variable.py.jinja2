@@ -1,0 +1,43 @@
+{#
+  Шаблон узла set_variable — установка переменных пользователя
+
+  @param {string} nodeId        — ID узла
+  @param {array}  assignments   — список присваиваний [{id, variable, value, mode}]
+  @param {string} autoTransitionTo — ID следующего узла (пустая строка если нет)
+#}
+{%- set safe_node_id = nodeId | safe_name -%}
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Узел set_variable: устанавливает переменные пользователя."""
+    try:
+        user_id = callback_query.from_user.id
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        {% for assignment in assignments %}
+        {%- set safe_var = assignment.variable %}
+        {%- if assignment.mode == 'expression' %}
+        # Вычисляем арифметическое выражение
+        user_data[user_id]["{{ safe_var }}"] = eval_expr({{ assignment.value | tojson }}, user_data[user_id])
+        {%- else %}
+        # Устанавливаем переменную через шаблон
+        user_data[user_id]["{{ safe_var }}"] = resolve_var({{ assignment.value | tojson }}, user_data[user_id])
+        {%- endif %}
+        {% endfor %}
+        logging.info(f"✅ set_variable {{ nodeId }}: установлено {{ assignments | length }} переменных для {user_id}")
+        {% if autoTransitionTo %}
+        {%- set safe_target = autoTransitionTo | safe_name %}
+        # Автопереход к следующему узлу
+        class FakeCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self.from_user = user
+                self.message = msg
+                self._is_fake = True
+            async def answer(self, *args, **kwargs):
+                pass
+        fake_cb = FakeCallback("{{ autoTransitionTo }}", callback_query.from_user, callback_query.message)
+        await handle_callback_{{ safe_target }}(fake_cb, state=state)
+        {% endif %}
+    except Exception as e:
+        logging.error(f"❌ Ошибка в set_variable {{ nodeId }}: {e}")
