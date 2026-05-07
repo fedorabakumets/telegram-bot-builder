@@ -51,6 +51,7 @@ export function getNodeTypeLabel(type: Node['type']): string {
     get_managed_bot_token: 'Получить токен бота',
     answer_callback_query: 'Уведомление inline кнопки',
     edit_message: 'Редактировать сообщение',
+    set_variable: 'Установить переменные',
   };
 
   return types[type] || type;
@@ -116,6 +117,12 @@ function getNodeContent(node: Node): string {
 
   if (node.type === 'broadcast') {
     return 'Рассылка';
+  }
+
+  if ((node.type as any) === 'set_variable') {
+    const assignments = ((node.data as any).assignments || []) as Array<{ variable: string; value: string }>;
+    if (assignments.length === 0) return '';
+    return assignments.slice(0, 2).map(a => `${a.variable}=${a.value}`).join(', ').slice(0, 50);
   }
 
   if (node.type === 'media') {

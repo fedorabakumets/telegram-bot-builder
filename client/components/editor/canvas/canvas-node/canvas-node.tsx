@@ -43,6 +43,7 @@ import { HttpRequestPreview } from './http-request-preview';
 import { GetManagedBotTokenPreview } from './get-managed-bot-token-preview';
 import { AnswerCallbackQueryPreview } from './answer-callback-query-preview';
 import { EditMessagePreview } from './edit-message-preview';
+import { SetVariablePreview } from './set-variable-preview';
 import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
 
 /**
@@ -609,6 +610,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Edit Message Preview */}
         {(node.type as any) === 'edit_message' && <EditMessagePreview node={node} />}
+
+        {/* Set Variable Preview */}
+        {(node.type as any) === 'set_variable' && <SetVariablePreview node={node} />}
 
         {/* Condition Node Preview */}
         {node.type === 'condition' && (
