@@ -379,6 +379,23 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
     });
   });
 
+  // Добавляем переменные от psql_query-узлов
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'psql_query') return;
+    const data = node.data as any;
+    if (!data.saveResultTo?.trim()) return;
+    const key = `psql_query__${node.id}`;
+    if (!variablesMap.has(key)) {
+      variablesMap.set(key, {
+        name: data.saveResultTo,
+        nodeId: node.id,
+        nodeType: 'psql_query' as any,
+        sourceTable: 'bot_users',
+        description: `Результат SQL-запроса (${data.resultFormat || 'first_row'})`,
+      });
+    }
+  });
+
   // Добавляем системные переменные
   SYSTEM_VARIABLES.forEach(v => { 
     if (!variablesMap.has(v.name)) {
