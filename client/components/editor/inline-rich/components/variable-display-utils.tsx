@@ -53,6 +53,8 @@ export function getBadgeText(variable: Variable): string {
     message_id: '🆔 ID сообщения',
     http_request: '🌐 HTTP',
     input: '⌨️ Ввод',
+    set_variable: '✏️ Переменная',
+    psql_query: '🗄️ SQL',
   };
   return labels[variable.nodeType] || '📌';
 }
@@ -143,6 +145,22 @@ export function getNodeInfo(variable: Variable) {
     return (
       <div className="text-[10px] text-sky-500 dark:text-sky-400 mt-0.5 truncate">
         🌐 {variable.description}
+      </div>
+    );
+  }
+  // Для psql_query показываем описание (формат результата)
+  if ((variable.nodeType as string) === 'psql_query') {
+    return (
+      <div className="text-[10px] text-violet-500 dark:text-violet-400 mt-0.5 truncate">
+        🗄️ {variable.description}
+      </div>
+    );
+  }
+  // Для set_variable показываем описание
+  if ((variable.nodeType as string) === 'set_variable') {
+    return (
+      <div className="text-[10px] text-emerald-500 dark:text-emerald-400 mt-0.5 truncate">
+        ✏️ {variable.description}
       </div>
     );
   }
