@@ -573,6 +573,7 @@ export function PropertiesPanel({
                 onNodeUpdate={onNodeUpdate}
                 getAllNodesFromAllSheets={getAllNodesFromAllSheets}
                 formatNodeDisplay={formatNodeDisplay}
+                textVariables={textVariables as Variable[]}
               />
             </div>
           )}

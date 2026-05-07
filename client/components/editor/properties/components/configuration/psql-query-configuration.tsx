@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { VariableNameInput } from '../variables/variable-name-input';
+import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы компонента PsqlQueryConfiguration */
 interface PsqlQueryConfigurationProps {
@@ -19,6 +21,8 @@ interface PsqlQueryConfigurationProps {
   getAllNodesFromAllSheets: Array<{ node: Node; sheetName: string }>;
   /** Функция форматирования отображения узла */
   formatNodeDisplay: (node: Node, sheetName: string) => string;
+  /** Доступные текстовые переменные проекта */
+  textVariables: Variable[];
 }
 
 /**
@@ -31,6 +35,7 @@ export function PsqlQueryConfiguration({
   onNodeUpdate,
   getAllNodesFromAllSheets,
   formatNodeDisplay,
+  textVariables,
 }: PsqlQueryConfigurationProps) {
   const data = selectedNode.data as any;
   const query: string = data?.query || '';
@@ -115,11 +120,11 @@ export function PsqlQueryConfiguration({
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
           Сохранить результат в переменную
         </Label>
-        <Input
+        <VariableNameInput
           value={saveResultTo}
-          onChange={(e) => onNodeUpdate(selectedNode.id, { saveResultTo: e.target.value })}
+          availableVariables={textVariables}
+          onChange={(value) => onNodeUpdate(selectedNode.id, { saveResultTo: value })}
           placeholder="stats_result"
-          className="text-xs h-8 font-mono bg-white/60 dark:bg-slate-950/60"
         />
       </div>
 
