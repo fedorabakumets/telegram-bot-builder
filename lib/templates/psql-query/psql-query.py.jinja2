@@ -1,0 +1,61 @@
+{#
+  Шаблон узла psql_query — прямой SQL-запрос к PostgreSQL
+
+  @param {string} nodeId          — ID узла
+  @param {string} query           — SQL-запрос с {переменными}
+  @param {string} saveResultTo    — переменная для сохранения результата
+  @param {string} resultFormat    — json | text | first_row | affected
+  @param {string} textTemplate    — шаблон строки для формата text
+  @param {string} autoTransitionTo — ID следующего узла
+#}
+{%- set safe_node_id = nodeId | safe_name -%}
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Узел psql_query: выполняет SQL-запрос к базе данных."""
+    try:
+        user_id = callback_query.from_user.id
+        if db_pool is None:
+            logging.warning(f"⚠️ psql_query [{{ nodeId }}]: db_pool недоступен, пропускаем")
+            return
+        _all_vars = await init_all_user_vars(user_id)
+        _query = replace_variables_in_text({{ query | tojson }}, _all_vars)
+        logging.info(f"🗄️ psql_query [{{ nodeId }}]: выполняем запрос для {user_id}")
+        async with db_pool.acquire() as _conn:
+            {% if resultFormat == 'affected' %}
+            _result = await _conn.execute(_query)
+            {% elif resultFormat == 'first_row' %}
+            _row = await _conn.fetchrow(_query)
+            _result = dict(_row) if _row else {}
+            {% else %}
+            _rows = await _conn.fetch(_query)
+            _result = [dict(r) for r in _rows]
+            {% endif %}
+        {% if saveResultTo %}
+        {% if resultFormat == 'text' %}
+        _lines = []
+        for _r in (_result if isinstance(_result, list) else []):
+            _line = replace_variables_in_text({{ textTemplate | tojson }}, _r)
+            _lines.append(_line)
+        user_data[user_id]["{{ saveResultTo }}"] = "\n".join(_lines)
+        {% else %}
+        user_data[user_id]["{{ saveResultTo }}"] = _result
+        {% endif %}
+        await set_user_var(user_id, "{{ saveResultTo }}", user_data[user_id]["{{ saveResultTo }}"])
+        {% endif %}
+        logging.info(f"✅ psql_query [{{ nodeId }}]: выполнено для {user_id}")
+        {% if autoTransitionTo %}
+        {%- set safe_target = autoTransitionTo | safe_name %}
+        class FakeCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self.from_user = user
+                self.message = msg
+                self._is_fake = True
+            async def answer(self, *a, **kw):
+                pass
+        fake_cb = FakeCallback("{{ autoTransitionTo }}", callback_query.from_user, callback_query.message)
+        await handle_callback_{{ safe_target }}(fake_cb, state=state)
+        {% endif %}
+    except Exception as e:
+        logging.error(f"❌ Ошибка в psql_query [{{ nodeId }}]: {e}")

@@ -389,6 +389,20 @@ export function getNodeDefaults(type: Node['type']): any {
       /** Тип клавиатуры */
       editKeyboardType: 'inline',
     },
+    psql_query: {
+      /** SQL-запрос к базе данных */
+      query: '',
+      /** Переменная для сохранения результата */
+      saveResultTo: '',
+      /** Формат результата */
+      resultFormat: 'first_row',
+      /** Шаблон строки для формата text */
+      textTemplate: '',
+      /** ID следующего узла */
+      autoTransitionTo: '',
+      /** Включить автопереход */
+      enableAutoTransition: false,
+    },
   };
   return defaults[type] || {};
 }
