@@ -57,23 +57,27 @@ export { results };
 // БЛОК B: Режим text — resolve_var
 // ════════════════════════════════════════════════════════════════════════════
 
-console.log('── Блок B: Режим text — resolve_var ─────────────────────────────────');
+console.log('── Блок B: Режим text — replace_variables_in_text ───────────────────');
 
-test('B01', 'mode text → вызывает resolve_var(', () => {
+test('B01', 'mode text → вызывает replace_variables_in_text(', () => {
   const code = gen(makeCleanProject([makeSetVariableNode('sv_1', {
     assignments: [{ id: 'a1', variable: 'greeting', value: 'Привет!', mode: 'text' }],
   })]), 'b01');
-  ok(code.includes('resolve_var('), 'resolve_var должен быть в коде для режима text');
+  ok(code.includes('replace_variables_in_text('), 'replace_variables_in_text должен быть в коде для режима text');
 });
 
-test('B02', 'mode text → не вызывает eval_expr(', () => {
+test('B02', 'mode text → обработчик sv_1 не содержит _eval_expr(', () => {
   const code = gen(makeCleanProject([makeSetVariableNode('sv_1', {
     assignments: [{ id: 'a1', variable: 'name', value: 'Иван', mode: 'text' }],
   })]), 'b02');
-  ok(!code.includes('eval_expr('), 'eval_expr не должен быть в коде для режима text');
+  // Вырезаем только тело обработчика sv_1, не весь файл
+  const start = code.indexOf('async def handle_callback_sv_1(');
+  const end = code.indexOf('\n@dp.', start + 1);
+  const handler = end > start ? code.slice(start, end) : code.slice(start);
+  ok(!handler.includes('_eval_expr('), '_eval_expr не должен быть в обработчике sv_1 для режима text');
 });
 
-test('B03', 'шаблон {first_name} встраивается в resolve_var как строка', () => {
+test('B03', 'шаблон {first_name} встраивается в replace_variables_in_text как строка', () => {
   const code = gen(makeCleanProject([makeSetVariableNode('sv_1', {
     assignments: [{ id: 'a1', variable: 'greeting', value: 'Привет, {first_name}!', mode: 'text' }],
   })]), 'b03');
@@ -87,11 +91,11 @@ test('B04', 'вложенный путь {response.data.name} встраивае
   ok(code.includes('{response.data.name}'), 'Вложенный путь {response.data.name} должен быть в коде');
 });
 
-test('B05', 'статическая строка без переменных встраивается через resolve_var', () => {
+test('B05', 'статическая строка без переменных встраивается через replace_variables_in_text', () => {
   const code = gen(makeCleanProject([makeSetVariableNode('sv_1', {
     assignments: [{ id: 'a1', variable: 'status', value: 'active', mode: 'text' }],
   })]), 'b05');
-  ok(code.includes('resolve_var('), 'resolve_var должен вызываться даже для статической строки');
+  ok(code.includes('replace_variables_in_text('), 'replace_variables_in_text должен вызываться даже для статической строки');
   ok(code.includes('active'), 'Значение active должно быть в коде');
 });
 
@@ -113,23 +117,27 @@ test('B07', 'синтаксис OK для режима text с шаблоном'
 // БЛОК C: Режим expression — eval_expr
 // ════════════════════════════════════════════════════════════════════════════
 
-console.log('── Блок C: Режим expression — eval_expr ─────────────────────────────');
+console.log('── Блок C: Режим expression — _eval_expr ────────────────────────────');
 
-test('C01', 'mode expression → вызывает eval_expr(', () => {
+test('C01', 'mode expression → вызывает _eval_expr(', () => {
   const code = gen(makeCleanProject([makeSetVariableNode('sv_1', {
     assignments: [{ id: 'a1', variable: 'step', value: '{step} + 1', mode: 'expression' }],
   })]), 'c01');
-  ok(code.includes('eval_expr('), 'eval_expr должен быть в коде для режима expression');
+  ok(code.includes('_eval_expr('), '_eval_expr должен быть в коде для режима expression');
 });
 
-test('C02', 'mode expression → не вызывает resolve_var для этой переменной', () => {
+test('C02', 'mode expression → обработчик sv_1 не содержит replace_variables_in_text', () => {
   const code = gen(makeCleanProject([makeSetVariableNode('sv_1', {
     assignments: [{ id: 'a1', variable: 'step', value: '{step} + 1', mode: 'expression' }],
   })]), 'c02');
-  ok(!code.includes('resolve_var('), 'resolve_var не должен быть в коде для режима expression');
+  // Вырезаем только тело обработчика sv_1
+  const start = code.indexOf('async def handle_callback_sv_1(');
+  const end = code.indexOf('\n@dp.', start + 1);
+  const handler = end > start ? code.slice(start, end) : code.slice(start);
+  ok(!handler.includes('replace_variables_in_text('), 'replace_variables_in_text не должен быть в обработчике sv_1 для режима expression');
 });
 
-test('C03', 'выражение {step} + 1 встраивается в eval_expr как строка', () => {
+test('C03', 'выражение {step} + 1 встраивается в _eval_expr как строка', () => {
   const code = gen(makeCleanProject([makeSetVariableNode('sv_1', {
     assignments: [{ id: 'a1', variable: 'step', value: '{step} + 1', mode: 'expression' }],
   })]), 'c03');
@@ -141,7 +149,7 @@ test('C04', 'умножение {price} * {quantity} встраивается к
     assignments: [{ id: 'a1', variable: 'total', value: '{price} * {quantity}', mode: 'expression' }],
   })]), 'c04');
   ok(code.includes('{price} * {quantity}'), 'Выражение {price} * {quantity} должно быть в коде');
-  ok(code.includes('eval_expr('), 'eval_expr должен быть в коде');
+  ok(code.includes('_eval_expr('), '_eval_expr должен быть в коде');
 });
 
 test('C05', 'имя переменной встраивается как ключ user_data[user_id]["step"]', () => {

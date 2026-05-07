@@ -208,6 +208,51 @@ async def _persist_user_var(user_id: int, key: str, value) -> None:
 {%- endif %}
 
 
+def _eval_expr(template: str, user_vars: dict):
+    """Вычисляет арифметическое выражение с подстановкой переменных из user_vars.
+
+    Сначала подставляет {переменные} как числа (или 0 если не найдено),
+    затем безопасно вычисляет выражение через ast.parse.
+    Разрешены только числа и арифметические операторы (+, -, *, /, //, %, **).
+    При любой ошибке возвращает исходный шаблон без изменений.
+
+    Args:
+        template: Строка-выражение, например "{step} + 1" или "{price} * {qty}"
+        user_vars: Словарь переменных пользователя
+
+    Returns:
+        Результат вычисления (число) или исходный шаблон при ошибке
+    """
+    import re as _re_expr, ast as _ast_expr
+
+    def _replacer(match):
+        path = match.group(1).split('.')
+        val = user_vars
+        for key in path:
+            if isinstance(val, dict):
+                val = val.get(key, 0)
+            else:
+                return '0'
+        return str(val) if val is not None else '0'
+
+    expr = _re_expr.sub(r'\{([^}]+)\}', _replacer, template)
+    try:
+        tree = _ast_expr.parse(expr, mode='eval')
+        _allowed = (
+            _ast_expr.Expression, _ast_expr.BinOp, _ast_expr.UnaryOp,
+            _ast_expr.Constant, _ast_expr.Num,
+            _ast_expr.Add, _ast_expr.Sub, _ast_expr.Mult, _ast_expr.Div,
+            _ast_expr.FloorDiv, _ast_expr.Mod, _ast_expr.Pow,
+            _ast_expr.USub, _ast_expr.UAdd,
+        )
+        for _node in _ast_expr.walk(tree):
+            if not isinstance(_node, _allowed):
+                return template
+        return eval(compile(tree, '<expr>', 'eval'))
+    except Exception:
+        return template
+
+
 def replace_variables_in_text(text: str, variables: dict, filters: dict = None) -> str:
     """Заменяет переменные вида {var_name} и {var.path.nested} в тексте на их значения
 

@@ -41,9 +41,9 @@ describe('generateSetVariableHandlers()', () => {
     expect(r).toContain('user_data[user_id]');
   });
 
-  it('содержит resolve_var для режима text', () => {
+  it('содержит replace_variables_in_text для режима text', () => {
     const r = generateSetVariableHandlers(nodesWithSetVariable);
-    expect(r).toContain('resolve_var');
+    expect(r).toContain('replace_variables_in_text');
   });
 
   it('содержит logging.info', () => {
@@ -121,7 +121,7 @@ describe('collectSetVariableEntries()', () => {
 // ─── Режим expression ────────────────────────────────────────────────────────
 
 describe('Режим expression', () => {
-  it('содержит eval_expr при mode: expression', () => {
+  it('содержит _eval_expr при mode: expression', () => {
     const nodes = [
       { id: 'sv_expr', type: 'set_variable', data: {
         assignments: [{ id: 'a1', variable: 'step', value: '{step} + 1', mode: 'expression' }],
@@ -129,10 +129,10 @@ describe('Режим expression', () => {
       }, position: { x: 0, y: 0 } } as any,
     ];
     const r = generateSetVariableHandlers(nodes);
-    expect(r).toContain('eval_expr');
+    expect(r).toContain('_eval_expr');
   });
 
-  it('не содержит eval_expr при mode: text', () => {
+  it('не містить _eval_expr при mode: text', () => {
     const nodes = [
       { id: 'sv_text', type: 'set_variable', data: {
         assignments: [{ id: 'a1', variable: 'name', value: 'Иван', mode: 'text' }],
@@ -140,8 +140,8 @@ describe('Режим expression', () => {
       }, position: { x: 0, y: 0 } } as any,
     ];
     const r = generateSetVariableHandlers(nodes);
-    expect(r).not.toContain('eval_expr');
-    expect(r).toContain('resolve_var');
+    expect(r).not.toContain('_eval_expr');
+    expect(r).toContain('replace_variables_in_text');
   });
 });
 

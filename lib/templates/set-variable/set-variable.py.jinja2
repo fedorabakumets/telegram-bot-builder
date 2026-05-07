@@ -18,10 +18,12 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         {%- set safe_var = assignment.variable %}
         {%- if assignment.mode == 'expression' %}
         # Вычисляем арифметическое выражение
-        user_data[user_id]["{{ safe_var }}"] = eval_expr({{ assignment.value | tojson }}, user_data[user_id])
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        user_data[user_id]["{{ safe_var }}"] = _eval_expr({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
         {%- else %}
         # Устанавливаем переменную через шаблон
-        user_data[user_id]["{{ safe_var }}"] = resolve_var({{ assignment.value | tojson }}, user_data[user_id])
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        user_data[user_id]["{{ safe_var }}"] = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
         {%- endif %}
         {% endfor %}
         logging.info(f"✅ set_variable {{ nodeId }}: установлено {{ assignments | length }} переменных для {user_id}")

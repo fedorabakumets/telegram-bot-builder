@@ -103,8 +103,8 @@ test('E04', 'смешанные режимы (text + expression) в одном �
       { id: 'a2', variable: 'score', value: '{score} + 10', mode: 'expression' },
     ],
   })]), 'e04');
-  ok(code.includes('resolve_var('), 'resolve_var должен быть в коде');
-  ok(code.includes('eval_expr('), 'eval_expr должен быть в коде');
+  ok(code.includes('replace_variables_in_text('), 'replace_variables_in_text должен быть в коде');
+  ok(code.includes('_eval_expr('), '_eval_expr должен быть в коде');
 });
 
 test('E05', 'синтаксис OK для нескольких assignments', () => {
@@ -139,7 +139,7 @@ test('F03', 'пустое значение value: "" — resolve_var вызыв�
   const code = gen(makeCleanProject([makeSetVariableNode('sv_1', {
     assignments: [{ id: 'a1', variable: 'myvar', value: '', mode: 'text' }],
   })]), 'f03');
-  ok(code.includes('resolve_var('), 'resolve_var должен вызываться даже с пустым значением');
+  ok(code.includes('replace_variables_in_text('), 'replace_variables_in_text должен вызываться даже с пустым значением');
   ok(code.includes('""'), 'Пустая строка "" должна быть в коде');
 });
 
