@@ -66,4 +66,6 @@ export const nodeIcons: Record<string, string> = {
   edit_message: 'fas fa-pen',
   /** Иконка узла установки переменных */
   set_variable: 'fas fa-pen',
+  /** Иконка узла прямого SQL-запроса к базе данных */
+  psql_query: 'fas fa-database',
 };

@@ -136,6 +136,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             HTTP запрос
           </span>
         );
+      /** Заголовок узла прямого SQL-запроса к базе данных */
+      case 'psql_query' as any:
+        return (
+          <span className="font-semibold text-violet-700 dark:text-violet-300">
+            SQL-запрос
+          </span>
+        );
       default:
         return null;
     }

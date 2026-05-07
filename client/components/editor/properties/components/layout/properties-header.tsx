@@ -77,6 +77,8 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   edit_message: 'Редактировать сообщение',
   /** Название узла установки переменных */
   set_variable: 'Установить переменные',
+  /** Название узла прямого SQL-запроса к базе данных */
+  psql_query: 'SQL-запрос',
 } as Partial<Record<string, string>>;
 
 /**
@@ -127,6 +129,8 @@ const nodeIcons: Partial<Record<Node['type'], string>> = {
   edit_message: 'fas fa-pen',
   /** Иконка узла установки переменных */
   set_variable: 'fas fa-pen',
+  /** Иконка узла прямого SQL-запроса к базе данных */
+  psql_query: 'fas fa-database',
 } as Partial<Record<string, string>>;
 
 /**
@@ -178,6 +182,8 @@ const nodeColors: Partial<Record<Node['type'], string>> = {
   edit_message: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
   /** Цвет узла установки переменных — изумрудный */
   set_variable: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+  /** Цвет узла прямого SQL-запроса — фиолетовый */
+  psql_query: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
 } as Partial<Record<string, string>>;
 
 /**
