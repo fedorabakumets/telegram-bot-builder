@@ -359,6 +359,26 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
     }
   });
 
+  // Добавляем переменные из узлов set_variable
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'set_variable') return;
+    const assignments: Array<{ id: string; variable: string; value: string }> =
+      (node.data as any)?.assignments || [];
+    assignments.forEach(({ variable }) => {
+      if (!variable?.trim()) return;
+      const mapKey = `set_variable__${node.id}__${variable}`;
+      if (!variablesMap.has(mapKey)) {
+        variablesMap.set(mapKey, {
+          name: variable,
+          nodeId: node.id,
+          nodeType: 'set_variable' as any,
+          sourceTable: 'bot_users',
+          description: `Установлена узлом «Установить переменные»`,
+        });
+      }
+    });
+  });
+
   // Добавляем системные переменные
   SYSTEM_VARIABLES.forEach(v => { 
     if (!variablesMap.has(v.name)) {
