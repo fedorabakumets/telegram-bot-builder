@@ -15,6 +15,9 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
     """Узел psql_query: выполняет SQL-запрос к базе данных."""
     try:
         user_id = callback_query.from_user.id
+        logging.info(f"🗄️ psql_query [{{ nodeId }}]: начало выполнения для пользователя {user_id}")
+        if user_id not in user_data:
+            user_data[user_id] = {}
         if db_pool is None:
             logging.warning(f"⚠️ psql_query [{{ nodeId }}]: db_pool недоступен, пропускаем")
             return
@@ -42,10 +45,12 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         user_data[user_id]["{{ saveResultTo }}"] = _result
         {% endif %}
         await set_user_var(user_id, "{{ saveResultTo }}", user_data[user_id]["{{ saveResultTo }}"])
+        logging.info(f"📦 psql_query [{{ nodeId }}]: результат сохранён в «{{ saveResultTo }}» для {user_id}")
         {% endif %}
         logging.info(f"✅ psql_query [{{ nodeId }}]: выполнено для {user_id}")
         {% if autoTransitionTo %}
         {%- set safe_target = autoTransitionTo | safe_name %}
+        logging.info(f"⚡ psql_query [{{ nodeId }}]: автопереход → {{ autoTransitionTo }} для {user_id}")
         class FakeCallback:
             def __init__(self, data, user, msg):
                 self.data = data
