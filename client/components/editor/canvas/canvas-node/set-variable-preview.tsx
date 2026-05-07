@@ -48,13 +48,13 @@ export function SetVariablePreview({ node }: SetVariablePreviewProps) {
     <div className="flex flex-col gap-1 w-full">
       {visible.map((a) => (
         <div key={a.id} className="flex items-center gap-1 text-xs">
-          <code className="bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono text-xs truncate max-w-[80px]">
-            {a.variable || '…'}
-          </code>
-          <span className="text-slate-500">←</span>
           <span className="text-slate-300 truncate max-w-[80px]">
             {a.value || '""'}
           </span>
+          <span className="text-slate-500">→</span>
+          <code className="bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono text-xs truncate max-w-[80px]">
+            {a.variable || '…'}
+          </code>
         </div>
       ))}
       {hidden > 0 && (
