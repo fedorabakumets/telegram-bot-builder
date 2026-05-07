@@ -19,7 +19,7 @@ interface SidebarState {
  * @returns Объект с флагом isCollapsed и функцией toggleCollapsed
  */
 export function useSidebarState(): SidebarState {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const toggleCollapsed = useCallback(() => {
     setIsCollapsed(prev => !prev);
