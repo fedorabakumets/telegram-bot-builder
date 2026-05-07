@@ -22,7 +22,7 @@ export const setVariableNode: ComponentDefinition = {
   defaultData: {
     /** Список присваиваний переменных */
     assignments: [
-      { id: 'assign_1', variable: '', value: '' },
+      { id: 'assign_1', variable: '', value: '', mode: 'text' },
     ],
     /** ID следующего узла для автоперехода */
     autoTransitionTo: '',

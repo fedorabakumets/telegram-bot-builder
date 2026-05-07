@@ -725,6 +725,8 @@ export const nodeSchema = z.object({
       variable: z.string(),
       /** Значение или шаблон с {переменными} */
       value: z.string(),
+      /** Режим присваивания: "text" — шаблон, "expression" — арифметическое выражение */
+      mode: z.enum(['text', 'expression']).default('text'),
     })).default([]),
   }),
 });

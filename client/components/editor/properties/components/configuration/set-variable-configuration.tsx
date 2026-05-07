@@ -27,6 +27,8 @@ interface Assignment {
   variable: string;
   /** Значение или шаблон */
   value: string;
+  /** Режим: "text" — шаблон, "expression" — арифметическое выражение */
+  mode: 'text' | 'expression';
 }
 
 /** Пропсы компонента SetVariableConfiguration */
