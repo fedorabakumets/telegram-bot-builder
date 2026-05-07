@@ -65,18 +65,6 @@ export function AssignmentRow({
 
   return (
     <div className="flex items-center gap-1.5">
-      {/* Поле имени переменной с селектором */}
-      <div className="flex-1">
-        <VariableNameInput
-          value={assignment.variable}
-          availableVariables={textVariables}
-          onChange={(val) => onChange(assignment.id, 'variable', val)}
-          placeholder="имя_переменной"
-        />
-      </div>
-
-      <span className="text-muted-foreground text-xs flex-shrink-0">→</span>
-
       {/* Переключатель режима T / = */}
       <Button
         variant={isExpression ? 'default' : 'outline'}
@@ -103,6 +91,18 @@ export function AssignmentRow({
         <VariableSelector
           availableVariables={textVariables}
           onSelect={handleInsertVariable}
+        />
+      </div>
+
+      <span className="text-muted-foreground text-xs flex-shrink-0">→</span>
+
+      {/* Поле имени переменной с селектором */}
+      <div className="flex-1">
+        <VariableNameInput
+          value={assignment.variable}
+          availableVariables={textVariables}
+          onChange={(val) => onChange(assignment.id, 'variable', val)}
+          placeholder="имя_переменной"
         />
       </div>
 

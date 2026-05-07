@@ -108,7 +108,7 @@ export function SetVariableConfiguration({
       {/* Список присваиваний */}
       <div className="space-y-2">
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Переменная → Значение
+          Значение → Переменная
         </Label>
 
         <div className="space-y-2">
