@@ -125,6 +125,11 @@ describe('generateMessageLoggingCode()', () => {
     expect(r).toContain('callback_query_logging_middleware');
   });
 
+  it('callback_query_logging_middleware вызывает event.answer() для закрытия анимации', () => {
+    const r = generateMessageLoggingCode(true, true, null, false);
+    expect(r).toContain('await event.answer()');
+  });
+
   it('без hasInlineButtons нет callback_query_logging_middleware', () => {
     const r = generateMessageLoggingCode(true, false, null, false);
     expect(r).not.toContain('callback_query_logging_middleware');

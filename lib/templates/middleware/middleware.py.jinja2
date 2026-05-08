@@ -233,6 +233,13 @@ async def callback_query_logging_middleware(handler, event: types.CallbackQuery,
     except Exception as e:
         logging.error(f"Ошибка в middleware сохранения нажатий кнопок: {e}")
 
+    # Закрываем анимацию загрузки на кнопке (обязательный квиток Telegram)
+    # Если не вызвать — кнопка крутит анимацию ~30 секунд
+    try:
+        await event.answer()
+    except Exception:
+        pass
+
     # Продолжаем обработку callback query
     return await handler(event, data)
 
