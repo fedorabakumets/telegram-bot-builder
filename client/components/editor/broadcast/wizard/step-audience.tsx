@@ -74,7 +74,6 @@ export function StepAudience({ projectId, formData, onChange, onNext, onCancel }
         >
           {[
             { value: 'all', label: 'Все пользователи' },
-            { value: 'tags', label: 'По тегам' },
             { value: 'date', label: 'По дате регистрации' },
             { value: 'activity', label: 'По активности' },
           ].map(({ value, label }) => (
