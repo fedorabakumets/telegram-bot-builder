@@ -49,9 +49,10 @@ function StatCard({
  * @returns JSX элемент с тремя карточками статистики
  */
 export function BroadcastStatsHeader({ broadcasts }: BroadcastStatsHeaderProps) {
-  const totalSent = broadcasts.reduce((s, b) => s + (b.sentCount ?? 0), 0);
-  const totalDelivered = broadcasts.reduce((s, b) => s + (b.deliveredCount ?? 0), 0);
-  const totalFailed = broadcasts.reduce((s, b) => s + (b.failedCount ?? 0), 0);
+  const safeList = Array.isArray(broadcasts) ? broadcasts : [];
+  const totalSent = safeList.reduce((s, b) => s + (b.sentCount ?? 0), 0);
+  const totalDelivered = safeList.reduce((s, b) => s + (b.deliveredCount ?? 0), 0);
+  const totalFailed = safeList.reduce((s, b) => s + (b.failedCount ?? 0), 0);
 
   return (
     <div className="flex gap-3">

@@ -34,7 +34,9 @@ interface BroadcastListProps {
  * @returns JSX элемент таблицы рассылок
  */
 export function BroadcastList({ broadcasts, onSelect, selectedId }: BroadcastListProps) {
-  if (broadcasts.length === 0) {
+  const safeList = Array.isArray(broadcasts) ? broadcasts : [];
+
+  if (safeList.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
         <span className="text-4xl mb-3">📭</span>
@@ -55,7 +57,7 @@ export function BroadcastList({ broadcasts, onSelect, selectedId }: BroadcastLis
         </TableRow>
       </TableHeader>
       <TableBody>
-        {broadcasts.map((broadcast) => (
+        {safeList.map((broadcast) => (
           <TableRow
             key={broadcast.id}
             className={`cursor-pointer hover:bg-muted/50 ${selectedId === broadcast.id ? 'bg-muted' : ''}`}
