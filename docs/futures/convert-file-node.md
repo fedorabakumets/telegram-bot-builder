@@ -201,6 +201,79 @@ n8n поддерживает 10 форматов в **Convert to File** + пар
 | Импорт списка пользователей | fromFile | CSV |
 | Конвертация CSV → XLSX | fromFile + toFile | CSV → XLSX |
 
+### 6.1 Экспорт базы пользователей в CSV
+
+```
+/export (adminOnly)
+  → psql_query (SELECT user_id, username, referrer_id, registered_at FROM bot_users → users_data, json)
+  → convert_file (toFile, csv, users_data → export_file, "users_{date}.csv")
+  → message (documentInputVariable: export_file, "📥 База пользователей")
+```
+
+### 6.2 Отчёт по рефералам в XLSX
+
+```
+/report (adminOnly)
+  → psql_query (SELECT referrer_id, COUNT(*) as cnt ... GROUP BY → stats_data, json)
+  → convert_file (toFile, xlsx, stats_data → report_file, sheetName: "Рефералы", "report_{date}.xlsx")
+  → message (documentInputVariable: report_file, "📊 Отчёт по рефералам")
+```
+
+### 6.3 Импорт прайс-листа из Excel
+
+Пользователь загружает XLSX с товарами — бот парсит и сохраняет в БД:
+
+```
+message (enableDocumentInput, documentInputVariable: price_file)
+  → convert_file (fromFile, auto, price_file → price_rows)
+  → psql_query (INSERT INTO products (name, price) VALUES ... FROM {price_rows})
+  → message ("✅ Загружено {price_rows_count} товаров")
+```
+
+### 6.4 ИИ-агент → CSV-отчёт
+
+ИИ анализирует данные и возвращает структурированный JSON — бот отправляет его как файл:
+
+```
+message (пользователь пишет "сделай отчёт")
+  → http_request (POST /api/ai/analyze, body: {user_id} → ai_result)
+  → convert_file (toFile, csv, ai_result → ai_report, "ai_report.csv")
+  → message (documentInputVariable: ai_report, "🤖 Отчёт готов")
+```
+
+### 6.5 Конвертация CSV → XLSX по запросу
+
+Пользователь присылает CSV — бот возвращает XLSX:
+
+```
+message (enableDocumentInput, documentInputVariable: csv_file)
+  → convert_file (fromFile, csv, csv_file → parsed_rows)
+  → convert_file (toFile, xlsx, parsed_rows → xlsx_file, "converted.xlsx")
+  → message (documentInputVariable: xlsx_file, "✅ Конвертировано в Excel")
+```
+
+### 6.6 Еженедельный автоотчёт (scheduled trigger)
+
+Бот сам формирует и рассылает отчёт по расписанию (когда появится scheduled trigger):
+
+```
+scheduled_trigger (каждый понедельник 09:00)
+  → psql_query (SELECT ... за прошлую неделю → weekly_data, json)
+  → convert_file (toFile, xlsx, weekly_data → weekly_report)
+  → message (adminIds, documentInputVariable: weekly_report, "📅 Отчёт за неделю")
+```
+
+### 6.7 Бэкап данных пользователя
+
+Пользователь запрашивает свои данные (GDPR-сценарий):
+
+```
+/mydata
+  → psql_query (SELECT * FROM bot_users WHERE user_id = {user_id} → my_data, json)
+  → convert_file (toFile, json, my_data → my_data_file, "my_data.json")
+  → message (documentInputVariable: my_data_file, "📦 Ваши данные")
+```
+
 ---
 
 ## 7. Связь с другими фичами
