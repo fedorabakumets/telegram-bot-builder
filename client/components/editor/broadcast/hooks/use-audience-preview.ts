@@ -47,10 +47,13 @@ export function useAudiencePreview(
       tokenId,
     ],
     queryFn: async () => {
+      const url = tokenId
+        ? `/api/projects/${projectId}/broadcasts/preview-audience?tokenId=${tokenId}`
+        : `/api/projects/${projectId}/broadcasts/preview-audience`;
       return apiRequest(
         'POST',
-        `/api/projects/${projectId}/broadcasts/preview-audience`,
-        { filters: debouncedFilters, tokenId: tokenId ?? 0 },
+        url,
+        { filters: debouncedFilters },
       );
     },
     enabled: !!projectId,

@@ -61,6 +61,48 @@ const CREATE_APP_SETTINGS_TABLE = `
 `;
 
 /**
+ * SQL для создания таблицы рассылок.
+ * Хранит задания на массовую отправку сообщений пользователям бота.
+ */
+const CREATE_BROADCASTS_TABLE = `
+  CREATE TABLE IF NOT EXISTS broadcasts (
+    id SERIAL PRIMARY KEY,
+    project_id INTEGER NOT NULL REFERENCES bot_projects(id) ON DELETE CASCADE,
+    token_id INTEGER NOT NULL DEFAULT 0,
+    name TEXT NOT NULL,
+    message_text TEXT NOT NULL,
+    filters JSONB NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL DEFAULT 'pending',
+    total_count INTEGER NOT NULL DEFAULT 0,
+    sent_count INTEGER NOT NULL DEFAULT 0,
+    delivered_count INTEGER NOT NULL DEFAULT 0,
+    failed_count INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    started_at TIMESTAMPTZ,
+    finished_at TIMESTAMPTZ
+  );
+  CREATE INDEX IF NOT EXISTS idx_broadcasts_project_token ON broadcasts(project_id, token_id);
+  CREATE INDEX IF NOT EXISTS idx_broadcasts_status ON broadcasts(status);
+`;
+
+/**
+ * SQL для создания таблицы результатов рассылки.
+ * По одной записи на каждого получателя рассылки.
+ */
+const CREATE_BROADCAST_RESULTS_TABLE = `
+  CREATE TABLE IF NOT EXISTS broadcast_results (
+    id SERIAL PRIMARY KEY,
+    broadcast_id INTEGER NOT NULL REFERENCES broadcasts(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    error_message TEXT,
+    sent_at TIMESTAMPTZ DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS idx_broadcast_results_broadcast_id ON broadcast_results(broadcast_id);
+  CREATE INDEX IF NOT EXISTS idx_broadcast_results_status ON broadcast_results(broadcast_id, status);
+`;
+
+/**
  * SQL для заполнения owner_id в bot_tokens из bot_projects.
  * Исправляет старые записи где owner_id = NULL, хотя проект имеет владельца.
  * Безопасно запускать повторно — обновляет только NULL-записи.
@@ -91,6 +133,10 @@ export async function runMigrations(): Promise<void> {
     console.log("[Migrations] Таблица app_settings готова");
     const repairResult = await client.query(REPAIR_BOT_TOKENS_OWNER_ID);
     console.log(`[Migrations] Repair bot_tokens.owner_id: обновлено ${repairResult.rowCount ?? 0} записей`);
+    await client.query(CREATE_BROADCASTS_TABLE);
+    console.log("[Migrations] Таблица broadcasts готова");
+    await client.query(CREATE_BROADCAST_RESULTS_TABLE);
+    console.log("[Migrations] Таблица broadcast_results готова");
   } catch (err) {
     console.error("[Migrations] Ошибка выполнения миграций:", err);
   } finally {

@@ -52,11 +52,14 @@ export function useCreateBroadcast({
           activeTo: filterFields.activeTo,
         };
 
-      return apiRequest('POST', `/api/projects/${projectId}/broadcasts`, {
+      const url = tokenId
+        ? `/api/projects/${projectId}/broadcasts?tokenId=${tokenId}`
+        : `/api/projects/${projectId}/broadcasts`;
+
+      return apiRequest('POST', url, {
         name: formData.name,
         messageText: formData.messageText,
         filters,
-        tokenId: tokenId ?? 0,
       });
     },
     onSuccess: (data) => {
