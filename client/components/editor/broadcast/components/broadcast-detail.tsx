@@ -3,6 +3,7 @@
  * @module client/components/editor/broadcast/components/broadcast-detail
  */
 
+import { useEffect } from 'react';
 import { X, Calendar, Clock, StopCircle, CheckCircle2, XCircle, Users, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +14,7 @@ import { BroadcastStatusBadge } from './broadcast-status-badge';
 import { StatMini } from './broadcast-stat-mini';
 import { useBroadcastDetail } from '../hooks/use-broadcast-detail';
 import { useStopBroadcast } from '../hooks/use-stop-broadcast';
+import { useBroadcastLiveProgress } from '../hooks/use-broadcast-live-progress';
 import type { Broadcast } from '../types';
 
 /**
@@ -40,16 +42,28 @@ function fmt(date: string | Date | null | undefined): string {
 
 /**
  * Детальная панель рассылки: статистика, даты, кнопка стоп и аккордеон ошибок.
+ * Статистика обновляется в реальном времени через WS-события broadcast-progress.
+ * При завершении рассылки (done/stopped) автоматически вызывает refetch списка.
  * @param props - Свойства компонента
  * @returns JSX элемент детальной панели
  */
 export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: BroadcastDetailProps) {
   const { results, isLoading } = useBroadcastDetail(projectId, broadcast.id);
   const stopMutation = useStopBroadcast({ projectId, refetch });
+  const { progressEvent } = useBroadcastLiveProgress(projectId, broadcast.id);
 
-  const total = broadcast.totalCount ?? 0;
-  const delivered = broadcast.deliveredCount ?? 0;
-  const failed = broadcast.failedCount ?? 0;
+  // При получении финального WS-события обновляем список рассылок
+  useEffect(() => {
+    if (progressEvent?.status === 'done' || progressEvent?.status === 'stopped') {
+      refetch();
+    }
+  }, [progressEvent?.status]);
+
+  // Данные из WS-события имеют приоритет над пропсами
+  const liveStatus = progressEvent?.status ?? broadcast.status;
+  const total = progressEvent?.totalCount ?? broadcast.totalCount ?? 0;
+  const delivered = progressEvent?.deliveredCount ?? broadcast.deliveredCount ?? 0;
+  const failed = progressEvent?.failedCount ?? broadcast.failedCount ?? 0;
   const successRate = total > 0 ? Math.round((delivered / total) * 100) : 0;
 
   return (
@@ -57,11 +71,11 @@ export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: Broa
       {/* Заголовок */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
         <div className="flex items-center gap-2 min-w-0">
-          <BroadcastStatusBadge status={broadcast.status} />
+          <BroadcastStatusBadge status={liveStatus} />
           <span className="font-semibold text-sm truncate">{broadcast.name}</span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {broadcast.status === 'running' && (
+          {liveStatus === 'running' && (
             <Button size="sm" variant="destructive" className="h-7 text-xs gap-1"
               onClick={() => stopMutation.mutate(broadcast.id)} disabled={stopMutation.isPending}>
               <StopCircle className="h-3.5 w-3.5" />
