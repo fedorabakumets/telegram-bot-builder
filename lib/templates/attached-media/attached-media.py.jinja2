@@ -60,7 +60,10 @@ if not os.path.exists(doc_path):
     logging.error(f"❌ Медиафайл не найден: {doc_path} (узел {{ nodeId }})")
     sent_message = await callback_query.message.answer(text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 else:
-    doc_file = FSInputFile(doc_path)
+    import re as _re
+    _raw_doc_name = os.path.basename(doc_path)
+    _clean_doc_name = _re.sub(r'^\d+-\d+-', '', _raw_doc_name)
+    doc_file = FSInputFile(doc_path, filename=_clean_doc_name)
     sent_message = await callback_query.message.answer_document(doc_file, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
 {%- else %}
 sent_message = await callback_query.message.answer_document("{{ documentUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, node_id="{{ nodeId }}")
