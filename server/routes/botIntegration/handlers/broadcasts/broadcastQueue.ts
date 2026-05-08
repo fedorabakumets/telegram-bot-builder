@@ -157,6 +157,15 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
             deliveredCount++;
             sentCount++;
             await storage.createBroadcastResult({ broadcastId, userId: user.userId, status: "sent" });
+            // Записываем сообщение в историю диалога чтобы оно было видно в панели диалога
+            await storage.createBotMessage({
+              projectId,
+              tokenId,
+              userId: user.userId,
+              messageType: "bot",
+              messageText: text,
+              messageData: { sentFromBroadcast: true, broadcastId },
+            });
             sent = true;
           } else if (result.errorCode === 429 && result.retryAfter) {
             // Rate limit — ждём retry_after секунд
