@@ -54,6 +54,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
             "mimeType": _mime_type,
             "fileName": _file_name,
         }
+        logging.info(f"📄 convert_file [{{ nodeId }}]: сформирован файл «{_file_name}» ({_mime_type}), {len(_file_bytes)} байт, {len(_input_data)} строк")
         {% if outputVariable %}
         user_data[user_id]["{{ outputVariable }}"] = _file_obj
         await set_user_var(user_id, "{{ outputVariable }}", _file_obj)
