@@ -196,7 +196,11 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
       // После каждого батча обновляем счётчики и отправляем WS-событие
       const isStopped = activeBroadcasts.get(broadcastId) === "stopped";
       await storage.updateBroadcast(broadcastId, { sentCount, deliveredCount, failedCount });
-      await emitProgress(projectId, broadcastId, sentCount, deliveredCount, failedCount, users.length, isStopped ? "stopped" : "running");
+      // Не отправляем промежуточный "running" если это последний батч — финальное событие придёт ниже
+      const isLastBatch = i + BATCH_SIZE >= users.length;
+      if (!isLastBatch || isStopped) {
+        await emitProgress(projectId, broadcastId, sentCount, deliveredCount, failedCount, users.length, isStopped ? "stopped" : "running");
+      }
     }
 
     // Определяем финальный статус

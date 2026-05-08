@@ -15,9 +15,17 @@ export interface UseBroadcastLiveProgressResult {
   progressEvent: BroadcastProgressEvent | null;
 }
 
+/** Приоритет статусов — финальные статусы не перезаписываются более ранними */
+const STATUS_PRIORITY: Record<string, number> = {
+  running: 1,
+  stopped: 2,
+  done: 2,
+};
+
 /**
  * Хук подписки на WS-события прогресса рассылки.
  * Использует UserMessagesLiveProvider для получения событий broadcast-progress.
+ * Защищает от регресса статуса: финальный статус (done/stopped) не перезаписывается.
  *
  * @param projectId - Идентификатор проекта
  * @param broadcastId - Идентификатор рассылки (опционально, для фильтрации)
@@ -40,16 +48,24 @@ export function useBroadcastLiveProgress(
       if (event.projectId !== projectId) return;
       if (broadcastId && event.data.broadcastId !== broadcastId) return;
 
-      // Приводим к плоской структуре BroadcastProgressEvent
-      setProgressEvent({
-        type: 'broadcast-progress',
-        projectId: event.projectId,
-        broadcastId: event.data.broadcastId,
-        sentCount: event.data.sentCount,
-        deliveredCount: event.data.deliveredCount,
-        failedCount: event.data.failedCount,
-        totalCount: event.data.totalCount,
-        status: event.data.status,
+      const incoming = event.data.status;
+
+      setProgressEvent((prev) => {
+        // Не перезаписываем финальный статус более ранним (защита от race condition)
+        const prevPriority = STATUS_PRIORITY[prev?.status ?? ''] ?? 0;
+        const incomingPriority = STATUS_PRIORITY[incoming] ?? 0;
+        if (incomingPriority < prevPriority) return prev;
+
+        return {
+          type: 'broadcast-progress',
+          projectId: event.projectId,
+          broadcastId: event.data.broadcastId,
+          sentCount: event.data.sentCount,
+          deliveredCount: event.data.deliveredCount,
+          failedCount: event.data.failedCount,
+          totalCount: event.data.totalCount,
+          status: incoming,
+        };
       });
     });
 
