@@ -59,3 +59,6 @@ export type { ProjectCollaborator, InsertProjectCollaborator } from "./project-c
 
 export { appSettings } from "./app-settings";
 export type { AppSetting, InsertAppSetting } from "./app-settings";
+
+export { broadcasts, broadcastResults, insertBroadcastSchema, insertBroadcastResultSchema, broadcastFiltersSchema } from "./broadcasts";
+export type { Broadcast, InsertBroadcast, BroadcastResult, InsertBroadcastResult, BroadcastFilters } from "./broadcasts";

@@ -2,10 +2,10 @@
  * @fileoverview Базовая реализация storage поверх Drizzle для серверной части конструктора
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters } from "@shared/schema";
 import { and, asc, desc, eq, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
-import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageUserBotDataInput, StorageUserBotDataUpdate } from "../storages/storageTypes";
+import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageUserBotDataInput, StorageUserBotDataUpdate, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput } from "../storages/storageTypes";
 import { db } from "./db";
 
 /**
@@ -1669,5 +1669,128 @@ export class DatabaseStorage implements IStorage {
       .from(projectCollaborators)
       .where(eq(projectCollaborators.projectId, projectId))
       .orderBy(projectCollaborators.createdAt);
+  }
+
+  // Рассылки
+
+  /**
+   * Создать новую рассылку в базе данных
+   * @param data - Данные рассылки
+   * @returns Созданная запись рассылки
+   */
+  async createBroadcast(data: StorageBroadcastInput): Promise<Broadcast> {
+    const [record] = await this.db.insert(broadcasts).values(data).returning();
+    return record;
+  }
+
+  /**
+   * Получить список рассылок проекта
+   * @param projectId - ID проекта
+   * @param tokenId - Опциональный ID токена для фильтрации
+   * @returns Массив рассылок, отсортированных по дате создания (новые первые)
+   */
+  async getBroadcasts(projectId: number, tokenId?: number | null): Promise<Broadcast[]> {
+    const conditions = [eq(broadcasts.projectId, projectId)];
+    if (tokenId !== null && tokenId !== undefined) {
+      conditions.push(eq(broadcasts.tokenId, tokenId));
+    }
+    return await this.db.select().from(broadcasts)
+      .where(and(...conditions))
+      .orderBy(desc(broadcasts.createdAt));
+  }
+
+  /**
+   * Получить рассылку по ID
+   * @param id - ID рассылки
+   * @returns Рассылка или undefined, если не найдена
+   */
+  async getBroadcastById(id: number): Promise<Broadcast | undefined> {
+    const [record] = await this.db.select().from(broadcasts).where(eq(broadcasts.id, id));
+    return record || undefined;
+  }
+
+  /**
+   * Обновить данные рассылки
+   * @param id - ID рассылки
+   * @param data - Данные для обновления
+   * @returns Обновлённая рассылка или undefined
+   */
+  async updateBroadcast(id: number, data: StorageBroadcastUpdate): Promise<Broadcast | undefined> {
+    const [record] = await this.db.update(broadcasts).set(data).where(eq(broadcasts.id, id)).returning();
+    return record || undefined;
+  }
+
+  /**
+   * Остановить рассылку — установить status = 'stopped'
+   * @param id - ID рассылки
+   * @returns Обновлённая рассылка или undefined
+   */
+  async stopBroadcast(id: number): Promise<Broadcast | undefined> {
+    const [record] = await this.db
+      .update(broadcasts)
+      .set({ status: "stopped", finishedAt: new Date() })
+      .where(eq(broadcasts.id, id))
+      .returning();
+    return record || undefined;
+  }
+
+  /**
+   * Записать результат отправки одному пользователю
+   * @param data - Данные результата
+   * @returns Созданная запись результата
+   */
+  async createBroadcastResult(data: StorageBroadcastResultInput): Promise<BroadcastResult> {
+    const [record] = await this.db.insert(broadcastResults).values(data).returning();
+    return record;
+  }
+
+  /**
+   * Получить результаты рассылки
+   * @param broadcastId - ID рассылки
+   * @returns Массив результатов, отсортированных по дате отправки
+   */
+  async getBroadcastResults(broadcastId: number): Promise<BroadcastResult[]> {
+    return await this.db.select().from(broadcastResults)
+      .where(eq(broadcastResults.broadcastId, broadcastId))
+      .orderBy(asc(broadcastResults.sentAt));
+  }
+
+  /**
+   * Получить пользователей для рассылки по фильтрам аудитории
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена бота
+   * @param filters - Фильтры аудитории (теги, даты регистрации, активности)
+   * @returns Массив пользователей, подходящих под фильтры
+   */
+  async getUsersForBroadcast(projectId: number, tokenId: number, filters: BroadcastFilters): Promise<UserBotData[]> {
+    const conditions = [
+      eq(userBotData.projectId, projectId),
+      eq(userBotData.tokenId, tokenId),
+      eq(userBotData.isBlocked, 0),
+    ];
+
+    if (filters.registeredFrom) {
+      conditions.push(sql`${userBotData.createdAt} >= ${new Date(filters.registeredFrom)}`);
+    }
+    if (filters.registeredTo) {
+      conditions.push(sql`${userBotData.createdAt} <= ${new Date(filters.registeredTo)}`);
+    }
+    if (filters.activeFrom) {
+      conditions.push(sql`${userBotData.lastInteraction} >= ${new Date(filters.activeFrom)}`);
+    }
+    if (filters.activeTo) {
+      conditions.push(sql`${userBotData.lastInteraction} <= ${new Date(filters.activeTo)}`);
+    }
+
+    const users = await this.db.select().from(userBotData).where(and(...conditions));
+
+    if (filters.tags && filters.tags.length > 0) {
+      return users.filter(u => {
+        const userTags = (u.tags as string[]) || [];
+        return filters.tags!.every(tag => userTags.includes(tag));
+      });
+    }
+
+    return users;
   }
 }

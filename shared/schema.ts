@@ -67,6 +67,9 @@ export type { ProjectCollaborator, InsertProjectCollaborator } from "./schema/ta
 export { appSettings } from "./schema/tables/app-settings";
 export type { AppSetting, InsertAppSetting } from "./schema/tables/app-settings";
 
+export { broadcasts, broadcastResults, insertBroadcastSchema, insertBroadcastResultSchema, broadcastFiltersSchema } from "./schema/tables/broadcasts";
+export type { Broadcast, InsertBroadcast, BroadcastResult, InsertBroadcastResult, BroadcastFilters } from "./schema/tables/broadcasts";
+
 export type TelegramUserDB = typeof telegramUsersTable.$inferSelect;
 
 // Импорты для обратной совместимости

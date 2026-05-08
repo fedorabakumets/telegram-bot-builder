@@ -91,3 +91,14 @@ export type StorageTelegramUserInput = typeof telegramUsers.$inferInsert;
 
 /** Тип вставки коллаборатора проекта по таблице Drizzle */
 export type StorageProjectCollaboratorInput = typeof projectCollaborators.$inferInsert;
+
+import { broadcasts, broadcastResults } from "@shared/schema";
+
+/** Тип вставки рассылки по таблице Drizzle */
+export type StorageBroadcastInput = typeof broadcasts.$inferInsert;
+
+/** Тип обновления рассылки */
+export type StorageBroadcastUpdate = Partial<StorageBroadcastInput>;
+
+/** Тип вставки результата рассылки по таблице Drizzle */
+export type StorageBroadcastResultInput = typeof broadcastResults.$inferInsert;

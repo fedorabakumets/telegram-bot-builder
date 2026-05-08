@@ -22,6 +22,7 @@ import { restrictMemberHandler } from "./botIntegration/groups/members";
 import { setGroupPhotoHandler, setGroupTitleHandler, setGroupDescriptionHandler, setGroupUsernameHandler } from "./botIntegration/groups/settings";
 import { pinMessageHandler, unpinMessageHandler, createInviteLinkHandler, deleteMessageHandler } from "./botIntegration/groups/moderation";
 import { telegramSettingsHandler, groupMembersHandler } from "./botIntegration/telegram";
+import { createBroadcastHandler, getBroadcastsHandler, getBroadcastDetailHandler, stopBroadcastHandler, previewAudienceHandler } from "./botIntegration/handlers/broadcasts";
 
 /**
  * Настраивает маршруты интеграции с ботами
@@ -194,4 +195,11 @@ export function setupBotIntegrationRoutes(app: Express) {
 
     // Получение участников группы через Telegram Client API (общая база)
     app.get("/api/telegram-client/group-members/:groupId", groupMembersHandler);
+
+    // Рассылки
+    app.get("/api/projects/:projectId/broadcasts", getBroadcastsHandler);
+    app.post("/api/projects/:projectId/broadcasts", createBroadcastHandler);
+    app.post("/api/projects/:projectId/broadcasts/preview-audience", previewAudienceHandler);
+    app.get("/api/projects/:projectId/broadcasts/:broadcastId", getBroadcastDetailHandler);
+    app.post("/api/projects/:projectId/broadcasts/:broadcastId/stop", stopBroadcastHandler);
 }

@@ -17,6 +17,9 @@ import {
   type TelegramUserDB,
   type UserBotData,
   type ProjectCollaborator,
+  type Broadcast,
+  type BroadcastResult,
+  type BroadcastFilters,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
 import type {
@@ -42,6 +45,9 @@ import type {
   StorageTelegramUserInput,
   StorageUserBotDataInput,
   StorageUserBotDataUpdate,
+  StorageBroadcastInput,
+  StorageBroadcastUpdate,
+  StorageBroadcastResultInput,
 } from "./storageTypes";
 
 /**
@@ -802,6 +808,68 @@ export interface IStorage {
    * @returns Массив записей коллабораторов
    */
   getCollaborators(projectId: number): Promise<ProjectCollaborator[]>;
+
+  // Рассылки
+
+  /**
+   * Создать новую рассылку
+   * @param data - Данные рассылки
+   * @returns Созданная запись рассылки
+   */
+  createBroadcast(data: StorageBroadcastInput): Promise<Broadcast>;
+
+  /**
+   * Получить список рассылок проекта
+   * @param projectId - ID проекта
+   * @param tokenId - Опциональный ID токена для фильтрации
+   * @returns Массив рассылок
+   */
+  getBroadcasts(projectId: number, tokenId?: number | null): Promise<Broadcast[]>;
+
+  /**
+   * Получить рассылку по ID
+   * @param id - ID рассылки
+   * @returns Рассылка или undefined
+   */
+  getBroadcastById(id: number): Promise<Broadcast | undefined>;
+
+  /**
+   * Обновить данные рассылки (статус, счётчики)
+   * @param id - ID рассылки
+   * @param data - Данные для обновления
+   * @returns Обновлённая рассылка или undefined
+   */
+  updateBroadcast(id: number, data: StorageBroadcastUpdate): Promise<Broadcast | undefined>;
+
+  /**
+   * Остановить рассылку — установить status = 'stopped'
+   * @param id - ID рассылки
+   * @returns Обновлённая рассылка или undefined
+   */
+  stopBroadcast(id: number): Promise<Broadcast | undefined>;
+
+  /**
+   * Записать результат отправки одному пользователю
+   * @param data - Данные результата
+   * @returns Созданная запись результата
+   */
+  createBroadcastResult(data: StorageBroadcastResultInput): Promise<BroadcastResult>;
+
+  /**
+   * Получить результаты рассылки
+   * @param broadcastId - ID рассылки
+   * @returns Массив результатов
+   */
+  getBroadcastResults(broadcastId: number): Promise<BroadcastResult[]>;
+
+  /**
+   * Получить пользователей для рассылки по фильтрам
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена бота
+   * @param filters - Фильтры аудитории
+   * @returns Массив пользователей
+   */
+  getUsersForBroadcast(projectId: number, tokenId: number, filters: BroadcastFilters): Promise<UserBotData[]>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных
