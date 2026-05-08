@@ -1763,34 +1763,68 @@ export class DatabaseStorage implements IStorage {
    * @returns Массив пользователей, подходящих под фильтры
    */
   async getUsersForBroadcast(projectId: number, tokenId: number, filters: BroadcastFilters): Promise<UserBotData[]> {
+    // Используем таблицу bot_users — там хранятся реальные пользователи бота
     const conditions = [
-      eq(userBotData.projectId, projectId),
-      eq(userBotData.tokenId, tokenId),
-      eq(userBotData.isBlocked, 0),
+      eq(botUsers.projectId, projectId),
+      eq(botUsers.tokenId, tokenId),
+      eq(botUsers.isBot, 0),
     ];
 
     if (filters.registeredFrom) {
-      conditions.push(sql`${userBotData.createdAt} >= ${new Date(filters.registeredFrom)}`);
+      conditions.push(sql`${botUsers.registeredAt} >= ${new Date(filters.registeredFrom)}`);
     }
     if (filters.registeredTo) {
-      conditions.push(sql`${userBotData.createdAt} <= ${new Date(filters.registeredTo)}`);
+      conditions.push(sql`${botUsers.registeredAt} <= ${new Date(filters.registeredTo)}`);
     }
     if (filters.activeFrom) {
-      conditions.push(sql`${userBotData.lastInteraction} >= ${new Date(filters.activeFrom)}`);
+      conditions.push(sql`${botUsers.lastInteraction} >= ${new Date(filters.activeFrom)}`);
     }
     if (filters.activeTo) {
-      conditions.push(sql`${userBotData.lastInteraction} <= ${new Date(filters.activeTo)}`);
+      conditions.push(sql`${botUsers.lastInteraction} <= ${new Date(filters.activeTo)}`);
     }
 
-    const users = await this.db.select().from(userBotData).where(and(...conditions));
+    const rows = await this.db.select().from(botUsers).where(and(...conditions));
 
+    // Фильтрация по тегам (хранятся в userData.tags)
+    let filtered = rows;
     if (filters.tags && filters.tags.length > 0) {
-      return users.filter(u => {
-        const userTags = (u.tags as string[]) || [];
+      filtered = rows.filter(u => {
+        const ud = (u.userData as Record<string, unknown>) || {};
+        const userTags = (ud.tags as string[]) || [];
         return filters.tags!.every(tag => userTags.includes(tag));
       });
     }
 
-    return users;
+    // Приводим BotUser к UserBotData для совместимости с очередью отправки
+    return filtered.map(u => ({
+      id: 0,
+      projectId: u.projectId,
+      tokenId: u.tokenId,
+      userId: String(u.userId),
+      userName: u.username ?? null,
+      firstName: u.firstName ?? null,
+      lastName: u.lastName ?? null,
+      avatarUrl: u.avatarUrl ?? null,
+      isBot: u.isBot ?? 0,
+      isPremium: u.isPremium ?? 0,
+      lastInteraction: u.lastInteraction ?? null,
+      interactionCount: u.interactionCount ?? 0,
+      userData: u.userData ?? {},
+      currentState: null,
+      preferences: {},
+      commandsUsed: {},
+      sessionsCount: 0,
+      totalMessagesSent: 0,
+      totalMessagesReceived: 0,
+      deviceInfo: null,
+      locationData: null,
+      contactData: null,
+      isBlocked: 0,
+      isActive: u.isActive ?? 1,
+      tags: [],
+      notes: null,
+      createdAt: u.registeredAt ?? null,
+      updatedAt: u.lastInteraction ?? null,
+    })) as unknown as UserBotData[];
   }
 }
