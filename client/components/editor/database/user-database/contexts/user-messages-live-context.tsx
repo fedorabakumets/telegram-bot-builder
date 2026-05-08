@@ -72,7 +72,34 @@ export interface NewUserLiveEvent {
 }
 
 /** Все типы live-событий */
-export type LiveEvent = NewMessageLiveEvent | NewUserLiveEvent;
+export type LiveEvent = NewMessageLiveEvent | NewUserLiveEvent | BroadcastProgressLiveEvent;
+
+/**
+ * Структура WS-события прогресса рассылки
+ */
+export interface BroadcastProgressLiveEvent {
+  /** Тип события */
+  type: 'broadcast-progress';
+  /** Идентификатор проекта */
+  projectId: number;
+  /** Данные прогресса */
+  data: {
+    /** Идентификатор рассылки */
+    broadcastId: number;
+    /** Отправлено сообщений */
+    sentCount: number;
+    /** Доставлено успешно */
+    deliveredCount: number;
+    /** Ошибок при отправке */
+    failedCount: number;
+    /** Всего получателей */
+    totalCount: number;
+    /** Текущий статус */
+    status: 'running' | 'stopped' | 'done';
+  };
+  /** Временная метка события */
+  timestamp: string;
+}
 
 /** Тип колбэка-подписчика на все live-события */
 type LiveEventListener = (event: LiveEvent) => void;
@@ -128,7 +155,7 @@ export function UserMessagesLiveProvider({ projectId, children }: UserMessagesLi
         try {
           const msg = JSON.parse(event.data as string) as LiveEvent;
           // Пропускаем только поддерживаемые типы событий
-          if (msg.type !== 'new-message' && msg.type !== 'new-user') return;
+          if (msg.type !== 'new-message' && msg.type !== 'new-user' && msg.type !== 'broadcast-progress') return;
           console.log(`[LiveProvider] событие ${msg.type} projectId=${msg.projectId} (ожидаем ${projectId}), подписчиков: ${listenersRef.current.size}`);
           if (msg.projectId !== projectId) return;
           console.log(`[LiveProvider] → рассылаем ${listenersRef.current.size} подписчикам`);

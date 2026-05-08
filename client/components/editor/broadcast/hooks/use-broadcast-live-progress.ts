@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useUserMessagesLiveContext } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
+import { useUserMessagesLiveContext, type BroadcastProgressLiveEvent } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 import type { BroadcastProgressEvent } from '../types';
 
 /**
@@ -35,11 +35,22 @@ export function useBroadcastLiveProgress(
 
     const unsubscribe = liveContext.subscribe((msg) => {
       // Фильтруем только события broadcast-progress
-      if ((msg as unknown as BroadcastProgressEvent).type !== 'broadcast-progress') return;
-      const event = msg as unknown as BroadcastProgressEvent;
+      if (msg.type !== 'broadcast-progress') return;
+      const event = msg as BroadcastProgressLiveEvent;
       if (event.projectId !== projectId) return;
-      if (broadcastId && event.broadcastId !== broadcastId) return;
-      setProgressEvent(event);
+      if (broadcastId && event.data.broadcastId !== broadcastId) return;
+
+      // Приводим к плоской структуре BroadcastProgressEvent
+      setProgressEvent({
+        type: 'broadcast-progress',
+        projectId: event.projectId,
+        broadcastId: event.data.broadcastId,
+        sentCount: event.data.sentCount,
+        deliveredCount: event.data.deliveredCount,
+        failedCount: event.data.failedCount,
+        totalCount: event.data.totalCount,
+        status: event.data.status,
+      });
     });
 
     return unsubscribe;
