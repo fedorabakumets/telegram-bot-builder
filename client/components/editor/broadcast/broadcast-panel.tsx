@@ -3,7 +3,7 @@
  * @module client/components/editor/broadcast/broadcast-panel
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,6 +31,16 @@ export function BroadcastPanel({ projectId, selectedTokenId }: BroadcastPanelPro
 
   const { broadcasts, total, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId, page);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_LIMIT));
+
+  // Синхронизируем selectedBroadcast с актуальными данными из списка после каждого refetch.
+  // Без этого selectedBroadcast остаётся замороженным объектом со старым статусом.
+  useEffect(() => {
+    if (!selectedBroadcast) return;
+    const fresh = broadcasts.find((b) => b.id === selectedBroadcast.id);
+    if (fresh && fresh.status !== selectedBroadcast.status) {
+      setSelectedBroadcast(fresh);
+    }
+  }, [broadcasts]);
 
   /** Обработчик выбора рассылки — сбрасывает при повторном клике */
   function handleSelect(broadcast: Broadcast) {
