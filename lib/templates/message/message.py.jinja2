@@ -119,7 +119,12 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         except Exception as _e:
             logging.warning(f"⚠️ Не удалось получить аватарку для {user_id}: {_e}")
     # Fire-and-forget: сохранение профиля не блокирует отправку сообщения
-    asyncio.create_task(save_user_to_db(user_id, username, first_name, last_name, _avatar_url))
+    # Передаём deep_link_param и referrer_id из user_data — они уже записаны set_user_var до вызова save_user_to_db
+    asyncio.create_task(save_user_to_db(
+        user_id, username, first_name, last_name, _avatar_url,
+        deep_link_param=user_data.get(user_id, {}).get("deep_link_param"),
+        referrer_id=user_data.get(user_id, {}).get("referrer_id"),
+    ))
 
     # Инициализируем базовые переменные пользователя (память — синхронно)
     user_name = await init_user_variables(user_id, callback_query.from_user)
