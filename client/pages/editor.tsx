@@ -1659,6 +1659,7 @@ export default function Editor() {
       {useFlexibleLayout ? (
         renderFlexibleLayoutContent()
       ) : (
+        <UserMessagesLiveProvider projectId={activeProject.id}>
         <AdaptiveLayout
           config={layoutConfig}
           header={
@@ -1836,6 +1837,7 @@ export default function Editor() {
             ) : null
           }
         />
+        </UserMessagesLiveProvider>
       )}
 
       {showLayoutManager && (
