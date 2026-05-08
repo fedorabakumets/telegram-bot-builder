@@ -138,8 +138,7 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
     hasBotCommandsResult: hasBotCommands(nodes),
     hasDeepLinkTriggersResult: nodes.some(
       n => n.type === 'command_trigger' &&
-           (n.data as any)?.deepLinkParam &&
-           String((n.data as any).deepLinkParam).trim().length > 0
+           (n.data as any)?.command === '/start'
     ),
   };
 }

@@ -17,9 +17,11 @@
 #}
 
 {# Единый роутер deep link — регистрируется ПЕРВЫМ чтобы иметь приоритет над CommandStart(deep_link=False) #}
+{# Генерируется всегда когда есть /start триггер — даже без явных deepLinkParam узлов #}
 {%- set deepLinkEntries = commandTriggerEntries | selectattr("deepLinkParam") | list -%}
+{%- set hasStartTrigger = commandTriggerEntries | selectattr("command", "equalto", "/start") | list | length > 0 -%}
 
-{%- if deepLinkEntries | length > 0 %}
+{%- if hasStartTrigger %}
 
 @dp.message(CommandStart(deep_link=True))
 async def deep_link_router(message: types.Message, command: CommandObject, state: FSMContext = None):
