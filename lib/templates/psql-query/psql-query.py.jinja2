@@ -42,6 +42,15 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
             _lines.append(_line)
         user_data[user_id]["{{ saveResultTo }}"] = "\n".join(_lines)
         {% else %}
+        # Нормализуем datetime → isoformat() для JSON-сериализации
+        def _norm_val(v):
+            return v.isoformat() if hasattr(v, 'isoformat') else v
+        def _norm_row(r):
+            return {k: _norm_val(v) for k, v in r.items()} if isinstance(r, dict) else r
+        if isinstance(_result, list):
+            _result = [_norm_row(r) for r in _result]
+        elif isinstance(_result, dict):
+            _result = _norm_row(_result)
         user_data[user_id]["{{ saveResultTo }}"] = _result
         {% endif %}
         await set_user_var(user_id, "{{ saveResultTo }}", user_data[user_id]["{{ saveResultTo }}"])

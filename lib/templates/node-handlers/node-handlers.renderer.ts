@@ -58,7 +58,23 @@ export function resolveMediaUrls(data: any): {
     };
   }
 
-  const urlStrings = (rawAttached as string[]).filter(u => typeof u === 'string' && (u.startsWith('http') || u.startsWith('/uploads/') || u.startsWith('{"__type":"file_id"')));
+  const urlStrings = (rawAttached as string[]).filter(u => typeof u === 'string' && (u.startsWith('http') || u.startsWith('/uploads/') || u.startsWith('{"__type":"file_id"') || (u.startsWith('{') && u.endsWith('}'))));
+
+  // Переменные вида {varName} — всегда остаются в attachedMediaUrls, не разбираются как URL
+  const hasVariableItems = urlStrings.some(u => u.startsWith('{') && u.endsWith('}') && !u.startsWith('{"__type"'));
+  if (hasVariableItems) {
+    return {
+      imageUrl: '',
+      videoUrl: '',
+      audioUrl: '',
+      documentUrl: '',
+      attachedMediaUrls: urlStrings,
+      isLocalImageUrl: false,
+      isLocalVideoUrl: false,
+      isLocalAudioUrl: false,
+      isLocalDocumentUrl: false,
+    };
+  }
   if (urlStrings.length === 0) {
     return {
       imageUrl,
