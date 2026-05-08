@@ -218,6 +218,11 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
             return typeof key === 'string' && key.includes(`/projects/${projectId}/messages/activity`);
           },
         });
+
+        // Инвалидируем трафик при new-message — deep_link_param мог записаться в БД
+        // чуть позже чем пришло событие new-user (race condition при первом визите)
+        const trafficUrlOnMsg = buildUsersApiUrl(`/api/projects/${projectId}/users/traffic`, selectedTokenId);
+        queryClient.invalidateQueries({ queryKey: [trafficUrlOnMsg, selectedTokenId] });
       }
 
       if (event.type === 'new-user') {
