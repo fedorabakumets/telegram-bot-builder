@@ -55,6 +55,7 @@ export function getBadgeText(variable: Variable): string {
     input: '⌨️ Ввод',
     set_variable: '✏️ Переменная',
     psql_query: '🗄️ SQL',
+    convert_file: '📄 Файл',
   };
   return labels[variable.nodeType] || '📌';
 }
@@ -153,6 +154,14 @@ export function getNodeInfo(variable: Variable) {
     return (
       <div className="text-[10px] text-violet-500 dark:text-violet-400 mt-0.5 truncate">
         🗄️ {variable.description}
+      </div>
+    );
+  }
+  // Для convert_file показываем описание (формат и источник)
+  if ((variable.nodeType as string) === 'convert_file') {
+    return (
+      <div className="text-[10px] text-emerald-500 dark:text-emerald-400 mt-0.5 truncate">
+        📄 {variable.description}
       </div>
     );
   }

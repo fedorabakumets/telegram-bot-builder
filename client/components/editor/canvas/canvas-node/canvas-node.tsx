@@ -45,6 +45,7 @@ import { AnswerCallbackQueryPreview } from './answer-callback-query-preview';
 import { EditMessagePreview } from './edit-message-preview';
 import { SetVariablePreview } from './set-variable-preview';
 import { PsqlQueryPreview } from './psql-query-preview';
+import { ConvertFilePreview } from './convert-file-preview';
 import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
 
 /**
@@ -617,6 +618,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* SQL Query Preview */}
         {(node.type as any) === 'psql_query' && <PsqlQueryPreview node={node} />}
+
+        {/* Convert File Preview */}
+        {(node.type as any) === 'convert_file' && <ConvertFilePreview node={node} />}
 
         {/* Condition Node Preview */}
         {node.type === 'condition' && (

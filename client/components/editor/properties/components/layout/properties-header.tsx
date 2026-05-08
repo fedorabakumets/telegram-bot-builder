@@ -79,6 +79,8 @@ const nodeTypeNames: Partial<Record<Node['type'], string>> = {
   set_variable: 'Установить переменные',
   /** Название узла прямого SQL-запроса к базе данных */
   psql_query: 'SQL-запрос',
+  /** Название узла конвертации файлов */
+  convert_file: 'Конвертер файлов',
 } as Partial<Record<string, string>>;
 
 /**
@@ -131,6 +133,8 @@ const nodeIcons: Partial<Record<Node['type'], string>> = {
   set_variable: 'fas fa-pen',
   /** Иконка узла прямого SQL-запроса к базе данных */
   psql_query: 'fas fa-database',
+  /** Иконка узла конвертации файлов */
+  convert_file: 'fas fa-file-export',
 } as Partial<Record<string, string>>;
 
 /**
@@ -184,6 +188,8 @@ const nodeColors: Partial<Record<Node['type'], string>> = {
   set_variable: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
   /** Цвет узла прямого SQL-запроса — фиолетовый */
   psql_query: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
+  /** Цвет узла конвертации файлов — изумрудный */
+  convert_file: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
 } as Partial<Record<string, string>>;
 
 /**

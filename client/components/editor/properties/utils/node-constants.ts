@@ -41,6 +41,7 @@ export const MANAGEMENT_NODE_TYPES = [
   'get_managed_bot_token' as any,
   'set_variable' as any,
   'psql_query' as any,
+  'convert_file' as any,
 ] as const;
 
 /**

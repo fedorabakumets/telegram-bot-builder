@@ -396,6 +396,23 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
     }
   });
 
+  // Добавляем переменные от convert_file-узлов
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'convert_file') return;
+    const data = node.data as any;
+    if (!data.convertFileOutputVariable?.trim()) return;
+    const key = `convert_file__${node.id}`;
+    if (!variablesMap.has(key)) {
+      variablesMap.set(key, {
+        name: data.convertFileOutputVariable,
+        nodeId: node.id,
+        nodeType: 'convert_file' as any,
+        sourceTable: 'bot_users',
+        description: `Файл (${data.convertFileFormat || 'csv'}) из ${data.convertFileInputVariable || '?'}`,
+      });
+    }
+  });
+
   // Добавляем системные переменные
   SYSTEM_VARIABLES.forEach(v => { 
     if (!variablesMap.has(v.name)) {

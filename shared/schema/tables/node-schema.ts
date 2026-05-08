@@ -62,7 +62,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query', 'convert_file']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -736,6 +736,20 @@ export const nodeSchema = z.object({
       /** Режим присваивания: "text" — шаблон, "expression" — арифметическое выражение */
       mode: z.enum(['text', 'expression']).default('text'),
     })).default([]),
+    /** Режим конвертации файла: toFile — данные в файл */
+    convertFileMode: z.enum(['toFile']).default('toFile'),
+    /** Входная переменная с json-массивом для convert_file */
+    convertFileInputVariable: z.string().default(''),
+    /** Формат выходного файла: csv или json */
+    convertFileFormat: z.enum(['csv', 'json']).default('csv'),
+    /** Имя выходного файла, поддерживает {date} */
+    convertFileFileName: z.string().default('export_{date}.csv'),
+    /** Разделитель для CSV формата */
+    convertFileCsvDelimiter: z.string().default(','),
+    /** Включать заголовки в CSV */
+    convertFileIncludeHeaderRow: z.boolean().default(true),
+    /** Переменная для сохранения file-объекта */
+    convertFileOutputVariable: z.string().default(''),
   }),
 });
 
