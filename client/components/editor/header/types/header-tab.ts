@@ -12,4 +12,5 @@ export type HeaderTab =
   | 'users'
   | 'groups'
   | 'user-ids'
-  | 'client-api';
+  | 'client-api'
+  | 'broadcast';

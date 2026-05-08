@@ -49,6 +49,7 @@ import { DialogPanel } from '@/components/editor/database/dialog/dialog-panel';
 import { UserMessagesLiveProvider } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
+import { BroadcastPanel } from '@/components/editor/broadcast';
 import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
 import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
@@ -1481,6 +1482,14 @@ export default function Editor() {
             </div>
           )}
           {currentTab === 'user-ids' && <UserIdsDatabase />}
+          {currentTab === 'broadcast' && (
+            <div className="h-full overflow-hidden">
+              <BroadcastPanel
+                projectId={activeProject.id}
+                selectedTokenId={selectedDatabaseTokenId}
+              />
+            </div>
+          )}
           {currentTab === 'client-api' && (
             <div className="h-full p-6 bg-background overflow-auto">
               <div className="max-w-3xl mx-auto">
@@ -1793,6 +1802,13 @@ export default function Editor() {
                   <GroupsPanel
                     projectId={activeProject.id}
                     projectName={activeProject.name}
+                  />
+                </div>
+              ) : currentTab === 'broadcast' ? (
+                <div className="h-full">
+                  <BroadcastPanel
+                    projectId={activeProject.id}
+                    selectedTokenId={selectedDatabaseTokenId}
                   />
                 </div>
               ) : currentTab === 'export' ? null : null}

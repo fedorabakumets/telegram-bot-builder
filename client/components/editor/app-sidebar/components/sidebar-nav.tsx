@@ -2,7 +2,7 @@
  * @fileoverview Вертикальная навигация по вкладкам сайдбара
  */
 
-import { LayoutDashboard, Code2, Bot, Users } from 'lucide-react';
+import { LayoutDashboard, Code2, Bot, Users, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/utils';
 import type { HeaderTab } from '../types';
@@ -33,10 +33,11 @@ interface NavItem {
 
 /** Список активных пунктов навигации */
 const NAV_ITEMS: NavItem[] = [
-  { tab: 'editor',  label: 'Редактор',     icon: LayoutDashboard },
-  { tab: 'export',  label: 'Код',          icon: Code2 },
-  { tab: 'bot',     label: 'Бот',          icon: Bot },
-  { tab: 'users',   label: 'Пользователи', icon: Users },
+  { tab: 'editor',    label: 'Редактор',   icon: LayoutDashboard },
+  { tab: 'export',    label: 'Код',        icon: Code2 },
+  { tab: 'bot',       label: 'Бот',        icon: Bot },
+  { tab: 'users',     label: 'Пользователи', icon: Users },
+  { tab: 'broadcast', label: 'Рассылки',   icon: Megaphone },
 ];
 
 /**
