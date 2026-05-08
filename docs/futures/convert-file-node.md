@@ -284,6 +284,100 @@ scheduled_trigger (каждый понедельник 09:00)
 
 ---
 
+## 8. Интеграции с внешними сервисами
+
+`convert_file` открывает сценарии не только отправки файла пользователю, но и синхронизации данных с внешними сервисами через `http_request`.
+
+### 8.1 Google Sheets — добавить строки из бота
+
+Данные из `psql_query` → напрямую в таблицу через Google Sheets API:
+
+```
+/sync (adminOnly)
+  → psql_query (SELECT user_id, username, referrer_id, registered_at FROM bot_users → users_data, json)
+  → http_request (POST https://sheets.googleapis.com/v4/spreadsheets/{id}/values/A1:append
+                  headers: Authorization Bearer {google_token}
+                  body: {values: {users_data}} → sync_result)
+  → message ("✅ Синхронизировано {users_data_count} строк в Google Sheets")
+```
+
+Без `convert_file` — данные идут напрямую как JSON. `convert_file` нужен только если нужно отдать файл пользователю, а не в API.
+
+### 8.2 Google Sheets → импорт в бота
+
+Читаем таблицу через API и сохраняем в БД:
+
+```
+/import_sheet (adminOnly)
+  → http_request (GET https://sheets.googleapis.com/v4/spreadsheets/{id}/values/A1:Z → sheet_data, json)
+  → psql_query (INSERT INTO products ... FROM {sheet_data.values})
+  → message ("✅ Импортировано из Google Sheets")
+```
+
+### 8.3 Notion — создать страницу с данными
+
+```
+/report_notion (adminOnly)
+  → psql_query (SELECT ... → stats_data, json)
+  → http_request (POST https://api.notion.com/v1/pages
+                  body: {parent: {database_id}, properties: {stats_data}}
+                  → notion_result)
+  → message ("✅ Отчёт создан в Notion: {notion_result.url}")
+```
+
+### 8.4 Airtable — синхронизация базы пользователей
+
+```
+/sync_airtable (adminOnly)
+  → psql_query (SELECT user_id, username, referrer_id FROM bot_users → users_data, json)
+  → http_request (POST https://api.airtable.com/v0/{base_id}/{table}
+                  headers: Authorization Bearer {airtable_token}
+                  body: {records: {users_data}} → airtable_result)
+  → message ("✅ Синхронизировано в Airtable")
+```
+
+### 8.5 Email с вложением (через SendGrid / Mailgun)
+
+`convert_file` формирует CSV → `http_request` отправляет письмо с вложением:
+
+```
+/email_report (adminOnly)
+  → psql_query (SELECT ... → report_data, json)
+  → convert_file (toFile, csv, report_data → report_file, "weekly.csv")
+  → http_request (POST https://api.sendgrid.com/v3/mail/send
+                  body: {to: admin@example.com, attachments: [{content: {report_file.data}, filename: "weekly.csv"}]}
+                  → email_result)
+  → message ("✅ Отчёт отправлен на email")
+```
+
+Здесь `convert_file` нужен — SendGrid принимает вложения как base64, что совпадает с форматом `file`-переменной.
+
+### 8.6 Telegram → Google Drive (через Google Drive API)
+
+Пользователь загружает файл в бота — бот сохраняет в Drive:
+
+```
+message (enableDocumentInput, documentInputVariable: user_file)
+  → http_request (POST https://www.googleapis.com/upload/drive/v3/files
+                  body: {user_file.data} (base64)
+                  → drive_result)
+  → message ("✅ Файл сохранён: {drive_result.webViewLink}")
+```
+
+### Сводная таблица интеграций
+
+| Сервис | Направление | Нужен convert_file | Через |
+|--------|------------|:-----------------:|-------|
+| Google Sheets | бот → таблица | ❌ | `http_request` + JSON |
+| Google Sheets | таблица → бот | ❌ | `http_request` + `psql_query` |
+| Notion | бот → база | ❌ | `http_request` + JSON |
+| Airtable | бот → таблица | ❌ | `http_request` + JSON |
+| Email (SendGrid) | бот → письмо с файлом | ✅ | `convert_file` + `http_request` |
+| Google Drive | файл → Drive | ❌ | `http_request` + `file`-переменная |
+| Telegram → Drive | загрузка → Drive | ❌ | `http_request` + `file`-переменная |
+
+**Вывод:** для большинства интеграций `convert_file` не нужен — данные идут как JSON через `http_request`. Нода нужна только когда сервис принимает файл (email-вложения, Drive upload, отправка пользователю).
+
 ## 9. Отличия от n8n Convert to File / Extract From File
 
 В n8n это **две отдельные ноды** (Convert to File + Extract From File). У нас — одна нода с двумя режимами (`toFile` / `fromFile`). Это осознанное упрощение.
