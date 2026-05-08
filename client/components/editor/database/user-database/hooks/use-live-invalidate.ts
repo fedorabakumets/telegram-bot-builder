@@ -223,23 +223,8 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
       if (event.type === 'new-user') {
         const newUserEvent = event as NewUserLiveEvent;
 
-        // Optimistic update статистики — новый активный пользователь
-        queryClient.setQueryData<UserStats>(statsKey, (old) => {
-          const newTotalUsers = (old?.totalUsers ?? 0) + 1;
-          const newActiveUsers = (old?.activeUsers ?? 0) + 1;
-          const totalInteractions = old?.totalInteractions ?? 0;
-          return {
-            ...(old ?? {}),
-            totalUsers: newTotalUsers,
-            activeUsers: newActiveUsers,
-            avgInteractionsPerUser: Math.round((totalInteractions / newTotalUsers) * 100) / 100,
-          };
-        });
-
-        // Мгновенно добавляем пользователя в таблицу
-        addNewUserToCache(queryClient, projectId, normalizedTokenId, newUserEvent);
-
-        // Инвалидируем stats, growth и traffic — новый пользователь влияет на все три
+        // Инвалидируем stats, growth и traffic — новый пользователь влияет на все три.
+        // Делаем это ДО optimistic update чтобы запрос ушёл немедленно.
         const growthUrl = buildUsersApiUrl(`/api/projects/${projectId}/users/growth`, selectedTokenId);
         const trafficUrl = buildUsersApiUrl(`/api/projects/${projectId}/users/traffic`, selectedTokenId);
 
@@ -250,6 +235,32 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
           queryKey: ['infinite-users', projectId],
           refetchType: 'all',
         });
+
+        // Optimistic update статистики — новый активный пользователь.
+        // deepLinkUsers инкрементируем если в событии есть deepLinkParam.
+        queryClient.setQueryData<UserStats>(statsKey, (old) => {
+          const newTotalUsers = (old?.totalUsers ?? 0) + 1;
+          const newActiveUsers = (old?.activeUsers ?? 0) + 1;
+          const totalInteractions = old?.totalInteractions ?? 0;
+          const hasDeepLink = !!(newUserEvent.data as any)?.deepLinkParam;
+          return {
+            ...(old ?? {}),
+            totalUsers: newTotalUsers,
+            activeUsers: newActiveUsers,
+            avgInteractionsPerUser: Math.round((totalInteractions / newTotalUsers) * 100) / 100,
+            deepLinkUsers: (old?.deepLinkUsers ?? 0) + (hasDeepLink ? 1 : 0),
+          };
+        });
+
+        // Мгновенно добавляем пользователя в таблицу
+        addNewUserToCache(queryClient, projectId, normalizedTokenId, newUserEvent);
+
+        // Повторная инвалидация трафика через 1.5с — на случай race condition
+        // между Redis publish и записью deep_link_param в БД
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: [trafficUrl, selectedTokenId] });
+          queryClient.invalidateQueries({ queryKey: statsKey });
+        }, 1500);
       }
     });
 

@@ -66,6 +66,10 @@ export interface NewUserLiveEvent {
     isPremium: number;
     /** Дата регистрации в ISO-формате */
     registeredAt: string;
+    /** Параметр deep link при первом визите */
+    deepLinkParam?: string | null;
+    /** ID пользователя-реферера */
+    referrerId?: string | null;
   };
   /** Временная метка события */
   timestamp: string;
