@@ -36,7 +36,9 @@ export function TrafficSection(props: TrafficSectionProps): React.JSX.Element | 
   const hasDeepLink = (stats.deepLinkUsers ?? 0) > 0;
   const hasLanguages = (stats.uniqueLanguages ?? 0) > 0;
 
-  if (!hasDeepLink && !hasLanguages) {
+  // Рендерим всегда — useTraffic должен быть смонтирован чтобы инвалидация работала.
+  // Если данных нет — компонент просто ничего не показывает.
+  if (!hasDeepLink && !hasLanguages && sources.length === 0) {
     return null;
   }
 
