@@ -240,7 +240,7 @@ def _eval_expr(template: str, user_vars: dict):
         tree = _ast_expr.parse(expr, mode='eval')
         _allowed = (
             _ast_expr.Expression, _ast_expr.BinOp, _ast_expr.UnaryOp,
-            _ast_expr.Constant, _ast_expr.Num,
+            _ast_expr.Constant,
             _ast_expr.Add, _ast_expr.Sub, _ast_expr.Mult, _ast_expr.Div,
             _ast_expr.FloorDiv, _ast_expr.Mod, _ast_expr.Pow,
             _ast_expr.USub, _ast_expr.UAdd,
