@@ -37,6 +37,16 @@ interface MessageBubbleProps {
 }
 
 /**
+ * Проверяет, отправлено ли сообщение через рассылку
+ * @param message - Сообщение
+ * @returns true если сообщение из рассылки
+ */
+function isBroadcastMessage(message: BotMessageWithMedia): boolean {
+  const data = message.messageData as Record<string, unknown> | null;
+  return !!data?.sentFromBroadcast;
+}
+
+/**
  * Медиа-плейсхолдеры — текст который не нужно показывать если есть медиа
  */
 const MEDIA_PLACEHOLDERS = new Set(['[Фото]', '[медиа]', '[Photo]', '[Видео]', '[Аудио]', '[Голосовое]', '[Документ]', '[Стикер]']);
@@ -101,6 +111,12 @@ export function MessageBubble({ message, index, user, bot, projectId, tokenId }:
           )}
 
           <MessageTimestamp createdAt={message.createdAt} />
+
+          {isBot && isBroadcastMessage(message) && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              📢 Рассылка
+            </span>
+          )}
         </div>
       </div>
     </div>
