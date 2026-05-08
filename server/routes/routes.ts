@@ -2385,16 +2385,16 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
 
     try {
-      // Запрос источников трафика по deep_link_param
+      // Запрос источников трафика по deep_link_param.
+      // Пользователи без deep_link_param (прямой /start) учитываются как "direct".
       const sourcesResult = await dbPool.query(`
         SELECT
-          COALESCE(deep_link_param, 'unknown') as param,
+          COALESCE(deep_link_param, 'direct') as param,
           COUNT(*) as count,
           ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) as percentage
         FROM bot_users
         WHERE project_id = $1
           AND ($2::integer IS NULL OR token_id = $2)
-          AND deep_link_param IS NOT NULL
         GROUP BY deep_link_param
         ORDER BY count DESC
         LIMIT 20
