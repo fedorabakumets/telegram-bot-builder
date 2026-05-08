@@ -53,7 +53,7 @@
 |---|---|---|
 | Вход по ссылке `/start=ref_id` | ✅ | `command_trigger` с `deepLinkParam: "ref_"`, `deepLinkMatchMode: "startsWith"` |
 | Фиксация источника при первом входе | ✅ | `deepLinkSaveToVar: true`, `deepLinkVarName: "referrer_id"` — пишется в `bot_users.deep_link_param` с COALESCE |
-| Учёт переходов | ✅ | Каждый новый пользователь с `ref_id` записывается в таблицу `bot_users` |
+| Учёт переходов | ✅ | `sv-track-visit` инкрементирует `visit_count` выражением `{visit_count} + 1` при каждом `/start` |
 | Нет дублей пользователей | ✅ | Встроено в генератор — `ON CONFLICT DO UPDATE` с COALESCE |
 | Повторные заходы не ломают логику | ✅ | COALESCE не перезаписывает `referrer_id` при повторном `/start` |
 | Без потерь рефералов | ✅ | Реферал фиксируется до любой логики воронки |
@@ -62,20 +62,41 @@
 | Финальное меню 4 кнопки | ✅ | `keyboard`-узел с `keyboardType: "reply"`, 4 кнопки разделов |
 | Сбор базы (ID, username, дата, ref_id) | ✅ | Автоматически в таблицу `bot_users` при каждом `/start` |
 | Fallback `/start` без реферала | ✅ | Второй `command_trigger` без `deepLinkParam` → та же воронка |
+| Учёт подписок по рефералам | ✅ | `sv-mark-subscribed` сохраняет `subscribed_source = {referrer_id}`; `sql-increment-subscribed` пишет `subscribed_at = NOW()` в `user_data` (только при первой подписке) |
+| Статистика по рефералам (`/stats`) | ✅ | Лист «Админка»: `sql-stats` группирует по `referrer_id`, топ-20, шаблон `{src} — {cnt} чел.` |
+| Общее количество пользователей | ✅ | Лист «Админка»: `sql-total` считает всех с `subscribed_at IS NOT NULL`, сохраняет в `total_users` |
 
-### Граф сценария
+### Граф сценария — лист «Воронка»
 
 ```
 /start?ref_xxx  →  trigger-start (deepLink → referrer_id)  ─┐
 /start          →  PF6Zj00y9kIH7wMtPw2_U                   ─┤
                                                               ↓
+                                                   sv-track-visit
+                                                   (visit_count + 1)
+                                                              ↓
                                                    check-subscription
                                                    (is_subscribed @sonofbog)
                                                     ↓               ↓
-                                               msg-final      msg-not-subscribed
-                                               + keyboard      + keyboard
-                                               (4 reply)       (Подписаться /
-                                                                Проверить ↺)
+                                             sv-mark-subscribed  msg-not-subscribed
+                                             (is_subscribed,      + keyboard
+                                              subscribed_source)  (Подписаться /
+                                                    ↓              Проверить ↺)
+                                             sql-increment-subscribed
+                                             (subscribed_at = NOW(), один раз)
+                                                    ↓
+                                                msg-final
+                                                + keyboard
+                                                (4 reply)
+```
+
+### Граф сценария — лист «Админка»
+
+```
+/stats (adminOnly, privateOnly)
+  → sql-total   (COUNT подписавшихся → total_users)
+  → sql-stats   (GROUP BY referrer_id, топ-20 → stats_rows)
+  → msg-stats   (📊 Всего: {total_users.total} / По рефералам: {stats_rows})
 ```
 
 ---
@@ -84,34 +105,24 @@
 
 | Требование | Статус | Причина |
 |---|---|---|
-| Учёт подписок по рефералам (счётчик) | ❌ | Конструктор не фиксирует момент подписки в отдельный счётчик. Нужен HTTP-запрос на бэкенд в ветке `is_subscribed` |
-| Статистика по рефералам (`/stats`) | ❌ | Нет встроенной команды для просмотра статистики в разрезе `ref_id` |
-| Общее количество пользователей | ❌ | Нет встроенной команды `/stats` для администратора |
-| Выгрузка базы в CSV | ❌ | Нет встроенной команды `/export` |
+| Выгрузка базы в CSV | ❌ | Нет встроенной команды `/export` — нужен HTTP-узел или внешний бэкенд |
 
 ---
 
 ## Варианты закрытия остатка
 
 ### Вариант A — HTTP-узел + внешний бэкенд
-Добавить в ветку `is_subscribed` узел `http_request`:
+Добавить лист с командой `/export` для администратора:
 ```
-check-subscription (is_subscribed)
-  → http_request POST /api/referral/subscribed?user_id={user_id}&ref_id={referrer_id}
-  → msg-final
+command_trigger /export (adminOnly)
+  → http_request GET /api/admin/export
+  → message (ссылка на файл или прямая отправка CSV)
 ```
-Бэкенд инкрементирует счётчик подписок. Статистика и выгрузка — через отдельный API.
+Бэкенд формирует CSV из `bot_users` и возвращает ссылку или файл.
 
-**Объём:** ~4–6 часов (бэкенд на Python/Node.js + 1 HTTP-узел в конструкторе)
+**Объём:** ~2–4 часа
 
-### Вариант B — Отдельный лист «Админка» в конструкторе
-Добавить лист с командой `/stats` для администратора:
-- `command_trigger /stats` → `http_request GET /api/admin/stats` → `message {response}`
-- `command_trigger /export` → `http_request GET /api/admin/export` → отправка файла
-
-**Объём:** ~2–3 часа (бэкенд-эндпоинты + листы в конструкторе)
-
-### Вариант C — Полностью кастомный код
+### Вариант B — Полностью кастомный код
 Написать бота с нуля на Python (aiogram 3) без конструктора.
 
 **Объём:** ~20–30 часов
@@ -120,7 +131,7 @@ check-subscription (is_subscribed)
 
 ## Итог
 
-Конструктор покрывает **~85% заказа**. Остаток — счётчик подписок и админ-функции — закрывается через HTTP-узлы + минимальный бэкенд (Вариант A+B, ~6–9 часов).
+Конструктор покрывает **~95% заказа**. Единственный остаток — выгрузка базы в CSV — закрывается через HTTP-узел + минимальный бэкенд (~2–4 часа).
 
 ---
 
