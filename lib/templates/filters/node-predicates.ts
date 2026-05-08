@@ -270,3 +270,12 @@ export function hasEditMessageNodes(nodes: Node[]): boolean {
 export function hasPsqlQueryNodes(nodes: Node[]): boolean {
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'psql_query');
 }
+
+/**
+ * Проверяет наличие узлов convert_file в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа convert_file
+ */
+export function hasConvertFileNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'convert_file');
+}

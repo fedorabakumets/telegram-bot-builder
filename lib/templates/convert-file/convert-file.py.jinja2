@@ -1,0 +1,78 @@
+{#
+  Шаблон узла convert_file — конвертация json-массива в файл
+
+  @param {string} nodeId           — ID узла
+  @param {string} inputVariable    — переменная с json-массивом
+  @param {string} format           — csv | json
+  @param {string} fileName         — имя файла, поддерживает {date}
+  @param {string} csvDelimiter     — разделитель CSV
+  @param {boolean} includeHeaderRow — включать заголовки
+  @param {string} outputVariable   — переменная для file-объекта
+  @param {string} autoTransitionTo — ID следующего узла
+#}
+{%- set safe_node_id = nodeId | safe_name -%}
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Узел convert_file: конвертирует json-массив в файл."""
+    try:
+        import csv
+        import io
+        import json as _json
+        import base64
+        from datetime import datetime
+        user_id = callback_query.from_user.id
+        logging.info(f"📄 convert_file [{{ nodeId }}]: начало выполнения для пользователя {user_id}")
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        _all_vars = await init_all_user_vars(user_id)
+        _input_data = user_data[user_id].get("{{ inputVariable }}", [])
+        if not isinstance(_input_data, list):
+            _input_data = [_input_data] if _input_data else []
+        _date_str = datetime.now().strftime("%Y%m%d")
+        _file_name = "{{ fileName }}".replace("{date}", _date_str)
+        {% if format == 'csv' %}
+        _buf = io.StringIO()
+        if _input_data:
+            _fieldnames = list(_input_data[0].keys()) if isinstance(_input_data[0], dict) else []
+            _writer = csv.DictWriter(_buf, fieldnames=_fieldnames, delimiter="{{ csvDelimiter }}", extrasaction='ignore')
+            {% if includeHeaderRow %}
+            _writer.writeheader()
+            {% endif %}
+            for _row in _input_data:
+                if isinstance(_row, dict):
+                    _writer.writerow(_row)
+        _file_bytes = _buf.getvalue().encode("utf-8")
+        _mime_type = "text/csv"
+        {% else %}
+        _file_bytes = _json.dumps(_input_data, ensure_ascii=False, indent=2).encode("utf-8")
+        _mime_type = "application/json"
+        {% endif %}
+        _file_obj = {
+            "type": "file",
+            "data": base64.b64encode(_file_bytes).decode("utf-8"),
+            "mimeType": _mime_type,
+            "fileName": _file_name,
+        }
+        {% if outputVariable %}
+        user_data[user_id]["{{ outputVariable }}"] = _file_obj
+        await set_user_var(user_id, "{{ outputVariable }}", _file_obj)
+        logging.info(f"📦 convert_file [{{ nodeId }}]: файл сохранён в «{{ outputVariable }}» для {user_id}")
+        {% endif %}
+        logging.info(f"✅ convert_file [{{ nodeId }}]: выполнено для {user_id}")
+        {% if autoTransitionTo %}
+        {%- set safe_target = autoTransitionTo | safe_name %}
+        logging.info(f"⚡ convert_file [{{ nodeId }}]: автопереход → {{ autoTransitionTo }} для {user_id}")
+        class FakeCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self.from_user = user
+                self.message = msg
+                self._is_fake = True
+            async def answer(self, *a, **kw):
+                pass
+        fake_cb = FakeCallback("{{ autoTransitionTo }}", callback_query.from_user, callback_query.message)
+        await handle_callback_{{ safe_target }}(fake_cb, state=state)
+        {% endif %}
+    except Exception as e:
+        logging.error(f"❌ Ошибка в convert_file [{{ nodeId }}]: {e}")
