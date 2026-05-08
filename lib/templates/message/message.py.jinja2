@@ -637,8 +637,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             if locals().get('_sent_result') is not None:
                 return _sent_result
 {%- endif %}
+{%- if mediaItem and '{' in mediaItem %}
+{%- set _fileVarName = mediaItem | replace('{', '') | replace('}', '') %}
             # Проверяем — вдруг это file-объект из convert_file ({"type":"file","data":...})
-            _file_var_val = user_data.get(user_id, {}).get("{{ mediaItem[1:-1] if mediaItem.startswith('{') and mediaItem.endswith('}') else '' }}")
+            _file_var_val = user_data.get(user_id, {}).get("{{ _fileVarName }}")
             if isinstance(_file_var_val, dict) and _file_var_val.get("type") == "file":
                 try:
                     import base64 as _b64
@@ -652,6 +654,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     return _sent_result
                 except Exception as _fe:
                     logging.error(f"❌ Узел {{ nodeId }}: ошибка отправки file-переменной: {_fe}")
+{%- endif %}
             return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- else %}
             {# Медиагруппа из нескольких элементов attachedMedia #}
