@@ -27,7 +27,17 @@ interface BroadcastListProps {
 }
 
 /**
- * Таблица рассылок с кликабельными строками.
+ * Форматирует дату в локальный формат ru-RU.
+ * @param date - Дата в виде строки, Date или null
+ * @returns Отформатированная строка или прочерк
+ */
+function formatDate(date: string | Date | null | undefined): string {
+  if (!date) return '—';
+  return new Date(date).toLocaleString('ru-RU');
+}
+
+/**
+ * Таблица рассылок с кликабельными строками и колонкой даты.
  * Показывает пустое состояние если рассылок нет.
  *
  * @param props - Свойства компонента
@@ -54,6 +64,7 @@ export function BroadcastList({ broadcasts, onSelect, selectedId }: BroadcastLis
           <TableHead className="text-right">Доставлено</TableHead>
           <TableHead className="text-right">Ошибок</TableHead>
           <TableHead>Статус</TableHead>
+          <TableHead>Дата</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -69,6 +80,9 @@ export function BroadcastList({ broadcasts, onSelect, selectedId }: BroadcastLis
             <TableCell className="text-right text-red-500">{broadcast.failedCount}</TableCell>
             <TableCell>
               <BroadcastStatusBadge status={broadcast.status} />
+            </TableCell>
+            <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+              {formatDate(broadcast.createdAt)}
             </TableCell>
           </TableRow>
         ))}

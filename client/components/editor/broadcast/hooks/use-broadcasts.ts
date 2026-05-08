@@ -1,10 +1,24 @@
 /**
- * @fileoverview Хук загрузки списка рассылок проекта
+ * @fileoverview Хук загрузки списка рассылок проекта с пагинацией
  * @module client/components/editor/broadcast/hooks/use-broadcasts
  */
 
 import { useQuery } from '@tanstack/react-query';
 import type { Broadcast } from '../types';
+
+/**
+ * Ответ сервера на GET /api/projects/:projectId/broadcasts
+ */
+interface BroadcastsResponse {
+  /** Список рассылок на текущей странице */
+  broadcasts: Broadcast[];
+  /** Общее количество рассылок */
+  total: number;
+  /** Текущая страница */
+  page: number;
+  /** Размер страницы */
+  limit: number;
+}
 
 /**
  * Результат хука useBroadcasts
@@ -14,26 +28,31 @@ export interface UseBroadcastsResult {
   broadcasts: Broadcast[];
   /** Флаг загрузки */
   isLoading: boolean;
+  /** Общее количество рассылок */
+  total: number;
   /** Функция принудительного обновления */
   refetch: () => void;
 }
 
 /**
- * Хук загрузки списка рассылок для проекта.
- * Выполняет GET /api/projects/:projectId/broadcasts
+ * Хук загрузки списка рассылок для проекта с поддержкой пагинации.
+ * Выполняет GET /api/projects/:projectId/broadcasts?page=X&tokenId=Y
  *
  * @param projectId - Идентификатор проекта
  * @param tokenId - Идентификатор токена (опционально)
- * @returns Список рассылок, флаг загрузки и функция обновления
+ * @param page - Номер страницы (по умолчанию 1)
+ * @returns Список рассылок, общее количество, флаг загрузки и функция обновления
  */
 export function useBroadcasts(
   projectId: number,
   tokenId?: number | null,
+  page = 1,
 ): UseBroadcastsResult {
-  const params = tokenId ? `?tokenId=${tokenId}` : '';
-  const queryKey = [`/api/projects/${projectId}/broadcasts${params}`];
+  const params = new URLSearchParams({ page: String(page) });
+  if (tokenId) params.set('tokenId', String(tokenId));
+  const queryKey = [`/api/projects/${projectId}/broadcasts?${params.toString()}`];
 
-  const { data, isLoading, refetch } = useQuery<Broadcast[]>({
+  const { data, isLoading, refetch } = useQuery<BroadcastsResponse>({
     queryKey,
     enabled: !!projectId,
     staleTime: 0,
@@ -41,7 +60,8 @@ export function useBroadcasts(
   });
 
   return {
-    broadcasts: data ?? [],
+    broadcasts: data?.broadcasts ?? [],
+    total: data?.total ?? 0,
     isLoading,
     refetch,
   };

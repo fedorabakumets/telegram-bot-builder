@@ -9,14 +9,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BroadcastStatsHeader } from './components/broadcast-stats-header';
 import { BroadcastList } from './components/broadcast-list';
-import { BroadcastStatusBadge } from './components/broadcast-status-badge';
+import { BroadcastDetail } from './components/broadcast-detail';
 import { NewBroadcastModal } from './wizard/new-broadcast-modal';
 import { useBroadcasts } from './hooks/use-broadcasts';
 import type { BroadcastPanelProps, Broadcast } from './types';
 
+/** Количество рассылок на одной странице */
+const PAGE_LIMIT = 20;
+
 /**
  * Главная панель рассылок.
- * Показывает статистику, список рассылок и позволяет создать новую.
+ * Показывает статистику, список рассылок с пагинацией и детали выбранной.
  *
  * @param props - Свойства компонента
  * @returns JSX элемент панели рассылок
@@ -24,7 +27,15 @@ import type { BroadcastPanelProps, Broadcast } from './types';
 export function BroadcastPanel({ projectId, selectedTokenId }: BroadcastPanelProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
-  const { broadcasts, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId);
+  const [page, setPage] = useState(1);
+
+  const { broadcasts, total, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId, page);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_LIMIT));
+
+  /** Обработчик выбора рассылки — сбрасывает предыдущий выбор при повторном клике */
+  function handleSelect(broadcast: Broadcast) {
+    setSelectedBroadcast((prev) => (prev?.id === broadcast.id ? null : broadcast));
+  }
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -56,47 +67,45 @@ export function BroadcastPanel({ projectId, selectedTokenId }: BroadcastPanelPro
             ) : (
               <BroadcastList
                 broadcasts={broadcasts}
-                onSelect={setSelectedBroadcast}
+                onSelect={handleSelect}
                 selectedId={selectedBroadcast?.id}
               />
             )}
           </div>
 
+          {/* Пагинация */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 text-sm">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                ← Назад
+              </Button>
+              <span className="text-muted-foreground">
+                Страница {page} из {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Вперёд →
+              </Button>
+            </div>
+          )}
+
           {/* Детали выбранной рассылки */}
           {selectedBroadcast && (
-            <div className="border rounded-lg p-4 space-y-3 bg-muted/20">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium">{selectedBroadcast.name}</h3>
-                <div className="flex items-center gap-2">
-                  <BroadcastStatusBadge status={selectedBroadcast.status} />
-                  <button
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                    onClick={() => setSelectedBroadcast(null)}
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm text-center">
-                <div className="border rounded p-2">
-                  <div className="font-bold">{selectedBroadcast.totalCount}</div>
-                  <div className="text-xs text-muted-foreground">Аудитория</div>
-                </div>
-                <div className="border rounded p-2">
-                  <div className="font-bold text-green-600">{selectedBroadcast.deliveredCount}</div>
-                  <div className="text-xs text-muted-foreground">Доставлено</div>
-                </div>
-                <div className="border rounded p-2">
-                  <div className="font-bold text-red-500">{selectedBroadcast.failedCount}</div>
-                  <div className="text-xs text-muted-foreground">Ошибок</div>
-                </div>
-              </div>
-              {selectedBroadcast.createdAt && (
-                <p className="text-xs text-muted-foreground">
-                  Создана: {new Date(selectedBroadcast.createdAt).toLocaleString('ru-RU')}
-                </p>
-              )}
-            </div>
+            <BroadcastDetail
+              broadcast={selectedBroadcast}
+              projectId={projectId}
+              onClose={() => setSelectedBroadcast(null)}
+              refetch={refetch}
+            />
           )}
         </div>
       </ScrollArea>
