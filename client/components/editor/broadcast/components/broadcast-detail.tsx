@@ -72,15 +72,11 @@ export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: Broa
       {/* Заголовок */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
         <div className="flex items-center gap-2 min-w-0">
-          {/* Пока REST-детали грузятся — не показываем устаревший статус из пропсов */}
-          {isLoading && !detailBroadcast
-            ? <Skeleton className="h-5 w-16 rounded-full" />
-            : <BroadcastStatusBadge status={liveStatus} />
-          }
+          <BroadcastStatusBadge status={liveStatus} />
           <span className="font-semibold text-sm truncate">{broadcast.name}</span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {liveStatus === 'running' && (!isLoading || !!detailBroadcast) && (
+          {liveStatus === 'running' && (
             <Button size="sm" variant="destructive" className="h-7 text-xs gap-1"
               onClick={() => stopMutation.mutate(broadcast.id)} disabled={stopMutation.isPending}>
               <StopCircle className="h-3.5 w-3.5" />

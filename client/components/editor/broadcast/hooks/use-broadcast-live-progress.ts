@@ -1,5 +1,5 @@
 /**
- * @fileoverview Хук подписки на WS-события прогресса рассылки
+ * @fileoverview Хук подписки на WS-события прогресса рассылки с кешем последних событий
  * @module client/components/editor/broadcast/hooks/use-broadcast-live-progress
  */
 
@@ -23,8 +23,28 @@ const STATUS_PRIORITY: Record<string, number> = {
 };
 
 /**
+ * Глобальный кеш последних WS-событий по broadcastId.
+ * Позволяет компонентам получить последнее событие даже если они смонтированы позже его прихода.
+ */
+const broadcastEventCache = new Map<number, BroadcastProgressEvent>();
+
+/**
+ * Обновляет кеш с учётом приоритета статусов — финальный статус не перезаписывается.
+ * @param incoming - Новое событие
+ */
+function updateCache(incoming: BroadcastProgressEvent): void {
+  const cached = broadcastEventCache.get(incoming.broadcastId);
+  const prevPriority = STATUS_PRIORITY[cached?.status ?? ''] ?? 0;
+  const incomingPriority = STATUS_PRIORITY[incoming.status] ?? 0;
+  if (incomingPriority >= prevPriority) {
+    broadcastEventCache.set(incoming.broadcastId, incoming);
+  }
+}
+
+/**
  * Хук подписки на WS-события прогресса рассылки.
  * Использует UserMessagesLiveProvider для получения событий broadcast-progress.
+ * Кеширует события глобально — компонент получает последнее событие даже при позднем монтировании.
  * Защищает от регресса статуса: финальный статус (done/stopped) не перезаписывается.
  *
  * @param projectId - Идентификатор проекта
@@ -35,7 +55,12 @@ export function useBroadcastLiveProgress(
   projectId: number,
   broadcastId?: number | null,
 ): UseBroadcastLiveProgressResult {
-  const [progressEvent, setProgressEvent] = useState<BroadcastProgressEvent | null>(null);
+  // Инициализируем из кеша — если событие пришло до монтирования компонента
+  const [progressEvent, setProgressEvent] = useState<BroadcastProgressEvent | null>(() => {
+    if (!broadcastId) return null;
+    return broadcastEventCache.get(broadcastId) ?? null;
+  });
+
   const liveContext = useUserMessagesLiveContext();
 
   useEffect(() => {
@@ -48,24 +73,26 @@ export function useBroadcastLiveProgress(
       if (event.projectId !== projectId) return;
       if (broadcastId && event.data.broadcastId !== broadcastId) return;
 
-      const incoming = event.data.status;
+      const next: BroadcastProgressEvent = {
+        type: 'broadcast-progress',
+        projectId: event.projectId,
+        broadcastId: event.data.broadcastId,
+        sentCount: event.data.sentCount,
+        deliveredCount: event.data.deliveredCount,
+        failedCount: event.data.failedCount,
+        totalCount: event.data.totalCount,
+        status: event.data.status,
+      };
+
+      // Обновляем глобальный кеш
+      updateCache(next);
 
       setProgressEvent((prev) => {
         // Не перезаписываем финальный статус более ранним (защита от race condition)
         const prevPriority = STATUS_PRIORITY[prev?.status ?? ''] ?? 0;
-        const incomingPriority = STATUS_PRIORITY[incoming] ?? 0;
+        const incomingPriority = STATUS_PRIORITY[next.status] ?? 0;
         if (incomingPriority < prevPriority) return prev;
-
-        return {
-          type: 'broadcast-progress',
-          projectId: event.projectId,
-          broadcastId: event.data.broadcastId,
-          sentCount: event.data.sentCount,
-          deliveredCount: event.data.deliveredCount,
-          failedCount: event.data.failedCount,
-          totalCount: event.data.totalCount,
-          status: incoming,
-        };
+        return next;
       });
     });
 
