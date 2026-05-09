@@ -9,6 +9,7 @@ export * from './use-infinite-users';
 export * from './use-stats';
 export * from './use-traffic';
 export * from './use-growth';
+export * from './use-growth-by-source';
 export * from './use-messages-activity';
 export * from './use-search-users';
 export * from './use-dialog-messages';

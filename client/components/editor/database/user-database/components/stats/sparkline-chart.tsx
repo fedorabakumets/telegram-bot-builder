@@ -2,6 +2,7 @@
  * @fileoverview Sparkline-график прироста пользователей на базе recharts
  * @description BarChart для минутных данных, AreaChart с точками для часовых,
  *              AreaChart без точек для дневных/недельных/месячных периодов.
+ *              Поддержка multi-line режима для отображения нескольких источников.
  */
 
 import React from 'react';
@@ -18,14 +19,28 @@ import { GrowthPoint } from '../../hooks/queries/use-growth';
 import { fmtTick, fmtTooltipDate, getTickIndices, toCumulative } from './sparkline-utils';
 
 /**
+ * Данные для одной линии в multi-line режиме
+ */
+export interface MultiLineData {
+  /** Название линии (источника) */
+  name: string;
+  /** Массив точек прироста */
+  data: GrowthPoint[];
+  /** Цвет линии */
+  color: string;
+}
+
+/**
  * Пропсы компонента SparklineChart
  */
 export interface SparklineChartProps {
-  /** Массив точек прироста */
-  data: GrowthPoint[];
+  /** Массив точек прироста (для single-line режима) */
+  data?: GrowthPoint[];
+  /** Массив данных для multi-line режима (несколько источников) */
+  multiLineData?: MultiLineData[];
   /** Уникальный суффикс для id градиента */
   gradientId: string;
-  /** Цвет линии и градиента (по умолчанию #3b82f6) */
+  /** Цвет линии и градиента (по умолчанию #3b82f6, только для single-line) */
   lineColor?: string;
   /** Гранулярность: '1m' | '5m' | '1h' | '1d' | '7d' | '30d' */
   granularity?: string;
@@ -46,17 +61,20 @@ interface TooltipProps {
   /** Флаг активности tooltip */
   active?: boolean;
   /** Данные точки */
-  payload?: Array<{ payload: GrowthPoint }>;
+  payload?: Array<{ payload: any; dataKey: string; color: string; name?: string }>;
   /** Гранулярность для форматирования */
   granularity?: string;
+  /** Флаг multi-line режима */
+  isMultiLine?: boolean;
 }
 
 /**
  * Рендерит кастомный tooltip для recharts
- * @param props - Пропсы от recharts + granularity
- * @returns JSX элемент tooltip или null
+ * @param granularity - Гранулярность для форматирования
+ * @param isMultiLine - Флаг multi-line режима
+ * @returns Компонент tooltip
  */
-function renderTooltip(granularity?: string) {
+function renderTooltip(granularity?: string, isMultiLine?: boolean) {
   /**
    * Внутренний компонент tooltip
    * @param props - Пропсы от recharts
@@ -64,6 +82,28 @@ function renderTooltip(granularity?: string) {
    */
   return function TooltipContent({ active, payload }: TooltipProps): React.JSX.Element | null {
     if (!active || !payload?.length) return null;
+
+    // Multi-line режим: показываем все источники
+    if (isMultiLine) {
+      const date = payload[0].payload.date;
+      return (
+        <div className="bg-popover border rounded-md px-2 py-1 text-xs shadow-md">
+          <div className="opacity-60 mb-1">{fmtTooltipDate(date, granularity)}</div>
+          {payload.map((entry, index) => (
+            <div key={index} className="flex items-center gap-1.5">
+              <div
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="opacity-80">{entry.name}:</span>
+              <span className="font-bold">{entry.payload[entry.dataKey]}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Single-line режим: показываем одно значение
     const point = payload[0].payload;
     return (
       <div className="bg-popover border rounded-md px-2 py-1 text-xs shadow-md">
@@ -81,11 +121,79 @@ function renderTooltip(granularity?: string) {
  */
 export function SparklineChart({
   data,
+  multiLineData,
   gradientId,
   lineColor = '#3b82f6',
   granularity,
   cumulative,
 }: SparklineChartProps): React.JSX.Element | null {
+  // Multi-line режим
+  if (multiLineData && multiLineData.length > 0) {
+    // Объединяем все точки из всех источников в один массив для оси X
+    const allDates = new Set<string>();
+    multiLineData.forEach(line => {
+      line.data.forEach(point => allDates.add(point.date));
+    });
+    const sortedDates = Array.from(allDates).sort();
+
+    // Создаём объединённый массив данных для recharts
+    const chartData = sortedDates.map(date => {
+      const dataPoint: any = { date };
+      multiLineData.forEach(line => {
+        const point = line.data.find(p => p.date === date);
+        dataPoint[line.name] = point?.count ?? 0;
+      });
+      return dataPoint;
+    });
+
+    if (chartData.length < 2) return null;
+
+    const tickIndices = getTickIndices(chartData.length);
+    const tickValues = tickIndices.map(i => chartData[i].date);
+    const TooltipContent = renderTooltip(granularity, true);
+
+    return (
+      <ResponsiveContainer width="100%" height={80}>
+        <AreaChart data={chartData} margin={MARGIN}>
+          <defs>
+            {multiLineData.map(line => (
+              <linearGradient key={`${gradientId}-${line.name}`} id={`${gradientId}-${line.name}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={line.color} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={line.color} stopOpacity={0} />
+              </linearGradient>
+            ))}
+          </defs>
+          <XAxis
+            dataKey="date"
+            ticks={tickValues}
+            tickFormatter={(val: string) => fmtTick(val, granularity)}
+            tick={TICK_STYLE}
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip
+            content={TooltipContent}
+            cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+          />
+          {multiLineData.map(line => (
+            <Area
+              key={line.name}
+              type="monotone"
+              dataKey={line.name}
+              stroke={line.color}
+              strokeWidth={2}
+              fill={`url(#${gradientId}-${line.name})`}
+              dot={false}
+              activeDot={{ r: 3, fill: line.color, strokeWidth: 0 }}
+              isAnimationActive={false}
+            />
+          ))}
+        </AreaChart>
+      </ResponsiveContainer>
+    );
+  }
+
+  // Single-line режим (оригинальная логика)
   if (!data || data.length < 2) return null;
 
   /** Применяем накопительное преобразование если нужно */
@@ -99,7 +207,7 @@ export function SparklineChart({
   const showDots = !cumulative && granularity === '1h';
 
   /** Компонент tooltip — создаётся один раз на рендер */
-  const TooltipContent = renderTooltip(granularity);
+  const TooltipContent = renderTooltip(granularity, false);
 
   const sharedChildren = (
     <>

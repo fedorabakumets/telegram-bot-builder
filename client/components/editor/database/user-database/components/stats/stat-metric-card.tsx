@@ -1,12 +1,14 @@
 /**
  * @fileoverview Числовая карточка статистики с Railway-стилем sparkline
  * @description Отображает заголовок, большое число, subtitle и график на всю ширину.
+ *              Поддержка multi-line графиков с легендой для источников трафика.
  */
 
 import React from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { GrowthPoint } from '../../hooks/queries/use-growth';
-import { SparklineChart } from './sparkline-chart';
+import { SparklineChart, MultiLineData } from './sparkline-chart';
+import { SourceLegend } from './source-legend';
 
 /**
  * Пропсы компонента StatMetricCard
@@ -20,8 +22,10 @@ export interface StatMetricCardProps {
   subtitle?: string;
   /** Направление тренда */
   trend?: 'up' | 'down' | 'neutral';
-  /** Данные для sparkline-графика */
+  /** Данные для sparkline-графика (single-line режим) */
   sparklineData?: GrowthPoint[];
+  /** Данные для multi-line графика (несколько источников) */
+  multiLineData?: MultiLineData[];
   /** Функция форматирования значения */
   formatValue?: (v: number) => string;
   /** Уникальный id градиента для sparkline (переопределяет авто-генерацию) */
@@ -65,13 +69,27 @@ function TrendIcon({ trend }: { trend?: 'up' | 'down' | 'neutral' }) {
  * @returns JSX элемент карточки
  */
 export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
-  const { title, value, subtitle, trend, sparklineData, formatValue, gradientId: gradientIdProp, lineColor, headerExtra, chartGranularity, cumulative } = props;
+  const {
+    title,
+    value,
+    subtitle,
+    trend,
+    sparklineData,
+    multiLineData,
+    formatValue,
+    gradientId: gradientIdProp,
+    lineColor,
+    headerExtra,
+    chartGranularity,
+    cumulative,
+  } = props;
   const fmt = formatValue ?? defaultFormat;
   const displayValue = value !== undefined ? fmt(value) : '—';
 
   /** Уникальный id градиента: из пропса или авто-генерация из заголовка */
   const gradientId = gradientIdProp ?? `sparkGrad-${title.replace(/\s+/g, '')}`;
-  const hasChart = !!sparklineData && sparklineData.length >= 2;
+  const hasChart = (!!sparklineData && sparklineData.length >= 2) || (!!multiLineData && multiLineData.length > 0);
+  const isMultiLine = !!multiLineData && multiLineData.length > 0;
 
   return (
     <div className="bg-background border rounded-xl p-3 flex flex-col gap-2 min-w-0 overflow-hidden">
@@ -98,8 +116,18 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
 
       {/* График на всю ширину карточки */}
       {hasChart && (
-        <SparklineChart data={sparklineData!} gradientId={gradientId} lineColor={lineColor} granularity={chartGranularity} cumulative={cumulative} />
+        <SparklineChart
+          data={sparklineData}
+          multiLineData={multiLineData}
+          gradientId={gradientId}
+          lineColor={lineColor}
+          granularity={chartGranularity}
+          cumulative={cumulative}
+        />
       )}
+
+      {/* Легенда для multi-line графика */}
+      {isMultiLine && <SourceLegend items={multiLineData!} />}
     </div>
   );
 }

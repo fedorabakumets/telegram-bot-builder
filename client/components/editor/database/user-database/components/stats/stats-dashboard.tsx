@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { UserStats } from '../../types';
 import { useGrowth, GrowthGranularity } from '../../hooks/queries/use-growth';
+import { useGrowthBySource } from '../../hooks/queries/use-growth-by-source';
 import { useTraffic } from '../../hooks/queries/use-traffic';
 import { useMessagesActivity, Granularity } from '../../hooks/queries/use-messages-activity';
 import { StatMetricCard } from './stat-metric-card';
@@ -13,6 +14,8 @@ import { StatDonutCard } from './stat-donut-card';
 import { ActivityGranularitySelector } from './activity-granularity-selector';
 import { GrowthGranularitySelector } from './growth-granularity-selector';
 import { ChartModeToggle, ChartMode } from './chart-mode-toggle';
+import { SourceModeToggle, SourceMode } from './source-mode-toggle';
+import { aggregateTopSources } from './source-aggregation-utils';
 
 /**
  * Пропсы компонента StatsDashboard
@@ -68,7 +71,11 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   /** Режим графика "Активность": за период или накопительно */
   const [activityMode, setActivityMode] = useState<ChartMode>('period');
 
+  /** Режим отображения прироста: общий или по источникам */
+  const [sourceMode, setSourceMode] = useState<SourceMode>('total');
+
   const { points, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
+  const { points: sourcePoints } = useGrowthBySource({ projectId, selectedTokenId, granularity: growthGranularity });
   const { sources, languages } = useTraffic({ projectId, selectedTokenId });
   const { points: messagePoints, weeklyMessages } = useMessagesActivity({
     projectId,
@@ -104,13 +111,17 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
     ? `~${formatAvg(stats.avgInteractionsPerUser)} среднее`
     : undefined;
 
+  // Агрегируем данные по источникам для multi-line графика
+  const multiLineData = sourceMode === 'by-source' ? aggregateTopSources(sourcePoints, 5) : undefined;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
       {/* Карточка: всего пользователей со sparkline */}
       <StatMetricCard
         title="Всего пользователей"
         value={stats.totalUsers}
-        sparklineData={points}
+        sparklineData={sourceMode === 'total' ? points : undefined}
+        multiLineData={multiLineData}
         trend={growthTrend}
         subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
         cumulative={growthMode === 'cumulative'}
@@ -122,6 +133,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
               onChange={setGrowthGranularity}
             />
             <ChartModeToggle value={growthMode} onChange={setGrowthMode} />
+            <SourceModeToggle value={sourceMode} onChange={setSourceMode} />
           </div>
         }
       />
