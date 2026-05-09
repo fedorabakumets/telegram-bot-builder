@@ -1,40 +1,81 @@
 /**
  * @fileoverview Утилита извлечения кнопок из узла
- * 
- * Преобразует кнопки узла в формат для Telegram API.
+ * Преобразует кнопки узла в формат для Telegram Bot API.
+ * Поддерживает action-типы из buttonSchema: goto, url, command, copy_text, web_app и др.
  */
 
 /**
- * Кнопка для inline клавиатуры
+ * Кнопка для inline клавиатуры Telegram
  */
 export interface InlineButton {
   /** ID кнопки */
   id: string;
   /** Текст кнопки */
   text: string;
-  /** Данные callback для кнопки */
+  /** Данные callback (для goto/command/selection/complete/default) */
   callbackData?: string;
-  /** URL для кнопки */
+  /** URL для кнопки-ссылки (action=url) */
   url?: string;
+  /** URL для Telegram Mini App (action=web_app) */
+  webAppUrl?: string;
+  /** Текст для копирования в буфер (action=copy_text) */
+  copyText?: string;
 }
 
 /**
- * Извлекает кнопки из данных узла
- * 
- * @param nodeData - Данные узла
- * @returns Массив кнопок
+ * Сырая кнопка из node.data.buttons (соответствует buttonSchema)
+ */
+interface RawButton {
+  /** Уникальный ID кнопки */
+  id: string;
+  /** Текст кнопки */
+  text: string;
+  /** Тип действия */
+  action?: string;
+  /** Целевой узел для goto */
+  target?: string;
+  /** URL для url-кнопки */
+  url?: string;
+  /** URL для web_app */
+  webAppUrl?: string;
+  /** Текст для copy_text */
+  copyText?: string;
+  /** Кастомный callback_data */
+  customCallbackData?: string;
+}
+
+/**
+ * Извлекает кнопки из данных узла и преобразует в формат для Telegram API.
+ * Читает поля согласно актуальной схеме buttonSchema:
+ * - action — строка enum ('url', 'goto', 'command', ...)
+ * - url, target, webAppUrl, copyText — отдельные поля верхнего уровня
+ *
+ * @param nodeData - Данные узла (node.data)
+ * @returns Массив кнопок для отправки через sendTelegramMessage
  */
 export function extractButtonsFromNode(nodeData: Record<string, unknown>): InlineButton[] {
-  const buttons = nodeData.buttons as Array<{
-    id: string;
-    text: string;
-    action?: { type: string; nodeId?: string; url?: string };
-  }> || [];
+  const buttons = (nodeData.buttons as RawButton[]) || [];
 
-  return buttons.map(b => ({
-    id: b.id,
-    text: b.text,
-    callbackData: b.action?.type === 'navigate' ? `node:${b.action.nodeId}` : undefined,
-    url: b.action?.type === 'url' ? b.action.url : undefined,
-  }));
+  return buttons.map(b => {
+    const action = b.action ?? 'default';
+
+    if (action === 'url') {
+      return { id: b.id, text: b.text, url: b.url };
+    }
+
+    if (action === 'web_app') {
+      return { id: b.id, text: b.text, webAppUrl: b.webAppUrl };
+    }
+
+    if (action === 'copy_text') {
+      return { id: b.id, text: b.text, copyText: b.copyText };
+    }
+
+    // goto, command, selection, complete, default — используют callbackData
+    const callbackData = b.customCallbackData
+      || (action === 'goto' && b.target ? `node:${b.target}` : undefined)
+      || b.id;
+
+    return { id: b.id, text: b.text, callbackData };
+  });
 }

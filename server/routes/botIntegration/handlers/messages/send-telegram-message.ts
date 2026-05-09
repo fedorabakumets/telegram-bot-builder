@@ -30,12 +30,17 @@ export async function sendTelegramMessage(
   const hasMedia = mediaFiles.length > 0;
   const hasButtons = buttons.length > 0;
 
-  // Формируем клавиатуру
+  // Формируем клавиатуру.
+  // Telegram API требует разные поля для разных типов кнопок:
+  // - url-кнопки: { text, url }
+  // - web_app-кнопки: { text, web_app: { url } }
+  // - остальные: { text, callback_data }
   const replyMarkup = hasButtons ? {
-    inline_keyboard: [buttons.map(b => ({
-      text: b.text,
-      callback_data: b.callbackData || b.url,
-    }))]
+    inline_keyboard: [buttons.map(b => {
+      if (b.url) return { text: b.text, url: b.url };
+      if (b.webAppUrl) return { text: b.text, web_app: { url: b.webAppUrl } };
+      return { text: b.text, callback_data: b.callbackData ?? b.id };
+    })]
   } : undefined;
 
   if (!hasMedia) {
