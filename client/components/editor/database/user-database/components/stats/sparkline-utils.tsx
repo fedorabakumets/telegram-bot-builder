@@ -60,6 +60,16 @@ interface CustomTooltipProps {
 }
 
 /**
+ * Преобразует массив точек в накопительный (каждая точка = сумма всех предыдущих)
+ * @param points - Исходный массив точек
+ * @returns Массив с накопительными значениями
+ */
+export function toCumulative(points: GrowthPoint[]): GrowthPoint[] {
+  let sum = 0;
+  return points.map(p => ({ date: p.date, count: (sum += p.count) }));
+}
+
+/**
  * Кастомный tooltip для recharts
  * @param props - Пропсы от recharts
  * @returns JSX элемент tooltip или null

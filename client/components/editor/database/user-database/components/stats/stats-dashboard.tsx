@@ -11,6 +11,7 @@ import { useMessagesActivity, Granularity } from '../../hooks/queries/use-messag
 import { StatMetricCard } from './stat-metric-card';
 import { StatBarCard } from './stat-bar-card';
 import { ActivityGranularitySelector } from './activity-granularity-selector';
+import { ChartModeToggle, ChartMode } from './chart-mode-toggle';
 
 /**
  * Пропсы компонента StatsDashboard
@@ -56,6 +57,12 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
 
   /** Текущая гранулярность графика активности сообщений */
   const [msgGranularity, setMsgGranularity] = useState<Granularity>('1d');
+
+  /** Режим графика "Всего пользователей": за период или накопительно */
+  const [growthMode, setGrowthMode] = useState<ChartMode>('period');
+
+  /** Режим графика "Активность": за период или накопительно */
+  const [activityMode, setActivityMode] = useState<ChartMode>('period');
 
   const { points, weeklyGrowth } = useGrowth({ projectId, selectedTokenId });
   const { sources, languages } = useTraffic({ projectId, selectedTokenId });
@@ -105,6 +112,10 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         sparklineData={points}
         trend={growthTrend}
         subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
+        cumulative={growthMode === 'cumulative'}
+        headerExtra={
+          <ChartModeToggle value={growthMode} onChange={setGrowthMode} />
+        }
       />
 
       {/* Карточка: активность с подписью среднего и числа ответивших */}
@@ -117,11 +128,15 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         gradientId="msgActivity"
         lineColor="#10b981"
         chartGranularity={msgGranularity}
+        cumulative={activityMode === 'cumulative'}
         headerExtra={
-          <ActivityGranularitySelector
-            value={msgGranularity}
-            onChange={setMsgGranularity}
-          />
+          <div className="flex items-center gap-1.5">
+            <ActivityGranularitySelector
+              value={msgGranularity}
+              onChange={setMsgGranularity}
+            />
+            <ChartModeToggle value={activityMode} onChange={setActivityMode} />
+          </div>
         }
       />
 

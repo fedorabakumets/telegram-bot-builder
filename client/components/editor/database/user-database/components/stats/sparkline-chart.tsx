@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { GrowthPoint } from '../../hooks/queries/use-growth';
-import { fmtTick, fmtTooltipDate, getTickIndices } from './sparkline-utils';
+import { fmtTick, fmtTooltipDate, getTickIndices, toCumulative } from './sparkline-utils';
 
 /**
  * Пропсы компонента SparklineChart
@@ -29,6 +29,8 @@ export interface SparklineChartProps {
   lineColor?: string;
   /** Гранулярность: '1m' | '5m' | '1h' | '1d' | '7d' | '30d' */
   granularity?: string;
+  /** Накопительный режим: данные суммируются нарастающим итогом */
+  cumulative?: boolean;
 }
 
 /** Общий отступ графика */
@@ -82,15 +84,19 @@ export function SparklineChart({
   gradientId,
   lineColor = '#3b82f6',
   granularity,
+  cumulative,
 }: SparklineChartProps): React.JSX.Element | null {
   if (!data || data.length < 2) return null;
 
-  const tickIndices = getTickIndices(data.length);
-  const tickValues = tickIndices.map(i => data[i].date);
+  /** Применяем накопительное преобразование если нужно */
+  const chartData = cumulative ? toCumulative(data) : data;
 
-  /** Тип графика по гранулярности */
-  const isBar = granularity === '1m' || granularity === '5m';
-  const showDots = granularity === '1h';
+  const tickIndices = getTickIndices(chartData.length);
+  const tickValues = tickIndices.map(i => chartData[i].date);
+
+  /** В накопительном режиме всегда AreaChart; иначе — по гранулярности */
+  const isBar = !cumulative && (granularity === '1m' || granularity === '5m');
+  const showDots = !cumulative && granularity === '1h';
 
   /** Компонент tooltip — создаётся один раз на рендер */
   const TooltipContent = renderTooltip(granularity);
@@ -115,7 +121,7 @@ export function SparklineChart({
   if (isBar) {
     return (
       <ResponsiveContainer width="100%" height={80}>
-        <BarChart data={data} margin={MARGIN}>
+        <BarChart data={chartData} margin={MARGIN}>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={lineColor} stopOpacity={0.8} />
@@ -137,7 +143,7 @@ export function SparklineChart({
 
   return (
     <ResponsiveContainer width="100%" height={80}>
-      <AreaChart data={data} margin={MARGIN}>
+      <AreaChart data={chartData} margin={MARGIN}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={lineColor} stopOpacity={0.3} />
