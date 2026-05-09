@@ -211,11 +211,10 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
         });
 
         // Инвалидируем кэш активности сообщений — новое сообщение влияет на график.
-        // Используем predicate чтобы инвалидировать все варианты (разные granularity/period)
+        // queryKey в useMessagesActivity: ['messages-activity', projectId, tokenId, granularity]
         queryClient.invalidateQueries({
           predicate: (query) => {
-            const key = query.queryKey[0];
-            return typeof key === 'string' && key.includes(`/projects/${projectId}/messages/activity`);
+            return query.queryKey[0] === 'messages-activity' && query.queryKey[1] === projectId;
           },
         });
 
