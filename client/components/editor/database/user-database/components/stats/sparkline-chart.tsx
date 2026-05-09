@@ -12,7 +12,6 @@ import {
   Area,
   Bar,
   XAxis,
-  YAxis,
   Tooltip,
 } from 'recharts';
 import { GrowthPoint } from '../../hooks/queries/use-growth';
@@ -34,22 +33,11 @@ export interface SparklineChartProps {
   cumulative?: boolean;
 }
 
-/** Общий отступ графика (отрицательный left компенсирует ширину YAxis) */
-const MARGIN = { top: 4, right: 4, bottom: 0, left: -10 };
+/** Общий отступ графика */
+const MARGIN = { top: 4, right: 4, bottom: 0, left: 0 };
 
 /** Стиль тиков оси X */
 const TICK_STYLE = { fontSize: 9, fill: 'rgba(255,255,255,0.4)' };
-
-/**
- * Форматирует значение оси Y компактно: 1000 → 1K, 1000000 → 1M
- * @param value - Числовое значение
- * @returns Отформатированная строка
- */
-function formatYAxis(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-  return String(Math.round(value));
-}
 
 /**
  * Пропсы кастомного tooltip от recharts
@@ -122,15 +110,6 @@ export function SparklineChart({
         tick={TICK_STYLE}
         axisLine={false}
         tickLine={false}
-      />
-      <YAxis
-        width={30}
-        tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.6)' }}
-        axisLine={false}
-        tickLine={false}
-        domain={['auto', 'auto']}
-        tickFormatter={formatYAxis}
-        tickCount={3}
       />
       <Tooltip
         content={TooltipContent}
