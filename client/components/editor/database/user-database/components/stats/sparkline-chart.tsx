@@ -25,15 +25,26 @@ const GH = VH - PB - PT;
 /**
  * Форматирует дату по гранулярности данных.
  * Для минут/часов показывает время "14:32", для дней/недель/месяцев — "25 апр."
+ * Если точки охватывают разные дни — добавляет дату к времени "25 апр. 14:32".
  * @param dateStr - ISO строка даты от бэкенда
  * @param granularity - Гранулярность: '1m' | '5m' | '1h' | '1d' | '7d' | '30d'
+ * @param allDates - Все даты набора (для определения охвата дней)
  * @returns Отформатированная строка
  */
-function fmtDate(dateStr: string, granularity?: string): string {
+function fmtDate(dateStr: string, granularity?: string, allDates?: string[]): string {
   const d = new Date(dateStr);
   if (granularity === '1m' || granularity === '5m' || granularity === '1h') {
-    // Минуты и часы — показываем время "14:32"
-    return d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+    const time = d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+    // Если набор охватывает несколько дней — добавляем дату перед временем
+    if (allDates && allDates.length >= 2) {
+      const firstDay = new Date(allDates[0]).toDateString();
+      const lastDay = new Date(allDates[allDates.length - 1]).toDateString();
+      if (firstDay !== lastDay) {
+        const date = d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
+        return `${date} ${time}`;
+      }
+    }
+    return time;
   }
   // Дни, недели, месяцы — показываем дату "25 апр."
   return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
@@ -113,6 +124,9 @@ export function SparklineChart({ data, gradientId, lineColor = '#3b82f6', granul
 
   const midIdx = Math.floor((total - 1) / 2);
 
+  /** Все строки дат для определения охвата дней */
+  const allDates = data.map(d => d.date);
+
   /** Обработчик движения мыши — находит ближайшую точку данных */
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
@@ -175,13 +189,13 @@ export function SparklineChart({ data, gradientId, lineColor = '#3b82f6', granul
 
         {/* Подписи по оси X */}
         <text x={PL} y={VH - 2} fontSize="9" fill="rgba(255,255,255,0.4)">
-          {fmtDate(data[0].date, granularity)}
+          {fmtDate(data[0].date, granularity, allDates)}
         </text>
         <text x={calcX(midIdx, total)} y={VH - 2} fontSize="9" fill="rgba(255,255,255,0.4)" textAnchor="middle">
-          {fmtDate(data[midIdx].date, granularity)}
+          {fmtDate(data[midIdx].date, granularity, allDates)}
         </text>
         <text x={VW - 4} y={VH - 2} fontSize="9" fill="rgba(255,255,255,0.4)" textAnchor="end">
-          {fmtDate(data[total - 1].date, granularity)}
+          {fmtDate(data[total - 1].date, granularity, allDates)}
         </text>
       </svg>
 
@@ -191,7 +205,7 @@ export function SparklineChart({ data, gradientId, lineColor = '#3b82f6', granul
           className="pointer-events-none absolute z-10 rounded-md border bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md"
           style={{ left: tooltip.x + 8, top: Math.max(0, tooltip.y - 32) }}
         >
-          <span className="opacity-60">{fmtDate(tooltip.point.date, granularity)}</span>
+          <span className="opacity-60">{fmtDate(tooltip.point.date, granularity, allDates)}</span>
           <span className="ml-2 font-semibold">{tooltip.point.count}</span>
         </div>
       )}
