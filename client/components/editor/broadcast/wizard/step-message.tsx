@@ -5,12 +5,15 @@
 
 import { Button } from '@/components/ui/button';
 import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
+import { MultiMediaSelector } from '@/components/editor/properties/media/multi-media-selector';
 import type { NewBroadcastFormData } from '../types';
 
 /**
  * Пропсы компонента StepMessage
  */
 interface StepMessageProps {
+  /** Идентификатор проекта */
+  projectId: number;
   /** Текущие данные формы */
   formData: NewBroadcastFormData;
   /** Обновление данных формы */
@@ -30,11 +33,11 @@ const VARIABLES = [
 ];
 
 /**
- * Шаг редактирования текста сообщения рассылки с поддержкой переменных
+ * Шаг редактирования текста и медиа сообщения рассылки
  * @param props - Свойства компонента
  * @returns JSX элемент шага редактора сообщения
  */
-export function StepMessage({ formData, onChange, onNext, onBack }: StepMessageProps) {
+export function StepMessage({ projectId, formData, onChange, onNext, onBack }: StepMessageProps) {
   /**
    * Вставляет переменную в конец текста сообщения
    * @param variable - Переменная для вставки
@@ -69,6 +72,20 @@ export function StepMessage({ formData, onChange, onNext, onBack }: StepMessageP
               {key} <span className="ml-1 text-muted-foreground">({label})</span>
             </Button>
           ))}
+        </div>
+      </div>
+
+      {/* Прикрепление медиафайлов — переиспользуем MultiMediaSelector из панели свойств */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium">Медиафайл (необязательно)</p>
+        <div className="rounded-xl border border-pink-200/40 dark:border-pink-800/40 bg-gradient-to-br from-pink-50/40 to-rose-50/20 dark:from-pink-950/30 dark:to-rose-900/20 p-3">
+          <MultiMediaSelector
+            projectId={projectId}
+            value={formData.mediaUrls}
+            onChange={(urls) => onChange({ mediaUrls: urls })}
+            label="Прикреплённые файлы"
+            placeholder="Введите URL или выберите файл"
+          />
         </div>
       </div>
 

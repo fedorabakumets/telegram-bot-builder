@@ -59,6 +59,7 @@ export function useCreateBroadcast({
       return apiRequest('POST', url, {
         name: formData.name,
         messageText: formData.messageText,
+        mediaUrls: formData.mediaUrls ?? [],
         filters,
       });
     },

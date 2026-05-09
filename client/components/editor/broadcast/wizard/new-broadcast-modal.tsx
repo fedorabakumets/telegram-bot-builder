@@ -37,6 +37,7 @@ interface NewBroadcastModalProps {
 const INITIAL_FORM: NewBroadcastFormData = {
   name: '',
   messageText: '',
+  mediaUrls: [],
   filters: { audienceType: 'all' },
 };
 
@@ -114,6 +115,7 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch }
         )}
         {step === 2 && (
           <StepMessage
+            projectId={projectId}
             formData={formData}
             onChange={updateForm}
             onNext={() => setStep(3)}

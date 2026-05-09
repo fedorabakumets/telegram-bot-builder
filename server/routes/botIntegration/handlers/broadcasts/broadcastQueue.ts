@@ -6,6 +6,8 @@
 import { storage } from "../../../../storages/storage";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 import { replaceVariablesInText } from "../messages/replace-variables";
+import { sendTelegramMessage } from "../messages/send-telegram-message";
+import type { SendMediaFile } from "../messages/extract-media";
 import type { UserBotData } from "@shared/schema";
 
 /** Размер батча пользователей для обработки */
@@ -33,32 +35,60 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Отправляет одно сообщение пользователю через Telegram Bot API
+ * Отправляет одно сообщение пользователю через общий sendTelegramMessage.
+ * Перехватывает ошибки Telegram и возвращает структурированный результат.
  * @param token - Токен бота
  * @param userId - Telegram user_id получателя
  * @param text - Текст сообщения (HTML)
+ * @param mediaFiles - Медиафайлы для отправки
  * @returns Объект с результатом: ok, retryAfter (при 429), errorCode
  */
-async function sendTelegramMessage(
+async function sendBroadcastMessage(
   token: string,
   userId: string,
   text: string,
+  mediaFiles: SendMediaFile[],
 ): Promise<{ ok: boolean; retryAfter?: number; errorCode?: number; description?: string }> {
-  const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: userId, text, parse_mode: "HTML" }),
-  });
-  const result = await response.json() as { ok: boolean; error_code?: number; description?: string; parameters?: { retry_after?: number } };
+  try {
+    await sendTelegramMessage(token, userId, text, mediaFiles, [], true);
+    return { ok: true };
+  } catch (error: unknown) {
+    // Пробуем извлечь код ошибки из тела ответа Telegram
+    const err = error as Record<string, unknown>;
+    const errorCode = typeof err?.error_code === "number" ? err.error_code : undefined;
+    const description = typeof err?.description === "string" ? err.description : undefined;
+    const retryAfter = typeof (err?.parameters as Record<string, unknown>)?.retry_after === "number"
+      ? (err.parameters as Record<string, unknown>).retry_after as number
+      : undefined;
+    return { ok: false, errorCode, description, retryAfter };
+  }
+}
 
-  if (response.ok) return { ok: true };
+/**
+ * Преобразует массив URL медиафайлов в формат SendMediaFile для sendTelegramMessage.
+ * Определяет тип медиа по расширению файла.
+ * @param mediaUrls - Массив URL медиафайлов
+ * @returns Массив SendMediaFile
+ */
+function buildMediaFiles(mediaUrls: string[]): SendMediaFile[] {
+  return mediaUrls.map((url, index) => ({
+    id: index,
+    url,
+    type: resolveMediaType(url),
+  }));
+}
 
-  return {
-    ok: false,
-    errorCode: result.error_code,
-    description: result.description,
-    retryAfter: result.parameters?.retry_after,
-  };
+/**
+ * Определяет тип медиа по расширению URL
+ * @param url - URL файла
+ * @returns Тип медиа для Telegram API
+ */
+function resolveMediaType(url: string): string {
+  const ext = url.split('.').pop()?.toLowerCase() ?? '';
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'photo';
+  if (['mp4', 'avi', 'mov', 'webm'].includes(ext)) return 'video';
+  if (['mp3', 'wav', 'ogg', 'm4a'].includes(ext)) return 'audio';
+  return 'document';
 }
 
 /**
@@ -101,9 +131,9 @@ async function emitProgress(
 }
 
 /**
- * Запускает очередь отправки рассылки
+ * Запускает очередь отправки рассылки.
  * Загружает пользователей батчами, отправляет сообщения с throttle 25 msg/sec,
- * обрабатывает ошибки Telegram, проверяет флаг остановки
+ * поддерживает медиафайлы, обрабатывает ошибки Telegram, проверяет флаг остановки.
  * @param broadcastId - ID рассылки
  * @param token - Токен бота для отправки
  */
@@ -118,6 +148,9 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     }
 
     const { projectId, tokenId, messageText, filters } = broadcast;
+    // Медиафайлы из поля mediaUrls рассылки
+    const mediaFiles = buildMediaFiles((broadcast.mediaUrls as string[]) ?? []);
+
     const users = await storage.getUsersForBroadcast(projectId, tokenId, filters as Parameters<typeof storage.getUsersForBroadcast>[2]);
 
     await storage.updateBroadcast(broadcastId, { totalCount: users.length });
@@ -151,7 +184,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
         let sent = false;
 
         while (retries < 3 && !sent) {
-          const result = await sendTelegramMessage(token, user.userId, text);
+          const result = await sendBroadcastMessage(token, user.userId, text, mediaFiles);
 
           if (result.ok) {
             deliveredCount++;
@@ -196,7 +229,6 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
       // После каждого батча обновляем счётчики и отправляем WS-событие
       const isStopped = activeBroadcasts.get(broadcastId) === "stopped";
       await storage.updateBroadcast(broadcastId, { sentCount, deliveredCount, failedCount });
-      // Не отправляем промежуточный "running" если это последний батч — финальное событие придёт ниже
       const isLastBatch = i + BATCH_SIZE >= users.length;
       if (!isLastBatch || isStopped) {
         await emitProgress(projectId, broadcastId, sentCount, deliveredCount, failedCount, users.length, isStopped ? "stopped" : "running");

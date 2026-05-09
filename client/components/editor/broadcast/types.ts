@@ -49,6 +49,8 @@ export interface NewBroadcastFormData {
   name: string;
   /** HTML-текст сообщения */
   messageText: string;
+  /** URL прикреплённых медиафайлов */
+  mediaUrls: string[];
   /** Фильтры аудитории */
   filters: {
     /** Тип аудитории */

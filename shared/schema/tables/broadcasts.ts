@@ -3,7 +3,7 @@
  * @module shared/schema/tables/broadcasts
  */
 
-import { pgTable, text, serial, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb, timestamp, json } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
@@ -40,6 +40,8 @@ export const broadcasts = pgTable("broadcasts", {
   startedAt: timestamp("started_at", { withTimezone: true }),
   /** Дата завершения отправки */
   finishedAt: timestamp("finished_at", { withTimezone: true }),
+  /** URL медиафайлов для отправки вместе с сообщением */
+  mediaUrls: json("media_urls").$type<string[]>().default([]),
 });
 
 /**
@@ -84,6 +86,8 @@ export const insertBroadcastSchema = z.object({
   name: z.string().min(1),
   /** HTML-текст сообщения */
   messageText: z.string().min(1),
+  /** URL медиафайлов для отправки */
+  mediaUrls: z.array(z.string()).default([]),
   /** Фильтры аудитории */
   filters: broadcastFiltersSchema.default({}),
   /** Статус рассылки */
