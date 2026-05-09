@@ -74,10 +74,24 @@ export function useSendMessage({
       );
     },
 
-    onMutate: ({ messageText }) => {
+    onMutate: ({ messageText, mediaUrls = [] }) => {
       // Генерируем временный отрицательный id, чтобы не конфликтовать с реальными id из БД
       const tempId = Date.now() * -1;
       tempIdRef.current = tempId;
+
+      /** Данные медиа для оптимистичного отображения — первый файл из списка */
+      const mediaMessageData: Record<string, unknown> = {};
+      if (mediaUrls.length > 0) {
+        const firstUrl = mediaUrls[0];
+        // Определяем тип по расширению для немедленного отображения
+        const ext = firstUrl.split('.').pop()?.toLowerCase() ?? '';
+        const isPhoto = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+        const isVideo = ['mp4', 'avi', 'mov', 'webm'].includes(ext);
+        const isAudio = ['mp3', 'wav', 'ogg', 'm4a'].includes(ext);
+        const mediaType = isPhoto ? 'photo' : isVideo ? 'video' : isAudio ? 'audio' : 'document';
+        mediaMessageData.broadcastMediaUrl = firstUrl;
+        mediaMessageData.broadcastMediaType = mediaType;
+      }
 
       const optimisticMsg: BotMessageWithMedia = {
         id: tempId,
@@ -86,11 +100,10 @@ export function useSendMessage({
         userId: userIdStr ?? String(userId ?? ''),
         messageType: 'bot',
         messageText,
-        messageData: {},
+        messageData: mediaMessageData,
         nodeId: null,
         primaryMediaId: null,
         createdAt: new Date(),
-        // Медиа появится после refetch — оставляем пустым
         media: [],
       };
 
