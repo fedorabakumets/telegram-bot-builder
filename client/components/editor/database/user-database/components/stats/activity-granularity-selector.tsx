@@ -17,15 +17,29 @@ export interface ActivityGranularitySelectorProps {
 }
 
 /**
- * Метка кнопки для каждого значения гранулярности
+ * Метка кнопки для каждого значения гранулярности.
+ * Показывает период охвата, а не шаг — чтобы пользователь понимал
+ * за какой промежуток времени отображается график.
  */
 const GRANULARITY_LABELS: Record<Granularity, string> = {
-  '1m':  '1м',
-  '5m':  '5м',
-  '1h':  '1ч',
-  '1d':  '1д',
-  '7d':  '7д',
-  '30d': '30д',
+  '1m':  '1ч',
+  '5m':  '3ч',
+  '1h':  '24ч',
+  '1d':  '30д',
+  '7d':  '90д',
+  '30d': '6м',
+};
+
+/**
+ * Подсказка при наведении — поясняет шаг и период
+ */
+const GRANULARITY_TITLES: Record<Granularity, string> = {
+  '1m':  'Последний час, шаг 1 минута',
+  '5m':  'Последние 3 часа, шаг 5 минут',
+  '1h':  'Последние 24 часа, шаг 1 час',
+  '1d':  'Последние 30 дней, шаг 1 день',
+  '7d':  'Последние 90 дней, шаг 1 день',
+  '30d': 'Последние 6 месяцев, шаг 1 день',
 };
 
 /** Порядок отображения кнопок */
@@ -50,6 +64,7 @@ export function ActivityGranularitySelector(
             key={g}
             type="button"
             onClick={() => onChange(g)}
+            title={GRANULARITY_TITLES[g]}
             className={[
               'text-xs px-1.5 py-0.5 rounded transition-colors',
               isActive
