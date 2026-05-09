@@ -33,11 +33,17 @@ export function BroadcastPanel({ projectId, selectedTokenId }: BroadcastPanelPro
   const totalPages = Math.max(1, Math.ceil(total / PAGE_LIMIT));
 
   // Синхронизируем selectedBroadcast с актуальными данными из списка после каждого refetch.
-  // Без этого selectedBroadcast остаётся замороженным объектом со старым статусом.
+  // Сравниваем по sentCount тоже — чтобы обновить счётчики даже если статус не изменился.
   useEffect(() => {
     if (!selectedBroadcast) return;
     const fresh = broadcasts.find((b) => b.id === selectedBroadcast.id);
-    if (fresh && fresh.status !== selectedBroadcast.status) {
+    if (!fresh) return;
+    const statusChanged = fresh.status !== selectedBroadcast.status;
+    const countsChanged = fresh.sentCount !== selectedBroadcast.sentCount
+      || fresh.deliveredCount !== selectedBroadcast.deliveredCount
+      || fresh.failedCount !== selectedBroadcast.failedCount
+      || fresh.totalCount !== selectedBroadcast.totalCount;
+    if (statusChanged || countsChanged) {
       setSelectedBroadcast(fresh);
     }
   }, [broadcasts]);

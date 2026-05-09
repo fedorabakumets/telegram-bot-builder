@@ -48,7 +48,7 @@ function fmt(date: string | Date | null | undefined): string {
  * @returns JSX элемент детальной панели
  */
 export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: BroadcastDetailProps) {
-  const { results, isLoading } = useBroadcastDetail(projectId, broadcast.id);
+  const { broadcast: detailBroadcast, results, isLoading } = useBroadcastDetail(projectId, broadcast.id);
   const stopMutation = useStopBroadcast({ projectId, refetch });
   const { progressEvent } = useBroadcastLiveProgress(projectId, broadcast.id);
 
@@ -59,11 +59,12 @@ export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: Broa
     }
   }, [progressEvent?.status]);
 
-  // Данные из WS-события имеют приоритет над пропсами
-  const liveStatus = progressEvent?.status ?? broadcast.status;
-  const total = progressEvent?.totalCount ?? broadcast.totalCount ?? 0;
-  const delivered = progressEvent?.deliveredCount ?? broadcast.deliveredCount ?? 0;
-  const failed = progressEvent?.failedCount ?? broadcast.failedCount ?? 0;
+  // Приоритет данных: WS-событие > REST-детали > пропсы (замороженный объект)
+  const base = detailBroadcast ?? broadcast;
+  const liveStatus = progressEvent?.status ?? base.status;
+  const total = progressEvent?.totalCount ?? base.totalCount ?? 0;
+  const delivered = progressEvent?.deliveredCount ?? base.deliveredCount ?? 0;
+  const failed = progressEvent?.failedCount ?? base.failedCount ?? 0;
   const successRate = total > 0 ? Math.round((delivered / total) * 100) : 0;
 
   return (
@@ -105,10 +106,10 @@ export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: Broa
             <Calendar className="h-3.5 w-3.5 shrink-0" />
             <span>Создана: <span className="text-foreground">{fmt(broadcast.createdAt)}</span></span>
           </div>
-          {broadcast.finishedAt && (
+          {base.finishedAt && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-3.5 w-3.5 shrink-0" />
-              <span>Завершена: <span className="text-foreground">{fmt(broadcast.finishedAt)}</span></span>
+              <span>Завершена: <span className="text-foreground">{fmt(base.finishedAt)}</span></span>
             </div>
           )}
         </div>
