@@ -85,18 +85,18 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   const blockedPercent = calcPercent(stats.blockedUsers ?? 0, total);
   const premiumPercent = calcPercent(stats.premiumUsers ?? 0, total);
 
-  // Преобразуем источники трафика в формат StatBarItem (приводим к числу — API возвращает строки)
+  // Преобразуем источники трафика в формат StatBarItem
   const sourceItems = sources.map(s => ({
     label: s.param,
-    count: Number(s.count),
-    percentage: Number(s.percentage),
+    count: s.count,
+    percentage: s.percentage,
   }));
 
-  // Преобразуем языки в формат StatBarItem (приводим к числу — API возвращает строки)
+  // Преобразуем языки в формат StatBarItem
   const languageItems = languages.map(l => ({
     label: l.code,
-    count: Number(l.count),
-    percentage: Number(l.percentage),
+    count: l.count,
+    percentage: l.percentage,
   }));
 
   // Формируем подпись для карточки активности

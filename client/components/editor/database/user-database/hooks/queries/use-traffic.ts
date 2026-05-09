@@ -71,7 +71,21 @@ export function useTraffic(params: UseTrafficParams) {
         headers: { 'Cache-Control': 'no-cache' },
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return response.json();
+      const raw = await response.json();
+      
+      // Нормализуем данные: приводим count и percentage к числам (API возвращает строки из SQL)
+      return {
+        sources: (raw.sources ?? []).map((s: any) => ({
+          param: s.param,
+          count: Number(s.count),
+          percentage: Number(s.percentage),
+        })),
+        languages: (raw.languages ?? []).map((l: any) => ({
+          code: l.code,
+          count: Number(l.count),
+          percentage: Number(l.percentage),
+        })),
+      };
     },
     enabled: !!projectId,
     staleTime: 0,
