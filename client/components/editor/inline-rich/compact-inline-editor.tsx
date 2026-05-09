@@ -8,6 +8,7 @@ import type { InlineRichEditorProps } from './types';
 import { formatOptions } from './format-options';
 import { Toolbar } from './components/Toolbar';
 import { EditorContent } from './components/EditorContent';
+import { LinkInputRow } from './components/LinkInputRow';
 
 /**
  * Свойства компактного редактора
@@ -18,7 +19,8 @@ export interface CompactInlineEditorProps extends Omit<InlineRichEditorProps, 'e
 }
 
 /**
- * Компактный редактор текста для диалоговых панелей
+ * Компактный редактор текста для диалоговых панелей.
+ * Поддерживает все форматы включая вставку ссылок через LinkInputRow.
  * @param props - Свойства компонента
  * @returns JSX элемент компактного редактора
  */
@@ -27,7 +29,9 @@ export function CompactInlineEditor({ showStats = false, ...props }: CompactInli
     editorRef, wordCount, charCount,
     undo, redo, canUndo, canRedo,
     applyFormatting, handleKeyDown,
-    copyFormatted, handleInput
+    copyFormatted, handleInput,
+    linkPopover, saveSelectionOnBlur, handlePaste,
+    activeFormats,
   } = useInlineRichEditor({ ...props, enableMarkdown: false });
 
   return (
@@ -41,13 +45,27 @@ export function CompactInlineEditor({ showStats = false, ...props }: CompactInli
         canUndo={canUndo}
         canRedo={canRedo}
         copyFormatted={copyFormatted}
+        activeFormats={activeFormats}
       />
+
+      {/* Строка ввода URL — появляется между тулбаром и редактором */}
+      <LinkInputRow
+        isOpen={linkPopover.isOpen}
+        currentUrl={linkPopover.currentUrl}
+        onApply={linkPopover.applyLink}
+        onRemove={linkPopover.removeLink}
+        onClose={linkPopover.closeLinkPopover}
+      />
+
       <EditorContent
         value={props.value}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
         placeholder={props.placeholder || 'Введите сообщение...'}
         innerRef={editorRef}
+        onLinkClick={linkPopover.openLinkPopover}
+        onBlur={saveSelectionOnBlur}
+        onPaste={handlePaste}
       >
         {showStats && (
           <div className="flex items-center justify-end gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-200/50 dark:border-slate-800/50">
