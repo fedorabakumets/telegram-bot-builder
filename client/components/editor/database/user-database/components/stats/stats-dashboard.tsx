@@ -9,7 +9,7 @@ import { useGrowth, GrowthGranularity } from '../../hooks/queries/use-growth';
 import { useTraffic } from '../../hooks/queries/use-traffic';
 import { useMessagesActivity, Granularity } from '../../hooks/queries/use-messages-activity';
 import { StatMetricCard } from './stat-metric-card';
-import { StatBarCard } from './stat-bar-card';
+import { StatDonutCard } from './stat-donut-card';
 import { ActivityGranularitySelector } from './activity-granularity-selector';
 import { GrowthGranularitySelector } from './growth-granularity-selector';
 import { ChartModeToggle, ChartMode } from './chart-mode-toggle';
@@ -152,7 +152,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
       />
 
       {/* Карточка: статус пользователей (активные, заблокированные, premium) */}
-      <StatBarCard
+      <StatDonutCard
         title="Статус"
         items={[
           { label: 'Активны', count: stats.activeUsers ?? 0, percentage: activePercent },
@@ -161,15 +161,15 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         ]}
       />
 
-      {/* Карточка: источники трафика — StatBarCard сам скрывается при пустом массиве */}
-      <StatBarCard
+      {/* Карточка: источники трафика */}
+      <StatDonutCard
         title="Источники трафика"
         items={sourceItems}
         onItemClick={onSourceClick}
       />
 
-      {/* Карточка: языки — StatBarCard сам скрывается при пустом массиве */}
-      <StatBarCard
+      {/* Карточка: языки */}
+      <StatDonutCard
         title="Языки"
         items={languageItems}
       />

@@ -11,5 +11,6 @@ export * from './stat-card-types';
 export * from './traffic-section';
 export * from './stat-metric-card';
 export * from './stat-bar-card';
+export * from './stat-donut-card';
 export * from './stats-dashboard';
 export * from './growth-granularity-selector';
