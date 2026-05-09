@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { GrowthPoint } from '../../hooks/queries/use-growth';
-import { fmtTick, getTickIndices, CustomTooltip } from './sparkline-utils';
+import { fmtTick, fmtTooltipDate, getTickIndices } from './sparkline-utils';
 
 /**
  * Пропсы компонента SparklineChart
@@ -38,6 +38,41 @@ const MARGIN = { top: 4, right: 4, bottom: 0, left: 0 };
 const TICK_STYLE = { fontSize: 9, fill: 'rgba(255,255,255,0.4)' };
 
 /**
+ * Пропсы кастомного tooltip от recharts
+ */
+interface TooltipProps {
+  /** Флаг активности tooltip */
+  active?: boolean;
+  /** Данные точки */
+  payload?: Array<{ payload: GrowthPoint }>;
+  /** Гранулярность для форматирования */
+  granularity?: string;
+}
+
+/**
+ * Рендерит кастомный tooltip для recharts
+ * @param props - Пропсы от recharts + granularity
+ * @returns JSX элемент tooltip или null
+ */
+function renderTooltip(granularity?: string) {
+  /**
+   * Внутренний компонент tooltip
+   * @param props - Пропсы от recharts
+   * @returns JSX или null
+   */
+  return function TooltipContent({ active, payload }: TooltipProps): React.JSX.Element | null {
+    if (!active || !payload?.length) return null;
+    const point = payload[0].payload;
+    return (
+      <div className="bg-popover border rounded-md px-2 py-1 text-xs shadow-md">
+        <span className="opacity-60">{fmtTooltipDate(point.date, granularity)}</span>
+        <span className="ml-2 font-bold">{point.count}</span>
+      </div>
+    );
+  };
+}
+
+/**
  * Sparkline-график прироста пользователей (recharts)
  * @param props - Свойства компонента
  * @returns JSX элемент графика или null если данных недостаточно
@@ -53,50 +88,41 @@ export function SparklineChart({
   const tickIndices = getTickIndices(data.length);
   const tickValues = tickIndices.map(i => data[i].date);
 
-  /** Форматтер тика с замыканием на granularity */
-  const tickFormatter = (val: string) => fmtTick(val, granularity);
-
-  /** Общий tooltip */
-  const tooltipEl = (
-    <Tooltip
-      content={<CustomTooltip granularity={granularity} />}
-      cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
-    />
-  );
-
-  /** Ось X с 3–4 тиками */
-  const xAxis = (
-    <XAxis
-      dataKey="date"
-      ticks={tickValues}
-      tickFormatter={tickFormatter}
-      tick={TICK_STYLE}
-      axisLine={false}
-      tickLine={false}
-    />
-  );
-
-  /** Блок градиента */
-  const gradientDef = (opacity0: number, opacity1: number) => (
-    <defs>
-      <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor={lineColor} stopOpacity={opacity0} />
-        <stop offset="100%" stopColor={lineColor} stopOpacity={opacity1} />
-      </linearGradient>
-    </defs>
-  );
-
   /** Тип графика по гранулярности */
   const isBar = granularity === '1m' || granularity === '5m';
   const showDots = granularity === '1h';
+
+  /** Компонент tooltip — создаётся один раз на рендер */
+  const TooltipContent = renderTooltip(granularity);
+
+  const sharedChildren = (
+    <>
+      <XAxis
+        dataKey="date"
+        ticks={tickValues}
+        tickFormatter={(val: string) => fmtTick(val, granularity)}
+        tick={TICK_STYLE}
+        axisLine={false}
+        tickLine={false}
+      />
+      <Tooltip
+        content={TooltipContent}
+        cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+      />
+    </>
+  );
 
   if (isBar) {
     return (
       <ResponsiveContainer width="100%" height={80}>
         <BarChart data={data} margin={MARGIN}>
-          {gradientDef(0.8, 0.3)}
-          {xAxis}
-          {tooltipEl}
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={lineColor} stopOpacity={0.8} />
+              <stop offset="100%" stopColor={lineColor} stopOpacity={0.3} />
+            </linearGradient>
+          </defs>
+          {sharedChildren}
           <Bar
             dataKey="count"
             fill={`url(#${gradientId})`}
@@ -112,9 +138,13 @@ export function SparklineChart({
   return (
     <ResponsiveContainer width="100%" height={80}>
       <AreaChart data={data} margin={MARGIN}>
-        {gradientDef(0.3, 0)}
-        {xAxis}
-        {tooltipEl}
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={lineColor} stopOpacity={0.3} />
+            <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        {sharedChildren}
         <Area
           type="monotone"
           dataKey="count"
