@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { StatBarItem } from './stat-bar-card';
 
 /**
@@ -73,8 +73,8 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
   const visible = (items ?? []).slice(0, maxItems);
   const isEmpty = visible.length === 0;
 
-  /** Общая сумма всех count для отображения в центре дырки */
-  const total = visible.reduce((sum, item) => sum + item.count, 0);
+  /** Общая сумма всех count для отображения в центре дырки (приводим к числу) */
+  const total = visible.reduce((sum, item) => sum + Number(item.count), 0);
 
   return (
     <div className="bg-background border rounded-xl p-3 flex flex-col gap-2 min-w-0">
@@ -89,29 +89,27 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
         <div className="flex items-center gap-3">
           {/* Donut-диаграмма с центральным числом */}
           <div className="relative flex-shrink-0" style={{ width: 96, height: 96 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={visible}
-                  dataKey="count"
-                  nameKey="label"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={28}
-                  outerRadius={44}
-                  strokeWidth={0}
-                  isAnimationActive={false}
-                >
-                  {visible.map((item, index) => (
-                    <Cell
-                      key={item.label}
-                      fill={DONUT_COLORS[index % DONUT_COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip content={<DonutTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
+            <PieChart width={96} height={96}>
+              <Pie
+                data={visible}
+                dataKey="count"
+                nameKey="label"
+                cx="50%"
+                cy="50%"
+                innerRadius={28}
+                outerRadius={44}
+                strokeWidth={0}
+                isAnimationActive={false}
+              >
+                {visible.map((item, index) => (
+                  <Cell
+                    key={item.label}
+                    fill={DONUT_COLORS[index % DONUT_COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              <Tooltip content={<DonutTooltip />} />
+            </PieChart>
             {/* Центральное число поверх дырки */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <span className="text-sm font-bold tabular-nums">{total}</span>
