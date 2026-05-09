@@ -47,9 +47,9 @@ export function DatabaseStatsSection(props: DatabaseStatsSectionProps): React.JS
   };
 
   return (
-    <div className="relative">
+    <div>
       {/* Переключатель вида */}
-      <div className="absolute top-2 right-2 z-10 flex items-center gap-0.5 bg-muted rounded-lg p-0.5">
+      <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5 w-fit mb-3">
         <button
           onClick={() => handleToggle(false)}
           className={`p-1.5 rounded-md transition-colors ${
