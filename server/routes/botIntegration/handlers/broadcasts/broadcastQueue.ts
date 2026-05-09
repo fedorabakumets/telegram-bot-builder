@@ -36,7 +36,7 @@ function sleep(ms: number): Promise<void> {
 
 /**
  * Отправляет одно сообщение пользователю через общий sendTelegramMessage.
- * Перехватывает ошибки Telegram и возвращает структурированный результат.
+ * Проверяет поле ok в ответе Telegram и возвращает структурированный результат.
  * @param token - Токен бота
  * @param userId - Telegram user_id получателя
  * @param text - Текст сообщения (HTML)
@@ -50,17 +50,32 @@ async function sendBroadcastMessage(
   mediaFiles: SendMediaFile[],
 ): Promise<{ ok: boolean; retryAfter?: number; errorCode?: number; description?: string }> {
   try {
-    await sendTelegramMessage(token, userId, text, mediaFiles, [], true);
+    const result = await sendTelegramMessage(token, userId, text, mediaFiles, [], true) as {
+      ok?: boolean;
+      error_code?: number;
+      description?: string;
+      parameters?: { retry_after?: number };
+    };
+
+    // sendTelegramMessage возвращает тело ответа Telegram как есть — проверяем поле ok
+    if (result?.ok === false) {
+      return {
+        ok: false,
+        errorCode: result.error_code,
+        description: result.description,
+        retryAfter: result.parameters?.retry_after,
+      };
+    }
+
     return { ok: true };
   } catch (error: unknown) {
-    // Пробуем извлечь код ошибки из тела ответа Telegram
+    // Сетевая ошибка (timeout, DNS и т.д.)
     const err = error as Record<string, unknown>;
-    const errorCode = typeof err?.error_code === "number" ? err.error_code : undefined;
-    const description = typeof err?.description === "string" ? err.description : undefined;
-    const retryAfter = typeof (err?.parameters as Record<string, unknown>)?.retry_after === "number"
-      ? (err.parameters as Record<string, unknown>).retry_after as number
-      : undefined;
-    return { ok: false, errorCode, description, retryAfter };
+    return {
+      ok: false,
+      errorCode: typeof err?.error_code === "number" ? err.error_code : undefined,
+      description: typeof err?.message === "string" ? err.message : "Сетевая ошибка",
+    };
   }
 }
 

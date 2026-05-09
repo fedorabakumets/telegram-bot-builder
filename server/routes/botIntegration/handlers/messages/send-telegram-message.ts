@@ -151,7 +151,12 @@ async function sendTextMessage(
     });
     
     console.log(`[Telegram API] Message sent in ${Date.now() - startTime}ms, status: ${response.status}`);
-    return await response.json();
+    const json = await response.json() as { ok: boolean; description?: string };
+    if (!response.ok) {
+      // Бросаем ошибку с телом ответа чтобы вызывающий код мог обработать errorCode
+      throw Object.assign(new Error(json.description ?? `Telegram API error ${response.status}`), json);
+    }
+    return json;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorCause = error instanceof Error && 'cause' in error 
@@ -250,7 +255,11 @@ async function sendMediaMessage(
     }
 
     console.log(`[Telegram API] Media sent in ${Date.now() - startTime}ms, status: ${response.status}`);
-    return await response.json();
+    const json = await response.json() as { ok: boolean; description?: string };
+    if (!response.ok) {
+      throw Object.assign(new Error(json.description ?? `Telegram API error ${response.status}`), json);
+    }
+    return json;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorCause = error instanceof Error && 'cause' in error
