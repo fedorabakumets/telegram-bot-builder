@@ -38,8 +38,20 @@ function calcWeeklyMessages(points: GrowthPoint[]): number {
 }
 
 /**
- * Строит URL запроса в зависимости от переданных параметров
- * @param projectId - Идентификатор проекта
+ * Интервал автоматического обновления в миллисекундах по гранулярности.
+ * Для коротких периодов — чаще, для длинных — реже.
+ * @param granularity - Гранулярность периода
+ * @returns Интервал в мс или false если polling не нужен
+ */
+function getRefetchInterval(granularity: Granularity | undefined): number | false {
+  switch (granularity) {
+    case '1m':  return 30_000;   // каждые 30 сек — минутный график
+    case '5m':  return 60_000;   // каждую минуту — 5-минутный график
+    case '1h':  return 120_000;  // каждые 2 мин — часовой график
+    case '1d':  return 300_000;  // каждые 5 мин — дневной график
+    default:    return false;    // 7д, 30д — только по WS-событию
+  }
+}
  * @param granularity - Гранулярность (приоритет над period)
  * @param period - Период (обратная совместимость)
  * @returns URL без токена
@@ -83,6 +95,7 @@ export function useMessagesActivity(params: UseMessagesActivityParams) {
     retry: false,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
+    refetchInterval: getRefetchInterval(granularity),
     placeholderData: undefined,
   });
 
