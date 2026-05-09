@@ -50,6 +50,7 @@ import { UserMessagesLiveProvider } from '@/components/editor/database/user-data
 import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
 import { BroadcastPanel } from '@/components/editor/broadcast';
+import { AnalyticsPanel } from '@/components/editor/analytics';
 import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
 import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
@@ -1490,6 +1491,15 @@ export default function Editor() {
               />
             </div>
           )}
+          {currentTab === 'analytics' && (
+            <div className="h-full overflow-hidden">
+              <AnalyticsPanel
+                projectId={activeProject.id}
+                selectedTokenId={selectedDatabaseTokenId}
+                onSelectToken={setSelectedDatabaseTokenId}
+              />
+            </div>
+          )}
           {currentTab === 'client-api' && (
             <div className="h-full p-6 bg-background overflow-auto">
               <div className="max-w-3xl mx-auto">
@@ -1810,6 +1820,14 @@ export default function Editor() {
                   <BroadcastPanel
                     projectId={activeProject.id}
                     selectedTokenId={selectedDatabaseTokenId}
+                  />
+                </div>
+              ) : currentTab === 'analytics' ? (
+                <div className="h-full overflow-hidden">
+                  <AnalyticsPanel
+                    projectId={activeProject.id}
+                    selectedTokenId={selectedDatabaseTokenId}
+                    onSelectToken={setSelectedDatabaseTokenId}
                   />
                 </div>
               ) : currentTab === 'export' ? null : null}

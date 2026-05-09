@@ -23,7 +23,8 @@ export type EditorTab =
   | 'client-api'
   | 'groups'
   | 'export'
-  | 'preview';
+  | 'preview'
+  | 'analytics';
 
 /**
  * Тип предыдущей вкладки
