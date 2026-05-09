@@ -100,12 +100,9 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   }));
 
   // Формируем подпись для карточки активности
-  const activitySubtitle = [
-    stats.avgInteractionsPerUser !== undefined
-      ? `~${formatAvg(stats.avgInteractionsPerUser)} среднее`
-      : null,
-    stats.usersWithResponses ? `${stats.usersWithResponses} с ответами` : null,
-  ].filter(Boolean).join(' · ') || undefined;
+  const activitySubtitle = stats.avgInteractionsPerUser !== undefined
+    ? `~${formatAvg(stats.avgInteractionsPerUser)} среднее`
+    : undefined;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
