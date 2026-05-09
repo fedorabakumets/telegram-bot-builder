@@ -2548,6 +2548,123 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Эндпоинт для получения данных прироста пользователей с разбивкой по источникам трафика
+   * @route GET /api/projects/:id/users/growth-by-source
+   * @param id - Идентификатор проекта
+   * @query granularity - Гранулярность: "1m"|"5m"|"1h"|"1d"|"7d"|"30d" (обязательный)
+   * @query tokenId - Фильтр по боту (опциональный)
+   * @returns Массив объектов [{date, sources}] где sources — объект с количеством пользователей по источникам
+   */
+  app.get("/api/projects/:id/users/growth-by-source", async (req, res) => {
+    const projectId = parseInt(req.params.id);
+    const tokenId = getRequestTokenId(req);
+    const granularity = req.query.granularity as string | undefined;
+
+    // Проверка прав доступа к проекту
+    const ownerId = getOwnerIdFromRequest(req);
+    if (ownerId !== null) {
+      const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Нет прав доступа к проекту" });
+      }
+    }
+
+    // Проверка обязательного параметра granularity
+    if (!granularity) {
+      return res.status(400).json({ message: "Параметр granularity обязателен" });
+    }
+
+    try {
+      /**
+       * Маппинг гранулярности на SQL-параметры для прироста пользователей по источникам.
+       * Переиспользуем конфигурацию из /users/growth
+       */
+      const granularityConfig: Record<string, { window: string; truncate: string; step: string }> = {
+        "1m":  { window: "1 hour",   truncate: "minute", step: "1 minute" },
+        "5m":  { window: "3 hours",  truncate: "minute", step: "5 minutes" },
+        "1h":  { window: "24 hours", truncate: "hour",   step: "1 hour"   },
+        "1d":  { window: "30 days",  truncate: "day",    step: "1 day"    },
+        "7d":  { window: "84 days",  truncate: "week",   step: "1 week"   },
+        "30d": { window: "365 days", truncate: "month",  step: "1 month"  },
+      };
+      const cfg = granularityConfig[granularity] ?? granularityConfig["1d"];
+
+      // Специальная обработка для 5-минутной гранулярности
+      let queryText: string;
+      if (granularity === "5m") {
+        queryText = `
+          WITH series AS (
+            SELECT generate_series(
+              DATE_TRUNC('hour', NOW() - INTERVAL '${cfg.window}'),
+              DATE_TRUNC('hour', NOW()) + INTERVAL '55 minutes',
+              INTERVAL '${cfg.step}'
+            ) AS slot
+          ),
+          users_by_source AS (
+            SELECT
+              DATE_TRUNC('hour', registered_at) + INTERVAL '5 min' * FLOOR(EXTRACT(MINUTE FROM registered_at) / 5) AS slot,
+              COALESCE(deep_link_param, 'direct') AS source,
+              COUNT(*) AS cnt
+            FROM bot_users
+            WHERE project_id = $1
+              AND ($2::integer IS NULL OR token_id = $2)
+              AND registered_at >= NOW() - INTERVAL '${cfg.window}'
+            GROUP BY 1, 2
+          )
+          SELECT 
+            s.slot AS date,
+            COALESCE(jsonb_object_agg(u.source, u.cnt) FILTER (WHERE u.source IS NOT NULL), '{}'::jsonb) AS sources
+          FROM series s
+          LEFT JOIN users_by_source u ON u.slot = s.slot
+          GROUP BY s.slot
+          ORDER BY s.slot ASC
+        `;
+      } else {
+        queryText = `
+          WITH series AS (
+            SELECT generate_series(
+              DATE_TRUNC('${cfg.truncate}', NOW() - INTERVAL '${cfg.window}'),
+              DATE_TRUNC('${cfg.truncate}', NOW()),
+              INTERVAL '${cfg.step}'
+            ) AS slot
+          ),
+          users_by_source AS (
+            SELECT
+              DATE_TRUNC('${cfg.truncate}', registered_at) AS slot,
+              COALESCE(deep_link_param, 'direct') AS source,
+              COUNT(*) AS cnt
+            FROM bot_users
+            WHERE project_id = $1
+              AND ($2::integer IS NULL OR token_id = $2)
+              AND registered_at >= NOW() - INTERVAL '${cfg.window}'
+            GROUP BY 1, 2
+          )
+          SELECT 
+            s.slot AS date,
+            COALESCE(jsonb_object_agg(u.source, u.cnt) FILTER (WHERE u.source IS NOT NULL), '{}'::jsonb) AS sources
+          FROM series s
+          LEFT JOIN users_by_source u ON u.slot = s.slot
+          GROUP BY s.slot
+          ORDER BY s.slot ASC
+        `;
+      }
+
+      const result = await dbPool.query(queryText, [projectId, tokenId]);
+      
+      // Преобразование результата в нужный формат
+      return res.json(result.rows.map(row => ({
+        date: row.date instanceof Date ? row.date.toISOString() : String(row.date),
+        sources: typeof row.sources === 'object' && row.sources !== null 
+          ? row.sources 
+          : {},
+      })));
+    } catch (error) {
+      console.error("Error fetching growth by source data:", error);
+      res.status(500).json({ message: "Ошибка при получении данных прироста по источникам" });
+    }
+  });
+
+  /**
    * Эндпоинт активности сообщений с поддержкой гранулярности
    * @route GET /api/projects/:id/messages/activity
    * @param id - Идентификатор проекта
