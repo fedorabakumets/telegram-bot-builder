@@ -291,20 +291,31 @@ export function MessageMedia({ media, messageData, projectId, tokenId }: Message
     }
   }
 
-  // Медиа из рассылки — URL файла сохранён в messageData.broadcastMediaUrl
+  // Медиа из рассылки — URL файла или Telegram file_id сохранён в messageData.broadcastMediaUrl
   const broadcastMediaUrl = data?.broadcastMediaUrl as string | undefined;
   const broadcastMediaType = data?.broadcastMediaType as string | undefined;
 
   if (broadcastMediaUrl) {
+    /**
+     * Определяет src для медиа из рассылки:
+     * - локальный путь /uploads/... → как есть
+     * - http(s):// URL → как есть
+     * - всё остальное (Telegram file_id) → через прокси
+     */
+    const isDirectUrl = broadcastMediaUrl.startsWith('/') || broadcastMediaUrl.startsWith('http');
+    const mediaSrc = isDirectUrl
+      ? broadcastMediaUrl
+      : buildProxyUrl(broadcastMediaUrl, projectId, tokenId);
+
     if (broadcastMediaType === 'photo' || broadcastMediaType === 'image') {
       return (
         <>
           <div className="rounded-lg overflow-hidden max-w-[200px]">
             <img
-              src={broadcastMediaUrl}
+              src={mediaSrc}
               alt="Фото рассылки"
               className="w-full h-auto rounded-lg cursor-zoom-in"
-              onClick={() => setLightboxSrc(broadcastMediaUrl)}
+              onClick={() => setLightboxSrc(mediaSrc)}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
           </div>
@@ -318,7 +329,7 @@ export function MessageMedia({ media, messageData, projectId, tokenId }: Message
       return (
         <div className="rounded-lg overflow-hidden max-w-[280px]">
           <video
-            src={broadcastMediaUrl}
+            src={mediaSrc}
             controls
             className="w-full h-auto rounded-lg"
             preload="metadata"
@@ -329,14 +340,14 @@ export function MessageMedia({ media, messageData, projectId, tokenId }: Message
     if (broadcastMediaType === 'audio') {
       return (
         <div className="flex items-center gap-1 rounded-lg bg-muted/40 p-2 max-w-[280px]">
-          <audio src={broadcastMediaUrl} controls className="w-full" preload="metadata" />
+          <audio src={mediaSrc} controls className="w-full" preload="metadata" />
         </div>
       );
     }
     // document и прочие — иконка со ссылкой
     return (
       <a
-        href={broadcastMediaUrl}
+        href={mediaSrc}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm hover:bg-muted/60 transition-colors max-w-[280px]"
