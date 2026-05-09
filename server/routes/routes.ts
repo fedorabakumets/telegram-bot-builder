@@ -2452,16 +2452,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (granularity) {
         /**
          * Маппинг гранулярности на SQL-параметры для прироста пользователей.
-         * 1h — последние 24 часа с шагом 1 час (24 точки)
-         * 1d — последние 30 дней с шагом 1 день
-         * 7d — последние 12 недель с шагом 1 неделя
+         * 1m  — последний час с шагом 1 минута (60 точек)
+         * 5m  — последние 3 часа с шагом 5 минут (36 точек)
+         * 1h  — последние 24 часа с шагом 1 час (24 точки)
+         * 1d  — последние 30 дней с шагом 1 день
+         * 7d  — последние 12 недель с шагом 1 неделя
          * 30d — последние 12 месяцев с шагом 1 месяц
          */
         const granularityConfig: Record<string, { window: string; truncate: string; step: string }> = {
-          "1h":  { window: "24 hours", truncate: "hour",  step: "1 hour"  },
-          "1d":  { window: "30 days",  truncate: "day",   step: "1 day"   },
-          "7d":  { window: "84 days",  truncate: "week",  step: "1 week"  },
-          "30d": { window: "365 days", truncate: "month", step: "1 month" },
+          "1m":  { window: "1 hour",   truncate: "minute", step: "1 minute" },
+          "5m":  { window: "3 hours",  truncate: "minute", step: "5 minutes" },
+          "1h":  { window: "24 hours", truncate: "hour",   step: "1 hour"   },
+          "1d":  { window: "30 days",  truncate: "day",    step: "1 day"    },
+          "7d":  { window: "84 days",  truncate: "week",   step: "1 week"   },
+          "30d": { window: "365 days", truncate: "month",  step: "1 month"  },
         };
         const cfg = granularityConfig[granularity] ?? granularityConfig["1d"];
 

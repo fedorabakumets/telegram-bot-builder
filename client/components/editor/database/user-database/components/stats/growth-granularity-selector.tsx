@@ -1,6 +1,6 @@
 /**
  * @fileoverview Компактный переключатель гранулярности для графика прироста пользователей
- * @description Отображает кнопки [1ч] [1д] [7д] [30д], активная подсвечена
+ * @description Отображает кнопки [1м] [5м] [1ч] [1д] [7д] [30д], активная подсвечена
  */
 
 import React from 'react';
@@ -22,6 +22,8 @@ export interface GrowthGranularitySelectorProps {
  * за какой промежуток времени отображается график.
  */
 const GROWTH_GRANULARITY_LABELS: Record<GrowthGranularity, string> = {
+  '1m':  '1ч',
+  '5m':  '3ч',
   '1h':  '24ч',
   '1d':  '30д',
   '7d':  '12н',
@@ -32,6 +34,8 @@ const GROWTH_GRANULARITY_LABELS: Record<GrowthGranularity, string> = {
  * Подсказка при наведении — поясняет шаг и период охвата
  */
 const GROWTH_GRANULARITY_TITLES: Record<GrowthGranularity, string> = {
+  '1m':  'Последний час, шаг 1 минута',
+  '5m':  'Последние 3 часа, шаг 5 минут',
   '1h':  'Последние 24 часа, шаг 1 час',
   '1d':  'Последние 30 дней, шаг 1 день',
   '7d':  'Последние 12 недель, шаг 1 неделя',
@@ -39,7 +43,7 @@ const GROWTH_GRANULARITY_TITLES: Record<GrowthGranularity, string> = {
 };
 
 /** Порядок отображения кнопок */
-const GROWTH_GRANULARITY_ORDER: GrowthGranularity[] = ['1h', '1d', '7d', '30d'];
+const GROWTH_GRANULARITY_ORDER: GrowthGranularity[] = ['1m', '5m', '1h', '1d', '7d', '30d'];
 
 /**
  * Компактный переключатель гранулярности графика прироста пользователей
