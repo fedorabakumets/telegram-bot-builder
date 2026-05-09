@@ -52,6 +52,8 @@ function getRefetchInterval(granularity: Granularity | undefined): number | fals
     default:    return false;    // 7д, 30д — только по WS-событию
   }
 }
+/**
+ * Строит URL запроса в зависимости от переданных параметров
  * @param granularity - Гранулярность (приоритет над period)
  * @param period - Период (обратная совместимость)
  * @returns URL без токена
