@@ -2519,47 +2519,74 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       // Режим гранулярности — новый параметр
       if (granularity) {
-        /** Маппинг гранулярности на SQL-параметры */
-        const granularityConfig: Record<string, { window: string; truncate: string | null }> = {
-          "1m":  { window: "1 hour",   truncate: "minute" },
-          "5m":  { window: "3 hours",  truncate: null },
-          "1h":  { window: "24 hours", truncate: "hour" },
-          "1d":  { window: "30 days",  truncate: "day" },
-          "7d":  { window: "90 days",  truncate: "day" },
-          "30d": { window: "180 days", truncate: "day" },
+        /**
+         * Маппинг гранулярности на SQL-параметры.
+         * fillGaps=true означает заполнение пустых интервалов нулями через generate_series.
+         */
+        const granularityConfig: Record<string, { window: string; truncate: string | null; step: string; fillGaps: boolean }> = {
+          "1m":  { window: "1 hour",   truncate: "minute", step: "1 minute",  fillGaps: true },
+          "5m":  { window: "3 hours",  truncate: null,     step: "5 minutes", fillGaps: true },
+          "1h":  { window: "24 hours", truncate: "hour",   step: "1 hour",    fillGaps: true },
+          "1d":  { window: "30 days",  truncate: "day",    step: "1 day",     fillGaps: true },
+          "7d":  { window: "90 days",  truncate: "day",    step: "1 day",     fillGaps: true },
+          "30d": { window: "180 days", truncate: "day",    step: "1 day",     fillGaps: true },
         };
         const cfg = granularityConfig[granularity] ?? granularityConfig["1d"];
 
         let queryText: string;
         if (granularity === "5m") {
-          // Группировка по 5-минутным интервалам через FLOOR
+          // Группировка по 5-минутным интервалам через FLOOR + generate_series для заполнения пустых слотов
           queryText = `
-            SELECT
-              DATE_TRUNC('hour', created_at) + INTERVAL '5 min' * FLOOR(EXTRACT(MINUTE FROM created_at) / 5) as date,
-              COUNT(*) as count
-            FROM bot_messages
-            WHERE project_id = $1
-              AND ($2::integer IS NULL OR token_id = $2)
-              AND created_at >= NOW() - INTERVAL '${cfg.window}'
-            GROUP BY 1
-            ORDER BY 1 ASC
+            WITH series AS (
+              SELECT generate_series(
+                DATE_TRUNC('hour', NOW() - INTERVAL '${cfg.window}'),
+                DATE_TRUNC('hour', NOW()) + INTERVAL '55 minutes',
+                INTERVAL '${cfg.step}'
+              ) AS slot
+            ),
+            msgs AS (
+              SELECT
+                DATE_TRUNC('hour', created_at) + INTERVAL '5 min' * FLOOR(EXTRACT(MINUTE FROM created_at) / 5) AS slot,
+                COUNT(*) AS cnt
+              FROM bot_messages
+              WHERE project_id = $1
+                AND ($2::integer IS NULL OR token_id = $2)
+                AND created_at >= NOW() - INTERVAL '${cfg.window}'
+              GROUP BY 1
+            )
+            SELECT s.slot AS date, COALESCE(m.cnt, 0) AS count
+            FROM series s
+            LEFT JOIN msgs m ON m.slot = s.slot
+            ORDER BY s.slot ASC
           `;
         } else {
+          // Для всех остальных гранулярностей — generate_series + LEFT JOIN для заполнения нулями
           queryText = `
-            SELECT
-              DATE_TRUNC('${cfg.truncate}', created_at) as date,
-              COUNT(*) as count
-            FROM bot_messages
-            WHERE project_id = $1
-              AND ($2::integer IS NULL OR token_id = $2)
-              AND created_at >= NOW() - INTERVAL '${cfg.window}'
-            GROUP BY 1
-            ORDER BY 1 ASC
+            WITH series AS (
+              SELECT generate_series(
+                DATE_TRUNC('${cfg.truncate}', NOW() - INTERVAL '${cfg.window}'),
+                DATE_TRUNC('${cfg.truncate}', NOW()),
+                INTERVAL '${cfg.step}'
+              ) AS slot
+            ),
+            msgs AS (
+              SELECT
+                DATE_TRUNC('${cfg.truncate}', created_at) AS slot,
+                COUNT(*) AS cnt
+              FROM bot_messages
+              WHERE project_id = $1
+                AND ($2::integer IS NULL OR token_id = $2)
+                AND created_at >= NOW() - INTERVAL '${cfg.window}'
+              GROUP BY 1
+            )
+            SELECT s.slot AS date, COALESCE(m.cnt, 0) AS count
+            FROM series s
+            LEFT JOIN msgs m ON m.slot = s.slot
+            ORDER BY s.slot ASC
           `;
         }
 
         const result = await dbPool.query(queryText, [projectId, tokenId]);
-        // Для минутных режимов — без fallback, возвращаем пустой массив если нет данных
         return res.json(result.rows.map(row => ({
           date: row.date instanceof Date ? row.date.toISOString() : String(row.date),
           count: Number(row.count),
