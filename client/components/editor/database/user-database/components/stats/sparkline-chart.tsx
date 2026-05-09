@@ -10,15 +10,17 @@ import { GrowthPoint } from '../../hooks/queries/use-growth';
 /** Ширина внутреннего viewBox */
 const VW = 400;
 /** Высота внутреннего viewBox */
-const VH = 80;
+const VH = 90;
 /** Отступ слева для подписей Y */
 const PL = 28;
+/** Отступ справа — чтобы последняя точка не упиралась в край */
+const PR = 6;
 /** Отступ снизу для подписей X */
 const PB = 16;
-/** Отступ сверху */
-const PT = 6;
+/** Отступ сверху — место для подписи max над линией */
+const PT = 14;
 /** Рабочая ширина графика */
-const GW = VW - PL - 4;
+const GW = VW - PL - PR;
 /** Рабочая высота графика */
 const GH = VH - PB - PT;
 
@@ -149,7 +151,7 @@ export function SparklineChart({ data, gradientId, lineColor = '#3b82f6', granul
         viewBox={`0 0 ${VW} ${VH}`}
         preserveAspectRatio="xMidYMid meet"
         width="100%"
-        height="80"
+        height="90"
         style={{ display: 'block' }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setTooltip(null)}
@@ -162,9 +164,9 @@ export function SparklineChart({ data, gradientId, lineColor = '#3b82f6', granul
         </defs>
 
         {/* Горизонтальные направляющие */}
-        <line x1={PL} y1={PT} x2={VW - 4} y2={PT} stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
-        <line x1={PL} y1={PT + GH / 2} x2={VW - 4} y2={PT + GH / 2} stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
-        <line x1={PL} y1={PT + GH} x2={VW - 4} y2={PT + GH} stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
+        <line x1={PL} y1={PT} x2={VW - PR} y2={PT} stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
+        <line x1={PL} y1={PT + GH / 2} x2={VW - PR} y2={PT + GH / 2} stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
+        <line x1={PL} y1={PT + GH} x2={VW - PR} y2={PT + GH} stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
 
         {/* Заливка под линией */}
         <path d={fillPath} fill={`url(#${gradientId})`} />
@@ -179,8 +181,8 @@ export function SparklineChart({ data, gradientId, lineColor = '#3b82f6', granul
           strokeLinejoin="round"
         />
 
-        {/* Подписи по оси Y */}
-        <text x={PL - 3} y={PT + 6} fontSize="9" fill="rgba(255,255,255,0.4)" textAnchor="end">
+        {/* Подписи по оси Y — max над верхней направляющей, 0 у нижней */}
+        <text x={PL - 3} y={PT - 2} fontSize="9" fill="rgba(255,255,255,0.4)" textAnchor="end">
           {max}
         </text>
         <text x={PL - 3} y={PT + GH} fontSize="9" fill="rgba(255,255,255,0.4)" textAnchor="end">
@@ -194,7 +196,7 @@ export function SparklineChart({ data, gradientId, lineColor = '#3b82f6', granul
         <text x={calcX(midIdx, total)} y={VH - 2} fontSize="9" fill="rgba(255,255,255,0.4)" textAnchor="middle">
           {fmtDate(data[midIdx].date, granularity, allDates)}
         </text>
-        <text x={VW - 4} y={VH - 2} fontSize="9" fill="rgba(255,255,255,0.4)" textAnchor="end">
+        <text x={VW - PR} y={VH - 2} fontSize="9" fill="rgba(255,255,255,0.4)" textAnchor="end">
           {fmtDate(data[total - 1].date, granularity, allDates)}
         </text>
       </svg>
