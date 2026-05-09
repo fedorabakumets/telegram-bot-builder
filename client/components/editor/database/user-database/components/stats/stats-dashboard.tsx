@@ -5,12 +5,13 @@
 
 import React, { useState } from 'react';
 import { UserStats } from '../../types';
-import { useGrowth } from '../../hooks/queries/use-growth';
+import { useGrowth, GrowthGranularity } from '../../hooks/queries/use-growth';
 import { useTraffic } from '../../hooks/queries/use-traffic';
 import { useMessagesActivity, Granularity } from '../../hooks/queries/use-messages-activity';
 import { StatMetricCard } from './stat-metric-card';
 import { StatBarCard } from './stat-bar-card';
 import { ActivityGranularitySelector } from './activity-granularity-selector';
+import { GrowthGranularitySelector } from './growth-granularity-selector';
 import { ChartModeToggle, ChartMode } from './chart-mode-toggle';
 
 /**
@@ -58,13 +59,16 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   /** Текущая гранулярность графика активности сообщений */
   const [msgGranularity, setMsgGranularity] = useState<Granularity>('1d');
 
+  /** Текущая гранулярность графика прироста пользователей */
+  const [growthGranularity, setGrowthGranularity] = useState<GrowthGranularity>('1d');
+
   /** Режим графика "Всего пользователей": за период или накопительно */
   const [growthMode, setGrowthMode] = useState<ChartMode>('period');
 
   /** Режим графика "Активность": за период или накопительно */
   const [activityMode, setActivityMode] = useState<ChartMode>('period');
 
-  const { points, weeklyGrowth } = useGrowth({ projectId, selectedTokenId });
+  const { points, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
   const { sources, languages } = useTraffic({ projectId, selectedTokenId });
   const { points: messagePoints, weeklyMessages } = useMessagesActivity({
     projectId,
@@ -113,8 +117,15 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         trend={growthTrend}
         subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
         cumulative={growthMode === 'cumulative'}
+        chartGranularity={growthGranularity}
         headerExtra={
-          <ChartModeToggle value={growthMode} onChange={setGrowthMode} />
+          <div className="flex items-center gap-1.5">
+            <GrowthGranularitySelector
+              value={growthGranularity}
+              onChange={setGrowthGranularity}
+            />
+            <ChartModeToggle value={growthMode} onChange={setGrowthMode} />
+          </div>
         }
       />
 

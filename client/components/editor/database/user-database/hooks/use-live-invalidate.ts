@@ -229,11 +229,11 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
 
         // Инвалидируем stats, growth и traffic — новый пользователь влияет на все три.
         // Делаем это ДО optimistic update чтобы запрос ушёл немедленно.
-        const growthUrl = buildUsersApiUrl(`/api/projects/${projectId}/users/growth`, selectedTokenId);
         const trafficUrl = buildUsersApiUrl(`/api/projects/${projectId}/users/traffic`, selectedTokenId);
 
         queryClient.invalidateQueries({ queryKey: statsKey });
-        queryClient.invalidateQueries({ queryKey: [growthUrl, selectedTokenId] });
+        // Инвалидируем все гранулярности growth для данного проекта
+        queryClient.invalidateQueries({ queryKey: ['users-growth', projectId, selectedTokenId] });
         queryClient.invalidateQueries({ queryKey: [trafficUrl, selectedTokenId] });
         queryClient.invalidateQueries({
           queryKey: ['infinite-users', projectId],

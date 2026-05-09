@@ -12,3 +12,4 @@ export * from './traffic-section';
 export * from './stat-metric-card';
 export * from './stat-bar-card';
 export * from './stats-dashboard';
+export * from './growth-granularity-selector';

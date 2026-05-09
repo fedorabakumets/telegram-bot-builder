@@ -1,18 +1,21 @@
 /**
  * @fileoverview Хук для загрузки данных прироста пользователей
- * @description Получает ежедневный прирост через GET /api/projects/:id/users/growth
+ * @description Получает прирост через GET /api/projects/:id/users/growth с поддержкой гранулярности
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { buildUsersApiUrl } from '@/components/editor/database/utils';
 
+/** Доступные значения гранулярности для графика прироста пользователей */
+export type GrowthGranularity = '1h' | '1d' | '7d' | '30d';
+
 /**
- * Точка данных прироста пользователей за один день
+ * Точка данных прироста пользователей за один период
  */
 export interface GrowthPoint {
-  /** Дата в формате "YYYY-MM-DD" */
+  /** Дата/время в формате ISO */
   date: string;
-  /** Количество новых пользователей за этот день */
+  /** Количество новых пользователей за этот период */
   count: number;
 }
 
@@ -24,8 +27,8 @@ interface UseGrowthParams {
   projectId: number;
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
-  /** Период: "7d" | "30d" | "90d", по умолчанию "30d" */
-  period?: '7d' | '30d' | '90d';
+  /** Гранулярность графика: "1h" | "1d" | "7d" | "30d", по умолчанию "1d" */
+  granularity?: GrowthGranularity;
 }
 
 /**
@@ -42,18 +45,32 @@ function calcWeeklyGrowth(points: GrowthPoint[]): number {
 }
 
 /**
- * Хук для загрузки данных прироста пользователей по дням
+ * Интервал автоматического обновления в миллисекундах по гранулярности.
+ * Для коротких периодов — чаще, для длинных — реже.
+ * @param granularity - Гранулярность периода
+ * @returns Интервал в мс или false если polling не нужен
+ */
+function getRefetchInterval(granularity: GrowthGranularity): number | false {
+  switch (granularity) {
+    case '1h':  return 120_000;  // каждые 2 мин — часовой график
+    case '1d':  return 300_000;  // каждые 5 мин — дневной график
+    default:    return false;    // 7д, 30д — только по WS-событию
+  }
+}
+
+/**
+ * Хук для загрузки данных прироста пользователей
  * @param params - Параметры хука
  * @returns Точки прироста, недельный прирост и состояние загрузки
  */
 export function useGrowth(params: UseGrowthParams) {
-  const { projectId, selectedTokenId, period = '30d' } = params;
+  const { projectId, selectedTokenId, granularity = '1d' } = params;
 
-  const baseUrl = `/api/projects/${projectId}/users/growth?period=${period}`;
+  const baseUrl = `/api/projects/${projectId}/users/growth?granularity=${granularity}`;
   const requestUrl = buildUsersApiUrl(baseUrl, selectedTokenId);
 
   const { data, isLoading } = useQuery<GrowthPoint[]>({
-    queryKey: [requestUrl, selectedTokenId, period],
+    queryKey: ['users-growth', projectId, selectedTokenId, granularity],
     queryFn: async () => {
       const response = await fetch(requestUrl, {
         credentials: 'include',
@@ -69,12 +86,13 @@ export function useGrowth(params: UseGrowthParams) {
     retry: false,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
+    refetchInterval: getRefetchInterval(granularity),
   });
 
   const points = data ?? [];
 
   return {
-    /** Массив точек прироста по дням */
+    /** Массив точек прироста */
     points,
     /** Суммарный прирост за последние 7 дней */
     weeklyGrowth: calcWeeklyGrowth(points),

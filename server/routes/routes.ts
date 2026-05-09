@@ -2426,15 +2426,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
-   * Эндпоинт для получения данных прироста пользователей по дням
+   * Эндпоинт для получения данных прироста пользователей с поддержкой гранулярности
    * @route GET /api/projects/:id/users/growth
    * @param id - Идентификатор проекта
-   * @query period - Период: "7d" | "30d" | "90d", по умолчанию "30d"
-   * @returns Массив объектов [{date, count}]
+   * @query granularity - Гранулярность: "1h"|"1d"|"7d"|"30d" (новый параметр)
+   * @query period - Период: "7d"|"30d"|"90d" (старый параметр, обратная совместимость)
+   * @returns Массив объектов [{date, count}] — дата в ISO формате
    */
   app.get("/api/projects/:id/users/growth", async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
+    const granularity = req.query.granularity as string | undefined;
     const period = (req.query.period as string) || "30d";
 
     const ownerId = getOwnerIdFromRequest(req);
@@ -2445,16 +2447,63 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
     }
 
-    // Определяем интервал по параметру period
-    const intervalMap: Record<string, string> = {
-      "7d": "7 days",
-      "30d": "30 days",
-      "90d": "90 days",
-    };
-    const interval = intervalMap[period] ?? "30 days";
-
     try {
-      // Сначала пробуем за выбранный период
+      // Режим гранулярности — новый параметр
+      if (granularity) {
+        /**
+         * Маппинг гранулярности на SQL-параметры для прироста пользователей.
+         * 1h — последние 24 часа с шагом 1 час (24 точки)
+         * 1d — последние 30 дней с шагом 1 день
+         * 7d — последние 12 недель с шагом 1 неделя
+         * 30d — последние 12 месяцев с шагом 1 месяц
+         */
+        const granularityConfig: Record<string, { window: string; truncate: string; step: string }> = {
+          "1h":  { window: "24 hours", truncate: "hour",  step: "1 hour"  },
+          "1d":  { window: "30 days",  truncate: "day",   step: "1 day"   },
+          "7d":  { window: "84 days",  truncate: "week",  step: "1 week"  },
+          "30d": { window: "365 days", truncate: "month", step: "1 month" },
+        };
+        const cfg = granularityConfig[granularity] ?? granularityConfig["1d"];
+
+        const queryText = `
+          WITH series AS (
+            SELECT generate_series(
+              DATE_TRUNC('${cfg.truncate}', NOW() - INTERVAL '${cfg.window}'),
+              DATE_TRUNC('${cfg.truncate}', NOW()),
+              INTERVAL '${cfg.step}'
+            ) AS slot
+          ),
+          users AS (
+            SELECT
+              DATE_TRUNC('${cfg.truncate}', registered_at) AS slot,
+              COUNT(*) AS cnt
+            FROM bot_users
+            WHERE project_id = $1
+              AND ($2::integer IS NULL OR token_id = $2)
+              AND registered_at >= NOW() - INTERVAL '${cfg.window}'
+            GROUP BY 1
+          )
+          SELECT s.slot AS date, COALESCE(u.cnt, 0) AS count
+          FROM series s
+          LEFT JOIN users u ON u.slot = s.slot
+          ORDER BY s.slot ASC
+        `;
+
+        const result = await dbPool.query(queryText, [projectId, tokenId]);
+        return res.json(result.rows.map(row => ({
+          date: row.date instanceof Date ? row.date.toISOString() : String(row.date),
+          count: Number(row.count),
+        })));
+      }
+
+      // Режим period — старый параметр (обратная совместимость)
+      const intervalMap: Record<string, string> = {
+        "7d": "7 days",
+        "30d": "30 days",
+        "90d": "90 days",
+      };
+      const interval = intervalMap[period] ?? "30 days";
+
       let result = await dbPool.query(`
         SELECT
           DATE(registered_at) as date,
