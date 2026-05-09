@@ -65,7 +65,11 @@ export function useTraffic(params: UseTrafficParams) {
   const { data, isLoading } = useQuery<TrafficData>({
     queryKey: [requestUrl, selectedTokenId],
     queryFn: async () => {
-      const response = await fetch(requestUrl, { credentials: 'include' });
+      const response = await fetch(requestUrl, {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
     },
@@ -73,6 +77,8 @@ export function useTraffic(params: UseTrafficParams) {
     staleTime: 0,
     gcTime: 0,
     retry: false,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
   });
 
   return {

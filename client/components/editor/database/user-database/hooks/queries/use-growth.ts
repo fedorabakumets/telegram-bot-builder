@@ -55,7 +55,11 @@ export function useGrowth(params: UseGrowthParams) {
   const { data, isLoading } = useQuery<GrowthPoint[]>({
     queryKey: [requestUrl, selectedTokenId, period],
     queryFn: async () => {
-      const response = await fetch(requestUrl, { credentials: 'include' });
+      const response = await fetch(requestUrl, {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
     },
@@ -63,6 +67,8 @@ export function useGrowth(params: UseGrowthParams) {
     staleTime: 0,
     gcTime: 0,
     retry: false,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
   });
 
   const points = data ?? [];

@@ -33,7 +33,11 @@ export function useStats(params: UseStatsParams) {
   } = useQuery<UserStats>({
     queryKey: [requestUrl, selectedTokenId],
     queryFn: async () => {
-      const response = await fetch(requestUrl, { credentials: 'include' });
+      const response = await fetch(requestUrl, {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
     },
@@ -41,6 +45,8 @@ export function useStats(params: UseStatsParams) {
     staleTime: 0,
     gcTime: 0,
     retry: false,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
   });
 
   return { stats, isStatsLoading: isLoading, refetchStats: refetch };

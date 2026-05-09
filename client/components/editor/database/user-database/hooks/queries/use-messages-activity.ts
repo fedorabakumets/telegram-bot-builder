@@ -67,9 +67,13 @@ export function useMessagesActivity(params: UseMessagesActivityParams) {
   const requestUrl = buildUsersApiUrl(baseUrl, selectedTokenId);
 
   const { data, isLoading } = useQuery<GrowthPoint[]>({
-    queryKey: ['messages-activity', projectId, selectedTokenId, granularity ?? period, requestUrl],
+    queryKey: ['messages-activity', projectId, selectedTokenId, granularity ?? period],
     queryFn: async () => {
-      const response = await fetch(requestUrl, { credentials: 'include' });
+      const response = await fetch(requestUrl, {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' },
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
     },
@@ -77,7 +81,7 @@ export function useMessagesActivity(params: UseMessagesActivityParams) {
     staleTime: 0,
     gcTime: 0,
     retry: false,
-    refetchOnMount: true,
+    refetchOnMount: 'always',
     refetchOnWindowFocus: false,
     placeholderData: undefined,
   });
