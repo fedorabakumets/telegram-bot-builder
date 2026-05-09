@@ -139,13 +139,20 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
       true
     );
 
+    /** Данные о медиа для сохранения в messageData — используются для отображения в диалоге */
+    const mediaMessageData: Record<string, unknown> = { sentFromAdmin: true };
+    if (mediaFiles.length > 0) {
+      mediaMessageData.broadcastMediaUrl = mediaFiles[0].url;
+      mediaMessageData.broadcastMediaType = mediaFiles[0].type;
+    }
+
     const savedMessage = await storage.createBotMessage({
       projectId,
       tokenId: effectiveTokenId,
       userId,
       messageType: "bot",
       messageText: textWithVariables.trim(),
-      messageData: { sentFromAdmin: true },
+      messageData: mediaMessageData,
     });
 
     // Публикуем WS-событие чтобы таблица и диалог обновились в реальном времени
@@ -158,7 +165,7 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
         userId,
         messageType: 'bot',
         messageText: textWithVariables.trim(),
-        messageData: { sentFromAdmin: true },
+        messageData: mediaMessageData,
         nodeId: null,
         createdAt: new Date().toISOString(),
       },
