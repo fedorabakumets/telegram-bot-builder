@@ -199,8 +199,9 @@ export function DialogPanel({
 
       <DialogInput
         isPending={sendMessageMutation.isPending}
-        onSend={(text) => {
-          sendMessageMutation.mutate({ messageText: text });
+        projectId={projectId}
+        onSend={(text, mediaUrls) => {
+          sendMessageMutation.mutate({ messageText: text, mediaUrls });
         }}
       />
 

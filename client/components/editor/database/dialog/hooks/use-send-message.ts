@@ -54,7 +54,15 @@ export function useSendMessage({
   const tempIdRef = useRef<number | null>(null);
 
   return useMutation({
-    mutationFn: async ({ messageText }: { messageText: string }) => {
+    mutationFn: async ({
+      messageText,
+      mediaUrls = [],
+    }: {
+      /** Текст сообщения */
+      messageText: string;
+      /** Массив URL медиафайлов (опционально) */
+      mediaUrls?: string[];
+    }) => {
       if (!userId) {
         throw new Error('No user selected');
       }
@@ -62,7 +70,7 @@ export function useSendMessage({
       return apiRequest(
         'POST',
         buildUsersApiUrl(`/api/projects/${projectId}/users/${userId}/send-message`, selectedTokenId),
-        { messageText }
+        { messageText, mediaUrls }
       );
     },
 
@@ -82,6 +90,7 @@ export function useSendMessage({
         nodeId: null,
         primaryMediaId: null,
         createdAt: new Date(),
+        // Медиа появится после refetch — оставляем пустым
         media: [],
       };
 
