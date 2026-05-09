@@ -41,6 +41,17 @@ const MARGIN = { top: 4, right: 4, bottom: 0, left: -10 };
 const TICK_STYLE = { fontSize: 9, fill: 'rgba(255,255,255,0.4)' };
 
 /**
+ * Форматирует значение оси Y компактно: 1000 → 1K, 1000000 → 1M
+ * @param value - Числовое значение
+ * @returns Отформатированная строка
+ */
+function formatYAxis(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return String(Math.round(value));
+}
+
+/**
  * Пропсы кастомного tooltip от recharts
  */
 interface TooltipProps {
@@ -114,10 +125,12 @@ export function SparklineChart({
       />
       <YAxis
         width={30}
-        tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.4)' }}
+        tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.6)' }}
         axisLine={false}
         tickLine={false}
         domain={['auto', 'auto']}
+        tickFormatter={formatYAxis}
+        tickCount={3}
       />
       <Tooltip
         content={TooltipContent}
