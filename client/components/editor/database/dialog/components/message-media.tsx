@@ -291,5 +291,63 @@ export function MessageMedia({ media, messageData, projectId, tokenId }: Message
     }
   }
 
+  // Медиа из рассылки — URL файла сохранён в messageData.broadcastMediaUrl
+  const broadcastMediaUrl = data?.broadcastMediaUrl as string | undefined;
+  const broadcastMediaType = data?.broadcastMediaType as string | undefined;
+
+  if (broadcastMediaUrl) {
+    if (broadcastMediaType === 'photo' || broadcastMediaType === 'image') {
+      return (
+        <>
+          <div className="rounded-lg overflow-hidden max-w-[200px]">
+            <img
+              src={broadcastMediaUrl}
+              alt="Фото рассылки"
+              className="w-full h-auto rounded-lg cursor-zoom-in"
+              onClick={() => setLightboxSrc(broadcastMediaUrl)}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          </div>
+          {lightboxSrc && (
+            <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+          )}
+        </>
+      );
+    }
+    if (broadcastMediaType === 'video') {
+      return (
+        <div className="rounded-lg overflow-hidden max-w-[280px]">
+          <video
+            src={broadcastMediaUrl}
+            controls
+            className="w-full h-auto rounded-lg"
+            preload="metadata"
+          />
+        </div>
+      );
+    }
+    if (broadcastMediaType === 'audio') {
+      return (
+        <div className="flex items-center gap-1 rounded-lg bg-muted/40 p-2 max-w-[280px]">
+          <audio src={broadcastMediaUrl} controls className="w-full" preload="metadata" />
+        </div>
+      );
+    }
+    // document и прочие — иконка со ссылкой
+    return (
+      <a
+        href={broadcastMediaUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2 text-sm hover:bg-muted/60 transition-colors max-w-[280px]"
+      >
+        <span className="text-lg">📎</span>
+        <span className="text-xs truncate">
+          {broadcastMediaType === 'document' ? 'Документ' : 'Файл рассылки'}
+        </span>
+      </a>
+    );
+  }
+
   return null;
 }

@@ -12,6 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BroadcastStatusBadge } from './broadcast-status-badge';
 import { StatMini } from './broadcast-stat-mini';
+import { MediaPreviewList } from './media-preview';
 import { useBroadcastDetail } from '../hooks/use-broadcast-detail';
 import { useStopBroadcast } from '../hooks/use-stop-broadcast';
 import { useBroadcastLiveProgress } from '../hooks/use-broadcast-live-progress';
@@ -99,6 +100,23 @@ export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: Broa
         </div>
 
         <Separator />
+
+        {/* Сообщение рассылки */}
+        {(base.messageText || (base.mediaUrls && base.mediaUrls.length > 0)) && (
+          <>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Сообщение</p>
+              {base.messageText && (
+                <p className="text-xs text-muted-foreground bg-muted/40 rounded p-2 whitespace-pre-wrap">
+                  {base.messageText.replace(/<[^>]+>/g, '').slice(0, 150)}
+                  {base.messageText.replace(/<[^>]+>/g, '').length > 150 ? '…' : ''}
+                </p>
+              )}
+              <MediaPreviewList mediaUrls={(base.mediaUrls as string[]) ?? []} />
+            </div>
+            <Separator />
+          </>
+        )}
 
         {/* Даты */}
         <div className="space-y-2 text-sm">

@@ -242,7 +242,14 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
               userId: user.userId,
               messageType: "bot",
               messageText: text,
-              messageData: { sentFromBroadcast: true, broadcastId },
+              messageData: {
+                sentFromBroadcast: true,
+                broadcastId,
+                // URL и тип первого медиафайла для отображения в диалоге
+                ...(mediaFiles.length > 0
+                  ? { broadcastMediaUrl: mediaFiles[0].url, broadcastMediaType: mediaFiles[0].type }
+                  : {}),
+              },
             });
             sent = true;
           } else if (result.errorCode === 429 && result.retryAfter) {

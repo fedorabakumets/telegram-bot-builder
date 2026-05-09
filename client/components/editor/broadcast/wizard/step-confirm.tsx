@@ -5,6 +5,7 @@
 
 import { Button } from '@/components/ui/button';
 import { useAudiencePreview } from '../hooks/use-audience-preview';
+import { MediaPreviewList } from '../components/media-preview';
 import type { NewBroadcastFormData } from '../types';
 
 /**
@@ -68,6 +69,7 @@ export function StepConfirm({ projectId, formData, isLoading, onConfirm, onBack 
           <p className="text-muted-foreground mb-1">Текст сообщения</p>
           <p className="text-xs bg-muted/40 rounded p-2 whitespace-pre-wrap">{preview || '—'}</p>
         </div>
+        <MediaPreviewList mediaUrls={formData.mediaUrls ?? []} />
       </div>
 
       <div className="flex justify-between pt-2">
