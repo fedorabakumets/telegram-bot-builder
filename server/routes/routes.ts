@@ -2395,7 +2395,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         FROM bot_users
         WHERE project_id = $1
           AND ($2::integer IS NULL OR token_id = $2)
-        GROUP BY deep_link_param
+        GROUP BY COALESCE(deep_link_param, 'direct')
         ORDER BY count DESC
         LIMIT 20
       `, [projectId, tokenId]);
