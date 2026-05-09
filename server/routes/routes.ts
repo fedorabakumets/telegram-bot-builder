@@ -2573,7 +2573,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Режим гранулярности — новый параметр
       if (granularity) {
         /**
-         * Маппинг гранулярности на SQL-параметры.
+         * Маппинг гранулярности на SQL-параметры для активности сообщений.
+         * 1m  — последний час с шагом 1 минута (60 точек)
+         * 5m  — последние 3 часа с шагом 5 минут (36 точек)
+         * 1h  — последние 24 часа с шагом 1 час (24 точки)
+         * 1d  — последние 30 дней с шагом 1 день (30 точек)
+         * 7d  — последние 13 недель с шагом 1 неделя (~13 точек)
+         * 30d — последние 12 месяцев с шагом 1 месяц (12 точек)
          * fillGaps=true означает заполнение пустых интервалов нулями через generate_series.
          */
         const granularityConfig: Record<string, { window: string; truncate: string | null; step: string; fillGaps: boolean }> = {
@@ -2581,8 +2587,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           "5m":  { window: "3 hours",  truncate: null,     step: "5 minutes", fillGaps: true },
           "1h":  { window: "24 hours", truncate: "hour",   step: "1 hour",    fillGaps: true },
           "1d":  { window: "30 days",  truncate: "day",    step: "1 day",     fillGaps: true },
-          "7d":  { window: "90 days",  truncate: "day",    step: "1 day",     fillGaps: true },
-          "30d": { window: "180 days", truncate: "day",    step: "1 day",     fillGaps: true },
+          "7d":  { window: "91 days",  truncate: "week",   step: "1 week",    fillGaps: true },
+          "30d": { window: "365 days", truncate: "month",  step: "1 month",   fillGaps: true },
         };
         const cfg = granularityConfig[granularity] ?? granularityConfig["1d"];
 
