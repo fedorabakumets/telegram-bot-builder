@@ -3,7 +3,6 @@
  * @description Отображает Select с иконкой папки, аналогично BotTokenSelector
  */
 
-import { FolderOpen } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -35,23 +34,20 @@ export function ProjectSelector({
   onSelect,
 }: ProjectSelectorProps): React.JSX.Element {
   return (
-    <div className="flex items-center gap-1.5">
-      <FolderOpen className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-      <Select
-        value={String(selectedProjectId)}
-        onValueChange={(value) => onSelect(Number(value))}
-      >
-        <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px] max-w-[180px]">
-          <SelectValue placeholder="Проект" />
-        </SelectTrigger>
-        <SelectContent>
-          {projects.map((project) => (
-            <SelectItem key={project.id} value={String(project.id)}>
-              {project.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Select
+      value={String(selectedProjectId)}
+      onValueChange={(value) => onSelect(Number(value))}
+    >
+      <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px] max-w-[180px]">
+        <SelectValue placeholder="Проект" />
+      </SelectTrigger>
+      <SelectContent>
+        {projects.map((project) => (
+          <SelectItem key={project.id} value={String(project.id)}>
+            {project.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
