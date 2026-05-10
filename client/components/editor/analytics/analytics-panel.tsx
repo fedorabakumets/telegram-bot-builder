@@ -20,6 +20,7 @@ import { SourceModeToggle, SourceMode } from '@/components/editor/database/user-
 import { aggregateTopSources } from '@/components/editor/database/user-database/components/stats/source-aggregation-utils';
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
+import { useLiveInvalidate } from '@/components/editor/database/user-database/hooks/use-live-invalidate';
 
 /**
  * Пропсы компонента AnalyticsPanel
@@ -64,6 +65,9 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
   /** Токены проекта для селектора бота */
   const projectTokensInfo = useProjectTokens([projectId]);
   const tokens = projectTokensInfo[0]?.tokens ?? [];
+
+  /** Подписка на WS-события — real-time инвалидация кэша статистики и графиков */
+  useLiveInvalidate({ projectId, selectedTokenId });
 
   /** Автовыбор дефолтного токена при загрузке, если ничего не выбрано */
   useEffect(() => {
