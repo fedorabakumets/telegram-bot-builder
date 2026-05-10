@@ -17,6 +17,7 @@ import { ChartModeToggle, ChartMode } from './chart-mode-toggle';
 import { ChartTypeToggle, ChartType } from './chart-type-toggle';
 import { SourceModeToggle, SourceMode } from './source-mode-toggle';
 import { aggregateTopSources } from './source-aggregation-utils';
+import { AnalyticsSourcesChart } from '@/components/editor/analytics/analytics-sources-chart';
 
 /**
  * Пропсы компонента StatsDashboard
@@ -179,7 +180,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         ]}
       />
 
-      {/* Карточка: источники трафика */}
+      {/* Карточка: источники трафика — donut */}
       <StatDonutCard
         title="Источники трафика"
         items={sourceItems}
@@ -191,6 +192,14 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         title="Языки"
         items={languageItems}
       />
+
+      {/* График источников трафика по времени (bar/line) — на всю ширину */}
+      <div className="sm:col-span-2">
+        <AnalyticsSourcesChart
+          projectId={projectId}
+          selectedTokenId={selectedTokenId}
+        />
+      </div>
     </div>
   );
 }
