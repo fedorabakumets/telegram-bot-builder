@@ -1,10 +1,8 @@
 /**
  * @fileoverview Компонент переключателя статуса пользователя
- * @description Позволяет включать/выключать активность пользователя
+ * @description Переключатель активности/блокировки — скрыт из UI (данные сохраняются)
  */
 
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { UserBotData } from '@shared/schema';
 
 /**
@@ -18,32 +16,14 @@ interface UserStatusToggleProps {
 }
 
 /**
- * Компонент переключателя статуса
+ * Компонент переключателя статуса — скрыт из UI
  * @param props - Пропсы компонента
- * @returns JSX компонент переключателя
+ * @returns Пустой фрагмент
  */
 export function UserStatusToggle({
-  selectedUser,
-  handleUserStatusToggle,
+  selectedUser: _selectedUser,
+  handleUserStatusToggle: _handleUserStatusToggle,
 }: UserStatusToggleProps): React.JSX.Element {
-  return (
-    <div>
-      <Label className="text-sm font-medium">Статус пользователя</Label>
-      <div className="mt-2">
-        <div className="flex items-center space-x-2">
-          <Switch
-            checked={Boolean(selectedUser.isActive)}
-            onCheckedChange={() => handleUserStatusToggle(selectedUser, 'isActive')}
-          />
-          <Label>Активен</Label>
-          <span className="text-xs text-muted-foreground ml-2">
-            (пользователь может взаимодействовать с ботом)
-          </span>
-        </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          Вы можете деактивировать пользователя, если нужно временно ограничить его доступ к боту.
-        </p>
-      </div>
-    </div>
-  );
+  // Активен/Заблокирован скрыто из UI — поля is_active, is_blocked продолжают писаться в БД
+  return <></>;
 }
