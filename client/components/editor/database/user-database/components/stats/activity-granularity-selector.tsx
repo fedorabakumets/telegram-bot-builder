@@ -26,7 +26,7 @@ const GRANULARITY_LABELS: Record<Granularity, string> = {
   '5m':  '3ч',
   '1h':  '24ч',
   '1d':  '30д',
-  '7d':  '13н',
+  '7d':  '12н',
   '30d': '12м',
 };
 
