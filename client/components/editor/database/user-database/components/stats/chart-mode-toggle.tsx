@@ -1,11 +1,11 @@
 /**
  * @fileoverview Переключатель режима графика: за период / накопительно
- * @description Две кнопки — BarChart2 (за период) и TrendingUp (накопительно),
+ * @description Две кнопки — CalendarDays (за период) и TrendingUp (накопительно),
  *              стиль совпадает с ActivityGranularitySelector.
  */
 
 import React from 'react';
-import { BarChart2, TrendingUp } from 'lucide-react';
+import { CalendarDays, TrendingUp } from 'lucide-react';
 
 /**
  * Режим отображения графика
@@ -26,8 +26,8 @@ export interface ChartModeToggleProps {
  * Конфигурация кнопок переключателя
  */
 const MODES: Array<{ mode: ChartMode; title: string; Icon: React.ElementType }> = [
-  { mode: 'period',     title: 'За период',    Icon: BarChart2   },
-  { mode: 'cumulative', title: 'Накопительно', Icon: TrendingUp  },
+  { mode: 'period',     title: 'За период',    Icon: CalendarDays },
+  { mode: 'cumulative', title: 'Накопительно', Icon: TrendingUp   },
 ];
 
 /**
