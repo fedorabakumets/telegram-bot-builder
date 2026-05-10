@@ -212,7 +212,7 @@ export function SparklineChart({
                 stackId="sources"
                 fill={line.color}
                 fillOpacity={idx === 0 ? 0.9 : 0.75}
-                barSize={4}
+                maxBarSize={20}
                 radius={idx === multiLineData.length - 1 ? [2, 2, 0, 0] : [0, 0, 0, 0]}
                 isAnimationActive={false}
               />
@@ -318,7 +318,7 @@ export function SparklineChart({
           <Bar
             dataKey="count"
             fill={`url(#${gradientId})`}
-            barSize={4}
+            maxBarSize={20}
             radius={[2, 2, 0, 0]}
             isAnimationActive={false}
           />

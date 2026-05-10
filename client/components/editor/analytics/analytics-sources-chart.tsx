@@ -221,7 +221,7 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
               cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
             {visibleData.map((line, idx) => (
               <Bar key={line.name} dataKey={line.name} stackId="sources" fill={line.color}
-                fillOpacity={0.85} isAnimationActive={false}
+                fillOpacity={0.85} isAnimationActive={false} maxBarSize={20}
                 radius={idx === visibleData.length - 1 ? [2, 2, 0, 0] : [0, 0, 0, 0]} />
             ))}
           </BarChart>
