@@ -132,9 +132,9 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
         />
       )}
 
-      {/* Интерактивная легенда */}
+      {/* Интерактивная легенда — pill-кнопки */}
       {multiLineData.length > 0 && (
-        <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {multiLineData.map((line) => {
             const hidden = hiddenSources.has(line.name);
             const count = line.data.reduce((s, p) => s + p.count, 0);
@@ -143,14 +143,23 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
                 key={line.name}
                 type="button"
                 onClick={() => toggleSource(line.name)}
-                className="flex items-center gap-1 cursor-pointer"
+                className={[
+                  'flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-medium transition-all',
+                  hidden
+                    ? 'border-border/40 text-muted-foreground/50 bg-transparent line-through'
+                    : 'border-transparent text-foreground',
+                ].join(' ')}
+                style={hidden ? {} : {
+                  backgroundColor: `${line.color}18`,
+                  borderColor: `${line.color}50`,
+                }}
               >
                 <span
-                  className="w-2 h-2 rounded-full shrink-0"
+                  className="w-2 h-2 rounded-full shrink-0 transition-colors"
                   style={{ backgroundColor: hidden ? '#6b7280' : line.color }}
                 />
-                <span className={`text-xs ${hidden ? 'opacity-40' : ''}`}>{line.name}</span>
-                <span className={`text-xs text-muted-foreground ${hidden ? 'opacity-40' : ''}`}>{count}</span>
+                {line.name}
+                <span className="tabular-nums opacity-70">{count}</span>
               </button>
             );
           })}
