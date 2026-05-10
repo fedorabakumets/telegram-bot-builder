@@ -1,7 +1,7 @@
 /**
  * @fileoverview Компонент аватарки бота
  *
- * Отображает аватарку бота через серверный прокси.
+ * Отображает аватарку бота через серверный прокси с передачей tokenId.
  * Fallback — инициалы или иконка бота.
  *
  * @module BotAvatar
@@ -23,22 +23,26 @@ interface BotAvatarProps {
   className?: string;
   /** ID проекта для прокси аватарки */
   projectId?: number;
+  /** ID токена бота — передаётся в запрос чтобы сервер использовал правильный токен */
+  tokenId?: number;
   /** ID бота (не используется, оставлен для совместимости) */
   botId?: string;
 }
 
 /**
- * Аватарка бота — загружает через серверный прокси /api/projects/:id/users/bot/avatar
+ * Аватарка бота — загружает через серверный прокси /api/projects/:id/users/bot/avatar?tokenId=:tokenId
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function BotAvatar({ photoUrl, botName, size = 40, className = '', projectId }: BotAvatarProps) {
+export function BotAvatar({ photoUrl, botName, size = 40, className = '', projectId, tokenId }: BotAvatarProps) {
   /** Флаг наличия фото — true если photoUrl не пустой */
   const hasPhoto = !!photoUrl && !!projectId;
 
   /** Стабилизируем URL — не сбрасываем при рефетче */
   const stableRef = useRef<string | null>(null);
-  const proxyUrl = hasPhoto ? `/api/projects/${projectId}/users/bot/avatar` : null;
+  const proxyUrl = hasPhoto
+    ? `/api/projects/${projectId}/users/bot/avatar${tokenId ? `?tokenId=${tokenId}` : ''}`
+    : null;
   if (proxyUrl) stableRef.current = proxyUrl;
   const resolvedUrl = proxyUrl || stableRef.current;
 
