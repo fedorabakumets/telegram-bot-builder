@@ -81,7 +81,7 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
   return (
     <div className={`bg-background border rounded-xl p-3 flex flex-col gap-2 min-w-0 ${className ?? ''}`}>
       {/* Заголовок карточки */}
-      <p className="text-xs font-medium text-muted-foreground">{title}</p>
+      <p className="text-sm font-medium text-foreground">{title}</p>
 
       {isEmpty ? (
         /* Пустое состояние */
