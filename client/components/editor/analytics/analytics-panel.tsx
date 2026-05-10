@@ -22,6 +22,7 @@ import { aggregateTopSources } from '@/components/editor/database/user-database/
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useLiveInvalidate } from '@/components/editor/database/user-database/hooks/use-live-invalidate';
+import { AnalyticsSourcesChart } from './analytics-sources-chart';
 
 /**
  * Пропсы компонента AnalyticsPanel
@@ -185,6 +186,12 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
               }
             />
           </div>
+
+          {/* График источников трафика */}
+          <AnalyticsSourcesChart
+            projectId={projectId}
+            selectedTokenId={selectedTokenId}
+          />
 
           {/* 3 donut-карточки */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

@@ -4,3 +4,4 @@
  */
 
 export * from './analytics-panel';
+export * from './analytics-sources-chart';
