@@ -99,13 +99,15 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
   const { stats, refetchStats } = useStats({ projectId, selectedTokenId });
   const { points: growthPoints, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
   const { points: sourcePoints } = useGrowthBySource({ projectId, selectedTokenId, granularity: growthGranularity });
-  const { languages } = useTraffic({ projectId, selectedTokenId });
+  const { languages, sources } = useTraffic({ projectId, selectedTokenId });
   const { points: messagePoints, weeklyMessages } = useMessagesActivity({ projectId, selectedTokenId, granularity: msgGranularity });
 
   const total = stats.totalUsers ?? 0;
   const growthTrend = weeklyGrowth > 0 ? 'up' : weeklyGrowth < 0 ? 'down' : 'neutral';
   const multiLineData = aggregateTopSources(sourcePoints, 5);
 
+  /** Элементы для donut-карточки источников трафика */
+  const sourceItems = sources.map(s => ({ label: s.param, count: s.count, percentage: s.percentage }));
   /** Элементы для donut-карточки языков */
   const languageItems = languages.map(l => ({ label: l.code, count: l.count, percentage: l.percentage }));
   /** Элементы для donut-карточки статуса */
@@ -192,11 +194,14 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
             <StatDonutCard title="Языки" items={languageItems} />
           </div>
 
-          {/* Строка 3: источники трафика — полная ширина */}
-          <AnalyticsSourcesChart
-            projectId={projectId}
-            selectedTokenId={selectedTokenId}
-          />
+          {/* Строка 3: источники трафика — stacked bar + donut */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <AnalyticsSourcesChart
+              projectId={projectId}
+              selectedTokenId={selectedTokenId}
+            />
+            <StatDonutCard title="Источники трафика" items={sourceItems} />
+          </div>
         </div>
       </ScrollArea>
     </div>
