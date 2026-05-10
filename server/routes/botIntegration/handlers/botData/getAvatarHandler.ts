@@ -62,14 +62,19 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                             `https://api.telegram.org/bot${tokenToUse.token}/getMe`
                         );
                         const getMeData = await getMeResp.json();
-                        if (!getMeResp.ok || !getMeData.result?.id) return null;
+                        if (!getMeResp.ok || !getMeData.result?.id) {
+                            console.warn('[avatar] getMe failed:', getMeData);
+                            return null;
+                        }
                         const botUserId = getMeData.result.id;
+                        console.log(`[avatar] fetching photos for bot user_id=${botUserId}`);
 
                         const photoResp = await fetchWithProxy(
                             `https://api.telegram.org/bot${tokenToUse.token}/getUserProfilePhotos`,
                             { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: botUserId, limit: 1 }) }
                         );
                         const photoData = await photoResp.json();
+                        console.log(`[avatar] getUserProfilePhotos result: ok=${photoResp.ok}, total_count=${photoData.result?.total_count}`);
                         if (photoResp.ok && photoData.result?.total_count > 0) {
                             const freshFileId = photoData.result.photos[0].at(-1).file_id;
                             await pool.query('UPDATE bot_tokens SET bot_photo_url = $1 WHERE id = $2', [freshFileId, tokenToUse.id]);
