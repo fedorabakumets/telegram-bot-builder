@@ -152,7 +152,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
       {/* Контент */}
       <ScrollArea className="flex-1">
         <div className="p-4 flex flex-col gap-4">
-          {/* Строка 1: прирост пользователей + статус */}
+          {/* Строка 1: прирост пользователей + активность сообщений */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <StatMetricCard
               title="Всего пользователей"
@@ -174,11 +174,6 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
                 </div>
               }
             />
-            <StatDonutCard title="Premium" items={statusItems} className="h-full" />
-          </div>
-
-          {/* Строка 2: активность сообщений + языки */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <StatMetricCard
               title="Активность"
               value={stats.totalInteractions}
@@ -199,6 +194,11 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
                 </div>
               }
             />
+          </div>
+
+          {/* Строка 2: Premium + языки */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <StatDonutCard title="Premium" items={statusItems} className="h-full" />
             <StatDonutCard title="Языки" items={languageItems} className="h-full" />
           </div>
 
