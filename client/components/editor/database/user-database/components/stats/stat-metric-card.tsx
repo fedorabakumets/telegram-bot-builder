@@ -53,7 +53,6 @@ export interface StatMetricCardProps {
    */
   stackHeader?: boolean;
 }
-}
 
 /**
  * Форматирует число компактно: 1.2K, 3.4M и т.д.
