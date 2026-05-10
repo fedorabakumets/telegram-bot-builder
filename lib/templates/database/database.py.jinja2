@@ -258,7 +258,7 @@ async def save_user_to_db(user_id: int, username: str = None, first_name: str = 
                     "languageCode": language_code,
                     "deepLinkParam": deep_link_param,
                     "referrerId": referrer_id,
-                    "registeredAt": datetime.utcnow().isoformat(),
+                    "registeredAt": datetime.now(datetime.UTC).isoformat(),
                 }, ensure_ascii=False)
                 await _redis_client.publish(
                     f"bot:user:{PROJECT_ID}:{TOKEN_ID}",
