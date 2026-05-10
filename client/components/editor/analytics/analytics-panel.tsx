@@ -18,6 +18,8 @@ import { GrowthGranularitySelector } from '@/components/editor/database/user-dat
 import { ChartModeToggle, ChartMode } from '@/components/editor/database/user-database/components/stats/chart-mode-toggle';
 import { SourceModeToggle, SourceMode } from '@/components/editor/database/user-database/components/stats/source-mode-toggle';
 import { aggregateTopSources } from '@/components/editor/database/user-database/components/stats/source-aggregation-utils';
+import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
+import { useProjectTokens } from '@/hooks/use-project-tokens';
 
 /**
  * Пропсы компонента AnalyticsPanel
@@ -47,7 +49,7 @@ function pct(count: number, total: number): number {
  * @param props - Пропсы компонента
  * @returns JSX элемент панели аналитики
  */
-export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken: _onSelectToken }: AnalyticsPanelProps): React.JSX.Element {
+export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: AnalyticsPanelProps): React.JSX.Element {
   /** Гранулярность графика прироста */
   const [growthGranularity, setGrowthGranularity] = useState<GrowthGranularity>('1d');
   /** Гранулярность графика активности */
@@ -58,6 +60,10 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken: _onS
   const [activityMode, setActivityMode] = useState<ChartMode>('period');
   /** Режим отображения источников: общий или по источникам */
   const [sourceMode, setSourceMode] = useState<SourceMode>('total');
+
+  /** Токены проекта для селектора бота */
+  const projectTokensInfo = useProjectTokens([projectId]);
+  const tokens = projectTokensInfo[0]?.tokens ?? [];
 
   const { stats, refetchStats } = useStats({ projectId, selectedTokenId });
   const { points: growthPoints, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
@@ -93,10 +99,19 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken: _onS
             <p className="text-xs text-muted-foreground mt-0.5">Статистика и рост аудитории</p>
           </div>
         </div>
-        <Button size="sm" variant="outline" className="gap-1.5" onClick={() => refetchStats()}>
-          <RefreshCw className="h-4 w-4" />
-          Обновить
-        </Button>
+        <div className="flex items-center gap-2">
+          {tokens.length > 0 && (
+            <BotTokenSelector
+              tokens={tokens}
+              selectedTokenId={selectedTokenId ?? null}
+              onSelect={(id) => onSelectToken?.(id)}
+            />
+          )}
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => refetchStats()}>
+            <RefreshCw className="h-4 w-4" />
+            Обновить
+          </Button>
+        </div>
       </div>
 
       {/* Контент */}
