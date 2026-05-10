@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Check, X } from 'lucide-react';
 import { GrowthGranularity } from '@/components/editor/database/user-database/hooks/queries/use-growth';
 import { useGrowthBySource } from '@/components/editor/database/user-database/hooks/queries/use-growth-by-source';
 import { aggregateTopSources } from '@/components/editor/database/user-database/components/stats/source-aggregation-utils';
@@ -146,7 +147,7 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
                 className={[
                   'flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-medium transition-all',
                   hidden
-                    ? 'border-border/40 text-muted-foreground/50 bg-transparent line-through'
+                    ? 'border-border/40 text-muted-foreground/50 bg-transparent'
                     : 'border-transparent text-foreground',
                 ].join(' ')}
                 style={hidden ? {} : {
@@ -154,10 +155,10 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
                   borderColor: `${line.color}50`,
                 }}
               >
-                <span
-                  className="w-2 h-2 rounded-full shrink-0 transition-colors"
-                  style={{ backgroundColor: hidden ? '#6b7280' : line.color }}
-                />
+                {hidden
+                  ? <X className="w-3 h-3 shrink-0 text-muted-foreground/50" />
+                  : <Check className="w-3 h-3 shrink-0" style={{ color: line.color }} />
+                }
                 {line.name}
                 <span className="tabular-nums opacity-70">{count}</span>
               </button>
