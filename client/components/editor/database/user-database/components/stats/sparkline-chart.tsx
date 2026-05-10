@@ -2,7 +2,7 @@
  * @fileoverview Sparkline-график прироста пользователей на базе recharts
  * @description BarChart для минутных данных, AreaChart с точками для часовых,
  *              AreaChart без точек для дневных/недельных/месячных периодов.
- *              Поддержка multi-line режима для отображения нескольких источников.
+ *              Поддержка multi-line режима и ручного переключателя типа графика.
  */
 
 import React from 'react';
@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import { GrowthPoint } from '../../hooks/queries/use-growth';
 import { fmtTick, fmtTooltipDate, getTickIndices, toCumulative } from './sparkline-utils';
+import { ChartType } from './chart-type-toggle';
 
 /**
  * Данные для одной линии в multi-line режиме
@@ -49,6 +50,12 @@ export interface SparklineChartProps {
   cumulative?: boolean;
   /** Высота графика в пикселях (по умолчанию 80) */
   height?: number;
+  /**
+   * Явный тип графика: 'bar' — столбчатый, 'line' — линейный (Area).
+   * Если не задан — тип выбирается автоматически по гранулярности.
+   * cumulative всегда принудительно использует AreaChart.
+   */
+  chartType?: ChartType;
 }
 
 /** Общий отступ графика */
@@ -144,6 +151,7 @@ export function SparklineChart({
   granularity,
   cumulative,
   height = 80,
+  chartType,
 }: SparklineChartProps): React.JSX.Element | null {
   // Multi-line режим
   if (multiLineData && multiLineData.length > 0) {
@@ -169,7 +177,15 @@ export function SparklineChart({
     const tickIndices = getTickIndices(chartData.length);
     const tickValues = tickIndices.map(i => chartData[i].date);
     const TooltipContent = renderTooltip(granularity, true);
-    const isMultiBar = !cumulative && (granularity === '1m' || granularity === '5m');
+
+    /**
+     * Определяем тип графика для multi-line:
+     * - cumulative всегда Area
+     * - явный chartType перекрывает автоматику
+     * - автоматика: 1m|5m → Bar, иначе → Area
+     */
+    const autoBar = !cumulative && (granularity === '1m' || granularity === '5m');
+    const isMultiBar = !cumulative && (chartType === 'bar' || (chartType === undefined && autoBar));
 
     /** Stacked bar chart для коротких гранулярностей (1м, 5м) */
     if (isMultiBar) {
@@ -258,9 +274,15 @@ export function SparklineChart({
   const tickIndices = getTickIndices(chartData.length);
   const tickValues = tickIndices.map(i => chartData[i].date);
 
-  /** В накопительном режиме всегда AreaChart; иначе — по гранулярности */
-  const isBar = !cumulative && (granularity === '1m' || granularity === '5m');
-  const showDots = !cumulative && granularity === '1h';
+  /**
+   * Определяем тип графика для single-line:
+   * - cumulative всегда Area
+   * - явный chartType перекрывает автоматику
+   * - автоматика: 1m|5m → Bar, иначе → Area
+   */
+  const autoBar = !cumulative && (granularity === '1m' || granularity === '5m');
+  const isBar = !cumulative && (chartType === 'bar' || (chartType === undefined && autoBar));
+  const showDots = !isBar && !cumulative && granularity === '1h';
 
   /** Компонент tooltip — создаётся один раз на рендер */
   const TooltipContent = renderTooltip(granularity, false);

@@ -14,6 +14,7 @@ import { StatDonutCard } from './stat-donut-card';
 import { ActivityGranularitySelector } from './activity-granularity-selector';
 import { GrowthGranularitySelector } from './growth-granularity-selector';
 import { ChartModeToggle, ChartMode } from './chart-mode-toggle';
+import { ChartTypeToggle, ChartType } from './chart-type-toggle';
 import { SourceModeToggle, SourceMode } from './source-mode-toggle';
 import { aggregateTopSources } from './source-aggregation-utils';
 
@@ -71,6 +72,12 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   /** Режим графика "Активность": за период или накопительно */
   const [activityMode, setActivityMode] = useState<ChartMode>('period');
 
+  /** Тип графика прироста: столбчатый или линейный */
+  const [growthChartType, setGrowthChartType] = useState<ChartType>('line');
+
+  /** Тип графика активности: столбчатый или линейный */
+  const [activityChartType, setActivityChartType] = useState<ChartType>('line');
+
   /** Режим отображения прироста: общий или по источникам */
   const [sourceMode, setSourceMode] = useState<SourceMode>('total');
 
@@ -125,6 +132,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
         cumulative={growthMode === 'cumulative'}
         chartGranularity={growthGranularity}
+        chartType={growthChartType}
         headerExtra={
           <div className="flex items-center gap-1.5">
             <GrowthGranularitySelector
@@ -132,6 +140,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
               onChange={setGrowthGranularity}
             />
             <ChartModeToggle value={growthMode} onChange={setGrowthMode} />
+            <ChartTypeToggle value={growthChartType} onChange={setGrowthChartType} />
             <SourceModeToggle value={sourceMode} onChange={setSourceMode} />
           </div>
         }
@@ -148,6 +157,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         lineColor="#10b981"
         chartGranularity={msgGranularity}
         cumulative={activityMode === 'cumulative'}
+        chartType={activityChartType}
         headerExtra={
           <div className="flex items-center gap-1.5">
             <ActivityGranularitySelector
@@ -155,6 +165,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
               onChange={setMsgGranularity}
             />
             <ChartModeToggle value={activityMode} onChange={setActivityMode} />
+            <ChartTypeToggle value={activityChartType} onChange={setActivityChartType} />
           </div>
         }
       />

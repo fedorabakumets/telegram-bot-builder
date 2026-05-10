@@ -17,6 +17,7 @@ import { StatMetricCard, StatDonutCard } from '@/components/editor/database/user
 import { ActivityGranularitySelector } from '@/components/editor/database/user-database/components/stats/activity-granularity-selector';
 import { GrowthGranularitySelector } from '@/components/editor/database/user-database/components/stats/growth-granularity-selector';
 import { ChartModeToggle, ChartMode } from '@/components/editor/database/user-database/components/stats/chart-mode-toggle';
+import { ChartTypeToggle, ChartType } from '@/components/editor/database/user-database/components/stats/chart-type-toggle';
 import { SourceModeToggle, SourceMode } from '@/components/editor/database/user-database/components/stats/source-mode-toggle';
 import { aggregateTopSources } from '@/components/editor/database/user-database/components/stats/source-aggregation-utils';
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
@@ -62,6 +63,10 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
   const [growthMode, setGrowthMode] = useState<ChartMode>('period');
   /** Режим графика активности: за период или накопительно */
   const [activityMode, setActivityMode] = useState<ChartMode>('period');
+  /** Тип графика прироста: столбчатый или линейный */
+  const [growthChartType, setGrowthChartType] = useState<ChartType>('line');
+  /** Тип графика активности: столбчатый или линейный */
+  const [activityChartType, setActivityChartType] = useState<ChartType>('line');
   /** Режим отображения источников: общий или по источникам */
   const [sourceMode, setSourceMode] = useState<SourceMode>('total');
 
@@ -159,10 +164,12 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
               cumulative={growthMode === 'cumulative'}
               chartGranularity={growthGranularity}
               chartHeight={160}
+              chartType={growthChartType}
               headerExtra={
                 <div className="flex items-center gap-1.5">
                   <GrowthGranularitySelector value={growthGranularity} onChange={handleGrowthGranularityChange} />
                   <ChartModeToggle value={growthMode} onChange={setGrowthMode} />
+                  <ChartTypeToggle value={growthChartType} onChange={setGrowthChartType} />
                   <SourceModeToggle value={sourceMode} onChange={setSourceMode} />
                 </div>
               }
@@ -183,10 +190,12 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
               cumulative={activityMode === 'cumulative'}
               chartGranularity={msgGranularity}
               chartHeight={160}
+              chartType={activityChartType}
               headerExtra={
                 <div className="flex items-center gap-1.5">
                   <ActivityGranularitySelector value={msgGranularity} onChange={setMsgGranularity} />
                   <ChartModeToggle value={activityMode} onChange={setActivityMode} />
+                  <ChartTypeToggle value={activityChartType} onChange={setActivityChartType} />
                 </div>
               }
             />

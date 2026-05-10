@@ -2,6 +2,7 @@
  * @fileoverview Числовая карточка статистики с Railway-стилем sparkline
  * @description Отображает заголовок, большое число, subtitle и график на всю ширину.
  *              Поддержка multi-line графиков с легендой для источников трафика.
+ *              Поддержка ручного переключателя типа графика (bar/line).
  */
 
 import React from 'react';
@@ -9,6 +10,7 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { GrowthPoint } from '../../hooks/queries/use-growth';
 import { SparklineChart, MultiLineData } from './sparkline-chart';
 import { SourceLegend } from './source-legend';
+import { ChartType } from './chart-type-toggle';
 
 /**
  * Пропсы компонента StatMetricCard
@@ -40,6 +42,11 @@ export interface StatMetricCardProps {
   cumulative?: boolean;
   /** Высота графика в пикселях (по умолчанию 80) */
   chartHeight?: number;
+  /**
+   * Явный тип графика: 'bar' — столбчатый, 'line' — линейный.
+   * Если не задан — тип выбирается автоматически по гранулярности.
+   */
+  chartType?: ChartType;
 }
 
 /**
@@ -85,6 +92,7 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
     chartGranularity,
     cumulative,
     chartHeight,
+    chartType,
   } = props;
   const fmt = formatValue ?? defaultFormat;
   const displayValue = value !== undefined ? fmt(value) : '—';
@@ -127,6 +135,7 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
           granularity={chartGranularity}
           cumulative={cumulative}
           height={chartHeight}
+          chartType={chartType}
         />
       )}
 
