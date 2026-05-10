@@ -92,12 +92,12 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
 
         <span className="text-border/60 hidden sm:inline">·</span>
 
-        {/* Переключатель БД */}
-        <DatabaseToggle
+        {/* Переключатель БД — скрыт из UI (функционал сохранён) */}
+        {/* <DatabaseToggle
           isDatabaseEnabled={isDatabaseEnabled}
           onToggle={(checked) => toggleDatabaseMutation.mutate(checked)}
           isPending={toggleDatabaseMutation.isPending}
-        />
+        /> */}
 
         {/* Кнопка удалить — только когда БД включена */}
         {isDatabaseEnabled && (
