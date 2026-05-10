@@ -39,6 +39,8 @@ export interface BroadcastPanelProps {
   projectId: number;
   /** Идентификатор выбранного токена (опционально) */
   selectedTokenId?: number | null;
+  /** Обработчик выбора токена */
+  onSelectToken?: (tokenId: number | null) => void;
 }
 
 /**

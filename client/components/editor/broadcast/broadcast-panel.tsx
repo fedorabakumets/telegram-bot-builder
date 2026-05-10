@@ -14,6 +14,8 @@ import { BroadcastDetail } from './components/broadcast-detail';
 import { BroadcastPagination } from './components/broadcast-pagination';
 import { NewBroadcastModal } from './wizard/new-broadcast-modal';
 import { useBroadcasts } from './hooks/use-broadcasts';
+import { useProjectTokens } from '@/hooks/use-project-tokens';
+import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
 import type { BroadcastPanelProps, Broadcast } from './types';
 
 /** Количество рассылок на одной странице */
@@ -24,10 +26,23 @@ const PAGE_LIMIT = 20;
  * @param props - Свойства компонента
  * @returns JSX элемент панели рассылок
  */
-export function BroadcastPanel({ projectId, selectedTokenId }: BroadcastPanelProps) {
+export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken }: BroadcastPanelProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
   const [page, setPage] = useState(1);
+
+  /** Токены проекта для селектора бота */
+  const projectTokensInfo = useProjectTokens([projectId]);
+  const tokens = projectTokensInfo[0]?.tokens ?? [];
+
+  /** Автовыбор дефолтного токена при загрузке, если ничего не выбрано */
+  useEffect(() => {
+    if (tokens.length === 0) return;
+    const alreadySelected = tokens.some((t) => t.id === selectedTokenId);
+    if (alreadySelected) return;
+    const next = tokens.find((t) => t.isDefault === 1) ?? tokens[0];
+    onSelectToken?.(next?.id ?? null);
+  }, [tokens, selectedTokenId, onSelectToken]);
 
   const { broadcasts, total, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId, page);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_LIMIT));
@@ -67,6 +82,13 @@ export function BroadcastPanel({ projectId, selectedTokenId }: BroadcastPanelPro
               {total > 0 ? `${total} рассыл${total === 1 ? 'ка' : total < 5 ? 'ки' : 'ок'}` : 'Нет рассылок'}
             </p>
           </div>
+          {tokens.length > 0 && (
+            <BotTokenSelector
+              tokens={tokens}
+              selectedTokenId={selectedTokenId ?? null}
+              onSelect={(id) => onSelectToken?.(id)}
+            />
+          )}
         </div>
         <Button size="sm" className="gap-1.5" onClick={() => setModalOpen(true)}>
           <Plus className="h-4 w-4" />

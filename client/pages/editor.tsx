@@ -1488,6 +1488,7 @@ export default function Editor() {
               <BroadcastPanel
                 projectId={activeProject.id}
                 selectedTokenId={selectedDatabaseTokenId}
+                onSelectToken={setSelectedDatabaseTokenId}
               />
             </div>
           )}
@@ -1820,6 +1821,7 @@ export default function Editor() {
                   <BroadcastPanel
                     projectId={activeProject.id}
                     selectedTokenId={selectedDatabaseTokenId}
+                    onSelectToken={setSelectedDatabaseTokenId}
                   />
                 </div>
               ) : currentTab === 'analytics' ? (
