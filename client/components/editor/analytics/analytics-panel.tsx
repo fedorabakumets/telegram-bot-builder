@@ -166,7 +166,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
               chartHeight={160}
               chartType={growthChartType}
               headerExtra={
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1">
                   <GrowthGranularitySelector value={growthGranularity} onChange={handleGrowthGranularityChange} />
                   <ChartModeToggle value={growthMode} onChange={setGrowthMode} />
                   <ChartTypeToggle value={growthChartType} onChange={setGrowthChartType} />
@@ -187,7 +187,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
               chartHeight={160}
               chartType={activityChartType}
               headerExtra={
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1">
                   <ActivityGranularitySelector value={msgGranularity} onChange={setMsgGranularity} />
                   <ChartModeToggle value={activityMode} onChange={setActivityMode} />
                   <ChartTypeToggle value={activityChartType} onChange={setActivityChartType} />

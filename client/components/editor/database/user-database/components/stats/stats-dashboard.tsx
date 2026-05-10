@@ -122,82 +122,75 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   const multiLineData = sourceMode === 'by-source' ? aggregateTopSources(sourcePoints, 5) : undefined;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
-      {/* Карточка: всего пользователей со sparkline */}
-      <StatMetricCard
-        title="Всего пользователей"
-        value={stats.totalUsers}
-        sparklineData={sourceMode === 'total' ? points : undefined}
-        multiLineData={multiLineData}
-        trend={growthTrend}
-        subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
-        cumulative={growthMode === 'cumulative'}
-        chartGranularity={growthGranularity}
-        chartType={growthChartType}
-        headerExtra={
-          <div className="flex items-center gap-1.5">
-            <GrowthGranularitySelector
-              value={growthGranularity}
-              onChange={setGrowthGranularity}
-            />
-            <ChartModeToggle value={growthMode} onChange={setGrowthMode} />
-            <ChartTypeToggle value={growthChartType} onChange={setGrowthChartType} />
-            <SourceModeToggle value={sourceMode} onChange={setSourceMode} />
-          </div>
-        }
+    <div className="flex flex-col gap-3 p-3">
+      {/* Строка 1: два графика рядом */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Карточка: всего пользователей со sparkline */}
+        <StatMetricCard
+          title="Всего пользователей"
+          value={stats.totalUsers}
+          sparklineData={sourceMode === 'total' ? points : undefined}
+          multiLineData={multiLineData}
+          trend={growthTrend}
+          subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
+          cumulative={growthMode === 'cumulative'}
+          chartGranularity={growthGranularity}
+          chartType={growthChartType}
+          headerExtra={
+            <div className="flex flex-wrap items-center gap-1">
+              <GrowthGranularitySelector value={growthGranularity} onChange={setGrowthGranularity} />
+              <ChartModeToggle value={growthMode} onChange={setGrowthMode} />
+              <ChartTypeToggle value={growthChartType} onChange={setGrowthChartType} />
+              <SourceModeToggle value={sourceMode} onChange={setSourceMode} />
+            </div>
+          }
+        />
+
+        {/* Карточка: активность */}
+        <StatMetricCard
+          title="Активность"
+          value={stats.totalInteractions}
+          sparklineData={messagePoints}
+          subtitle={activitySubtitle}
+          trend={weeklyMessages > 0 ? 'up' : 'neutral'}
+          gradientId="msgActivity"
+          lineColor="#10b981"
+          chartGranularity={msgGranularity}
+          cumulative={activityMode === 'cumulative'}
+          chartType={activityChartType}
+          headerExtra={
+            <div className="flex flex-wrap items-center gap-1">
+              <ActivityGranularitySelector value={msgGranularity} onChange={setMsgGranularity} />
+              <ChartModeToggle value={activityMode} onChange={setActivityMode} />
+              <ChartTypeToggle value={activityChartType} onChange={setActivityChartType} />
+            </div>
+          }
+        />
+      </div>
+
+      {/* Строка 2: график источников трафика на всю ширину */}
+      <AnalyticsSourcesChart
+        projectId={projectId}
+        selectedTokenId={selectedTokenId}
       />
 
-      {/* Карточка: активность с подписью среднего и числа ответивших */}
-      <StatMetricCard
-        title="Активность"
-        value={stats.totalInteractions}
-        sparklineData={messagePoints}
-        subtitle={activitySubtitle}
-        trend={weeklyMessages > 0 ? 'up' : 'neutral'}
-        gradientId="msgActivity"
-        lineColor="#10b981"
-        chartGranularity={msgGranularity}
-        cumulative={activityMode === 'cumulative'}
-        chartType={activityChartType}
-        headerExtra={
-          <div className="flex items-center gap-1.5">
-            <ActivityGranularitySelector
-              value={msgGranularity}
-              onChange={setMsgGranularity}
-            />
-            <ChartModeToggle value={activityMode} onChange={setActivityMode} />
-            <ChartTypeToggle value={activityChartType} onChange={setActivityChartType} />
-          </div>
-        }
-      />
-
-      {/* Карточка: Premium / не Premium */}
-      <StatDonutCard
-        title="Premium"
-        items={[
-          { label: 'Premium', count: stats.premiumUsers ?? 0, percentage: premiumPercent },
-          { label: 'Обычные', count: Math.max(0, total - (stats.premiumUsers ?? 0)), percentage: nonPremiumPercent },
-        ]}
-      />
-
-      {/* Карточка: источники трафика — donut */}
-      <StatDonutCard
-        title="Источники трафика"
-        items={sourceItems}
-        onItemClick={onSourceClick}
-      />
-
-      {/* Карточка: языки */}
-      <StatDonutCard
-        title="Языки"
-        items={languageItems}
-      />
-
-      {/* График источников трафика по времени (bar/line) — на всю ширину */}
-      <div className="sm:col-span-2">
-        <AnalyticsSourcesChart
-          projectId={projectId}
-          selectedTokenId={selectedTokenId}
+      {/* Строка 3: три donut-диаграммы */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatDonutCard
+          title="Premium"
+          items={[
+            { label: 'Premium', count: stats.premiumUsers ?? 0, percentage: premiumPercent },
+            { label: 'Обычные', count: Math.max(0, total - (stats.premiumUsers ?? 0)), percentage: nonPremiumPercent },
+          ]}
+        />
+        <StatDonutCard
+          title="Источники трафика"
+          items={sourceItems}
+          onItemClick={onSourceClick}
+        />
+        <StatDonutCard
+          title="Языки"
+          items={languageItems}
         />
       </div>
     </div>
