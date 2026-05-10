@@ -2303,7 +2303,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
     try {
       // Используем общий пул соединений для запроса к bot_users.
-      // JOIN с bot_messages убран — используем денормализованный interaction_count из bot_users.
+      // totalInteractions — COUNT(*) из bot_messages (входящие + исходящие).
       const result = await dbPool.query(`
         SELECT
           COUNT(*) as "totalUsers",
@@ -2311,9 +2311,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           COUNT(*) FILTER (WHERE is_active = 0) as "blockedUsers",
           COUNT(*) FILTER (WHERE is_premium = 1) as "premiumUsers",
           COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}') as "usersWithResponses",
-          COALESCE(SUM(interaction_count), 0) as "totalInteractions",
+          (SELECT COALESCE(COUNT(*), 0) FROM bot_messages bm
+           WHERE bm.project_id = $1
+             AND ($2::integer IS NULL OR bm.token_id = $2)) as "totalInteractions",
           CASE WHEN COUNT(*) > 0
-            THEN COALESCE(SUM(interaction_count)::float / COUNT(*), 0)
+            THEN (SELECT COALESCE(COUNT(*), 0)::float FROM bot_messages bm
+                  WHERE bm.project_id = $1
+                    AND ($2::integer IS NULL OR bm.token_id = $2)) / COUNT(*)
             ELSE 0
           END as "avgInteractionsPerUser",
           COUNT(DISTINCT language_code) FILTER (WHERE language_code IS NOT NULL) as "uniqueLanguages",
@@ -2344,8 +2348,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
             COUNT(*) FILTER (WHERE is_active = 0) as "blockedUsers",
             COUNT(*) FILTER (WHERE is_premium = 1) as "premiumUsers",
             COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}') as "usersWithResponses",
-            COALESCE(SUM(interaction_count), 0) as "totalInteractions",
-            COALESCE(AVG(interaction_count), 0) as "avgInteractionsPerUser"
+            (SELECT COALESCE(COUNT(*), 0) FROM bot_messages bm
+             WHERE bm.project_id = $1
+               AND ($2::integer IS NULL OR bm.token_id = $2)) as "totalInteractions",
+            CASE WHEN COUNT(*) > 0
+              THEN (SELECT COALESCE(COUNT(*), 0)::float FROM bot_messages bm
+                    WHERE bm.project_id = $1
+                      AND ($2::integer IS NULL OR bm.token_id = $2)) / COUNT(*)
+              ELSE 0
+            END as "avgInteractionsPerUser"
           FROM user_bot_data
           WHERE project_id = $1
             AND ($2::integer IS NULL OR token_id = $2)
