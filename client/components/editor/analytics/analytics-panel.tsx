@@ -24,6 +24,7 @@ import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useLiveInvalidate } from '@/components/editor/database/user-database/hooks/use-live-invalidate';
 import { AnalyticsSourcesChart } from './analytics-sources-chart';
 
+
 /**
  * Пропсы компонента AnalyticsPanel
  */
@@ -98,15 +99,13 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
   const { stats, refetchStats } = useStats({ projectId, selectedTokenId });
   const { points: growthPoints, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
   const { points: sourcePoints } = useGrowthBySource({ projectId, selectedTokenId, granularity: growthGranularity });
-  const { sources, languages } = useTraffic({ projectId, selectedTokenId });
+  const { languages } = useTraffic({ projectId, selectedTokenId });
   const { points: messagePoints, weeklyMessages } = useMessagesActivity({ projectId, selectedTokenId, granularity: msgGranularity });
 
   const total = stats.totalUsers ?? 0;
   const growthTrend = weeklyGrowth > 0 ? 'up' : weeklyGrowth < 0 ? 'down' : 'neutral';
   const multiLineData = aggregateTopSources(sourcePoints, 5);
 
-  /** Элементы для donut-карточки источников трафика */
-  const sourceItems = sources.map(s => ({ label: s.param, count: s.count, percentage: s.percentage }));
   /** Элементы для donut-карточки языков */
   const languageItems = languages.map(l => ({ label: l.code, count: l.count, percentage: l.percentage }));
   /** Элементы для donut-карточки статуса */
@@ -147,8 +146,8 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
       {/* Контент */}
       <ScrollArea className="flex-1">
         <div className="p-4 flex flex-col gap-4">
-          {/* 2 числовые карточки */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Строка 1: прирост пользователей + статус */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <StatMetricCard
               title="Всего пользователей"
               value={stats.totalUsers}
@@ -167,6 +166,11 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
                 </div>
               }
             />
+            <StatDonutCard title="Статус" items={statusItems} />
+          </div>
+
+          {/* Строка 2: активность сообщений + языки */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <StatMetricCard
               title="Активность"
               value={stats.totalInteractions}
@@ -185,20 +189,14 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
                 </div>
               }
             />
+            <StatDonutCard title="Языки" items={languageItems} />
           </div>
 
-          {/* График источников трафика */}
+          {/* Строка 3: источники трафика — полная ширина */}
           <AnalyticsSourcesChart
             projectId={projectId}
             selectedTokenId={selectedTokenId}
           />
-
-          {/* 3 donut-карточки */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <StatDonutCard title="Источники трафика" items={sourceItems} />
-            <StatDonutCard title="Языки" items={languageItems} />
-            <StatDonutCard title="Статус" items={statusItems} />
-          </div>
         </div>
       </ScrollArea>
     </div>
