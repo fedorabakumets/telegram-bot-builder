@@ -21,6 +21,8 @@ interface BotManagementInterfaceProps {
   projects: BotProject[];
   /** Токены по каждому проекту (индекс совпадает с projects) */
   allTokens: BotToken[][];
+  /** ID активного проекта — будет показан первым */
+  currentProjectId?: number;
 }
 
 /**
@@ -28,11 +30,22 @@ interface BotManagementInterfaceProps {
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function BotManagementInterface({ projects, allTokens }: BotManagementInterfaceProps) {
+export function BotManagementInterface({ projects, allTokens, currentProjectId }: BotManagementInterfaceProps) {
   const { setProjectForNewBot, setShowAddBot, allBotInfos, restartAllBotsMutation } = useBotControl();
 
   /** Состояние сворачивания карточек: tokenId → collapsed */
   const [collapsedState, setCollapsedState] = useState<Record<number, boolean>>({});
+
+  /**
+   * Проекты отсортированы: активный проект идёт первым
+   */
+  const sortedEntries = projects
+    .map((project, index) => ({ project, tokens: allTokens[index] || [], botInfo: allBotInfos[index] }))
+    .sort((a, b) => {
+      if (a.project.id === currentProjectId) return -1;
+      if (b.project.id === currentProjectId) return 1;
+      return 0;
+    });
 
   /**
    * Обновить состояние сворачивания одного токена
@@ -69,9 +82,7 @@ export function BotManagementInterface({ projects, allTokens }: BotManagementInt
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      {projects.map((project, projectIndex) => {
-        const projectTokens = allTokens[projectIndex] || [];
-        const projectBotInfo = allBotInfos[projectIndex];
+      {sortedEntries.map(({ project, tokens: projectTokens, botInfo: projectBotInfo }) => {
 
         /** Все ли карточки проекта свёрнуты */
         const defaultCollapsedFallback = projectTokens.length > 3;

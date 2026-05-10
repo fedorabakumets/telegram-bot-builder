@@ -107,6 +107,7 @@ export function BotControlPanel({
           <BotManagementInterface
             projects={projects}
             allTokens={allTokens}
+            currentProjectId={currentProjectId}
           />
         )}
       </div>
