@@ -32,28 +32,26 @@ export function BotControlPanelHeader({ onConnectBot, allProjects, currentProjec
   const isGuestUser = !user || isGuest(user);
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-muted/40 to-background">
-      <div className="flex items-center gap-2.5">
-        <div className="rounded-lg bg-primary/10 p-2">
-          <Bot className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <h2 className="text-base font-semibold leading-none">Боты</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Управление ботами проекта</p>
-        </div>
-        {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
-          <ProjectSelector
-            projects={allProjects}
-            selectedProjectId={currentProjectId}
-            onSelect={onProjectChange}
-          />
-        )}
+    <div className="flex items-center gap-2.5 px-6 py-4 border-b bg-gradient-to-r from-muted/40 to-background">
+      <div className="rounded-lg bg-primary/10 p-2 flex-shrink-0">
+        <Bot className="h-5 w-5 text-primary" />
       </div>
+      <div className="flex-shrink-0">
+        <h2 className="text-base font-semibold leading-none">Боты</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">Управление ботами проекта</p>
+      </div>
+      {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
+        <ProjectSelector
+          projects={allProjects}
+          selectedProjectId={currentProjectId}
+          onSelect={onProjectChange}
+        />
+      )}
       {!isGuestUser && (
         <Button
           variant="outline"
           onClick={onConnectBot}
-          className="gap-1.5 h-9 px-3 text-sm"
+          className="gap-1.5 h-9 px-3 text-sm ml-auto flex-shrink-0"
           data-testid="button-connect-bot"
         >
           <Plus className="w-4 h-4" />
