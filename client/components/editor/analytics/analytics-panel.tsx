@@ -139,18 +139,18 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
             <h2 className="text-base font-semibold leading-none">Аналитика</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Статистика и рост аудитории</p>
           </div>
-          {tokens.length > 0 && (
-            <BotTokenSelector
-              tokens={tokens}
-              selectedTokenId={selectedTokenId ?? null}
-              onSelect={(id) => onSelectToken?.(id)}
-            />
-          )}
           {allProjects && allProjects.length > 1 && onProjectChange && (
             <ProjectSelector
               projects={allProjects}
               selectedProjectId={projectId}
               onSelect={(id) => { onSelectToken?.(null); onProjectChange(id); }}
+            />
+          )}
+          {tokens.length > 0 && (
+            <BotTokenSelector
+              tokens={tokens}
+              selectedTokenId={selectedTokenId ?? null}
+              onSelect={(id) => onSelectToken?.(id)}
             />
           )}
         </div>

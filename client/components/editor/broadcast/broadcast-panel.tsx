@@ -83,18 +83,18 @@ export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allP
               {total > 0 ? `${total} рассыл${total === 1 ? 'ка' : total < 5 ? 'ки' : 'ок'}` : 'Нет рассылок'}
             </p>
           </div>
-          {tokens.length > 0 && (
-            <BotTokenSelector
-              tokens={tokens}
-              selectedTokenId={selectedTokenId ?? null}
-              onSelect={(id) => onSelectToken?.(id)}
-            />
-          )}
           {allProjects && allProjects.length > 1 && onProjectChange && (
             <ProjectSelector
               projects={allProjects}
               selectedProjectId={projectId}
               onSelect={(id) => { onSelectToken?.(null); onProjectChange(id); }}
+            />
+          )}
+          {tokens.length > 0 && (
+            <BotTokenSelector
+              tokens={tokens}
+              selectedTokenId={selectedTokenId ?? null}
+              onSelect={(id) => onSelectToken?.(id)}
             />
           )}
         </div>
