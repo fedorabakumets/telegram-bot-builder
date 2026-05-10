@@ -186,7 +186,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                 const tokenToUse = await resolveProjectBotToken(projectId, tokenId);
                 if (tokenToUse) {
                     if (isBotAvatar) {
-                        // Для бота: getMyProfilePhotos
+                        // Для бота: сначала пробуем getMyProfilePhotos → свежий file_id
                         const photoResp = await fetchWithProxy(
                             `https://api.telegram.org/bot${tokenToUse.token}/getMyProfilePhotos`,
                             { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ limit: 1 }) }
@@ -209,6 +209,29 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                             const fileData = await fileResp.json();
                             if (fileResp.ok && fileData.result?.file_path) {
                                 response = await fetchWithProxy(`https://api.telegram.org/file/bot${tokenToUse.token}/${fileData.result.file_path}`);
+                            }
+                        }
+
+                        // Fallback: если getMyProfilePhotos не помог — пробуем file_id из БД напрямую
+                        if (!response.ok) {
+                            const { Pool } = await import('pg');
+                            const pool2 = new Pool({ connectionString: process.env.DATABASE_URL });
+                            const botResult2 = await pool2.query(
+                                'SELECT bot_photo_url FROM bot_tokens WHERE id = $1',
+                                [tokenToUse.id]
+                            );
+                            await pool2.end();
+                            const storedFileId = botResult2.rows[0]?.bot_photo_url;
+                            if (storedFileId && !storedFileId.startsWith('http')) {
+                                // Это file_id — резолвим в свежий URL
+                                const fileResp = await fetchWithProxy(
+                                    `https://api.telegram.org/bot${tokenToUse.token}/getFile`,
+                                    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_id: storedFileId }) }
+                                );
+                                const fileData = await fileResp.json();
+                                if (fileResp.ok && fileData.result?.file_path) {
+                                    response = await fetchWithProxy(`https://api.telegram.org/file/bot${tokenToUse.token}/${fileData.result.file_path}`);
+                                }
                             }
                         }
                     } else {
