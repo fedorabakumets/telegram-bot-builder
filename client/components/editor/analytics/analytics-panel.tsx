@@ -1,13 +1,12 @@
 /**
  * @fileoverview Панель аналитики — статистика и рост аудитории бота
- * @description Отображает числовые карточки, график прироста и donut-диаграммы
+ * @description Отображает числовые карточки с графиками и donut-диаграммы
  */
 
 import React, { useState } from 'react';
 import { BarChart2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useStats } from '@/components/editor/database/user-database/hooks/queries/use-stats';
 import { useGrowth, GrowthGranularity } from '@/components/editor/database/user-database/hooks/queries/use-growth';
 import { useGrowthBySource } from '@/components/editor/database/user-database/hooks/queries/use-growth-by-source';
@@ -15,11 +14,10 @@ import { useTraffic } from '@/components/editor/database/user-database/hooks/que
 import { useMessagesActivity, Granularity } from '@/components/editor/database/user-database/hooks/queries/use-messages-activity';
 import { StatMetricCard, StatDonutCard } from '@/components/editor/database/user-database/components/stats';
 import { ActivityGranularitySelector } from '@/components/editor/database/user-database/components/stats/activity-granularity-selector';
+import { GrowthGranularitySelector } from '@/components/editor/database/user-database/components/stats/growth-granularity-selector';
 import { ChartModeToggle, ChartMode } from '@/components/editor/database/user-database/components/stats/chart-mode-toggle';
-import { SourceMode } from '@/components/editor/database/user-database/components/stats/source-mode-toggle';
+import { SourceModeToggle, SourceMode } from '@/components/editor/database/user-database/components/stats/source-mode-toggle';
 import { aggregateTopSources } from '@/components/editor/database/user-database/components/stats/source-aggregation-utils';
-import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
-import { AnalyticsGrowthSection } from './analytics-growth-section';
 
 /**
  * Пропсы компонента AnalyticsPanel
@@ -45,7 +43,7 @@ function pct(count: number, total: number): number {
 }
 
 /**
- * Панель аналитики: числовые карточки, график прироста, donut-диаграммы
+ * Панель аналитики: числовые карточки с графиками и donut-диаграммы
  * @param props - Пропсы компонента
  * @returns JSX элемент панели аналитики
  */
@@ -54,16 +52,18 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken: _onS
   const [growthGranularity, setGrowthGranularity] = useState<GrowthGranularity>('1d');
   /** Гранулярность графика активности */
   const [msgGranularity, setMsgGranularity] = useState<Granularity>('1d');
-  /** Режим графика прироста */
+  /** Режим графика прироста: за период или накопительно */
   const [growthMode, setGrowthMode] = useState<ChartMode>('period');
-  /** Режим отображения источников */
+  /** Режим графика активности: за период или накопительно */
+  const [activityMode, setActivityMode] = useState<ChartMode>('period');
+  /** Режим отображения источников: общий или по источникам */
   const [sourceMode, setSourceMode] = useState<SourceMode>('total');
 
   const { stats, refetchStats } = useStats({ projectId, selectedTokenId });
   const { points: growthPoints, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
   const { points: sourcePoints } = useGrowthBySource({ projectId, selectedTokenId, granularity: growthGranularity });
   const { sources, languages } = useTraffic({ projectId, selectedTokenId });
-  const { points: messagePoints } = useMessagesActivity({ projectId, selectedTokenId, granularity: msgGranularity });
+  const { points: messagePoints, weeklyMessages } = useMessagesActivity({ projectId, selectedTokenId, granularity: msgGranularity });
 
   const total = stats.totalUsers ?? 0;
   const growthTrend = weeklyGrowth > 0 ? 'up' : weeklyGrowth < 0 ? 'down' : 'neutral';
@@ -75,9 +75,9 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken: _onS
   const languageItems = languages.map(l => ({ label: l.code, count: l.count, percentage: l.percentage }));
   /** Элементы для donut-карточки статуса */
   const statusItems = [
-    { label: 'Активны',  count: stats.activeUsers ?? 0,  percentage: pct(stats.activeUsers ?? 0, total) },
-    { label: 'Заблок.',  count: stats.blockedUsers ?? 0,  percentage: pct(stats.blockedUsers ?? 0, total) },
-    { label: 'Premium',  count: stats.premiumUsers ?? 0,  percentage: pct(stats.premiumUsers ?? 0, total) },
+    { label: 'Активны', count: stats.activeUsers ?? 0, percentage: pct(stats.activeUsers ?? 0, total) },
+    { label: 'Заблок.', count: stats.blockedUsers ?? 0, percentage: pct(stats.blockedUsers ?? 0, total) },
+    { label: 'Premium', count: stats.premiumUsers ?? 0, percentage: pct(stats.premiumUsers ?? 0, total) },
   ];
 
   return (
@@ -102,14 +102,24 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken: _onS
       {/* Контент */}
       <ScrollArea className="flex-1">
         <div className="p-4 flex flex-col gap-4">
-          {/* Строка 1 — 4 числовые карточки */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* 2 числовые карточки */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <StatMetricCard
               title="Всего пользователей"
               value={stats.totalUsers}
-              sparklineData={growthPoints}
+              sparklineData={sourceMode === 'total' ? growthPoints : undefined}
+              multiLineData={sourceMode === 'by-source' ? multiLineData : undefined}
               trend={growthTrend}
               subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
+              cumulative={growthMode === 'cumulative'}
+              chartGranularity={growthGranularity}
+              headerExtra={
+                <div className="flex items-center gap-1.5">
+                  <GrowthGranularitySelector value={growthGranularity} onChange={setGrowthGranularity} />
+                  <ChartModeToggle value={growthMode} onChange={setGrowthMode} />
+                  <SourceModeToggle value={sourceMode} onChange={setSourceMode} />
+                </div>
+              }
             />
             <StatMetricCard
               title="Активность"
@@ -118,39 +128,21 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken: _onS
               lineColor="#10b981"
               gradientId="analyticsActivity"
               subtitle={stats.avgInteractionsPerUser !== undefined ? `~${stats.avgInteractionsPerUser.toFixed(1)} среднее` : undefined}
-              headerExtra={<ActivityGranularitySelector value={msgGranularity} onChange={setMsgGranularity} />}
-            />
-            <StatMetricCard
-              title="Активных"
-              value={stats.activeUsers}
-              subtitle={`${pct(stats.activeUsers ?? 0, total)}% от всех`}
-            />
-            <StatMetricCard
-              title="Premium"
-              value={stats.premiumUsers}
-              subtitle={`${pct(stats.premiumUsers ?? 0, total)}% от всех`}
+              trend={weeklyMessages > 0 ? 'up' : 'neutral'}
+              cumulative={activityMode === 'cumulative'}
+              chartGranularity={msgGranularity}
+              headerExtra={
+                <div className="flex items-center gap-1.5">
+                  <ActivityGranularitySelector value={msgGranularity} onChange={setMsgGranularity} />
+                  <ChartModeToggle value={activityMode} onChange={setActivityMode} />
+                </div>
+              }
             />
           </div>
 
-          {/* Строка 2 — Большой график прироста */}
-          <AnalyticsGrowthSection
-            growthPoints={growthPoints}
-            multiLineData={multiLineData}
-            granularity={growthGranularity}
-            onGranularityChange={setGrowthGranularity}
-            chartMode={growthMode}
-            onChartModeChange={setGrowthMode}
-            sourceMode={sourceMode}
-            onSourceModeChange={setSourceMode}
-          />
-
-          {/* Строка 3 — 3 donut-карточки */}
+          {/* 3 donut-карточки */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <StatDonutCard
-              title="Источники трафика"
-              items={sourceItems}
-              onItemClick={(label) => console.log('Источник:', label)}
-            />
+            <StatDonutCard title="Источники трафика" items={sourceItems} />
             <StatDonutCard title="Языки" items={languageItems} />
             <StatDonutCard title="Статус" items={statusItems} />
           </div>
