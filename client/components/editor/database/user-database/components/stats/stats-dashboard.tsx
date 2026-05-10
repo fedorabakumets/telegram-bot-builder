@@ -85,11 +85,18 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   const { points, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
   const { points: sourcePoints } = useGrowthBySource({ projectId, selectedTokenId, granularity: growthGranularity });
   const { sources, languages } = useTraffic({ projectId, selectedTokenId });
-  const { points: messagePoints, weeklyMessages } = useMessagesActivity({
+  const { points: messagePoints, outgoingPoints, weeklyMessages } = useMessagesActivity({
     projectId,
     selectedTokenId,
     granularity: msgGranularity,
+    split: true,
   });
+
+  /** Multi-line данные для графика активности: входящие + исходящие */
+  const activityMultiLine = [
+    { name: 'Входящие', data: messagePoints, color: '#10b981' },
+    { name: 'Исходящие', data: outgoingPoints, color: '#6366f1' },
+  ];
 
   // Определяем тренд по недельному приросту
   const growthTrend = weeklyGrowth > 0 ? 'up' : weeklyGrowth < 0 ? 'down' : 'neutral';
@@ -153,11 +160,10 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         <StatMetricCard
           title="Активность"
           value={stats.totalInteractions}
-          sparklineData={messagePoints}
+          multiLineData={activityMultiLine}
           subtitle={activitySubtitle}
           trend={weeklyMessages > 0 ? 'up' : 'neutral'}
           gradientId="msgActivity"
-          lineColor="#10b981"
           chartGranularity={msgGranularity}
           cumulative={activityMode === 'cumulative'}
           chartType={activityChartType}

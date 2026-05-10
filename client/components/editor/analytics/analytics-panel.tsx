@@ -111,7 +111,13 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
   const { points: growthPoints, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
   const { points: sourcePoints } = useGrowthBySource({ projectId, selectedTokenId, granularity: growthGranularity });
   const { languages, sources } = useTraffic({ projectId, selectedTokenId });
-  const { points: messagePoints, weeklyMessages } = useMessagesActivity({ projectId, selectedTokenId, granularity: msgGranularity });
+  const { points: messagePoints, outgoingPoints, weeklyMessages } = useMessagesActivity({ projectId, selectedTokenId, granularity: msgGranularity, split: true });
+
+  /** Multi-line данные для графика активности: входящие + исходящие */
+  const activityMultiLine = [
+    { name: 'Входящие', data: messagePoints, color: '#10b981' },
+    { name: 'Исходящие', data: outgoingPoints, color: '#6366f1' },
+  ];
 
   const total = stats.totalUsers ?? 0;
   const growthTrend = weeklyGrowth > 0 ? 'up' : weeklyGrowth < 0 ? 'down' : 'neutral';
@@ -190,8 +196,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
             <StatMetricCard
               title="Активность"
               value={stats.totalInteractions}
-              sparklineData={messagePoints}
-              lineColor="#10b981"
+              multiLineData={activityMultiLine}
               gradientId="analyticsActivity"
               subtitle={weeklyMessages > 0 ? `+${weeklyMessages} за неделю` : stats.avgInteractionsPerUser !== undefined ? `~${stats.avgInteractionsPerUser.toFixed(1)} среднее` : undefined}
               trend={weeklyMessages > 0 ? 'up' : 'neutral'}

@@ -2676,18 +2676,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
-   * Эндпоинт активности сообщений с поддержкой гранулярности
+   * Эндпоинт активности сообщений с поддержкой гранулярности и разбивки по направлению
    * @route GET /api/projects/:id/messages/activity
    * @param id - Идентификатор проекта
    * @query granularity - Гранулярность: "1m"|"5m"|"1h"|"1d"|"7d"|"30d" (новый параметр)
    * @query period - Период: "7d"|"30d"|"90d" (старый параметр, для обратной совместимости)
-   * @returns Массив объектов [{date, count}] — дата в ISO формате
+   * @query split - "true" — вернуть [{date, incoming, outgoing}] вместо [{date, count}]
+   * @returns Массив объектов [{date, count}] или [{date, incoming, outgoing}] при split=true
    */
   app.get("/api/projects/:id/messages/activity", async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     const granularity = req.query.granularity as string | undefined;
     const period = (req.query.period as string) || "30d";
+    const split = req.query.split === "true";
 
     const ownerId = getOwnerIdFromRequest(req);
     if (ownerId !== null) {
@@ -2706,7 +2708,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
          * 5m  — последние 3 часа с шагом 5 минут (36 точек)
          * 1h  — последние 24 часа с шагом 1 час (24 точки)
          * 1d  — последние 30 дней с шагом 1 день (30 точек)
-         * 7d  — последние 13 недель с шагом 1 неделя (~13 точек)
+         * 7d  — последние 12 недель с шагом 1 неделя (~12 точек)
          * 30d — последние 12 месяцев с шагом 1 месяц (12 точек)
          * fillGaps=true означает заполнение пустых интервалов нулями через generate_series.
          */
@@ -2721,6 +2723,72 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         const cfg = granularityConfig[granularity] ?? granularityConfig["1d"];
 
         let queryText: string;
+
+        if (split) {
+          // Режим split: группируем по слоту И message_type, затем pivot через FILTER
+          if (granularity === "5m") {
+            queryText = `
+              WITH series AS (
+                SELECT generate_series(
+                  DATE_TRUNC('hour', NOW() - INTERVAL '${cfg.window}'),
+                  DATE_TRUNC('hour', NOW()) + INTERVAL '55 minutes',
+                  INTERVAL '${cfg.step}'
+                ) AS slot
+              ),
+              msgs AS (
+                SELECT
+                  DATE_TRUNC('hour', created_at) + INTERVAL '5 min' * FLOOR(EXTRACT(MINUTE FROM created_at) / 5) AS slot,
+                  COUNT(*) FILTER (WHERE message_type = 'user') AS incoming,
+                  COUNT(*) FILTER (WHERE message_type = 'bot')  AS outgoing
+                FROM bot_messages
+                WHERE project_id = $1
+                  AND ($2::integer IS NULL OR token_id = $2)
+                  AND created_at >= NOW() - INTERVAL '${cfg.window}'
+                GROUP BY 1
+              )
+              SELECT s.slot AS date,
+                     COALESCE(m.incoming, 0) AS incoming,
+                     COALESCE(m.outgoing, 0) AS outgoing
+              FROM series s
+              LEFT JOIN msgs m ON m.slot = s.slot
+              ORDER BY s.slot ASC
+            `;
+          } else {
+            queryText = `
+              WITH series AS (
+                SELECT generate_series(
+                  DATE_TRUNC('${cfg.truncate}', NOW() - INTERVAL '${cfg.window}'),
+                  DATE_TRUNC('${cfg.truncate}', NOW()),
+                  INTERVAL '${cfg.step}'
+                ) AS slot
+              ),
+              msgs AS (
+                SELECT
+                  DATE_TRUNC('${cfg.truncate}', created_at) AS slot,
+                  COUNT(*) FILTER (WHERE message_type = 'user') AS incoming,
+                  COUNT(*) FILTER (WHERE message_type = 'bot')  AS outgoing
+                FROM bot_messages
+                WHERE project_id = $1
+                  AND ($2::integer IS NULL OR token_id = $2)
+                  AND created_at >= NOW() - INTERVAL '${cfg.window}'
+                GROUP BY 1
+              )
+              SELECT s.slot AS date,
+                     COALESCE(m.incoming, 0) AS incoming,
+                     COALESCE(m.outgoing, 0) AS outgoing
+              FROM series s
+              LEFT JOIN msgs m ON m.slot = s.slot
+              ORDER BY s.slot ASC
+            `;
+          }
+          const result = await dbPool.query(queryText, [projectId, tokenId]);
+          return res.json(result.rows.map(row => ({
+            date: row.date instanceof Date ? row.date.toISOString() : String(row.date),
+            incoming: Number(row.incoming),
+            outgoing: Number(row.outgoing),
+          })));
+        }
+
         if (granularity === "5m") {
           // Группировка по 5-минутным интервалам через FLOOR + generate_series для заполнения пустых слотов
           queryText = `

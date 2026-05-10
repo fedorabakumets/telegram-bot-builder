@@ -1,6 +1,7 @@
 /**
  * @fileoverview Хук для загрузки данных активности сообщений с поддержкой гранулярности
- * @description Получает количество сообщений через GET /api/projects/:id/messages/activity
+ * @description Получает количество сообщений через GET /api/projects/:id/messages/activity.
+ *              Поддерживает режим split — разбивку на входящие (от пользователей) и исходящие (от бота).
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +10,18 @@ import { GrowthPoint } from './use-growth';
 
 /** Доступные значения гранулярности для графика активности */
 export type Granularity = '1m' | '5m' | '1h' | '1d' | '7d' | '30d';
+
+/**
+ * Точка активности с разбивкой по направлению
+ */
+export interface ActivitySplitPoint {
+  /** Дата в ISO формате */
+  date: string;
+  /** Входящие сообщения (от пользователей) */
+  incoming: number;
+  /** Исходящие сообщения (от бота) */
+  outgoing: number;
+}
 
 /**
  * Параметры хука useMessagesActivity
@@ -22,6 +35,8 @@ export interface UseMessagesActivityParams {
   granularity?: Granularity;
   /** Период: "7d" | "30d" | "90d" (старый параметр, для обратной совместимости) */
   period?: '7d' | '30d' | '90d';
+  /** Режим разбивки: true — вернуть входящие/исходящие отдельно */
+  split?: boolean;
 }
 
 /**
@@ -52,21 +67,26 @@ function getRefetchInterval(granularity: Granularity | undefined): number | fals
     default:    return false;    // 7д, 30д — только по WS-событию
   }
 }
+
 /**
  * Строит URL запроса в зависимости от переданных параметров
+ * @param projectId - Идентификатор проекта
  * @param granularity - Гранулярность (приоритет над period)
  * @param period - Период (обратная совместимость)
+ * @param split - Режим разбивки на входящие/исходящие
  * @returns URL без токена
  */
 function buildActivityUrl(
   projectId: number,
   granularity: Granularity | undefined,
   period: string,
+  split: boolean,
 ): string {
+  const splitParam = split ? '&split=true' : '';
   if (granularity) {
-    return `/api/projects/${projectId}/messages/activity?granularity=${granularity}`;
+    return `/api/projects/${projectId}/messages/activity?granularity=${granularity}${splitParam}`;
   }
-  return `/api/projects/${projectId}/messages/activity?period=${period}`;
+  return `/api/projects/${projectId}/messages/activity?period=${period}${splitParam}`;
 }
 
 /**
@@ -75,13 +95,13 @@ function buildActivityUrl(
  * @returns Точки активности, недельное количество сообщений, текущая гранулярность и состояние загрузки
  */
 export function useMessagesActivity(params: UseMessagesActivityParams) {
-  const { projectId, selectedTokenId, granularity, period = '30d' } = params;
+  const { projectId, selectedTokenId, granularity, period = '30d', split = false } = params;
 
-  const baseUrl = buildActivityUrl(projectId, granularity, period);
+  const baseUrl = buildActivityUrl(projectId, granularity, period, split);
   const requestUrl = buildUsersApiUrl(baseUrl, selectedTokenId);
 
-  const { data, isLoading } = useQuery<GrowthPoint[]>({
-    queryKey: ['messages-activity', projectId, selectedTokenId, granularity ?? period],
+  const { data, isLoading } = useQuery<GrowthPoint[] | ActivitySplitPoint[]>({
+    queryKey: ['messages-activity', projectId, selectedTokenId, granularity ?? period, split],
     queryFn: async () => {
       const response = await fetch(requestUrl, {
         credentials: 'include',
@@ -101,13 +121,42 @@ export function useMessagesActivity(params: UseMessagesActivityParams) {
     placeholderData: undefined,
   });
 
-  const points = data ?? [];
+  if (split) {
+    const splitPoints = (data ?? []) as ActivitySplitPoint[];
+    /** Входящие как GrowthPoint для SparklineChart */
+    const incomingPoints: GrowthPoint[] = splitPoints.map(p => ({ date: p.date, count: p.incoming }));
+    /** Исходящие как GrowthPoint для SparklineChart */
+    const outgoingPoints: GrowthPoint[] = splitPoints.map(p => ({ date: p.date, count: p.outgoing }));
+    const weeklyIncoming = calcWeeklyMessages(incomingPoints);
+    const weeklyOutgoing = calcWeeklyMessages(outgoingPoints);
+    return {
+      /** Точки входящих сообщений */
+      points: incomingPoints,
+      /** Точки исходящих сообщений */
+      outgoingPoints,
+      /** Сырые split-данные */
+      splitPoints,
+      /** Недельные входящие */
+      weeklyMessages: weeklyIncoming,
+      /** Недельные исходящие */
+      weeklyOutgoing,
+      granularity,
+      isLoading,
+    };
+  }
 
+  const points = (data ?? []) as GrowthPoint[];
   return {
     /** Массив точек активности сообщений */
     points,
+    /** Точки исходящих (пусто в обычном режиме) */
+    outgoingPoints: [] as GrowthPoint[],
+    /** Сырые split-данные (пусто в обычном режиме) */
+    splitPoints: [] as ActivitySplitPoint[],
     /** Суммарное количество сообщений за последние 7 дней */
     weeklyMessages: calcWeeklyMessages(points),
+    /** Недельные исходящие (0 в обычном режиме) */
+    weeklyOutgoing: 0,
     /** Текущая гранулярность (если задана) */
     granularity,
     /** Флаг загрузки данных */
