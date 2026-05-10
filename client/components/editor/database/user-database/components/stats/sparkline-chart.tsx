@@ -13,6 +13,7 @@ import {
   Area,
   Bar,
   XAxis,
+  YAxis,
   Tooltip,
 } from 'recharts';
 import { GrowthPoint } from '../../hooks/queries/use-growth';
@@ -117,6 +118,20 @@ function renderTooltip(granularity?: string, isMultiLine?: boolean) {
 }
 
 /**
+ * Создаёт рендерер точки только для последнего элемента линии
+ * @param color - Цвет точки
+ * @param dataLength - Длина массива данных
+ * @returns Функция-рендерер для prop `dot` компонента Area
+ */
+function renderLastDot(color: string, dataLength: number) {
+  return function LastDot(props: any): React.JSX.Element | null {
+    const { cx, cy, index } = props;
+    if (index !== dataLength - 1) return null;
+    return <circle cx={cx} cy={cy} r={3} fill={color} stroke="none" />;
+  };
+}
+
+/**
  * Sparkline-график прироста пользователей (recharts)
  * @param props - Свойства компонента
  * @returns JSX элемент графика или null если данных недостаточно
@@ -161,11 +176,13 @@ export function SparklineChart({
           <defs>
             {multiLineData.map(line => (
               <linearGradient key={`${gradientId}-${line.name}`} id={`${gradientId}-${line.name}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={line.color} stopOpacity={0.3} />
-                <stop offset="100%" stopColor={line.color} stopOpacity={0} />
+                <stop offset="0%" stopColor={line.color} stopOpacity={0.4} />
+                <stop offset="100%" stopColor={line.color} stopOpacity={0.02} />
               </linearGradient>
             ))}
           </defs>
+          {/* Скрытая ось Y для корректного масштабирования пиков */}
+          <YAxis hide domain={['auto', 'auto']} />
           <XAxis
             dataKey="date"
             ticks={tickValues}
@@ -176,18 +193,18 @@ export function SparklineChart({
           />
           <Tooltip
             content={TooltipContent}
-            cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+            cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1 }}
           />
-          {multiLineData.map(line => (
+          {multiLineData.map((line, idx) => (
             <Area
               key={line.name}
               type="monotone"
               dataKey={line.name}
               stroke={line.color}
-              strokeWidth={2}
+              strokeWidth={idx === 0 ? 2 : 1.5}
               fill={`url(#${gradientId}-${line.name})`}
-              dot={false}
-              activeDot={{ r: 3, fill: line.color, strokeWidth: 0 }}
+              dot={renderLastDot(line.color, chartData.length)}
+              activeDot={{ r: idx === 0 ? 4 : 3, fill: line.color, strokeWidth: 0 }}
               isAnimationActive={false}
             />
           ))}
