@@ -33,6 +33,8 @@ export interface StatDonutCardProps {
   maxItems?: number;
   /** Обработчик клика по элементу легенды */
   onItemClick?: (label: string) => void;
+  /** Дополнительные CSS классы для корневого элемента */
+  className?: string;
 }
 
 /**
@@ -68,7 +70,7 @@ function DonutTooltip({ active, payload }: DonutTooltipProps): React.JSX.Element
  * @returns JSX элемент карточки
  */
 export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
-  const { title, items, maxItems = 8, onItemClick } = props;
+  const { title, items, maxItems = 8, onItemClick, className } = props;
 
   const visible = (items ?? []).slice(0, maxItems);
   const isEmpty = visible.length === 0;
@@ -77,7 +79,7 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
   const total = visible.reduce((sum, item) => sum + Number(item.count), 0);
 
   return (
-    <div className="bg-background border rounded-xl p-3 flex flex-col gap-2 min-w-0">
+    <div className={`bg-background border rounded-xl p-3 flex flex-col gap-2 min-w-0 ${className ?? ''}`}>
       {/* Заголовок карточки */}
       <p className="text-xs font-medium text-muted-foreground">{title}</p>
 
@@ -86,18 +88,18 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
         <p className="text-xs text-muted-foreground/50 italic">Нет данных</p>
       ) : (
         /* Основной контент: donut слева + легенда справа */
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 flex-1">
           {/* Donut-диаграмма с центральным числом */}
-          <div className="relative flex-shrink-0" style={{ width: 96, height: 96 }}>
-            <PieChart width={96} height={96}>
+          <div className="relative flex-shrink-0" style={{ width: 140, height: 140 }}>
+            <PieChart width={140} height={140}>
               <Pie
                 data={visible}
                 dataKey="count"
                 nameKey="label"
                 cx="50%"
                 cy="50%"
-                innerRadius={28}
-                outerRadius={44}
+                innerRadius={42}
+                outerRadius={64}
                 strokeWidth={0}
                 isAnimationActive={false}
               >

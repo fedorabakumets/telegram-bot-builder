@@ -168,7 +168,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
                 </div>
               }
             />
-            <StatDonutCard title="Статус" items={statusItems} />
+            <StatDonutCard title="Статус" items={statusItems} className="h-full" />
           </div>
 
           {/* Строка 2: активность сообщений + языки */}
@@ -191,7 +191,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
                 </div>
               }
             />
-            <StatDonutCard title="Языки" items={languageItems} />
+            <StatDonutCard title="Языки" items={languageItems} className="h-full" />
           </div>
 
           {/* Строка 3: источники трафика — stacked bar + donut */}
@@ -200,7 +200,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
               projectId={projectId}
               selectedTokenId={selectedTokenId}
             />
-            <StatDonutCard title="Источники трафика" items={sourceItems} />
+            <StatDonutCard title="Источники трафика" items={sourceItems} className="h-full" />
           </div>
         </div>
       </ScrollArea>
