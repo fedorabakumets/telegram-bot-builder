@@ -169,6 +169,42 @@ export function SparklineChart({
     const tickIndices = getTickIndices(chartData.length);
     const tickValues = tickIndices.map(i => chartData[i].date);
     const TooltipContent = renderTooltip(granularity, true);
+    const isMultiBar = !cumulative && (granularity === '1m' || granularity === '5m');
+
+    /** Stacked bar chart для коротких гранулярностей (1м, 5м) */
+    if (isMultiBar) {
+      return (
+        <ResponsiveContainer width="100%" height={height}>
+          <BarChart data={chartData} margin={MARGIN}>
+            <YAxis hide domain={['auto', 'auto']} />
+            <XAxis
+              dataKey="date"
+              ticks={tickValues}
+              tickFormatter={(val: string) => fmtTick(val, granularity)}
+              tick={TICK_STYLE}
+              axisLine={false}
+              tickLine={false}
+            />
+            <Tooltip
+              content={TooltipContent}
+              cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+            />
+            {multiLineData.map((line, idx) => (
+              <Bar
+                key={line.name}
+                dataKey={line.name}
+                stackId="sources"
+                fill={line.color}
+                fillOpacity={idx === 0 ? 0.9 : 0.75}
+                barSize={4}
+                radius={idx === multiLineData.length - 1 ? [2, 2, 0, 0] : [0, 0, 0, 0]}
+                isAnimationActive={false}
+              />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      );
+    }
 
     return (
       <ResponsiveContainer width="100%" height={height}>
