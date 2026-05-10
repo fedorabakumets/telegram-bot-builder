@@ -38,6 +38,8 @@ export interface StatMetricCardProps {
   chartGranularity?: string;
   /** Накопительный режим: данные суммируются нарастающим итогом */
   cumulative?: boolean;
+  /** Высота графика в пикселях (по умолчанию 80) */
+  chartHeight?: number;
 }
 
 /**
@@ -82,6 +84,7 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
     headerExtra,
     chartGranularity,
     cumulative,
+    chartHeight,
   } = props;
   const fmt = formatValue ?? defaultFormat;
   const displayValue = value !== undefined ? fmt(value) : '—';
@@ -123,6 +126,7 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
           lineColor={lineColor}
           granularity={chartGranularity}
           cumulative={cumulative}
+          height={chartHeight}
         />
       )}
 

@@ -46,6 +46,8 @@ export interface SparklineChartProps {
   granularity?: string;
   /** Накопительный режим: данные суммируются нарастающим итогом */
   cumulative?: boolean;
+  /** Высота графика в пикселях (по умолчанию 80) */
+  height?: number;
 }
 
 /** Общий отступ графика */
@@ -126,6 +128,7 @@ export function SparklineChart({
   lineColor = '#3b82f6',
   granularity,
   cumulative,
+  height = 80,
 }: SparklineChartProps): React.JSX.Element | null {
   // Multi-line режим
   if (multiLineData && multiLineData.length > 0) {
@@ -153,7 +156,7 @@ export function SparklineChart({
     const TooltipContent = renderTooltip(granularity, true);
 
     return (
-      <ResponsiveContainer width="100%" height={80}>
+      <ResponsiveContainer width="100%" height={height}>
         <AreaChart data={chartData} margin={MARGIN}>
           <defs>
             {multiLineData.map(line => (
@@ -228,7 +231,7 @@ export function SparklineChart({
 
   if (isBar) {
     return (
-      <ResponsiveContainer width="100%" height={80}>
+      <ResponsiveContainer width="100%" height={height}>
         <BarChart data={chartData} margin={MARGIN}>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -250,7 +253,7 @@ export function SparklineChart({
   }
 
   return (
-    <ResponsiveContainer width="100%" height={80}>
+    <ResponsiveContainer width="100%" height={height}>
       <AreaChart data={chartData} margin={MARGIN}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

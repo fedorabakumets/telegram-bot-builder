@@ -113,6 +113,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken: _onS
               subtitle={weeklyGrowth > 0 ? `+${weeklyGrowth} за неделю` : undefined}
               cumulative={growthMode === 'cumulative'}
               chartGranularity={growthGranularity}
+              chartHeight={160}
               headerExtra={
                 <div className="flex items-center gap-1.5">
                   <GrowthGranularitySelector value={growthGranularity} onChange={setGrowthGranularity} />
@@ -131,6 +132,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken: _onS
               trend={weeklyMessages > 0 ? 'up' : 'neutral'}
               cumulative={activityMode === 'cumulative'}
               chartGranularity={msgGranularity}
+              chartHeight={160}
               headerExtra={
                 <div className="flex items-center gap-1.5">
                   <ActivityGranularitySelector value={msgGranularity} onChange={setMsgGranularity} />
