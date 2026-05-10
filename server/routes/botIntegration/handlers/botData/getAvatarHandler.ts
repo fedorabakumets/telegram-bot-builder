@@ -180,7 +180,53 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
 
         // Проксируем файл скрывая токен бота от клиента
         console.log(`[avatar] fetching avatar for user_id=${userId}`);
-        const response = await fetchWithProxy(fetchUrl);
+        let response = await fetchWithProxy(fetchUrl);
+
+        // URL протух (Telegram file-URL живут ограниченное время) — обновляем через getUserProfilePhotos
+        if (!response.ok && !isBotAvatar) {
+            console.log(`[avatar] URL expired (${response.status}), refreshing via getUserProfilePhotos`);
+            try {
+                const tokenToUse = await resolveProjectBotToken(projectId, tokenId);
+                if (tokenToUse) {
+                    const photoResp = await fetchWithProxy(
+                        `https://api.telegram.org/bot${tokenToUse.token}/getUserProfilePhotos`,
+                        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, limit: 1 }) }
+                    );
+                    const photoData = await photoResp.json();
+                    if (photoResp.ok && photoData.result?.total_count > 0) {
+                        const freshFileId = photoData.result.photos[0].at(-1).file_id;
+                        const fileResp = await fetchWithProxy(
+                            `https://api.telegram.org/bot${tokenToUse.token}/getFile`,
+                            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_id: freshFileId }) }
+                        );
+                        const fileData = await fileResp.json();
+                        if (fileResp.ok && fileData.result?.file_path) {
+                            const freshUrl = `https://api.telegram.org/file/bot${tokenToUse.token}/${fileData.result.file_path}`;
+                            // Сохраняем свежий file_id в БД (не URL — он тоже протухнет)
+                            const { Pool } = await import('pg');
+                            const pool2 = new Pool({ connectionString: process.env.DATABASE_URL });
+                            await pool2.query(
+                                'UPDATE bot_users SET avatar_url = $1 WHERE user_id = $2 AND project_id = $3',
+                                [freshFileId, userId, projectId]
+                            );
+                            await pool2.end();
+                            response = await fetchWithProxy(freshUrl);
+                        }
+                    } else {
+                        // Аватарки больше нет — очищаем протухший URL
+                        const { Pool } = await import('pg');
+                        const pool2 = new Pool({ connectionString: process.env.DATABASE_URL });
+                        await pool2.query(
+                            'UPDATE bot_users SET avatar_url = NULL WHERE user_id = $1 AND project_id = $2',
+                            [userId, projectId]
+                        );
+                        await pool2.end();
+                    }
+                }
+            } catch (e) {
+                console.warn('[avatar] failed to refresh expired URL:', e);
+            }
+        }
 
         if (!response.ok) {
             res.status(404).json({ message: "Не удалось получить аватарку" });
