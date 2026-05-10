@@ -41,6 +41,10 @@ export interface BroadcastPanelProps {
   selectedTokenId?: number | null;
   /** Обработчик выбора токена */
   onSelectToken?: (tokenId: number | null) => void;
+  /** Список всех проектов для переключателя */
+  allProjects?: Array<{ id: number; name: string }>;
+  /** Обработчик смены проекта */
+  onProjectChange?: (projectId: number) => void;
 }
 
 /**

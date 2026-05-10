@@ -16,6 +16,7 @@ import { NewBroadcastModal } from './wizard/new-broadcast-modal';
 import { useBroadcasts } from './hooks/use-broadcasts';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
+import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 import type { BroadcastPanelProps, Broadcast } from './types';
 
 /** Количество рассылок на одной странице */
@@ -26,7 +27,7 @@ const PAGE_LIMIT = 20;
  * @param props - Свойства компонента
  * @returns JSX элемент панели рассылок
  */
-export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken }: BroadcastPanelProps) {
+export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allProjects, onProjectChange }: BroadcastPanelProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedBroadcast, setSelectedBroadcast] = useState<Broadcast | null>(null);
   const [page, setPage] = useState(1);
@@ -87,6 +88,13 @@ export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken }: Br
               tokens={tokens}
               selectedTokenId={selectedTokenId ?? null}
               onSelect={(id) => onSelectToken?.(id)}
+            />
+          )}
+          {allProjects && allProjects.length > 1 && onProjectChange && (
+            <ProjectSelector
+              projects={allProjects}
+              selectedProjectId={projectId}
+              onSelect={(id) => { onSelectToken?.(null); onProjectChange(id); }}
             />
           )}
         </div>

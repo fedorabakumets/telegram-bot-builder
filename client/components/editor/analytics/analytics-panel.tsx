@@ -26,6 +26,8 @@ import { useLiveInvalidate } from '@/components/editor/database/user-database/ho
 import { AnalyticsSourcesChart } from './analytics-sources-chart';
 
 
+import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
+
 /**
  * Пропсы компонента AnalyticsPanel
  */
@@ -36,6 +38,10 @@ export interface AnalyticsPanelProps {
   selectedTokenId?: number | null;
   /** Обработчик выбора токена */
   onSelectToken?: (tokenId: number | null) => void;
+  /** Список всех проектов для переключателя */
+  allProjects?: Array<{ id: number; name: string }>;
+  /** Обработчик смены проекта */
+  onProjectChange?: (projectId: number) => void;
 }
 
 /**
@@ -54,7 +60,7 @@ function pct(count: number, total: number): number {
  * @param props - Пропсы компонента
  * @returns JSX элемент панели аналитики
  */
-export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: AnalyticsPanelProps): React.JSX.Element {
+export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allProjects, onProjectChange }: AnalyticsPanelProps): React.JSX.Element {
   /** Гранулярность графика прироста */
   const [growthGranularity, setGrowthGranularity] = useState<GrowthGranularity>('1d');
   /** Гранулярность графика активности */
@@ -138,6 +144,13 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
               tokens={tokens}
               selectedTokenId={selectedTokenId ?? null}
               onSelect={(id) => onSelectToken?.(id)}
+            />
+          )}
+          {allProjects && allProjects.length > 1 && onProjectChange && (
+            <ProjectSelector
+              projects={allProjects}
+              selectedProjectId={projectId}
+              onSelect={(id) => { onSelectToken?.(null); onProjectChange(id); }}
             />
           )}
         </div>

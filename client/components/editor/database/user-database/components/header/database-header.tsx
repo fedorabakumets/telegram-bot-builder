@@ -1,6 +1,6 @@
 /**
  * @fileoverview Компонент компактного заголовка вкладки "Пользователи"
- * @description Строка с иконкой, названием и кнопкой обновления
+ * @description Строка с иконкой (bg-primary/10), названием и кнопкой обновления
  */
 
 import { Users, RefreshCw } from 'lucide-react';
@@ -24,9 +24,14 @@ interface DatabaseHeaderProps {
 export function DatabaseHeader({ projectName: _projectName, onRefresh }: DatabaseHeaderProps): React.JSX.Element {
   return (
     <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <Users className="w-5 h-5 text-muted-foreground" />
-        <h2 className="text-base font-semibold text-foreground">Пользователи</h2>
+      <div className="flex items-center gap-2.5">
+        <div className="rounded-lg bg-primary/10 p-2">
+          <Users className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-base font-semibold leading-none">Пользователи</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">База данных бота</p>
+        </div>
       </div>
       {onRefresh && (
         <Button
