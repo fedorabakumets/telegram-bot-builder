@@ -3,7 +3,7 @@
  * @description Отображает числовые карточки с графиками и donut-диаграммы
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -64,6 +64,15 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
   /** Токены проекта для селектора бота */
   const projectTokensInfo = useProjectTokens([projectId]);
   const tokens = projectTokensInfo[0]?.tokens ?? [];
+
+  /** Автовыбор дефолтного токена при загрузке, если ничего не выбрано */
+  useEffect(() => {
+    if (tokens.length === 0) return;
+    const alreadySelected = tokens.some((t) => t.id === selectedTokenId);
+    if (alreadySelected) return;
+    const next = tokens.find((t) => t.isDefault === 1) ?? tokens[0];
+    onSelectToken?.(next?.id ?? null);
+  }, [tokens, selectedTokenId, onSelectToken]);
 
   const { stats, refetchStats } = useStats({ projectId, selectedTokenId });
   const { points: growthPoints, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
