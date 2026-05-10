@@ -19,6 +19,7 @@ import { GrowthGranularitySelector } from '@/components/editor/database/user-dat
 import { ChartModeToggle, ChartMode } from '@/components/editor/database/user-database/components/stats/chart-mode-toggle';
 import { ChartTypeToggle, ChartType } from '@/components/editor/database/user-database/components/stats/chart-type-toggle';
 import { SourceModeToggle, SourceMode } from '@/components/editor/database/user-database/components/stats/source-mode-toggle';
+import { ActivitySplitToggle, ActivitySplitMode } from '@/components/editor/database/user-database/components/stats/activity-split-toggle';
 import { aggregateTopSources } from '@/components/editor/database/user-database/components/stats/source-aggregation-utils';
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
