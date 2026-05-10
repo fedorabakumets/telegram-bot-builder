@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { BarChart2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useStats } from '@/components/editor/database/user-database/hooks/queries/use-stats';
 import { useGrowth, GrowthGranularity } from '@/components/editor/database/user-database/hooks/queries/use-growth';
 import { useGrowthBySource } from '@/components/editor/database/user-database/hooks/queries/use-growth-by-source';
@@ -17,6 +18,7 @@ import { ActivityGranularitySelector } from '@/components/editor/database/user-d
 import { ChartModeToggle, ChartMode } from '@/components/editor/database/user-database/components/stats/chart-mode-toggle';
 import { SourceMode } from '@/components/editor/database/user-database/components/stats/source-mode-toggle';
 import { aggregateTopSources } from '@/components/editor/database/user-database/components/stats/source-aggregation-utils';
+import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
 import { AnalyticsGrowthSection } from './analytics-growth-section';
 
 /**
