@@ -92,11 +92,40 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
         // bot info retrieved
         const botInfo = result.result;
 
+        // Проверяем наличие фото через bot_tokens.bot_photo_url в БД.
+        // Если пусто — пробуем получить file_id через getUserProfilePhotos и сохранить.
+        const { Pool } = await import('pg');
+        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        const photoResult = await pool.query(
+            'SELECT bot_photo_url FROM bot_tokens WHERE id = $1',
+            [defaultToken.id]
+        );
+        let hasPhoto = !!photoResult.rows[0]?.bot_photo_url;
+
+        if (!hasPhoto) {
+            try {
+                const photoResp = await fetchWithProxy(
+                    `https://api.telegram.org/bot${defaultToken.token}/getUserProfilePhotos`,
+                    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: botInfo.id, limit: 1 }) }
+                );
+                const photoData = await photoResp.json();
+                if (photoResp.ok && photoData.result?.total_count > 0) {
+                    const fileId = photoData.result.photos[0].at(-1).file_id;
+                    await pool.query('UPDATE bot_tokens SET bot_photo_url = $1 WHERE id = $2', [fileId, defaultToken.id]);
+                    hasPhoto = true;
+                }
+            } catch (e) {
+                console.warn('[getBotInfo] failed to fetch bot photo:', e);
+            }
+        }
+
+        await pool.end();
+
         const responseData = {
             ...botInfo,
             // Не возвращаем прямой URL Telegram — он протухает и раскрывает токен.
             // Клиент использует прокси /api/projects/:id/users/bot/avatar
-            photoUrl: botInfo.photo ? true : null
+            photoUrl: hasPhoto ? true : null
         };
 
         res.json(responseData);
