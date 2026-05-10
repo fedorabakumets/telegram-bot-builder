@@ -47,6 +47,12 @@ export interface StatMetricCardProps {
    * Если не задан — тип выбирается автоматически по гранулярности.
    */
   chartType?: ChartType;
+  /**
+   * Если true — заголовок с числом отображается над переключателями (stackHeader layout).
+   * По умолчанию false — заголовок и переключатели в одной строке.
+   */
+  stackHeader?: boolean;
+}
 }
 
 /**
@@ -104,6 +110,7 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
     cumulative,
     chartHeight,
     chartType,
+    stackHeader,
   } = props;
   const fmt = formatValue ?? defaultFormat;
   const displayValue = value !== undefined ? fmt(value) : '—';
@@ -115,21 +122,41 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
 
   return (
     <div className="bg-background border rounded-xl p-3 flex flex-col gap-3 min-w-0 overflow-hidden">
-      {/* Шапка: заголовок + subtitle слева, переключатели справа */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-medium text-foreground truncate">{title}</span>
-          <TrendIcon trend={trend} subtitle={subtitle} />
+      {stackHeader ? (
+        /* Стек-режим: заголовок + число сверху, переключатели снизу */
+        <>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-sm font-medium text-foreground truncate">{title}</span>
+              <TrendIcon trend={trend} subtitle={subtitle} />
+            </div>
+            <span className="text-2xl font-bold text-foreground tabular-nums leading-none shrink-0">
+              {displayValue}
+            </span>
+          </div>
+          {headerExtra && (
+            <div className="flex flex-wrap items-center gap-1">{headerExtra}</div>
+          )}
+        </>
+      ) : (
+        /* Обычный режим: заголовок + переключатели в одной строке */
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm font-medium text-foreground truncate">{title}</span>
+            <TrendIcon trend={trend} subtitle={subtitle} />
+          </div>
+          {headerExtra && (
+            <div className="flex items-center gap-1 shrink-0">{headerExtra}</div>
+          )}
         </div>
-        {headerExtra && (
-          <div className="flex items-center gap-1 shrink-0">{headerExtra}</div>
-        )}
-      </div>
+      )}
 
-      {/* Большое числовое значение */}
-      <span className="text-2xl font-bold text-foreground tabular-nums leading-none">
-        {displayValue}
-      </span>
+      {/* Большое числовое значение (только в обычном режиме) */}
+      {!stackHeader && (
+        <span className="text-2xl font-bold text-foreground tabular-nums leading-none">
+          {displayValue}
+        </span>
+      )}
 
       {/* График на всю ширину карточки */}
       {hasChart && (

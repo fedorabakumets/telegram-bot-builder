@@ -136,6 +136,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
           cumulative={growthMode === 'cumulative'}
           chartGranularity={growthGranularity}
           chartType={growthChartType}
+          stackHeader
           headerExtra={
             <div className="flex flex-wrap items-center gap-1">
               <GrowthGranularitySelector value={growthGranularity} onChange={setGrowthGranularity} />
@@ -158,6 +159,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
           chartGranularity={msgGranularity}
           cumulative={activityMode === 'cumulative'}
           chartType={activityChartType}
+          stackHeader
           headerExtra={
             <div className="flex flex-wrap items-center gap-1">
               <ActivityGranularitySelector value={msgGranularity} onChange={setMsgGranularity} />
