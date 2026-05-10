@@ -3,7 +3,7 @@
  * @description Получает прирост через GET /api/projects/:id/users/growth-by-source с поддержкой гранулярности
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import { GrowthGranularity } from './use-growth';
 
@@ -69,11 +69,12 @@ export function useGrowthBySource(params: UseGrowthBySourceParams) {
     },
     enabled: !!projectId,
     staleTime: 0,
-    gcTime: 0,
+    gcTime: 60_000,
     retry: false,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
     refetchInterval: getRefetchInterval(granularity),
+    placeholderData: keepPreviousData,
   });
 
   const points = data ?? [];

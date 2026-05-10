@@ -3,7 +3,7 @@
  * @description Получает прирост через GET /api/projects/:id/users/growth с поддержкой гранулярности
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { buildUsersApiUrl } from '@/components/editor/database/utils';
 
 /** Доступные значения гранулярности для графика прироста пользователей */
@@ -84,11 +84,12 @@ export function useGrowth(params: UseGrowthParams) {
     },
     enabled: !!projectId,
     staleTime: 0,
-    gcTime: 0,
+    gcTime: 60_000,
     retry: false,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
     refetchInterval: getRefetchInterval(granularity),
+    placeholderData: keepPreviousData,
   });
 
   const points = data ?? [];
