@@ -196,19 +196,19 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
             />
           </div>
 
-          {/* Строка 2: Premium + языки */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <StatDonutCard title="Premium" items={statusItems} className="h-full" />
-            <StatDonutCard title="Языки" items={languageItems} className="h-full" />
-          </div>
-
-          {/* Строка 3: источники трафика — stacked bar + donut */}
+          {/* Строка 2: источники трафика (bar/line) + donut источников */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <AnalyticsSourcesChart
               projectId={projectId}
               selectedTokenId={selectedTokenId}
             />
             <StatDonutCard title="Источники трафика" items={sourceItems} className="h-full" />
+          </div>
+
+          {/* Строка 3: Premium + языки */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <StatDonutCard title="Premium" items={statusItems} className="h-full" />
+            <StatDonutCard title="Языки" items={languageItems} className="h-full" />
           </div>
         </div>
       </ScrollArea>
