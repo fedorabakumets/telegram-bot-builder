@@ -1462,6 +1462,10 @@ export default function Editor() {
               <BotLayout
                 projectId={activeProject.id}
                 projectName={activeProject.name}
+                allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                onProjectChange={(projectId) => {
+                  setLocation(`/projects/${projectId}`);
+                }}
               />
             </div>
           )}

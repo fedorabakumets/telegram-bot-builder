@@ -39,24 +39,22 @@ interface BotControlProps {
   onBotDeleted?: (projectId: number, tokenId: number) => void;
   /**
    * Callback при создании нового токена через внешний Telegram-бот (WebSocket событие).
-   * @param projectId - ID проекта
-   * @param tokenId - ID нового токена
-   * @param tokenName - Имя нового токена
    */
   onTokenCreated?: (projectId: number, tokenId: number, tokenName: string) => void;
   /**
-   * Callback при получении события bot-started через WebSocket (срабатывает на всех вкладках).
-   * Используется для очистки логов терминала на второй вкладке.
-   * @param projectId - ID проекта
-   * @param tokenId - ID токена
+   * Callback при получении события bot-started через WebSocket.
    */
   onBotStartedWs?: (projectId: number, tokenId: number) => void;
+  /** Список всех проектов для переключателя */
+  allProjects?: Array<{ id: number; name: string }>;
+  /** Обработчик смены проекта */
+  onProjectChange?: (projectId: number) => void;
 }
 
 /**
  * Основной компонент управления ботами
  */
-export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted, onTokenCreated, onBotStartedWs }: Omit<BotControlProps, 'projectName'> & { projectName?: string }) {
+export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted, onTokenCreated, onBotStartedWs, allProjects, onProjectChange }: Omit<BotControlProps, 'projectName'> & { projectName?: string }) {
   const [showAddBot, setShowAddBot] = useState(false);
   const [newBotToken, setNewBotToken] = useState('');
   const [projectForNewBot, setProjectForNewBot] = useState<number | null>(null);
@@ -269,6 +267,9 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
         isParsingBot={isParsingBot}
         createBotMutation={createBotMutation}
         handleAddBot={handleAddBot}
+        allProjects={allProjects}
+        currentProjectId={projectId}
+        onProjectChange={onProjectChange}
       />
 
       <BotProfileSheet

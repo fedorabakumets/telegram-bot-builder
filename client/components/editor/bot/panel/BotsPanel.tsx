@@ -17,6 +17,10 @@ import { useBotQueries } from '../hooks/use-bot-queries';
 interface BotsPanelProps {
   projectId: number;
   projectName: string;
+  /** Список всех проектов для переключателя */
+  allProjects?: Array<{ id: number; name: string }>;
+  /** Обработчик смены проекта */
+  onProjectChange?: (projectId: number) => void;
 }
 
 interface BotStatusResponse {
@@ -27,7 +31,7 @@ interface BotStatusResponse {
 /**
  * Панель ботов
  */
-export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
+export function BotsPanel({ projectId, projectName, allProjects, onProjectChange }: BotsPanelProps) {
   const { addTerminal, updateTerminalStatus, removeTerminal } = useActiveTerminals();
   const { clearLogs } = useBotLogs();
 
@@ -95,7 +99,7 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
   };
 
   return (
-    <div className="h-full overflow-auto p-3 sm:p-4 lg:p-6">
+    <div className="h-full overflow-hidden">
       <BotControl
         projectId={projectId}
         projectName={projectName}
@@ -104,6 +108,8 @@ export function BotsPanel({ projectId, projectName }: BotsPanelProps) {
         onBotDeleted={handleBotDeleted}
         onTokenCreated={handleTokenCreated}
         onBotStartedWs={handleBotStartedWs}
+        allProjects={allProjects}
+        onProjectChange={onProjectChange}
       />
     </div>
   );

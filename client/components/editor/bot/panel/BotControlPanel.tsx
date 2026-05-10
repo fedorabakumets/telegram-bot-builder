@@ -47,6 +47,12 @@ interface BotControlPanelProps {
   createBotMutation: { isPending: boolean };
   /** Обработчик добавления бота */
   handleAddBot: (selectedTokenId?: number | null) => void;
+  /** Список всех проектов для переключателя */
+  allProjects?: Array<{ id: number; name: string }>;
+  /** ID текущего проекта */
+  currentProjectId?: number;
+  /** Обработчик смены проекта */
+  onProjectChange?: (projectId: number) => void;
 }
 
 /**
@@ -63,6 +69,9 @@ export function BotControlPanel({
   isParsingBot,
   createBotMutation,
   handleAddBot,
+  allProjects,
+  currentProjectId,
+  onProjectChange,
 }: BotControlPanelProps) {
   const { setShowAddBot, setProjectForNewBot, allTokensFlat, allBotStatuses } = useBotControl();
   const { user } = useTelegramAuth();
@@ -74,26 +83,33 @@ export function BotControlPanel({
   const hasRunningBot = allBotStatuses.some(s => s?.status === 'running');
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <BotControlPanelHeader onConnectBot={() => setShowAddBot(true)} />
+    <div className="flex flex-col h-full bg-background">
+      <BotControlPanelHeader
+        onConnectBot={() => setShowAddBot(true)}
+        allProjects={allProjects}
+        currentProjectId={currentProjectId}
+        onProjectChange={onProjectChange}
+      />
 
-      {isGuestUser && (
-        <GuestBanner
-          hasRunningBot={hasRunningBot}
-          onLogin={handleTelegramLogin}
-        />
-      )}
+      <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+        {isGuestUser && (
+          <GuestBanner
+            hasRunningBot={hasRunningBot}
+            onLogin={handleTelegramLogin}
+          />
+        )}
 
-      {projectsLoading ? (
-        <BotControlPanelLoading />
-      ) : projects.length === 0 ? (
-        <BotControlPanelEmpty />
-      ) : (
-        <BotManagementInterface
-          projects={projects}
-          allTokens={allTokens}
-        />
-      )}
+        {projectsLoading ? (
+          <BotControlPanelLoading />
+        ) : projects.length === 0 ? (
+          <BotControlPanelEmpty />
+        ) : (
+          <BotManagementInterface
+            projects={projects}
+            allTokens={allTokens}
+          />
+        )}
+      </div>
 
       <AddBotDialog
         showAddBot={showAddBot}
