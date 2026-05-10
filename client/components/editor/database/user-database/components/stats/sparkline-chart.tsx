@@ -155,9 +155,17 @@ export function SparklineChart({
 }: SparklineChartProps): React.JSX.Element | null {
   // Multi-line режим
   if (multiLineData && multiLineData.length > 0) {
+    /**
+     * Применяем накопительное преобразование к каждой линии если нужно.
+     * toCumulative суммирует count нарастающим итогом внутри каждой серии.
+     */
+    const processedLines = cumulative
+      ? multiLineData.map(line => ({ ...line, data: toCumulative(line.data) }))
+      : multiLineData;
+
     // Объединяем все точки из всех источников в один массив для оси X
     const allDates = new Set<string>();
-    multiLineData.forEach(line => {
+    processedLines.forEach(line => {
       line.data.forEach(point => allDates.add(point.date));
     });
     const sortedDates = Array.from(allDates).sort();
@@ -165,7 +173,7 @@ export function SparklineChart({
     // Создаём объединённый массив данных для recharts
     const chartData = sortedDates.map(date => {
       const dataPoint: any = { date };
-      multiLineData.forEach(line => {
+      processedLines.forEach(line => {
         const point = line.data.find(p => p.date === date);
         dataPoint[line.name] = point?.count ?? 0;
       });
@@ -180,19 +188,19 @@ export function SparklineChart({
 
     /**
      * Определяем тип графика для multi-line:
-     * - cumulative всегда Area
+     * - cumulative всегда Area (накопительный стек баров не имеет смысла)
      * - явный chartType перекрывает автоматику
      * - автоматика: 1m|5m → Bar, иначе → Area
      */
     const autoBar = !cumulative && (granularity === '1m' || granularity === '5m');
     const isMultiBar = !cumulative && (chartType === 'bar' || (chartType === undefined && autoBar));
 
-    /** Stacked bar chart для коротких гранулярностей (1м, 5м) */
+    /** Stacked bar chart */
     if (isMultiBar) {
       return (
         <ResponsiveContainer width="100%" height={height}>
           <BarChart data={chartData} margin={MARGIN} barCategoryGap="8%">
-            <YAxis hide domain={['auto', 'auto']} />
+            <YAxis hide domain={[0, 'auto']} />
             <XAxis
               dataKey="date"
               ticks={tickValues}
@@ -205,14 +213,14 @@ export function SparklineChart({
               content={TooltipContent}
               cursor={{ fill: 'rgba(255,255,255,0.05)' }}
             />
-            {multiLineData.map((line, idx) => (
+            {processedLines.map((line, idx) => (
               <Bar
                 key={line.name}
                 dataKey={line.name}
                 stackId="sources"
                 fill={line.color}
                 fillOpacity={idx === 0 ? 0.9 : 0.75}
-                radius={idx === multiLineData.length - 1 ? [2, 2, 0, 0] : [0, 0, 0, 0]}
+                radius={idx === processedLines.length - 1 ? [2, 2, 0, 0] : [0, 0, 0, 0]}
                 isAnimationActive={false}
               />
             ))}
@@ -225,7 +233,7 @@ export function SparklineChart({
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart data={chartData} margin={MARGIN}>
           <defs>
-            {multiLineData.map(line => (
+            {processedLines.map(line => (
               <linearGradient key={`${gradientId}-${line.name}`} id={`${gradientId}-${line.name}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={line.color} stopOpacity={0.4} />
                 <stop offset="100%" stopColor={line.color} stopOpacity={0.02} />
@@ -246,7 +254,7 @@ export function SparklineChart({
             content={TooltipContent}
             cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1 }}
           />
-          {multiLineData.map((line, idx) => (
+          {processedLines.map((line, idx) => (
             <Area
               key={line.name}
               type="monotone"
