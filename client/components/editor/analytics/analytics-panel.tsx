@@ -98,8 +98,6 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
             <h2 className="text-base font-semibold leading-none">Аналитика</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Статистика и рост аудитории</p>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
           {tokens.length > 0 && (
             <BotTokenSelector
               tokens={tokens}
@@ -107,6 +105,8 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
               onSelect={(id) => onSelectToken?.(id)}
             />
           )}
+        </div>
+        <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => refetchStats()}>
             <RefreshCw className="h-4 w-4" />
             Обновить
