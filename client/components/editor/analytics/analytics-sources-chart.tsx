@@ -1,16 +1,17 @@
 /**
  * @fileoverview Карточка-график динамики источников трафика
- * @description Отображает multi-line график с переключателем периодов,
+ * @description Stacked bar chart с переключателем периодов,
  *              интерактивной легендой и WS real-time обновлениями.
  */
 
 import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Check, X } from 'lucide-react';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import { GrowthGranularity } from '@/components/editor/database/user-database/hooks/queries/use-growth';
 import { useGrowthBySource } from '@/components/editor/database/user-database/hooks/queries/use-growth-by-source';
 import { aggregateTopSources } from '@/components/editor/database/user-database/components/stats/source-aggregation-utils';
-import { SparklineChart } from '@/components/editor/database/user-database/components/stats/sparkline-chart';
+import { fmtTick, fmtTooltipDate, getTickIndices } from '@/components/editor/database/user-database/components/stats/sparkline-utils';
 import { useUserMessagesLiveContext } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 
 /**
@@ -23,9 +24,7 @@ export interface AnalyticsSourcesChartProps {
   selectedTokenId?: number | null;
 }
 
-/**
- * Метки кнопок переключателя периодов
- */
+/** Метки кнопок переключателя периодов */
 const PERIOD_LABELS: Record<GrowthGranularity, string> = {
   '1m':  '1ч',
   '5m':  '3ч',
@@ -37,6 +36,37 @@ const PERIOD_LABELS: Record<GrowthGranularity, string> = {
 
 /** Порядок кнопок переключателя */
 const PERIOD_ORDER: GrowthGranularity[] = ['1m', '5m', '1h', '1d', '7d', '30d'];
+
+/**
+ * Кастомный tooltip для stacked bar графика источников
+ * @param props - Пропсы от recharts + гранулярность
+ * @returns JSX элемент tooltip или null
+ */
+function SourcesTooltip({ active, payload, granularity }: {
+  active?: boolean;
+  payload?: Array<{ dataKey: string; color: string; value: number; payload: any }>;
+  granularity?: string;
+}): React.JSX.Element | null {
+  if (!active || !payload?.length) return null;
+  const date = payload[0]?.payload?.date;
+  /** Фильтруем нулевые значения — не показываем пустые источники */
+  const nonZero = payload.filter(e => e.value > 0);
+  if (!nonZero.length) return null;
+  return (
+    <div className="bg-popover border rounded-md px-2 py-1.5 text-xs shadow-md min-w-[120px]">
+      <div className="opacity-60 mb-1.5 text-[10px]">{fmtTooltipDate(date, granularity)}</div>
+      {nonZero.map((entry, i) => (
+        <div key={i} className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
+            <span className="opacity-80">{entry.dataKey}</span>
+          </div>
+          <span className="font-bold tabular-nums">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /**
  * Карточка-график динамики источников трафика с переключателем периодов,
@@ -58,9 +88,7 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
     if (!liveContext) return;
     return liveContext.subscribe((event) => {
       if (event.type === 'new-user' && event.projectId === projectId) {
-        queryClient.invalidateQueries({
-          queryKey: ['users-growth-by-source', projectId, selectedTokenId],
-        });
+        queryClient.invalidateQueries({ queryKey: ['users-growth-by-source', projectId, selectedTokenId] });
       }
     });
   }, [liveContext, projectId, selectedTokenId, queryClient]);
@@ -69,13 +97,28 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
   const multiLineData = aggregateTopSources(points, 6);
 
   /** Суммарное число пользователей за период по всем источникам */
-  const totalForPeriod = multiLineData.reduce(
-    (sum, line) => sum + line.data.reduce((s, p) => s + p.count, 0),
-    0,
-  );
+  const totalForPeriod = multiLineData.reduce((sum, line) => sum + line.data.reduce((s, p) => s + p.count, 0), 0);
 
   /** Данные только видимых источников (не скрытых легендой) */
   const visibleData = multiLineData.filter(d => !hiddenSources.has(d.name));
+
+  // Собираем все уникальные даты из visibleData
+  const allDates = new Set<string>();
+  visibleData.forEach(line => line.data.forEach(p => allDates.add(p.date)));
+  const sortedDates = Array.from(allDates).sort();
+
+  /** Объединённый массив точек для recharts */
+  const chartData = sortedDates.map(date => {
+    const point: Record<string, any> = { date };
+    visibleData.forEach(line => {
+      const p = line.data.find(d => d.date === date);
+      point[line.name] = p?.count ?? 0;
+    });
+    return point;
+  });
+
+  const tickIndices = getTickIndices(chartData.length);
+  const tickValues = tickIndices.map(i => chartData[i]?.date);
 
   /**
    * Переключает видимость источника в легенде
@@ -84,8 +127,7 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
   function toggleSource(name: string): void {
     setHiddenSources(prev => {
       const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
+      if (next.has(name)) next.delete(name); else next.add(name);
       return next;
     });
   }
@@ -102,35 +144,41 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
         </div>
         <div className="flex items-center gap-0.5">
           {PERIOD_ORDER.map((g) => (
-            <button
-              key={g}
-              type="button"
-              onClick={() => setGranularity(g)}
-              className={[
-                'text-xs px-1.5 py-0.5 rounded transition-colors',
-                g === granularity
-                  ? 'bg-primary/20 text-primary font-medium'
-                  : 'text-muted-foreground hover:text-foreground',
-              ].join(' ')}
-            >
+            <button key={g} type="button" onClick={() => setGranularity(g)}
+              className={['text-xs px-1.5 py-0.5 rounded transition-colors',
+                g === granularity ? 'bg-primary/20 text-primary font-medium' : 'text-muted-foreground hover:text-foreground',
+              ].join(' ')}>
               {PERIOD_LABELS[g]}
             </button>
           ))}
         </div>
       </div>
 
-      {/* График или пустое состояние */}
-      {multiLineData.length === 0 && !isLoading ? (
+      {/* Stacked bar chart или пустое состояние */}
+      {chartData.length < 2 ? (
         <p className="text-xs text-muted-foreground/50 italic py-8 text-center">
-          Нет данных об источниках трафика
+          {isLoading ? '' : 'Нет данных об источниках трафика'}
         </p>
       ) : (
-        <SparklineChart
-          multiLineData={visibleData}
-          gradientId="sourcesChart"
-          granularity={granularity}
-          height={160}
-        />
+        <ResponsiveContainer width="100%" height={160}>
+          <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+            <YAxis hide domain={[0, 'auto']} />
+            <XAxis dataKey="date" ticks={tickValues}
+              tickFormatter={(val: string) => fmtTick(val, granularity)}
+              tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.4)' }}
+              axisLine={false} tickLine={false} />
+            <Tooltip
+              content={(props) => (
+                <SourcesTooltip active={props.active} payload={props.payload as any} granularity={granularity} />
+              )}
+              cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+            {visibleData.map((line, idx) => (
+              <Bar key={line.name} dataKey={line.name} stackId="sources" fill={line.color}
+                fillOpacity={0.85} isAnimationActive={false}
+                radius={idx === visibleData.length - 1 ? [2, 2, 0, 0] : [0, 0, 0, 0]} />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
       )}
 
       {/* Интерактивная легенда — pill-кнопки */}
@@ -140,25 +188,14 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
             const hidden = hiddenSources.has(line.name);
             const count = line.data.reduce((s, p) => s + p.count, 0);
             return (
-              <button
-                key={line.name}
-                type="button"
-                onClick={() => toggleSource(line.name)}
-                className={[
-                  'flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-medium transition-all',
-                  hidden
-                    ? 'border-border/40 text-muted-foreground/50 bg-transparent'
-                    : 'border-transparent text-foreground',
+              <button key={line.name} type="button" onClick={() => toggleSource(line.name)}
+                className={['flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-medium transition-all',
+                  hidden ? 'border-border/40 text-muted-foreground/50 bg-transparent' : 'border-transparent text-foreground',
                 ].join(' ')}
-                style={hidden ? {} : {
-                  backgroundColor: `${line.color}18`,
-                  borderColor: `${line.color}50`,
-                }}
-              >
+                style={hidden ? {} : { backgroundColor: `${line.color}18`, borderColor: `${line.color}50` }}>
                 {hidden
                   ? <X className="w-3 h-3 shrink-0 text-muted-foreground/50" />
-                  : <Check className="w-3 h-3 shrink-0" style={{ color: line.color }} />
-                }
+                  : <Check className="w-3 h-3 shrink-0" style={{ color: line.color }} />}
                 {line.name}
                 <span className="tabular-nums opacity-70">{count}</span>
               </button>
