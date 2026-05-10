@@ -4,12 +4,10 @@
  */
 
 import {
-  Activity,
   BarChart3,
   Crown,
   Edit,
   MessageSquare,
-  Shield,
   Users,
 } from 'lucide-react';
 import { UserStats } from '../../types';
@@ -34,22 +32,8 @@ const STATS_DATA = [
     bg: 'bg-blue-50 dark:bg-blue-950/40',
     ring: 'ring-blue-200 dark:ring-blue-800',
   },
-  {
-    icon: Activity,
-    label: 'Активны',
-    fullLabel: 'Активных пользователей',
-    gradient: 'from-emerald-500 to-emerald-600',
-    bg: 'bg-emerald-50 dark:bg-emerald-950/40',
-    ring: 'ring-emerald-200 dark:ring-emerald-800',
-  },
-  {
-    icon: Shield,
-    label: 'Заблок.',
-    fullLabel: 'Заблокировано',
-    gradient: 'from-rose-500 to-rose-600',
-    bg: 'bg-rose-50 dark:bg-rose-950/40',
-    ring: 'ring-rose-200 dark:ring-rose-800',
-  },
+  // { icon: Activity, label: 'Активны', ... } — скрыто
+  // { icon: Shield, label: 'Заблок.', ... } — скрыто
   {
     icon: Crown,
     label: 'Premium',
@@ -108,8 +92,8 @@ function formatStatValue(value: number | undefined): string {
 export function StatsCards({ stats }: StatsCardsProps) {
   const statValues = [
     stats.totalUsers,
-    stats.activeUsers,
-    stats.blockedUsers,
+    // stats.activeUsers — скрыто
+    // stats.blockedUsers — скрыто
     stats.premiumUsers,
     stats.totalInteractions,
     stats.avgInteractionsPerUser,

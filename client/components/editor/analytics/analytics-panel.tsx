@@ -110,11 +110,10 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
   const sourceItems = sources.map(s => ({ label: s.param, count: s.count, percentage: s.percentage }));
   /** Элементы для donut-карточки языков */
   const languageItems = languages.map(l => ({ label: l.code, count: l.count, percentage: l.percentage }));
-  /** Элементы для donut-карточки статуса */
+  /** Элементы для donut-карточки Premium / не Premium */
   const statusItems = [
-    { label: 'Активны', count: stats.activeUsers ?? 0, percentage: pct(stats.activeUsers ?? 0, total) },
-    { label: 'Заблок.', count: stats.blockedUsers ?? 0, percentage: pct(stats.blockedUsers ?? 0, total) },
     { label: 'Premium', count: stats.premiumUsers ?? 0, percentage: pct(stats.premiumUsers ?? 0, total) },
+    { label: 'Обычные', count: Math.max(0, total - (stats.premiumUsers ?? 0)), percentage: pct(Math.max(0, total - (stats.premiumUsers ?? 0)), total) },
   ];
 
   return (
@@ -168,7 +167,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
                 </div>
               }
             />
-            <StatDonutCard title="Статус" items={statusItems} className="h-full" />
+            <StatDonutCard title="Premium" items={statusItems} className="h-full" />
           </div>
 
           {/* Строка 2: активность сообщений + языки */}

@@ -86,11 +86,10 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   // Определяем тренд по недельному приросту
   const growthTrend = weeklyGrowth > 0 ? 'up' : weeklyGrowth < 0 ? 'down' : 'neutral';
 
-  // Вычисляем проценты статусов пользователей от общего числа
+  // Вычисляем процент premium пользователей от общего числа
   const total = stats.totalUsers ?? 0;
-  const activePercent = calcPercent(stats.activeUsers ?? 0, total);
-  const blockedPercent = calcPercent(stats.blockedUsers ?? 0, total);
   const premiumPercent = calcPercent(stats.premiumUsers ?? 0, total);
+  const nonPremiumPercent = calcPercent(Math.max(0, total - (stats.premiumUsers ?? 0)), total);
 
   // Преобразуем источники трафика в формат StatBarItem
   const sourceItems = sources.map(s => ({
@@ -160,13 +159,12 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         }
       />
 
-      {/* Карточка: статус пользователей (активные, заблокированные, premium) */}
+      {/* Карточка: Premium / не Premium */}
       <StatDonutCard
-        title="Статус"
+        title="Premium"
         items={[
-          { label: 'Активны', count: stats.activeUsers ?? 0, percentage: activePercent },
-          { label: 'Заблок.', count: stats.blockedUsers ?? 0, percentage: blockedPercent },
           { label: 'Premium', count: stats.premiumUsers ?? 0, percentage: premiumPercent },
+          { label: 'Обычные', count: Math.max(0, total - (stats.premiumUsers ?? 0)), percentage: nonPremiumPercent },
         ]}
       />
 

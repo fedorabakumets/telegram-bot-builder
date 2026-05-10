@@ -1,6 +1,6 @@
 /**
  * @fileoverview Компонент ячейки статусов пользователя
- * @description Отображает бейджи статусов: активен, premium, заблокирован
+ * @description Отображает бейдж Premium (активен/заблокирован скрыты)
  */
 
 import { Badge } from '@/components/ui/badge';
@@ -25,19 +25,15 @@ export function DesktopStatusCell({ user }: DesktopStatusCellProps): React.JSX.E
   return (
     <TableCell className="py-2">
       <div className="flex flex-wrap gap-1">
-        <Badge
-          variant={Boolean(user.isActive) ? 'default' : 'secondary'}
-          className="text-xs"
-        >
-          {Boolean(user.isActive) ? 'Активен' : 'Неактивен'}
-        </Badge>
-        {Boolean(user.isPremium) && (
-          <Badge variant="outline" className="text-xs h-5">
+        {/* Активен/Неактивен — скрыто */}
+        {/* Заблокирован — скрыто */}
+        {Boolean(user.isPremium) ? (
+          <Badge variant="outline" className="text-xs h-5 text-yellow-600 border-yellow-400">
             <Crown className="w-2.5 h-2.5 mr-0.5" />
+            Premium
           </Badge>
-        )}
-        {Boolean(user.isBlocked) && (
-          <Badge variant="destructive" className="text-xs">X</Badge>
+        ) : (
+          <span className="text-xs text-muted-foreground/50">—</span>
         )}
       </div>
     </TableCell>
