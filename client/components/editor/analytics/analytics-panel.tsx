@@ -3,10 +3,11 @@
  * @description Отображает числовые карточки с графиками и donut-диаграммы
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useQueryClient } from '@tanstack/react-query';
 import { useStats } from '@/components/editor/database/user-database/hooks/queries/use-stats';
 import { useGrowth, GrowthGranularity } from '@/components/editor/database/user-database/hooks/queries/use-growth';
 import { useGrowthBySource } from '@/components/editor/database/user-database/hooks/queries/use-growth-by-source';
@@ -65,9 +66,24 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
   /** Токены проекта для селектора бота */
   const projectTokensInfo = useProjectTokens([projectId]);
   const tokens = projectTokensInfo[0]?.tokens ?? [];
+  const queryClient = useQueryClient();
 
   /** Подписка на WS-события — real-time инвалидация кэша статистики и графиков */
   useLiveInvalidate({ projectId, selectedTokenId });
+
+  /**
+   * Смена гранулярности прироста с принудительной инвалидацией кэша источников
+   * @param g - Новое значение гранулярности
+   */
+  const handleGrowthGranularityChange = useCallback((g: GrowthGranularity) => {
+    setGrowthGranularity(g);
+    queryClient.invalidateQueries({
+      queryKey: ['users-growth-by-source', projectId, selectedTokenId],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ['users-growth', projectId, selectedTokenId],
+    });
+  }, [queryClient, projectId, selectedTokenId]);
 
   /** Автовыбор дефолтного токена при загрузке, если ничего не выбрано */
   useEffect(() => {
@@ -144,7 +160,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken }: An
               chartHeight={160}
               headerExtra={
                 <div className="flex items-center gap-1.5">
-                  <GrowthGranularitySelector value={growthGranularity} onChange={setGrowthGranularity} />
+                  <GrowthGranularitySelector value={growthGranularity} onChange={handleGrowthGranularityChange} />
                   <ChartModeToggle value={growthMode} onChange={setGrowthMode} />
                   <SourceModeToggle value={sourceMode} onChange={setSourceMode} />
                 </div>
