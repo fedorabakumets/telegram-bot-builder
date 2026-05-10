@@ -208,7 +208,7 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
         </ResponsiveContainer>
       ) : (
         <ResponsiveContainer width="100%" height={160}>
-          <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+          <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }} barCategoryGap="8%">
             <YAxis hide domain={[0, 'auto']} />
             <XAxis dataKey="date" ticks={tickValues}
               tickFormatter={(val: string) => fmtTick(val, granularity)}
@@ -221,7 +221,7 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
               cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
             {visibleData.map((line, idx) => (
               <Bar key={line.name} dataKey={line.name} stackId="sources" fill={line.color}
-                fillOpacity={0.85} isAnimationActive={false} maxBarSize={20}
+                fillOpacity={0.85} isAnimationActive={false}
                 radius={idx === visibleData.length - 1 ? [2, 2, 0, 0] : [0, 0, 0, 0]} />
             ))}
           </BarChart>

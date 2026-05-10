@@ -191,7 +191,7 @@ export function SparklineChart({
     if (isMultiBar) {
       return (
         <ResponsiveContainer width="100%" height={height}>
-          <BarChart data={chartData} margin={MARGIN}>
+          <BarChart data={chartData} margin={MARGIN} barCategoryGap="8%">
             <YAxis hide domain={['auto', 'auto']} />
             <XAxis
               dataKey="date"
@@ -212,7 +212,6 @@ export function SparklineChart({
                 stackId="sources"
                 fill={line.color}
                 fillOpacity={idx === 0 ? 0.9 : 0.75}
-                maxBarSize={20}
                 radius={idx === multiLineData.length - 1 ? [2, 2, 0, 0] : [0, 0, 0, 0]}
                 isAnimationActive={false}
               />
@@ -307,7 +306,7 @@ export function SparklineChart({
   if (isBar) {
     return (
       <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={chartData} margin={MARGIN}>
+        <BarChart data={chartData} margin={MARGIN} barCategoryGap="8%">
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={lineColor} stopOpacity={0.8} />
@@ -318,7 +317,6 @@ export function SparklineChart({
           <Bar
             dataKey="count"
             fill={`url(#${gradientId})`}
-            maxBarSize={20}
             radius={[2, 2, 0, 0]}
             isAnimationActive={false}
           />
