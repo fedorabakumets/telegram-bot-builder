@@ -170,25 +170,27 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         />
       </div>
 
-      {/* Строка 2: график источников трафика на всю ширину */}
-      <AnalyticsSourcesChart
-        projectId={projectId}
-        selectedTokenId={selectedTokenId}
-      />
+      {/* Строка 2: график источников трафика + donut рядом */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <AnalyticsSourcesChart
+          projectId={projectId}
+          selectedTokenId={selectedTokenId}
+        />
+        <StatDonutCard
+          title="Источники трафика"
+          items={sourceItems}
+          onItemClick={onSourceClick}
+        />
+      </div>
 
-      {/* Строка 3: три donut-диаграммы */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Строка 3: Premium + языки */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <StatDonutCard
           title="Premium"
           items={[
             { label: 'Premium', count: stats.premiumUsers ?? 0, percentage: premiumPercent },
             { label: 'Обычные', count: Math.max(0, total - (stats.premiumUsers ?? 0)), percentage: nonPremiumPercent },
           ]}
-        />
-        <StatDonutCard
-          title="Источники трафика"
-          items={sourceItems}
-          onItemClick={onSourceClick}
         />
         <StatDonutCard
           title="Языки"
