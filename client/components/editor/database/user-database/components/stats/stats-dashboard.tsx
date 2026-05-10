@@ -114,9 +114,11 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
   }));
 
   // Формируем подпись для карточки активности
-  const activitySubtitle = stats.avgInteractionsPerUser !== undefined
-    ? `~${formatAvg(stats.avgInteractionsPerUser)} среднее`
-    : undefined;
+  const activitySubtitle = weeklyMessages > 0
+    ? `+${weeklyMessages} за неделю`
+    : stats.avgInteractionsPerUser !== undefined
+      ? `~${formatAvg(stats.avgInteractionsPerUser)} среднее`
+      : undefined;
 
   // Агрегируем данные по источникам для multi-line графика
   const multiLineData = sourceMode === 'by-source' ? aggregateTopSources(sourcePoints, 5) : undefined;

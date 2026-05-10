@@ -193,7 +193,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               sparklineData={messagePoints}
               lineColor="#10b981"
               gradientId="analyticsActivity"
-              subtitle={stats.avgInteractionsPerUser !== undefined ? `~${stats.avgInteractionsPerUser.toFixed(1)} среднее` : undefined}
+              subtitle={weeklyMessages > 0 ? `+${weeklyMessages} за неделю` : stats.avgInteractionsPerUser !== undefined ? `~${stats.avgInteractionsPerUser.toFixed(1)} среднее` : undefined}
               trend={weeklyMessages > 0 ? 'up' : 'neutral'}
               cumulative={activityMode === 'cumulative'}
               chartGranularity={msgGranularity}

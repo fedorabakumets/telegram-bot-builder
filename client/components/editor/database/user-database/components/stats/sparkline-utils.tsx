@@ -17,6 +17,12 @@ export function fmtTick(dateStr: string, granularity?: string): string {
   if (granularity === '1m' || granularity === '5m' || granularity === '1h') {
     return d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
   }
+  if (granularity === '7d') {
+    return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
+  }
+  if (granularity === '30d') {
+    return d.toLocaleDateString('ru', { month: 'short', year: '2-digit' });
+  }
   return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
 }
 
@@ -32,6 +38,14 @@ export function fmtTooltipDate(dateStr: string, granularity?: string): string {
     const date = d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
     const time = d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
     return `${date} ${time}`;
+  }
+  if (granularity === '30d') {
+    return d.toLocaleDateString('ru', { month: 'long', year: 'numeric' });
+  }
+  if (granularity === '7d') {
+    const from = d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
+    const to = new Date(d.getTime() + 6 * 86400_000).toLocaleDateString('ru', { day: 'numeric', month: 'short' });
+    return `${from} – ${to}`;
   }
   return d.toLocaleDateString('ru', { day: 'numeric', month: 'long', year: 'numeric' });
 }
