@@ -312,6 +312,12 @@ export async function initializeDatabaseTables() {
     `, "Создание таблицы bot_groups");
 
     await executeWithRetry(db, sql`
+      CREATE UNIQUE INDEX IF NOT EXISTS bot_groups_project_group_uniq
+      ON bot_groups (project_id, group_id)
+      WHERE group_id IS NOT NULL;
+    `, "Уникальный индекс bot_groups (project_id, group_id)");
+
+    await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS group_members (
         id SERIAL PRIMARY KEY,
         group_id INTEGER REFERENCES bot_groups(id) ON DELETE CASCADE NOT NULL,
