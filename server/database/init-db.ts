@@ -640,6 +640,16 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при миграции token_id в bot_messages:', error);
     }
 
+    // Миграция: добавить telegram_message_id в bot_messages
+    try {
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_messages
+        ADD COLUMN IF NOT EXISTS telegram_message_id INTEGER;
+      `, "Миграция: добавление telegram_message_id в bot_messages");
+    } catch (error) {
+      console.log('⚠️ Ошибка при миграции telegram_message_id в bot_messages:', error);
+    }
+
     // Миграция: добавить token_id в bot_users и обновить первичный ключ
     try {
       await executeWithRetry(db, sql`

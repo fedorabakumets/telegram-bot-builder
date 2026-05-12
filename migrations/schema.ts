@@ -120,6 +120,8 @@ export const botMessages = pgTable("bot_messages", {
 	messageData: jsonb("message_data"),
 	nodeId: text("node_id"),
 	primaryMediaId: integer("primary_media_id"),
+	/** ID сообщения в Telegram (для удаления/редактирования через Telegram API) */
+	telegramMessageId: integer("telegram_message_id"),
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
 }, (table) => [
 	foreignKey({

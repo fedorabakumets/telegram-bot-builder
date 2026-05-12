@@ -32,6 +32,8 @@ export const botMessages = pgTable("bot_messages", {
   nodeId: text("node_id"),
   /** ID основного медиа */
   primaryMediaId: integer("primary_media_id").references(() => mediaFiles.id, { onDelete: "set null" }),
+  /** ID сообщения в Telegram (для удаления/редактирования через Telegram API) */
+  telegramMessageId: integer("telegram_message_id"),
   /** Дата создания сообщения */
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).defaultNow(),
 });
@@ -72,6 +74,8 @@ export const insertBotMessageSchema = z.object({
   nodeId: z.string().nullable().optional(),
   /** ID основного медиа */
   primaryMediaId: z.number().nullable().optional(),
+  /** ID сообщения в Telegram */
+  telegramMessageId: z.number().int().positive().nullable().optional(),
 });
 
 /** Схема вставки связи сообщения с медиа */
