@@ -1,72 +1,62 @@
 /**
  * @fileoverview Хук синхронизации названий и аватарок групп из Telegram
- * При монтировании запрашивает список групп проекта и синкает каждую через Bot API
+ * Берёт уникальные chat_id из списка диалогов (bot_messages) и синкает каждую через Bot API.
+ * После синка название и аватарка подтягиваются из bot_groups через LEFT JOIN в SQL.
  * @module client/components/editor/database/user-database/hooks/use-sync-groups
  */
 
 import { useEffect, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BotGroup } from '@shared/schema';
+import { useQueryClient } from '@tanstack/react-query';
+import { UserBotData } from '@shared/schema';
 
 /**
  * Синхронизирует данные групп (название, аватарка) из Telegram Bot API.
- * Запускается один раз при монтировании компонента.
- * После синка инвалидирует кэш групп и список диалогов.
+ * Запускается один раз при монтировании. Принимает список диалогов напрямую
+ * чтобы не делать лишний запрос к /api/projects/:id/groups.
  *
  * @param projectId - Идентификатор проекта
- * @param selectedTokenId - Идентификатор выбранного токена (для инвалидации кэша)
+ * @param selectedTokenId - Идентификатор выбранного токена
+ * @param dialogs - Список диалогов (включая группы с isGroup=true)
  */
-export function useSyncGroups(projectId: number, selectedTokenId?: number | null): void {
+export function useSyncGroups(
+    projectId: number,
+    selectedTokenId?: number | null,
+    dialogs?: UserBotData[],
+): void {
     const queryClient = useQueryClient();
-    const syncedRef = useRef(false);
-
-    // Загружаем список групп проекта
-    const { data: groups } = useQuery<BotGroup[]>({
-        queryKey: [`/api/projects/${projectId}/groups`],
-        queryFn: async () => {
-            const res = await fetch(`/api/projects/${projectId}/groups`, {
-                credentials: 'include',
-            });
-            if (!res.ok) return [];
-            return res.json();
-        },
-        staleTime: 60_000,
-        enabled: !!projectId,
-    });
+    const syncedRef = useRef<Set<string>>(new Set());
 
     useEffect(() => {
-        // Синкаем только один раз за сессию монтирования
-        if (syncedRef.current) return;
-        if (!groups || groups.length === 0) return;
+        if (!dialogs || dialogs.length === 0) return;
 
-        syncedRef.current = true;
+        // Берём только группы у которых ещё не синкали в этой сессии
+        const groups = dialogs.filter(
+            (d) => (d as any).isGroup && d.userId && !syncedRef.current.has(String(d.userId))
+        );
+        if (groups.length === 0) return;
+
+        groups.forEach((g) => syncedRef.current.add(String(g.userId)));
 
         /**
-         * Синкает каждую группу у которой есть group_id (Telegram chat_id).
-         * Запросы идут параллельно, ошибки не блокируют остальные.
+         * Синкает каждую группу параллельно через POST /sync.
+         * После завершения инвалидирует кэш списка диалогов.
          */
         const syncAll = async () => {
-            const groupsWithId = groups.filter((g) => g.groupId);
-            if (groupsWithId.length === 0) return;
-
             await Promise.allSettled(
-                groupsWithId.map((g) =>
+                groups.map((g) =>
                     fetch(
-                        `/api/projects/${projectId}/groups/${encodeURIComponent(g.groupId!)}/sync`,
+                        `/api/projects/${projectId}/groups/${encodeURIComponent(String(g.userId))}/sync`,
                         { method: 'POST', credentials: 'include' }
                     )
                 )
             );
 
-            // Инвалидируем кэш групп и список диалогов после синка
-            queryClient.invalidateQueries({
-                queryKey: [`/api/projects/${projectId}/groups`],
-            });
+            // Инвалидируем список диалогов — подтянутся обновлённые названия и аватарки
             queryClient.invalidateQueries({
                 queryKey: ['infinite-users', projectId],
             });
         };
 
         syncAll();
-    }, [groups, projectId, selectedTokenId, queryClient]);
+    }, [dialogs, projectId, selectedTokenId, queryClient]);
 }

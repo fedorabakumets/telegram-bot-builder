@@ -13,6 +13,7 @@ import { DialogList } from './dialog-list';
 import { useLiveInvalidate } from '../hooks/use-live-invalidate';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useSyncGroups } from '../hooks/use-sync-groups';
+import { useInfiniteUsers } from '../hooks/queries/use-infinite-users';
 import { BotTokenSelector, ProjectSelector } from '../components/header';
 
 /**
@@ -78,8 +79,17 @@ export function DialogsTabContent({
   // Подписываемся на WS-события: обновляет кэш infinite-users (lastMessageText, порядок)
   useLiveInvalidate({ projectId, selectedTokenId: resolvedTokenId });
 
-  // Синкаем названия и аватарки групп из Telegram при открытии вкладки
-  useSyncGroups(projectId, resolvedTokenId);
+  // Загружаем первую страницу диалогов чтобы передать группы в useSyncGroups
+  const { allUsers: dialogs } = useInfiniteUsers({
+    projectId,
+    selectedTokenId: resolvedTokenId,
+    includeGroups: true,
+    sortBy: 'lastInteraction',
+    sortDir: 'desc',
+  });
+
+  // Синкаем названия и аватарки групп из Telegram при появлении групп в списке
+  useSyncGroups(projectId, resolvedTokenId, dialogs);
 
   /** Сброс выбранного пользователя */
   const handleClose = () => setSelectedUser(null);
