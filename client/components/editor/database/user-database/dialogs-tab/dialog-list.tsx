@@ -45,6 +45,7 @@ export function DialogList({
       search,
       sortBy: 'lastInteraction',
       sortDir: 'desc',
+      includeGroups: true,
     });
 
   /** Infinite scroll через IntersectionObserver */

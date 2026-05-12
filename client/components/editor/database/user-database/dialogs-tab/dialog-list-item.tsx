@@ -1,8 +1,10 @@
 /**
  * @fileoverview Карточка одного диалога в левой колонке списка
- * @description Отображает аватар, имя, превью последнего сообщения и время
+ * @description Отображает аватар, имя, превью последнего сообщения и время.
+ * Поддерживает как личные диалоги, так и групповые чаты.
  */
 
+import { Users, Radio } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
 import { UserAvatar } from '../../dialog/components/user-avatar';
 import { formatRelativeTime } from '../utils/format-relative-time';
@@ -23,13 +25,17 @@ const MEDIA_MAP: Record<string, string> = {
 };
 
 /**
- * Расширенный тип пользователя с полями последнего сообщения
+ * Расширенный тип диалога с полями последнего сообщения и флагом группы
  */
-type UserWithLastMessage = UserBotData & {
+type DialogWithMeta = UserBotData & {
   /** Текст последнего сообщения из JOIN на сервере */
   lastMessageText?: string | null;
   /** Время последнего сообщения из JOIN на сервере */
   lastMessageAt?: string | Date | null;
+  /** Флаг группового диалога */
+  isGroup?: boolean;
+  /** Тип чата для групп */
+  chatType?: string;
 };
 
 /**
@@ -44,10 +50,23 @@ function formatPreview(raw: string | null | undefined): string {
 }
 
 /**
+ * Возвращает читаемый тип чата для бейджа
+ * @param chatType - Тип чата из Telegram
+ * @returns Строка для отображения
+ */
+function formatChatType(chatType?: string): string {
+  switch (chatType) {
+    case 'channel': return 'Канал';
+    case 'supergroup': return 'Супергруппа';
+    default: return 'Группа';
+  }
+}
+
+/**
  * Пропсы компонента DialogListItem
  */
 interface DialogListItemProps {
-  /** Данные пользователя */
+  /** Данные пользователя или группы */
   user: UserBotData;
   /** Флаг активного (выбранного) состояния */
   isSelected: boolean;
@@ -60,7 +79,8 @@ interface DialogListItemProps {
 }
 
 /**
- * Карточка диалога в стиле мессенджера
+ * Карточка диалога в стиле мессенджера.
+ * Для групп показывает иконку группы/канала и бейдж типа чата.
  * @param props - Пропсы компонента
  * @returns JSX элемент карточки диалога
  */
@@ -71,12 +91,11 @@ export function DialogListItem({
   projectId,
   tokenId,
 }: DialogListItemProps): React.JSX.Element {
-  const userWithMsg = user as UserWithLastMessage;
-  const preview = formatPreview(userWithMsg.lastMessageText);
-  const timestamp = formatRelativeTime(
-    userWithMsg.lastMessageAt ?? user.lastInteraction
-  );
-  const name = formatUserName(user);
+  const entry = user as DialogWithMeta;
+  const preview = formatPreview(entry.lastMessageText);
+  const timestamp = formatRelativeTime(entry.lastMessageAt ?? user.lastInteraction);
+  const name = entry.isGroup ? (user.firstName ?? 'Группа') : formatUserName(user);
+  const isChannel = entry.chatType === 'channel';
 
   return (
     <button
@@ -89,21 +108,59 @@ export function DialogListItem({
         isSelected ? 'bg-primary/10 hover:bg-primary/15' : '',
       ].join(' ')}
     >
-      {/* Аватар пользователя */}
+      {/* Аватар: для групп — иконка, для пользователей — фото */}
       <div className="flex-shrink-0">
-        <UserAvatar
-          messageType="user"
-          user={user}
-          projectId={projectId}
-          tokenId={tokenId}
-          size={40}
-        />
+        {entry.isGroup ? (
+          <div
+            style={{ width: 40, height: 40 }}
+            className={[
+              'rounded-full flex items-center justify-center',
+              isChannel
+                ? 'bg-rose-100 dark:bg-rose-900'
+                : 'bg-violet-100 dark:bg-violet-900',
+            ].join(' ')}
+          >
+            {isChannel ? (
+              <Radio
+                style={{ width: 20, height: 20 }}
+                className="text-rose-600 dark:text-rose-400"
+              />
+            ) : (
+              <Users
+                style={{ width: 20, height: 20 }}
+                className="text-violet-600 dark:text-violet-400"
+              />
+            )}
+          </div>
+        ) : (
+          <UserAvatar
+            messageType="user"
+            user={user}
+            projectId={projectId}
+            tokenId={tokenId}
+            size={40}
+          />
+        )}
       </div>
 
       {/* Основной контент карточки */}
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="text-sm font-medium truncate">{name}</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-sm font-medium truncate">{name}</span>
+            {entry.isGroup && (
+              <span
+                className={[
+                  'text-[10px] px-1 py-0.5 rounded font-medium flex-shrink-0',
+                  isChannel
+                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300'
+                    : 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300',
+                ].join(' ')}
+              >
+                {formatChatType(entry.chatType)}
+              </span>
+            )}
+          </div>
           <span className="text-xs text-muted-foreground flex-shrink-0">{timestamp}</span>
         </div>
         <p className="text-xs text-muted-foreground truncate mt-0.5">{preview}</p>
