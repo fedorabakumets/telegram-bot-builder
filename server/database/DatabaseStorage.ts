@@ -1430,6 +1430,49 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
+   * Получить сообщения группового чата по project_id и chat_id
+   * @param projectId - ID проекта
+   * @param chatId - Telegram chat_id группы
+   * @param limit - Ограничение количества сообщений (по умолчанию 100)
+   * @param tokenId - Опциональный ID токена для фильтрации
+   * @returns Массив сообщений с медиа, отсортированных по убыванию даты
+   */
+  async getGroupChatMessages(
+    projectId: number,
+    chatId: string,
+    limit: number = 100,
+    tokenId?: number | null
+  ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]> {
+    const whereConditions = [
+      eq(botMessages.projectId, projectId),
+      eq(botMessages.chatId, chatId),
+    ];
+
+    if (tokenId !== null && tokenId !== undefined) {
+      whereConditions.push(eq(botMessages.tokenId, tokenId));
+    }
+
+    const messages = await this.db
+      .select()
+      .from(botMessages)
+      .where(and(...whereConditions))
+      .orderBy(desc(botMessages.createdAt))
+      .limit(limit);
+
+    const messagesWithMedia = await Promise.all(
+      messages.map(async (message) => {
+        const media = await this.getMessageMedia(message.id);
+        return {
+          ...message,
+          media: media.length > 0 ? media : undefined,
+        };
+      })
+    );
+
+    return messagesWithMedia;
+  }
+
+  /**
    * Импортировать проекты из файлов в директории bots/
    * @returns Массив импортированных проектов
    */

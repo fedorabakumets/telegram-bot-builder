@@ -22,7 +22,7 @@ export { mediaFiles, insertMediaFileSchema } from "./media-files";
 export type { MediaFile, InsertMediaFile } from "./media-files";
 
 export { userBotData, insertUserBotDataSchema } from "./user-bot-data";
-export type { UserBotData, InsertUserBotData } from "./user-bot-data";
+export type { UserBotData, InsertUserBotData, DialogEntry } from "./user-bot-data";
 
 export { botUsers, insertBotUserSchema } from "./bot-users";
 export type { BotUser, InsertBotUser } from "./bot-users";

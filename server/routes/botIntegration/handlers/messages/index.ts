@@ -13,3 +13,4 @@ export { saveMessageHandler } from "./saveMessageHandler";
 export { deleteMessagesHandler } from "./deleteMessagesHandler";
 export { deleteSingleMessageHandler } from "./deleteSingleMessageHandler";
 export { editSingleMessageHandler } from "./editSingleMessageHandler";
+export { getGroupMessagesHandler } from "./getGroupMessagesHandler";

@@ -11,7 +11,7 @@
 import type { Express } from "express";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
 import { getTelegramFileHandler } from "./botIntegration/handlers/botData/getTelegramFileHandler";
-import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, saveMessageHandler, deleteMessagesHandler, deleteSingleMessageHandler, editSingleMessageHandler } from "./botIntegration/handlers/messages";
+import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, saveMessageHandler, deleteMessagesHandler, deleteSingleMessageHandler, editSingleMessageHandler, getGroupMessagesHandler } from "./botIntegration/handlers/messages";
 import { registerTelegramMediaHandler } from "./botIntegration/handlers/media";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler } from "./botIntegration/handlers/groups";
 import { getBotInfoHandler, updateBotNameHandler, updateBotDescriptionHandler, updateBotShortDescriptionHandler } from "./botIntegration/handlers/botInfo";
@@ -81,6 +81,15 @@ export function setupBotIntegrationRoutes(app: Express) {
      * @route GET /api/projects/:projectId/users/:userId/messages
      */
     app.get("/api/projects/:projectId/users/:userId/messages", getMessagesHandler);
+
+    /**
+     * Обработчик маршрута GET /api/projects/:projectId/groups/:groupId/messages
+     *
+     * Возвращает все сообщения группового чата по Telegram chat_id
+     *
+     * @route GET /api/projects/:projectId/groups/:groupId/messages
+     */
+    app.get("/api/projects/:projectId/groups/:groupId/messages", getGroupMessagesHandler);
 
     /**
      * Обработчик маршрута POST /api/projects/:projectId/users/:userId/send-message

@@ -139,3 +139,14 @@ export type UserBotData = typeof userBotData.$inferSelect;
 
 /** Тип для вставки пользовательских данных бота */
 export type InsertUserBotData = z.infer<typeof insertUserBotDataSchema>;
+
+/**
+ * Расширенный тип записи диалога — пользователь или группа.
+ * Используется в списке диалогов с поддержкой групповых чатов.
+ */
+export type DialogEntry = UserBotData & {
+  /** Флаг группового диалога */
+  isGroup?: boolean;
+  /** Тип чата для групп: 'group', 'supergroup', 'channel' */
+  chatType?: string;
+};

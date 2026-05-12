@@ -2213,7 +2213,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         u.deep_link_param AS "deepLinkParam",
         u.referrer_id AS "referrerId",
         lm.message_text AS "lastMessageText",
-        lm.created_at AS "lastMessageAt"
+        lm.created_at AS "lastMessageAt",
+        FALSE AS "isGroup",
+        NULL AS "chatType"
       FROM bot_users u
       LEFT JOIN LATERAL (
         SELECT message_text, created_at
@@ -2226,6 +2228,51 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       WHERE u.is_bot = 0
         AND u.project_id = $1
         AND ($2::integer IS NULL OR u.token_id = $2)
+    `;
+
+    // Флаг включения групп в список диалогов
+    const includeGroups = req.query.includeGroups === 'true';
+
+    /**
+     * SQL-запрос для групп как диалогов (UNION ALL с основным запросом пользователей).
+     * Используется отрицательный id чтобы не конфликтовать с id пользователей.
+     */
+    const groupsUnionSql = `
+      UNION ALL
+      SELECT
+        (-g.id) AS id,
+        g.group_id::text AS "userId",
+        NULL AS "userName",
+        g.name AS "firstName",
+        NULL AS "lastName",
+        g.avatar_url AS "avatarUrl",
+        g.created_at AS "registeredAt",
+        g.created_at AS "createdAt",
+        COALESCE(g.last_activity, g.updated_at) AS "lastInteraction",
+        g.messages_count AS "interactionCount",
+        TRUE AS "isActive",
+        FALSE AS "isPremium",
+        FALSE AS "isBlocked",
+        FALSE AS "isBot",
+        NULL AS "languageCode",
+        NULL AS "deepLinkParam",
+        NULL AS "referrerId",
+        lm.message_text AS "lastMessageText",
+        lm.created_at AS "lastMessageAt",
+        TRUE AS "isGroup",
+        g.chat_type AS "chatType"
+      FROM bot_groups g
+      LEFT JOIN LATERAL (
+        SELECT message_text, created_at
+        FROM bot_messages
+        WHERE chat_id = g.group_id
+          AND project_id = g.project_id
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) lm ON true
+      WHERE g.project_id = $1
+        AND g.is_active = 1
+        AND g.group_id IS NOT NULL
     `;
 
     try {
@@ -2264,11 +2311,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
         const whereExtra = conditions.length ? ' AND ' + conditions.join(' AND ') : '';
 
-        const dataSql = `${selectBase}${whereExtra} ORDER BY ${sortColumn} ${sortOrder} LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
-        const countSql = `
-          SELECT COUNT(*)::integer AS total FROM bot_users u
-          WHERE u.is_bot = 0 AND u.project_id = $1 AND ($2::integer IS NULL OR u.token_id = $2)${whereExtra}
-        `;
+        // При includeGroups оборачиваем UNION в подзапрос для корректной пагинации
+        const unionPart = includeGroups ? groupsUnionSql : '';
+        const dataSql = includeGroups
+          ? `SELECT * FROM (${selectBase}${whereExtra} ${unionPart}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`
+          : `${selectBase}${whereExtra} ORDER BY ${sortColumn} ${sortOrder} LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+
+        const countSql = includeGroups
+          ? `SELECT COUNT(*)::integer AS total FROM (${selectBase}${whereExtra} ${unionPart}) AS dialogs`
+          : `SELECT COUNT(*)::integer AS total FROM bot_users u WHERE u.is_bot = 0 AND u.project_id = $1 AND ($2::integer IS NULL OR u.token_id = $2)${whereExtra}`;
 
         const dataParams = [...params, limit, offset];
         const countParams = [...params];
@@ -2285,7 +2336,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       // Обратная совместимость: возвращаем массив без пагинации (без фильтров)
-      const selectSql = `${selectBase} ORDER BY u.last_interaction DESC`;
+      const unionPart = includeGroups ? groupsUnionSql : '';
+      const selectSql = includeGroups
+        ? `SELECT * FROM (${selectBase} ${unionPart}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST`
+        : `${selectBase} ORDER BY u.last_interaction DESC`;
       const result = await dbPool.query(selectSql, [projectId, tokenId]);
       console.log(`Found ${result.rows.length} users for project ${projectId}`);
       res.json(result.rows);

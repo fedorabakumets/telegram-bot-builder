@@ -676,6 +676,21 @@ export interface IStorage {
   getBotMessagesWithMedia(projectId: number, userId: string, limit?: number, order?: 'asc' | 'desc', messageType?: 'user' | 'bot', tokenId?: number | null): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]>;
 
   /**
+   * Получить сообщения группового чата по project_id и chat_id
+   * @param projectId - ID проекта
+   * @param chatId - Telegram chat_id группы
+   * @param limit - Ограничение количества сообщений (по умолчанию 100)
+   * @param tokenId - Опциональный ID токена для фильтрации
+   * @returns Массив сообщений с медиа, отсортированных по убыванию даты
+   */
+  getGroupChatMessages(
+    projectId: number,
+    chatId: string,
+    limit?: number,
+    tokenId?: number | null
+  ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]>;
+
+  /**
    * Удалить сообщения бота по проекту и пользователю
    * @param projectId - ID проекта
    * @param userId - ID пользователя
