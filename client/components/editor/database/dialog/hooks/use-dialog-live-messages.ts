@@ -11,6 +11,7 @@ import {
   useUserMessagesLiveContext,
   NewMessageLiveEvent,
   MessageDeletedLiveEvent,
+  MessageEditedLiveEvent,
 } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 
 /**
@@ -27,6 +28,8 @@ export interface UseDialogLiveMessagesResult {
   removeOptimisticMessage: (tempId: number) => void;
   /** ID сообщений удалённых через WS другим оператором */
   wsDeletedIds: Set<number>;
+  /** Карта отредактированных через WS сообщений: messageId → новый текст */
+  wsEditedMessages: Map<number, string>;
 }
 
 /**
@@ -74,6 +77,8 @@ export function useDialogLiveMessages(
   const [liveMessages, setLiveMessages] = useState<BotMessageWithMedia[]>([]);
   /** ID сообщений удалённых через WS другим оператором */
   const [wsDeletedIds, setWsDeletedIds] = useState<Set<number>>(new Set());
+  /** Карта отредактированных через WS сообщений: messageId → новый текст */
+  const [wsEditedMessages, setWsEditedMessages] = useState<Map<number, string>>(new Map());
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -84,6 +89,7 @@ export function useDialogLiveMessages(
   const resetLiveMessages = useCallback(() => {
     setLiveMessages([]);
     setWsDeletedIds(new Set());
+    setWsEditedMessages(new Map());
   }, []);
 
   /**
@@ -117,6 +123,14 @@ export function useDialogLiveMessages(
         const deletedId = deleted.data.messageId;
         setLiveMessages((prev) => prev.filter((m) => m.id !== deletedId));
         setWsDeletedIds((prev) => new Set(prev).add(deletedId));
+        return;
+      }
+      // Обрабатываем событие редактирования сообщения
+      if (msg.type === 'message-edited') {
+        const edited = msg as MessageEditedLiveEvent;
+        if (selectedTokenId && msg.tokenId && msg.tokenId !== selectedTokenId) return;
+        if (String(edited.data.userId) !== userIdStr) return;
+        setWsEditedMessages((prev) => new Map(prev).set(edited.data.messageId, edited.data.messageText));
         return;
       }
       // Обрабатываем только события new-message, new-user игнорируем
@@ -176,6 +190,16 @@ export function useDialogLiveMessages(
             return;
           }
 
+          // Обрабатываем событие редактирования сообщения
+          if (msg.type === 'message-edited') {
+            const data = msg.data as { messageId: number; userId: string; messageText: string } | undefined;
+            if (!data) return;
+            if (selectedTokenId && msg.tokenId && msg.tokenId !== selectedTokenId) return;
+            if (String(data.userId) !== userIdStr) return;
+            setWsEditedMessages((prev) => new Map(prev).set(data.messageId, data.messageText));
+            return;
+          }
+
           if (msg.type !== 'new-message') return;
           if (selectedTokenId && msg.tokenId && msg.tokenId !== selectedTokenId) return;
           if (String(msg.data?.userId) !== userIdStr) return;
@@ -222,5 +246,5 @@ export function useDialogLiveMessages(
     };
   }, [projectId, selectedTokenId, userId, liveContext]);
 
-  return { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage, wsDeletedIds };
+  return { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage, wsDeletedIds, wsEditedMessages };
 }

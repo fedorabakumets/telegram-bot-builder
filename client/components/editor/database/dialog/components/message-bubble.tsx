@@ -1,10 +1,10 @@
 /**
  * @fileoverview Компонент пузыря сообщения
- * Координирует отображение всех частей сообщения с поддержкой удаления
+ * Координирует отображение всех частей сообщения с поддержкой удаления и редактирования
  */
 
-import { useState } from 'react';
-import { Trash2, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Trash2, Loader2, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotMessageWithMedia } from '../types';
 import { UserBotData } from '@shared/schema';
@@ -14,12 +14,7 @@ import { FormattedText } from './formatted-text';
 import { MessageButtons } from './message-buttons';
 import { ButtonClickedInfo } from './button-clicked-info';
 import { MessageTimestamp } from './message-timestamp';
-import {
-  hasButtons,
-  getButtons,
-  hasButtonClicked,
-  getButtonText
-} from '../utils/message-utils';
+import { hasButtons, getButtons, hasButtonClicked, getButtonText } from '../utils/message-utils';
 
 /**
  * Свойства компонента сообщения
@@ -41,6 +36,10 @@ interface MessageBubbleProps {
   onDelete?: (messageId: number) => void;
   /** Идёт ли удаление этого сообщения */
   isDeleting?: boolean;
+  /** Колбэк сохранения отредактированного текста */
+  onEdit?: (messageId: number, newText: string, originalText: string) => void;
+  /** Идёт ли сохранение редактирования */
+  isEditing?: boolean;
 }
 
 /**
@@ -66,22 +65,53 @@ function hasVisibleMedia(message: BotMessageWithMedia): boolean {
   const data = message.messageData as Record<string, unknown> | null;
   if (!data) return false;
   return ['photo', 'video', 'audio', 'voice', 'document', 'sticker'].some(
-    (type) => data[type] && typeof (data[type] as any)?.file_id === 'string'
+    (type) => data[type] && typeof (data[type] as Record<string, unknown>)?.file_id === 'string'
   );
 }
 
 /**
- * Компонент отображения одного сообщения с кнопкой удаления при наведении
+ * Убирает HTML-теги из текста для удобного редактирования
+ * @param html - Текст с возможными HTML-тегами
+ * @returns Очищенный текст
+ */
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, '');
+}
+
+/**
+ * Компонент отображения одного сообщения с кнопками удаления и редактирования при наведении
  * @param props - Свойства компонента
  * @returns JSX элемент сообщения
  */
-export function MessageBubble({ message, index, user, bot, projectId, tokenId, onDelete, isDeleting }: MessageBubbleProps) {
+export function MessageBubble({
+  message, index, user, bot, projectId, tokenId,
+  onDelete, isDeleting, onEdit, isEditing,
+}: MessageBubbleProps) {
   const isBot = message.messageType === 'bot';
   const isUser = message.messageType === 'user';
   const messageType: 'bot' | 'user' = isBot ? 'bot' : 'user';
 
   /** Состояние наведения курсора на блок сообщения */
   const [isHovered, setIsHovered] = useState(false);
+  /** Режим inline-редактирования */
+  const [isEditMode, setIsEditMode] = useState(false);
+  /** Текущий текст в textarea */
+  const [editText, setEditText] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /** Сбрасываем режим редактирования при смене сообщения */
+  useEffect(() => {
+    setIsEditMode(false);
+  }, [message.id]);
+
+  /** Фокус на textarea при входе в режим редактирования */
+  useEffect(() => {
+    if (isEditMode && textareaRef.current) {
+      textareaRef.current.focus();
+      const len = textareaRef.current.value.length;
+      textareaRef.current.setSelectionRange(len, len);
+    }
+  }, [isEditMode]);
 
   /** Скрываем текст-плейсхолдер если медиа отображается */
   const displayText = hasVisibleMedia(message) && MEDIA_PLACEHOLDERS.has(message.messageText ?? '')
@@ -89,7 +119,28 @@ export function MessageBubble({ message, index, user, bot, projectId, tokenId, o
     : message.messageText;
 
   /** Показывать ли кнопку удаления */
-  const showDeleteButton = isBot && message.id > 0 && !!onDelete && (isHovered || isDeleting);
+  const showDeleteButton = isBot && message.id > 0 && !!onDelete && (isHovered || isDeleting) && !isEditMode;
+  /** Показывать ли кнопку редактирования */
+  const showEditButton = isBot && message.id > 0 && !!onEdit && (isHovered || isEditing) && !isEditMode;
+
+  /** Открывает режим редактирования */
+  const handleOpenEdit = () => {
+    const raw = displayText ?? '';
+    setEditText(stripHtml(raw));
+    setIsEditMode(true);
+  };
+
+  /** Сохраняет отредактированный текст */
+  const handleSave = () => {
+    if (!onEdit) return;
+    onEdit(message.id, editText, displayText ?? '');
+    setIsEditMode(false);
+  };
+
+  /** Отменяет редактирование */
+  const handleCancel = () => setIsEditMode(false);
+
+  const isSaveDisabled = editText.trim() === '' || editText === stripHtml(displayText ?? '');
 
   return (
     <div
@@ -117,7 +168,42 @@ export function MessageBubble({ message, index, user, bot, projectId, tokenId, o
             tokenId={message.tokenId ?? undefined}
           />
 
-          <FormattedText text={displayText} messageType={messageType} />
+          {/* Режим редактирования: textarea вместо FormattedText */}
+          {isEditMode ? (
+            <div className="flex flex-col gap-1">
+              <textarea
+                ref={textareaRef}
+                className="w-full min-w-[220px] rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                rows={3}
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+              />
+              <div className="flex gap-1 justify-end">
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="h-6 px-2 text-xs"
+                  onClick={handleSave}
+                  disabled={isSaveDisabled || isEditing}
+                >
+                  {isEditing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                  <span className="ml-1">Сохранить</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 px-2 text-xs"
+                  onClick={handleCancel}
+                  disabled={isEditing}
+                >
+                  <X className="h-3 w-3" />
+                  <span className="ml-1">Отмена</span>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <FormattedText text={displayText} messageType={messageType} />
+          )}
 
           {isBot && hasButtons(message) && (
             <MessageButtons buttons={getButtons(message)} index={index} />
@@ -136,22 +222,39 @@ export function MessageBubble({ message, index, user, bot, projectId, tokenId, o
           )}
         </div>
 
-        {/* Кнопка удаления — снаружи пузыря, видна при наведении */}
-        {showDeleteButton && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            onClick={() => onDelete(message.id)}
-            disabled={isDeleting}
-            title="Удалить сообщение"
-          >
-            {isDeleting
-              ? <Loader2 className="h-3 w-3 animate-spin" />
-              : <Trash2 className="h-3 w-3" />
-            }
-          </Button>
-        )}
+        {/* Кнопки действий — снаружи пузыря, видны при наведении */}
+        <div className="flex flex-col gap-0.5">
+          {showEditButton && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10"
+              onClick={handleOpenEdit}
+              disabled={isEditing}
+              title="Редактировать сообщение"
+            >
+              {isEditing
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <Pencil className="h-3 w-3" />
+              }
+            </Button>
+          )}
+          {showDeleteButton && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              onClick={() => onDelete(message.id)}
+              disabled={isDeleting}
+              title="Удалить сообщение"
+            >
+              {isDeleting
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <Trash2 className="h-3 w-3" />
+              }
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import { buildUsersApiUrl, formatUserName } from '../utils';
 import { DialogPanelProps, BotMessageWithMedia } from './types';
 import { useSendMessage } from './hooks/use-send-message';
 import { useDeleteMessage } from './hooks/use-delete-message';
+import { useEditMessage } from './hooks/use-edit-message';
 import { useBotData } from './hooks/use-bot-data';
 import { useDialogLiveMessages } from './hooks/use-dialog-live-messages';
 import { useUserList } from '@/components/editor/database/user-details/hooks/useUserList';
@@ -72,6 +73,9 @@ export function DialogPanel({
   /** Набор id сообщений, оптимистично скрытых при удалении */
   const [deletedMessageIds, setDeletedMessageIds] = useState<Set<number>>(new Set());
 
+  /** Карта оптимистично отредактированных сообщений: messageId → новый текст */
+  const [editedMessages, setEditedMessages] = useState<Map<number, string>>(new Map());
+
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(0);
 
@@ -105,7 +109,7 @@ export function DialogPanel({
     },
   });
 
-  const { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage, wsDeletedIds } =
+  const { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage, wsDeletedIds, wsEditedMessages } =
     useDialogLiveMessages(projectId, selectedTokenId, user?.userId);
 
   /** Объединённые и дедуплицированные сообщения */
@@ -124,6 +128,7 @@ export function DialogPanel({
   useEffect(() => {
     resetLiveMessages();
     setDeletedMessageIds(new Set());
+    setEditedMessages(new Map());
     prevMessageCountRef.current = 0;
   }, [user?.userId, resetLiveMessages]);
 
@@ -169,6 +174,19 @@ export function DialogPanel({
     onDeleted: refetchMessages,
   });
 
+  const editMessageMutation = useEditMessage({
+    projectId,
+    selectedTokenId,
+    onOptimisticEdit: (messageId, newText) =>
+      setEditedMessages((prev) => new Map(prev).set(messageId, newText)),
+    onRollback: (messageId, originalText) =>
+      setEditedMessages((prev) => {
+        const next = new Map(prev);
+        next.set(messageId, originalText);
+        return next;
+      }),
+  });
+
   if (!user) {
     return <NoUserSelected />;
   }
@@ -205,22 +223,37 @@ export function DialogPanel({
           <EmptyDialog />
         ) : (
           <div className="space-y-3 py-2">
-            {messages.map((message, index) => (
-              <MessageBubble
-                key={message.id || index}
-                message={message}
-                index={index}
-                user={message.messageType === 'user' ? user : null}
-                bot={message.messageType === 'bot' ? bot : null}
-                projectId={projectId}
-                tokenId={selectedTokenId}
-                onDelete={(id) => deleteMessageMutation.mutate(id)}
-                isDeleting={
-                  deleteMessageMutation.isPending &&
-                  deleteMessageMutation.variables === message.id
-                }
-              />
-            ))}
+            {messages.map((message, index) => {
+              /** Применяем оптимистичные правки и WS-правки к тексту сообщения */
+              const displayMessage = editedMessages.has(message.id)
+                ? { ...message, messageText: editedMessages.get(message.id)! }
+                : wsEditedMessages.has(message.id)
+                ? { ...message, messageText: wsEditedMessages.get(message.id)! }
+                : message;
+              return (
+                <MessageBubble
+                  key={message.id || index}
+                  message={displayMessage}
+                  index={index}
+                  user={message.messageType === 'user' ? user : null}
+                  bot={message.messageType === 'bot' ? bot : null}
+                  projectId={projectId}
+                  tokenId={selectedTokenId}
+                  onDelete={(id) => deleteMessageMutation.mutate(id)}
+                  isDeleting={
+                    deleteMessageMutation.isPending &&
+                    deleteMessageMutation.variables === message.id
+                  }
+                  onEdit={(messageId, newText, originalText) =>
+                    editMessageMutation.mutate({ messageId, messageText: newText, originalText })
+                  }
+                  isEditing={
+                    editMessageMutation.isPending &&
+                    editMessageMutation.variables?.messageId === message.id
+                  }
+                />
+              );
+            })}
           </div>
         )}
       </ScrollArea>
