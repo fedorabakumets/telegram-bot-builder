@@ -37,7 +37,15 @@ async def handle_group_message(message: types.Message):
                 user_id=str(user_id),
                 message_type="user",
                 message_text=message.text or "[медиа]",
-                message_data={"message_id": message.message_id},
+                message_data={
+                    "message_id": message.message_id,
+                    "from_user": {
+                        "id": user_id,
+                        "username": message.from_user.username or "",
+                        "first_name": message.from_user.first_name or "",
+                        "last_name": message.from_user.last_name or "",
+                    },
+                },
                 chat_type=message.chat.type,
                 chat_id=str(chat_id),
             )

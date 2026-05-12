@@ -41,6 +41,8 @@ interface MessageBubbleProps {
   onEdit?: (messageId: number, newText: string, originalText: string) => void;
   /** Идёт ли сохранение редактирования */
   isEditing?: boolean;
+  /** Флаг группового диалога — показывает имя отправителя над сообщением */
+  isGroupDialog?: boolean;
 }
 
 /**
@@ -71,13 +73,26 @@ function hasVisibleMedia(message: BotMessageWithMedia): boolean {
 }
 
 /**
+ * Извлекает имя отправителя из messageData.from_user
+ * @param message - Сообщение
+ * @returns Отображаемое имя или null
+ */
+function getSenderName(message: BotMessageWithMedia): string | null {
+  const data = message.messageData as Record<string, unknown> | null;
+  const fromUser = data?.from_user as Record<string, string> | undefined;
+  if (!fromUser) return null;
+  const name = [fromUser.first_name, fromUser.last_name].filter(Boolean).join(' ').trim();
+  return name || fromUser.username || String(message.userId) || null;
+}
+
+/**
  * Компонент отображения одного сообщения с кнопками удаления и редактирования при наведении
  * @param props - Свойства компонента
  * @returns JSX элемент сообщения
  */
 export function MessageBubble({
   message, index, user, bot, projectId, tokenId,
-  onDelete, isDeleting, onEdit, isEditing,
+  onDelete, isDeleting, onEdit, isEditing, isGroupDialog,
 }: MessageBubbleProps) {
   const isBot = message.messageType === 'bot';
   const isUser = message.messageType === 'user';
@@ -176,6 +191,12 @@ export function MessageBubble({
         </div>
 
         <div className="flex flex-col gap-1 min-w-0" onDoubleClick={isBot && message.id > 0 && !!onEdit ? handleOpenEdit : undefined}>
+          {/* Имя отправителя в групповом диалоге — показывается над сообщением пользователя */}
+          {isGroupDialog && isUser && (
+            <span className="text-[10px] font-medium text-violet-600 dark:text-violet-400 px-1">
+              {getSenderName(message) ?? message.userId}
+            </span>
+          )}
           <MessageMedia
             media={message.media}
             messageData={message.messageData}
