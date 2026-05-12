@@ -45,8 +45,10 @@ function buildAvatarUrl(projectId: number, userId: string | number, tokenId?: nu
 export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }: UserAvatarProps) {
   const [imageError, setImageError] = useState(false);
   const isBot = messageType === 'bot';
+  /** Для групп (отрицательный userId) аватарку через этот роут не запрашиваем */
+  const isGroupChat = user?.userId ? String(user.userId).startsWith('-') : false;
   /** Показываем img если есть projectId и userId — avatarUrl в БД не обязателен */
-  const canFetchPhoto = !!projectId && !!user?.userId && !imageError;
+  const canFetchPhoto = !!projectId && !!user?.userId && !imageError && !isGroupChat;
   const iconSize = size * 0.5;
 
   if (isBot && canFetchPhoto && user?.userId) {

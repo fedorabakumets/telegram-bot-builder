@@ -51,8 +51,8 @@ export function useSyncGroups(
                 )
             );
 
-            // Инвалидируем список диалогов — подтянутся обновлённые названия и аватарки
-            queryClient.invalidateQueries({
+            // Немедленно перезапрашиваем список диалогов — подтянутся обновлённые названия и аватарки
+            await queryClient.refetchQueries({
                 queryKey: ['infinite-users', projectId],
             });
         };
