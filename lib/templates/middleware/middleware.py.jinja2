@@ -169,6 +169,8 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
             message_type="user",
             message_text=message_text,
             message_data=message_data,
+            chat_type=event.chat.type if hasattr(event, 'chat') and event.chat else 'private',
+            chat_id=str(event.chat.id) if hasattr(event, 'chat') and event.chat and event.chat.type in ['group', 'supergroup', 'channel'] else None,
         )
 
         # Обновляем last_interaction в bot_users при каждом входящем сообщении
@@ -230,7 +232,9 @@ async def callback_query_logging_middleware(handler, event: types.CallbackQuery,
                 "button_clicked": True,
                 "button_text": button_text,
                 "callback_data": callback_data
-            }
+            },
+            chat_type=event.message.chat.type if event.message and event.message.chat else 'private',
+            chat_id=str(event.message.chat.id) if event.message and event.message.chat and event.message.chat.type in ['group', 'supergroup', 'channel'] else None,
         )
     except Exception as e:
         logging.error(f"Ошибка в middleware сохранения нажатий кнопок: {e}")

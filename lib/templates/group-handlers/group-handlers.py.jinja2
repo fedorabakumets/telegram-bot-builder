@@ -31,6 +31,18 @@ async def handle_group_message(message: types.Message):
             await save_group_message_stats(chat_id, user_id, message.text or "", group_name)
         except Exception as e:
             logging.error(f"Ошибка сохранения статистики группы: {e}")
+        # Сохраняем сообщение из группы в bot_messages для отображения в диалогах
+        try:
+            _fire_save_message(
+                user_id=str(user_id),
+                message_type="user",
+                message_text=message.text or "[медиа]",
+                message_data={"message_id": message.message_id},
+                chat_type=message.chat.type,
+                chat_id=str(chat_id),
+            )
+        except Exception as e:
+            logging.error(f"Ошибка сохранения группового сообщения в bot_messages: {e}")
 
 
 async def save_group_message_stats(chat_id: int, user_id: int, message_text: str, group_name: str):

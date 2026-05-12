@@ -52,6 +52,8 @@ def _wrap_message_answer(bot_instance):
                 message_text=text,
                 node_id=node_id,
                 message_data=message_data_obj,
+                chat_type=self.chat.type if hasattr(self, 'chat') and self.chat else 'private',
+                chat_id=str(self.chat.id) if hasattr(self, 'chat') and self.chat and self.chat.type in ['group', 'supergroup', 'channel'] else None,
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования message.answer: {e}")
@@ -85,6 +87,8 @@ def _wrap_message_answer(bot_instance):
                 message_text=caption or "[Фото]",
                 node_id=node_id,
                 message_data=message_data_obj,
+                chat_type=self.chat.type if hasattr(self, 'chat') and self.chat else 'private',
+                chat_id=str(self.chat.id) if hasattr(self, 'chat') and self.chat and self.chat.type in ['group', 'supergroup', 'channel'] else None,
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования message.answer_photo: {e}")
@@ -123,6 +127,8 @@ def _wrap_message_answer(bot_instance):
                 message_text=caption or "[Видео]",
                 node_id=node_id,
                 message_data=message_data_obj,
+                chat_type=self.chat.type if hasattr(self, 'chat') and self.chat else 'private',
+                chat_id=str(self.chat.id) if hasattr(self, 'chat') and self.chat and self.chat.type in ['group', 'supergroup', 'channel'] else None,
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования message.answer_video: {e}")
@@ -160,6 +166,8 @@ def _wrap_message_answer(bot_instance):
                 message_text=caption or "[Аудио]",
                 node_id=node_id,
                 message_data=message_data_obj,
+                chat_type=self.chat.type if hasattr(self, 'chat') and self.chat else 'private',
+                chat_id=str(self.chat.id) if hasattr(self, 'chat') and self.chat and self.chat.type in ['group', 'supergroup', 'channel'] else None,
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования message.answer_audio: {e}")
@@ -196,6 +204,8 @@ def _wrap_message_answer(bot_instance):
                 message_text=caption or "[Документ]",
                 node_id=node_id,
                 message_data=message_data_obj,
+                chat_type=self.chat.type if hasattr(self, 'chat') and self.chat else 'private',
+                chat_id=str(self.chat.id) if hasattr(self, 'chat') and self.chat and self.chat.type in ['group', 'supergroup', 'channel'] else None,
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования message.answer_document: {e}")
