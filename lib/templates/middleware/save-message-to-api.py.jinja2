@@ -48,6 +48,8 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
                         "nodeId": node_id,
                         "id": result['id'],
                         "createdAt": result['created_at'].isoformat() if result['created_at'] else None,
+                        "chatId": chat_id,
+                        "chatType": chat_type,
                     }, ensure_ascii=False)
                     await _redis_client.publish(
                         f"bot:message:{PROJECT_ID}:{TOKEN_ID}",

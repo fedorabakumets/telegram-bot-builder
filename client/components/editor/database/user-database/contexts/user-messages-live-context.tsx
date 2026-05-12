@@ -32,6 +32,10 @@ export interface NewMessageLiveEvent {
     id: number;
     /** Время создания в ISO-формате */
     createdAt: string;
+    /** Telegram chat_id группового чата (null для личных сообщений) */
+    chatId?: string | null;
+    /** Тип чата: 'private', 'group', 'supergroup', 'channel' */
+    chatType?: string | null;
   };
   /** Временная метка события */
   timestamp: string;

@@ -67,12 +67,14 @@ function eventToMessage(
  * @param projectId - Идентификатор проекта
  * @param selectedTokenId - Идентификатор выбранного токена (фильтр)
  * @param userId - Идентификатор пользователя (строка или число)
+ * @param chatId - Telegram chat_id группы (для групповых диалогов)
  * @returns Объект с live-сообщениями и функциями управления
  */
 export function useDialogLiveMessages(
   projectId: number,
   selectedTokenId?: number | null,
   userId?: string | number | null,
+  chatId?: string | null,
 ): UseDialogLiveMessagesResult {
   const [liveMessages, setLiveMessages] = useState<BotMessageWithMedia[]>([]);
   /** ID сообщений удалённых через WS другим оператором */
@@ -136,14 +138,17 @@ export function useDialogLiveMessages(
       // Обрабатываем только события new-message, new-user игнорируем
       if (msg.type !== 'new-message') return;
       if (selectedTokenId && msg.tokenId && msg.tokenId !== selectedTokenId) return;
-      if (String(msg.data?.userId) !== userIdStr) return;
+
+      // Для группового диалога — фильтруем по chatId, для личного — по userId
+      if (chatId) {
+        if (msg.data?.chatId !== chatId) return;
+      } else {
+        if (String(msg.data?.userId) !== userIdStr) return;
+      }
 
       const newMsg = eventToMessage(msg, projectId, selectedTokenId);
       setLiveMessages((prev) => {
-        // Уже есть — пропускаем дубль
         if (prev.some((m) => m.id === newMsg.id)) return prev;
-        // Есть оптимистичное сообщение (отрицательный id) того же типа —
-        // заменяем его реальным (сравниваем по тексту или просто берём первое оптимистичное того же типа)
         const optimisticIndex = prev.findIndex(
           (m) => m.id < 0 && m.messageType === newMsg.messageType &&
             (m.messageText === newMsg.messageText || !m.messageText || !newMsg.messageText),
@@ -158,7 +163,7 @@ export function useDialogLiveMessages(
     });
 
     return unsubscribe;
-  }, [projectId, selectedTokenId, userId, liveContext]);
+  }, [projectId, selectedTokenId, userId, chatId, liveContext]);
 
   // Режим fallback: собственное WS-соединение если контекст недоступен
   useEffect(() => {
@@ -202,7 +207,13 @@ export function useDialogLiveMessages(
 
           if (msg.type !== 'new-message') return;
           if (selectedTokenId && msg.tokenId && msg.tokenId !== selectedTokenId) return;
-          if (String(msg.data?.userId) !== userIdStr) return;
+
+          // Для группового диалога — фильтруем по chatId, для личного — по userId
+          if (chatId) {
+            if ((msg.data as { chatId?: string })?.chatId !== chatId) return;
+          } else {
+            if (String(msg.data?.userId) !== userIdStr) return;
+          }
 
           const newMsg = eventToMessage(msg as NewMessageLiveEvent, projectId, selectedTokenId);
           setLiveMessages((prev) => {
@@ -244,7 +255,7 @@ export function useDialogLiveMessages(
       wsRef.current?.close();
       wsRef.current = null;
     };
-  }, [projectId, selectedTokenId, userId, liveContext]);
+  }, [projectId, selectedTokenId, userId, chatId, liveContext]);
 
   return { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage, wsDeletedIds, wsEditedMessages };
 }

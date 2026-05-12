@@ -125,7 +125,7 @@ export function DialogPanel({
   });
 
   const { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage, wsDeletedIds, wsEditedMessages } =
-    useDialogLiveMessages(projectId, selectedTokenId, user?.userId);
+    useDialogLiveMessages(projectId, selectedTokenId, user?.userId, isGroup ? groupChatId : null);
 
   /** Объединённые и дедуплицированные сообщения */
   const allMessages = useMemo(
