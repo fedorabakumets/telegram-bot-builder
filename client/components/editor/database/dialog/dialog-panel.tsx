@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { buildUsersApiUrl, formatUserName } from '../utils';
 import { DialogPanelProps, BotMessageWithMedia } from './types';
 import { useSendMessage } from './hooks/use-send-message';
+import { useDeleteMessage } from './hooks/use-delete-message';
 import { useBotData } from './hooks/use-bot-data';
 import { useDialogLiveMessages } from './hooks/use-dialog-live-messages';
 import { useUserList } from '@/components/editor/database/user-details/hooks/useUserList';
@@ -68,6 +69,9 @@ export function DialogPanel({
     return localStorage.getItem('dialog-warning-dismissed') !== 'true';
   });
 
+  /** Набор id сообщений, оптимистично скрытых при удалении */
+  const [deletedMessageIds, setDeletedMessageIds] = useState<Set<number>>(new Set());
+
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(0);
 
@@ -105,14 +109,21 @@ export function DialogPanel({
     useDialogLiveMessages(projectId, selectedTokenId, user?.userId);
 
   /** Объединённые и дедуплицированные сообщения */
-  const messages = useMemo(
+  const allMessages = useMemo(
     () => mergeMessages(httpMessages, liveMessages),
     [httpMessages, liveMessages],
   );
 
-  /** Сброс live-сообщений при смене пользователя */
+  /** Сообщения без оптимистично удалённых */
+  const messages = useMemo(
+    () => allMessages.filter((m) => !deletedMessageIds.has(m.id)),
+    [allMessages, deletedMessageIds],
+  );
+
+  /** Сброс live-сообщений и удалённых id при смене пользователя */
   useEffect(() => {
     resetLiveMessages();
+    setDeletedMessageIds(new Set());
     prevMessageCountRef.current = 0;
   }, [user?.userId, resetLiveMessages]);
 
@@ -142,6 +153,20 @@ export function DialogPanel({
     onSent: refetchMessages,
     addOptimisticMessage,
     removeOptimisticMessage,
+  });
+
+  const deleteMessageMutation = useDeleteMessage({
+    projectId,
+    selectedTokenId,
+    onOptimisticRemove: (id) =>
+      setDeletedMessageIds((prev) => new Set(prev).add(id)),
+    onRollback: (id) =>
+      setDeletedMessageIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      }),
+    onDeleted: refetchMessages,
   });
 
   if (!user) {
@@ -189,6 +214,11 @@ export function DialogPanel({
                 bot={message.messageType === 'bot' ? bot : null}
                 projectId={projectId}
                 tokenId={selectedTokenId}
+                onDelete={(id) => deleteMessageMutation.mutate(id)}
+                isDeleting={
+                  deleteMessageMutation.isPending &&
+                  deleteMessageMutation.variables === message.id
+                }
               />
             ))}
           </div>
