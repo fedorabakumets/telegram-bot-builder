@@ -95,10 +95,12 @@ export function MessageBubble({ message, index, user, bot, projectId, tokenId, o
     <div
       className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
       data-testid={`dialog-message-${message.messageType}-${index}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={`flex items-end gap-2 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div
+        className={`flex items-end gap-2 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <MessageAvatar
           messageType={messageType}
           user={isUser ? user : null}
@@ -107,7 +109,7 @@ export function MessageBubble({ message, index, user, bot, projectId, tokenId, o
           tokenId={tokenId ?? message.tokenId}
         />
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 min-w-0">
           <MessageMedia
             media={message.media}
             messageData={message.messageData}
