@@ -1,6 +1,7 @@
 /**
  * @fileoverview Утилита отправки сообщений в Telegram
  * Отправляет сообщения с поддержкой медиа (локальные файлы и URL) и кнопок.
+ * Возвращает типизированный результат с message_id для сохранения в БД.
  */
 
 import { existsSync, readFileSync } from 'fs';
@@ -8,6 +9,28 @@ import { basename, join } from 'path';
 import type { SendMediaFile } from "./extract-media";
 import type { InlineButton } from "./extract-buttons";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
+
+/**
+ * Объект сообщения из ответа Telegram API
+ */
+export interface TelegramMessage {
+  /** Уникальный идентификатор сообщения в чате */
+  message_id: number;
+  /** Дополнительные поля ответа */
+  [key: string]: unknown;
+}
+
+/**
+ * Результат успешного вызова Telegram Bot API
+ */
+export interface TelegramSendResult {
+  /** Признак успешного выполнения запроса */
+  ok: boolean;
+  /** Объект отправленного сообщения */
+  result?: TelegramMessage;
+  /** Описание ошибки (при ok=false) */
+  description?: string;
+}
 
 /** MIME-типы по расширению файла */
 const MIME_TYPES: Record<string, string> = {
@@ -87,7 +110,7 @@ function buildMultipartBody(
  * @param mediaFiles - Медиафайлы
  * @param buttons - Кнопки
  * @param useHtml - Использовать HTML форматирование
- * @returns Результат отправки
+ * @returns Типизированный результат Telegram API с message_id
  */
 export async function sendTelegramMessage(
   token: string,
@@ -96,7 +119,7 @@ export async function sendTelegramMessage(
   mediaFiles: SendMediaFile[],
   buttons: InlineButton[],
   useHtml: boolean
-): Promise<unknown> {
+): Promise<TelegramSendResult> {
   const hasMedia = mediaFiles.length > 0;
   const hasButtons = buttons.length > 0;
 
@@ -124,6 +147,12 @@ export async function sendTelegramMessage(
 
 /**
  * Отправляет текстовое сообщение
+ * @param token - Токен бота
+ * @param chatId - ID чата
+ * @param text - Текст сообщения
+ * @param useHtml - Использовать HTML форматирование
+ * @param replyMarkup - Встроенная клавиатура
+ * @returns Типизированный результат Telegram API
  */
 async function sendTextMessage(
   token: string,
@@ -131,7 +160,7 @@ async function sendTextMessage(
   text: string,
   useHtml: boolean,
   replyMarkup?: unknown
-): Promise<unknown> {
+): Promise<TelegramSendResult> {
   const maskedToken = token.length > 12 ? `${token.slice(0, 8)}...${token.slice(-4)}` : '***';
   const startTime = Date.now();
   
@@ -151,7 +180,7 @@ async function sendTextMessage(
     });
     
     console.log(`[Telegram API] Message sent in ${Date.now() - startTime}ms, status: ${response.status}`);
-    const json = await response.json() as { ok: boolean; description?: string };
+    const json = await response.json() as TelegramSendResult;
     if (!response.ok) {
       // Бросаем ошибку с телом ответа чтобы вызывающий код мог обработать errorCode
       throw Object.assign(new Error(json.description ?? `Telegram API error ${response.status}`), json);
@@ -181,7 +210,7 @@ async function sendTextMessage(
  * @param caption - Подпись к медиа
  * @param useHtml - Использовать HTML форматирование
  * @param replyMarkup - Клавиатура
- * @returns Результат отправки
+ * @returns Типизированный результат Telegram API
  */
 async function sendMediaMessage(
   token: string,
@@ -190,7 +219,7 @@ async function sendMediaMessage(
   caption: string,
   useHtml: boolean,
   replyMarkup?: unknown
-): Promise<unknown> {
+): Promise<TelegramSendResult> {
   const maskedToken = token.length > 12 ? `${token.slice(0, 8)}...${token.slice(-4)}` : '***';
   const endpoints: Record<string, string> = {
     photo: 'sendPhoto',
@@ -255,7 +284,7 @@ async function sendMediaMessage(
     }
 
     console.log(`[Telegram API] Media sent in ${Date.now() - startTime}ms, status: ${response.status}`);
-    const json = await response.json() as { ok: boolean; description?: string };
+    const json = await response.json() as TelegramSendResult;
     if (!response.ok) {
       throw Object.assign(new Error(json.description ?? `Telegram API error ${response.status}`), json);
     }

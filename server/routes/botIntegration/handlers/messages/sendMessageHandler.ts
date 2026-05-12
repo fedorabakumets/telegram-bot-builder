@@ -139,6 +139,9 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
       true
     );
 
+    /** ID отправленного сообщения в Telegram (из result.message_id) */
+    const telegramMessageId = result?.result?.message_id ?? null;
+
     /** Данные о медиа для сохранения в messageData — используются для отображения в диалоге */
     const mediaMessageData: Record<string, unknown> = { sentFromAdmin: true };
     if (mediaFiles.length > 0) {
@@ -153,6 +156,7 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
       messageType: "bot",
       messageText: textWithVariables.trim(),
       messageData: mediaMessageData,
+      telegramMessageId,
     });
 
     // Публикуем WS-событие чтобы таблица и диалог обновились в реальном времени
