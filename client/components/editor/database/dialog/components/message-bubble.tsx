@@ -3,9 +3,10 @@
  * Координирует отображение всех частей сообщения с поддержкой удаления и редактирования
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Trash2, Loader2, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 import { BotMessageWithMedia } from '../types';
 import { UserBotData } from '@shared/schema';
 import { MessageAvatar } from './message-avatar';
@@ -70,15 +71,6 @@ function hasVisibleMedia(message: BotMessageWithMedia): boolean {
 }
 
 /**
- * Убирает HTML-теги из текста для удобного редактирования
- * @param html - Текст с возможными HTML-тегами
- * @returns Очищенный текст
- */
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, '');
-}
-
-/**
  * Компонент отображения одного сообщения с кнопками удаления и редактирования при наведении
  * @param props - Свойства компонента
  * @returns JSX элемент сообщения
@@ -95,23 +87,13 @@ export function MessageBubble({
   const [isHovered, setIsHovered] = useState(false);
   /** Режим inline-редактирования */
   const [isEditMode, setIsEditMode] = useState(false);
-  /** Текущий текст в textarea */
+  /** Текущий текст в редакторе (HTML) */
   const [editText, setEditText] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /** Сбрасываем режим редактирования при смене сообщения */
   useEffect(() => {
     setIsEditMode(false);
   }, [message.id]);
-
-  /** Фокус на textarea при входе в режим редактирования */
-  useEffect(() => {
-    if (isEditMode && textareaRef.current) {
-      textareaRef.current.focus();
-      const len = textareaRef.current.value.length;
-      textareaRef.current.setSelectionRange(len, len);
-    }
-  }, [isEditMode]);
 
   /** Скрываем текст-плейсхолдер если медиа отображается */
   const displayText = hasVisibleMedia(message) && MEDIA_PLACEHOLDERS.has(message.messageText ?? '')
@@ -123,10 +105,9 @@ export function MessageBubble({
   /** Показывать ли кнопку редактирования */
   const showEditButton = isBot && message.id > 0 && !!onEdit && (isHovered || isEditing) && !isEditMode;
 
-  /** Открывает режим редактирования */
+  /** Открывает режим редактирования — передаём HTML как есть в редактор */
   const handleOpenEdit = () => {
-    const raw = displayText ?? '';
-    setEditText(stripHtml(raw));
+    setEditText(displayText ?? '');
     setIsEditMode(true);
   };
 
@@ -140,7 +121,7 @@ export function MessageBubble({
   /** Отменяет редактирование */
   const handleCancel = () => setIsEditMode(false);
 
-  const isSaveDisabled = editText.trim() === '' || editText === stripHtml(displayText ?? '');
+  const isSaveDisabled = editText.trim() === '' || editText === (displayText ?? '');
 
   return (
     <div
@@ -168,15 +149,13 @@ export function MessageBubble({
             tokenId={message.tokenId ?? undefined}
           />
 
-          {/* Режим редактирования: textarea вместо FormattedText */}
+          {/* Режим редактирования: CompactInlineEditor с поддержкой форматирования */}
           {isEditMode ? (
-            <div className="flex flex-col gap-1">
-              <textarea
-                ref={textareaRef}
-                className="w-full min-w-[220px] rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                rows={3}
+            <div className="flex flex-col gap-1 min-w-[260px]">
+              <CompactInlineEditor
                 value={editText}
-                onChange={(e) => setEditText(e.target.value)}
+                onChange={setEditText}
+                placeholder="Введите текст сообщения..."
               />
               <div className="flex gap-1 justify-end">
                 <Button
