@@ -39,20 +39,24 @@ interface UsersPageResponse {
 }
 
 /**
- * Мгновенно обновляет lastInteraction и interactionCount пользователя в кэше,
+ * Мгновенно обновляет lastInteraction, interactionCount и lastMessageText пользователя в кэше,
  * и перемещает его в начало списка (сортировка по последней активности как в Telegram).
  * @param queryClient - Клиент React Query
  * @param projectId - Идентификатор проекта
  * @param normalizedTokenId - Нормализованный идентификатор токена
  * @param userId - Идентификатор пользователя
+ * @param messageText - Текст последнего сообщения для обновления превью
+ * @param messageAt - Время последнего сообщения
  */
 function updateUserInCache(
   queryClient: ReturnType<typeof useQueryClient>,
   projectId: number,
   normalizedTokenId: number | null,
   userId: string,
+  messageText?: string | null,
+  messageAt?: Date,
 ): void {
-  const now = new Date();
+  const now = messageAt ?? new Date();
   queryClient.setQueriesData<InfiniteData<UsersPageResponse>>(
     { queryKey: ['infinite-users', projectId] },
     (old) => {
@@ -67,6 +71,9 @@ function updateUserInCache(
             ...page.users[userIndex],
             lastInteraction: now,
             interactionCount: (page.users[userIndex].interactionCount ?? 0) + 1,
+            // Обновляем поля превью последнего сообщения для DialogListItem
+            ...(messageText !== undefined ? { lastMessageText: messageText } : {}),
+            ...(messageAt !== undefined ? { lastMessageAt: messageAt } : {}),
           };
 
           // Убираем пользователя с текущей позиции
@@ -199,7 +206,14 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
 
         // Optimistic update строки пользователя в таблице (перемещает наверх мгновенно)
         if (userId) {
-          updateUserInCache(queryClient, projectId, normalizedTokenId, userId);
+          updateUserInCache(
+            queryClient,
+            projectId,
+            normalizedTokenId,
+            userId,
+            msg.data.messageText ?? null,
+            new Date(msg.data.createdAt),
+          );
         }
 
         // Redis publish происходит строго после INSERT RETURNING в save_message_to_api,

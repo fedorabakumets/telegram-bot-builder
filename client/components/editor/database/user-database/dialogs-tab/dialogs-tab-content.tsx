@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { UserBotData } from '@shared/schema';
 import { DialogPanel } from '../../dialog/dialog-panel';
 import { DialogList } from './dialog-list';
+import { useLiveInvalidate } from '../hooks/use-live-invalidate';
 
 /**
  * Пропсы компонента DialogsTabContent
@@ -44,6 +45,9 @@ export function DialogsTabContent({
   selectedTokenId,
 }: DialogsTabContentProps): React.JSX.Element {
   const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
+
+  // Подписываемся на WS-события: обновляет кэш infinite-users (lastMessageText, порядок)
+  useLiveInvalidate({ projectId, selectedTokenId });
 
   /** Сброс выбранного пользователя */
   const handleClose = () => setSelectedUser(null);
