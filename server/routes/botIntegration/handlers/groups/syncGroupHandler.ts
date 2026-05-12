@@ -55,25 +55,11 @@ export async function syncGroupHandler(req: Request, res: Response): Promise<voi
         const title: string = chatInfo.title || chatInfo.first_name || telegramGroupId;
         const chatType: string = chatInfo.type || "group";
 
-        // Получаем URL аватарки если есть фото
+        // Получаем file_id аватарки если есть фото — сохраняем file_id, не прямой URL
         let avatarUrl: string | null = null;
         if (chatInfo.photo?.big_file_id) {
-            try {
-                const fileResponse = await fetchWithProxy(
-                    `https://api.telegram.org/bot${defaultToken.token}/getFile`,
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ file_id: chatInfo.photo.big_file_id }),
-                    }
-                );
-                const fileResult = await fileResponse.json();
-                if (fileResponse.ok && fileResult.result?.file_path) {
-                    avatarUrl = `https://api.telegram.org/file/bot${defaultToken.token}/${fileResult.result.file_path}`;
-                }
-            } catch {
-                // Аватарка не критична — продолжаем без неё
-            }
+            // Проксируем через наш сервер — скрываем токен бота от клиента
+            avatarUrl = `/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(chatInfo.photo.big_file_id)}`;
         }
 
         // Ищем запись в bot_groups по telegramGroupId
