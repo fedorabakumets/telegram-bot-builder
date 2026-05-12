@@ -56,8 +56,10 @@ async function callTelegramDeleteMessage(
  *
  * Алгоритм:
  * 1. Читает messageId из params и находит запись в БД
- * 2. Если есть telegram_message_id — удаляет сообщение через Telegram API
- * 3. Физически удаляет запись из таблицы bot_messages
+ * 2. Если нет telegram_message_id — возвращает 400 (удаление невозможно)
+ * 3. Вызывает Telegram API — при ошибке возвращает 400, БД не трогает
+ * 4. Только при успехе Telegram — физически удаляет запись из БД
+ * 5. Рассылает WS-событие message-deleted
  *
  * @param req - Объект запроса Express (params: projectId, messageId)
  * @param res - Объект ответа Express
@@ -95,30 +97,36 @@ export async function deleteSingleMessageHandler(
       return;
     }
 
-    // Пытаемся удалить из Telegram, если есть telegram_message_id
-    let deletedFromTelegram = false;
-
-    if (message.telegramMessageId) {
-      const tokenId = getRequestTokenId(req);
-      const { selectedToken } = await resolveEffectiveProjectToken(projectId, tokenId);
-
-      if (selectedToken?.token) {
-        const result = await callTelegramDeleteMessage(
-          selectedToken.token,
-          message.userId,
-          message.telegramMessageId
-        );
-        deletedFromTelegram = result.success;
-
-        if (!result.success) {
-          console.warn(
-            `Не удалось удалить сообщение ${messageId} из Telegram: ${result.error}`
-          );
-        }
-      }
+    // Без telegram_message_id удаление невозможно — нечего синхронизировать
+    if (!message.telegramMessageId) {
+      res.status(400).json({ message: "Сообщение не имеет Telegram ID — удаление недоступно" });
+      return;
     }
 
-    // Физически удаляем запись из БД
+    // Удаляем из Telegram — только при успехе удаляем из БД
+    const tokenId = getRequestTokenId(req);
+    const { selectedToken } = await resolveEffectiveProjectToken(projectId, tokenId);
+
+    if (!selectedToken?.token) {
+      res.status(400).json({ message: "Токен бота не найден для этого проекта" });
+      return;
+    }
+
+    const telegramResult = await callTelegramDeleteMessage(
+      selectedToken.token,
+      message.userId,
+      message.telegramMessageId
+    );
+
+    if (!telegramResult.success) {
+      console.warn(`Не удалось удалить сообщение ${messageId} из Telegram: ${telegramResult.error}`);
+      res.status(400).json({
+        message: `Telegram не принял удаление: ${telegramResult.error ?? "неизвестная ошибка"}`,
+      });
+      return;
+    }
+
+    // Telegram подтвердил — физически удаляем запись из БД
     await db.delete(botMessages).where(eq(botMessages.id, messageId));
 
     // Рассылаем WS-событие всем подключённым клиентам проекта
@@ -130,7 +138,7 @@ export async function deleteSingleMessageHandler(
       timestamp: new Date().toISOString(),
     });
 
-    res.json({ success: true, deletedFromTelegram });
+    res.json({ success: true, deletedFromTelegram: true });
   } catch (error) {
     console.error("Ошибка удаления сообщения:", error);
     res.status(500).json({ message: "Не удалось удалить сообщение" });
