@@ -3,7 +3,8 @@
  * @module shared/schema/tables/bot-groups
  */
 
-import { pgTable, text, serial, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
@@ -69,7 +70,12 @@ export const botGroups = pgTable("bot_groups", {
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления группы */
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  /** Уникальный индекс по (project_id, group_id) — нужен для ON CONFLICT при авто-регистрации */
+  uniqueIndex("bot_groups_project_group_uniq")
+    .on(table.projectId, table.groupId)
+    .where(sql`group_id IS NOT NULL`),
+]);
 
 /** Схема для вставки данных группы бота */
 export const insertBotGroupSchema = z.object({

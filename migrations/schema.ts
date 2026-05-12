@@ -2,7 +2,7 @@
  * @fileoverview Схема базы данных, сгенерированная Drizzle ORM
  * @module migrations/schema
  */
-import { pgTable, foreignKey, serial, integer, text, timestamp, bigint, jsonb, unique, index } from "drizzle-orm/pg-core"
+import { pgTable, foreignKey, serial, integer, text, timestamp, bigint, jsonb, unique, index, uniqueIndex } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -295,6 +295,9 @@ export const botGroups = pgTable("bot_groups", {
 			foreignColumns: [botProjects.id],
 			name: "bot_groups_project_id_bot_projects_id_fk"
 		}).onDelete("cascade"),
+	uniqueIndex("bot_groups_project_group_uniq")
+		.on(table.projectId, table.groupId)
+		.where(sql`group_id IS NOT NULL`),
 ]);
 
 export const mediaFiles = pgTable("media_files", {
