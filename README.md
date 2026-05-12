@@ -22,7 +22,7 @@
   ![GitHub issues](https://img.shields.io/github/issues/fedorabakumets/telegram-bot-builder?style=for-the-badge&logo=github)
   ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=fedorabakumets.telegram-bot-builder&style=for-the-badge)
   
-  <!-- Жива я статистика -->
+  <!-- Живая статистика -->
   
 </div>
 
