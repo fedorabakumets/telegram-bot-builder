@@ -81,6 +81,15 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
         message_text = event.text or event.caption or "[медиа]"
         message_data = {"message_id": event.message_id}
 
+        # Для групповых сообщений сохраняем данные отправителя
+        if hasattr(event, 'from_user') and event.from_user:
+            message_data["from_user"] = {
+                "id": event.from_user.id,
+                "username": event.from_user.username or "",
+                "first_name": event.from_user.first_name or "",
+                "last_name": event.from_user.last_name or "",
+            }
+
         # Проверяем наличие фото
         photo_file_id = None
         if event.photo:

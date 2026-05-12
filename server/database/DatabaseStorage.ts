@@ -1399,6 +1399,8 @@ export class DatabaseStorage implements IStorage {
     const whereConditions = [
       eq(botMessages.projectId, projectId),
       eq(botMessages.userId, userId),
+      // Личный диалог — только сообщения из приватного чата, без групповых
+      eq(botMessages.chatType, 'private'),
     ];
 
     if (tokenId !== null && tokenId !== undefined) {

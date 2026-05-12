@@ -293,6 +293,7 @@ export function DialogPanel({
                   bot={message.messageType === 'bot' ? bot : null}
                   projectId={projectId}
                   tokenId={selectedTokenId}
+                  isGroupDialog={isGroup}
                   onDelete={(id) => deleteMessageMutation.mutate(id)}
                   isDeleting={
                     deleteMessageMutation.isPending &&
