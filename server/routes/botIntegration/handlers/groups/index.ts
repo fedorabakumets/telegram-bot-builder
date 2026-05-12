@@ -10,3 +10,4 @@ export { getGroupsHandler } from "./getGroupsHandler";
 export { createGroupHandler } from "./createGroupHandler";
 export { updateGroupHandler } from "./updateGroupHandler";
 export { deleteGroupHandler } from "./deleteGroupHandler";
+export { syncGroupHandler } from "./syncGroupHandler";
