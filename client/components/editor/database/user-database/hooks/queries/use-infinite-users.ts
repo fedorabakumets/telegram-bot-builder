@@ -39,6 +39,8 @@ interface UseInfiniteUsersParams {
   sortBy?: string;
   /** Направление сортировки */
   sortDir?: 'asc' | 'desc';
+  /** Включать группы в список диалогов */
+  includeGroups?: boolean;
 }
 
 /**
@@ -65,7 +67,7 @@ export interface UseInfiniteUsersResult {
  * @returns Объект с данными и функциями управления пагинацией
  */
 export function useInfiniteUsers(params: UseInfiniteUsersParams): UseInfiniteUsersResult {
-  const { projectId, selectedTokenId, search, filterActive, sortBy, sortDir } = params;
+  const { projectId, selectedTokenId, search, filterActive, sortBy, sortDir, includeGroups } = params;
 
   const basePath = `/api/projects/${projectId}/users`;
 
@@ -77,7 +79,7 @@ export function useInfiniteUsers(params: UseInfiniteUsersParams): UseInfiniteUse
     isLoading,
     refetch,
   } = useInfiniteQuery<UsersPageResponse>({
-    queryKey: ['infinite-users', projectId, selectedTokenId, search, filterActive, sortBy, sortDir],
+    queryKey: ['infinite-users', projectId, selectedTokenId, search, filterActive, sortBy, sortDir, includeGroups],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       const offset = pageParam as number;
@@ -91,6 +93,7 @@ export function useInfiniteUsers(params: UseInfiniteUsersParams): UseInfiniteUse
       }
       if (sortBy) extraParams.sortBy = sortBy;
       if (sortDir) extraParams.sortDir = sortDir;
+      if (includeGroups) extraParams.includeGroups = 'true';
 
       const url = buildUsersApiUrl(basePath, selectedTokenId, extraParams);
       const response = await fetch(url, { credentials: 'include' });
