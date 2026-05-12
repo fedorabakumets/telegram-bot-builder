@@ -79,7 +79,7 @@ export function DesktopActionsFull({
       {/* Версия и GitHub — только в горизонтальном режиме */}
       {!isVertical && (
         <>
-          <VersionBadge version="2.1.9.2" />
+          <VersionBadge version="2.1.9.3" />
           <GithubButton className="!p-0 !h-auto" />
         </>
       )}
