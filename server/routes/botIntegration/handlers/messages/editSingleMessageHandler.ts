@@ -76,10 +76,10 @@ async function callTelegramEditMessage(
  *
  * Алгоритм:
  * 1. Читает messageId из params, messageText из body
- * 2. Находит запись в БД, проверяет принадлежность проекту
- * 3. Проверяет что сообщение от бота (messageType === 'bot')
- * 4. Если есть telegramMessageId — редактирует через Telegram API
- * 5. Обновляет messageText в БД
+ * 2. Находит запись в БД, проверяет принадлежность проекту и тип 'bot'
+ * 3. Если нет telegramMessageId — возвращает 400 (редактирование невозможно)
+ * 4. Вызывает Telegram API — при ошибке возвращает 400, БД не трогает
+ * 5. Только при успехе Telegram — обновляет messageText в БД
  * 6. Рассылает WS-событие message-edited
  *
  * @param req - Объект запроса Express (params: projectId, messageId; body: messageText)
@@ -130,31 +130,39 @@ export async function editSingleMessageHandler(
       return;
     }
 
-    // Пытаемся отредактировать в Telegram, если есть telegramMessageId
-    let editedInTelegram = false;
-
-    if (message.telegramMessageId) {
-      const tokenId = getRequestTokenId(req);
-      const { selectedToken } = await resolveEffectiveProjectToken(projectId, tokenId);
-
-      if (selectedToken?.token) {
-        const isMedia = hasMediaAttachment(message.messageData);
-        const result = await callTelegramEditMessage(
-          selectedToken.token,
-          message.userId,
-          message.telegramMessageId,
-          messageText,
-          isMedia
-        );
-        editedInTelegram = result.success;
-
-        if (!result.success) {
-          console.warn(`Не удалось отредактировать сообщение ${messageId} в Telegram: ${result.error}`);
-        }
-      }
+    // Без telegram_message_id редактирование невозможно — нечего синхронизировать
+    if (!message.telegramMessageId) {
+      res.status(400).json({ message: "Сообщение не имеет Telegram ID — редактирование недоступно" });
+      return;
     }
 
-    // Обновляем текст в БД
+    // Редактируем в Telegram — только при успехе обновляем БД
+    const tokenId = getRequestTokenId(req);
+    const { selectedToken } = await resolveEffectiveProjectToken(projectId, tokenId);
+
+    if (!selectedToken?.token) {
+      res.status(400).json({ message: "Токен бота не найден для этого проекта" });
+      return;
+    }
+
+    const isMedia = hasMediaAttachment(message.messageData);
+    const telegramResult = await callTelegramEditMessage(
+      selectedToken.token,
+      message.userId,
+      message.telegramMessageId,
+      messageText,
+      isMedia
+    );
+
+    if (!telegramResult.success) {
+      console.warn(`Не удалось отредактировать сообщение ${messageId} в Telegram: ${telegramResult.error}`);
+      res.status(400).json({
+        message: `Telegram не принял изменение: ${telegramResult.error ?? "неизвестная ошибка"}`,
+      });
+      return;
+    }
+
+    // Telegram подтвердил — обновляем БД
     await db
       .update(botMessages)
       .set({ messageText })
@@ -169,7 +177,7 @@ export async function editSingleMessageHandler(
       timestamp: new Date().toISOString(),
     });
 
-    res.json({ success: true, editedInTelegram });
+    res.json({ success: true, editedInTelegram: true });
   } catch (error) {
     console.error("Ошибка редактирования сообщения:", error);
     res.status(500).json({ message: "Не удалось отредактировать сообщение" });
