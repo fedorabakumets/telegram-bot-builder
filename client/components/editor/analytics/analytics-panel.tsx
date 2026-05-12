@@ -76,6 +76,8 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
   const [activityChartType, setActivityChartType] = useState<ChartType>('line');
   /** Режим отображения источников: общий или по источникам */
   const [sourceMode, setSourceMode] = useState<SourceMode>('total');
+  /** Режим отображения активности: все сообщения / входящие+исходящие */
+  const [activitySplitMode, setActivitySplitMode] = useState<ActivitySplitMode>('total');
 
   /** Токены проекта для селектора бота */
   const projectTokensInfo = useProjectTokens([projectId]);
@@ -112,13 +114,13 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
   const { points: growthPoints, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });
   const { points: sourcePoints } = useGrowthBySource({ projectId, selectedTokenId, granularity: growthGranularity });
   const { languages, sources } = useTraffic({ projectId, selectedTokenId });
-  const { points: messagePoints, outgoingPoints, weeklyMessages } = useMessagesActivity({ projectId, selectedTokenId, granularity: msgGranularity, split: true });
+  const { points: messagePoints, outgoingPoints, weeklyMessages } = useMessagesActivity({ projectId, selectedTokenId, granularity: msgGranularity, split: activitySplitMode === 'split' });
 
-  /** Multi-line данные для графика активности: входящие + исходящие */
-  const activityMultiLine = [
+  /** Multi-line данные для графика активности: входящие + исходящие (только в режиме split) */
+  const activityMultiLine = activitySplitMode === 'split' ? [
     { name: 'Входящие', data: messagePoints, color: '#10b981' },
     { name: 'Исходящие', data: outgoingPoints, color: '#6366f1' },
-  ];
+  ] : undefined;
 
   const total = stats.totalUsers ?? 0;
   const growthTrend = weeklyGrowth > 0 ? 'up' : weeklyGrowth < 0 ? 'down' : 'neutral';
@@ -197,7 +199,9 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
             <StatMetricCard
               title="Активность"
               value={stats.totalInteractions}
+              sparklineData={activitySplitMode === 'total' ? messagePoints : undefined}
               multiLineData={activityMultiLine}
+              lineColor="#10b981"
               gradientId="analyticsActivity"
               subtitle={weeklyMessages > 0 ? `+${weeklyMessages} за неделю` : stats.avgInteractionsPerUser !== undefined ? `~${stats.avgInteractionsPerUser.toFixed(1)} среднее` : undefined}
               trend={weeklyMessages > 0 ? 'up' : 'neutral'}
@@ -210,6 +214,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
                   <ActivityGranularitySelector value={msgGranularity} onChange={setMsgGranularity} />
                   <ChartModeToggle value={activityMode} onChange={setActivityMode} />
                   <ChartTypeToggle value={activityChartType} onChange={setActivityChartType} />
+                  <ActivitySplitToggle value={activitySplitMode} onChange={setActivitySplitMode} />
                 </div>
               }
             />
