@@ -289,7 +289,12 @@ export function DialogPanel({
                   key={message.id || index}
                   message={displayMessage}
                   index={index}
-                  user={message.messageType === 'user' ? user : null}
+                  user={message.messageType === 'user'
+                    ? (isGroup
+                        // В групповом диалоге — подставляем userId отправителя для аватарки
+                        ? { ...user, userId: message.userId } as typeof user
+                        : user)
+                    : null}
                   bot={message.messageType === 'bot' ? bot : null}
                   projectId={projectId}
                   tokenId={selectedTokenId}
