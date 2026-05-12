@@ -41,6 +41,10 @@ def _wrap_bot_send_message(bot_instance):
                         message_data_obj["keyboard_type"] = "reply"
             except Exception as e:
                 logging.warning(f"Не удалось извлечь кнопки: {e}")
+        # Определяем тип чата по знаку chat_id: отрицательный — группа/супергруппа
+        _out_chat_id_int = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
+        _out_chat_type = 'supergroup' if _out_chat_id_int < 0 else 'private'
+        _out_chat_id_str = str(chat_id) if _out_chat_id_int < 0 else None
         # Сохраняем исходящее сообщение бота асинхронно (fire-and-forget)
         _fire_save_message(
             user_id=str(chat_id),
@@ -48,12 +52,14 @@ def _wrap_bot_send_message(bot_instance):
             message_text=text,
             node_id=node_id,
             message_data=message_data_obj,
+            chat_type=_out_chat_type,
+            chat_id=_out_chat_id_str,
         )
         # Вызываем обработчики триггеров исходящих сообщений
         try:
             _omt_handlers = globals().get('_outgoing_message_trigger_handlers', [])
             if _omt_handlers:
-                _omt_user_id = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
+                _omt_user_id = _out_chat_id_int if _out_chat_id_int > 0 else 0
                 if _omt_user_id > 0:
                     for _omt_handler in _omt_handlers:
                         try:
@@ -207,6 +213,10 @@ def _wrap_bot_send_video(bot_instance):
                             message_data_obj["keyboard_type"] = "inline"
                 except Exception as e:
                     logging.warning(f"Не удалось извлечь кнопки из send_video: {e}")
+            # Определяем тип чата по знаку chat_id
+            _vid_chat_id_int = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
+            _vid_chat_type = 'supergroup' if _vid_chat_id_int < 0 else 'private'
+            _vid_chat_id_str = str(chat_id) if _vid_chat_id_int < 0 else None
             # Сохраняем исходящее видео бота асинхронно (fire-and-forget)
             _fire_save_message(
                 user_id=str(chat_id),
@@ -214,6 +224,8 @@ def _wrap_bot_send_video(bot_instance):
                 message_text=caption or "[Видео]",
                 node_id=node_id,
                 message_data=message_data_obj,
+                chat_type=_vid_chat_type,
+                chat_id=_vid_chat_id_str,
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования send_video: {e}")
@@ -254,6 +266,10 @@ def _wrap_bot_send_audio(bot_instance):
                     "title": result.audio.title if hasattr(result.audio, "title") else None,
                     "performer": result.audio.performer if hasattr(result.audio, "performer") else None,
                 }
+            # Определяем тип чата по знаку chat_id
+            _aud_chat_id_int = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
+            _aud_chat_type = 'supergroup' if _aud_chat_id_int < 0 else 'private'
+            _aud_chat_id_str = str(chat_id) if _aud_chat_id_int < 0 else None
             # Сохраняем исходящее аудио бота асинхронно (fire-and-forget)
             _fire_save_message(
                 user_id=str(chat_id),
@@ -261,6 +277,8 @@ def _wrap_bot_send_audio(bot_instance):
                 message_text=caption or "[Аудио]",
                 node_id=node_id,
                 message_data=message_data_obj,
+                chat_type=_aud_chat_type,
+                chat_id=_aud_chat_id_str,
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования send_audio: {e}")
@@ -299,6 +317,10 @@ def _wrap_bot_send_document(bot_instance):
                     "mime_type": result.document.mime_type if hasattr(result.document, "mime_type") else None,
                     "file_size": result.document.file_size if hasattr(result.document, "file_size") else None,
                 }
+            # Определяем тип чата по знаку chat_id
+            _doc_chat_id_int = int(str(chat_id)) if str(chat_id).lstrip('-').isdigit() else 0
+            _doc_chat_type = 'supergroup' if _doc_chat_id_int < 0 else 'private'
+            _doc_chat_id_str = str(chat_id) if _doc_chat_id_int < 0 else None
             # Сохраняем исходящий документ бота асинхронно (fire-and-forget)
             _fire_save_message(
                 user_id=str(chat_id),
@@ -306,6 +328,8 @@ def _wrap_bot_send_document(bot_instance):
                 message_text=caption or "[Документ]",
                 node_id=node_id,
                 message_data=message_data_obj,
+                chat_type=_doc_chat_type,
+                chat_id=_doc_chat_id_str,
             )
         except Exception as e:
             logging.warning(f"Ошибка логирования send_document: {e}")
