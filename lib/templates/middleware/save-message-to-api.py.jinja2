@@ -13,10 +13,11 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
     try:
         async with db_pool.acquire() as conn:
             message_data_json = json.dumps(message_data or {}, ensure_ascii=False)
+            tg_message_id = (message_data or {}).get("message_id")
             result = await conn.fetchrow(
                 """
-                INSERT INTO bot_messages (project_id, token_id, user_id, message_type, message_text, node_id, message_data, created_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+                INSERT INTO bot_messages (project_id, token_id, user_id, message_type, message_text, node_id, message_data, telegram_message_id, created_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
                 RETURNING id, user_id, message_type, created_at
                 """,
                 PROJECT_ID,
@@ -25,9 +26,9 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
                 message_type,
                 message_text,
                 node_id,
-                message_data_json
+                message_data_json,
+                tg_message_id,
             )
-            tg_message_id = (message_data or {}).get("message_id")
             tg_mid_str = f", tg_message_id={tg_message_id}" if tg_message_id else ""
             logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result['id']}{tg_mid_str})")
 
