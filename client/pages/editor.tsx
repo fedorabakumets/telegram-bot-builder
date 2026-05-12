@@ -1493,6 +1493,7 @@ export default function Editor() {
                 <DialogsTabContent
                   projectId={activeProject.id}
                   selectedTokenId={selectedDatabaseTokenId}
+                  onSelectToken={setSelectedDatabaseTokenId}
                 />
               </UserMessagesLiveProvider>
             </div>

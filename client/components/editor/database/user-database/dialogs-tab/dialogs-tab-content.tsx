@@ -4,13 +4,14 @@
  * На мобайле — переключение между списком и открытым диалогом.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserBotData } from '@shared/schema';
 import { DialogPanel } from '../../dialog/dialog-panel';
 import { DialogList } from './dialog-list';
 import { useLiveInvalidate } from '../hooks/use-live-invalidate';
+import { useProjectTokens } from '@/hooks/use-project-tokens';
 
 /**
  * Пропсы компонента DialogsTabContent
@@ -20,6 +21,8 @@ interface DialogsTabContentProps {
   projectId: number;
   /** ID выбранного токена бота */
   selectedTokenId?: number | null;
+  /** Колбэк для обновления выбранного токена снаружи */
+  onSelectToken?: (tokenId: number | null) => void;
 }
 
 /**
@@ -42,12 +45,27 @@ function NoDialogSelected(): React.JSX.Element {
  */
 export function DialogsTabContent({
   projectId,
-  selectedTokenId,
+  selectedTokenId: selectedTokenIdProp,
+  onSelectToken,
 }: DialogsTabContentProps): React.JSX.Element {
   const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
 
+  // Автоматически выбираем токен по умолчанию если снаружи не передан
+  const projectTokensInfo = useProjectTokens([projectId]);
+  const projectTokens = projectTokensInfo[0]?.tokens ?? [];
+  const [internalTokenId, setInternalTokenId] = useState<number | null>(selectedTokenIdProp ?? null);
+  const resolvedTokenId = selectedTokenIdProp ?? internalTokenId;
+
+  useEffect(() => {
+    if (resolvedTokenId !== null || projectTokens.length === 0) return;
+    const defaultToken = projectTokens.find((t) => t.isDefault === 1) ?? projectTokens[0];
+    if (!defaultToken) return;
+    setInternalTokenId(defaultToken.id);
+    onSelectToken?.(defaultToken.id);
+  }, [projectTokens, resolvedTokenId, onSelectToken]);
+
   // Подписываемся на WS-события: обновляет кэш infinite-users (lastMessageText, порядок)
-  useLiveInvalidate({ projectId, selectedTokenId });
+  useLiveInvalidate({ projectId, selectedTokenId: resolvedTokenId });
 
   /** Сброс выбранного пользователя */
   const handleClose = () => setSelectedUser(null);
@@ -63,7 +81,7 @@ export function DialogsTabContent({
         <div className="w-80 flex-shrink-0 border-r border-border flex flex-col min-h-0">
           <DialogList
             projectId={projectId}
-            selectedTokenId={selectedTokenId}
+            selectedTokenId={resolvedTokenId}
             selectedUserId={selectedUser ? String(selectedUser.userId) : null}
             onSelectUser={handleSelectUser}
           />
@@ -74,7 +92,7 @@ export function DialogsTabContent({
           {selectedUser ? (
             <DialogPanel
               projectId={projectId}
-              selectedTokenId={selectedTokenId}
+              selectedTokenId={resolvedTokenId}
               user={selectedUser}
               onClose={handleClose}
               onSelectUser={handleSelectUser}
@@ -104,7 +122,7 @@ export function DialogsTabContent({
             <div className="flex-1 min-h-0">
               <DialogPanel
                 projectId={projectId}
-                selectedTokenId={selectedTokenId}
+                selectedTokenId={resolvedTokenId}
                 user={selectedUser}
                 onClose={handleClose}
                 onSelectUser={handleSelectUser}
@@ -114,7 +132,7 @@ export function DialogsTabContent({
         ) : (
           <DialogList
             projectId={projectId}
-            selectedTokenId={selectedTokenId}
+            selectedTokenId={resolvedTokenId}
             selectedUserId={null}
             onSelectUser={handleSelectUser}
           />
