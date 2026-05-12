@@ -32,6 +32,30 @@ function Get-RepositoryRoot {
 }
 
 <#
+ @description Строит относительный путь без зависимости от новых API .NET.
+ @param RepositoryRoot Корень репозитория.
+ @param FullPath Абсолютный путь к файлу.
+ @returns Относительный путь к файлу.
+#>
+function Get-RepositoryRelativePath {
+  param(
+    [string]$RepositoryRoot,
+    [string]$FullPath
+  )
+
+  $rootWithSeparator = $RepositoryRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+  if ($FullPath.Equals($RepositoryRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+    return "."
+  }
+
+  if (-not $FullPath.StartsWith($rootWithSeparator, [System.StringComparison]::OrdinalIgnoreCase)) {
+    return ""
+  }
+
+  return $FullPath.Substring($rootWithSeparator.Length)
+}
+
+<#
  @description Нормализует список путей относительно корня репозитория.
  @param RepositoryRoot Корень репозитория.
  @param CandidatePaths Исходный список путей.
@@ -54,7 +78,7 @@ function Get-RelativePaths {
       continue
     }
 
-    $relativePath = [System.IO.Path]::GetRelativePath($RepositoryRoot, $fullPath)
+    $relativePath = Get-RepositoryRelativePath -RepositoryRoot $RepositoryRoot -FullPath $fullPath
     if ($relativePath -and $relativePath -ne ".") {
       $pathSet.Add($relativePath) | Out-Null
     }
@@ -67,8 +91,8 @@ $repositoryRoot = Get-RepositoryRoot -PreferredRoot $RepoRoot
 Push-Location $repositoryRoot
 
 try {
-  $relativePaths = Get-RelativePaths -RepositoryRoot $repositoryRoot -CandidatePaths $Paths
-  if ($relativePaths.Count -gt 0) {
+  $relativePaths = @(Get-RelativePaths -RepositoryRoot $repositoryRoot -CandidatePaths $Paths)
+  if ($relativePaths.Length -gt 0) {
     git add -- $relativePaths
   }
   else {

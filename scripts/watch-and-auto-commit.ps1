@@ -12,6 +12,30 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 <#
+ @description Строит относительный путь без зависимости от новых API .NET.
+ @param RepositoryRoot Корень репозитория.
+ @param FullPath Абсолютный путь к файлу.
+ @returns Относительный путь к файлу.
+#>
+function Get-RepositoryRelativePath {
+  param(
+    [string]$RepositoryRoot,
+    [string]$FullPath
+  )
+
+  $rootWithSeparator = $RepositoryRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+  if ($FullPath.Equals($RepositoryRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+    return "."
+  }
+
+  if (-not $FullPath.StartsWith($rootWithSeparator, [System.StringComparison]::OrdinalIgnoreCase)) {
+    return ""
+  }
+
+  return $FullPath.Substring($rootWithSeparator.Length)
+}
+
+<#
  @description Добавляет путь в набор ожидающих коммита файлов.
  @param PendingPaths Набор путей.
  @param RepositoryRoot Корень репозитория.
@@ -33,7 +57,7 @@ function Add-PendingPath {
     return
   }
 
-  $relativePath = [System.IO.Path]::GetRelativePath($RepositoryRoot, $fullPath)
+  $relativePath = Get-RepositoryRelativePath -RepositoryRoot $RepositoryRoot -FullPath $fullPath
   if ($relativePath -and -not $relativePath.StartsWith(".git", [System.StringComparison]::OrdinalIgnoreCase)) {
     $PendingPaths.Add($relativePath) | Out-Null
   }
