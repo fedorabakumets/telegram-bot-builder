@@ -1,10 +1,11 @@
 <#
-@fileoverview Скрипт-наблюдатель для автокоммита файлов после паузы в изменениях
+@fileoverview Скрипт-наблюдатель для автокоммита через периодическую проверку git-статуса
 #>
 
 param(
   [string]$RootPath = ".",
   [int]$DebounceSeconds = 15,
+  [int]$PollSeconds = 3,
   [string]$MessagePrefix = "auto: watcher changes"
 )
 
@@ -12,107 +13,73 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 <#
- @description Строит относительный путь без зависимости от новых API .NET.
- @param RepositoryRoot Корень репозитория.
- @param FullPath Абсолютный путь к файлу.
- @returns Относительный путь к файлу.
+ @description Возвращает корень git-репозитория.
+ @param PreferredRoot Предпочтительный путь к репозиторию.
+ @returns Абсолютный путь к корню репозитория.
 #>
-function Get-RepositoryRelativePath {
-  param(
-    [string]$RepositoryRoot,
-    [string]$FullPath
-  )
-
-  $rootWithSeparator = $RepositoryRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
-  if ($FullPath.Equals($RepositoryRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
-    return "."
-  }
-
-  if (-not $FullPath.StartsWith($rootWithSeparator, [System.StringComparison]::OrdinalIgnoreCase)) {
-    return ""
-  }
-
-  return $FullPath.Substring($rootWithSeparator.Length)
+function Get-RepositoryRoot {
+  param([string]$PreferredRoot)
+  return (Resolve-Path -LiteralPath $PreferredRoot).Path
 }
 
 <#
- @description Добавляет путь в набор ожидающих коммита файлов.
- @param PendingPaths Набор путей.
- @param RepositoryRoot Корень репозитория.
- @param FilePath Абсолютный путь к файлу.
+ @description Возвращает список измененных файлов из git status.
+ @returns Список относительных путей измененных файлов.
 #>
-function Add-PendingPath {
-  param(
-    [System.Collections.Generic.HashSet[string]]$PendingPaths,
-    [string]$RepositoryRoot,
-    [string]$FilePath
-  )
+function Get-ChangedPaths {
+  $statusLines = @(git status --porcelain)
+  $paths = @()
 
-  if (-not $FilePath) {
-    return
+  foreach ($statusLine in $statusLines) {
+    if (-not $statusLine -or $statusLine.Length -lt 4) {
+      continue
+    }
+
+    $path = $statusLine.Substring(3).Trim()
+    if ($path -and -not $path.StartsWith(".git", [System.StringComparison]::OrdinalIgnoreCase)) {
+      $paths += $path
+    }
   }
 
-  $fullPath = [System.IO.Path]::GetFullPath($FilePath)
-  if (-not $fullPath.StartsWith($RepositoryRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
-    return
-  }
-
-  $relativePath = Get-RepositoryRelativePath -RepositoryRoot $RepositoryRoot -FullPath $fullPath
-  if ($relativePath -and -not $relativePath.StartsWith(".git", [System.StringComparison]::OrdinalIgnoreCase)) {
-    $PendingPaths.Add($relativePath) | Out-Null
-  }
+  return @($paths | Select-Object -Unique)
 }
 
-$repositoryRoot = (Resolve-Path -LiteralPath $RootPath).Path
+$repositoryRoot = Get-RepositoryRoot -PreferredRoot $RootPath
 $watcherScriptPath = Join-Path $repositoryRoot "scripts\auto-commit.ps1"
-$pendingPaths = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+$lastChangedPaths = @()
 $lastChangeAt = [datetime]::MinValue
 
-$watcher = New-Object System.IO.FileSystemWatcher
-$watcher.Path = $repositoryRoot
-$watcher.IncludeSubdirectories = $true
-$watcher.NotifyFilter = [System.IO.NotifyFilters]'FileName, DirectoryName, LastWrite, CreationTime'
-$watcher.EnableRaisingEvents = $true
-
-$handleChange = {
-  $script:lastChangeAt = Get-Date
-  Add-PendingPath -PendingPaths $script:pendingPaths -RepositoryRoot $script:repositoryRoot -FilePath $Event.SourceEventArgs.FullPath
-}
-
-$createdRegistration = Register-ObjectEvent $watcher Created -Action $handleChange
-$changedRegistration = Register-ObjectEvent $watcher Changed -Action $handleChange
-$deletedRegistration = Register-ObjectEvent $watcher Deleted -Action $handleChange
-$renamedRegistration = Register-ObjectEvent $watcher Renamed -Action {
-  $script:lastChangeAt = Get-Date
-  Add-PendingPath -PendingPaths $script:pendingPaths -RepositoryRoot $script:repositoryRoot -FilePath $Event.SourceEventArgs.OldFullPath
-  Add-PendingPath -PendingPaths $script:pendingPaths -RepositoryRoot $script:repositoryRoot -FilePath $Event.SourceEventArgs.FullPath
-}
-
-Write-Host "Watcher запущен в $repositoryRoot"
-Write-Host "Автокоммит выполнится после $DebounceSeconds секунд тишины. Остановка: Ctrl+C"
+Push-Location $repositoryRoot
 
 try {
+  Write-Host "Watcher запущен в $repositoryRoot"
+  Write-Host "Проверка каждые $PollSeconds сек., автокоммит после $DebounceSeconds сек. тишины."
+
   while ($true) {
-    Start-Sleep -Seconds 1
-    if ($pendingPaths.Count -eq 0 -or $lastChangeAt -eq [datetime]::MinValue) {
-      continue
+    $changedPaths = @(Get-ChangedPaths)
+    $hasChanges = $changedPaths.Length -gt 0
+    $samePaths = (@(Compare-Object -ReferenceObject $lastChangedPaths -DifferenceObject $changedPaths -SyncWindow 0).Length -eq 0)
+
+    if ($hasChanges -and -not $samePaths) {
+      $lastChangedPaths = $changedPaths
+      $lastChangeAt = Get-Date
+    }
+    elseif ($hasChanges -and $lastChangeAt -ne [datetime]::MinValue) {
+      $silenceDuration = (Get-Date) - $lastChangeAt
+      if ($silenceDuration.TotalSeconds -ge $DebounceSeconds) {
+        & $watcherScriptPath -RepoRoot $repositoryRoot -Paths $changedPaths -Message $MessagePrefix
+        $lastChangedPaths = @()
+        $lastChangeAt = [datetime]::MinValue
+      }
+    }
+    else {
+      $lastChangedPaths = @()
+      $lastChangeAt = [datetime]::MinValue
     }
 
-    $silenceDuration = (Get-Date) - $lastChangeAt
-    if ($silenceDuration.TotalSeconds -lt $DebounceSeconds) {
-      continue
-    }
-
-    $pathsToCommit = [string[]]$pendingPaths
-    $pendingPaths.Clear()
-    $lastChangeAt = [datetime]::MinValue
-    & $watcherScriptPath -RepoRoot $repositoryRoot -Paths $pathsToCommit -Message $MessagePrefix
+    Start-Sleep -Seconds $PollSeconds
   }
 }
 finally {
-  Unregister-Event -SourceIdentifier $createdRegistration.Name
-  Unregister-Event -SourceIdentifier $changedRegistration.Name
-  Unregister-Event -SourceIdentifier $deletedRegistration.Name
-  Unregister-Event -SourceIdentifier $renamedRegistration.Name
-  $watcher.Dispose()
+  Pop-Location
 }
