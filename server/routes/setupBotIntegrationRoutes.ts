@@ -11,7 +11,7 @@
 import type { Express } from "express";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
 import { getTelegramFileHandler } from "./botIntegration/handlers/botData/getTelegramFileHandler";
-import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, saveMessageHandler, deleteMessagesHandler } from "./botIntegration/handlers/messages";
+import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, saveMessageHandler, deleteMessagesHandler, deleteSingleMessageHandler } from "./botIntegration/handlers/messages";
 import { registerTelegramMediaHandler } from "./botIntegration/handlers/media";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler } from "./botIntegration/handlers/groups";
 import { getBotInfoHandler, updateBotNameHandler, updateBotDescriptionHandler, updateBotShortDescriptionHandler } from "./botIntegration/handlers/botInfo";
@@ -117,6 +117,13 @@ export function setupBotIntegrationRoutes(app: Express) {
      * @route DELETE /api/projects/:projectId/users/:userId/messages
      */
     app.delete("/api/projects/:projectId/users/:userId/messages", deleteMessagesHandler);
+
+    /**
+     * Удаление одного сообщения из диалога
+     *
+     * @route DELETE /api/projects/:projectId/messages/:messageId
+     */
+    app.delete("/api/projects/:projectId/messages/:messageId", deleteSingleMessageHandler);
 
     /**
      * Обработчик маршрута POST /api/projects/:projectId/media/register-telegram-photo

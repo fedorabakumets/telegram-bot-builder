@@ -11,3 +11,4 @@ export { sendMessageHandler } from "./sendMessageHandler";
 export { sendNodeMessageHandler } from "./sendNodeMessageHandler";
 export { saveMessageHandler } from "./saveMessageHandler";
 export { deleteMessagesHandler } from "./deleteMessagesHandler";
+export { deleteSingleMessageHandler } from "./deleteSingleMessageHandler";
