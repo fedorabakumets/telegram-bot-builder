@@ -197,20 +197,23 @@ export function DialogPanel({
 
       <Separator />
 
-      <DialogInput
-        isPending={sendMessageMutation.isPending}
-        projectId={projectId}
-        onSend={(text, mediaUrls) => {
-          sendMessageMutation.mutate({ messageText: text, mediaUrls });
-        }}
-      />
+      {/* Зона ввода — ограничена по высоте чтобы не перекрывать историю сообщений */}
+      <div className="flex-shrink-0 max-h-[55%] overflow-y-auto">
+        <DialogInput
+          isPending={sendMessageMutation.isPending}
+          projectId={projectId}
+          onSend={(text, mediaUrls) => {
+            sendMessageMutation.mutate({ messageText: text, mediaUrls });
+          }}
+        />
 
-      <NodeSender
-        projectId={projectId}
-        selectedTokenId={selectedTokenId}
-        userId={user?.userId ? Number(user.userId) : undefined}
-        onSent={refetchMessages}
-      />
+        <NodeSender
+          projectId={projectId}
+          selectedTokenId={selectedTokenId}
+          userId={user?.userId ? Number(user.userId) : undefined}
+          onSent={refetchMessages}
+        />
+      </div>
     </div>
   );
 }
