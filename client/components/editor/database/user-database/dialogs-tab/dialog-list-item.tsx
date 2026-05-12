@@ -40,7 +40,7 @@ type UserWithLastMessage = UserBotData & {
 function formatPreview(raw: string | null | undefined): string {
   if (!raw) return 'Нет сообщений';
   const stripped = raw.replace(/<[^>]*>/g, '').trim();
-  return MEDIA_MAP[stripped] ?? stripped || 'Нет сообщений';
+  return MEDIA_MAP[stripped] ?? (stripped || 'Нет сообщений');
 }
 
 /**
