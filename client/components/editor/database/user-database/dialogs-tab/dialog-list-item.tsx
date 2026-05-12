@@ -4,6 +4,7 @@
  * Поддерживает как личные диалоги, так и групповые чаты.
  */
 
+import { useState } from 'react';
 import { Users, Radio } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
 import { UserAvatar } from '../../dialog/components/user-avatar';
@@ -80,7 +81,7 @@ interface DialogListItemProps {
 
 /**
  * Карточка диалога в стиле мессенджера.
- * Для групп показывает иконку группы/канала и бейдж типа чата.
+ * Для групп показывает реальную аватарку из Telegram (если есть) или иконку.
  * @param props - Пропсы компонента
  * @returns JSX элемент карточки диалога
  */
@@ -92,10 +93,14 @@ export function DialogListItem({
   tokenId,
 }: DialogListItemProps): React.JSX.Element {
   const entry = user as DialogWithMeta;
+  const [groupAvatarError, setGroupAvatarError] = useState(false);
   const preview = formatPreview(entry.lastMessageText);
   const timestamp = formatRelativeTime(entry.lastMessageAt ?? user.lastInteraction);
   const name = entry.isGroup ? (user.firstName ?? 'Группа') : formatUserName(user);
   const isChannel = entry.chatType === 'channel';
+  /** URL аватарки группы из bot_groups.avatar_url (заполняется после синка) */
+  const groupAvatarUrl = entry.isGroup ? (user.avatarUrl ?? null) : null;
+  const showGroupPhoto = !!groupAvatarUrl && !groupAvatarError;
 
   return (
     <button
@@ -108,9 +113,18 @@ export function DialogListItem({
         isSelected ? 'bg-primary/10 hover:bg-primary/15' : '',
       ].join(' ')}
     >
-      {/* Аватар: для групп — иконка, для пользователей — фото */}
+      {/* Аватар: для групп — фото из Telegram или иконка, для пользователей — фото */}
       <div className="flex-shrink-0">
         {entry.isGroup ? (
+          showGroupPhoto ? (
+            <img
+              src={groupAvatarUrl!}
+              alt={name}
+              style={{ width: 40, height: 40 }}
+              className="rounded-full object-cover"
+              onError={() => setGroupAvatarError(true)}
+            />
+          ) : (
           <div
             style={{ width: 40, height: 40 }}
             className={[
@@ -132,6 +146,7 @@ export function DialogListItem({
               />
             )}
           </div>
+          )
         ) : (
           <UserAvatar
             messageType="user"
