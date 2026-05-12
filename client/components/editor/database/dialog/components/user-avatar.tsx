@@ -1,6 +1,8 @@
 /**
  * @fileoverview Компонент аватара пользователя
- * Отображает фото пользователя или иконку по умолчанию
+ * Отображает фото пользователя или иконку по умолчанию.
+ * Запрашивает аватарку через прокси всегда когда есть projectId и userId —
+ * сервер сам получит её из Telegram если в БД пусто.
  */
 
 import { Bot, User } from 'lucide-react';
@@ -34,17 +36,20 @@ function buildAvatarUrl(projectId: number, userId: string | number, tokenId?: nu
 }
 
 /**
- * Компонент аватара с поддержкой реальных фото
+ * Компонент аватара с поддержкой реальных фото.
+ * Запрашивает аватарку через прокси независимо от наличия avatarUrl в объекте пользователя —
+ * сервер получит её из Telegram если в БД пусто. При ошибке показывает иконку.
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }: UserAvatarProps) {
   const [imageError, setImageError] = useState(false);
   const isBot = messageType === 'bot';
-  const hasPhoto = !!user?.avatarUrl && !!projectId && !!user?.userId && !imageError;
+  /** Показываем img если есть projectId и userId — avatarUrl в БД не обязателен */
+  const canFetchPhoto = !!projectId && !!user?.userId && !imageError;
   const iconSize = size * 0.5;
 
-  if (isBot && hasPhoto && user?.userId) {
+  if (isBot && canFetchPhoto && user?.userId) {
     return (
       <img
         src={buildAvatarUrl(projectId!, user.userId, tokenId)}
@@ -64,7 +69,7 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }:
     );
   }
 
-  if (hasPhoto && user?.userId) {
+  if (canFetchPhoto && user?.userId) {
     return (
       <img
         src={buildAvatarUrl(projectId!, user.userId, tokenId)}
