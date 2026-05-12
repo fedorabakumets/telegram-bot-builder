@@ -5,9 +5,10 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Send, Paperclip } from 'lucide-react';
+import { RefreshCw, Send, Paperclip, Hash } from 'lucide-react';
 import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 import { MultiMediaSelector } from '@/components/editor/properties/media/multi-media-selector';
+import { FileIdInput } from '@/components/editor/properties/media/file-id-input';
 
 /**
  * Свойства компонента ввода сообщения
@@ -27,7 +28,7 @@ interface DialogInputProps {
 
 /**
  * Компонент ввода и отправки сообщения с поддержкой форматирования и медиафайлов.
- * Содержит кнопку-скрепку для показа/скрытия медиаселектора.
+ * Содержит кнопку-скрепку для медиаселектора и кнопку Telegram file_id.
  * @param props - Свойства компонента
  * @returns JSX элемент поля ввода
  */
@@ -37,6 +38,10 @@ export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) 
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   /** Флаг видимости медиаселектора */
   const [showMedia, setShowMedia] = useState(false);
+  /** Флаг видимости блока ввода Telegram file_id */
+  const [showFileId, setShowFileId] = useState(false);
+  /** Тип медиа для file_id */
+  const [fileIdMediaType, setFileIdMediaType] = useState<'photo' | 'video' | 'audio' | 'document'>('photo');
 
   const handleSend = () => {
     if (messageText.trim() && !isPending) {
@@ -44,6 +49,7 @@ export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) 
       setMessageText('');
       setMediaUrls([]);
       setShowMedia(false);
+      setShowFileId(false);
     }
   };
 
@@ -67,6 +73,21 @@ export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) 
         </div>
       )}
 
+      {/* Блок ввода Telegram file_id */}
+      {showFileId && (
+        <div className="border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60 max-h-64 overflow-y-auto">
+          <FileIdInput
+            projectId={projectId}
+            mediaType={fileIdMediaType}
+            onMediaTypeChange={setFileIdMediaType}
+            onAdd={(entry) => {
+              setMediaUrls((prev) => [...prev, entry]);
+              setShowFileId(false);
+            }}
+          />
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <p className="text-xs text-muted-foreground">Enter - отправить</p>
         <div className="flex items-center gap-1">
@@ -74,13 +95,24 @@ export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) 
           <Button
             variant={showMedia ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => setShowMedia((v) => !v)}
+            onClick={() => { setShowMedia((v) => !v); setShowFileId(false); }}
             title="Прикрепить медиафайл"
           >
             <Paperclip className="w-4 h-4" />
             {mediaUrls.length > 0 && (
               <span className="ml-1 text-xs font-semibold">{mediaUrls.length}</span>
             )}
+          </Button>
+
+          {/* Кнопка Telegram file_id */}
+          <Button
+            variant={showFileId ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => { setShowFileId((v) => !v); setShowMedia(false); }}
+            title="Добавить Telegram file_id"
+            className={showFileId ? '' : 'text-violet-500 hover:text-violet-600'}
+          >
+            <Hash className="w-4 h-4" />
           </Button>
 
           <Button
