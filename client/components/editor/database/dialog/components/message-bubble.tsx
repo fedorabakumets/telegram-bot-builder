@@ -141,7 +141,41 @@ export function MessageBubble({
           tokenId={tokenId ?? message.tokenId}
         />
 
-        <div className="flex flex-col gap-1 min-w-0">
+        {/* Кнопки действий — между аватаром и пузырём, видны при наведении */}
+        <div className="flex flex-col gap-0.5 self-center">
+          {showEditButton && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10"
+              onClick={handleOpenEdit}
+              disabled={isEditing}
+              title="Редактировать сообщение"
+            >
+              {isEditing
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <Pencil className="h-3 w-3" />
+              }
+            </Button>
+          )}
+          {showDeleteButton && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              onClick={() => onDelete(message.id)}
+              disabled={isDeleting}
+              title="Удалить сообщение"
+            >
+              {isDeleting
+                ? <Loader2 className="h-3 w-3 animate-spin" />
+                : <Trash2 className="h-3 w-3" />
+            }
+            </Button>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1 min-w-0" onDoubleClick={isBot && message.id > 0 && !!onEdit ? handleOpenEdit : undefined}>
           <MessageMedia
             media={message.media}
             messageData={message.messageData}
@@ -198,40 +232,6 @@ export function MessageBubble({
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               📢 Рассылка
             </span>
-          )}
-        </div>
-
-        {/* Кнопки действий — снаружи пузыря, видны при наведении */}
-        <div className="flex flex-col gap-0.5">
-          {showEditButton && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 shrink-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10"
-              onClick={handleOpenEdit}
-              disabled={isEditing}
-              title="Редактировать сообщение"
-            >
-              {isEditing
-                ? <Loader2 className="h-3 w-3 animate-spin" />
-                : <Pencil className="h-3 w-3" />
-              }
-            </Button>
-          )}
-          {showDeleteButton && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              onClick={() => onDelete(message.id)}
-              disabled={isDeleting}
-              title="Удалить сообщение"
-            >
-              {isDeleting
-                ? <Loader2 className="h-3 w-3 animate-spin" />
-                : <Trash2 className="h-3 w-3" />
-              }
-            </Button>
           )}
         </div>
       </div>
