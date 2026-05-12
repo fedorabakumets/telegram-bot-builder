@@ -153,6 +153,32 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
                 avatarUrl = userResult.rows[0]?.avatar_url || null;
                 console.log(`[avatar] user_bot_data lookup: found=${avatarUrl ? 'yes' : 'no'}`);
             }
+
+            // Если avatar_url всё ещё пустой — пробуем получить напрямую из Telegram
+            if (!avatarUrl) {
+                const tokenToUse = await resolveProjectBotToken(projectId, tokenId);
+                if (tokenToUse) {
+                    try {
+                        const photoResp = await fetchWithProxy(
+                            `https://api.telegram.org/bot${tokenToUse.token}/getUserProfilePhotos`,
+                            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, limit: 1 }) }
+                        );
+                        const photoData = await photoResp.json();
+                        if (photoResp.ok && photoData.result?.total_count > 0) {
+                            const freshFileId = photoData.result.photos[0].at(-1).file_id;
+                            // Сохраняем file_id в БД чтобы не запрашивать повторно
+                            await pool.query(
+                                'UPDATE bot_users SET avatar_url = $1 WHERE user_id = $2 AND project_id = $3',
+                                [freshFileId, userId, projectId]
+                            );
+                            avatarUrl = freshFileId;
+                            console.log(`[avatar] fetched fresh file_id from Telegram for user_id=${userId}`);
+                        }
+                    } catch (e) {
+                        console.warn('[avatar] failed to fetch user profile photos from Telegram:', e);
+                    }
+                }
+            }
         }
 
         await pool.end();
