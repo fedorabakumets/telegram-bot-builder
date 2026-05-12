@@ -55,9 +55,9 @@ export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) 
         placeholder="Введите сообщение..."
       />
 
-      {/* Медиаселектор — показывается при нажатии на скрепку */}
+      {/* Медиаселектор — показывается при нажатии на скрепку, ограничен по высоте */}
       {showMedia && (
-        <div className="border rounded-md p-2 bg-muted/30">
+        <div className="border rounded-md p-2 bg-muted/30 max-h-48 overflow-y-auto">
           <MultiMediaSelector
             projectId={projectId}
             value={mediaUrls}
