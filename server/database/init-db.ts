@@ -650,6 +650,20 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при миграции telegram_message_id в bot_messages:', error);
     }
 
+    // Миграция: добавить chat_type и chat_id в bot_messages
+    try {
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_messages
+        ADD COLUMN IF NOT EXISTS chat_type TEXT DEFAULT 'private';
+      `, "Миграция: добавление chat_type в bot_messages");
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_messages
+        ADD COLUMN IF NOT EXISTS chat_id TEXT;
+      `, "Миграция: добавление chat_id в bot_messages");
+    } catch (error) {
+      console.log('⚠️ Ошибка при миграции chat_type/chat_id в bot_messages:', error);
+    }
+
     // Миграция: добавить token_id в bot_users и обновить первичный ключ
     try {
       await executeWithRetry(db, sql`
