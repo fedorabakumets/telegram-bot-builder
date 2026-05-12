@@ -2235,21 +2235,22 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
     /**
      * SQL-запрос для групп как диалогов (UNION ALL с основным запросом пользователей).
-     * Используется отрицательный id чтобы не конфликтовать с id пользователей.
+     * Строится на основе bot_messages (chat_type IN group/supergroup/channel) —
+     * не требует записи в bot_groups. Группируем по chat_id, берём последнее сообщение.
      */
     const groupsUnionSql = `
       UNION ALL
       SELECT
-        (-g.id) AS id,
-        g.group_id::text AS "userId",
+        (-(ROW_NUMBER() OVER (ORDER BY MAX(bm.created_at) DESC))::bigint) AS id,
+        bm.chat_id AS "userId",
         NULL AS "userName",
-        g.name AS "firstName",
+        COALESCE(bg.name, bm.chat_id) AS "firstName",
         NULL AS "lastName",
-        g.avatar_url AS "avatarUrl",
-        g.created_at AS "registeredAt",
-        g.created_at AS "createdAt",
-        COALESCE(g.last_activity, g.updated_at) AS "lastInteraction",
-        g.messages_count AS "interactionCount",
+        bg.avatar_url AS "avatarUrl",
+        MIN(bm.created_at) AS "registeredAt",
+        MIN(bm.created_at) AS "createdAt",
+        MAX(bm.created_at) AS "lastInteraction",
+        COUNT(*)::integer AS "interactionCount",
         TRUE AS "isActive",
         FALSE AS "isPremium",
         FALSE AS "isBlocked",
@@ -2257,22 +2258,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         NULL AS "languageCode",
         NULL AS "deepLinkParam",
         NULL AS "referrerId",
-        lm.message_text AS "lastMessageText",
-        lm.created_at AS "lastMessageAt",
+        (ARRAY_AGG(bm.message_text ORDER BY bm.created_at DESC))[1] AS "lastMessageText",
+        MAX(bm.created_at) AS "lastMessageAt",
         TRUE AS "isGroup",
-        g.chat_type AS "chatType"
-      FROM bot_groups g
-      LEFT JOIN LATERAL (
-        SELECT message_text, created_at
-        FROM bot_messages
-        WHERE chat_id = g.group_id
-          AND project_id = g.project_id
-        ORDER BY created_at DESC
-        LIMIT 1
-      ) lm ON true
-      WHERE g.project_id = $1
-        AND g.is_active = 1
-        AND g.group_id IS NOT NULL
+        bm.chat_type AS "chatType"
+      FROM bot_messages bm
+      LEFT JOIN bot_groups bg
+        ON bg.group_id = bm.chat_id AND bg.project_id = bm.project_id
+      WHERE bm.project_id = $1
+        AND bm.chat_type IN ('group', 'supergroup', 'channel')
+        AND bm.chat_id IS NOT NULL
+        AND ($2::integer IS NULL OR bm.token_id = $2)
+      GROUP BY bm.chat_id, bm.chat_type, bg.name, bg.avatar_url
     `;
 
     try {

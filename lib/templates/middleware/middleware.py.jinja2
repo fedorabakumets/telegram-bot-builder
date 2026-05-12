@@ -72,37 +72,6 @@ async def register_user_middleware(handler, event: types.Message, data: dict):
 {% endif %}
 
 {% if userDatabaseEnabled %}
-async def _ensure_group_registered(chat_id: str, chat_type: str, chat_title: str):
-    """Авто-регистрирует группу в bot_groups если её там ещё нет.
-    Вызывается fire-and-forget при каждом входящем сообщении из группы.
-    При повторных вызовах — только обновляет last_activity (ON CONFLICT DO UPDATE).
-
-    @param chat_id - Telegram chat_id группы (строка, например '-1002300967595')
-    @param chat_type - Тип чата: 'group', 'supergroup', 'channel'
-    @param chat_title - Название группы из event.chat.title
-    """
-    try:
-        async with db_pool.acquire() as _conn:
-            await _conn.execute(
-                """
-                INSERT INTO bot_groups (project_id, group_id, name, url, chat_type, is_active, last_activity, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, 1, NOW(), NOW(), NOW())
-                ON CONFLICT (project_id, group_id) DO UPDATE
-                    SET last_activity = NOW(),
-                        updated_at = NOW(),
-                        chat_type = EXCLUDED.chat_type,
-                        name = CASE WHEN bot_groups.name = bot_groups.group_id THEN EXCLUDED.name ELSE bot_groups.name END
-                """,
-                PROJECT_ID,
-                chat_id,
-                chat_title,
-                '',
-                chat_type,
-            )
-    except Exception as _e:
-        logging.debug(f"⚠️ _ensure_group_registered: {_e}")
-
-
 # Middleware для сохранения входящих сообщений
 async def message_logging_middleware(handler, event: types.Message, data: dict):
     """Middleware для автоматического сохранения входящих сообщений от пользователей"""
@@ -197,14 +166,6 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
         # Определяем тип и id чата
         _evt_chat_type = event.chat.type if hasattr(event, 'chat') and event.chat else 'private'
         _evt_chat_id = str(event.chat.id) if hasattr(event, 'chat') and event.chat and event.chat.type in ['group', 'supergroup', 'channel'] else None
-
-        # Авто-регистрация группы в bot_groups при первом сообщении (fire-and-forget)
-        if _evt_chat_id and db_pool:
-            asyncio.create_task(_ensure_group_registered(
-                chat_id=_evt_chat_id,
-                chat_type=_evt_chat_type,
-                chat_title=event.chat.title or _evt_chat_id,
-            ))
 
         # Сохраняем сообщение в базу данных асинхронно (fire-and-forget)
         _fire_save_message(
