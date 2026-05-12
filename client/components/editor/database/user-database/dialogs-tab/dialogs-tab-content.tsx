@@ -87,7 +87,7 @@ export function DialogsTabContent({
   const showProjectSelector = !!allProjects && allProjects.length > 1 && !!onProjectChange;
 
   return (
-    <>
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Хедер с селекторами проекта и токена */}
       <div className="border-b border-border/50 bg-card px-3 py-2 sm:px-4 sm:py-3 flex-shrink-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -122,7 +122,7 @@ export function DialogsTabContent({
       </div>
 
       {/* Desktop: двухколоночный layout */}
-      <div className="hidden md:flex h-full min-h-0">
+      <div className="hidden md:flex flex-1 min-h-0">
         {/* Левая колонка — список диалогов */}
         <div className="w-80 flex-shrink-0 border-r border-border flex flex-col min-h-0">
           <DialogList
@@ -150,7 +150,7 @@ export function DialogsTabContent({
       </div>
 
       {/* Mobile: переключение между списком и диалогом */}
-      <div className="flex md:hidden flex-col h-full min-h-0">
+      <div className="flex md:hidden flex-col flex-1 min-h-0">
         {selectedUser ? (
           <div className="flex flex-col h-full min-h-0">
             {/* Кнопка "Назад" */}
@@ -184,6 +184,6 @@ export function DialogsTabContent({
           />
         )}
       </div>
-    </>
+    </div>
   );
 }
