@@ -105,7 +105,7 @@ export function DialogPanel({
     },
   });
 
-  const { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage } =
+  const { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage, wsDeletedIds } =
     useDialogLiveMessages(projectId, selectedTokenId, user?.userId);
 
   /** Объединённые и дедуплицированные сообщения */
@@ -114,10 +114,10 @@ export function DialogPanel({
     [httpMessages, liveMessages],
   );
 
-  /** Сообщения без оптимистично удалённых */
+  /** Сообщения без оптимистично удалённых и удалённых через WS */
   const messages = useMemo(
-    () => allMessages.filter((m) => !deletedMessageIds.has(m.id)),
-    [allMessages, deletedMessageIds],
+    () => allMessages.filter((m) => !deletedMessageIds.has(m.id) && !wsDeletedIds.has(m.id)),
+    [allMessages, deletedMessageIds, wsDeletedIds],
   );
 
   /** Сброс live-сообщений и удалённых id при смене пользователя */

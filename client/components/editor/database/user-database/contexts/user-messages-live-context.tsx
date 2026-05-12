@@ -76,7 +76,28 @@ export interface NewUserLiveEvent {
 }
 
 /** Все типы live-событий */
-export type LiveEvent = NewMessageLiveEvent | NewUserLiveEvent | BroadcastProgressLiveEvent;
+export type LiveEvent = NewMessageLiveEvent | NewUserLiveEvent | BroadcastProgressLiveEvent | MessageDeletedLiveEvent;
+
+/**
+ * Структура WS-события удаления сообщения из диалога
+ */
+export interface MessageDeletedLiveEvent {
+  /** Тип события */
+  type: 'message-deleted';
+  /** Идентификатор проекта */
+  projectId: number;
+  /** Идентификатор токена */
+  tokenId?: number;
+  /** Данные удалённого сообщения */
+  data: {
+    /** Внутренний ID удалённого сообщения */
+    messageId: number;
+    /** Идентификатор пользователя (строка) */
+    userId: string;
+  };
+  /** Временная метка события */
+  timestamp: string;
+}
 
 /**
  * Структура WS-события прогресса рассылки
@@ -159,7 +180,7 @@ export function UserMessagesLiveProvider({ projectId, children }: UserMessagesLi
         try {
           const msg = JSON.parse(event.data as string) as LiveEvent;
           // Пропускаем только поддерживаемые типы событий
-          if (msg.type !== 'new-message' && msg.type !== 'new-user' && msg.type !== 'broadcast-progress') return;
+          if (msg.type !== 'new-message' && msg.type !== 'new-user' && msg.type !== 'broadcast-progress' && msg.type !== 'message-deleted') return;
           console.log(`[LiveProvider] событие ${msg.type} projectId=${msg.projectId} (ожидаем ${projectId}), подписчиков: ${listenersRef.current.size}`);
           if (msg.projectId !== projectId) return;
           console.log(`[LiveProvider] → рассылаем ${listenersRef.current.size} подписчикам`);

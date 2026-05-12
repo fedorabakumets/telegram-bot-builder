@@ -10,6 +10,7 @@ import { BotMessageWithMedia } from '../types';
 import {
   useUserMessagesLiveContext,
   NewMessageLiveEvent,
+  MessageDeletedLiveEvent,
 } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 
 /**
@@ -24,6 +25,8 @@ export interface UseDialogLiveMessagesResult {
   addOptimisticMessage: (msg: BotMessageWithMedia) => void;
   /** Удаляет оптимистичное сообщение по временному id (откат при ошибке) */
   removeOptimisticMessage: (tempId: number) => void;
+  /** ID сообщений удалённых через WS другим оператором */
+  wsDeletedIds: Set<number>;
 }
 
 /**
@@ -69,6 +72,8 @@ export function useDialogLiveMessages(
   userId?: string | number | null,
 ): UseDialogLiveMessagesResult {
   const [liveMessages, setLiveMessages] = useState<BotMessageWithMedia[]>([]);
+  /** ID сообщений удалённых через WS другим оператором */
+  const [wsDeletedIds, setWsDeletedIds] = useState<Set<number>>(new Set());
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -78,6 +83,7 @@ export function useDialogLiveMessages(
   /** Сбрасывает накопленные live-сообщения */
   const resetLiveMessages = useCallback(() => {
     setLiveMessages([]);
+    setWsDeletedIds(new Set());
   }, []);
 
   /**
@@ -103,6 +109,16 @@ export function useDialogLiveMessages(
     const userIdStr = String(userId);
 
     const unsubscribe = liveContext.subscribe((msg) => {
+      // Обрабатываем событие удаления сообщения
+      if (msg.type === 'message-deleted') {
+        const deleted = msg as MessageDeletedLiveEvent;
+        if (selectedTokenId && msg.tokenId && msg.tokenId !== selectedTokenId) return;
+        if (String(deleted.data.userId) !== userIdStr) return;
+        const deletedId = deleted.data.messageId;
+        setLiveMessages((prev) => prev.filter((m) => m.id !== deletedId));
+        setWsDeletedIds((prev) => new Set(prev).add(deletedId));
+        return;
+      }
       // Обрабатываем только события new-message, new-user игнорируем
       if (msg.type !== 'new-message') return;
       if (selectedTokenId && msg.tokenId && msg.tokenId !== selectedTokenId) return;
@@ -146,13 +162,25 @@ export function useDialogLiveMessages(
 
       ws.onmessage = (event) => {
         try {
-          const msg = JSON.parse(event.data as string) as NewMessageLiveEvent;
-          if (msg.type !== 'new-message') return;
+          const msg = JSON.parse(event.data as string) as { type: string; projectId: number; tokenId?: number; data?: unknown; timestamp: string };
           if (msg.projectId !== projectId) return;
+
+          // Обрабатываем событие удаления сообщения
+          if (msg.type === 'message-deleted') {
+            const data = msg.data as { messageId: number; userId: string } | undefined;
+            if (!data) return;
+            if (selectedTokenId && msg.tokenId && msg.tokenId !== selectedTokenId) return;
+            if (String(data.userId) !== userIdStr) return;
+            setLiveMessages((prev) => prev.filter((m) => m.id !== data.messageId));
+            setWsDeletedIds((prev) => new Set(prev).add(data.messageId));
+            return;
+          }
+
+          if (msg.type !== 'new-message') return;
           if (selectedTokenId && msg.tokenId && msg.tokenId !== selectedTokenId) return;
           if (String(msg.data?.userId) !== userIdStr) return;
 
-          const newMsg = eventToMessage(msg, projectId, selectedTokenId);
+          const newMsg = eventToMessage(msg as NewMessageLiveEvent, projectId, selectedTokenId);
           setLiveMessages((prev) => {
             // Уже есть — пропускаем дубль
             if (prev.some((m) => m.id === newMsg.id)) return prev;
@@ -194,5 +222,5 @@ export function useDialogLiveMessages(
     };
   }, [projectId, selectedTokenId, userId, liveContext]);
 
-  return { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage };
+  return { liveMessages, resetLiveMessages, addOptimisticMessage, removeOptimisticMessage, wsDeletedIds };
 }

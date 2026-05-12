@@ -29,8 +29,8 @@ export interface BroadcastProgressEvent {
  * Событие проекта, рассылаемое всем подключённым клиентам
  */
 export interface ProjectEvent {
-  /** Тип события: создание/удаление токена, изменение статуса бота, новое сообщение диалога, новый пользователь или прогресс рассылки */
-  type: 'token-created' | 'token-deleted' | 'bot-started' | 'bot-stopped' | 'bot-error' | 'new-message' | 'new-user' | 'broadcast-progress';
+  /** Тип события: создание/удаление токена, изменение статуса бота, новое/удалённое сообщение диалога, новый пользователь или прогресс рассылки */
+  type: 'token-created' | 'token-deleted' | 'bot-started' | 'bot-stopped' | 'bot-error' | 'new-message' | 'message-deleted' | 'new-user' | 'broadcast-progress';
   /** Идентификатор проекта */
   projectId: number;
   /** ID токена (для событий бота) */

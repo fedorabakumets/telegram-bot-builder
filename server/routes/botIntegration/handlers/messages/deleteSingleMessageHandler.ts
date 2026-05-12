@@ -16,6 +16,7 @@ import {
   resolveEffectiveProjectToken,
   getRequestTokenId,
 } from "../../../utils/resolve-request-token";
+import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 
 /**
  * Вызывает Telegram Bot API для удаления сообщения из чата
@@ -119,6 +120,15 @@ export async function deleteSingleMessageHandler(
 
     // Физически удаляем запись из БД
     await db.delete(botMessages).where(eq(botMessages.id, messageId));
+
+    // Рассылаем WS-событие всем подключённым клиентам проекта
+    await broadcastProjectEvent(projectId, {
+      type: 'message-deleted',
+      projectId,
+      tokenId: message.tokenId,
+      data: { messageId, userId: message.userId },
+      timestamp: new Date().toISOString(),
+    });
 
     res.json({ success: true, deletedFromTelegram });
   } catch (error) {
