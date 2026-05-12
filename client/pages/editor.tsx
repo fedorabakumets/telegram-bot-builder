@@ -47,6 +47,7 @@ import { useLocation } from 'wouter';
 
 import { DialogPanel } from '@/components/editor/database/dialog/dialog-panel';
 import { UserMessagesLiveProvider } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
+import { DialogsTabContent } from '@/components/editor/database/user-database/dialogs-tab/dialogs-tab-content';
 import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
 import { BroadcastPanel } from '@/components/editor/broadcast';
@@ -1484,6 +1485,16 @@ export default function Editor() {
                   setLocation(`/projects/${projectId}`);
                 }}
               />
+            </div>
+          )}
+          {currentTab === 'dialogs' && (
+            <div className="h-full overflow-hidden">
+              <UserMessagesLiveProvider projectId={activeProject.id}>
+                <DialogsTabContent
+                  projectId={activeProject.id}
+                  selectedTokenId={selectedDatabaseTokenId}
+                />
+              </UserMessagesLiveProvider>
             </div>
           )}
           {currentTab === 'user-ids' && <UserIdsDatabase />}

@@ -10,6 +10,7 @@ export type HeaderTab =
   | 'export'
   | 'bot'
   | 'users'
+  | 'dialogs'
   | 'groups'
   | 'user-ids'
   | 'client-api'
