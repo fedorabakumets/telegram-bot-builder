@@ -208,7 +208,7 @@ async def save_user_to_db(user_id: int, username: str = None, first_name: str = 
     deep_link_param и referrer_id не перезаписываются при повторных визитах —
     сохраняется только значение первого касания (COALESCE).
     """
-    from datetime import datetime
+    from datetime import datetime, timezone
     if not db_pool:
         return False
     try:
@@ -258,7 +258,7 @@ async def save_user_to_db(user_id: int, username: str = None, first_name: str = 
                     "languageCode": language_code,
                     "deepLinkParam": deep_link_param,
                     "referrerId": referrer_id,
-                    "registeredAt": datetime.now(datetime.timezone.utc).isoformat(),
+                    "registeredAt": datetime.now(timezone.utc).isoformat(),
                 }, ensure_ascii=False)
                 await _redis_client.publish(
                     f"bot:user:{PROJECT_ID}:{TOKEN_ID}",
