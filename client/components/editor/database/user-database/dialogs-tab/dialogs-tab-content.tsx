@@ -12,6 +12,7 @@ import { DialogPanel } from '../../dialog/dialog-panel';
 import { DialogList } from './dialog-list';
 import { useLiveInvalidate } from '../hooks/use-live-invalidate';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
+import { BotTokenSelector, ProjectSelector } from '../components/header';
 
 /**
  * Пропсы компонента DialogsTabContent
@@ -19,10 +20,16 @@ import { useProjectTokens } from '@/hooks/use-project-tokens';
 interface DialogsTabContentProps {
   /** ID проекта */
   projectId: number;
+  /** Название проекта */
+  projectName?: string;
   /** ID выбранного токена бота */
   selectedTokenId?: number | null;
   /** Колбэк для обновления выбранного токена снаружи */
   onSelectToken?: (tokenId: number | null) => void;
+  /** Список всех проектов для селектора */
+  allProjects?: Array<{ id: number; name: string }>;
+  /** Колбэк смены проекта */
+  onProjectChange?: (projectId: number) => void;
 }
 
 /**
@@ -45,8 +52,11 @@ function NoDialogSelected(): React.JSX.Element {
  */
 export function DialogsTabContent({
   projectId,
+  projectName,
   selectedTokenId: selectedTokenIdProp,
   onSelectToken,
+  allProjects,
+  onProjectChange,
 }: DialogsTabContentProps): React.JSX.Element {
   const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
 
@@ -73,8 +83,44 @@ export function DialogsTabContent({
   /** Выбор пользователя из списка или из DialogPanel */
   const handleSelectUser = (user: UserBotData) => setSelectedUser(user);
 
+  /** Показывать селектор проекта только если несколько проектов */
+  const showProjectSelector = !!allProjects && allProjects.length > 1 && !!onProjectChange;
+
   return (
     <>
+      {/* Хедер с селекторами проекта и токена */}
+      <div className="border-b border-border/50 bg-card px-3 py-2 sm:px-4 sm:py-3 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold text-foreground">Диалоги</span>
+          <span className="text-border/60">·</span>
+          {showProjectSelector ? (
+            <ProjectSelector
+              projects={allProjects!}
+              selectedProjectId={projectId}
+              onSelect={onProjectChange!}
+            />
+          ) : (
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              {projectName && <>Проект: <span className="font-medium text-foreground">{projectName}</span></>}
+            </span>
+          )}
+          {projectTokens.length > 0 && (
+            <>
+              <span className="text-border/60 hidden sm:inline">·</span>
+              <BotTokenSelector
+                tokens={projectTokens}
+                selectedTokenId={resolvedTokenId}
+                onSelect={(id) => {
+                  setInternalTokenId(id);
+                  onSelectToken?.(id);
+                  setSelectedUser(null);
+                }}
+              />
+            </>
+          )}
+        </div>
+      </div>
+
       {/* Desktop: двухколоночный layout */}
       <div className="hidden md:flex h-full min-h-0">
         {/* Левая колонка — список диалогов */}

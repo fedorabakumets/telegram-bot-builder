@@ -1492,8 +1492,14 @@ export default function Editor() {
               <UserMessagesLiveProvider projectId={activeProject.id}>
                 <DialogsTabContent
                   projectId={activeProject.id}
+                  projectName={activeProject.name}
                   selectedTokenId={selectedDatabaseTokenId}
                   onSelectToken={setSelectedDatabaseTokenId}
+                  allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                  onProjectChange={(pid) => {
+                    setSelectedDatabaseTokenId(null);
+                    setLocation(`/projects/${pid}`);
+                  }}
                 />
               </UserMessagesLiveProvider>
             </div>
