@@ -2237,9 +2237,25 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
         if (search) {
           const searchParam = `%${search}%`;
-          conditions.push(
-            `(u.first_name ILIKE $${paramIdx} OR u.username ILIKE $${paramIdx} OR u.user_id::text ILIKE $${paramIdx})`
-          );
+          /**
+           * Ищем не только по данным пользователя, но и по тексту сообщений диалога.
+           * EXISTS сохраняет корректную пагинацию без дублирования строк пользователя.
+           */
+          conditions.push(`
+            (
+              u.first_name ILIKE $${paramIdx}
+              OR u.username ILIKE $${paramIdx}
+              OR u.user_id::text ILIKE $${paramIdx}
+              OR EXISTS (
+                SELECT 1
+                FROM bot_messages bm
+                WHERE bm.project_id = u.project_id
+                  AND bm.user_id = u.user_id::text
+                  AND ($2::integer IS NULL OR bm.token_id = $2)
+                  AND COALESCE(bm.message_text, '') ILIKE $${paramIdx}
+              )
+            )
+          `);
           params.push(searchParam);
           paramIdx++;
         }
