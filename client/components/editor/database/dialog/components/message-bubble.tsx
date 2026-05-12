@@ -93,11 +93,11 @@ export function MessageBubble({ message, index, user, bot, projectId, tokenId, o
 
   return (
     <div
-      className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+      className={`flex ${isBot ? 'justify-end' : 'justify-start'}`}
       data-testid={`dialog-message-${message.messageType}-${index}`}
     >
       <div
-        className={`flex items-end gap-2 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+        className={`flex items-end gap-2 max-w-[85%] ${isBot ? 'flex-row-reverse' : 'flex-row'}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
