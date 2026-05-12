@@ -52,9 +52,8 @@ export interface SparklineChartProps {
   height?: number;
   /**
    * Явный тип графика: 'bar' — столбчатый, 'line' — линейный (Area).
-   * Если не задан — тип выбирается автоматически по гранулярности.
-   * При автоматическом выборе cumulative использует AreaChart,
-   * но явный chartType='bar' работает в любом режиме, включая накопительный.
+   * Если не задан — тип выбирается автоматически по гранулярности (1m/5m → bar, иначе → line).
+   * Работает в любом режиме, включая накопительный.
    */
   chartType?: ChartType;
 }
@@ -190,9 +189,9 @@ export function SparklineChart({
     /**
      * Определяем тип графика для multi-line:
      * - явный chartType='bar' всегда использует BarChart, включая cumulative режим
-     * - автоматика: 1m|5m и !cumulative → Bar, иначе → Area
+     * - автоматика: 1m|5m → Bar в любом режиме, иначе → Area
      */
-    const autoBar = !cumulative && (granularity === '1m' || granularity === '5m');
+    const autoBar = granularity === '1m' || granularity === '5m';
     const isMultiBar = chartType === 'bar' || (chartType === undefined && autoBar);
 
     /** Stacked bar chart */
@@ -284,9 +283,9 @@ export function SparklineChart({
   /**
    * Определяем тип графика для single-line:
    * - явный chartType='bar' всегда использует BarChart, включая cumulative режим
-   * - автоматика: 1m|5m и !cumulative → Bar, иначе → Area
+   * - автоматика: 1m|5m → Bar в любом режиме, иначе → Area
    */
-  const autoBar = !cumulative && (granularity === '1m' || granularity === '5m');
+  const autoBar = granularity === '1m' || granularity === '5m';
   const isBar = chartType === 'bar' || (chartType === undefined && autoBar);
   const showDots = !isBar && !cumulative && granularity === '1h';
 
