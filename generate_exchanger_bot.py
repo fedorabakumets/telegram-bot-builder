@@ -179,6 +179,10 @@ def build_pair_chain(from_id, from_name, from_key, to_id, to_name, to_key,
     expr = f"rates_{from_key}_{to_key}['exchange']['{from_id}']['to']['{to_id}']"
     expr = f"rates_{pair_key.replace('-','_')}['exchange']['{from_id}']['to']['{to_id}']"
 
+    # dot-notation: {resp_var.exchange.FROM_ID.to.TO_ID}
+    # replace_variables_in_text умеет обходить вложенные dict по точечному пути
+    dot_path = f"{{{resp_var}.exchange.{from_id}.to.{to_id}}}"
+
     nodes = [
         http_node(fetch_id, check_id, resp_var, stat_var, x_start, y_row),
         condition_node(check_id, stat_var, [
@@ -189,8 +193,8 @@ def build_pair_chain(from_id, from_name, from_key, to_id, to_name, to_key,
         ], x_start + 400, y_row),
         set_var_node(setv_id, [
             {"id": f"a1-{pair_key}", "variable": rate_var,
-             "value": f"{resp_var}['exchange']['{from_id}']['to']['{to_id}']",
-             "mode": "expression"}
+             "value": dot_path,
+             "mode": "text"}
         ], show_id, x_start + 800, y_row),
         message_node(
             show_id,
