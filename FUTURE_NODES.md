@@ -393,3 +393,144 @@ schedule_trigger (каждые 5 мин)
 4. **Ноды table_get / table_set** — чтение и запись из сценария
 5. **table_delete / table_count** — дополнительные операции
 6. **Синхронизация** — изменения в UI применяются без перезапуска бота
+
+
+---
+
+## 📐 Архитектурные сценарии — мониторинг обменников
+
+### Сценарий A — текущий (жёсткие ноды)
+
+Каждый обменник и каждая пара прописаны вручную в нодах.
+
+```
+fetch-swop → fetch-sova → fetch-ferma → set_variable → message
+```
+
+| Метрика | Значение |
+|---|---|
+| Нод на пару | 6 |
+| Нод при 8 парах × 4 обменниках | 53 |
+| Добавить обменник | перегенерация всего проекта |
+| Скорость ответа | ~2 сек (4 последовательных запроса) |
+
+---
+
+### Сценарий B — loop + таблицы (масштабируемый)
+
+Обменники и пары хранятся в таблицах. Loop проходит по ним динамически.
+
+```
+table_get (exchangers) → loop → http_request → json_extract → set_variable (накопить) → message
+```
+
+Таблица обменников:
+```
+📋 exchangers
+id │ name     │ url                    │ ton_id │ usdt_id │ enabled
+───┼──────────┼────────────────────────┼────────┼─────────┼────────
+1  │ swop.is  │ https://swop.is/...    │ 107    │ 55      │ true
+2  │ sova.is  │ https://sova.is/...    │ 136    │ 55      │ true
+3  │ ferma.cc │ https://ferma.cc/...   │ 107    │ 55      │ true
+```
+
+Таблица пар:
+```
+📋 pairs
+id │ from_name │ from_id │ to_name    │ to_id │ emoji_from │ emoji_to
+───┼───────────┼─────────┼────────────┼───────┼────────────┼─────────
+1  │ Сбербанк  │ 2       │ USDT TRC20 │ 55    │ 🏦         │ ₮
+2  │ Сбербанк  │ 2       │ Bitcoin    │ 5     │ 🏦         │ ₿
+3  │ Тинькофф  │ 18      │ USDT TRC20 │ 55    │ 💳         │ ₮
+4  │ ЮMoney    │ 48      │ TON        │ 107   │ 🟡         │ 💎
+```
+
+Схема нод (8 нод на весь бот):
+```
+command_trigger (/rate)
+  → message (выбери пару — кнопки из таблицы pairs через enableDynamicButtons)
+    → set_variable (selected_pair_id = {callback_data})
+      → table_get (exchangers, enabled=true) → exchangers_list
+        → loop (по exchangers_list, item=exchanger)
+            → http_request (GET {exchanger.url})
+              → json_extract (exchange.{pair.from_id}.to.{exchanger.to_id})
+                → set_variable (rates_text += "🔸 {exchanger.name}: {current_rate}\n")
+          (после loop)
+        → message "💱 {pair.from_name} → {pair.to_name}\n\n{rates_text}"
+```
+
+| Метрика | Значение |
+|---|---|
+| Нод на весь бот | 8 |
+| Добавить обменник | 1 строка в таблице |
+| Добавить пару | 1 строка в таблице |
+| Скорость ответа | N сек (N = кол-во обменников, последовательно) |
+
+---
+
+### Сценарий C — schedule + кеш (production, рекомендуется)
+
+Фоновый сборщик обновляет курсы каждые 5 минут. Пользователь получает ответ мгновенно из кеша.
+
+Таблица кеша:
+```
+📋 rates
+exchanger_id │ pair_id │ rate    │ updated_at
+─────────────┼─────────┼─────────┼───────────────────
+1            │ 1       │ 82.70   │ 2026-05-13 09:15:00
+2            │ 1       │ 82.21   │ 2026-05-13 09:15:00
+3            │ 1       │ 82.69   │ 2026-05-13 09:15:00
+1            │ 2       │ 6527090 │ 2026-05-13 09:15:00
+```
+
+Фоновый сборщик (5 нод, работает сам):
+```
+schedule_trigger (каждые 5 мин)
+  → table_get (pairs, enabled=true) → pairs_list
+    → loop (по pairs_list, item=pair)
+        → loop (по exchangers_list, item=exchanger)  ← вложенный loop
+            → http_request (GET {exchanger.url})
+              → json_extract (exchange.{pair.from_id}.to.{exchanger.to_id})
+                → table_set (rates, upsert, exchanger_id+pair_id)
+```
+
+Запрос пользователя (4 ноды, мгновенно):
+```
+command_trigger (/rate)
+  → message (выбери пару)
+    → table_get (rates JOIN exchangers, filter: pair_id={selected}, ORDER BY rate DESC)
+      → message "{rates_text}"
+```
+
+| Метрика | Значение |
+|---|---|
+| Нод фонового сборщика | 5 |
+| Нод интерфейса пользователя | 4 |
+| Итого | 9 нод |
+| Добавить обменник | 1 строка в таблице |
+| Добавить пару | 1 строка в таблице |
+| Скорость ответа пользователю | мгновенно (чтение из кеша) |
+| Масштаб | 1 — 10 000 обменников без изменений |
+
+---
+
+### Сравнение сценариев
+
+| | A (сейчас) | B (loop) | C (schedule+кеш) |
+|---|---|---|---|
+| Нод | 53 | 8 | 9 |
+| Добавить обменник | перегенерация | 1 строка | 1 строка |
+| 1000 обменников | невозможно | медленно | ✅ мгновенно |
+| Нужные ноды | — | loop, json_extract, table_get/set | + schedule_trigger |
+| Сложность реализации | — | средняя | высокая |
+
+---
+
+### Что нужно реализовать для сценария C
+
+В порядке зависимостей:
+1. `table_get` / `table_set` — чтение и запись таблиц
+2. `json_extract` — извлечение вложенного поля по пути
+3. `loop` — цикл по массиву (с поддержкой вложенности)
+4. `schedule_trigger` — фоновый запуск по расписанию
+5. UI вкладка "Таблицы" — управление данными без кода
