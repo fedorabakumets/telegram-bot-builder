@@ -13,24 +13,38 @@ OUTPUT_DIR  = r"C:\Users\1\Desktop\telegram-bot-builder\bots\exchanger-monitor"
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "project.json")
 NOW         = "2026-05-13T10:00:00.000Z"
 
-# Пары: (from_id, from_name, from_key, to_id, to_name, to_key, emoji_from, emoji_to)
+# Маппинг ID валют по обменникам (имя_валюты -> id в конкретном API)
+# Проверено: swop/ferma совпадают, sova и pocket имеют другие ID для TON
+CURRENCY_IDS = {
+    #          swop  sova  pocket  ferma
+    "SBERRUB": [2,   2,    2,      2],
+    "TCSBRUB": [18,  18,   18,     18],
+    "YAMRUB":  [48,  48,   48,     48],
+    "USDTTRC20":[55, 55,   55,     55],
+    "BTC":     [5,   5,    5,      5],
+    "ETH":     [4,   4,    4,      4],
+    "TON":     [107, 136,  101,    107],  # sova=136, pocket=101
+    "SOL":     [74,  74,   74,     74],
+}
+
+# Пары: (from_currency, from_name, from_key, to_currency, to_name, to_key, emoji_from, emoji_to)
 PAIRS = [
-    (2,  "Сбербанк", "sber", 55,  "USDT TRC20", "usdt", "🏦", "₮"),
-    (2,  "Сбербанк", "sber", 5,   "Bitcoin",    "btc",  "🏦", "₿"),
-    (2,  "Сбербанк", "sber", 4,   "Ethereum",   "eth",  "🏦", "Ξ"),
-    (2,  "Сбербанк", "sber", 107, "TON",        "ton",  "🏦", "💎"),
-    (18, "Тинькофф", "tcs",  55,  "USDT TRC20", "usdt", "💳", "₮"),
-    (18, "Тинькофф", "tcs",  5,   "Bitcoin",    "btc",  "💳", "₿"),
-    (48, "ЮMoney",   "yam",  55,  "USDT TRC20", "usdt", "🟡", "₮"),
-    (48, "ЮMoney",   "yam",  107, "TON",        "ton",  "🟡", "💎"),
+    ("SBERRUB", "Сбербанк", "sber", "USDTTRC20", "USDT TRC20", "usdt", "🏦", "₮"),
+    ("SBERRUB", "Сбербанк", "sber", "BTC",       "Bitcoin",    "btc",  "🏦", "₿"),
+    ("SBERRUB", "Сбербанк", "sber", "ETH",       "Ethereum",   "eth",  "🏦", "Ξ"),
+    ("SBERRUB", "Сбербанк", "sber", "TON",       "TON",        "ton",  "🏦", "💎"),
+    ("TCSBRUB", "Тинькофф", "tcs",  "USDTTRC20", "USDT TRC20", "usdt", "💳", "₮"),
+    ("TCSBRUB", "Тинькофф", "tcs",  "BTC",       "Bitcoin",    "btc",  "💳", "₿"),
+    ("YAMRUB",  "ЮMoney",   "yam",  "USDTTRC20", "USDT TRC20", "usdt", "🟡", "₮"),
+    ("YAMRUB",  "ЮMoney",   "yam",  "TON",       "TON",        "ton",  "🟡", "💎"),
 ]
 
-# Обменники: (ключ, отображаемое имя, URL)
+# Обменники: (ключ, отображаемое имя, URL, индекс в CURRENCY_IDS)
 EXCHANGERS = [
-    ("swop",   "swop.is",             "https://swop.is/valuta.json"),
-    ("sova",   "sova.is",             "https://sova.is/valuta.json"),
-    ("pocket", "pocket-exchange.com", "https://pocket-exchange.com/valuta.json"),
-    ("ferma",  "ferma.cc",            "https://ferma.cc/valuta.json"),
+    ("swop",   "swop.is",             "https://swop.is/valuta.json",             0),
+    ("sova",   "sova.is",             "https://sova.is/valuta.json",             1),
+    ("pocket", "pocket-exchange.com", "https://pocket-exchange.com/valuta.json", 2),
+    ("ferma",  "ferma.cc",            "https://ferma.cc/valuta.json",            3),
 ]
 
 
@@ -199,33 +213,31 @@ def set_var_node(node_id, assignments, next_id, x, y):
 
 # ─── Построение цепочки нод для одной пары ───────────────────────────────────
 
-def build_pair_chain(from_id, from_name, from_key, to_id, to_name, to_key,
+def build_pair_chain(from_cur, from_name, from_key, to_cur, to_name, to_key,
                      emoji_from, emoji_to, y_row):
     """
     Строит цепочку нод для одной пары FROM→TO с 4 обменниками.
-    Порядок: fetch-swop → fetch-sova → fetch-pocket → fetch-ferma → setv → show.
-    @param from_id - Числовой ID валюты-источника в API
+    Использует правильные ID валют для каждого обменника из CURRENCY_IDS.
+    @param from_cur - Код валюты-источника (например SBERRUB)
     @param from_name - Отображаемое имя источника
     @param from_key - Короткий ключ источника (sber, tcs, yam)
-    @param to_id - Числовой ID целевой валюты в API
-    @param to_name - Отображаемое имя целевой валюты
+    @param to_cur - Код целевой валюты (например TON)
+    @param to_name - Отображаемое имя цели
     @param to_key - Короткий ключ цели (usdt, btc, eth, ton)
     @param emoji_from - Эмодзи источника
     @param emoji_to - Эмодзи цели
     @param y_row - Позиция по Y для всей строки нод
     @returns Кортеж (список нод, ID первой fetch-ноды, текст кнопки меню)
     """
-    pk = f"{from_key}-{to_key}"  # pair key
+    pk = f"{from_key}-{to_key}"
     setv_id = f"setv-{pk}"
     show_id = f"show-{pk}"
 
-    # Строим цепочку fetch-нод: каждая ведёт на следующую
     fetch_nodes = []
-    for i, (ex_key, ex_name, ex_url) in enumerate(EXCHANGERS):
+    for i, (ex_key, ex_name, ex_url, ex_idx) in enumerate(EXCHANGERS):
         node_id  = f"fetch-{ex_key}-{pk}"
         resp_var = f"r_{ex_key}_{from_key}_{to_key}"
         stat_var = f"s_{ex_key}"
-        # Следующая нода: следующий fetch или setv для последнего
         if i + 1 < len(EXCHANGERS):
             next_ex_key = EXCHANGERS[i + 1][0]
             next_id = f"fetch-{next_ex_key}-{pk}"
@@ -234,11 +246,13 @@ def build_pair_chain(from_id, from_name, from_key, to_id, to_name, to_key,
         x_pos = 1200 + i * 400
         fetch_nodes.append(http_node(node_id, ex_url, resp_var, stat_var, next_id, x_pos, y_row))
 
-    # 4 присваивания — по одному на обменник
+    # Присваивания с правильными ID для каждого обменника
     assignments = []
-    for i, (ex_key, ex_name, ex_url) in enumerate(EXCHANGERS):
+    for i, (ex_key, ex_name, ex_url, ex_idx) in enumerate(EXCHANGERS):
         resp_var  = f"r_{ex_key}_{from_key}_{to_key}"
         rate_var  = f"rate_{ex_key}_{from_key}_{to_key}"
+        from_id   = CURRENCY_IDS[from_cur][ex_idx]
+        to_id     = CURRENCY_IDS[to_cur][ex_idx]
         dot_value = "{" + f"{resp_var}.exchange.{from_id}.to.{to_id}" + "}"
         assignments.append({
             "id": f"a{i+1}-{pk}",
@@ -249,9 +263,8 @@ def build_pair_chain(from_id, from_name, from_key, to_id, to_name, to_key,
 
     setv = set_var_node(setv_id, assignments, show_id, 2800, y_row)
 
-    # Текст сообщения с таблицей курсов от всех 4 обменников
     lines = [f"💱 <b>{emoji_from} {from_name} → {emoji_to} {to_name}</b>\n"]
-    for ex_key, ex_name, _ in EXCHANGERS:
+    for ex_key, ex_name, _, _ in EXCHANGERS:
         rate_var = f"rate_{ex_key}_{from_key}_{to_key}"
         pad = " " * max(0, 14 - len(ex_name))
         lines.append(f"🔸 {ex_name}:{pad}<b>{{{rate_var}}}</b>")
@@ -299,7 +312,7 @@ def build_project():
     )
     exchangers_list = "\n".join(
         f"• <a href='{url}'>{name}</a>"
-        for _, name, url in EXCHANGERS
+        for _, name, url, _ in EXCHANGERS
     )
     about_text = (
         "ℹ️ <b>Бот мониторинга обменников</b>\n\n"
