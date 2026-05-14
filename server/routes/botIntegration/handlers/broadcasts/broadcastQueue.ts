@@ -309,6 +309,36 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
       for (const groupId of groupIds) {
         try {
           await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, [], true);
+          // Записываем сообщение в историю группового диалога
+          await storage.createBotMessage({
+            projectId,
+            tokenId,
+            userId: groupId,
+            messageType: "bot",
+            messageText: broadcast.messageText,
+            messageData: {
+              sentFromBroadcast: true,
+              broadcastId,
+              chatId: groupId,
+            },
+          });
+          // Публикуем WS-событие чтобы диалог группы обновился
+          await broadcastProjectEvent(projectId, {
+            type: "new-message",
+            projectId,
+            tokenId,
+            data: {
+              id: 0,
+              userId: groupId,
+              chatId: groupId,
+              messageType: "bot",
+              messageText: broadcast.messageText,
+              messageData: { sentFromBroadcast: true, broadcastId },
+              nodeId: null,
+              createdAt: new Date().toISOString(),
+            },
+            timestamp: new Date().toISOString(),
+          });
         } catch (err) {
           console.error(`[broadcastQueue] Ошибка отправки в группу ${groupId}:`, err);
         }
