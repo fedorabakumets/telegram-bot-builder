@@ -92,6 +92,10 @@ export async function editBroadcastHandler(req: Request, res: Response): Promise
         const ok = await editTelegramMessage(tokenRecord.token, r.userId, r.telegramMessageId!, messageText);
         if (ok) edited++;
         else failed++;
+        // Throttle: 25 запросов в секунду
+        if (results.length > 25) {
+          await new Promise((resolve) => setTimeout(resolve, 40));
+        }
       }
     }
 

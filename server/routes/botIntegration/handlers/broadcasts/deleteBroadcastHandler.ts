@@ -71,6 +71,10 @@ export async function deleteBroadcastHandler(req: Request, res: Response): Promi
     if (tokenRecord?.token && results.length > 0) {
       for (const r of results) {
         await deleteTelegramMessage(tokenRecord.token, r.userId, r.telegramMessageId!);
+        // Throttle: 25 запросов в секунду (как при отправке)
+        if (results.length > 25) {
+          await new Promise((resolve) => setTimeout(resolve, 40));
+        }
       }
     }
 
