@@ -39,6 +39,12 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
 
   const { broadcasts, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId);
 
+  /** Периодический рефетч для обновления статусов и новых рассылок */
+  useEffect(() => {
+    const interval = setInterval(() => refetch(), 5000);
+    return () => clearInterval(interval);
+  }, [refetch]);
+
   /** Автопрокрутка вниз при загрузке */
   useEffect(() => {
     if (isLoading || broadcasts.length === 0) return;
@@ -55,12 +61,13 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
     setModalOpen(true);
   };
 
-  /** Закрытие модалки — очистка и рефетч */
+  /** Закрытие модалки — очистка и рефетч с задержкой */
   const handleModalClose = () => {
     setModalOpen(false);
     setPrefillText('');
     setMessageText('');
-    refetch();
+    // Задержка чтобы бэкенд успел записать рассылку
+    setTimeout(() => refetch(), 500);
   };
 
   return (
