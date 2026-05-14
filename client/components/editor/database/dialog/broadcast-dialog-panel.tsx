@@ -5,7 +5,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Megaphone, X, Send, Paperclip, Hash } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -53,6 +53,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
   /** ID рассылки, которая сейчас редактируется */
   const [editingId, setEditingId] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   const { broadcasts, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId);
 
@@ -67,6 +68,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
     onSettled: () => {
       setDeletingId(null);
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['infinite-users', projectId] });
     },
   });
 
@@ -86,6 +88,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
     onSettled: () => {
       setEditingId(null);
       refetch();
+      queryClient.invalidateQueries({ queryKey: ['infinite-users', projectId] });
     },
   });
 
