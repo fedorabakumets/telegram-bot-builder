@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MessageSquare } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserBotData } from '@shared/schema';
 import { DialogPanel } from '../../dialog/dialog-panel';
@@ -15,6 +15,7 @@ import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useSyncGroups } from '../hooks/use-sync-groups';
 import { useInfiniteUsers } from '../hooks/queries/use-infinite-users';
 import { BotTokenSelector, ProjectSelector } from '../components/header';
+import { NewBroadcastModal } from '@/components/editor/broadcast/wizard/new-broadcast-modal';
 
 /**
  * Пропсы компонента DialogsTabContent
@@ -61,6 +62,8 @@ export function DialogsTabContent({
   onProjectChange,
 }: DialogsTabContentProps): React.JSX.Element {
   const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
+  /** Флаг открытия модалки создания рассылки */
+  const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
 
   // Автоматически выбираем токен по умолчанию если снаружи не передан
   const projectTokensInfo = useProjectTokens([projectId]);
@@ -132,6 +135,16 @@ export function DialogsTabContent({
               />
             </>
           )}
+          <span className="text-border/60 hidden sm:inline">·</span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 h-7 text-xs"
+            onClick={() => setBroadcastModalOpen(true)}
+          >
+            <Megaphone className="h-3.5 w-3.5" />
+            + Рассылка
+          </Button>
         </div>
       </div>
 
@@ -198,6 +211,14 @@ export function DialogsTabContent({
           />
         )}
       </div>
+
+      {/* Модалка создания рассылки */}
+      <NewBroadcastModal
+        open={broadcastModalOpen}
+        onClose={() => setBroadcastModalOpen(false)}
+        projectId={projectId}
+        tokenId={resolvedTokenId}
+      />
     </div>
   );
 }

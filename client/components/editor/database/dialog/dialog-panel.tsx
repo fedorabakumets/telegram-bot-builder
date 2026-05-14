@@ -26,7 +26,6 @@ import { DialogInput } from './components/dialog-input';
 import { LoadingMessages } from './components/loading-messages';
 import { NoUserSelected } from './components/no-user-selected';
 import { NodeSender } from './components/node-sender';
-import { NewBroadcastModal } from '@/components/editor/broadcast/wizard/new-broadcast-modal';
 
 /**
  * Дедуплицирует и сортирует сообщения по id и времени создания.
@@ -74,9 +73,6 @@ export function DialogPanel({
     if (typeof window === 'undefined') return true;
     return localStorage.getItem('dialog-warning-dismissed') !== 'true';
   });
-
-  /** Флаг открытия модалки создания рассылки */
-  const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
 
   /** Набор id сообщений, оптимистично скрытых при удалении */
   const [deletedMessageIds, setDeletedMessageIds] = useState<Set<number>>(new Set());
@@ -258,7 +254,6 @@ export function DialogPanel({
           formatUserName={formatUserName}
           onSelectUser={handleSelectUser}
           onClose={onClose}
-          onBroadcast={() => setBroadcastModalOpen(true)}
         />
       )}
 
@@ -350,13 +345,6 @@ export function DialogPanel({
         )}
       </div>
 
-      {/* Модалка создания рассылки */}
-      <NewBroadcastModal
-        open={broadcastModalOpen}
-        onClose={() => setBroadcastModalOpen(false)}
-        projectId={projectId}
-        tokenId={selectedTokenId}
-      />
     </div>
   );
 }
