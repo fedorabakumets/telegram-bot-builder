@@ -51,12 +51,6 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
 
   const { broadcasts, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId);
 
-  /** Периодический рефетч для обновления статусов и новых рассылок */
-  useEffect(() => {
-    const interval = setInterval(() => refetch(), 5000);
-    return () => clearInterval(interval);
-  }, [refetch]);
-
   /** Автопрокрутка вниз при загрузке */
   useEffect(() => {
     if (isLoading || broadcasts.length === 0) return;

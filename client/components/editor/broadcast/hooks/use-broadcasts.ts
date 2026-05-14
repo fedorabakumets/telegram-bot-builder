@@ -55,8 +55,8 @@ export function useBroadcasts(
   const { data, isLoading, refetch } = useQuery<BroadcastsResponse>({
     queryKey,
     enabled: !!projectId,
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 30_000,
+    gcTime: 60_000,
   });
 
   return {
