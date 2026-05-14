@@ -89,7 +89,6 @@ export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) 
       )}
 
       <div className="flex justify-between items-center">
-        <p className="text-xs text-muted-foreground">Enter - отправить</p>
         <div className="flex items-center gap-1">
           {/* Кнопка прикрепления медиафайлов */}
           <Button
@@ -115,22 +114,24 @@ export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) 
             <Hash className="w-4 h-4" />
           </Button>
 
-          <Button
-            data-testid="dialog-panel-button-send"
-            onClick={handleSend}
-            disabled={!messageText.trim() || isPending}
-            size="sm"
-          >
-            {isPending ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                <Send className="w-4 h-4 mr-1" />
-                Отправить
-              </>
-            )}
-          </Button>
+          <p className="text-xs text-muted-foreground ml-1">Enter - отправить</p>
         </div>
+
+        <Button
+          data-testid="dialog-panel-button-send"
+          onClick={handleSend}
+          disabled={!messageText.trim() || isPending}
+          size="sm"
+        >
+          {isPending ? (
+            <RefreshCw className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <Send className="w-4 h-4 mr-1" />
+              Отправить
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );
