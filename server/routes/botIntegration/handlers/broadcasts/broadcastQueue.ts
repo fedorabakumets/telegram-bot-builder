@@ -251,6 +251,22 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
                   : {}),
               },
             });
+            // Публикуем WS-событие чтобы диалог и список обновились в реальном времени
+            await broadcastProjectEvent(projectId, {
+              type: "new-message",
+              projectId,
+              tokenId,
+              data: {
+                id: 0,
+                userId: user.userId,
+                messageType: "bot",
+                messageText: text,
+                messageData: { sentFromBroadcast: true, broadcastId },
+                nodeId: null,
+                createdAt: new Date().toISOString(),
+              },
+              timestamp: new Date().toISOString(),
+            });
             sent = true;
           } else if (result.errorCode === 429 && result.retryAfter) {
             // Rate limit — ждём retry_after секунд
