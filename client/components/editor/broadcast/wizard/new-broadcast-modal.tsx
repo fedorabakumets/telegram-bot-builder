@@ -54,6 +54,8 @@ const STEP_TITLES = ['Аудитория', 'Сообщение', 'Подтвер
  * @returns JSX элемент модального окна
  */
 export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, initialMessageText }: NewBroadcastModalProps) {
+  /** Если текст предзаполнен — пропускаем шаг сообщения */
+  const skipMessageStep = !!initialMessageText;
   const [step, setStep] = useState<1 | 2 | 3 | 'progress'>(1);
   const [formData, setFormData] = useState<NewBroadcastFormData>({
     ...INITIAL_FORM,
@@ -100,6 +102,8 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
 
   const title = step === 'progress'
     ? '📊 Прогресс рассылки'
+    : skipMessageStep && step === 3
+    ? '📢 Новая рассылка — Подтверждение'
     : `📢 Новая рассылка — ${STEP_TITLES[(step as number) - 1]}`;
 
   return (
@@ -114,7 +118,7 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
             projectId={projectId}
             formData={formData}
             onChange={updateForm}
-            onNext={() => setStep(2)}
+            onNext={() => setStep(skipMessageStep ? 3 : 2)}
             onCancel={handleClose}
           />
         )}
@@ -133,7 +137,7 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
             formData={formData}
             isLoading={createMutation.isPending}
             onConfirm={() => createMutation.mutate(formData)}
-            onBack={() => setStep(2)}
+            onBack={() => setStep(skipMessageStep ? 1 : 2)}
           />
         )}
         {step === 'progress' && createdBroadcast && (
