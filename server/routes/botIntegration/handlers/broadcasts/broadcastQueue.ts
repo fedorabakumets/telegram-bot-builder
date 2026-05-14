@@ -7,7 +7,6 @@ import { storage } from "../../../../storages/storage";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 import { replaceVariablesInText } from "../messages/replace-variables";
 import { sendTelegramMessage } from "../messages/send-telegram-message";
-import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import type { SendMediaFile } from "../messages/extract-media";
 import type { UserBotData } from "@shared/schema";
 
@@ -304,25 +303,12 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
       }
     }
 
-    // Отправка в выбранные группы
+    // Отправка в выбранные группы (текст + медиа)
     const groupIds = (broadcast.filters as Record<string, unknown>)?.groupIds as string[] | undefined;
     if (groupIds && groupIds.length > 0 && activeBroadcasts.get(broadcastId) !== "stopped") {
       for (const groupId of groupIds) {
         try {
-          const telegramApiUrl = `https://api.telegram.org/bot${token}/sendMessage`;
-          const response = await fetchWithProxy(telegramApiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: groupId,
-              text: broadcast.messageText,
-              parse_mode: 'HTML',
-            }),
-          });
-          const result = await response.json();
-          if (!result.ok) {
-            console.warn(`[broadcastQueue] Ошибка отправки в группу ${groupId}:`, result.description);
-          }
+          await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, [], true);
         } catch (err) {
           console.error(`[broadcastQueue] Ошибка отправки в группу ${groupId}:`, err);
         }
