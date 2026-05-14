@@ -309,7 +309,18 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     if (groupIds && groupIds.length > 0 && activeBroadcasts.get(broadcastId) !== "stopped") {
       for (const groupId of groupIds) {
         try {
-          await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, [], true);
+          const groupResult = await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, [], true) as {
+            ok?: boolean;
+            result?: { message_id?: number };
+          };
+          const groupMsgId = groupResult?.result?.message_id ?? null;
+          // Сохраняем результат с telegram_message_id для возможности редактирования/удаления
+          await storage.createBroadcastResult({
+            broadcastId,
+            userId: groupId,
+            status: "sent",
+            telegramMessageId: groupMsgId,
+          });
           // Записываем сообщение в историю группового диалога
           await storage.createBotMessage({
             projectId,
