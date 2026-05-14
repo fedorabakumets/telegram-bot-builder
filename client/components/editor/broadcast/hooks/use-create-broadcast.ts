@@ -47,7 +47,8 @@ export function useCreateBroadcast({
         audienceType === 'date' ? {
           registeredFrom: filterFields.registeredFrom,
           registeredTo: filterFields.registeredTo,
-        } : {
+        } :
+        audienceType === 'manual' ? { userIds: filterFields.userIds } : {
           activeFrom: filterFields.activeFrom,
           activeTo: filterFields.activeTo,
         };

@@ -60,7 +60,7 @@ export interface NewBroadcastFormData {
   /** Фильтры аудитории */
   filters: {
     /** Тип аудитории */
-    audienceType: 'all' | 'tags' | 'date' | 'activity';
+    audienceType: 'all' | 'tags' | 'date' | 'activity' | 'manual';
     /** Теги для фильтрации */
     tags?: string[];
     /** Дата регистрации от (ISO) */
@@ -71,5 +71,7 @@ export interface NewBroadcastFormData {
     activeFrom?: string;
     /** Последняя активность до (ISO) */
     activeTo?: string;
+    /** Массив userId выбранных вручную пользователей */
+    userIds?: string[];
   };
 }

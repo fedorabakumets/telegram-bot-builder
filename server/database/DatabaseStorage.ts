@@ -1815,6 +1815,11 @@ export class DatabaseStorage implements IStorage {
       eq(botUsers.isBot, 0),
     ];
 
+    // Фильтрация по конкретным userId (ручной выбор аудитории)
+    if (filters.userIds && filters.userIds.length > 0) {
+      conditions.push(sql`${botUsers.userId}::text IN (${sql.join(filters.userIds.map(id => sql`${id}`), sql`, `)})`);
+    }
+
     if (filters.registeredFrom) {
       conditions.push(sql`${botUsers.registeredAt} >= ${new Date(filters.registeredFrom)}`);
     }

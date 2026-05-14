@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAudiencePreview } from '../hooks/use-audience-preview';
+import { ManualUserSelect } from './manual-user-select';
 import type { NewBroadcastFormData } from '../types';
 
 /**
@@ -17,6 +18,8 @@ import type { NewBroadcastFormData } from '../types';
 interface StepAudienceProps {
   /** Идентификатор проекта */
   projectId: number;
+  /** Идентификатор токена бота */
+  tokenId?: number | null;
   /** Текущие данные формы */
   formData: NewBroadcastFormData;
   /** Обновление данных формы */
@@ -32,7 +35,7 @@ interface StepAudienceProps {
  * @param props - Свойства компонента
  * @returns JSX элемент шага выбора аудитории
  */
-export function StepAudience({ projectId, formData, onChange, onNext, onCancel }: StepAudienceProps) {
+export function StepAudience({ projectId, tokenId, formData, onChange, onNext, onCancel }: StepAudienceProps) {
   const [tagInput, setTagInput] = useState('');
   const audienceType = formData.filters.audienceType;
 
@@ -41,6 +44,11 @@ export function StepAudience({ projectId, formData, onChange, onNext, onCancel }
     audienceType === 'activity' ? { activeFrom: formData.filters.activeFrom, activeTo: formData.filters.activeTo } : {};
 
   const { count, isLoading } = useAudiencePreview(projectId, apiFilters);
+
+  /** Количество получателей: для ручного выбора — длина массива userIds */
+  const recipientCount = audienceType === 'manual'
+    ? (formData.filters.userIds?.length ?? 0)
+    : count;
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && tagInput.trim()) {
@@ -53,6 +61,11 @@ export function StepAudience({ projectId, formData, onChange, onNext, onCancel }
   const handleRemoveTag = (tag: string) => {
     const tags = (formData.filters.tags ?? []).filter((t) => t !== tag);
     onChange({ filters: { ...formData.filters, tags } });
+  };
+
+  /** Обработчик изменения выбранных userId */
+  const handleUserIdsChange = (userIds: string[]) => {
+    onChange({ filters: { ...formData.filters, userIds } });
   };
 
   return (
@@ -76,6 +89,7 @@ export function StepAudience({ projectId, formData, onChange, onNext, onCancel }
             { value: 'all', label: 'Все пользователи' },
             { value: 'date', label: 'По дате регистрации' },
             { value: 'activity', label: 'По активности' },
+            { value: 'manual', label: 'Выбрать вручную' },
           ].map(({ value, label }) => (
             <div key={value} className="flex items-center gap-2">
               <RadioGroupItem value={value} id={`aud-${value}`} />
@@ -112,8 +126,17 @@ export function StepAudience({ projectId, formData, onChange, onNext, onCancel }
         </div>
       )}
 
+      {audienceType === 'manual' && (
+        <ManualUserSelect
+          projectId={projectId}
+          tokenId={tokenId}
+          selectedUserIds={formData.filters.userIds ?? []}
+          onChangeUserIds={handleUserIdsChange}
+        />
+      )}
+
       <div className="text-sm text-muted-foreground border rounded p-2 bg-muted/30">
-        👥 Получателей: <strong>{isLoading ? '...' : count.toLocaleString('ru-RU')}</strong>
+        👥 Получателей: <strong>{audienceType === 'manual' ? recipientCount.toLocaleString('ru-RU') : (isLoading ? '...' : count.toLocaleString('ru-RU'))}</strong>
       </div>
 
       <div className="flex justify-between pt-2">

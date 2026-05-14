@@ -74,6 +74,8 @@ export const broadcastFiltersSchema = z.object({
   activeFrom: z.string().optional(),
   /** Последняя активность до (ISO) */
   activeTo: z.string().optional(),
+  /** Массив userId выбранных вручную пользователей */
+  userIds: z.array(z.string()).optional(),
 });
 
 /** Схема вставки рассылки */

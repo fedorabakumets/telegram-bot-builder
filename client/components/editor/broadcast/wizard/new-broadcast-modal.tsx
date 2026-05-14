@@ -130,6 +130,7 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
         {step === 1 && (
           <StepAudience
             projectId={projectId}
+            tokenId={tokenId}
             formData={formData}
             onChange={updateForm}
             onNext={() => setStep(skipMessageStep ? 3 : 2)}
