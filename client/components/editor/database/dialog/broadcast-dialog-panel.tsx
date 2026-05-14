@@ -99,7 +99,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
           </div>
         ) : (
           <div className="space-y-3 py-2">
-            {broadcasts.map((b) => (
+            {[...broadcasts].reverse().map((b) => (
               <BroadcastMessageBubble key={b.id} broadcast={b} />
             ))}
           </div>
