@@ -5,8 +5,11 @@
 
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Users, Radio, Inbox } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/utils/utils';
 
 /**
  * Данные группы из API
@@ -75,7 +78,12 @@ export function GroupSelect({ projectId, selectedGroupIds, onChangeGroupIds }: G
   }
 
   if (availableGroups.length === 0) {
-    return <div className="text-sm text-muted-foreground py-2">Нет групп</div>;
+    return (
+      <div className="flex flex-col items-center gap-2 py-4 text-muted-foreground">
+        <Inbox className="w-8 h-8 opacity-40" />
+        <span className="text-sm">Нет доступных групп</span>
+      </div>
+    );
   }
 
   const allSelected = availableGroups.every((g) => selectedGroupIds.includes(g.groupId));
@@ -96,30 +104,46 @@ export function GroupSelect({ projectId, selectedGroupIds, onChangeGroupIds }: G
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 py-1">
+      <div className="flex items-center gap-2 py-1 border-b pb-2">
         <Checkbox id="select-all-groups" checked={allSelected} onCheckedChange={handleToggleAll} />
-        <Label htmlFor="select-all-groups" className="cursor-pointer text-sm">
+        <Label htmlFor="select-all-groups" className="cursor-pointer text-sm font-semibold">
           Все группы ({availableGroups.length})
         </Label>
       </div>
 
-      <div className="max-h-36 overflow-y-auto border rounded p-2 space-y-1">
-        {availableGroups.map((group) => (
-          <div key={group.groupId} className="flex items-center gap-2">
-            <Checkbox
-              id={`group-${group.groupId}`}
-              checked={selectedGroupIds.includes(group.groupId)}
-              onCheckedChange={(checked) => handleToggleGroup(group.groupId, !!checked)}
-            />
-            <Label htmlFor={`group-${group.groupId}`} className="cursor-pointer text-sm truncate">
-              {group.name}
-              <span className="text-muted-foreground ml-1 text-xs">
+      <div className="max-h-36 overflow-y-auto space-y-1.5">
+        {availableGroups.map((group) => {
+          const isChannel = group.chatType === 'channel';
+          const Icon = isChannel ? Radio : Users;
+          const isSelected = selectedGroupIds.includes(group.groupId);
+
+          return (
+            <div
+              key={group.groupId}
+              className={cn(
+                'flex items-center gap-2.5 rounded-lg border p-2 transition-colors',
+                'hover:bg-accent/40',
+                isSelected && 'border-violet-300/50 bg-violet-500/5',
+              )}
+            >
+              <Checkbox
+                id={`group-${group.groupId}`}
+                checked={isSelected}
+                onCheckedChange={(checked) => handleToggleGroup(group.groupId, !!checked)}
+              />
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 flex items-center justify-center shrink-0">
+                <Icon className="w-3.5 h-3.5 text-white" />
+              </div>
+              <Label htmlFor={`group-${group.groupId}`} className="cursor-pointer text-sm truncate flex-1">
+                {group.name}
+              </Label>
+              <Badge variant="secondary" className="text-[10px] shrink-0">
                 {chatTypeLabels[group.chatType] ?? group.chatType}
-                {group.memberCount != null && ` · ${group.memberCount} уч.`}
-              </span>
-            </Label>
-          </div>
-        ))}
+                {group.memberCount != null && ` · ${group.memberCount}`}
+              </Badge>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

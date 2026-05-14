@@ -5,9 +5,11 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/utils/utils';
 import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import type { UserBotData } from '@shared/schema';
 
@@ -110,39 +112,57 @@ export function ManualUserSelect({ projectId, tokenId, selectedUserIds, onChange
 
   return (
     <div className="space-y-2">
-      <Input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Поиск по имени или username"
-      />
-
-      <div className="flex items-center gap-2 py-1">
-        <Checkbox
-          id="select-all"
-          checked={allFilteredSelected}
-          onCheckedChange={handleToggleAll}
+      {/* Поле поиска с иконкой */}
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Поиск по имени или username"
+          className="pl-8"
         />
-        <Label htmlFor="select-all" className="cursor-pointer text-sm">
+      </div>
+
+      {/* Чекбокс «Все» */}
+      <div className="flex items-center gap-2 py-1.5 border-b pb-2">
+        <Checkbox id="select-all" checked={allFilteredSelected} onCheckedChange={handleToggleAll} />
+        <Label htmlFor="select-all" className="cursor-pointer text-sm font-semibold">
           Все ({filteredUsers.length})
         </Label>
       </div>
 
-      <div className="max-h-48 overflow-y-auto border rounded p-2 space-y-1">
-        {filteredUsers.map((user) => (
-          <div key={user.userId} className="flex items-center gap-2">
-            <Checkbox
-              id={`user-${user.userId}`}
-              checked={selectedUserIds.includes(user.userId)}
-              onCheckedChange={(checked) => handleToggleUser(user.userId, !!checked)}
-            />
-            <Label htmlFor={`user-${user.userId}`} className="cursor-pointer text-sm truncate">
-              {user.firstName ?? ''} {user.lastName ?? ''}
-              {user.userName && <span className="text-muted-foreground ml-1">@{user.userName}</span>}
-            </Label>
-          </div>
-        ))}
+      {/* Список пользователей */}
+      <div className="max-h-48 overflow-y-auto rounded-lg border p-2 space-y-1">
+        {filteredUsers.map((user) => {
+          const initials = (user.firstName ?? '?')[0].toUpperCase();
+          const isSelected = selectedUserIds.includes(user.userId);
+
+          return (
+            <div
+              key={user.userId}
+              className={cn(
+                'flex items-center gap-2.5 rounded-lg p-1.5 transition-colors',
+                'hover:bg-accent/40',
+                isSelected && 'bg-blue-500/5',
+              )}
+            >
+              <Checkbox
+                id={`user-${user.userId}`}
+                checked={isSelected}
+                onCheckedChange={(checked) => handleToggleUser(user.userId, !!checked)}
+              />
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                {initials}
+              </div>
+              <Label htmlFor={`user-${user.userId}`} className="cursor-pointer text-sm truncate flex-1">
+                {user.firstName ?? ''} {user.lastName ?? ''}
+                {user.userName && <span className="text-muted-foreground ml-1">@{user.userName}</span>}
+              </Label>
+            </div>
+          );
+        })}
         {filteredUsers.length === 0 && (
-          <div className="text-sm text-muted-foreground text-center py-2">Пользователи не найдены</div>
+          <div className="text-sm text-muted-foreground text-center py-4">Пользователи не найдены</div>
         )}
       </div>
     </div>

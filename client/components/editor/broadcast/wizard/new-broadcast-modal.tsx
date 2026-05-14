@@ -14,6 +14,7 @@ import { StepAudience } from './step-audience';
 import { StepMessage } from './step-message';
 import { StepConfirm } from './step-confirm';
 import { BroadcastProgress } from './broadcast-progress';
+import { WizardStepper } from './wizard-stepper';
 import { useCreateBroadcast } from '../hooks/use-create-broadcast';
 import type { NewBroadcastFormData, Broadcast } from '../types';
 
@@ -86,7 +87,6 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
     tokenId,
     refetch,
     onSuccess: (broadcastId) => {
-      // Создаём временный объект broadcast для отображения прогресса
       setCreatedBroadcast({
         id: broadcastId,
         projectId,
@@ -114,18 +114,21 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
     onClose();
   };
 
-  const title = step === 'progress'
-    ? '📊 Прогресс рассылки'
-    : skipMessageStep && step === 3
-    ? '📢 Новая рассылка — Подтверждение'
-    : `📢 Новая рассылка — ${STEP_TITLES[(step as number) - 1]}`;
+  /** Текущий номер шага для stepper */
+  const currentStepNumber = typeof step === 'number' ? step : 3;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle className="text-lg bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
+            📢 Новая рассылка
+          </DialogTitle>
         </DialogHeader>
+
+        {step !== 'progress' && (
+          <WizardStepper steps={STEP_TITLES} currentStep={currentStepNumber} />
+        )}
 
         {step === 1 && (
           <StepAudience
