@@ -76,6 +76,8 @@ export const broadcastFiltersSchema = z.object({
   activeTo: z.string().optional(),
   /** Массив userId выбранных вручную пользователей */
   userIds: z.array(z.string()).optional(),
+  /** Массив groupId (Telegram chat_id) выбранных групп */
+  groupIds: z.array(z.string()).optional(),
 });
 
 /** Схема вставки рассылки */

@@ -53,6 +53,12 @@ export function useCreateBroadcast({
           activeTo: filterFields.activeTo,
         };
 
+      // Добавляем groupIds если выбраны группы
+      const filtersWithGroups = {
+        ...filters,
+        ...(filterFields.groupIds?.length ? { groupIds: filterFields.groupIds } : {}),
+      };
+
       const url = tokenId
         ? `/api/projects/${projectId}/broadcasts?tokenId=${tokenId}`
         : `/api/projects/${projectId}/broadcasts`;
@@ -61,7 +67,7 @@ export function useCreateBroadcast({
         name: formData.name,
         messageText: formData.messageText,
         mediaUrls: formData.mediaUrls ?? [],
-        filters,
+        filters: filtersWithGroups,
       });
     },
     onSuccess: (data) => {

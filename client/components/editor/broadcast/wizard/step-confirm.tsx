@@ -65,6 +65,12 @@ export function StepConfirm({ projectId, formData, isLoading, onConfirm, onBack 
             {estimatedSeconds > 0 ? `~${estimatedSeconds} сек` : '—'}
           </span>
         </div>
+        {(formData.filters.groupIds?.length ?? 0) > 0 && (
+          <div className="flex justify-between px-4 py-2.5">
+            <span className="text-muted-foreground">Группы</span>
+            <span className="font-medium">{formData.filters.groupIds!.length}</span>
+          </div>
+        )}
         <div className="px-4 py-2.5">
           <p className="text-muted-foreground mb-1">Текст сообщения</p>
           <p className="text-xs bg-muted/40 rounded p-2 whitespace-pre-wrap">{preview || '—'}</p>

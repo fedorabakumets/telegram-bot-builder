@@ -73,5 +73,7 @@ export interface NewBroadcastFormData {
     activeTo?: string;
     /** Массив userId выбранных вручную пользователей */
     userIds?: string[];
+    /** Массив groupId (Telegram chat_id) выбранных групп */
+    groupIds?: string[];
   };
 }

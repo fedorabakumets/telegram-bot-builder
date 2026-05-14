@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAudiencePreview } from '../hooks/use-audience-preview';
 import { ManualUserSelect } from './manual-user-select';
+import { GroupSelect } from './group-select';
 import type { NewBroadcastFormData } from '../types';
 
 /**
@@ -66,6 +67,11 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
   /** Обработчик изменения выбранных userId */
   const handleUserIdsChange = (userIds: string[]) => {
     onChange({ filters: { ...formData.filters, userIds } });
+  };
+
+  /** Обработчик изменения выбранных групп */
+  const handleGroupIdsChange = (groupIds: string[]) => {
+    onChange({ filters: { ...formData.filters, groupIds } });
   };
 
   return (
@@ -134,6 +140,16 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
           onChangeUserIds={handleUserIdsChange}
         />
       )}
+
+      {/* Секция групп */}
+      <div className="space-y-2">
+        <Label>Также отправить в группы</Label>
+        <GroupSelect
+          projectId={projectId}
+          selectedGroupIds={formData.filters.groupIds ?? []}
+          onChangeGroupIds={handleGroupIdsChange}
+        />
+      </div>
 
       <div className="text-sm text-muted-foreground border rounded p-2 bg-muted/30">
         👥 Получателей: <strong>{audienceType === 'manual' ? recipientCount.toLocaleString('ru-RU') : (isLoading ? '...' : count.toLocaleString('ru-RU'))}</strong>
