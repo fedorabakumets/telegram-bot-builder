@@ -10,6 +10,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
+import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 import {
     analyzeTelegramError,
     getErrorStatusCode
@@ -61,6 +62,36 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
             });
             return;
         }
+
+        // Записываем сообщение в БД для отображения в диалоге группы
+        await storage.createBotMessage({
+            projectId,
+            tokenId: defaultToken.id,
+            userId: groupId,
+            chatId: groupId,
+            messageType: "bot",
+            messageText: message,
+            messageData: { sentFromAdmin: true },
+            telegramMessageId: result.result?.message_id ?? null,
+        });
+
+        // Публикуем WS-событие чтобы диалог группы обновился в реальном времени
+        await broadcastProjectEvent(projectId, {
+            type: "new-message",
+            projectId,
+            tokenId: defaultToken.id,
+            data: {
+                id: 0,
+                userId: groupId,
+                chatId: groupId,
+                messageType: "bot",
+                messageText: message,
+                messageData: { sentFromAdmin: true },
+                nodeId: null,
+                createdAt: new Date().toISOString(),
+            },
+            timestamp: new Date().toISOString(),
+        });
 
         res.json({
             message: "Сообщение успешно отправлено",
