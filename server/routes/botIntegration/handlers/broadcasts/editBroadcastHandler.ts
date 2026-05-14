@@ -8,6 +8,7 @@ import { eq, and, sql, isNotNull } from "drizzle-orm";
 import { db } from "../../../../database/db";
 import { broadcasts, broadcastResults, botMessages, botTokens } from "@shared/schema";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
+import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 
 /**
  * Редактирует текст сообщения рассылки в Telegram у конкретного получателя
@@ -115,6 +116,26 @@ export async function editBroadcastHandler(req: Request, res: Response): Promise
           sql`${botMessages.messageData}->>'broadcastId' = ${String(broadcastId)}`
         )
       );
+
+    // Публикуем WS-событие message-edited для каждого получателя
+    const allResults = await db
+      .select()
+      .from(broadcastResults)
+      .where(eq(broadcastResults.broadcastId, broadcastId));
+
+    for (const r of allResults) {
+      await broadcastProjectEvent(projectId, {
+        type: "message-edited",
+        projectId,
+        tokenId: broadcast.tokenId,
+        data: {
+          messageId: 0,
+          userId: r.userId,
+          messageText,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     res.json({ ok: true, edited, failed });
   } catch (error) {
