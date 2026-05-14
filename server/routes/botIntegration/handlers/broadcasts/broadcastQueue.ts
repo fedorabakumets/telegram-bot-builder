@@ -326,6 +326,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
             projectId,
             tokenId,
             userId: groupId,
+            chatId: groupId,
             messageType: "bot",
             messageText: broadcast.messageText,
             messageData: {
