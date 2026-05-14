@@ -3,7 +3,7 @@
  * @module client/components/editor/broadcast/wizard/new-broadcast-modal
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -62,6 +62,13 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
     messageText: initialMessageText ?? '',
   });
   const [createdBroadcast, setCreatedBroadcast] = useState<Broadcast | null>(null);
+
+  /** Синхронизируем messageText при изменении initialMessageText (открытие модалки) */
+  useEffect(() => {
+    if (open && initialMessageText) {
+      setFormData((prev) => ({ ...prev, messageText: initialMessageText }));
+    }
+  }, [open, initialMessageText]);
 
   const updateForm = (data: Partial<NewBroadcastFormData>) => {
     setFormData((prev) => ({ ...prev, ...data }));

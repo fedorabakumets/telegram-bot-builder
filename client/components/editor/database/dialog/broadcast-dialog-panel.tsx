@@ -118,6 +118,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
 
       {/* Модалка создания рассылки с предзаполненным текстом */}
       <NewBroadcastModal
+        key={prefillText}
         open={modalOpen}
         onClose={handleModalClose}
         projectId={projectId}
