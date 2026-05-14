@@ -1,9 +1,9 @@
 /**
  * @fileoverview Компонент заголовка панели диалога
- * Отображает иконку, селектор пользователей, кнопку закрытия и подсказку с предупреждением
+ * Отображает иконку, селектор пользователей, кнопку рассылки, кнопку закрытия и подсказку с предупреждением
  */
 
-import { X, MessageSquare } from 'lucide-react';
+import { X, MessageSquare, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserBotData } from '@shared/schema';
@@ -23,6 +23,8 @@ interface DialogHeaderProps {
   onSelectUser: (user: UserBotData) => void;
   /** Колбэк закрытия */
   onClose: () => void;
+  /** Колбэк открытия модалки рассылки */
+  onBroadcast?: () => void;
 }
 
 /**
@@ -33,7 +35,8 @@ export function DialogHeader({
   users,
   formatUserName,
   onSelectUser,
-  onClose
+  onClose,
+  onBroadcast,
 }: DialogHeaderProps) {
   // Защита: если users не массив, используем пустой массив
   const usersArray = Array.isArray(users) ? users : [];
@@ -71,15 +74,29 @@ export function DialogHeader({
           </Select>
         </div>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onClose}
-        data-testid="button-close-dialog-panel"
-        className="h-7 w-7 xs:h-8 xs:w-8 sm:h-9 sm:w-9 flex-shrink-0"
-      >
-        <X className="w-3.5 xs:w-4 h-3.5 xs:h-4" />
-      </Button>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {onBroadcast && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1 text-xs h-7 xs:h-8 sm:h-8 px-2"
+            onClick={onBroadcast}
+            title="Новая рассылка"
+          >
+            <Megaphone className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">+ Рассылка</span>
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          data-testid="button-close-dialog-panel"
+          className="h-7 w-7 xs:h-8 xs:w-8 sm:h-9 sm:w-9"
+        >
+          <X className="w-3.5 xs:w-4 h-3.5 xs:h-4" />
+        </Button>
+      </div>
     </div>
   );
 }
