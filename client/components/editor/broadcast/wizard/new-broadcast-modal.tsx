@@ -33,6 +33,8 @@ interface NewBroadcastModalProps {
   refetch?: () => void;
   /** Предзаполненный текст сообщения (опционально) */
   initialMessageText?: string;
+  /** Предзаполненные медиафайлы (опционально) */
+  initialMediaUrls?: string[];
 }
 
 /** Начальные данные формы */
@@ -53,22 +55,27 @@ const STEP_TITLES = ['Аудитория', 'Сообщение', 'Подтвер
  * @param props - Свойства компонента
  * @returns JSX элемент модального окна
  */
-export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, initialMessageText }: NewBroadcastModalProps) {
+export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, initialMessageText, initialMediaUrls }: NewBroadcastModalProps) {
   /** Если текст предзаполнен — пропускаем шаг сообщения */
   const skipMessageStep = !!initialMessageText;
   const [step, setStep] = useState<1 | 2 | 3 | 'progress'>(1);
   const [formData, setFormData] = useState<NewBroadcastFormData>({
     ...INITIAL_FORM,
     messageText: initialMessageText ?? '',
+    mediaUrls: initialMediaUrls ?? [],
   });
   const [createdBroadcast, setCreatedBroadcast] = useState<Broadcast | null>(null);
 
-  /** Синхронизируем messageText при изменении initialMessageText (открытие модалки) */
+  /** Синхронизируем messageText и mediaUrls при открытии модалки */
   useEffect(() => {
-    if (open && initialMessageText) {
-      setFormData((prev) => ({ ...prev, messageText: initialMessageText }));
+    if (open) {
+      setFormData((prev) => ({
+        ...prev,
+        ...(initialMessageText ? { messageText: initialMessageText } : {}),
+        ...(initialMediaUrls ? { mediaUrls: initialMediaUrls } : {}),
+      }));
     }
-  }, [open, initialMessageText]);
+  }, [open, initialMessageText, initialMediaUrls]);
 
   const updateForm = (data: Partial<NewBroadcastFormData>) => {
     setFormData((prev) => ({ ...prev, ...data }));
@@ -102,7 +109,7 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
 
   const handleClose = () => {
     setStep(1);
-    setFormData({ ...INITIAL_FORM, messageText: initialMessageText ?? '' });
+    setFormData({ ...INITIAL_FORM, messageText: initialMessageText ?? '', mediaUrls: initialMediaUrls ?? [] });
     setCreatedBroadcast(null);
     onClose();
   };
