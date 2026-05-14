@@ -8,3 +8,4 @@ export { getBroadcastsHandler } from "./getBroadcastsHandler";
 export { getBroadcastDetailHandler } from "./getBroadcastDetailHandler";
 export { stopBroadcastHandler } from "./stopBroadcastHandler";
 export { previewAudienceHandler } from "./previewAudienceHandler";
+export { deleteBroadcastHandler } from "./deleteBroadcastHandler";

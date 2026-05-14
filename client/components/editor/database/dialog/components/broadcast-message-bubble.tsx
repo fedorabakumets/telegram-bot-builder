@@ -1,9 +1,11 @@
 /**
- * @fileoverview Пузырь сообщения рассылки в стиле чата
+ * @fileoverview Пузырь сообщения рассылки с кнопками удаления и повтора при наведении
  * @module editor/database/dialog/components/broadcast-message-bubble
  */
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { Trash2, Loader2, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { parseHTML } from '@/components/editor/inline-rich/utils/formatting-parser';
 import type { Broadcast } from '@shared/schema';
 
@@ -13,6 +15,12 @@ import type { Broadcast } from '@shared/schema';
 interface BroadcastMessageBubbleProps {
   /** Данные рассылки */
   broadcast: Broadcast;
+  /** Колбэк удаления рассылки */
+  onDelete?: (broadcastId: number) => void;
+  /** Идёт ли удаление этой рассылки */
+  isDeleting?: boolean;
+  /** Колбэк повтора рассылки (открывает wizard с тем же текстом) */
+  onRepeat?: (broadcastId: number) => void;
 }
 
 /**
@@ -46,10 +54,12 @@ function formatDate(date: Date | string | null | undefined): string {
 
 /**
  * Компонент пузыря рассылки — отображает одну рассылку как сообщение бота
+ * с кнопками удаления и повтора при наведении
  * @param props - Свойства компонента
  * @returns JSX элемент пузыря рассылки
  */
-export function BroadcastMessageBubble({ broadcast }: BroadcastMessageBubbleProps) {
+export function BroadcastMessageBubble({ broadcast, onDelete, isDeleting, onRepeat }: BroadcastMessageBubbleProps) {
+  const [isHovered, setIsHovered] = useState(false);
   const badge = getStatusBadge(broadcast.status);
   const isRunning = broadcast.status === 'running';
   const statsIcon = isRunning ? '⏳' : '✓';
@@ -61,8 +71,47 @@ export function BroadcastMessageBubble({ broadcast }: BroadcastMessageBubbleProp
     return parseHTML(broadcast.messageText.trimEnd());
   }, [broadcast.messageText]);
 
+  /** Показывать ли кнопку удаления */
+  const showDelete = !!onDelete && (isHovered || isDeleting);
+  /** Показывать ли кнопку повтора */
+  const showRepeat = !!onRepeat && isHovered && !isDeleting;
+
   return (
-    <div className="flex justify-end">
+    <div
+      className="flex justify-end"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Кнопки действий — слева от пузыря, видны при наведении */}
+      <div className="flex flex-col gap-0.5 self-center mr-1">
+        {showRepeat && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10"
+            onClick={() => onRepeat(broadcast.id)}
+            title="Повторить рассылку"
+          >
+            <RefreshCw className="h-3 w-3" />
+          </Button>
+        )}
+        {showDelete && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            onClick={() => onDelete!(broadcast.id)}
+            disabled={isDeleting}
+            title="Удалить рассылку"
+          >
+            {isDeleting
+              ? <Loader2 className="h-3 w-3 animate-spin" />
+              : <Trash2 className="h-3 w-3" />
+            }
+          </Button>
+        )}
+      </div>
+
       <div className="max-w-[85%] space-y-1">
         {/* Текст рассылки в пузыре с фиолетовым градиентом */}
         {content && (

@@ -5,6 +5,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Megaphone, X, Send, Paperclip, Hash } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -47,9 +48,25 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
   const [prefillText, setPrefillText] = useState('');
   /** Медиа для передачи в модалку */
   const [prefillMedia, setPrefillMedia] = useState<string[]>([]);
+  /** ID рассылки, которая сейчас удаляется */
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { broadcasts, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId);
+
+  /** Мутация удаления рассылки */
+  const deleteMutation = useMutation({
+    mutationFn: async (broadcastId: number) => {
+      const res = await fetch(`/api/projects/${projectId}/broadcasts/${broadcastId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Ошибка удаления рассылки');
+      return res.json();
+    },
+    onMutate: (broadcastId) => setDeletingId(broadcastId),
+    onSettled: () => {
+      setDeletingId(null);
+      refetch();
+    },
+  });
 
   /** Автопрокрутка вниз при загрузке */
   useEffect(() => {
@@ -68,6 +85,15 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
     setModalOpen(true);
   };
 
+  /** Повторить рассылку — открыть модалку с текстом выбранной рассылки */
+  const handleRepeat = (broadcastId: number) => {
+    const b = broadcasts.find((br) => br.id === broadcastId);
+    if (!b) return;
+    setPrefillText(b.messageText ?? '');
+    setPrefillMedia(Array.isArray(b.mediaUrls) ? b.mediaUrls : []);
+    setModalOpen(true);
+  };
+
   /** Закрытие модалки — очистка и рефетч с задержкой */
   const handleModalClose = () => {
     setModalOpen(false);
@@ -77,7 +103,6 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
     setMediaUrls([]);
     setShowMedia(false);
     setShowFileId(false);
-    // Задержка чтобы бэкенд успел записать рассылку
     setTimeout(() => refetch(), 500);
   };
 
@@ -111,7 +136,13 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
         ) : (
           <div className="space-y-3 py-2">
             {[...broadcasts].reverse().map((b) => (
-              <BroadcastMessageBubble key={b.id} broadcast={b} />
+              <BroadcastMessageBubble
+                key={b.id}
+                broadcast={b}
+                onDelete={(id) => deleteMutation.mutate(id)}
+                isDeleting={deletingId === b.id}
+                onRepeat={handleRepeat}
+              />
             ))}
           </div>
         )}
