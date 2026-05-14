@@ -31,6 +31,8 @@ interface NewBroadcastModalProps {
   tokenId?: number | null;
   /** Колбэк обновления списка рассылок */
   refetch?: () => void;
+  /** Предзаполненный текст сообщения (опционально) */
+  initialMessageText?: string;
 }
 
 /** Начальные данные формы */
@@ -51,9 +53,12 @@ const STEP_TITLES = ['Аудитория', 'Сообщение', 'Подтвер
  * @param props - Свойства компонента
  * @returns JSX элемент модального окна
  */
-export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch }: NewBroadcastModalProps) {
+export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, initialMessageText }: NewBroadcastModalProps) {
   const [step, setStep] = useState<1 | 2 | 3 | 'progress'>(1);
-  const [formData, setFormData] = useState<NewBroadcastFormData>(INITIAL_FORM);
+  const [formData, setFormData] = useState<NewBroadcastFormData>({
+    ...INITIAL_FORM,
+    messageText: initialMessageText ?? '',
+  });
   const [createdBroadcast, setCreatedBroadcast] = useState<Broadcast | null>(null);
 
   const updateForm = (data: Partial<NewBroadcastFormData>) => {
@@ -88,7 +93,7 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch }
 
   const handleClose = () => {
     setStep(1);
-    setFormData(INITIAL_FORM);
+    setFormData({ ...INITIAL_FORM, messageText: initialMessageText ?? '' });
     setCreatedBroadcast(null);
     onClose();
   };

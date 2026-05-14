@@ -9,6 +9,7 @@ import { ArrowLeft, MessageSquare, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserBotData } from '@shared/schema';
 import { DialogPanel } from '../../dialog/dialog-panel';
+import { BroadcastDialogPanel } from '../../dialog/broadcast-dialog-panel';
 import { DialogList } from './dialog-list';
 import { useLiveInvalidate } from '../hooks/use-live-invalidate';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
@@ -62,6 +63,8 @@ export function DialogsTabContent({
   onProjectChange,
 }: DialogsTabContentProps): React.JSX.Element {
   const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
+  /** Флаг открытия виртуального диалога рассылок */
+  const [isBroadcastDialogOpen, setIsBroadcastDialogOpen] = useState(false);
   /** Флаг открытия модалки создания рассылки */
   const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
 
@@ -95,10 +98,22 @@ export function DialogsTabContent({
   useSyncGroups(projectId, resolvedTokenId, dialogs);
 
   /** Сброс выбранного пользователя */
-  const handleClose = () => setSelectedUser(null);
+  const handleClose = () => {
+    setSelectedUser(null);
+    setIsBroadcastDialogOpen(false);
+  };
 
   /** Выбор пользователя из списка или из DialogPanel */
-  const handleSelectUser = (user: UserBotData) => setSelectedUser(user);
+  const handleSelectUser = (user: UserBotData) => {
+    setSelectedUser(user);
+    setIsBroadcastDialogOpen(false);
+  };
+
+  /** Клик по виртуальному элементу «Рассылка» */
+  const handleSelectBroadcast = () => {
+    setIsBroadcastDialogOpen(true);
+    setSelectedUser(null);
+  };
 
   /** Показывать селектор проекта только если несколько проектов */
   const showProjectSelector = !!allProjects && allProjects.length > 1 && !!onProjectChange;
@@ -157,12 +172,20 @@ export function DialogsTabContent({
             selectedTokenId={resolvedTokenId}
             selectedUserId={selectedUser ? String(selectedUser.userId) : null}
             onSelectUser={handleSelectUser}
+            onSelectBroadcast={handleSelectBroadcast}
+            isBroadcastSelected={isBroadcastDialogOpen}
           />
         </div>
 
-        {/* Правая колонка — открытый диалог или заглушка */}
+        {/* Правая колонка — открытый диалог, рассылка или заглушка */}
         <div className="flex-1 min-w-0 flex flex-col min-h-0">
-          {selectedUser ? (
+          {isBroadcastDialogOpen ? (
+            <BroadcastDialogPanel
+              projectId={projectId}
+              selectedTokenId={resolvedTokenId}
+              onClose={handleClose}
+            />
+          ) : selectedUser ? (
             <DialogPanel
               projectId={projectId}
               selectedTokenId={resolvedTokenId}
@@ -178,7 +201,23 @@ export function DialogsTabContent({
 
       {/* Mobile: переключение между списком и диалогом */}
       <div className="flex md:hidden flex-col flex-1 min-h-0">
-        {selectedUser ? (
+        {isBroadcastDialogOpen ? (
+          <div className="flex flex-col h-full min-h-0">
+            <div className="flex-shrink-0 px-2 py-1 border-b border-border">
+              <Button variant="ghost" size="sm" onClick={handleClose} className="gap-1 text-sm">
+                <ArrowLeft className="h-4 w-4" />
+                Назад
+              </Button>
+            </div>
+            <div className="flex-1 min-h-0">
+              <BroadcastDialogPanel
+                projectId={projectId}
+                selectedTokenId={resolvedTokenId}
+                onClose={handleClose}
+              />
+            </div>
+          </div>
+        ) : selectedUser ? (
           <div className="flex flex-col h-full min-h-0">
             {/* Кнопка "Назад" */}
             <div className="flex-shrink-0 px-2 py-1 border-b border-border">
@@ -208,6 +247,8 @@ export function DialogsTabContent({
             selectedTokenId={resolvedTokenId}
             selectedUserId={null}
             onSelectUser={handleSelectUser}
+            onSelectBroadcast={handleSelectBroadcast}
+            isBroadcastSelected={false}
           />
         )}
       </div>

@@ -1,0 +1,130 @@
+/**
+ * @fileoverview Панель диалога рассылок — отображает историю рассылок в формате чата
+ * @module editor/database/dialog/broadcast-dialog-panel
+ */
+
+import { useState, useRef, useEffect } from 'react';
+import { Megaphone, X, Send } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
+import { useBroadcasts } from '@/components/editor/broadcast/hooks/use-broadcasts';
+import { NewBroadcastModal } from '@/components/editor/broadcast/wizard/new-broadcast-modal';
+import { BroadcastMessageBubble } from './components/broadcast-message-bubble';
+
+/**
+ * Пропсы компонента BroadcastDialogPanel
+ */
+export interface BroadcastDialogPanelProps {
+  /** Идентификатор проекта */
+  projectId: number;
+  /** Идентификатор выбранного токена бота */
+  selectedTokenId?: number | null;
+  /** Колбэк закрытия панели */
+  onClose: () => void;
+}
+
+/**
+ * Панель истории рассылок в формате чата.
+ * Показывает рассылки как пузыри сообщений с возможностью создания новой.
+ * @param props - Свойства компонента
+ * @returns JSX элемент панели рассылок
+ */
+export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: BroadcastDialogPanelProps) {
+  const [messageText, setMessageText] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [prefillText, setPrefillText] = useState('');
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const { broadcasts, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId);
+
+  /** Автопрокрутка вниз при загрузке */
+  useEffect(() => {
+    if (isLoading || broadcasts.length === 0) return;
+    setTimeout(() => {
+      const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport) viewport.scrollTop = viewport.scrollHeight;
+    }, 100);
+  }, [isLoading, broadcasts.length]);
+
+  /** Открыть модалку с предзаполненным текстом */
+  const handleSend = () => {
+    if (!messageText.trim()) return;
+    setPrefillText(messageText.trim());
+    setModalOpen(true);
+  };
+
+  /** Закрытие модалки — очистка и рефетч */
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setPrefillText('');
+    setMessageText('');
+    refetch();
+  };
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden bg-background">
+      {/* Шапка */}
+      <div className="flex items-center justify-between gap-2 p-3 border-b bg-gradient-to-r from-violet-50 to-fuchsia-50 dark:from-violet-950/30 dark:to-fuchsia-950/20">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center">
+            <Megaphone className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+          </div>
+          <h3 className="font-medium text-sm">Рассылка</h3>
+        </div>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Область сообщений */}
+      <ScrollArea ref={scrollRef} className="min-h-0 flex-1 p-3">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-24">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
+        ) : broadcasts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground py-12">
+            <Megaphone className="h-10 w-10 opacity-20" />
+            <p className="text-sm">Нет рассылок</p>
+            <p className="text-xs">Напишите сообщение ниже чтобы создать первую рассылку</p>
+          </div>
+        ) : (
+          <div className="space-y-3 py-2">
+            {broadcasts.map((b) => (
+              <BroadcastMessageBubble key={b.id} broadcast={b} />
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+
+      <Separator />
+
+      {/* Зона ввода */}
+      <div className="flex-shrink-0 p-3 space-y-2">
+        <CompactInlineEditor
+          value={messageText}
+          onChange={setMessageText}
+          placeholder="Текст рассылки..."
+        />
+        <div className="flex justify-end">
+          <Button size="sm" onClick={handleSend} disabled={!messageText.trim()}>
+            <Send className="w-4 h-4 mr-1" />
+            Отправить рассылку
+          </Button>
+        </div>
+      </div>
+
+      {/* Модалка создания рассылки с предзаполненным текстом */}
+      <NewBroadcastModal
+        open={modalOpen}
+        onClose={handleModalClose}
+        projectId={projectId}
+        tokenId={selectedTokenId}
+        refetch={refetch}
+        initialMessageText={prefillText}
+      />
+    </div>
+  );
+}
