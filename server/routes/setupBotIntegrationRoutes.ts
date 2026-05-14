@@ -22,7 +22,7 @@ import { restrictMemberHandler } from "./botIntegration/groups/members";
 import { setGroupPhotoHandler, setGroupTitleHandler, setGroupDescriptionHandler, setGroupUsernameHandler } from "./botIntegration/groups/settings";
 import { pinMessageHandler, unpinMessageHandler, createInviteLinkHandler, deleteMessageHandler } from "./botIntegration/groups/moderation";
 import { telegramSettingsHandler, groupMembersHandler } from "./botIntegration/telegram";
-import { createBroadcastHandler, getBroadcastsHandler, getBroadcastDetailHandler, stopBroadcastHandler, previewAudienceHandler, deleteBroadcastHandler } from "./botIntegration/handlers/broadcasts";
+import { createBroadcastHandler, getBroadcastsHandler, getBroadcastDetailHandler, stopBroadcastHandler, previewAudienceHandler, deleteBroadcastHandler, editBroadcastHandler } from "./botIntegration/handlers/broadcasts";
 
 /**
  * Настраивает маршруты интеграции с ботами
@@ -231,5 +231,6 @@ export function setupBotIntegrationRoutes(app: Express) {
     app.post("/api/projects/:projectId/broadcasts/preview-audience", previewAudienceHandler);
     app.get("/api/projects/:projectId/broadcasts/:broadcastId", getBroadcastDetailHandler);
     app.post("/api/projects/:projectId/broadcasts/:broadcastId/stop", stopBroadcastHandler);
+    app.put("/api/projects/:projectId/broadcasts/:broadcastId", editBroadcastHandler);
     app.delete("/api/projects/:projectId/broadcasts/:broadcastId", deleteBroadcastHandler);
 }

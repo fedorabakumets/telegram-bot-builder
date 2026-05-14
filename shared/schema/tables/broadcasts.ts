@@ -58,6 +58,8 @@ export const broadcastResults = pgTable("broadcast_results", {
   status: text("status").notNull(),
   /** Описание ошибки от Telegram (если есть) */
   errorMessage: text("error_message"),
+  /** ID сообщения в Telegram (для удаления/редактирования) */
+  telegramMessageId: integer("telegram_message_id"),
   /** Дата отправки */
   sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow(),
 });
@@ -108,6 +110,8 @@ export const insertBroadcastResultSchema = z.object({
   status: z.enum(["sent", "failed", "blocked", "not_found"]),
   /** Описание ошибки */
   errorMessage: z.string().nullable().optional(),
+  /** ID сообщения в Telegram (для удаления/редактирования) */
+  telegramMessageId: z.number().int().nullable().optional(),
 });
 
 /** Тип записи рассылки */

@@ -48,10 +48,11 @@ async function sendBroadcastMessage(
   userId: string,
   text: string,
   mediaFiles: SendMediaFile[],
-): Promise<{ ok: boolean; retryAfter?: number; errorCode?: number; description?: string }> {
+): Promise<{ ok: boolean; messageId?: number; retryAfter?: number; errorCode?: number; description?: string }> {
   try {
     const result = await sendTelegramMessage(token, userId, text, mediaFiles, [], true) as {
       ok?: boolean;
+      result?: { message_id?: number };
       error_code?: number;
       description?: string;
       parameters?: { retry_after?: number };
@@ -67,7 +68,7 @@ async function sendBroadcastMessage(
       };
     }
 
-    return { ok: true };
+    return { ok: true, messageId: result?.result?.message_id ?? undefined };
   } catch (error: unknown) {
     // Сетевая ошибка (timeout, DNS и т.д.)
     const err = error as Record<string, unknown>;
@@ -234,7 +235,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
           if (result.ok) {
             deliveredCount++;
             sentCount++;
-            await storage.createBroadcastResult({ broadcastId, userId: user.userId, status: "sent" });
+            await storage.createBroadcastResult({ broadcastId, userId: user.userId, status: "sent", telegramMessageId: result.messageId ?? null });
             // Записываем сообщение в историю диалога чтобы оно было видно в панели диалога
             await storage.createBotMessage({
               projectId,

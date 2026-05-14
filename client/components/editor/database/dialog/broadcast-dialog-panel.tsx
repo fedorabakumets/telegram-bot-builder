@@ -50,6 +50,8 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
   const [prefillMedia, setPrefillMedia] = useState<string[]>([]);
   /** ID рассылки, которая сейчас удаляется */
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  /** ID рассылки, которая сейчас редактируется */
+  const [editingId, setEditingId] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { broadcasts, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId);
@@ -64,6 +66,24 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
     onMutate: (broadcastId) => setDeletingId(broadcastId),
     onSettled: () => {
       setDeletingId(null);
+      refetch();
+    },
+  });
+
+  /** Мутация редактирования рассылки */
+  const editMutation = useMutation({
+    mutationFn: async ({ broadcastId, messageText }: { broadcastId: number; messageText: string }) => {
+      const res = await fetch(`/api/projects/${projectId}/broadcasts/${broadcastId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageText }),
+      });
+      if (!res.ok) throw new Error('Ошибка редактирования рассылки');
+      return res.json();
+    },
+    onMutate: ({ broadcastId }) => setEditingId(broadcastId),
+    onSettled: () => {
+      setEditingId(null);
       refetch();
     },
   });
@@ -92,6 +112,11 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
     setPrefillText(b.messageText ?? '');
     setPrefillMedia(Array.isArray(b.mediaUrls) ? b.mediaUrls : []);
     setModalOpen(true);
+  };
+
+  /** Редактировать рассылку — вызвать PUT-запрос */
+  const handleEdit = (broadcastId: number, newText: string) => {
+    editMutation.mutate({ broadcastId, messageText: newText });
   };
 
   /** Закрытие модалки — очистка и рефетч с задержкой */
@@ -142,6 +167,8 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
                 onDelete={(id) => deleteMutation.mutate(id)}
                 isDeleting={deletingId === b.id}
                 onRepeat={handleRepeat}
+                onEdit={handleEdit}
+                isEditing={editingId === b.id}
               />
             ))}
           </div>
