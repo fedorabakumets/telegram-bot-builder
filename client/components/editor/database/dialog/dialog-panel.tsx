@@ -6,7 +6,8 @@
 
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Users, Radio } from 'lucide-react';
+import { Users, Radio, Megaphone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { buildUsersApiUrl, formatUserName } from '../utils';
@@ -26,6 +27,7 @@ import { DialogInput } from './components/dialog-input';
 import { LoadingMessages } from './components/loading-messages';
 import { NoUserSelected } from './components/no-user-selected';
 import { NodeSender } from './components/node-sender';
+import { NewBroadcastModal } from '@/components/editor/broadcast/wizard/new-broadcast-modal';
 
 /**
  * Дедуплицирует и сортирует сообщения по id и времени создания.
@@ -73,6 +75,9 @@ export function DialogPanel({
     if (typeof window === 'undefined') return true;
     return localStorage.getItem('dialog-warning-dismissed') !== 'true';
   });
+
+  /** Флаг открытия модалки создания рассылки */
+  const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
 
   /** Набор id сообщений, оптимистично скрытых при удалении */
   const [deletedMessageIds, setDeletedMessageIds] = useState<Set<number>>(new Set());
@@ -334,6 +339,21 @@ export function DialogPanel({
           }}
         />
 
+        {/* Кнопка рассылки и NodeSender — только для личных диалогов */}
+        {!isGroup && (
+          <div className="flex items-center gap-2 px-3 pb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              onClick={() => setBroadcastModalOpen(true)}
+            >
+              <Megaphone className="h-3.5 w-3.5" />
+              + Рассылка
+            </Button>
+          </div>
+        )}
+
         {/* NodeSender только для личных диалогов */}
         {!isGroup && (
           <NodeSender
@@ -344,6 +364,14 @@ export function DialogPanel({
           />
         )}
       </div>
+
+      {/* Модалка создания рассылки */}
+      <NewBroadcastModal
+        open={broadcastModalOpen}
+        onClose={() => setBroadcastModalOpen(false)}
+        projectId={projectId}
+        tokenId={selectedTokenId}
+      />
     </div>
   );
 }
