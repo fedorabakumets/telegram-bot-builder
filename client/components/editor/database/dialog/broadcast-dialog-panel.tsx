@@ -59,7 +59,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
   /** Мутация удаления рассылки */
   const deleteMutation = useMutation({
     mutationFn: async (broadcastId: number) => {
-      const res = await fetch(`/api/projects/${projectId}/broadcasts/${broadcastId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/projects/${projectId}/broadcasts/${broadcastId}`, { method: 'DELETE', credentials: 'include' });
       if (!res.ok) throw new Error('Ошибка удаления рассылки');
       return res.json();
     },
@@ -77,6 +77,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messageText }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Ошибка редактирования рассылки');
       return res.json();
