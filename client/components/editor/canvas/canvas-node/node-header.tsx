@@ -15,6 +15,7 @@ import { ClientAuthHeader } from './client-auth-header';
 import { GroupMessageTriggerHeader } from './group-message-trigger-header';
 import { nodeIcons } from './node-icons';
 import { nodeColors } from './node-colors';
+import { getNodeName } from '../../shared/node-registry';
 
 /**
  * Интерфейс свойств компонента NodeHeader
@@ -113,34 +114,34 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
       case 'edit_message' as any:
         return (
           <span className="font-semibold text-blue-700 dark:text-blue-300">
-            Редактировать сообщение
+            {getNodeName('edit_message')}
           </span>
         );
       /** Заголовок узла установки переменных */
       case 'set_variable' as any:
         return (
           <span className="font-semibold text-emerald-700 dark:text-emerald-300">
-            Установить переменные
+            {getNodeName('set_variable')}
           </span>
         );
       /** Заголовок триггера обновления управляемого бота */
       case 'managed_bot_updated_trigger' as any:
         return (
           <span className="font-semibold text-indigo-700 dark:text-indigo-300">
-            🤖 Управляемый бот
+            🤖 {getNodeName('managed_bot_updated_trigger')}
           </span>
         );
       case 'http_request':
         return (
           <span className="font-semibold text-cyan-700 dark:text-cyan-300">
-            HTTP запрос
+            {getNodeName('http_request')}
           </span>
         );
       /** Заголовок узла PostgreSQL */
       case 'psql_query' as any:
         return (
           <span className="font-semibold text-violet-700 dark:text-violet-300">
-            PostgreSQL
+            {getNodeName('psql_query')}
           </span>
         );
       default:

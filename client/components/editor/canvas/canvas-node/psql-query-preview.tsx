@@ -4,6 +4,7 @@
  */
 
 import { Node } from '@shared/schema';
+import { getNodeName } from '../../shared/node-registry';
 
 /** Пропсы компонента превью SQL-запроса */
 interface PsqlQueryPreviewProps {
@@ -37,7 +38,7 @@ export function PsqlQueryPreview({ node }: PsqlQueryPreviewProps) {
       <div className="flex items-center gap-1.5">
         <i className="fas fa-database text-violet-500 dark:text-violet-400 text-xs" />
         <span className="text-xs font-semibold text-violet-700 dark:text-violet-300">
-          PostgreSQL
+          {getNodeName('psql_query')}
         </span>
       </div>
 

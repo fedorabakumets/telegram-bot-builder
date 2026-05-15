@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/u
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getNodeDefaults } from '../../utils/node-defaults';
+import { getNodeName, getNodeIcon, getNodeColor } from '../../../shared/node-registry';
 
 /**
  * Пропсы компонента заголовка панели свойств
@@ -29,170 +30,6 @@ interface PropertiesHeaderProps {
 }
 
 /**
- * Маппинг названий типов узлов
- */
-const nodeTypeNames: Partial<Record<Node['type'], string>> = {
-  start: 'Старт',
-  command: 'Команда',
-  message: 'Текстовое сообщение',
-  sticker: 'Стикер',
-  voice: 'Голосовое сообщение',
-  animation: 'GIF анимация',
-  location: 'Местоположение',
-  contact: 'Контакт',
-  pin_message: 'Закрепить сообщение',
-  unpin_message: 'Открепить сообщение',
-  delete_message: 'Удалить сообщение',
-  forward_message: 'Переслать сообщение',
-  ban_user: 'Заблокировать пользователя',
-  unban_user: 'Разблокировать пользователя',
-  mute_user: 'Ограничить пользователя',
-  unmute_user: 'Снять ограничения',
-  kick_user: 'Исключить пользователя',
-  promote_user: 'Назначить администратором',
-  demote_user: 'Снять с администратора',
-  admin_rights: 'Права администратора',
-  broadcast: '📢 Рассылка',
-  photo: 'Фото',
-  video: 'Видео',
-  audio: 'Аудио',
-  document: 'Документ',
-  keyboard: 'Клавиатура',
-  input: 'Сохранить ответ',
-  condition: 'Условие',
-  client_auth: 'Авторизация Client API',
-  command_trigger: 'Триггер команды',
-  text_trigger: 'Текстовый триггер',
-  incoming_message_trigger: 'Триггер входящего сообщения',
-  group_message_trigger: 'Триггер входящего сообщения в теме группы',
-  media: 'Медиафайл',
-  callback_trigger: 'Триггер inline-кнопки',
-  incoming_callback_trigger: 'Триггер нажатия кнопки',
-  outgoing_message_trigger: 'Триггер исходящего сообщения',
-  create_forum_topic: 'Создать топик форума',
-  http_request: 'HTTP запрос',
-  managed_bot_updated_trigger: 'Триггер создания/обновления бота',
-  get_managed_bot_token: 'Получить токен бота',
-  answer_callback_query: 'Уведомление inline кнопки',
-  edit_message: 'Редактировать сообщение',
-  /** Название узла установки переменных */
-  set_variable: 'Установить переменные',
-  /** Название узла PostgreSQL-запроса к базе данных */
-  psql_query: 'PostgreSQL',
-  /** Название узла конвертации файлов */
-  convert_file: 'Конвертер файлов',
-} as Partial<Record<string, string>>;
-
-/**
- * Маппинг иконок типов узлов
- */
-const nodeIcons: Partial<Record<Node['type'], string>> = {
-  start: 'fas fa-play',
-  command: 'fas fa-terminal',
-  message: 'fas fa-comment',
-  sticker: 'fas fa-smile',
-  voice: 'fas fa-microphone',
-  animation: 'fas fa-film',
-  location: 'fas fa-map-marker-alt',
-  contact: 'fas fa-address-book',
-  pin_message: 'fas fa-thumbtack',
-  unpin_message: 'fas fa-times',
-  delete_message: 'fas fa-trash',
-  forward_message: 'fas fa-share',
-  ban_user: 'fas fa-user-slash',
-  unban_user: 'fas fa-user-check',
-  mute_user: 'fas fa-volume-mute',
-  unmute_user: 'fas fa-volume-up',
-  kick_user: 'fas fa-door-open',
-  promote_user: 'fas fa-user-shield',
-  demote_user: 'fas fa-user-minus',
-  admin_rights: 'fas fa-crown',
-  broadcast: 'fas fa-bullhorn',
-  photo: 'fas fa-image',
-  video: 'fas fa-video',
-  audio: 'fas fa-music',
-  document: 'fas fa-file',
-  keyboard: 'fas fa-keyboard',
-  input: 'fas fa-keyboard',
-  condition: 'fas fa-code-branch',
-  client_auth: 'fas fa-key',
-  command_trigger: 'fas fa-bolt',
-  text_trigger: 'fas fa-comment-dots',
-  incoming_message_trigger: 'fas fa-inbox',
-  media: 'fas fa-photo-video',
-  callback_trigger: 'fas fa-hand-pointer',
-  incoming_callback_trigger: 'fas fa-hand-pointer',
-  outgoing_message_trigger: 'fas fa-paper-plane',
-  create_forum_topic: 'fas fa-comments',
-  http_request: 'fas fa-globe',
-  managed_bot_updated_trigger: 'fas fa-robot',
-  get_managed_bot_token: 'fas fa-key',
-  answer_callback_query: 'fas fa-bell',
-  edit_message: 'fas fa-pen',
-  /** Иконка узла установки переменных */
-  set_variable: 'fas fa-pen',
-  /** Иконка узла PostgreSQL-запроса к базе данных */
-  psql_query: 'fas fa-database',
-  /** Иконка узла конвертации файлов */
-  convert_file: 'fas fa-file-export',
-} as Partial<Record<string, string>>;
-
-/**
- * Маппинг цветов типов узлов
- */
-const nodeColors: Partial<Record<Node['type'], string>> = {
-  start: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
-  command: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-  message: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-  sticker: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
-  voice: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
-  animation: 'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
-  location: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
-  contact: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
-  pin_message: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
-  unpin_message: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
-  delete_message: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
-  forward_message: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-  ban_user: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
-  unban_user: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-  mute_user: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
-  unmute_user: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-  kick_user: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
-  promote_user: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-  demote_user: 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400',
-  admin_rights: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-  broadcast: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-  photo: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-  video: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-  audio: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-  document: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
-  keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-  input: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
-  condition: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-  client_auth: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
-  command_trigger: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
-  text_trigger: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-  incoming_message_trigger: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-  media: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400',
-  callback_trigger: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
-  incoming_callback_trigger: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
-  outgoing_message_trigger: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-  create_forum_topic: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
-  http_request: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
-  managed_bot_updated_trigger: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-  get_managed_bot_token: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-  answer_callback_query: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-  /** Цвет узла редактирования сообщения — синий */
-  edit_message: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-  /** Цвет узла установки переменных — изумрудный */
-  set_variable: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
-  /** Цвет узла PostgreSQL-запроса — фиолетовый */
-  psql_query: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
-  /** Цвет узла конвертации файлов — изумрудный */
-  convert_file: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
-} as Partial<Record<string, string>>;
-
-/**
  * Компонент заголовка панели свойств узла
  * 
  * @param {PropertiesHeaderProps} props - Пропсы компонента
@@ -207,12 +44,12 @@ export function PropertiesHeader({
   const { toast } = useToast();
 
   const getNodeTitle = () => {
-    return nodeTypeNames[selectedNode.type] || 'Узел';
+    return getNodeName(selectedNode.type as string);
   };
 
   const nodeTitle = getNodeTitle();
-  const nodeIcon = nodeIcons[selectedNode.type] || 'fas fa-circle';
-  const nodeColor = nodeColors[selectedNode.type] || 'bg-slate-100 text-slate-600';
+  const nodeIcon = getNodeIcon(selectedNode.type as string);
+  const nodeColor = getNodeColor(selectedNode.type as string);
 
   return (
     <div className="bg-gradient-to-br from-slate-50/50 to-slate-100/30 dark:from-slate-950/40 dark:to-slate-900/30 border-b border-border/50 backdrop-blur-sm">

@@ -3,6 +3,7 @@
  */
 
 import { Node } from '@shared/schema';
+import { getNodeName } from '../../shared/node-registry';
 
 export function formatNodeDisplay(node: Node, sheetName?: string): string {
   const typeLabel = getNodeTypeLabel(node.type);
@@ -11,52 +12,7 @@ export function formatNodeDisplay(node: Node, sheetName?: string): string {
 }
 
 export function getNodeTypeLabel(type: Node['type']): string {
-  const types: Partial<Record<Node['type'], string>> = {
-    start: 'Старт',
-    command: 'Команда',
-    message: 'Сообщение',
-    location: 'Геолокация',
-    contact: 'Контакт',
-    sticker: 'Стикер',
-    voice: 'Голос',
-    animation: 'Анимация',
-    command_trigger: 'Триггер команды',
-    text_trigger: 'Текстовый триггер',
-    media: 'Медиа',
-    pin_message: 'Закрепить',
-    unpin_message: 'Открепить',
-    delete_message: 'Удалить',
-    forward_message: 'Переслать',
-    ban_user: 'Заблокировать',
-    unban_user: 'Разблокировать',
-    mute_user: 'Заглушить',
-    unmute_user: 'Включить звук',
-    kick_user: 'Исключить',
-    promote_user: 'Повысить',
-    demote_user: 'Понизить',
-    admin_rights: 'Права админа',
-    broadcast: 'Рассылка',
-    photo: 'Фото',
-    video: 'Видео',
-    audio: 'Аудио',
-    document: 'Документ',
-    keyboard: 'Клавиатура',
-    input: 'Сохранить ответ в переменную',
-    condition: 'Условие',
-    client_auth: 'Авторизация',
-    callback_trigger: 'Триггер inline-кнопки',
-    incoming_callback_trigger: 'Триггер нажатия кнопки',
-    outgoing_message_trigger: 'Триггер исходящего сообщения',
-    managed_bot_updated_trigger: 'Триггер создания/обновления бота',
-    get_managed_bot_token: 'Получить токен бота',
-    answer_callback_query: 'Уведомление inline кнопки',
-    edit_message: 'Редактировать сообщение',
-    set_variable: 'Установить переменные',
-    psql_query: 'PostgreSQL',
-    convert_file: 'Конвертер файлов',
-  } as Partial<Record<Node['type'] | string, string>>;
-
-  return (types as Record<string, string>)[type as string] || type;
+  return getNodeName(type as string);
 }
 
 function getNodeContent(node: Node): string {
