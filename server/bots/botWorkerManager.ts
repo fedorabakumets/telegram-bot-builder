@@ -427,11 +427,19 @@ class BotWorkerManager extends EventEmitter {
         try {
           const { execSync } = require("node:child_process");
           if (process.platform === "win32") {
-            const output = execSync(`tasklist /FI "PID eq ${worker.process.pid}" /FO CSV /NH`, { encoding: "utf8" }).trim();
-            // Формат: "python.exe","1234","Console","1","44 988 КБ"
-            const match = output.match(/"([\d\s]+)\s*\S+"\s*$/);
-            if (match) {
-              memoryMb = Math.round(parseInt(match[1].replace(/\s/g, "")) / 1024);
+            const output = execSync(`tasklist /FI "PID eq ${worker.process.pid}" /FO CSV`, { encoding: "utf8" }).trim();
+            // Формат: "python.exe","1492","Console","9","29 916 КБ"
+            // Извлекаем все цифры из последнего CSV-поля (память в КБ)
+            const lines = output.split("\n").filter(l => l.includes(`"${worker.process.pid}"`));
+            if (lines.length > 0) {
+              const fields = lines[0].match(/"[^"]*"/g);
+              if (fields && fields.length >= 5) {
+                const memField = fields[fields.length - 1]; // последнее поле — память
+                const digits = memField.replace(/[^\d]/g, ""); // только цифры
+                if (digits) {
+                  memoryMb = Math.round(parseInt(digits) / 1024);
+                }
+              }
             }
           } else {
             const output = execSync(`ps -o rss= -p ${worker.process.pid}`, { encoding: "utf8" }).trim();
