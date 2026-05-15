@@ -5,8 +5,13 @@
  */
 
 import { spawn, ChildProcess } from "node:child_process";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { EventEmitter } from "node:events";
+
+/** Эквивалент __dirname для ES modules */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /** Сообщение от воркера (stdout JSON) */
 interface WorkerMessage {
