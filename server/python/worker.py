@@ -248,20 +248,33 @@ class BotWorker:
         """Главный цикл воркера: читает stdin, обрабатывает команды."""
         emit_system("worker_ready")
 
-        # Читаем stdin асинхронно
-        reader = asyncio.StreamReader()
-        protocol = asyncio.StreamReaderProtocol(reader)
-        await asyncio.get_event_loop().connect_read_pipe(lambda: protocol, sys.stdin)
+        # Читаем stdin в отдельном потоке (Windows не поддерживает asyncio read_pipe для stdin)
+        loop = asyncio.get_event_loop()
+        stdin_queue: asyncio.Queue = asyncio.Queue()
+
+        def _stdin_reader():
+            """Читает stdin в блокирующем режиме из отдельного потока."""
+            try:
+                for line in sys.stdin:
+                    loop.call_soon_threadsafe(stdin_queue.put_nowait, line.strip())
+            except (EOFError, OSError):
+                pass
+            finally:
+                loop.call_soon_threadsafe(stdin_queue.put_nowait, None)
+
+        import threading
+        reader_thread = threading.Thread(target=_stdin_reader, daemon=True)
+        reader_thread.start()
 
         while not self._shutdown_event.is_set():
             try:
-                line = await asyncio.wait_for(reader.readline(), timeout=1.0)
-                if not line:
+                line_str = await asyncio.wait_for(stdin_queue.get(), timeout=1.0)
+
+                if line_str is None:
                     # stdin закрыт — Node.js процесс завершился
                     emit_system("stdin_closed")
                     break
 
-                line_str = line.decode("utf-8").strip()
                 if not line_str:
                     continue
 
