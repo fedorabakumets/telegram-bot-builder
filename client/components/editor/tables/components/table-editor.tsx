@@ -107,7 +107,7 @@ export function TableEditor({
             <tr className="bg-muted/60 border-b border-border">
               {/* ID колонка */}
               <th className="w-14 min-w-[56px] h-8 px-2 text-left font-medium text-muted-foreground border-r border-border bg-muted/80">
-                ID
+                №
               </th>
               {table.columns.map((col) => (
                 <th
@@ -158,7 +158,7 @@ export function TableEditor({
               <tr key={row.id} className="group border-b border-border/50 hover:bg-muted/20">
                 {/* ID ячейка */}
                 <td className="h-8 px-2 text-muted-foreground bg-muted/30 border-r border-border select-none">
-                  {row.id}
+                  {row.rowIndex}
                 </td>
                 {table.columns.map((col) => (
                   <td key={col.id} className="h-8 border-r border-border/50 p-0">

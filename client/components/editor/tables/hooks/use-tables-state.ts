@@ -61,7 +61,7 @@ export function useTablesState(projectId: number) {
 
   /** Строки в клиентском формате */
   const rows: TableRow[] = useMemo(
-    () => serverRows.map((r) => ({ id: r.id, cells: r.data ?? {} })),
+    () => serverRows.map((r) => ({ id: r.id, rowIndex: r.rowIndex, cells: r.data ?? {} })),
     [serverRows],
   );
 
