@@ -95,6 +95,8 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
       await apiRequest('PUT', batchUrl, { changes: entries });
       setChanges(new Map());
       invalidateAll();
+      // Останавливаем и запускаем заново
+      try { await apiRequest('POST', `/api/projects/${projectId}/bot/stop`, { tokenId }); } catch { /* может быть уже остановлен */ }
       await apiRequest('POST', `/api/projects/${projectId}/bot/start`, { tokenId });
       queryClient.invalidateQueries({ queryKey: [`/api/tokens/${tokenId}/bot-status`] });
       toast({ title: 'Бот перезапущен', description: 'Изменения сохранены, бот перезапущен' });
