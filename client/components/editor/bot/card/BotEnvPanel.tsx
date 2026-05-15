@@ -148,6 +148,17 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
           placeholder="Фильтр по имени..." className="h-7 text-xs" autoFocus />
       )}
 
+      {/* Мини-бар несохранённых изменений */}
+      {pending.changesCount > 0 && (
+        <BotEnvStagingBar
+          changesCount={pending.changesCount}
+          isSaving={pending.isSaving}
+          onDiscard={pending.discardAll}
+          onSave={pending.saveAll}
+          onSaveAndRestart={pending.saveAndRestart}
+        />
+      )}
+
       {showRaw ? (
         <BotEnvRawEditor
           systemVars={systemVars}
@@ -200,16 +211,6 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
             </>
           )}
 
-          {/* Мини-бар несохранённых изменений */}
-          {pending.changesCount > 0 && (
-            <BotEnvStagingBar
-              changesCount={pending.changesCount}
-              isSaving={pending.isSaving}
-              onDiscard={pending.discardAll}
-              onSave={pending.saveAll}
-              onSaveAndRestart={pending.saveAndRestart}
-            />
-          )}
         </>
       )}
     </div>
