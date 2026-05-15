@@ -1,124 +1,104 @@
 /**
- * @fileoverview Редактор содержимого таблицы (правая панель)
+ * @fileoverview Spreadsheet-редактор таблицы — сетка ячеек как в Google Sheets
  * @module editor/tables/components/table-editor
  */
 
 import { useState } from 'react';
-import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from '@/components/ui/table';
-import type { BotTable, ColumnType } from '../types';
+import { SpreadsheetCell } from './spreadsheet-cell';
+import { ColumnHeader } from './column-header';
+import { SpreadsheetToolbar } from './spreadsheet-toolbar';
+import { AddRowsFooter } from './add-rows-footer';
+import type { BotTable } from '../types';
 
 /** Пропсы компонента TableEditor */
 interface TableEditorProps {
   /** Таблица для редактирования */
   table: BotTable;
-  /** Добавить колонку */
-  onAddColumn: (column: { name: string; type: ColumnType }) => void;
+  /** Добавить именованную колонку */
+  onAddColumn: (name: string) => void;
+  /** Добавить 26 буквенных колонок */
+  onAddAlphabetColumns: () => void;
+  /** Переименовать колонку */
+  onRenameColumn: (columnId: string, name: string) => void;
   /** Удалить колонку */
   onDeleteColumn: (columnId: string) => void;
-  /** Добавить строку */
-  onAddRow: () => void;
+  /** Добавить N строк */
+  onAddRows: (count: number) => void;
   /** Удалить строку */
-  onDeleteRow: (rowId: string) => void;
+  onDeleteRow: (rowId: number) => void;
+  /** Перезаписать ID */
+  onReindex: () => void;
   /** Обновить ячейку */
-  onUpdateCell: (rowId: string, columnId: string, value: string | number | boolean) => void;
+  onUpdateCell: (rowId: number, columnId: string, value: string) => void;
 }
 
 /**
- * Редактор данных таблицы — шапка с колонками и строки
+ * Spreadsheet-редактор — основная сетка данных
  * @param props - Пропсы компонента
- * @returns JSX элемент редактора таблицы
+ * @returns JSX элемент редактора
  */
 export function TableEditor({
   table,
   onAddColumn,
+  onAddAlphabetColumns,
+  onRenameColumn,
   onDeleteColumn,
-  onAddRow,
+  onAddRows,
   onDeleteRow,
+  onReindex,
   onUpdateCell,
 }: TableEditorProps) {
   /** Режим добавления колонки */
-  const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const [addingCol, setAddingCol] = useState(false);
   /** Имя новой колонки */
   const [newColName, setNewColName] = useState('');
-  /** Тип новой колонки */
-  const [newColType, setNewColType] = useState<ColumnType>('text');
 
   /** Подтверждение добавления колонки */
-  const handleAddColumn = () => {
+  const handleAddCol = () => {
     const name = newColName.trim();
     if (!name) return;
-    onAddColumn({ name, type: newColType });
+    onAddColumn(name);
     setNewColName('');
-    setNewColType('text');
-    setIsAddingColumn(false);
+    setAddingCol(false);
   };
 
   return (
     <div className="flex flex-col h-full flex-1 overflow-hidden">
-      {/* Заголовок таблицы */}
-      <div className="px-4 py-3 border-b border-border/50 flex items-center justify-between">
-        <h3 className="text-sm font-semibold">{table.name}</h3>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {table.columns.length} кол. · {table.rows.length} строк
-          </span>
-        </div>
-      </div>
+      {/* Тулбар */}
+      <SpreadsheetToolbar
+        onAddAlphabet={onAddAlphabetColumns}
+        onAdd100Rows={() => onAddRows(100)}
+        onReindex={onReindex}
+      />
 
-      {/* Таблица данных */}
+      {/* Сетка */}
       <div className="flex-1 overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-8 px-2">#</TableHead>
+        <table className="w-full border-collapse text-xs">
+          {/* Шапка колонок */}
+          <thead className="sticky top-0 z-10">
+            <tr className="bg-muted/60 border-b border-border">
+              {/* ID колонка */}
+              <th className="w-14 min-w-[56px] h-8 px-2 text-left font-medium text-muted-foreground border-r border-border bg-muted/80">
+                ID
+              </th>
               {table.columns.map((col) => (
-                <TableHead key={col.id} className="min-w-[120px]">
-                  <div className="flex items-center gap-1 group">
-                    <span className="truncate">{col.name}</span>
-                    <span className="text-[10px] text-muted-foreground/60">
-                      {col.type}
-                    </span>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-4 w-4 opacity-0 group-hover:opacity-100 ml-auto"
-                      onClick={() => onDeleteColumn(col.id)}
-                    >
-                      <Trash2 className="h-2.5 w-2.5 text-destructive" />
-                    </Button>
-                  </div>
-                </TableHead>
+                <th
+                  key={col.id}
+                  className="min-w-[120px] h-8 text-left font-medium text-muted-foreground border-r border-border bg-muted/60"
+                >
+                  <ColumnHeader
+                    column={col}
+                    onRename={(name) => onRenameColumn(col.id, name)}
+                    onDelete={() => onDeleteColumn(col.id)}
+                  />
+                </th>
               ))}
-              <TableHead className="w-24">
-                {!isAddingColumn ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 text-xs gap-1"
-                    onClick={() => setIsAddingColumn(true)}
-                  >
-                    <Plus className="h-3 w-3" />
-                    Колонка
-                  </Button>
-                ) : (
+              {/* Кнопка добавления колонки */}
+              <th className="w-28 h-8 px-1 bg-muted/40 border-r border-border">
+                {addingCol ? (
                   <div className="flex items-center gap-1">
                     <Input
                       autoFocus
@@ -126,107 +106,62 @@ export function TableEditor({
                       value={newColName}
                       onChange={(e) => setNewColName(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleAddColumn();
-                        if (e.key === 'Escape') setIsAddingColumn(false);
+                        if (e.key === 'Enter') handleAddCol();
+                        if (e.key === 'Escape') setAddingCol(false);
                       }}
+                      onBlur={handleAddCol}
                       className="h-6 text-xs w-20"
                     />
-                    <Select value={newColType} onValueChange={(v) => setNewColType(v as ColumnType)}>
-                      <SelectTrigger className="h-6 text-xs w-16">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="text">text</SelectItem>
-                        <SelectItem value="number">number</SelectItem>
-                        <SelectItem value="boolean">bool</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button size="icon" className="h-6 w-6" onClick={handleAddColumn}>
-                      <Plus className="h-3 w-3" />
-                    </Button>
                   </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 text-xs gap-1 w-full"
+                    onClick={() => setAddingCol(true)}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
                 )}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {table.rows.map((row, idx) => (
-              <TableRow key={row.id}>
-                <TableCell className="px-2 text-xs text-muted-foreground">
-                  {idx + 1}
-                </TableCell>
+              </th>
+            </tr>
+          </thead>
+
+          {/* Тело таблицы */}
+          <tbody>
+            {table.rows.map((row) => (
+              <tr key={row.id} className="group border-b border-border/50 hover:bg-muted/20">
+                {/* ID ячейка */}
+                <td className="h-8 px-2 text-muted-foreground bg-muted/30 border-r border-border select-none">
+                  {row.id}
+                </td>
                 {table.columns.map((col) => (
-                  <TableCell key={col.id} className="p-1">
-                    <CellInput
-                      type={col.type}
-                      value={row.cells[col.id]}
+                  <td key={col.id} className="h-8 border-r border-border/50 p-0">
+                    <SpreadsheetCell
+                      value={row.cells[col.id] ?? ''}
                       onChange={(val) => onUpdateCell(row.id, col.id, val)}
                     />
-                  </TableCell>
+                  </td>
                 ))}
-                <TableCell className="p-1">
+                {/* Кнопка удаления строки */}
+                <td className="h-8 w-8 p-0">
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-6 w-6"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => onDeleteRow(row.id)}
                   >
                     <Trash2 className="h-3 w-3 text-destructive" />
                   </Button>
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             ))}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
 
-      {/* Кнопка добавления строки */}
-      <div className="px-4 py-2 border-t border-border/50">
-        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={onAddRow}>
-          <Plus className="h-3 w-3" />
-          Строка
-        </Button>
-      </div>
+      {/* Футер — добавление строк */}
+      <AddRowsFooter onAddRows={onAddRows} />
     </div>
-  );
-}
-
-/** Пропсы ячейки ввода */
-interface CellInputProps {
-  /** Тип колонки */
-  type: ColumnType;
-  /** Текущее значение */
-  value: string | number | boolean | undefined;
-  /** Обработчик изменения */
-  onChange: (value: string | number | boolean) => void;
-}
-
-/**
- * Ячейка ввода — адаптируется под тип колонки
- * @param props - Пропсы компонента
- * @returns JSX элемент ячейки
- */
-function CellInput({ type, value, onChange }: CellInputProps) {
-  if (type === 'boolean') {
-    return (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={Boolean(value)}
-          onCheckedChange={(checked) => onChange(Boolean(checked))}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <Input
-      type={type === 'number' ? 'number' : 'text'}
-      value={value != null ? String(value) : ''}
-      onChange={(e) => {
-        const raw = e.target.value;
-        onChange(type === 'number' ? Number(raw) || 0 : raw);
-      }}
-      className="h-7 text-xs border-transparent hover:border-border focus:border-primary"
-    />
   );
 }

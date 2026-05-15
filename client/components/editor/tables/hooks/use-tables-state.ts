@@ -1,5 +1,5 @@
 /**
- * @fileoverview Хук локального состояния таблиц (заглушка до подключения API)
+ * @fileoverview Хук состояния таблиц — spreadsheet-подобное управление
  * @module editor/tables/hooks/use-tables-state
  */
 
@@ -9,6 +9,22 @@ import type { BotTable, TableColumn, TableRow } from '../types';
 /** Генерирует короткий уникальный ID */
 function uid(): string {
   return Math.random().toString(36).slice(2, 10);
+}
+
+/** Количество пустых строк при создании таблицы */
+const INITIAL_ROWS = 10;
+
+/**
+ * Создаёт пустые строки с автоинкрементом ID
+ * @param startId - Начальный ID
+ * @param count - Количество строк
+ * @returns Массив пустых строк
+ */
+function createEmptyRows(startId: number, count: number): TableRow[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: startId + i,
+    cells: {},
+  }));
 }
 
 /**
@@ -25,13 +41,14 @@ export function useTablesState(_projectId: number) {
   /** Выбранная таблица */
   const selectedTable = tables.find((t) => t.id === selectedTableId) ?? null;
 
-  /** Создать новую таблицу */
+  /** Создать новую таблицу с 10 пустыми строками */
   const createTable = useCallback((name: string) => {
     const newTable: BotTable = {
       id: uid(),
       name,
-      columns: [{ id: uid(), name: 'name', type: 'text' }],
-      rows: [],
+      columns: [],
+      rows: createEmptyRows(1, INITIAL_ROWS),
+      nextRowId: INITIAL_ROWS + 1,
     };
     setTables((prev) => [...prev, newTable]);
     setSelectedTableId(newTable.id);
@@ -50,18 +67,44 @@ export function useTablesState(_projectId: number) {
     );
   }, []);
 
-  /** Добавить колонку */
-  const addColumn = useCallback((tableId: string, column: Omit<TableColumn, 'id'>) => {
+  /** Добавить именованную колонку */
+  const addColumn = useCallback((tableId: string, name: string) => {
     setTables((prev) =>
       prev.map((t) =>
         t.id === tableId
-          ? { ...t, columns: [...t.columns, { ...column, id: uid() }] }
+          ? { ...t, columns: [...t.columns, { id: uid(), name }] }
           : t
       )
     );
   }, []);
 
-  /** Удалить колонку */
+  /** Добавить 26 буквенных колонок (A-Z) */
+  const addAlphabetColumns = useCallback((tableId: string) => {
+    const letters = Array.from({ length: 26 }, (_, i) =>
+      String.fromCharCode(65 + i)
+    );
+    const newCols: TableColumn[] = letters.map((l) => ({ id: uid(), name: l }));
+    setTables((prev) =>
+      prev.map((t) =>
+        t.id === tableId
+          ? { ...t, columns: [...t.columns, ...newCols] }
+          : t
+      )
+    );
+  }, []);
+
+  /** Переименовать колонку */
+  const renameColumn = useCallback((tableId: string, columnId: string, name: string) => {
+    setTables((prev) =>
+      prev.map((t) =>
+        t.id === tableId
+          ? { ...t, columns: t.columns.map((c) => (c.id === columnId ? { ...c, name } : c)) }
+          : t
+      )
+    );
+  }, []);
+
+  /** Удалить колонку и данные из строк */
   const deleteColumn = useCallback((tableId: string, columnId: string) => {
     setTables((prev) =>
       prev.map((t) => {
@@ -79,23 +122,19 @@ export function useTablesState(_projectId: number) {
     );
   }, []);
 
-  /** Добавить строку */
-  const addRow = useCallback((tableId: string) => {
+  /** Добавить N строк (по умолчанию 1) */
+  const addRows = useCallback((tableId: string, count = 1) => {
     setTables((prev) =>
       prev.map((t) => {
         if (t.id !== tableId) return t;
-        const cells: Record<string, string | number | boolean> = {};
-        t.columns.forEach((col) => {
-          cells[col.id] = col.type === 'number' ? 0 : col.type === 'boolean' ? false : '';
-        });
-        const newRow: TableRow = { id: uid(), cells };
-        return { ...t, rows: [...t.rows, newRow] };
+        const newRows = createEmptyRows(t.nextRowId, count);
+        return { ...t, rows: [...t.rows, ...newRows], nextRowId: t.nextRowId + count };
       })
     );
   }, []);
 
   /** Удалить строку */
-  const deleteRow = useCallback((tableId: string, rowId: string) => {
+  const deleteRow = useCallback((tableId: string, rowId: number) => {
     setTables((prev) =>
       prev.map((t) =>
         t.id === tableId
@@ -105,9 +144,20 @@ export function useTablesState(_projectId: number) {
     );
   }, []);
 
+  /** Перезаписать ID строк (1, 2, 3...) */
+  const reindexRows = useCallback((tableId: string) => {
+    setTables((prev) =>
+      prev.map((t) => {
+        if (t.id !== tableId) return t;
+        const rows = t.rows.map((r, i) => ({ ...r, id: i + 1 }));
+        return { ...t, rows, nextRowId: rows.length + 1 };
+      })
+    );
+  }, []);
+
   /** Обновить значение ячейки */
   const updateCell = useCallback(
-    (tableId: string, rowId: string, columnId: string, value: string | number | boolean) => {
+    (tableId: string, rowId: number, columnId: string, value: string) => {
       setTables((prev) =>
         prev.map((t) => {
           if (t.id !== tableId) return t;
@@ -132,9 +182,12 @@ export function useTablesState(_projectId: number) {
     deleteTable,
     renameTable,
     addColumn,
+    addAlphabetColumns,
+    renameColumn,
     deleteColumn,
-    addRow,
+    addRows,
     deleteRow,
+    reindexRows,
     updateCell,
   };
 }

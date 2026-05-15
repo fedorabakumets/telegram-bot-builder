@@ -1,27 +1,22 @@
 /**
- * @fileoverview Типы для вкладки "Таблицы"
+ * @fileoverview Типы для вкладки "Таблицы" — spreadsheet-подобный интерфейс
  * @module editor/tables/types
  */
 
-/** Тип колонки таблицы */
-export type ColumnType = 'text' | 'number' | 'boolean';
-
-/** Определение колонки */
+/** Определение колонки таблицы */
 export interface TableColumn {
   /** Уникальный идентификатор колонки */
   id: string;
-  /** Имя колонки */
+  /** Имя колонки (отображается в шапке) */
   name: string;
-  /** Тип данных */
-  type: ColumnType;
 }
 
-/** Строка таблицы — объект с ключами = id колонок */
+/** Строка таблицы — все значения строковые */
 export interface TableRow {
-  /** Уникальный идентификатор строки */
-  id: string;
-  /** Значения ячеек: ключ = columnId, значение = данные */
-  cells: Record<string, string | number | boolean>;
+  /** Автоинкрементный числовой ID строки */
+  id: number;
+  /** Значения ячеек: ключ = columnId, значение = строка */
+  cells: Record<string, string>;
 }
 
 /** Определение таблицы */
@@ -30,10 +25,12 @@ export interface BotTable {
   id: string;
   /** Имя таблицы */
   name: string;
-  /** Колонки таблицы */
+  /** Колонки таблицы (без учёта ID — он автоматический) */
   columns: TableColumn[];
   /** Строки данных */
   rows: TableRow[];
+  /** Счётчик для автоинкремента ID строк */
+  nextRowId: number;
 }
 
 /** Пропсы компонента TablesPanel */

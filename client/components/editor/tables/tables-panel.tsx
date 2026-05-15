@@ -1,5 +1,5 @@
 /**
- * @fileoverview Главная панель вкладки "Таблицы"
+ * @fileoverview Главная панель вкладки "Таблицы" — spreadsheet-интерфейс
  * @module editor/tables/tables-panel
  */
 
@@ -7,6 +7,7 @@ import { Table2 } from 'lucide-react';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 import { TableList } from './components/table-list';
 import { TableEditor } from './components/table-editor';
+import { TableSwitcher } from './components/table-switcher';
 import { useTablesState } from './hooks/use-tables-state';
 import type { TablesPanelProps } from './types';
 
@@ -24,9 +25,12 @@ export function TablesPanel({ projectId, allProjects, onProjectChange }: TablesP
     createTable,
     deleteTable,
     addColumn,
-    addRow,
-    deleteRow,
+    addAlphabetColumns,
+    renameColumn,
     deleteColumn,
+    addRows,
+    deleteRow,
+    reindexRows,
     updateCell,
   } = useTablesState(projectId);
 
@@ -42,6 +46,12 @@ export function TablesPanel({ projectId, allProjects, onProjectChange }: TablesP
             <h2 className="text-base font-semibold leading-none">Таблицы</h2>
             <p className="text-xs text-muted-foreground mt-0.5">Данные проекта</p>
           </div>
+          {/* Переключатель таблиц в шапке */}
+          <TableSwitcher
+            tables={tables}
+            selectedTable={selectedTable}
+            onSelect={setSelectedTableId}
+          />
           {allProjects && allProjects.length > 1 && onProjectChange && (
             <ProjectSelector
               projects={allProjects}
@@ -65,10 +75,13 @@ export function TablesPanel({ projectId, allProjects, onProjectChange }: TablesP
         {selectedTable ? (
           <TableEditor
             table={selectedTable}
-            onAddColumn={(col) => addColumn(selectedTable.id, col)}
+            onAddColumn={(name) => addColumn(selectedTable.id, name)}
+            onAddAlphabetColumns={() => addAlphabetColumns(selectedTable.id)}
+            onRenameColumn={(colId, name) => renameColumn(selectedTable.id, colId, name)}
             onDeleteColumn={(colId) => deleteColumn(selectedTable.id, colId)}
-            onAddRow={() => addRow(selectedTable.id)}
+            onAddRows={(count) => addRows(selectedTable.id, count)}
             onDeleteRow={(rowId) => deleteRow(selectedTable.id, rowId)}
+            onReindex={() => reindexRows(selectedTable.id)}
             onUpdateCell={(rowId, colId, val) => updateCell(selectedTable.id, rowId, colId, val)}
           />
         ) : (
