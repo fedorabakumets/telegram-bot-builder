@@ -79,6 +79,28 @@ export function SpreadsheetCell({
     } else if (e.key === 'Escape') {
       setLocalValue(value);
       onBlurCell();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      commit();
+      onNavigate('up');
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      commit();
+      onNavigate('down');
+    } else if (e.key === 'ArrowLeft') {
+      const input = inputRef.current;
+      if (input && input.selectionStart === 0 && input.selectionEnd === 0) {
+        e.preventDefault();
+        commit();
+        onNavigate('left');
+      }
+    } else if (e.key === 'ArrowRight') {
+      const input = inputRef.current;
+      if (input && input.selectionStart === localValue.length) {
+        e.preventDefault();
+        commit();
+        onNavigate('right');
+      }
     }
   };
 
