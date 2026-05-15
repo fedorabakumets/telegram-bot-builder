@@ -125,72 +125,61 @@ Telegram ограничивает ~30 запросов/сек на один IP. 
 
 ## Этапы реализации
 
-### Этап 1 — Python Worker (основа)
+### ~~Этап 1 — Python Worker~~ ✅ РЕАЛИЗОВАНО
 
-**Новые файлы:**
-- `server/python/worker.py` — asyncio мастер-процесс
+**Файл:** `server/python/worker.py`
 
-**Задачи:**
-- [ ] Реализовать приём команд через stdin (JSON protocol)
-- [ ] Реализовать `start_bot` — загрузка bot.py, создание Dispatcher, добавление в event loop
-- [ ] Реализовать `stop_bot` — корректное удаление бота из event loop
-- [ ] Реализовать `shutdown` — остановка всех ботов и завершение процесса
-- [ ] Реализовать `status` — список активных ботов с метриками
-- [ ] Маршрутизация логов по `token_id` в stdout (JSON)
-- [ ] Изоляция переменных: отдельный namespace для каждого бота
-- [ ] try/except вокруг каждого бота (ошибка одного не роняет остальных)
-- [ ] Написать тесты для worker.py
-
----
-
-### Этап 2 — Node.js интеграция
-
-**Новые файлы:**
-- `server/bots/botWorkerManager.ts` — управление воркерами (spawn, stdin/stdout, lifecycle)
-
-**Изменяемые файлы:**
-
-| Файл | Что меняется |
-|---|---|
-| `server/bots/startBot.ts` | Вместо `spawn(python3, [mainFile])` → отправка `start_bot` воркеру через `botWorkerManager` |
-| `server/bots/stopBot.ts` | Вместо kill процесса → `stop_bot` воркеру. Если последний бот — убить воркер |
-| `server/bots/restartBotIfRunning.ts` | `stop_bot` → `start_bot` через воркер (без пересоздания процесса) |
-| `server/bots/restoreRunningBots.ts` | Создать воркер проекта → `start_bot` для каждого бота |
-| `server/bots/botRestartManager.ts` | Без изменений (логика backoff остаётся) |
-| `server/routes/routes.ts` | Добавить `projectWorkers` Map рядом с `botProcesses` |
-| `server/terminal/setupBotProcessListeners.ts` | Подписка на stdout воркера, парсинг JSON, маршрутизация по `token_id` |
-| `server/terminal/setupProcessOutputListener.ts` | Адаптировать под JSON-протокол |
-| `server/utils/graceful-shutdown.ts` | Отправить `shutdown` всем воркерам вместо kill каждого процесса |
-| `lib/bot-generator.ts` (+ шаблоны) | Режим "worker-compatible": экспорт `create_bot(token)` вместо `if __name__ == '__main__'` |
-
-**Задачи:**
-- [ ] Создать `botWorkerManager.ts` — spawn воркера, отправка команд, парсинг ответов
-- [ ] Реализовать lifecycle: создание воркера при первом боте, убийство при последнем
-- [ ] Переписать `startBot.ts` — отправка команды воркеру
-- [ ] Переписать `stopBot.ts` — отправка `stop_bot`
-- [ ] Обновить `restartBotIfRunning.ts`
-- [ ] Обновить `restoreRunningBots.ts`
-- [ ] Обновить `graceful-shutdown.ts`
-- [ ] Адаптировать парсинг логов под JSON-протокол
-- [ ] Обновить генератор кода (режим worker-compatible)
+- [x] Приём команд через stdin (JSON protocol)
+- [x] `start_bot` — загрузка bot.py через `compile()` + `exec()`
+- [x] `stop_bot` — остановка через `task.cancel()`
+- [x] `shutdown` — остановка всех ботов
+- [x] `status` — список активных ботов
+- [x] Маршрутизация логов по `token_id` (JSON)
+- [x] Изоляция переменных (отдельный namespace)
+- [x] try/except (ошибка одного не роняет остальных)
+- [x] Перехват root logger → JSON с token_id
+- [x] Перехват signal.signal → no-op
+- [x] Перехват print → emit_log
+- [x] sys.path вместо os.chdir
+- [x] UTF-8 stdout на Windows
+- [x] Threading для stdin (Windows-совместимо)
 
 ---
 
-### Этап 3 — БД + UI
+### ~~Этап 2 — Node.js интеграция~~ ✅ РЕАЛИЗОВАНО
 
-**Изменяемые файлы:**
+**Файл:** `server/bots/botWorkerManager.ts`
 
-| Файл | Что меняется |
+| Изменённый файл | Что сделано |
 |---|---|
-| `server/database/` | Миграция: таблица `worker_processes` (pid, project_id, status, bots_count, memory_mb) |
-| `server/storages/` | Методы `getWorkerForProject()`, `createWorker()`, `removeWorker()` |
-| Клиент (UI) | Статус-бар: "Worker: active, 3 бота, 150MB" (опционально) |
+| `server/bots/startBot.ts` | Блок `USE_WORKER_POOL` — запуск через воркер |
+| `server/bots/stopBot.ts` | Остановка через воркер |
+| `server/bots/restartBotIfRunning.ts` | Мгновенный перезапуск (500мс) |
+| `server/terminal/setupBotProcessListeners.ts` | Подписка на `bot-log` |
+| `server/utils/graceful-shutdown.ts` | `workerManager.shutdownAll()` |
+| `server/routes/.../botStatusByTokenHandler.ts` | `workerManager.isBotRunning()` |
+| `lib/templates/main/main.py.jinja2` | `except asyncio.CancelledError` |
 
-**Задачи:**
-- [ ] Написать миграцию `worker_processes`
-- [ ] Добавить методы в storage
-- [ ] Добавить статус-бар воркера в UI (опционально)
-- [ ] Показывать метрики RAM/CPU воркера
+- [x] Lifecycle: создание/убийство воркера
+- [x] Маршрутизация raw логов
+- [x] Fallback на spawn если `USE_WORKER_POOL` не задан
+
+---
+
+### ~~Этап 3 — БД + UI~~ ✅ РЕАЛИЗОВАНО
+
+| Файл | Что добавлено |
+|---|---|
+| `migrations/0033_create_worker_processes.sql` | SQL миграция |
+| `shared/schema/tables/worker-processes.ts` | Drizzle-схема |
+| `server/database/DatabaseStorage.ts` | Методы storage |
+| `server/routes/.../workerStatsHandler.ts` | `GET /api/workers/stats` |
+| `client/.../WorkerPoolStatus.tsx` | UI статус-бар |
+
+- [x] Таблица `worker_processes`
+- [x] API: workers, totalBots, totalMemoryMb, details
+- [x] UI: "1 воркер · 2 бота · 150 MB"
+- [x] Метрики RAM через tasklist/ps
 
 ---
 
