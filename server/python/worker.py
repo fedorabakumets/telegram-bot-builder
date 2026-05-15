@@ -145,6 +145,7 @@ class BotWorker:
     async def _run_bot(self, ctx: BotContext) -> None:
         """Загружает и запускает bot.py в изолированном контексте."""
         token_id = ctx.token_id
+        _original_signal = None
 
         try:
             emit_log(token_id, "─── Начало загрузки бота ───", "stdout")
@@ -184,8 +185,6 @@ class BotWorker:
             emit_log(token_id, f"Env: PROJECT_ID={PROJECT_ID}, TOKEN_ID={token_id}", "stdout")
 
             # Перехватываем print для маршрутизации логов
-            original_print = __builtins__["print"] if isinstance(__builtins__, dict) else getattr(__builtins__, "print")
-
             def patched_print(*args, **kwargs):
                 content = " ".join(str(a) for a in args)
                 emit_log(token_id, content, "stdout")
@@ -193,11 +192,16 @@ class BotWorker:
             module.__builtins__ = {**(__builtins__ if isinstance(__builtins__, dict) else vars(__builtins__))}
             module.__builtins__["print"] = patched_print
 
-            # Настраиваем логирование для этого бота
-            bot_logger = logging.getLogger(f"bot_{token_id}")
-            bot_logger.handlers.clear()
-            bot_logger.addHandler(WorkerLogHandler(token_id))
-            bot_logger.setLevel(logging.INFO)
+            # Перехватываем root logger — все logging.info/warning/error идут через emit_log
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(WorkerLogHandler(token_id))
+            root_logger.setLevel(logging.DEBUG)
+
+            # Перехватываем signal.signal — бот не должен менять обработчики сигналов воркера
+            import signal as _signal_module
+            _original_signal = _signal_module.signal
+            _signal_module.signal = lambda *args, **kwargs: None
 
             # Загружаем модуль (выполняет top-level код: создание bot, dp, хендлеров)
             emit_log(token_id, "Выполнение top-level кода бота...", "stdout")
@@ -226,6 +230,11 @@ class BotWorker:
             sys.stderr.write(f"[bot_{token_id}] ERROR: {e}\n{tb}\n")
             sys.stderr.flush()
             ctx.status = "error"
+        finally:
+            # Восстанавливаем signal.signal после завершения бота
+            if _original_signal is not None:
+                import signal as _signal_module
+                _signal_module.signal = _original_signal
         finally:
             # Убираем бота из активных если он ещё там
             if token_id in self.bots and self.bots[token_id] is ctx:
