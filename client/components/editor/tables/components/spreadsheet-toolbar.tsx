@@ -3,9 +3,11 @@
  * @module editor/tables/components/spreadsheet-toolbar
  */
 
-import { ALargeSmall, Hash, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { ALargeSmall, Hash, RefreshCw, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExportMenu } from './export-menu';
+import { ImportDialog } from './import-dialog';
 import type { BotTable } from '../types';
 
 /** Пропсы тулбара */
@@ -18,6 +20,12 @@ interface SpreadsheetToolbarProps {
   onAdd100Rows: () => void;
   /** Перезаписать ID строк */
   onReindex: () => void;
+  /** Импорт как новая таблица */
+  onImportNew: (name: string, columns: string[], rows: string[][]) => void;
+  /** Импорт строк в текущую таблицу */
+  onImportRows: (rows: string[][]) => void;
+  /** Есть ли выбранная таблица */
+  hasSelectedTable: boolean;
 }
 
 /**
@@ -25,7 +33,18 @@ interface SpreadsheetToolbarProps {
  * @param props - Пропсы компонента
  * @returns JSX элемент тулбара
  */
-export function SpreadsheetToolbar({ table, onAddAlphabet, onAdd100Rows, onReindex }: SpreadsheetToolbarProps) {
+export function SpreadsheetToolbar({
+  table,
+  onAddAlphabet,
+  onAdd100Rows,
+  onReindex,
+  onImportNew,
+  onImportRows,
+  hasSelectedTable,
+}: SpreadsheetToolbarProps) {
+  /** Состояние диалога импорта */
+  const [importOpen, setImportOpen] = useState(false);
+
   return (
     <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border/50 bg-muted/20">
       <Button
@@ -56,10 +75,28 @@ export function SpreadsheetToolbar({ table, onAddAlphabet, onAdd100Rows, onReind
         Перезаписать ID
       </Button>
 
-      {/* Разделитель и меню экспорта */}
-      <div className="ml-auto">
+      {/* Импорт и экспорт */}
+      <div className="ml-auto flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 text-xs gap-1.5"
+          onClick={() => setImportOpen(true)}
+        >
+          <Upload className="h-3.5 w-3.5" />
+          Импорт
+        </Button>
         <ExportMenu table={table} />
       </div>
+
+      {/* Диалог импорта */}
+      <ImportDialog
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImportNew={onImportNew}
+        onImportRows={onImportRows}
+        hasSelectedTable={hasSelectedTable}
+      />
     </div>
   );
 }

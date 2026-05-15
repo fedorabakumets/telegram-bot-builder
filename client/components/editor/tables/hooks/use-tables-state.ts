@@ -153,6 +153,54 @@ export function useTablesState(projectId: number) {
     [updateRowMut, serverRows],
   );
 
+  /** Импортировать новую таблицу с колонками и данными */
+  const importNewTable = useCallback(async (name: string, columns: string[], rows: string[][]) => {
+    const created = await createTableMut.mutateAsync(name);
+    const tableId = created.id;
+
+    /** Создаём колонки последовательно (нужен ID каждой) */
+    const createdCols = await Promise.all(
+      columns.map((colName, i) => api.createColumn(projectId, tableId, colName, i)),
+    );
+
+    /** Маппим строки: columns[i] → columnId */
+    const mappedRows = rows.map((row, rowIdx) => {
+      const data: Record<string, string> = {};
+      createdCols.forEach((col, ci) => {
+        if (row[ci] !== undefined && row[ci] !== '') {
+          data[String(col.id)] = row[ci];
+        }
+      });
+      return { rowIndex: rowIdx + 1, data };
+    });
+
+    await createRowsMut.mutateAsync({ tableId, rows: mappedRows });
+    setSelectedTableId(String(tableId));
+    queryClient.invalidateQueries({ queryKey: tableKeys.columns(projectId, tableId) });
+    queryClient.invalidateQueries({ queryKey: tableKeys.rows(projectId, tableId) });
+  }, [createTableMut, createRowsMut, projectId, queryClient]);
+
+  /** Импортировать строки в существующую таблицу */
+  const importRows = useCallback(async (tableId: string, rows: string[][]) => {
+    const tid = Number(tableId);
+    /** Берём текущие колонки по порядку position */
+    const sortedCols = [...serverColumns].sort((a, b) => a.position - b.position);
+    const maxIndex = serverRows.reduce((max, r) => Math.max(max, r.rowIndex), 0);
+
+    const mappedRows = rows.map((row, rowIdx) => {
+      const data: Record<string, string> = {};
+      sortedCols.forEach((col, ci) => {
+        if (row[ci] !== undefined && row[ci] !== '') {
+          data[String(col.id)] = row[ci];
+        }
+      });
+      return { rowIndex: maxIndex + rowIdx + 1, data };
+    });
+
+    await createRowsMut.mutateAsync({ tableId: tid, rows: mappedRows });
+    queryClient.invalidateQueries({ queryKey: tableKeys.rows(projectId, tid) });
+  }, [createRowsMut, serverColumns, serverRows, projectId, queryClient]);
+
   return {
     tables,
     selectedTable,
@@ -168,5 +216,7 @@ export function useTablesState(projectId: number) {
     deleteRow,
     reindexRows,
     updateCell,
+    importNewTable,
+    importRows,
   };
 }

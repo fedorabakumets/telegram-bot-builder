@@ -3,7 +3,7 @@
  * @module editor/tables/components/table-editor
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { SpreadsheetCell } from './spreadsheet-cell';
 import { ColumnHeader } from './column-header';
 import { SpreadsheetToolbar } from './spreadsheet-toolbar';
 import { AddRowsFooter } from './add-rows-footer';
+import { parseClipboardTsv } from '../utils/parse-clipboard';
 import type { BotTable } from '../types';
 
 /** Пропсы компонента TableEditor */
@@ -33,6 +34,10 @@ interface TableEditorProps {
   onReindex: () => void;
   /** Обновить ячейку */
   onUpdateCell: (rowId: number, columnId: string, value: string) => void;
+  /** Импорт как новая таблица */
+  onImportNew: (name: string, columns: string[], rows: string[][]) => void;
+  /** Импорт строк в текущую таблицу */
+  onImportRows: (rows: string[][]) => void;
 }
 
 /**
@@ -50,6 +55,8 @@ export function TableEditor({
   onDeleteRow,
   onReindex,
   onUpdateCell,
+  onImportNew,
+  onImportRows,
 }: TableEditorProps) {
   /** Режим добавления колонки */
   const [addingCol, setAddingCol] = useState(false);
@@ -65,14 +72,31 @@ export function TableEditor({
     setAddingCol(false);
   };
 
+  /** Обработчик вставки из буфера (Ctrl+V) */
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      const text = e.clipboardData.getData('text/plain');
+      if (!text || !text.includes('\t')) return;
+      e.preventDefault();
+      const { rows } = parseClipboardTsv(text);
+      if (rows.length > 0) {
+        onImportRows(rows);
+      }
+    },
+    [onImportRows],
+  );
+
   return (
-    <div className="flex flex-col h-full flex-1 overflow-hidden">
+    <div className="flex flex-col h-full flex-1 overflow-hidden" onPaste={handlePaste}>
       {/* Тулбар */}
       <SpreadsheetToolbar
         table={table}
         onAddAlphabet={onAddAlphabetColumns}
         onAdd100Rows={() => onAddRows(100)}
         onReindex={onReindex}
+        onImportNew={onImportNew}
+        onImportRows={onImportRows}
+        hasSelectedTable={true}
       />
 
       {/* Сетка */}

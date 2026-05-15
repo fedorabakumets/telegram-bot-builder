@@ -32,6 +32,8 @@ export function TablesPanel({ projectId, allProjects, onProjectChange }: TablesP
     deleteRow,
     reindexRows,
     updateCell,
+    importNewTable,
+    importRows,
   } = useTablesState(projectId);
 
   return (
@@ -83,6 +85,8 @@ export function TablesPanel({ projectId, allProjects, onProjectChange }: TablesP
             onDeleteRow={(rowId) => deleteRow(selectedTable.id, rowId)}
             onReindex={() => reindexRows(selectedTable.id)}
             onUpdateCell={(rowId, colId, val) => updateCell(selectedTable.id, rowId, colId, val)}
+            onImportNew={importNewTable}
+            onImportRows={(rows) => importRows(selectedTable.id, rows)}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center">
