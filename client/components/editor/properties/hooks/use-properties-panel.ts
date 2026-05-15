@@ -25,6 +25,8 @@ interface UsePropertiesPanelProps {
   allSheets: unknown[];
   /** ID текущего листа */
   currentSheetId?: string;
+  /** ID проекта для загрузки таблиц */
+  projectId?: number;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
 }
@@ -100,6 +102,7 @@ export function usePropertiesPanel({
   allNodes,
   allSheets,
   currentSheetId,
+  projectId,
   onNodeUpdate
 }: UsePropertiesPanelProps): UsePropertiesPanelReturn {
   const stateHooks = usePropertiesPanelState(selectedNode);
@@ -108,6 +111,7 @@ export function usePropertiesPanel({
     allNodes,
     allSheets,
     currentSheetId,
+    projectId,
     onNodeUpdate
   });
 

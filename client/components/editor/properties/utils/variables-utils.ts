@@ -19,6 +19,14 @@ export interface ProjectVariable {
   nodeIds?: string[];
 }
 
+/** Таблица проекта для селектора переменных */
+export interface BotTableForVariables {
+  /** Имя таблицы */
+  name: string;
+  /** Колонки таблицы */
+  columns: Array<{ id: number; name: string }>;
+}
+
 /** Результат извлечения переменных */
 export interface VariablesResult {
   textVariables: ProjectVariable[];
@@ -56,9 +64,10 @@ export function collectAvailableQuestions(allNodes: Node[]): ProjectVariable[] {
 /**
  * Извлекает и разделяет переменные на текстовые и медиа.
  * @param {Node[]} allNodes - Все узлы проекта
+ * @param {BotTableForVariables[]} botTables - Таблицы проекта (опционально)
  * @returns {VariablesResult} Объект с текстовыми и медиа переменными
  */
-export function extractVariables(allNodes: Node[]): VariablesResult {
+export function extractVariables(allNodes: Node[], botTables?: BotTableForVariables[]): VariablesResult {
   const variablesMap = new Map<string, ProjectVariable>();
   allNodes.forEach(node => {
     if (node.data.collectUserInput && node.data.inputVariable && !variablesMap.has(node.data.inputVariable)) {
@@ -425,6 +434,24 @@ export function extractVariables(allNodes: Node[]): VariablesResult {
       });
     }
   });
+  // Добавляем переменные из пользовательских таблиц проекта (bot_tables)
+  if (botTables && botTables.length > 0) {
+    botTables.forEach(table => {
+      table.columns.forEach(column => {
+        const varName = `table.${table.name}.${column.name}`;
+        if (!variablesMap.has(varName)) {
+          variablesMap.set(varName, {
+            name: varName,
+            nodeId: 'table',
+            nodeType: 'table' as any,
+            description: `Таблица: ${table.name}`,
+            sourceTable: 'bot_tables',
+          });
+        }
+      });
+    });
+  }
+
   // Разделяем на текстовые и медиа
   const all = Array.from(variablesMap.values());
   return { textVariables: all.filter(v => !v.mediaType), mediaVariables: all.filter(v => v.mediaType) };

@@ -8,8 +8,8 @@ import type { Node } from '@shared/schema';
 /** Тип медиа: "photo", "video", "audio", "document", "sticker" */
 type MediaType = 'photo' | 'video' | 'audio' | 'document' | 'sticker';
 
-/** Тип узла: "user-input", "start", "command", "system", "conditional", "callback_trigger" */
-type NodeType = 'user-input' | 'start' | 'command' | 'system' | 'conditional' | 'callback_trigger';
+/** Тип узла: "user-input", "start", "command", "system", "conditional", "callback_trigger", "table" */
+type NodeType = 'user-input' | 'start' | 'command' | 'system' | 'conditional' | 'callback_trigger' | 'table';
 
 /**
  * Интерфейс для описания переменной, доступной в редакторе

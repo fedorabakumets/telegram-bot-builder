@@ -56,6 +56,7 @@ export function getBadgeText(variable: Variable): string {
     set_variable: '✏️ Переменная',
     psql_query: '🗄️ SQL',
     convert_file: '📄 Файл',
+    table: '📊 Таблица',
   };
   return labels[variable.nodeType] || '📌';
 }
@@ -66,6 +67,14 @@ export function getBadgeText(variable: Variable): string {
  * @returns React компонент с информацией
  */
 export function getNodeInfo(variable: Variable) {
+  // Для таблиц проекта (bot_tables) показываем описание
+  if ((variable.nodeType as string) === 'table') {
+    return (
+      <div className="text-[10px] text-amber-500 dark:text-amber-400 mt-0.5 truncate">
+        📊 {variable.description}
+      </div>
+    );
+  }
   // Для callback_trigger показываем описание триггера
   if (variable.nodeType === 'callback_trigger') {
     return (

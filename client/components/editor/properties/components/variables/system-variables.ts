@@ -60,6 +60,7 @@ export function getVariableIcon(nodeType: string): string {
     'get_managed_bot_token': 'key',
     'http_request': 'globe',
     'input': 'keyboard',
+    'table': 'table',
   };
   return icons[nodeType] || 'cube';
 }
@@ -78,6 +79,7 @@ export function getVariableColor(nodeType: string): string {
     'get_managed_bot_token': 'from-indigo-400 to-violet-500',
     'http_request': 'from-sky-400 to-blue-500',
     'input': 'from-cyan-400 to-cyan-500',
+    'table': 'from-amber-400 to-orange-500',
   };
   return gradients[nodeType] || 'from-gray-400 to-gray-500';
 }
@@ -95,6 +97,7 @@ export function getVariableBadge(nodeType: string): string {
     'get_managed_bot_token': 'Токен бота',
     'http_request': 'HTTP',
     'input': 'Ввод',
+    'table': '📊 Таблица',
   };
   return badges[nodeType] || 'Другое';
 }

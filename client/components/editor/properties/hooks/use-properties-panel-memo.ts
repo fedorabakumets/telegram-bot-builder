@@ -7,6 +7,7 @@
 import { useMemo } from 'react';
 import { collectAllNodesFromSheets, collectAvailableQuestions, extractVariables } from '../utils';
 import { useMediaVariables } from './use-media-variables';
+import { useBotTablesForVariables } from './use-bot-tables-for-variables';
 import { detectRuleConflicts as detectConflicts } from '../utils/conditional-utils';
 import type { Node } from '@shared/schema';
 import type { RuleConflict } from '../utils/conditional-utils';
@@ -46,6 +47,8 @@ interface UsePropertiesPanelMemoProps {
   allSheets: any[];
   /** ID текущего листа */
   currentSheetId?: string;
+  /** ID проекта для загрузки таблиц */
+  projectId?: number;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
 }
@@ -61,6 +64,7 @@ export function usePropertiesPanelMemo({
   allNodes,
   allSheets,
   currentSheetId,
+  projectId,
   onNodeUpdate
 }: UsePropertiesPanelMemoProps): UsePropertiesPanelMemoReturn {
   const getAllNodesFromAllSheets = useMemo(
@@ -73,9 +77,12 @@ export function usePropertiesPanelMemo({
     [allNodes]
   );
 
+  /** Таблицы проекта для переменных формата {table.имя.колонка} */
+  const botTables = useBotTablesForVariables(projectId || 0);
+
   const { textVariables, mediaVariables } = useMemo(
-    () => extractVariables(allNodes),
-    [allNodes]
+    () => extractVariables(allNodes, botTables),
+    [allNodes, botTables]
   );
 
   const { attachedMediaVariables, handleMediaVariableSelect, handleMediaVariableRemove } = useMediaVariables(

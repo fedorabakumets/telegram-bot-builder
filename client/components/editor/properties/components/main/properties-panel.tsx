@@ -13,6 +13,7 @@ import { getNodeDefaults } from '../../utils/node-defaults';
 import { collectAllNodesFromSheets } from '../../utils/node-utils';
 import { extractVariables } from '../../utils/variables-utils';
 import { useMediaVariables } from '../../hooks/use-media-variables';
+import { useBotTablesForVariables } from '../../hooks/use-bot-tables-for-variables';
 import { useNodeCommandValidation } from '../../hooks/use-node-command-validation';
 import { formatNodeDisplay } from '../../utils/node-formatters';
 import { isManagementNode, isTriggerNode, isConditionNode } from '../../utils/node-constants';
@@ -167,6 +168,9 @@ export function PropertiesPanel({
   /** Env-переменные бота для селектора подключения к БД */
   const envVariablesForNode = useEnvVariablesForNode(projectId);
 
+  /** Таблицы проекта для переменных формата {table.имя.колонка} */
+  const botTables = useBotTablesForVariables(projectId);
+
   // РЎРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµРј displayNodeId СЃ selectedNode.id РїСЂРё РёР·РјРµРЅРµРЅРёРё СѓР·Р»Р°
   useEffect(() => {
     if (selectedNode?.id) {
@@ -250,7 +254,7 @@ export function PropertiesPanel({
   /**
    * РњРµРјРѕРёР·РёСЂРѕРІР°РЅРЅС‹Рµ С‚РµРєСЃС‚РѕРІС‹Рµ Рё РјРµРґРёР° РїРµСЂРµРјРµРЅРЅС‹Рµ
    */
-  const { textVariables, mediaVariables } = useMemo(() => extractVariables(allNodes), [allNodes]);
+  const { textVariables, mediaVariables } = useMemo(() => extractVariables(allNodes, botTables), [allNodes, botTables]);
 
   /**
    * РҐСѓРє РґР»СЏ СѓРїСЂР°РІР»РµРЅРёСЏ РјРµРґРёР°РїРµСЂРµРјРµРЅРЅС‹РјРё
