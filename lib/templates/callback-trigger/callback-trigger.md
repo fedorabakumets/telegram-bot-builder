@@ -109,3 +109,35 @@ async def callback_trigger_auto_btn_yes_handler(callback_query):
 **Два способа настройки:**
 - Линия от кнопки к ноде + `customCallbackData` → виртуальный триггер (простой UX)
 - Явная нода `callback_trigger` → расширенные настройки (adminOnly, requiresAuth, startswith)
+
+
+## Извлечение переменных из callback_data
+
+Если задан `callbackParseTemplate`, триггер автоматически парсит callback_data по шаблону
+и сохраняет именованные части в переменные пользователя.
+
+### Пример
+
+Шаблон: `rate_{from_id}_{to_id}`
+callback_data: `rate_2_55`
+Результат: `selected_from_id = "2"`, `selected_to_id = "55"`
+
+### Параметры
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| callbackParseTemplate | string | Шаблон с {плейсхолдерами} |
+| callbackSaveVariables | array | Маппинг: templateVar → saveAs |
+
+### Генерируемый Python-код
+
+```python
+import re as _re_cb_trigger_rate
+_cb_parse_pattern_trigger_rate = _re_cb_trigger_rate.compile(r"rate_(?P<from_id>[^_]+)_(?P<to_id>[^_]+)")
+_cb_parse_match = _cb_parse_pattern_trigger_rate.fullmatch(callback_query.data or "")
+if _cb_parse_match:
+    user_data[user_id]["selected_from_id"] = _cb_parse_match.group("from_id")
+    await set_user_var(user_id, "selected_from_id", _cb_parse_match.group("from_id"))
+    user_data[user_id]["selected_to_id"] = _cb_parse_match.group("to_id")
+    await set_user_var(user_id, "selected_to_id", _cb_parse_match.group("to_id"))
+```

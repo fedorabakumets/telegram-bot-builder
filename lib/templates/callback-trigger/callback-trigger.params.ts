@@ -21,6 +21,10 @@ export interface CallbackTriggerEntry {
   targetNodeType: string;
   /** Текст кнопки, найденный по callbackData среди кнопок проекта */
   buttonText?: string;
+  /** Шаблон разбора callback_data (например "rate_{from_id}_{to_id}") */
+  callbackParseTemplate?: string;
+  /** Маппинг переменных из шаблона */
+  callbackSaveVariables?: Array<{ templateVar: string; saveAs: string }>;
 }
 
 /** Параметры для генерации всех обработчиков триггеров inline-кнопок */

@@ -22,6 +22,7 @@ import {
   joinFilter,
   lowerFilter,
   escapeFilter,
+  callbackToRegexFilter,
 } from './filters';
 import { getTemplatesDir } from './utils/get-templates-dir';
 
@@ -107,6 +108,7 @@ function initEnvironment(): Environment {
   env.addFilter('join', joinFilter);
   env.addFilter('lower', lowerFilter);
   env.addFilter('escape', escapeFilter);
+  env.addFilter('callback_to_regex', callbackToRegexFilter);
   env.addFilter('tojson', (val: any, indent?: number) => {
     if (indent !== undefined) {
       return JSON.stringify(val, null, indent);

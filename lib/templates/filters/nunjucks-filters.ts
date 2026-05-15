@@ -178,3 +178,18 @@ export function escapeFilter(str: string, type = 'python_string'): string {
   if (type === 'python_string') return escapePythonStringFilter(str);
   return str;
 }
+
+/**
+ * Конвертирует шаблон callback_data в regex с именованными группами.
+ * Например: "rate_{from_id}_{to_id}" → "rate_(?P<from_id>[^_]+)_(?P<to_id>[^_]+)"
+ * @param template - Шаблон с {плейсхолдерами}
+ * @returns Строка regex с именованными группами
+ */
+export function callbackToRegexFilter(template: string): string {
+  if (typeof template !== 'string') return '';
+  // Экранируем спецсимволы regex кроме {}, затем заменяем {name} на (?P<name>[^_]+)
+  let escaped = template.replace(/[.*+?^$|()[\]\\]/g, '\\$&');
+  // Заменяем плейсхолдеры {name} на именованные группы
+  escaped = escaped.replace(/\{([^}]+)\}/g, '(?P<$1>[^_]+)');
+  return escaped;
+}

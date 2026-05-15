@@ -39,6 +39,9 @@ export function collectCallbackTriggerEntries(nodes: Node[]): CallbackTriggerEnt
       if (btn?.text) { buttonText = btn.text; break; }
     }
 
+    const callbackParseTemplate: string = (node.data as any).callbackParseTemplate ?? '';
+    const callbackSaveVariables: Array<{templateVar: string; saveAs: string}> = (node.data as any).callbackSaveVariables ?? [];
+
     entries.push({
       nodeId: node.id,
       callbackData,
@@ -48,6 +51,8 @@ export function collectCallbackTriggerEntries(nodes: Node[]): CallbackTriggerEnt
       targetNodeId,
       targetNodeType,
       buttonText,
+      ...(callbackParseTemplate ? { callbackParseTemplate } : {}),
+      ...(callbackSaveVariables.length > 0 ? { callbackSaveVariables } : {}),
     });
   }
 

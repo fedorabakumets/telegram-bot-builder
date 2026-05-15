@@ -77,6 +77,18 @@ async def callback_trigger_{{ sanitized_node_id }}_handler(callback_query: types
     # Fallback: используем статичный текст кнопки из проекта если не нашли в reply_markup
     user_data[user_id]["button_text"] = _cb_btn_text or "{{ entry.buttonText or entry.callbackData }}"
 
+    {%- if entry.callbackSaveVariables and entry.callbackSaveVariables|length > 0 %}
+    # Извлекаем переменные из callback_data по шаблону: {{ entry.callbackParseTemplate }}
+    import re as _re_cb_{{ sanitized_node_id }}
+    _cb_parse_pattern_{{ sanitized_node_id }} = _re_cb_{{ sanitized_node_id }}.compile(r"{{ entry.callbackParseTemplate | callback_to_regex }}")
+    _cb_parse_match = _cb_parse_pattern_{{ sanitized_node_id }}.fullmatch(callback_query.data or "")
+    if _cb_parse_match:
+        {%- for var in entry.callbackSaveVariables %}
+        user_data[user_id]["{{ var.saveAs }}"] = _cb_parse_match.group("{{ var.templateVar }}")
+        await set_user_var(user_id, "{{ var.saveAs }}", _cb_parse_match.group("{{ var.templateVar }}"))
+        {%- endfor %}
+    {%- endif %}
+
     # Сразу убираем анимацию загрузки — до вызова MockCallback который может занять время
     try:
         await callback_query.answer()

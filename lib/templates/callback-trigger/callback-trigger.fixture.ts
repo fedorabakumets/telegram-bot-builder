@@ -185,3 +185,18 @@ export const nodesWithSingleCustomCallback: Node[] = [
   }),
   makeNode('msg_confirmed', 'message', { messageText: 'Подтверждено!' }),
 ];
+
+/** Узлы с callbackParseTemplate — извлечение переменных из callback_data */
+export const nodesWithCallbackTriggerParseTemplate: Node[] = [
+  makeNode('trigger_rate', 'callback_trigger', {
+    callbackData: 'rate_',
+    matchType: 'startswith',
+    autoTransitionTo: 'loop_exchangers',
+    callbackParseTemplate: 'rate_{from_id}_{to_id}',
+    callbackSaveVariables: [
+      { templateVar: 'from_id', saveAs: 'selected_from_id' },
+      { templateVar: 'to_id', saveAs: 'selected_to_id' },
+    ],
+  }),
+  makeNode('loop_exchangers', 'loop', { sourceVariable: 'exchangers' }),
+];

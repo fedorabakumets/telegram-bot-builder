@@ -28,6 +28,7 @@ import {
   nodesWithAdminOnly,
   nodesWithRequiresAuth,
   nodesWithCustomCallbackButtons,
+  nodesWithCallbackTriggerParseTemplate,
   makeNode,
 } from './callback-trigger.fixture';
 import { callbackTriggerParamsSchema } from './callback-trigger.schema';
@@ -391,5 +392,53 @@ describe('Производительность', () => {
     const start = Date.now();
     generateCallbackTriggerHandlers(nodesWithCallbackTriggerExact);
     expect(Date.now() - start).toBeLessThan(100);
+  });
+});
+
+
+// ─── callbackParseTemplate (извлечение переменных) ────────────────────────────
+
+describe('callbackParseTemplate (извлечение переменных)', () => {
+  it('генерирует regex парсинг при наличии callbackParseTemplate', () => {
+    const entries = collectCallbackTriggerEntries(nodesWithCallbackTriggerParseTemplate);
+    const r = generateCallbackTriggers({ entries });
+    expect(r).toContain('_re_cb_');
+    expect(r).toContain('fullmatch');
+    expect(r).toContain('selected_from_id');
+    expect(r).toContain('selected_to_id');
+  });
+
+  it('НЕ генерирует regex при отсутствии callbackParseTemplate', () => {
+    const entries = collectCallbackTriggerEntries(nodesWithCallbackTriggerExact);
+    const r = generateCallbackTriggers({ entries });
+    expect(r).not.toContain('_re_cb_');
+    expect(r).not.toContain('fullmatch');
+  });
+
+  it('collectCallbackTriggerEntries передаёт callbackSaveVariables', () => {
+    const entries = collectCallbackTriggerEntries(nodesWithCallbackTriggerParseTemplate);
+    expect(entries[0].callbackSaveVariables).toHaveLength(2);
+    expect(entries[0].callbackSaveVariables![0].templateVar).toBe('from_id');
+    expect(entries[0].callbackSaveVariables![0].saveAs).toBe('selected_from_id');
+  });
+
+  it('генерирует import re с уникальным именем модуля', () => {
+    const entries = collectCallbackTriggerEntries(nodesWithCallbackTriggerParseTemplate);
+    const r = generateCallbackTriggers({ entries });
+    expect(r).toContain('import re as _re_cb_trigger_rate');
+  });
+
+  it('генерирует корректный regex паттерн из шаблона', () => {
+    const entries = collectCallbackTriggerEntries(nodesWithCallbackTriggerParseTemplate);
+    const r = generateCallbackTriggers({ entries });
+    expect(r).toContain('(?P<from_id>[^_]+)');
+    expect(r).toContain('(?P<to_id>[^_]+)');
+  });
+
+  it('генерирует set_user_var для каждой переменной', () => {
+    const entries = collectCallbackTriggerEntries(nodesWithCallbackTriggerParseTemplate);
+    const r = generateCallbackTriggers({ entries });
+    expect(r).toContain('await set_user_var(user_id, "selected_from_id"');
+    expect(r).toContain('await set_user_var(user_id, "selected_to_id"');
   });
 });
