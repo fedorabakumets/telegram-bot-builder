@@ -69,6 +69,7 @@ export function TableEditor({
     <div className="flex flex-col h-full flex-1 overflow-hidden">
       {/* Тулбар */}
       <SpreadsheetToolbar
+        table={table}
         onAddAlphabet={onAddAlphabetColumns}
         onAdd100Rows={() => onAddRows(100)}
         onReindex={onReindex}

@@ -5,9 +5,13 @@
 
 import { ALargeSmall, Hash, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ExportMenu } from './export-menu';
+import type { BotTable } from '../types';
 
 /** Пропсы тулбара */
 interface SpreadsheetToolbarProps {
+  /** Текущая таблица для экспорта */
+  table: BotTable;
   /** Добавить 26 буквенных колонок */
   onAddAlphabet: () => void;
   /** Добавить 100 строк */
@@ -21,7 +25,7 @@ interface SpreadsheetToolbarProps {
  * @param props - Пропсы компонента
  * @returns JSX элемент тулбара
  */
-export function SpreadsheetToolbar({ onAddAlphabet, onAdd100Rows, onReindex }: SpreadsheetToolbarProps) {
+export function SpreadsheetToolbar({ table, onAddAlphabet, onAdd100Rows, onReindex }: SpreadsheetToolbarProps) {
   return (
     <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border/50 bg-muted/20">
       <Button
@@ -51,6 +55,11 @@ export function SpreadsheetToolbar({ onAddAlphabet, onAdd100Rows, onReindex }: S
         <RefreshCw className="h-3.5 w-3.5" />
         Перезаписать ID
       </Button>
+
+      {/* Разделитель и меню экспорта */}
+      <div className="ml-auto">
+        <ExportMenu table={table} />
+      </div>
     </div>
   );
 }
