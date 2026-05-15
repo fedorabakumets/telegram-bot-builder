@@ -31,6 +31,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'set_variable', // собственный обработчик генерируется шаблоном set-variable.py.jinja2
   'psql_query', // собственный обработчик генерируется шаблоном psql-query.py.jinja2
   'convert_file', // собственный обработчик генерируется шаблоном convert-file.py.jinja2
+  'loop', // собственный обработчик генерируется шаблоном loop.py.jinja2
 ]);
 
 /**

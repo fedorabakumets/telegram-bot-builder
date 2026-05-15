@@ -1,0 +1,105 @@
+{#
+  @fileoverview Шаблон узла loop — цикл по массиву.
+  Генерирует callback-обработчик, который итерирует по массиву из переменной
+  и вызывает тело цикла для каждого элемента.
+#}
+
+# Обработчик цикла: {{ nodeId }}
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Цикл по массиву {{ sourceVariable }}{% if parallel %} (параллельный){% endif %}."""
+    user_id = callback_query.from_user.id
+    await init_user_variables(user_id, callback_query.from_user)
+
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    _all_vars = await init_all_user_vars(user_id)
+    if state is not None:
+        try:
+            _fsm_data = await state.get_data()
+            if _fsm_data:
+                _all_vars.update(_fsm_data)
+        except Exception:
+            pass
+
+    # Получаем массив из переменной
+    _items = _all_vars.get("{{ sourceVariable }}", [])
+    if isinstance(_items, str):
+        try:
+            import json as _json
+            _items = _json.loads(_items)
+        except Exception:
+            _items = []
+
+    if not isinstance(_items, list):
+        _items = []
+
+    # Пустой массив — сразу переход к afterLoopTo
+    if len(_items) == 0:
+{% if afterLoopTargetExists %}
+        await handle_callback_{{ afterLoopToSafe }}(callback_query, state=state)
+{% endif %}
+        return
+
+    _max_iterations = {{ maxIterations }}
+    _delay_seconds = {{ delaySeconds }}
+    _HARD_LIMIT = 10000
+
+{% if parallel %}
+    # Параллельное выполнение
+    async def _loop_iteration(_i, _item):
+        await set_user_var(user_id, "{{ itemVariable }}", _item)
+        await set_user_var(user_id, "{{ indexVariable }}", str(_i))
+        if isinstance(_item, dict):
+            for _k, _v in _item.items():
+                await set_user_var(user_id, f"{{ itemVariable }}.{_k}", str(_v) if _v is not None else "")
+{% if autoTransitionTargetExists %}
+        await handle_callback_{{ autoTransitionToSafe }}(callback_query, state=state)
+{% endif %}
+
+    _tasks = []
+    for _i, _item in enumerate(_items):
+        if _i >= _HARD_LIMIT:
+            logging.warning(f"loop [{{ nodeId }}]: достигнут лимит {_HARD_LIMIT} итераций")
+            break
+        if _max_iterations > 0 and _i >= _max_iterations:
+            break
+        _tasks.append(_loop_iteration(_i, _item))
+
+    await asyncio.gather(*_tasks)
+{% else %}
+    # Последовательное выполнение
+    for _i, _item in enumerate(_items):
+        if _i >= _HARD_LIMIT:
+            logging.warning(f"loop [{{ nodeId }}]: достигнут лимит {_HARD_LIMIT} итераций")
+            break
+        if _max_iterations > 0 and _i >= _max_iterations:
+            break
+
+        # Выставляем текущий элемент как переменную
+        await set_user_var(user_id, "{{ itemVariable }}", _item)
+        await set_user_var(user_id, "{{ indexVariable }}", str(_i))
+
+        # Разворачиваем поля словаря как плоские переменные
+        if isinstance(_item, dict):
+            for _k, _v in _item.items():
+                await set_user_var(user_id, f"{{ itemVariable }}.{_k}", str(_v) if _v is not None else "")
+
+{% if autoTransitionTargetExists %}
+        # Вызываем тело цикла
+        await handle_callback_{{ autoTransitionToSafe }}(callback_query, state=state)
+{% endif %}
+
+        # Задержка между итерациями (anti-flood)
+        if _delay_seconds > 0 and _i < len(_items) - 1:
+            await asyncio.sleep(_delay_seconds)
+{% endif %}
+
+{% if afterLoopTargetExists %}
+    # После цикла — переход к следующей ноде
+    await handle_callback_{{ afterLoopToSafe }}(callback_query, state=state)
+{% endif %}
