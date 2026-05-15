@@ -140,26 +140,27 @@ async def init_all_user_vars(user_id: int) -> dict:
         logging.warning(f"⚠️ Не удалось загрузить переменные из БД: {e}")
 {%- endif %}
     # Загружаем данные из пользовательских таблиц проекта (Bot Tables)
-    # Формат переменных: table.имя_таблицы.имя_колонки → значение из первой строки
+    # Для таблиц с одной строкой: плоские переменные table.имя.колонка (обратная совместимость) + массив
+    # Для таблиц с несколькими строками: только массив table.имя = [{col: val, ...}, ...]
     global _bot_tables_cache
     if _bot_tables_cache is None and db_pool:
         try:
             async with db_pool.acquire() as conn:
                 _tbl_rows = await conn.fetch("""
-                    SELECT bt.name AS table_name, btc.name AS col_name, btc.id AS col_id, btr.data
+                    SELECT bt.name AS table_name, btc.name AS col_name, btc.id AS col_id, btr.data, btr.row_index
                     FROM bot_tables bt
                     JOIN bot_table_columns btc ON btc.table_id = bt.id
                     JOIN bot_table_rows btr ON btr.table_id = bt.id
-                    WHERE bt.project_id = $1 AND btr.row_index = (
-                        SELECT MIN(row_index) FROM bot_table_rows WHERE table_id = bt.id
-                    )
-                    ORDER BY bt.id, btc.position
+                    WHERE bt.project_id = $1
+                    ORDER BY bt.id, btr.row_index, btc.position
                 """, PROJECT_ID)
-                _cache = {}
+                # Группируем данные: {table_name: {row_index: {col_name: value}}}
+                _tables_data = {}
                 for _r in _tbl_rows:
                     _tname = _r["table_name"]
                     _cname = _r["col_name"]
                     _cid = str(_r["col_id"])
+                    _row_idx = _r["row_index"]
                     _raw_data = _r["data"]
                     if isinstance(_raw_data, str):
                         import json as _json_tbl
@@ -172,7 +173,23 @@ async def init_all_user_vars(user_id: int) -> dict:
                     else:
                         _data = {}
                     _val = _data.get(_cid, "")
-                    _cache[f"table.{_tname}.{_cname}"] = str(_val) if _val else ""
+                    if _tname not in _tables_data:
+                        _tables_data[_tname] = {}
+                    if _row_idx not in _tables_data[_tname]:
+                        _tables_data[_tname][_row_idx] = {}
+                    _tables_data[_tname][_row_idx][_cname] = str(_val) if _val else ""
+                # Формируем кеш: массивы и плоские переменные
+                _cache = {}
+                for _tname, _rows_dict in _tables_data.items():
+                    # Собираем массив объектов (каждый объект = одна строка таблицы)
+                    _sorted_indices = sorted(_rows_dict.keys())
+                    _arr = [_rows_dict[_idx] for _idx in _sorted_indices]
+                    # Массив сохраняем всегда (как list Python для _flatten_dict)
+                    _cache[f"table.{_tname}"] = _arr
+                    # Для таблиц с одной строкой — также плоские переменные (обратная совместимость)
+                    if len(_arr) == 1:
+                        for _cname, _cval in _arr[0].items():
+                            _cache[f"table.{_tname}.{_cname}"] = _cval
                 _bot_tables_cache = _cache
         except Exception as e:
             logging.warning(f"⚠️ Не удалось загрузить Bot Tables: {e}")
