@@ -22,12 +22,13 @@ export interface EnvVarItem {
  */
 export function useEnvVariablesForNode(projectId: number): EnvVarItem[] {
   const { data } = useQuery({
-    queryKey: [`/api/projects/${projectId}/tokens/first/env-variables`],
+    queryKey: [`/api/projects/${projectId}/env-for-node`],
     queryFn: async () => {
       if (!projectId) return { items: [] };
-      const tokenData = await apiRequest('GET', `/api/projects/${projectId}/tokens/first`);
-      if (!tokenData?.id) return { items: [] };
-      return apiRequest('GET', `/api/projects/${projectId}/tokens/${tokenData.id}/env-variables`);
+      const tokens = await apiRequest('GET', `/api/projects/${projectId}/tokens`);
+      const firstToken = Array.isArray(tokens) ? tokens[0] : null;
+      if (!firstToken?.id) return { items: [] };
+      return apiRequest('GET', `/api/projects/${projectId}/tokens/${firstToken.id}/env-variables`);
     },
     enabled: !!projectId,
     staleTime: 60000,
