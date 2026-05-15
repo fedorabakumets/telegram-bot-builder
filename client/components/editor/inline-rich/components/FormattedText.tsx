@@ -64,7 +64,7 @@ export function FormattedText({ value, className = '', lineClamp, enableMarkdown
 
   return (
     <div
-      className={`text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-medium break-words ${lineClampClass} ${className}`}
+      className={`text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-medium break-all overflow-hidden ${lineClampClass} ${className}`}
     >
       {parsed}
     </div>
