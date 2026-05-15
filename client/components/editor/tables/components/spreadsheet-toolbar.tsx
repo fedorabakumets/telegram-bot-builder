@@ -3,11 +3,12 @@
  * @module editor/tables/components/spreadsheet-toolbar
  */
 
-import { useState } from 'react';
-import { ALargeSmall, Hash, RefreshCw, Upload } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { ALargeSmall, Hash, RefreshCw, Upload, ClipboardPaste } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ExportMenu } from './export-menu';
 import { ImportDialog } from './import-dialog';
+import { parseClipboardTsv } from '../utils/parse-clipboard';
 import type { BotTable } from '../types';
 
 /** Пропсы тулбара */
@@ -45,6 +46,23 @@ export function SpreadsheetToolbar({
   /** Состояние диалога импорта */
   const [importOpen, setImportOpen] = useState(false);
 
+  /** Вставка из буфера обмена через кнопку */
+  const handlePasteFromClipboard = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) return;
+      const { columns, rows } = parseClipboardTsv(text);
+      if (rows.length === 0) return;
+      if (columns && columns.length > 0) {
+        onImportNew('Из буфера', columns, rows);
+      } else {
+        onImportRows(rows);
+      }
+    } catch {
+      /** Браузер заблокировал доступ к буферу — игнорируем */
+    }
+  }, [onImportNew, onImportRows]);
+
   return (
     <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border/50 bg-muted/20">
       <Button
@@ -75,8 +93,18 @@ export function SpreadsheetToolbar({
         Перезаписать ID
       </Button>
 
-      {/* Импорт и экспорт */}
+      {/* Импорт, вставка и экспорт */}
       <div className="ml-auto flex items-center gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 text-xs gap-1.5"
+          onClick={handlePasteFromClipboard}
+          title="Вставить данные из буфера обмена"
+        >
+          <ClipboardPaste className="h-3.5 w-3.5" />
+          Вставить
+        </Button>
         <Button
           size="sm"
           variant="ghost"
