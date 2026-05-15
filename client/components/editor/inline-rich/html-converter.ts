@@ -35,7 +35,8 @@ export function valueToHtml(text: string, enableMarkdown: boolean): string {
   if (enableMarkdown) {
     html = html
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+      .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<strong>$1</strong>')
+      .replace(/(?<!_)_([^_]+)_(?!_)/g, '<em>$1</em>')
       .replace(/__(.*?)__/g, '<u>$1</u>')
       .replace(/~~(.*?)~~/g, '<s>$1</s>')
       /** Синтаксис спойлера Telegram: ||текст|| → <tg-spoiler> */
@@ -68,8 +69,8 @@ export function htmlToValue(html: string, enableMarkdown: boolean): string {
 
   if (enableMarkdown) {
     text = text
-      .replace(/<strong[^>]*>(.*?)<\/strong>/g, '**$1**')
-      .replace(/<em[^>]*>(.*?)<\/em>/g, '*$1*')
+      .replace(/<strong[^>]*>(.*?)<\/strong>/g, '*$1*')
+      .replace(/<em[^>]*>(.*?)<\/em>/g, '_$1_')
       .replace(/<u[^>]*>(.*?)<\/u>/g, '__$1__')
       .replace(/<s[^>]*>(.*?)<\/s>/g, '~~$1~~')
       /** Спойлер в Markdown-режиме: <tg-spoiler> → ||текст|| */

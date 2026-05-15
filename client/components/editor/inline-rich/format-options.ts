@@ -45,7 +45,7 @@ export const formatOptions: FormatOption[] = [
     icon: Bold,
     name: 'Жирный',
     shortcut: 'Ctrl+B',
-    markdown: '**текст**',
+    markdown: '*текст*',
     html: '<strong>текст</strong>'
   },
   {
@@ -53,7 +53,7 @@ export const formatOptions: FormatOption[] = [
     icon: Italic,
     name: 'Курсив',
     shortcut: 'Ctrl+I',
-    markdown: '*текст*',
+    markdown: '_текст_',
     html: '<em>текст</em>'
   },
   {

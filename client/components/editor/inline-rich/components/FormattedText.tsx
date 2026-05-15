@@ -8,6 +8,7 @@
 
 import { useMemo } from 'react';
 import { parseHTML } from '../utils/formatting-parser';
+import { valueToHtml } from '../html-converter';
 
 /**
  * Свойства компонента FormattedText
@@ -19,6 +20,8 @@ export interface FormattedTextProps {
   className?: string;
   /** Ограничение количества строк (line-clamp) */
   lineClamp?: number;
+  /** Включён ли Markdown-режим (для конвертации перед рендерингом) */
+  enableMarkdown?: boolean;
 }
 
 /**
@@ -43,15 +46,19 @@ function normalizeNewlines(value: string): string {
  * @param props - Свойства компонента
  * @returns JSX-элемент с форматированным текстом или null
  */
-export function FormattedText({ value, className = '', lineClamp }: FormattedTextProps) {
+export function FormattedText({ value, className = '', lineClamp, enableMarkdown }: FormattedTextProps) {
   if (!value) return null;
 
   /**
    * Мемоизируем результат парсинга для предотвращения лишних вычислений.
+   * Если включён Markdown — сначала конвертируем в HTML, затем парсим.
    * Перед парсингом конвертируем \n → <br>, чтобы DOMParser не потерял переносы.
    */
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  const parsed = useMemo(() => parseHTML(normalizeNewlines(value)), [value]);
+  const parsed = useMemo(() => {
+    const html = enableMarkdown ? valueToHtml(value, true) : normalizeNewlines(value);
+    return parseHTML(html);
+  }, [value, enableMarkdown]);
 
   const lineClampClass = lineClamp ? `line-clamp-${lineClamp}` : '';
 
