@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VariableNameInput } from '../variables/variable-name-input';
+import { PsqlConnectionSection } from './psql-connection-section';
 import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы компонента PsqlQueryConfiguration */
@@ -23,6 +24,8 @@ interface PsqlQueryConfigurationProps {
   formatNodeDisplay: (node: Node, sheetName: string) => string;
   /** Доступные текстовые переменные проекта */
   textVariables: Variable[];
+  /** Переменные окружения бота */
+  envVariables?: Array<{ key: string; value: string }>;
 }
 
 /**
@@ -36,6 +39,7 @@ export function PsqlQueryConfiguration({
   getAllNodesFromAllSheets,
   formatNodeDisplay,
   textVariables,
+  envVariables,
 }: PsqlQueryConfigurationProps) {
   const data = selectedNode.data as any;
   const query: string = data?.query || '';
@@ -43,6 +47,9 @@ export function PsqlQueryConfiguration({
   const resultFormat: string = data?.resultFormat || 'first_row';
   const textTemplate: string = data?.textTemplate || '';
   const autoTransitionTo: string = data?.autoTransitionTo || '';
+  const connectionSource: string = data?.connectionSource || 'builtin';
+  const connectionEnvVar: string = data?.connectionEnvVar || '';
+  const connectionString: string = data?.connectionString || '';
 
   /** Доступные узлы для перехода (исключаем текущий) */
   const availableTargets = getAllNodesFromAllSheets.filter(
@@ -61,6 +68,15 @@ export function PsqlQueryConfiguration({
       <p className="text-xs text-muted-foreground -mt-2">
         Поддерживаются переменные в формате {'{user_id}'}, {'{referrer_id}'}
       </p>
+
+      {/* Секция подключения к БД */}
+      <PsqlConnectionSection
+        connectionSource={connectionSource as any}
+        connectionEnvVar={connectionEnvVar}
+        connectionString={connectionString}
+        envVariables={envVariables || []}
+        onUpdate={(updates) => onNodeUpdate(selectedNode.id, updates)}
+      />
 
       {/* SQL-запрос */}
       <div className="space-y-1.5">

@@ -402,6 +402,12 @@ export function getNodeDefaults(type: Node['type']): any {
       autoTransitionTo: '',
       /** Включить автопереход */
       enableAutoTransition: false,
+      /** Источник подключения к БД */
+      connectionSource: 'builtin',
+      /** Переменная окружения бота для подключения */
+      connectionEnvVar: '',
+      /** Connection string для ручного ввода */
+      connectionString: '',
     },
   };
   return defaults[type] || {};

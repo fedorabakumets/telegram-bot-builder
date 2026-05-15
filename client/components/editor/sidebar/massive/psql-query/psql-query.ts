@@ -20,5 +20,8 @@ export const psqlQueryNode: ComponentDefinition = {
     textTemplate: '',
     enableAutoTransition: false,
     autoTransitionTo: '',
+    connectionSource: 'builtin',
+    connectionEnvVar: '',
+    connectionString: '',
   },
 };
