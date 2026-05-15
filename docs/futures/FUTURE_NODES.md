@@ -64,8 +64,10 @@ webhook_trigger (POST /payment)
 
 ---
 
-### `loop`
+### ~~`loop`~~ ✅ РЕАЛИЗОВАНО
 **Цикл по массиву — выполнить цепочку для каждого элемента.**
+
+> Нода реализована и доступна в конструкторе.
 
 Поля:
 - `sourceVariable` — переменная с массивом
@@ -73,15 +75,6 @@ webhook_trigger (POST /payment)
 - `indexVariable` — имя переменной для индекса (опционально)
 - `autoTransitionTo` — ID ноды-тела цикла
 - `afterLoopTo` — ID ноды после завершения цикла
-
-Пример использования:
-```
-loop (по {users_list}, item=current_user)
-  → message (отправить {current_user.name})
-```
-
-Реализация: требует новой концепции в генераторе (вложенные функции).
-Сложность: высокая.
 
 ---
 
@@ -223,7 +216,7 @@ http_request (GET cryptobar.cc/...xml, responseFormat=text)
 5. webhook_trigger           — разблокирует интеграции с внешними системами
 6. api_response              — пара к webhook_trigger
 7. http_request_multi        — агрегация источников за один шаг
-8. loop                      — сложно, но критично для масштаба
+8. ~~loop~~                  — ✅ РЕАЛИЗОВАНО
 9. try_catch                 — улучшает надёжность
 10. random                   — nice to have
 11. template                 — архитектурное изменение
@@ -233,9 +226,10 @@ http_request (GET cryptobar.cc/...xml, responseFormat=text)
 
 ---
 
-## 🗄️ Встроенное хранилище данных (Bot Tables)
+## ~~🗄️ Встроенное хранилище данных (Bot Tables)~~ ✅ РЕАЛИЗОВАНО
 
 > Аналог "Таблицы Salebot" — встроенная БД прямо в платформе, без внешних сервисов.
+> **Статус: реализовано и доступно в конструкторе.**
 
 ### Концепция
 
