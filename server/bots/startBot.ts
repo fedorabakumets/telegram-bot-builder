@@ -308,7 +308,15 @@ export async function startBot(projectId: number, token: string, tokenId: number
 
     // ─── Режим воркера: запуск бота через worker pool вместо отдельного процесса ───
     if (process.env.USE_WORKER_POOL === 'true') {
-      await workerManager.startBot(projectId, token, tokenId, mainFile);
+      console.log(`🏭 [WorkerPool] Запуск бота ${projectId}/${tokenId} через воркер...`);
+      console.log(`🏭 [WorkerPool] mainFile: ${mainFile}`);
+      try {
+        await workerManager.startBot(projectId, token, tokenId, mainFile);
+        console.log(`🏭 [WorkerPool] Бот ${projectId}/${tokenId} отправлен в воркер`);
+      } catch (workerError) {
+        console.error(`🏭 [WorkerPool] Ошибка запуска бота через воркер:`, workerError);
+        return { success: false, error: workerError instanceof Error ? workerError.message : 'Ошибка воркера' };
+      }
 
       // Сохраняем в БД как обычно
       const existingBotInstance = await storage.getBotInstanceByToken(tokenId);

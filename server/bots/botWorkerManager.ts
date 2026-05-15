@@ -101,6 +101,10 @@ class BotWorkerManager extends EventEmitter {
    */
   private createWorker(projectId: number): Promise<ProjectWorker> {
     return new Promise((resolve, reject) => {
+      console.log(`🏭 [WorkerPool] Создаём воркер для проекта ${projectId}`);
+      console.log(`🏭 [WorkerPool] Python: ${this.pythonPath}`);
+      console.log(`🏭 [WorkerPool] Script: ${this.workerScript}`);
+
       const workerProcess = spawn(this.pythonPath, ["-u", this.workerScript], {
         stdio: ["pipe", "pipe", "pipe"],
         env: {
@@ -108,6 +112,8 @@ class BotWorkerManager extends EventEmitter {
           PROJECT_ID: projectId.toString(),
         },
       });
+
+      console.log(`🏭 [WorkerPool] Процесс воркера создан, PID: ${workerProcess.pid}`);
 
       const worker: ProjectWorker = {
         projectId,
@@ -123,6 +129,7 @@ class BotWorkerManager extends EventEmitter {
       const timeout = setTimeout(() => {
         if (worker.status === "starting") {
           worker.status = "error";
+          console.error(`🏭 [WorkerPool] Таймаут: воркер проекта ${projectId} не запустился за 10 секунд`);
           reject(new Error(`Воркер проекта ${projectId} не запустился за 10 секунд`));
         }
       }, 10000);
@@ -130,7 +137,9 @@ class BotWorkerManager extends EventEmitter {
       // Парсим stdout (JSON протокол)
       let buffer = "";
       workerProcess.stdout?.on("data", (chunk: Buffer) => {
-        buffer += chunk.toString("utf-8");
+        const raw = chunk.toString("utf-8");
+        console.log(`🏭 [WorkerPool:${projectId}] stdout: ${raw.trim().substring(0, 200)}`);
+        buffer += raw;
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";
 
@@ -158,12 +167,14 @@ class BotWorkerManager extends EventEmitter {
       workerProcess.stderr?.on("data", (chunk: Buffer) => {
         const content = chunk.toString("utf-8").trim();
         if (content) {
+          console.error(`🏭 [WorkerPool:${projectId}] stderr: ${content.substring(0, 300)}`);
           this.emit("worker-error", projectId, content);
         }
       });
 
       // Процесс завершился
       workerProcess.on("exit", (code, signal) => {
+        console.log(`🏭 [WorkerPool:${projectId}] Воркер завершился: code=${code}, signal=${signal}`);
         clearTimeout(timeout);
         const wasReady = worker.status === "ready";
         worker.status = "stopped";
