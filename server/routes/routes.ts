@@ -4825,9 +4825,12 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
    * Принимает массив изменений и маппит каждое на нужное хранилище:
    * - BOT_TOKEN → bot_tokens.token
    * - ADMIN_IDS → bot_projects.adminIds
+   * - USER_DATABASE → bot_projects.userDatabaseEnabled
    * - LOG_LEVEL → bot_tokens.logLevel
    * - PROTECT_CONTENT → bot_tokens.protectContent
    * - SAVE_INCOMING_MEDIA → bot_tokens.saveIncomingMedia
+   * - AUTO_RESTART → bot_tokens.autoRestart
+   * - MAX_RESTART_ATTEMPTS → bot_tokens.maxRestartAttempts
    * - Остальные → bot_env_variables (CRUD)
    */
   app.put("/api/projects/:projectId/tokens/:tokenId/env-batch", async (req, res) => {
@@ -4848,6 +4851,8 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
         LOG_LEVEL: 'logLevel',
         PROTECT_CONTENT: 'protectContent',
         SAVE_INCOMING_MEDIA: 'saveIncomingMedia',
+        AUTO_RESTART: 'autoRestart',
+        MAX_RESTART_ATTEMPTS: 'maxRestartAttempts',
       };
 
       /** Ключи, которые хранятся в bot_env_variables */
@@ -4886,12 +4891,22 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
             continue;
           }
 
-          // Поля bot_tokens (BOT_TOKEN, LOG_LEVEL, PROTECT_CONTENT, SAVE_INCOMING_MEDIA)
+          // USER_DATABASE → обновляем проект
+          if (key === 'USER_DATABASE') {
+            await storage.updateBotProject(projectId, { userDatabaseEnabled: value === '1' ? 1 : 0 });
+            results.push(`updated:USER_DATABASE`);
+            continue;
+          }
+
+          // Поля bot_tokens (BOT_TOKEN, LOG_LEVEL, PROTECT_CONTENT, SAVE_INCOMING_MEDIA, AUTO_RESTART, MAX_RESTART_ATTEMPTS)
           if (tokenFieldMap[key]) {
             const field = tokenFieldMap[key];
             let dbValue: any = value;
-            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA') {
-              dbValue = value === 'true' ? 1 : 0;
+            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART') {
+              dbValue = value === 'true' || value === '1' ? 1 : 0;
+            }
+            if (key === 'MAX_RESTART_ATTEMPTS') {
+              dbValue = parseInt(value!) || 3;
             }
             await storage.updateBotToken(tokenId, { [field]: dbValue });
             results.push(`updated:${key}`);

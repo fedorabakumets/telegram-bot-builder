@@ -24,6 +24,8 @@ interface BotDatabaseToggleProps {
   };
   /** Дополнительный CSS-класс для управления col-span */
   className?: string;
+  /** Колбэк для pending (если передан — не сохраняет мгновенно) */
+  onPendingChange?: (key: string, value: string) => void;
 }
 
 /**
@@ -34,6 +36,7 @@ export function BotDatabaseToggle({
   userDatabaseEnabled,
   toggleDatabaseMutation,
   className = '',
+  onPendingChange,
 }: Omit<BotDatabaseToggleProps, 'projectId'> & { projectId?: number }) {
   const isEnabled = userDatabaseEnabled === 1;
 
@@ -52,7 +55,13 @@ export function BotDatabaseToggle({
         id={`db-toggle-bot-${tokenId}`}
         data-testid="switch-database-toggle-bot-card"
         checked={isEnabled}
-        onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
+        onCheckedChange={(checked) => {
+          if (onPendingChange) {
+            onPendingChange('USER_DATABASE', checked ? '1' : '0');
+          } else {
+            toggleDatabaseMutation.mutate(checked);
+          }
+        }}
         disabled={toggleDatabaseMutation.isPending}
       />
     </div>

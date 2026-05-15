@@ -29,6 +29,8 @@ interface BotAutoRestartToggleProps {
   maxRestartAttempts: number | null;
   /** Дополнительный CSS-класс */
   className?: string;
+  /** Колбэк для pending (если передан — не сохраняет мгновенно) */
+  onPendingChange?: (autoRestart: string, maxAttempts: string) => void;
 }
 
 /**
@@ -63,6 +65,7 @@ export function BotAutoRestartToggle({
   autoRestart,
   maxRestartAttempts,
   className = '',
+  onPendingChange,
 }: BotAutoRestartToggleProps) {
   const [localEnabled, setLocalEnabled] = useState(autoRestart === 1);
   const [localAttempts, setLocalAttempts] = useState(maxRestartAttempts ?? 3);
@@ -115,7 +118,11 @@ export function BotAutoRestartToggle({
           checked={localEnabled}
           onCheckedChange={(checked) => {
             setLocalEnabled(checked);
-            mutation.mutate({ ar: checked ? 1 : 0, ma: localAttempts });
+            if (onPendingChange) {
+              onPendingChange(checked ? '1' : '0', String(localAttempts));
+            } else {
+              mutation.mutate({ ar: checked ? 1 : 0, ma: localAttempts });
+            }
           }}
           disabled={mutation.isPending}
         />
@@ -130,7 +137,11 @@ export function BotAutoRestartToggle({
             onValueChange={(val) => {
               const ma = parseInt(val);
               setLocalAttempts(ma);
-              mutation.mutate({ ar: 1, ma });
+              if (onPendingChange) {
+                onPendingChange('1', String(ma));
+              } else {
+                mutation.mutate({ ar: 1, ma });
+              }
             }}
             disabled={mutation.isPending}
           >

@@ -99,12 +99,17 @@ export function BotSettingsGrid({
         tokenId={tokenId}
         userDatabaseEnabled={userDatabaseEnabled}
         toggleDatabaseMutation={toggleDatabaseMutation}
+        onPendingChange={onPendingChange}
       />
       <BotAutoRestartToggle
         projectId={projectId}
         tokenId={tokenId}
         autoRestart={token.autoRestart}
         maxRestartAttempts={token.maxRestartAttempts}
+        onPendingChange={onPendingChange ? (ar, ma) => {
+          onPendingChange('AUTO_RESTART', ar);
+          onPendingChange('MAX_RESTART_ATTEMPTS', ma);
+        } : undefined}
       />
       <BotLogLevelSelect
         projectId={projectId}
