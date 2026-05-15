@@ -227,8 +227,8 @@ export function collectConnections(nodes: Node[]): Connection[] {
   const existingIds = new Set(nodes.map(n => n.id));
 
   nodes.forEach(node => {
-    // 1. Автопереход
-    if (node.data?.enableAutoTransition && node.data?.autoTransitionTo) {
+    // 1. Автопереход (исключаем loop — у него свои порты в пункте 10)
+    if (node.data?.enableAutoTransition && node.data?.autoTransitionTo && (node.type as any) !== 'loop') {
       const toId = node.data.autoTransitionTo as string;
       const targetNode = nodes.find((candidate) => candidate.id === toId);
       const isLegacyForwardSourceLink =
@@ -341,11 +341,27 @@ export function collectConnections(nodes: Node[]): Connection[] {
       }
     }
 
-    // 10. Соединение afterLoopTo для узла loop (выход "Далее")
+    // 10. Соединения узла loop: тело (autoTransitionTo) и далее (afterLoopTo)
     if ((node.type as any) === 'loop') {
+      const autoTransitionTo = (node.data as any)?.autoTransitionTo as string | undefined;
+      if (autoTransitionTo && existingIds.has(autoTransitionTo)) {
+        connections.push({
+          fromId: node.id,
+          toId: autoTransitionTo,
+          type: 'button-goto',
+          label: '↻ Тело',
+          buttonId: 'loop-body',
+        });
+      }
       const afterLoopTo = (node.data as any)?.afterLoopTo as string | undefined;
       if (afterLoopTo && existingIds.has(afterLoopTo)) {
-        connections.push({ fromId: node.id, toId: afterLoopTo, type: 'auto-transition' });
+        connections.push({
+          fromId: node.id,
+          toId: afterLoopTo,
+          type: 'button-goto',
+          label: '→ Далее',
+          buttonId: 'loop-after',
+        });
       }
     }
   });
