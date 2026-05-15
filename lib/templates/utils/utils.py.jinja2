@@ -333,6 +333,63 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
     import re as _re
     import json as _json
 
+    # ─── Обработка итерации по массиву в тексте ─────────────────────────────
+    # Синтаксис в тексте пользователя: {каждый элемент} — см. документацию
+    # Внутри блока доступны поля текущего элемента + __index (с 1)
+    _each_open = "{" + "#each"  # разбиваем чтобы не конфликтовать с шаблонизатором
+    _each_pattern = _re.compile(r'\{' + r'#each\s+([\w.\[\]]+)\}(.*?)\{/each\}', _re.DOTALL)
+
+    def _expand_each(_m):
+        _var_path = _m.group(1)
+        _tpl = _m.group(2)
+        # Убираем ведущий перенос строки после открывающего тега
+        if _tpl.startswith('\n'):
+            _tpl = _tpl[1:]
+        # Убираем завершающий перенос строки перед {/each}
+        if _tpl.endswith('\n'):
+            _tpl = _tpl[:-1]
+        # Получаем массив из переменных
+        _items = variables.get(_var_path)
+        if _items is None:
+            # Пробуем через dot-notation
+            _segments = _var_path.split('.')
+            _obj = variables
+            for _seg in _segments:
+                if isinstance(_obj, dict):
+                    _obj = _obj.get(_seg)
+                else:
+                    _obj = None
+                    break
+            _items = _obj
+        if isinstance(_items, str):
+            try:
+                _items = _json.loads(_items)
+            except Exception:
+                _items = None
+        if not isinstance(_items, list):
+            return ''
+        _lines = []
+        for _i, _item in enumerate(_items):
+            _item_vars = dict(variables)  # копируем родительские переменные
+            if isinstance(_item, dict):
+                _item_vars.update(_item)
+            else:
+                _item_vars['value'] = str(_item) if _item is not None else ''
+            _item_vars['__index'] = str(_i + 1)
+            _item_vars['__index0'] = str(_i)
+            _line = replace_variables_in_text(_tpl, _item_vars, filters)
+            _lines.append(_line)
+        return '\n'.join(_lines)
+
+    # Раскрываем все each-блоки (поддержка вложенности через рекурсию)
+    _prev = None
+    result = text
+    while _prev != result:
+        _prev = result
+        result = _each_pattern.sub(_expand_each, result)
+
+    # ─── Основная замена переменных {var} ─────────────────────────────────────
+
     def _resolve(var_path: str) -> str | None:
         """Разрешает переменную, поддерживая dot-notation и индексы массивов вида [0]"""
         # Сначала ищем точное совпадение в плоском словаре (включая ключи вида a.b[0].c)
@@ -386,7 +443,6 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
 
     # Паттерн поддерживает: {var}, {a.b.c}, {a.b[0][1].c}
     # Многопроходная замена: если после подстановки остались {}, делаем ещё проход (макс 3)
-    result = text
     for _pass in range(3):
         _new_result = _re.sub(r'\{([\w.\[\]]+)\}', _replacer, result)
         if _new_result == result:
