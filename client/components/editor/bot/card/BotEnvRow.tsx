@@ -1,7 +1,7 @@
 /**
  * @fileoverview Строка переменной окружения в панели
  * Отображает key=value с кнопками reveal, copy, меню действий
- * Поддерживает инлайн-редактирование для системных и пользовательских переменных
+ * Поддерживает инлайн-редактирование с dirty state (pending changes)
  * @module components/editor/bot/card/BotEnvRow
  */
 
@@ -18,7 +18,7 @@ interface BotEnvRowProps {
   id: number | null;
   /** Имя переменной */
   envKey: string;
-  /** Значение (для системных — реальное, для кастомных секретов — маскированное) */
+  /** Значение (серверное) */
   value: string;
   /** Флаг секретности */
   isSecret: boolean;
@@ -26,21 +26,21 @@ interface BotEnvRowProps {
   isSystem: boolean;
   /** Колбэк раскрытия секрета (для кастомных) */
   onReveal?: (id: number) => Promise<string>;
-  /** Колбэк обновления (для кастомных) */
-  onUpdate?: (id: number, value: string) => void;
-  /** Колбэк удаления (для кастомных) */
+  /** Колбэк при изменении значения (dirty state) */
+  onPendingChange?: (key: string, value: string, type: 'system' | 'custom', id?: number) => void;
+  /** Колбэк удаления (для кастомных, прямая мутация) */
   onDelete?: (id: number) => void;
-  /** Колбэк обновления системной переменной (key → новое значение) */
-  onSystemUpdate?: (key: string, value: string) => void;
+  /** Pending значение (если есть несохранённое изменение) */
+  pendingValue?: string;
 }
 
 /**
- * Строка переменной окружения
+ * Строка переменной окружения с поддержкой dirty state
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function BotEnvRow({
-  id, envKey, value, isSecret, isSystem, onReveal, onUpdate, onDelete, onSystemUpdate,
+  id, envKey, value, isSecret, isSystem, onReveal, onPendingChange, onDelete, pendingValue,
 }: BotEnvRowProps) {
   /** Раскрытое значение секрета */
   const [revealed, setRevealed] = useState<string | null>(null);
@@ -50,40 +50,45 @@ export function BotEnvRow({
   const [editValue, setEditValue] = useState(value);
 
   /** Можно ли редактировать эту переменную */
-  const canEdit = isSystem ? !!onSystemUpdate : !!(id && onUpdate);
+  const canEdit = !!onPendingChange;
+
+  /** Актуальное значение с учётом pending */
+  const actualValue = pendingValue ?? value;
 
   /** Показать/скрыть секрет */
   async function handleToggleReveal() {
     if (revealed !== null) { setRevealed(null); return; }
     if (isSystem) {
-      setRevealed(value);
+      setRevealed(actualValue);
     } else if (id && onReveal) {
       const val = await onReveal(id);
       setRevealed(val);
     }
   }
 
-  /** Сохранить инлайн-редактирование */
+  /** Сохранить инлайн-редактирование в pending */
   function handleSaveEdit() {
-    if (isSystem && onSystemUpdate) {
-      onSystemUpdate(envKey, editValue);
-    } else if (id && onUpdate) {
-      onUpdate(id, editValue);
+    if (onPendingChange) {
+      onPendingChange(envKey, editValue, isSystem ? 'system' : 'custom', id ?? undefined);
     }
     setEditing(false);
   }
 
   /** Начать редактирование */
   function handleStartEdit() {
-    setEditValue(revealed ?? value);
+    setEditValue(revealed ?? actualValue);
     setEditing(true);
   }
 
   /** Отображаемое значение */
-  const displayValue = isSecret ? (revealed ?? '••••••••') : value;
+  const displayValue = isSecret ? (revealed ?? '••••••••') : actualValue;
+
+  /** Подсветка строки при наличии pending изменения */
+  const pendingHighlight = pendingValue !== undefined
+    ? 'bg-amber-50/50 dark:bg-amber-950/20' : '';
 
   return (
-    <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/40 group/row transition-colors">
+    <div className={`flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/40 group/row transition-colors ${pendingHighlight}`}>
       <Braces className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
       <span className="text-xs font-mono font-medium text-foreground min-w-[80px] shrink-0">
         {envKey}
@@ -120,7 +125,7 @@ export function BotEnvRow({
       )}
 
       {/* Кнопка копирования */}
-      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/row:opacity-100" onClick={() => navigator.clipboard.writeText(revealed ?? value)} title="Копировать">
+      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/row:opacity-100" onClick={() => navigator.clipboard.writeText(revealed ?? actualValue)} title="Копировать">
         <Copy className="h-3 w-3" />
       </Button>
 

@@ -1,6 +1,6 @@
 /**
  * @fileoverview Панель переменных окружения бота (режим «Переменные»)
- * Отображает системные и пользовательские переменные с CRUD операциями
+ * Отображает системные и пользовательские переменные с dirty state
  * @module components/editor/bot/card/BotEnvPanel
  */
 
@@ -12,8 +12,10 @@ import { Search, Plus, FileCode } from 'lucide-react';
 import { BotEnvRow } from './BotEnvRow';
 import { BotEnvAddRow } from './BotEnvAddRow';
 import { BotEnvRawEditor } from './BotEnvRawEditor';
+import { BotEnvStagingBar } from './BotEnvStagingBar';
 import { useEnvVariables } from './use-env-variables';
 import { useSystemEnvUpdate } from './use-system-env-update';
+import { useEnvPendingChanges } from './use-env-pending-changes';
 import type { BotToken } from '@shared/schema';
 
 /** Свойства панели переменных окружения */
@@ -76,13 +78,14 @@ function buildSystemVars(token: BotToken, projectId: number, tokenId: number,
 }
 
 /**
- * Панель переменных окружения бота
+ * Панель переменных окружения бота с dirty state
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanelProps) {
-  const { items, createMutation, updateMutation, deleteMutation, revealValue } = useEnvVariables(projectId, tokenId);
+  const { items, createMutation, deleteMutation, revealValue } = useEnvVariables(projectId, tokenId);
   const { handleSystemUpdate } = useSystemEnvUpdate(projectId, tokenId);
+  const pending = useEnvPendingChanges(projectId, tokenId);
 
   const [showAdd, setShowAdd] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -107,7 +110,12 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
 
   const totalCount = systemVars.length + filteredCustom.length;
 
-  /** Обработчик создания переменной */
+  /** Обработчик pending изменения из BotEnvRow */
+  function handlePendingChange(key: string, value: string, type: 'system' | 'custom', id?: number) {
+    pending.addChange({ type, id, key, value });
+  }
+
+  /** Обработчик создания переменной (прямая мутация) */
   function handleCreate(key: string, value: string, isSecret: number) {
     createMutation.mutate({ key, value, isSecret }, { onSuccess: () => setShowAdd(false) });
   }
@@ -141,7 +149,7 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
           customItems={filteredCustom.map(v => ({ id: v.id, key: v.key, value: v.value, isSecret: v.isSecret }))}
           onSystemUpdate={handleSystemUpdate}
           onCreate={handleCreate}
-          onUpdate={(id, val) => updateMutation.mutate({ id, value: val })}
+          onUpdate={(id, val) => pending.addChange({ type: 'custom', id, key: '', value: val })}
           onDelete={(id) => deleteMutation.mutate(id)}
           onClose={() => setShowRaw(false)}
         />
@@ -158,7 +166,8 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
               <BotEnvRow
                 key={v.key} id={null} envKey={v.key} value={v.value}
                 isSecret={v.isSecret} isSystem={true}
-                onSystemUpdate={!READ_ONLY_KEYS.has(v.key) ? handleSystemUpdate : undefined}
+                onPendingChange={!READ_ONLY_KEYS.has(v.key) ? handlePendingChange : undefined}
+                pendingValue={pending.getPendingValue(v.key)}
               />
             ))}
           </div>
@@ -174,8 +183,9 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
                     key={v.id} id={v.id} envKey={v.key} value={v.value}
                     isSecret={!!v.isSecret} isSystem={false}
                     onReveal={revealValue}
-                    onUpdate={(id, val) => updateMutation.mutate({ id, value: val })}
+                    onPendingChange={handlePendingChange}
                     onDelete={(id) => deleteMutation.mutate(id)}
+                    pendingValue={pending.getPendingValue(v.key)}
                   />
                 ))}
                 {filteredCustom.length === 0 && (
@@ -183,6 +193,17 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
                 )}
               </div>
             </>
+          )}
+
+          {/* Мини-бар несохранённых изменений */}
+          {pending.changesCount > 0 && (
+            <BotEnvStagingBar
+              changesCount={pending.changesCount}
+              isSaving={pending.isSaving}
+              onDiscard={pending.discardAll}
+              onSave={pending.saveAll}
+              onSaveAndRestart={pending.saveAndRestart}
+            />
           )}
         </>
       )}
