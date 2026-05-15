@@ -12,6 +12,7 @@ import { Search, Plus } from 'lucide-react';
 import { BotEnvRow } from './BotEnvRow';
 import { BotEnvAddRow } from './BotEnvAddRow';
 import { useEnvVariables } from './use-env-variables';
+import { useSystemEnvUpdate } from './use-system-env-update';
 import type { BotToken } from '@shared/schema';
 
 /** Свойства панели переменных окружения */
@@ -63,26 +64,18 @@ function buildSystemVars(token: BotToken, projectId: number, tokenId: number, ad
  */
 export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanelProps) {
   const { items, createMutation, updateMutation, deleteMutation, revealValue } = useEnvVariables(projectId, tokenId);
+  const { handleSystemUpdate } = useSystemEnvUpdate(projectId, tokenId);
 
-  /** Показать форму добавления */
   const [showAdd, setShowAdd] = useState(false);
-  /** Показать поиск */
   const [showSearch, setShowSearch] = useState(false);
-  /** Строка поиска */
   const [search, setSearch] = useState('');
 
-  /** Системные переменные */
   const systemVars = useMemo(() => buildSystemVars(token, projectId, tokenId, adminIds), [token, projectId, tokenId, adminIds]);
 
-  /** Фильтрация по поиску */
   const filteredSystem = useMemo(() =>
-    systemVars.filter(v => v.key.includes(search.toUpperCase())),
-    [systemVars, search]
-  );
+    systemVars.filter(v => v.key.includes(search.toUpperCase())), [systemVars, search]);
   const filteredCustom = useMemo(() =>
-    items.filter(v => v.key.includes(search.toUpperCase())),
-    [items, search]
-  );
+    items.filter(v => v.key.includes(search.toUpperCase())), [items, search]);
 
   const totalCount = systemVars.length + items.length;
 
@@ -95,9 +88,7 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
     <div className="mt-3 space-y-2">
       {/* Заголовок */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground font-medium">
-          {totalCount} переменных
-        </span>
+        <span className="text-xs text-muted-foreground font-medium">{totalCount} переменных</span>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSearch(!showSearch)} title="Поиск">
             <Search className="h-3.5 w-3.5" />
@@ -108,33 +99,23 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
         </div>
       </div>
 
-      {/* Поиск */}
       {showSearch && (
-        <Input
-          value={search} onChange={(e) => setSearch(e.target.value)}
-          placeholder="Фильтр по имени..." className="h-7 text-xs"
-          autoFocus
-        />
+        <Input value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="Фильтр по имени..." className="h-7 text-xs" autoFocus />
       )}
 
-      {/* Форма добавления */}
       {showAdd && (
-        <BotEnvAddRow
-          onSave={handleCreate}
-          onCancel={() => setShowAdd(false)}
-          isPending={createMutation.isPending}
-        />
+        <BotEnvAddRow onSave={handleCreate} onCancel={() => setShowAdd(false)} isPending={createMutation.isPending} />
       )}
 
       {/* Системные переменные */}
       <div className="space-y-0.5">
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2">
-          Системные
-        </span>
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2">Системные</span>
         {filteredSystem.map(v => (
           <BotEnvRow
             key={v.key} id={null} envKey={v.key} value={v.value}
             isSecret={v.isSecret} isSystem={true}
+            onSystemUpdate={v.key !== 'PROJECT_ID' && v.key !== 'TOKEN_ID' ? handleSystemUpdate : undefined}
           />
         ))}
       </div>
@@ -144,9 +125,7 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
         <>
           <Separator className="opacity-30" />
           <div className="space-y-0.5">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2">
-              Пользовательские
-            </span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2">Пользовательские</span>
             {filteredCustom.map(v => (
               <BotEnvRow
                 key={v.id} id={v.id} envKey={v.key} value={v.value}
@@ -157,9 +136,7 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
               />
             ))}
             {filteredCustom.length === 0 && (
-              <p className="text-xs text-muted-foreground/50 px-2 py-2">
-                Нет пользовательских переменных
-              </p>
+              <p className="text-xs text-muted-foreground/50 px-2 py-2">Нет пользовательских переменных</p>
             )}
           </div>
         </>
