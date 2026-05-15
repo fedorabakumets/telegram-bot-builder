@@ -42,7 +42,7 @@ export const componentCategories: Array<{
   },
   {
     title: 'Интеграции',
-    components: [managedBotUpdatedTrigger, httpRequestNode, psqlQueryNode, convertFileNode, getManagedBotTokenNode, conditionNode, setVariableNode]
+    components: [httpRequestNode, psqlQueryNode, convertFileNode, conditionNode, setVariableNode]
   }
 ];
 
