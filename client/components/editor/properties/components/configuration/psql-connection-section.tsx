@@ -53,7 +53,8 @@ interface PsqlConnectionSectionProps {
 
 /** Серверные переменные (доступны всегда) */
 const SERVER_VARIABLES = [
-  { key: 'DATABASE_URL', description: 'Основная БД платформы' },
+  { key: 'DATABASE_URL', description: 'Основная PostgreSQL БД платформы' },
+  { key: 'REDIS_URL', description: 'Redis для кэша и FSM' },
 ];
 
 /**
