@@ -49,9 +49,18 @@ class WorkerLogHandler(logging.Handler):
 
 def emit_log(token_id: int, content: str, stream: str = "stdout") -> None:
     """Отправляет строку лога в stdout как JSON."""
-    line = json.dumps({"token_id": token_id, "type": stream, "content": content}, ensure_ascii=False)
-    sys.stdout.write(line + "\n")
-    sys.stdout.flush()
+    try:
+        line = json.dumps({"token_id": token_id, "type": stream, "content": content}, ensure_ascii=False)
+        sys.stdout.write(line + "\n")
+        sys.stdout.flush()
+    except Exception:
+        # Fallback: ASCII-safe вывод
+        try:
+            line = json.dumps({"token_id": token_id, "type": stream, "content": content}, ensure_ascii=True)
+            sys.stdout.write(line + "\n")
+            sys.stdout.flush()
+        except Exception:
+            pass
 
 
 def emit_system(content: str) -> None:
@@ -213,6 +222,9 @@ class BotWorker:
         except Exception as e:
             tb = traceback.format_exc()
             emit_log(token_id, f"Ошибка бота: {e}\n{tb}", "stderr")
+            # Дублируем в stderr процесса на случай если emit_log не работает
+            sys.stderr.write(f"[bot_{token_id}] ERROR: {e}\n{tb}\n")
+            sys.stderr.flush()
             ctx.status = "error"
         finally:
             # Убираем бота из активных если он ещё там
@@ -331,8 +343,13 @@ class BotWorker:
 
 def main():
     """Запуск воркера."""
-    # Отключаем буферизацию stdout
-    sys.stdout.reconfigure(line_buffering=True)
+    # Принудительно устанавливаем UTF-8 для stdin/stdout/stderr на Windows
+    if sys.platform == "win32":
+        sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1, closefd=False)
+        sys.stderr = open(sys.stderr.fileno(), mode='w', encoding='utf-8', buffering=1, closefd=False)
+        sys.stdin = open(sys.stdin.fileno(), mode='r', encoding='utf-8', closefd=False)
+    else:
+        sys.stdout.reconfigure(line_buffering=True)
 
     # Игнорируем SIGTERM/SIGINT — управление через stdin команду shutdown
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
