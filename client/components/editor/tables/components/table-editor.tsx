@@ -1,5 +1,5 @@
 /**
- * @fileoverview Spreadsheet-редактор таблицы — сетка ячеек как в Google Sheets
+ * @fileoverview Spreadsheet-редактор таблицы — сетка ячеек с клавиатурной навигацией
  * @module editor/tables/components/table-editor
  */
 
@@ -8,6 +8,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SpreadsheetCell } from './spreadsheet-cell';
+import type { NavigateDirection } from './spreadsheet-cell';
 import { ColumnHeader } from './column-header';
 import { SpreadsheetToolbar } from './spreadsheet-toolbar';
 import { AddRowsFooter } from './add-rows-footer';
@@ -40,8 +41,16 @@ interface TableEditorProps {
   onImportRows: (rows: string[][]) => void;
 }
 
+/** Координаты активной ячейки */
+interface FocusedCell {
+  /** Индекс строки (0-based) */
+  rowIndex: number;
+  /** Индекс колонки (0-based) */
+  colIndex: number;
+}
+
 /**
- * Spreadsheet-редактор — основная сетка данных
+ * Spreadsheet-редактор — основная сетка данных с навигацией
  * @param props - Пропсы компонента
  * @returns JSX элемент редактора
  */
@@ -62,6 +71,8 @@ export function TableEditor({
   const [addingCol, setAddingCol] = useState(false);
   /** Имя новой колонки */
   const [newColName, setNewColName] = useState('');
+  /** Координаты ячейки в фокусе */
+  const [focusedCell, setFocusedCell] = useState<FocusedCell | null>(null);
 
   /** Подтверждение добавления колонки */
   const handleAddCol = () => {
@@ -71,6 +82,45 @@ export function TableEditor({
     setNewColName('');
     setAddingCol(false);
   };
+
+  /** Навигация между ячейками с учётом границ таблицы */
+  const navigate = useCallback(
+    (direction: NavigateDirection) => {
+      setFocusedCell((prev) => {
+        if (!prev) return null;
+        const maxRow = table.rows.length - 1;
+        const maxCol = table.columns.length - 1;
+        let { rowIndex, colIndex } = prev;
+
+        switch (direction) {
+          case 'right':
+            if (colIndex < maxCol) {
+              colIndex++;
+            } else if (rowIndex < maxRow) {
+              rowIndex++;
+              colIndex = 0;
+            }
+            break;
+          case 'left':
+            if (colIndex > 0) {
+              colIndex--;
+            } else if (rowIndex > 0) {
+              rowIndex--;
+              colIndex = maxCol;
+            }
+            break;
+          case 'down':
+            if (rowIndex < maxRow) rowIndex++;
+            break;
+          case 'up':
+            if (rowIndex > 0) rowIndex--;
+            break;
+        }
+        return { rowIndex, colIndex };
+      });
+    },
+    [table.rows.length, table.columns.length],
+  );
 
   /** Обработчик вставки из буфера (Ctrl+V) */
   const handlePaste = useCallback(
@@ -102,10 +152,8 @@ export function TableEditor({
       {/* Сетка */}
       <div className="flex-1 overflow-auto">
         <table className="w-full border-collapse text-xs">
-          {/* Шапка колонок */}
           <thead className="sticky top-0 z-10">
             <tr className="bg-muted/60 border-b border-border">
-              {/* ID колонка */}
               <th className="w-14 min-w-[56px] h-8 px-2 text-left font-medium text-muted-foreground border-r border-border bg-muted/80">
                 №
               </th>
@@ -121,7 +169,6 @@ export function TableEditor({
                   />
                 </th>
               ))}
-              {/* Кнопка добавления колонки */}
               <th className="w-28 h-8 px-1 bg-muted/40 border-r border-border">
                 {addingCol ? (
                   <div className="flex items-center gap-1">
@@ -152,23 +199,26 @@ export function TableEditor({
             </tr>
           </thead>
 
-          {/* Тело таблицы */}
           <tbody>
-            {table.rows.map((row) => (
+            {table.rows.map((row, rowIdx) => (
               <tr key={row.id} className="group border-b border-border/50 hover:bg-muted/20">
-                {/* ID ячейка */}
                 <td className="h-8 px-2 text-muted-foreground bg-muted/30 border-r border-border select-none">
                   {row.rowIndex}
                 </td>
-                {table.columns.map((col) => (
+                {table.columns.map((col, colIdx) => (
                   <td key={col.id} className="h-8 border-r border-border/50 p-0">
                     <SpreadsheetCell
                       value={row.cells[col.id] ?? ''}
                       onChange={(val) => onUpdateCell(row.id, col.id, val)}
+                      isFocused={
+                        focusedCell?.rowIndex === rowIdx && focusedCell?.colIndex === colIdx
+                      }
+                      onNavigate={navigate}
+                      onFocus={() => setFocusedCell({ rowIndex: rowIdx, colIndex: colIdx })}
+                      onBlurCell={() => setFocusedCell(null)}
                     />
                   </td>
                 ))}
-                {/* Кнопка удаления строки */}
                 <td className="h-8 w-8 p-0">
                   <Button
                     size="icon"
