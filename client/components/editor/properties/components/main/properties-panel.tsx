@@ -67,6 +67,7 @@ import { SetVariableConfiguration } from '../configuration/set-variable-configur
 import { PsqlQueryConfiguration } from '../configuration/psql-query-configuration';
 import { ConvertFileConfiguration } from '../configuration/ConvertFileConfiguration';
 import type { Variable } from '../../../inline-rich/types';
+import { useEnvVariablesForNode } from '../../hooks/use-env-variables-for-node';
 
 /**
  * РРЅС‚РµСЂС„РµР№СЃ РїСЂРѕРїСЃРѕРІ РґР»СЏ РїР°РЅРµР»Рё СЃРІРѕР№СЃС‚РІ СѓР·Р»РѕРІ
@@ -162,6 +163,9 @@ export function PropertiesPanel({
   const [displayNodeId, setDisplayNodeId] = useState(selectedNode?.id || '');
   const lastUserInputNodeIdRef = useRef<string | null>(selectedNode?.id || null);
   const wasUserInputPresentRef = useRef(false);
+
+  /** Env-переменные бота для селектора подключения к БД */
+  const envVariablesForNode = useEnvVariablesForNode(projectId);
 
   // РЎРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµРј displayNodeId СЃ selectedNode.id РїСЂРё РёР·РјРµРЅРµРЅРёРё СѓР·Р»Р°
   useEffect(() => {
@@ -575,6 +579,7 @@ export function PropertiesPanel({
                 getAllNodesFromAllSheets={getAllNodesFromAllSheets}
                 formatNodeDisplay={formatNodeDisplay}
                 textVariables={textVariables as Variable[]}
+                envVariables={envVariablesForNode}
               />
             </div>
           )}
