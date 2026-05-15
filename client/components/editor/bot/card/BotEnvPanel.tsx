@@ -54,19 +54,19 @@ const READ_ONLY_KEYS = new Set(['PROJECT_ID', 'TOKEN_ID']);
  * @param tokenId - ID токена
  * @param adminIds - ID администраторов
  * @param customItems - Кастомные переменные для переопределения дефолтов
- * @param serverEnv - Переменные из серверного окружения (fallback)
+ * @param serverEnvKeys - Ключи доступных серверных переменных
  * @returns Массив системных переменных
  */
 function buildSystemVars(token: BotToken, projectId: number, tokenId: number,
   adminIds: string, customItems: Array<{ key: string; value: string }>,
-  serverEnv: Map<string, string>): SystemVar[] {
+  serverEnvKeys: Set<string>): SystemVar[] {
   /** Маппинг кастомных переменных для переопределения дефолтов */
   const customMap = new Map(customItems.map(v => [v.key, v.value]));
 
   /** Резолвит значение и определяет источник */
   function resolve(key: string, defaultValue: string): { value: string; isServerRef: boolean } {
     if (customMap.has(key)) return { value: customMap.get(key)!, isServerRef: false };
-    if (serverEnv.has(key)) return { value: serverEnv.get(key)!, isServerRef: true };
+    if (serverEnvKeys.has(key)) return { value: `\${{${key}}}`, isServerRef: true };
     return { value: defaultValue, isServerRef: false };
   }
 
@@ -108,16 +108,16 @@ function buildSystemVars(token: BotToken, projectId: number, tokenId: number,
 export function BotEnvPanel({ projectId, tokenId, token, adminIds, pending }: BotEnvPanelProps) {
   const { items, revealValue } = useEnvVariables(projectId, tokenId);
 
-  /** Серверные переменные окружения (fallback для DATABASE_URL, REDIS_URL и т.д.) */
-  const { data: serverEnvData } = useQuery<{ items: Array<{ key: string; value: string }> }>({
+  /** Серверные переменные окружения (только ключи — значения не передаются) */
+  const { data: serverEnvData } = useQuery<{ items: Array<{ key: string }> }>({
     queryKey: ['/api/server/env-keys'],
     queryFn: () => apiRequest('GET', '/api/server/env-keys'),
     staleTime: 5 * 60 * 1000,
   });
 
-  /** Маппинг серверных переменных */
-  const serverEnvMap = useMemo(() =>
-    new Map((serverEnvData?.items ?? []).map(v => [v.key, v.value])),
+  /** Множество ключей серверных переменных (значения не передаются) */
+  const serverEnvKeys = useMemo(() =>
+    new Set((serverEnvData?.items ?? []).map(v => v.key)),
     [serverEnvData],
   );
 
@@ -127,8 +127,8 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds, pending }: Bo
   const [showRaw, setShowRaw] = useState(false);
 
   const systemVars = useMemo(
-    () => buildSystemVars(token, projectId, tokenId, adminIds, items, serverEnvMap),
-    [token, projectId, tokenId, adminIds, items, serverEnvMap],
+    () => buildSystemVars(token, projectId, tokenId, adminIds, items, serverEnvKeys),
+    [token, projectId, tokenId, adminIds, items, serverEnvKeys],
   );
 
   /** Ключи системных переменных для фильтрации дублей */

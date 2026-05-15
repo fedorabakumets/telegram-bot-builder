@@ -151,7 +151,13 @@ export async function createCompleteBotFiles(
 
   // Получаем кастомные переменные окружения из БД
   const customEnvVars = await storage.getEnvVariables(tokenId);
-  const customVariables = customEnvVars.map(v => ({ key: v.key, value: v.value }));
+  const customVariables = customEnvVars.map(v => ({
+    key: v.key,
+    // Резолвим ${{KEY}} ссылки в реальные значения из серверного окружения
+    value: v.value.startsWith('${{') && v.value.endsWith('}}')
+      ? (process.env[v.value.slice(3, -2)] ?? v.value)
+      : v.value,
+  }));
 
   // Добавляем DATABASE_URL из окружения сервера если не задан пользователем
   if (!customVariables.some(v => v.key === 'DATABASE_URL') && process.env.DATABASE_URL) {

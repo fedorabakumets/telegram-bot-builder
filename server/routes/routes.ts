@@ -4790,30 +4790,21 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
   });
 
   /**
-   * Получение списка серверных переменных окружения для подстановки в ботов
+   * Получение списка доступных серверных переменных (только ключи, без значений)
    * GET /api/server/env-keys
    */
   app.get("/api/server/env-keys", (_req, res) => {
     /** Ключи из серверного окружения, доступные для подстановки */
     const allowedKeys = [
       'DATABASE_URL', 'REDIS_URL', 'WEBHOOK_BASE_URL',
-      'API_BASE_URL', 'SESSION_SECRET', 'NODE_ENV',
-      'PGHOST', 'PGPORT', 'PGDATABASE', 'PGUSER', 'PGPASSWORD',
-      'TELEGRAM_PROXY_URL',
+      'API_BASE_URL', 'NODE_ENV',
+      'PGHOST', 'PGPORT', 'PGDATABASE', 'PGUSER',
     ];
 
-    /** Ключи, значения которых маскируются при отображении */
-    const secretKeys = ['DATABASE_URL', 'REDIS_URL', 'SESSION_SECRET', 'PGPASSWORD'];
-
+    /** Возвращаем только ключи (без значений — безопасность) */
     const items = allowedKeys
       .filter(key => process.env[key] !== undefined && process.env[key] !== '')
-      .map(key => ({
-        key,
-        value: process.env[key]!,
-        maskedValue: secretKeys.includes(key)
-          ? process.env[key]!.substring(0, 15) + '...'
-          : process.env[key]!,
-      }));
+      .map(key => ({ key }));
 
     res.json({ items });
   });

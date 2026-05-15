@@ -14,15 +14,11 @@ import { useState } from 'react';
 interface ServerEnvItem {
   /** Имя переменной */
   key: string;
-  /** Реальное значение */
-  value: string;
-  /** Маскированное значение для отображения */
-  maskedValue: string;
 }
 
 /** Свойства компонента */
 interface BotEnvServerVarsPopoverProps {
-  /** Колбэк при выборе переменной — передаёт реальное значение */
+  /** Колбэк при выборе переменной — передаёт ${{KEY}} */
   onSelect: (value: string) => void;
 }
 
@@ -42,9 +38,9 @@ export function BotEnvServerVarsPopover({ onSelect }: BotEnvServerVarsPopoverPro
     staleTime: 5 * 60 * 1000,
   });
 
-  /** Обработчик выбора переменной */
+  /** Обработчик выбора переменной — подставляет ${{KEY}} */
   function handleSelect(item: ServerEnvItem) {
-    onSelect(item.value);
+    onSelect(`\${{${item.key}}}`);
     setOpen(false);
   }
 
