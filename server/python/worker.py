@@ -175,9 +175,11 @@ class BotWorker:
             module.__file__ = str(bot_path)
             module.__loader__ = None
 
-            # Устанавливаем рабочую директорию в папку бота
-            os.chdir(bot_path.parent)
-            emit_log(token_id, f"Рабочая директория: {os.getcwd()}", "stdout")
+            # Добавляем папку бота в sys.path (вместо os.chdir — он глобальный и сломает другие боты)
+            bot_dir = str(bot_path.parent)
+            if bot_dir not in sys.path:
+                sys.path.insert(0, bot_dir)
+            emit_log(token_id, f"Директория бота добавлена в sys.path: {bot_dir}", "stdout")
 
             # Подменяем переменные окружения для этого бота
             os.environ["BOT_TOKEN"] = ctx.token
