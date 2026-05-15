@@ -4836,6 +4836,8 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
       const tokenId = parseInt(req.params.tokenId);
       const { changes } = req.body as { changes: Array<{ action: string; key: string; value?: string; id?: number; isSecret?: number }> };
 
+      console.log(`[env-batch] projectId=${projectId} tokenId=${tokenId} changes=${changes?.length ?? 0}`);
+
       if (!Array.isArray(changes) || changes.length === 0) {
         return res.status(400).json({ message: "Массив changes обязателен" });
       }
@@ -4862,6 +4864,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
 
       for (const change of changes) {
         const { action, key, value, id, isSecret } = change;
+        console.log(`[env-batch]   ${action} ${key}${id ? ` id=${id}` : ''}`);
 
         if (action === 'delete' && id) {
           await storage.deleteEnvVariable(id);
@@ -4921,7 +4924,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
 
       res.json({ success: true, applied: results.length, results });
     } catch (error: any) {
-      console.error("Ошибка batch обновления env:", error);
+      console.error("[env-batch] Ошибка:", error?.message || error);
       res.status(500).json({ message: "Ошибка batch обновления переменных" });
     }
   });
