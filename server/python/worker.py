@@ -138,11 +138,13 @@ class BotWorker:
         token_id = ctx.token_id
 
         try:
+            emit_log(token_id, "─── Начало загрузки бота ───", "stdout")
+
             # Динамическая загрузка модуля бота
             from pathlib import Path
             bot_path = Path(ctx.bot_file)
             
-            emit_log(token_id, f"Загрузка файла: {bot_path}", "stdout")
+            emit_log(token_id, f"Путь к файлу: {bot_path}", "stdout")
             emit_log(token_id, f"Файл существует: {bot_path.exists()}", "stdout")
             
             if not bot_path.exists():
@@ -151,16 +153,26 @@ class BotWorker:
                 return
 
             # Читаем и компилируем код напрямую (обходим проблемы importlib с кириллицей)
+            emit_log(token_id, "Чтение исходного кода...", "stdout")
             source_code = bot_path.read_text(encoding="utf-8")
+            emit_log(token_id, f"Код прочитан: {len(source_code)} символов", "stdout")
+            
+            emit_log(token_id, "Компиляция кода...", "stdout")
             compiled = compile(source_code, str(bot_path), "exec")
+            emit_log(token_id, "Код скомпилирован", "stdout")
             
             module = types.ModuleType(f"bot_{token_id}")
             module.__file__ = str(bot_path)
             module.__loader__ = None
 
+            # Устанавливаем рабочую директорию в папку бота
+            os.chdir(bot_path.parent)
+            emit_log(token_id, f"Рабочая директория: {os.getcwd()}", "stdout")
+
             # Подменяем переменные окружения для этого бота
             os.environ["BOT_TOKEN"] = ctx.token
             os.environ["TOKEN_ID"] = str(token_id)
+            emit_log(token_id, f"Env: PROJECT_ID={PROJECT_ID}, TOKEN_ID={token_id}", "stdout")
 
             # Перехватываем print для маршрутизации логов
             original_print = __builtins__["print"] if isinstance(__builtins__, dict) else getattr(__builtins__, "print")
@@ -179,20 +191,24 @@ class BotWorker:
             bot_logger.setLevel(logging.INFO)
 
             # Загружаем модуль (выполняет top-level код: создание bot, dp, хендлеров)
+            emit_log(token_id, "Выполнение top-level кода бота...", "stdout")
             exec(compiled, module.__dict__)
+            emit_log(token_id, "Top-level код выполнен", "stdout")
 
             ctx.status = "running"
             ctx.started_at = datetime.now()
 
             # Вызываем main() бота
             if hasattr(module, "main"):
+                emit_log(token_id, "Вызов main()...", "stdout")
                 await module.main()
+                emit_log(token_id, "main() завершился", "stdout")
             else:
                 emit_log(token_id, "Функция main() не найдена в bot.py", "stderr")
                 ctx.status = "error"
 
         except asyncio.CancelledError:
-            emit_log(token_id, "Бот остановлен", "stdout")
+            emit_log(token_id, "Бот остановлен (CancelledError)", "stdout")
             ctx.status = "stopped"
         except Exception as e:
             tb = traceback.format_exc()
