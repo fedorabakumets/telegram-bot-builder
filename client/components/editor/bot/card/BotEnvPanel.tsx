@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Search, Plus, FileCode } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/queryClient';
 import { BotEnvRow } from './BotEnvRow';
 import { BotEnvAddRow } from './BotEnvAddRow';
 import { BotEnvRawEditor } from './BotEnvRawEditor';
@@ -49,30 +51,37 @@ const READ_ONLY_KEYS = new Set(['PROJECT_ID', 'TOKEN_ID']);
  * @param tokenId - ID токена
  * @param adminIds - ID администраторов
  * @param customItems - Кастомные переменные для переопределения дефолтов
+ * @param serverEnv - Переменные из серверного окружения (fallback)
  * @returns Массив системных переменных
  */
 function buildSystemVars(token: BotToken, projectId: number, tokenId: number,
-  adminIds: string, customItems: Array<{ key: string; value: string }>): SystemVar[] {
+  adminIds: string, customItems: Array<{ key: string; value: string }>,
+  serverEnv: Map<string, string>): SystemVar[] {
   /** Маппинг кастомных переменных для переопределения дефолтов */
   const customMap = new Map(customItems.map(v => [v.key, v.value]));
+
+  /** Резолвит значение: кастомное → серверное → дефолт */
+  function resolve(key: string, defaultValue: string): string {
+    return customMap.get(key) ?? serverEnv.get(key) ?? defaultValue;
+  }
 
   return [
     { key: 'BOT_TOKEN', value: token.token, isSecret: true },
     { key: 'ADMIN_IDS', value: adminIds || '123456789', isSecret: true },
     { key: 'PROJECT_ID', value: String(projectId), isSecret: false },
     { key: 'TOKEN_ID', value: String(tokenId), isSecret: false },
-    { key: 'API_BASE_URL', value: customMap.get('API_BASE_URL') ?? 'http://localhost:5000', isSecret: false },
-    { key: 'API_PORT', value: customMap.get('API_PORT') ?? '5000', isSecret: false },
-    { key: 'API_USE_SSL', value: customMap.get('API_USE_SSL') ?? 'auto', isSecret: false },
-    { key: 'API_TIMEOUT', value: customMap.get('API_TIMEOUT') ?? '10', isSecret: false },
+    { key: 'API_BASE_URL', value: resolve('API_BASE_URL', 'http://localhost:5000'), isSecret: false },
+    { key: 'API_PORT', value: resolve('API_PORT', '5000'), isSecret: false },
+    { key: 'API_USE_SSL', value: resolve('API_USE_SSL', 'auto'), isSecret: false },
+    { key: 'API_TIMEOUT', value: resolve('API_TIMEOUT', '10'), isSecret: false },
     { key: 'LOG_LEVEL', value: token.logLevel || 'WARNING', isSecret: false },
-    { key: 'DISABLE_ASYNC_LOG', value: customMap.get('DISABLE_ASYNC_LOG') ?? 'true', isSecret: false },
-    { key: 'REDIS_URL', value: customMap.get('REDIS_URL') ?? 'redis://localhost:6379', isSecret: true },
+    { key: 'DISABLE_ASYNC_LOG', value: resolve('DISABLE_ASYNC_LOG', 'true'), isSecret: false },
+    { key: 'REDIS_URL', value: resolve('REDIS_URL', 'redis://localhost:6379'), isSecret: true },
     { key: 'PROTECT_CONTENT', value: token.protectContent ? 'true' : 'false', isSecret: false },
     { key: 'SAVE_INCOMING_MEDIA', value: token.saveIncomingMedia ? 'true' : 'false', isSecret: false },
-    { key: 'DATABASE_URL', value: customMap.get('DATABASE_URL') ?? '', isSecret: true },
-    { key: 'MAX_UPDATE_AGE_SECONDS', value: customMap.get('MAX_UPDATE_AGE_SECONDS') ?? '300', isSecret: false },
-    { key: 'WEBHOOK_PORT', value: customMap.get('WEBHOOK_PORT') ?? '8080', isSecret: false },
+    { key: 'DATABASE_URL', value: resolve('DATABASE_URL', ''), isSecret: true },
+    { key: 'MAX_UPDATE_AGE_SECONDS', value: resolve('MAX_UPDATE_AGE_SECONDS', '300'), isSecret: false },
+    { key: 'WEBHOOK_PORT', value: resolve('WEBHOOK_PORT', '8080'), isSecret: false },
   ];
 }
 
@@ -85,14 +94,27 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
   const { items, revealValue } = useEnvVariables(projectId, tokenId);
   const pending = useEnvPendingChanges(projectId, tokenId);
 
+  /** Серверные переменные окружения (fallback для DATABASE_URL, REDIS_URL и т.д.) */
+  const { data: serverEnvData } = useQuery<{ items: Array<{ key: string; value: string }> }>({
+    queryKey: ['/api/server/env-keys'],
+    queryFn: () => apiRequest('GET', '/api/server/env-keys'),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  /** Маппинг серверных переменных */
+  const serverEnvMap = useMemo(() =>
+    new Map((serverEnvData?.items ?? []).map(v => [v.key, v.value])),
+    [serverEnvData],
+  );
+
   const [showAdd, setShowAdd] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [search, setSearch] = useState('');
   const [showRaw, setShowRaw] = useState(false);
 
   const systemVars = useMemo(
-    () => buildSystemVars(token, projectId, tokenId, adminIds, items),
-    [token, projectId, tokenId, adminIds, items],
+    () => buildSystemVars(token, projectId, tokenId, adminIds, items, serverEnvMap),
+    [token, projectId, tokenId, adminIds, items, serverEnvMap],
   );
 
   /** Ключи системных переменных для фильтрации дублей */
