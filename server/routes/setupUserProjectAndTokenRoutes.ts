@@ -34,6 +34,11 @@ import { getTokenStatsHandler } from "./userProjectsTokens/handlers/tokens/getTo
 import { getCollaboratorsHandler } from "./userProjectsTokens/handlers/collaborators/getCollaboratorsHandler";
 import { addCollaboratorHandler } from "./userProjectsTokens/handlers/collaborators/addCollaboratorHandler";
 import { removeCollaboratorHandler } from "./userProjectsTokens/handlers/collaborators/removeCollaboratorHandler";
+import { getEnvVariablesHandler } from "./userProjectsTokens/handlers/envVariables/getEnvVariablesHandler";
+import { createEnvVariableHandler } from "./userProjectsTokens/handlers/envVariables/createEnvVariableHandler";
+import { updateEnvVariableHandler } from "./userProjectsTokens/handlers/envVariables/updateEnvVariableHandler";
+import { deleteEnvVariableHandler } from "./userProjectsTokens/handlers/envVariables/deleteEnvVariableHandler";
+import { revealEnvVariableHandler } from "./userProjectsTokens/handlers/envVariables/revealEnvVariableHandler";
 
 /**
  * Настраивает маршруты управления проектами и токенами пользователя
@@ -70,4 +75,11 @@ export function setupUserProjectAndTokenRoutes(app: Express): void {
     app.delete("/api/bot/projects/:id/collaborators/:userId", requireProjectAccess, removeCollaboratorHandler);
     app.patch("/api/user/tokens/:id", updateTokenHandler);
     app.delete("/api/user/tokens/:id", deleteTokenHandler);
+
+    // Переменные окружения бота
+    app.get("/api/bot/tokens/:tokenId/env", getEnvVariablesHandler);
+    app.post("/api/bot/tokens/:tokenId/env", createEnvVariableHandler);
+    app.patch("/api/bot/env/:id", updateEnvVariableHandler);
+    app.delete("/api/bot/env/:id", deleteEnvVariableHandler);
+    app.get("/api/bot/env/:id/reveal", revealEnvVariableHandler);
 }
