@@ -13,14 +13,18 @@ import { useEnvVariables } from './use-env-variables';
 
 /** Одно несохранённое изменение */
 export interface PendingChange {
+  /** Действие: обновление, создание или удаление */
+  action: 'update' | 'create' | 'delete';
   /** Тип: системная или кастомная */
   type: 'system' | 'custom';
-  /** ID переменной (для кастомных) */
+  /** ID переменной (для кастомных update/delete) */
   id?: number;
   /** Ключ переменной */
   key: string;
-  /** Новое значение */
+  /** Новое значение (для update/create) */
   value: string;
+  /** Флаг секретности (для create) */
+  isSecret?: number;
 }
 
 /**
@@ -35,7 +39,7 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { handleSystemUpdate } = useSystemEnvUpdate(projectId, tokenId);
-  const { updateMutation } = useEnvVariables(projectId, tokenId);
+  const { updateMutation, createMutation, deleteMutation } = useEnvVariables(projectId, tokenId);
 
   /** Количество несохранённых изменений */
   const changesCount = changes.size;
@@ -44,7 +48,9 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
   const addChange = useCallback((change: PendingChange) => {
     setChanges(prev => {
       const next = new Map(prev);
-      next.set(change.key, change);
+      /** Для удаления используем уникальный ключ с префиксом */
+      const mapKey = change.action === 'delete' ? `__delete__${change.id}` : change.key;
+      next.set(mapKey, change);
       return next;
     });
   }, []);
@@ -65,9 +71,13 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
     try {
       const entries = Array.from(changes.values());
       for (const entry of entries) {
-        if (entry.type === 'system') {
+        if (entry.action === 'delete' && entry.id) {
+          deleteMutation.mutate(entry.id);
+        } else if (entry.action === 'create') {
+          createMutation.mutate({ key: entry.key, value: entry.value, isSecret: entry.isSecret ?? 0 });
+        } else if (entry.action === 'update' && entry.type === 'system') {
           handleSystemUpdate(entry.key, entry.value);
-        } else if (entry.id) {
+        } else if (entry.action === 'update' && entry.id) {
           updateMutation.mutate({ id: entry.id, value: entry.value });
         }
       }
@@ -76,7 +86,7 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
     } finally {
       setIsSaving(false);
     }
-  }, [changes, handleSystemUpdate, updateMutation, toast]);
+  }, [changes, handleSystemUpdate, updateMutation, createMutation, deleteMutation, toast]);
 
   /** Сохранить и перезапустить бота */
   const saveAndRestart = useCallback(async () => {

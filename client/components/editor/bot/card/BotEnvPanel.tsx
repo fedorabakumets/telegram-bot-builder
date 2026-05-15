@@ -14,7 +14,6 @@ import { BotEnvAddRow } from './BotEnvAddRow';
 import { BotEnvRawEditor } from './BotEnvRawEditor';
 import { BotEnvStagingBar } from './BotEnvStagingBar';
 import { useEnvVariables } from './use-env-variables';
-import { useSystemEnvUpdate } from './use-system-env-update';
 import { useEnvPendingChanges } from './use-env-pending-changes';
 import type { BotToken } from '@shared/schema';
 
@@ -83,8 +82,7 @@ function buildSystemVars(token: BotToken, projectId: number, tokenId: number,
  * @returns JSX элемент
  */
 export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanelProps) {
-  const { items, createMutation, deleteMutation, revealValue } = useEnvVariables(projectId, tokenId);
-  const { handleSystemUpdate } = useSystemEnvUpdate(projectId, tokenId);
+  const { items, revealValue } = useEnvVariables(projectId, tokenId);
   const pending = useEnvPendingChanges(projectId, tokenId);
 
   const [showAdd, setShowAdd] = useState(false);
@@ -112,12 +110,19 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
 
   /** Обработчик pending изменения из BotEnvRow */
   function handlePendingChange(key: string, value: string, type: 'system' | 'custom', id?: number) {
-    pending.addChange({ type, id, key, value });
+    pending.addChange({ action: 'update', type, id, key, value });
   }
 
-  /** Обработчик создания переменной (прямая мутация) */
+  /** Обработчик создания переменной (в pending) */
   function handleCreate(key: string, value: string, isSecret: number) {
-    createMutation.mutate({ key, value, isSecret }, { onSuccess: () => setShowAdd(false) });
+    pending.addChange({ action: 'create', type: 'custom', key, value, isSecret });
+    setShowAdd(false);
+  }
+
+  /** Обработчик удаления переменной (в pending) */
+  function handleDelete(id: number) {
+    const item = items.find(v => v.id === id);
+    pending.addChange({ action: 'delete', type: 'custom', id, key: item?.key ?? '', value: '' });
   }
 
   return (
@@ -147,16 +152,16 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
         <BotEnvRawEditor
           systemVars={systemVars}
           customItems={filteredCustom.map(v => ({ id: v.id, key: v.key, value: v.value, isSecret: v.isSecret }))}
-          onSystemUpdate={handleSystemUpdate}
-          onCreate={handleCreate}
-          onUpdate={(id, val) => pending.addChange({ type: 'custom', id, key: '', value: val })}
-          onDelete={(id) => deleteMutation.mutate(id)}
+          onSystemUpdate={(key, value) => pending.addChange({ action: 'update', type: 'system', key, value })}
+          onCreate={(key, value, isSecret) => handleCreate(key, value, isSecret)}
+          onUpdate={(id, val) => pending.addChange({ action: 'update', type: 'custom', id, key: '', value: val })}
+          onDelete={handleDelete}
           onClose={() => setShowRaw(false)}
         />
       ) : (
         <>
           {showAdd && (
-            <BotEnvAddRow onSave={handleCreate} onCancel={() => setShowAdd(false)} isPending={createMutation.isPending} />
+            <BotEnvAddRow onSave={handleCreate} onCancel={() => setShowAdd(false)} />
           )}
 
           {/* Системные переменные */}
@@ -184,7 +189,7 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
                     isSecret={!!v.isSecret} isSystem={false}
                     onReveal={revealValue}
                     onPendingChange={handlePendingChange}
-                    onDelete={(id) => deleteMutation.mutate(id)}
+                    onDelete={handleDelete}
                     pendingValue={pending.getPendingValue(v.key)}
                   />
                 ))}
