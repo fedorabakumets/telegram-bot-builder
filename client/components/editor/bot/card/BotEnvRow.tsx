@@ -5,7 +5,7 @@
  * @module components/editor/bot/card/BotEnvRow
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Braces, Eye, EyeOff, Copy } from 'lucide-react';
@@ -50,6 +50,8 @@ export function BotEnvRow({
   const [editing, setEditing] = useState(false);
   /** Локальное значение при редактировании */
   const [editValue, setEditValue] = useState(value);
+  /** Флаг: не закрывать editing при blur (клик по кнопке внутри контейнера) */
+  const skipBlurRef = useRef(false);
 
   /** Можно ли редактировать эту переменную */
   const canEdit = !!onPendingChange;
@@ -115,11 +117,13 @@ export function BotEnvRow({
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditing(false); }}
-            onBlur={() => setTimeout(handleSaveEdit, 150)}
+            onBlur={() => { if (!skipBlurRef.current) handleSaveEdit(); skipBlurRef.current = false; }}
             className="h-6 text-xs flex-1 min-w-0"
             autoFocus
           />
-          <BotEnvServerVarsPopover onSelect={(val) => setEditValue(val)} />
+          <div onMouseDown={() => { skipBlurRef.current = true; }}>
+            <BotEnvServerVarsPopover onSelect={(val) => setEditValue(val)} />
+          </div>
         </div>
       ) : (
         <span
