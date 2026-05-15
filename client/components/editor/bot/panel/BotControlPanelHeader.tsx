@@ -9,6 +9,7 @@ import { Bot, Plus } from 'lucide-react';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { isGuest } from '@/types/telegram-user';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
+import { WorkerPoolStatus } from './WorkerPoolStatus';
 
 /** Свойства заголовка панели управления ботами */
 interface BotControlPanelHeaderProps {
@@ -47,6 +48,7 @@ export function BotControlPanelHeader({ onConnectBot, allProjects, currentProjec
           onSelect={onProjectChange}
         />
       )}
+      <WorkerPoolStatus />
       {!isGuestUser && (
         <Button
           variant="outline"
