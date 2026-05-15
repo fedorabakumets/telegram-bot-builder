@@ -35,7 +35,7 @@ export function AppSidebar({
         'bg-background dark:bg-slate-950',
         'border-r border-border/50',
         'transition-all duration-300',
-        isCollapsed ? 'w-14' : 'w-56'
+        isCollapsed ? 'w-14' : 'w-44'
       )}
     >
       {/* Бренд + кнопка сворачивания */}
