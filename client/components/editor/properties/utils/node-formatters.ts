@@ -52,7 +52,7 @@ export function getNodeTypeLabel(type: Node['type']): string {
     answer_callback_query: 'Уведомление inline кнопки',
     edit_message: 'Редактировать сообщение',
     set_variable: 'Установить переменные',
-    psql_query: 'SQL-запрос',
+    psql_query: 'PostgreSQL',
     convert_file: 'Конвертер файлов',
   } as Partial<Record<Node['type'] | string, string>>;
 

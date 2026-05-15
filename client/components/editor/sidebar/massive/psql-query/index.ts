@@ -1,5 +1,5 @@
 /**
- * @fileoverview Реэкспорт узла SQL-запроса для сайдбара
+ * @fileoverview Реэкспорт узла PostgreSQL для сайдбара
  * @module components/editor/sidebar/massive/psql-query
  */
 
