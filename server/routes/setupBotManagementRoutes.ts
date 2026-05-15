@@ -18,6 +18,7 @@ import { getBotTokenStatusHandler } from './botManagement/handlers/getBotTokenSt
 import { getBotTokenPhotoHandler } from './botManagement/handlers/getBotTokenPhotoHandler';
 import { handleGetLaunchHistory } from './botManagement/handlers/botLaunchHistoryHandler';
 import { handleGetLaunchLogs } from './botManagement/handlers/botLaunchLogsHandler';
+import { handleWorkerStats } from './botManagement/handlers/workerStatsHandler';
 
 /**
  * Настраивает маршруты управления ботами
@@ -27,6 +28,7 @@ import { handleGetLaunchLogs } from './botManagement/handlers/botLaunchLogsHandl
  * @returns {void}
  */
 export function setupBotManagementRoutes(app: Express): void {
+    app.get("/api/workers/stats", handleWorkerStats);
     app.get("/api/tokens/:tokenId/bot-status", handleBotStatusByToken);
     app.get("/api/bot/tokens/:tokenId/status", getBotTokenStatusHandler);
     app.get("/api/bot/tokens/:tokenId/photo", getBotTokenPhotoHandler);

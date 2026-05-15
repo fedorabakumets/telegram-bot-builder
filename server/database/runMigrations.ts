@@ -156,6 +156,25 @@ const CREATE_BOT_TABLE_ROWS_TABLE = `
 `;
 
 /**
+ * SQL для создания таблицы процессов воркеров.
+ * Хранит информацию о Python worker процессах для мониторинга Worker Pool.
+ */
+const CREATE_WORKER_PROCESSES_TABLE = `
+  CREATE TABLE IF NOT EXISTS worker_processes (
+    id SERIAL PRIMARY KEY,
+    project_id INTEGER NOT NULL,
+    pid INTEGER,
+    status TEXT NOT NULL DEFAULT 'running',
+    bots_count INTEGER NOT NULL DEFAULT 0,
+    memory_mb INTEGER,
+    started_at TIMESTAMP DEFAULT NOW(),
+    stopped_at TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_worker_processes_project_id ON worker_processes(project_id);
+  CREATE INDEX IF NOT EXISTS idx_worker_processes_status ON worker_processes(status);
+`;
+
+/**
  * Запускает все необходимые миграции базы данных
  * @returns Promise<void>
  */
@@ -182,6 +201,8 @@ export async function runMigrations(): Promise<void> {
     console.log("[Migrations] Таблица bot_table_columns готова");
     await client.query(CREATE_BOT_TABLE_ROWS_TABLE);
     console.log("[Migrations] Таблица bot_table_rows готова");
+    await client.query(CREATE_WORKER_PROCESSES_TABLE);
+    console.log("[Migrations] Таблица worker_processes готова");
   } catch (err) {
     console.error("[Migrations] Ошибка выполнения миграций:", err);
   } finally {

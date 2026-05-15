@@ -126,3 +126,11 @@ export type StorageBotTableRowInput = typeof botTableRows.$inferInsert;
 
 /** Тип обновления строки пользовательской таблицы */
 export type StorageBotTableRowUpdate = Partial<StorageBotTableRowInput>;
+
+import { workerProcesses } from "@shared/schema";
+
+/** Тип вставки записи процесса воркера по таблице Drizzle */
+export type StorageWorkerProcessInput = typeof workerProcesses.$inferInsert;
+
+/** Тип обновления записи процесса воркера */
+export type StorageWorkerProcessUpdate = Partial<StorageWorkerProcessInput>;

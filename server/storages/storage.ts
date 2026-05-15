@@ -24,6 +24,7 @@ import {
   type BotTable,
   type BotTableColumn,
   type BotTableRow,
+  type WorkerProcess,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
 import type {
@@ -57,6 +58,7 @@ import type {
   StorageBotTableInput,
   StorageBotTableColumnInput,
   StorageBotTableRowInput,
+  StorageWorkerProcessInput,
 } from "./storageTypes";
 
 /**
@@ -1034,6 +1036,28 @@ export interface IStorage {
    * @param tableId - ID таблицы
    */
   reindexBotTableRows(tableId: number): Promise<void>;
+
+  // Worker Processes (мониторинг воркеров)
+
+  /**
+   * Создать запись о процессе воркера
+   * @param data - Данные для создания записи
+   * @returns Созданная запись процесса воркера
+   */
+  createWorkerProcess(data: StorageWorkerProcessInput): Promise<WorkerProcess>;
+
+  /**
+   * Остановить воркер проекта — установить status = 'stopped', stopped_at = NOW()
+   * @param projectId - ID проекта
+   * @returns true, если запись была обновлена
+   */
+  stopWorkerProcess(projectId: number): Promise<boolean>;
+
+  /**
+   * Получить все активные воркеры (status = 'running')
+   * @returns Массив активных записей воркеров
+   */
+  getActiveWorkers(): Promise<WorkerProcess[]>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных
