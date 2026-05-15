@@ -428,10 +428,10 @@ class BotWorkerManager extends EventEmitter {
           const { execSync } = require("node:child_process");
           if (process.platform === "win32") {
             const output = execSync(`tasklist /FI "PID eq ${worker.process.pid}" /FO CSV /NH`, { encoding: "utf8" }).trim();
-            // Формат: "python.exe","1234","Console","1","150,000 K"
-            const match = output.match(/"([0-9,]+)\s*K"/);
+            // Формат: "python.exe","1234","Console","1","44 988 КБ"
+            const match = output.match(/"([\d\s]+)\s*\S+"\s*$/);
             if (match) {
-              memoryMb = Math.round(parseInt(match[1].replace(/,/g, "")) / 1024);
+              memoryMb = Math.round(parseInt(match[1].replace(/\s/g, "")) / 1024);
             }
           } else {
             const output = execSync(`ps -o rss= -p ${worker.process.pid}`, { encoding: "utf8" }).trim();

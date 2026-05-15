@@ -39,11 +39,11 @@ export function BotLayout({ projectId, projectName, allProjects, onProjectChange
     return (
       <div className="h-full">
         <ResizablePanelGroup direction="horizontal" className="h-full">
-          <ResizablePanel defaultSize={40} minSize={25}>
+          <ResizablePanel defaultSize={50} minSize={30}>
             <BotsPanel projectId={projectId} projectName={projectName} allProjects={allProjects} onProjectChange={onProjectChange} />
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={60} minSize={25}>
+          <ResizablePanel defaultSize={50} minSize={25}>
             <TerminalPanel />
           </ResizablePanel>
         </ResizablePanelGroup>
