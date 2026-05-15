@@ -131,7 +131,12 @@ export function BotCard({
               canManage={canManage}
             />
           ) : (
-            <BotEnvPanel projectId={project.id} tokenId={token.id} />
+            <BotEnvPanel
+              projectId={project.id}
+              tokenId={token.id}
+              token={token}
+              adminIds={project.adminIds || ''}
+            />
           )}
         </div>
       </CardContent>

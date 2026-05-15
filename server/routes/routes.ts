@@ -4671,6 +4671,122 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
     res.redirect(`/api/google-auth/callback?code=${encodeURIComponent(code)}`);
   });
 
+  // ─── Переменные окружения бота (веб-клиент, без telegram_id) ───
+
+  /**
+   * Получение списка переменных окружения токена
+   * GET /api/projects/:projectId/tokens/:tokenId/env-variables
+   */
+  app.get("/api/projects/:projectId/tokens/:tokenId/env-variables", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const items = await storage.getEnvVariables(tokenId);
+      const masked = items.map(item => ({
+        ...item,
+        value: item.isSecret ? "••••••••" : item.value,
+      }));
+      res.json({ items: masked, count: masked.length });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка получения переменных окружения" });
+    }
+  });
+
+  /**
+   * Создание переменной окружения
+   * POST /api/projects/:projectId/tokens/:tokenId/env-variables
+   */
+  app.post("/api/projects/:projectId/tokens/:tokenId/env-variables", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const { key, value, isSecret } = req.body as { key: string; value?: string; isSecret?: number };
+
+      if (!key || !/^[A-Z][A-Z0-9_]*$/.test(key)) {
+        return res.status(400).json({ message: "Некорректное имя переменной (A-Z, 0-9, _)" });
+      }
+
+      const existing = await storage.getEnvVariables(tokenId);
+      if (existing.some(v => v.key === key)) {
+        return res.status(409).json({ message: `Переменная ${key} уже существует` });
+      }
+
+      const variable = await storage.createEnvVariable({
+        tokenId,
+        key,
+        value: value ?? "",
+        isSecret: isSecret ?? 0,
+      });
+      res.status(201).json(variable);
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка создания переменной окружения" });
+    }
+  });
+
+  /**
+   * Обновление переменной окружения
+   * PUT /api/projects/:projectId/tokens/:tokenId/env-variables/:id
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/env-variables/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { key, value, isSecret } = req.body as { key?: string; value?: string; isSecret?: number };
+
+      if (key && !/^[A-Z][A-Z0-9_]*$/.test(key)) {
+        return res.status(400).json({ message: "Некорректное имя переменной" });
+      }
+
+      const variable = await storage.getEnvVariable(id);
+      if (!variable) return res.status(404).json({ message: "Переменная не найдена" });
+
+      if (key && key !== variable.key) {
+        const existing = await storage.getEnvVariables(variable.tokenId);
+        if (existing.some(v => v.key === key && v.id !== id)) {
+          return res.status(409).json({ message: `Переменная ${key} уже существует` });
+        }
+      }
+
+      const updateData: Record<string, any> = {};
+      if (key !== undefined) updateData.key = key;
+      if (value !== undefined) updateData.value = value;
+      if (isSecret !== undefined) updateData.isSecret = isSecret;
+
+      const updated = await storage.updateEnvVariable(id, updateData);
+      if (!updated) return res.status(404).json({ message: "Не удалось обновить" });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка обновления переменной окружения" });
+    }
+  });
+
+  /**
+   * Удаление переменной окружения
+   * DELETE /api/projects/:projectId/tokens/:tokenId/env-variables/:id
+   */
+  app.delete("/api/projects/:projectId/tokens/:tokenId/env-variables/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteEnvVariable(id);
+      if (!deleted) return res.status(404).json({ message: "Переменная не найдена" });
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка удаления переменной окружения" });
+    }
+  });
+
+  /**
+   * Раскрытие секретного значения переменной
+   * GET /api/projects/:projectId/tokens/:tokenId/env-variables/:id/reveal
+   */
+  app.get("/api/projects/:projectId/tokens/:tokenId/env-variables/:id/reveal", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const variable = await storage.getEnvVariable(id);
+      if (!variable) return res.status(404).json({ message: "Переменная не найдена" });
+      res.json({ value: variable.value });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка получения значения" });
+    }
+  });
+
   // Setup Google Auth routes
   setupGoogleAuthRoutes(app);
 }
