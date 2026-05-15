@@ -5,7 +5,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Activity } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@/queryClient';
 
 /** Ответ API /api/workers/stats */
 interface WorkerStats {
