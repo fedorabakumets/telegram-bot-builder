@@ -235,7 +235,7 @@ class BotWorker:
             if _original_signal is not None:
                 import signal as _signal_module
                 _signal_module.signal = _original_signal
-        finally:
+
             # Убираем бота из активных если он ещё там
             if token_id in self.bots and self.bots[token_id] is ctx:
                 del self.bots[token_id]
