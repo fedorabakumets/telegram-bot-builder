@@ -4,7 +4,7 @@
  * @module server/bots/botWorkerManager
  */
 
-import { spawn, ChildProcess } from "node:child_process";
+import { spawn, ChildProcess, execSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { EventEmitter } from "node:events";
@@ -425,7 +425,6 @@ class BotWorkerManager extends EventEmitter {
       let memoryMb = 0;
       if (worker.process.pid) {
         try {
-          const { execSync } = require("node:child_process");
           if (process.platform === "win32") {
             const output = execSync(`tasklist /FI "PID eq ${worker.process.pid}" /FO CSV`, { encoding: "utf8" }).trim();
             // Формат: "python.exe","1492","Console","9","29 916 КБ"
