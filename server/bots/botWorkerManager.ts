@@ -157,8 +157,11 @@ class BotWorkerManager extends EventEmitter {
               resolve(worker);
             }
           } catch {
-            // Не JSON — пробрасываем как есть
-            this.emit("raw-output", projectId, line);
+            // Не JSON — это raw логи от Python (aiogram, root logger)
+            // Маршрутизируем как stdout лог для всех активных ботов воркера
+            for (const tokenId of worker.activeBots) {
+              this.emit("bot-log", projectId, tokenId, "stdout", line);
+            }
           }
         }
       });
