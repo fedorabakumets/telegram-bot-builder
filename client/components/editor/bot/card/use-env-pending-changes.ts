@@ -39,7 +39,7 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
   const { toast } = useToast();
 
   /** URL batch-эндпоинта */
-  const batchUrl = `/api/projects/${projectId}/tokens/${tokenId}/env-variables/batch`;
+  const batchUrl = `/api/projects/${projectId}/tokens/${tokenId}/env-batch`;
 
   /** Количество несохранённых изменений */
   const changesCount = changes.size;

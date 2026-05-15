@@ -4728,6 +4728,8 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
   app.put("/api/projects/:projectId/tokens/:tokenId/env-variables/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      // Пропускаем если это batch-запрос (обрабатывается отдельным роутом)
+      if (isNaN(id)) return res.status(400).json({ message: "Некорректный id" });
       const { key, value, isSecret } = req.body as { key?: string; value?: string; isSecret?: number };
 
       if (key && !/^[A-Z][A-Z0-9_]*$/.test(key)) {
@@ -4818,7 +4820,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
 
   /**
    * Batch-обновление переменных окружения (единый эндпоинт)
-   * PUT /api/projects/:projectId/tokens/:tokenId/env-variables/batch
+   * PUT /api/projects/:projectId/tokens/:tokenId/env-batch
    *
    * Принимает массив изменений и маппит каждое на нужное хранилище:
    * - BOT_TOKEN → bot_tokens.token
@@ -4828,7 +4830,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
    * - SAVE_INCOMING_MEDIA → bot_tokens.saveIncomingMedia
    * - Остальные → bot_env_variables (CRUD)
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/env-variables/batch", async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/env-batch", async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const tokenId = parseInt(req.params.tokenId);
