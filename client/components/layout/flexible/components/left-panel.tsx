@@ -53,7 +53,7 @@ export function LeftPanel(props: LeftPanelProps): React.JSX.Element {
       <ResizablePanel
         id={id}
         order={order}
-        defaultSize={isUserDetails ? 20 : 25}
+        defaultSize={isUserDetails ? 20 : 30}
         minSize={finalMinSize}
         maxSize={finalMaxSize}
         className="overflow-hidden"
