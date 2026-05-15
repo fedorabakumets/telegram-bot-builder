@@ -7,7 +7,7 @@
  * @module components/editor/properties/components/trigger/CallbackTriggerConfiguration
  */
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import type { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,11 @@ import {
 } from '@/components/ui/select';
 import { TriggerTargetSelector } from './TriggerTargetSelector';
 import { formatNodeDisplay as defaultFormatNodeDisplay } from '../../utils/node-formatters';
+import {
+  CallbackVariableExtraction,
+  parseTemplatePlaceholders,
+  type CallbackVariableMapping,
+} from './CallbackVariableExtraction';
 
 /**
  * Пропсы компонента CallbackTriggerConfiguration
@@ -67,6 +72,66 @@ export function CallbackTriggerConfiguration({
 
   /** Текущий тип совпадения */
   const matchType: string = (selectedNode.data as any)?.matchType ?? 'exact';
+
+  /** Шаблон разбора callback_data */
+  const callbackParseTemplate: string = (selectedNode.data as any)?.callbackParseTemplate ?? '';
+
+  /** Массив маппингов переменных */
+  const callbackSaveVariables: CallbackVariableMapping[] =
+    (selectedNode.data as any)?.callbackSaveVariables ?? [];
+
+  /** Включено ли извлечение переменных (определяется наличием шаблона) */
+  const extractionEnabled: boolean = Boolean(callbackParseTemplate);
+
+  /**
+   * Переключает режим извлечения переменных
+   * @param enabled - Новое состояние чекбокса
+   */
+  const handleExtractionToggle = useCallback((enabled: boolean) => {
+    if (!enabled) {
+      onNodeUpdate(selectedNode.id, {
+        callbackParseTemplate: '',
+        callbackSaveVariables: [],
+      });
+    } else {
+      onNodeUpdate(selectedNode.id, {
+        callbackParseTemplate: callbackData || '',
+      });
+    }
+  }, [selectedNode.id, callbackData, onNodeUpdate]);
+
+  /**
+   * Обновляет шаблон и синхронизирует маппинг переменных
+   * @param template - Новый шаблон разбора
+   */
+  const handleTemplateChange = useCallback((template: string) => {
+    const placeholders = parseTemplatePlaceholders(template);
+    const newMappings: CallbackVariableMapping[] = placeholders.map(ph => {
+      const existing = callbackSaveVariables.find(v => v.templateVar === ph);
+      return existing ?? { templateVar: ph, saveAs: ph };
+    });
+    onNodeUpdate(selectedNode.id, {
+      callbackParseTemplate: template,
+      callbackSaveVariables: newMappings,
+    });
+  }, [selectedNode.id, callbackSaveVariables, onNodeUpdate]);
+
+  /**
+   * Переименовывает переменную для сохранения по индексу
+   * @param index - Индекс переменной в массиве плейсхолдеров
+   * @param newSaveAs - Новое имя для сохранения
+   */
+  const handleVariableRename = useCallback((index: number, newSaveAs: string) => {
+    const placeholders = parseTemplatePlaceholders(callbackParseTemplate);
+    const newMappings: CallbackVariableMapping[] = placeholders.map((ph, idx) => {
+      const existing = callbackSaveVariables.find(v => v.templateVar === ph);
+      if (idx === index) {
+        return { templateVar: ph, saveAs: newSaveAs };
+      }
+      return existing ?? { templateVar: ph, saveAs: ph };
+    });
+    onNodeUpdate(selectedNode.id, { callbackSaveVariables: newMappings });
+  }, [selectedNode.id, callbackParseTemplate, callbackSaveVariables, onNodeUpdate]);
 
   /**
    * Собирает уникальные customCallbackData из кнопок всех узлов на холсте
@@ -148,6 +213,16 @@ export function CallbackTriggerConfiguration({
           </SelectContent>
         </Select>
       </div>
+
+      {/* Извлечение переменных из callback */}
+      <CallbackVariableExtraction
+        enabled={extractionEnabled}
+        parseTemplate={callbackParseTemplate}
+        saveVariables={callbackSaveVariables}
+        onToggle={handleExtractionToggle}
+        onTemplateChange={handleTemplateChange}
+        onVariableRename={handleVariableRename}
+      />
 
       {/* Следующий узел */}
       <TriggerTargetSelector
