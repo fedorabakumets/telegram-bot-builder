@@ -16,15 +16,16 @@
 {% for entry in callbackTriggerEntries -%}
 {%- set sanitized_node_id = entry.nodeId | safe_name -%}
 {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+{%- set escaped_callback_data = entry.callbackData | replace('"', '\\"') -%}
 
 {% if entry.matchType == 'startswith' -%}
-@dp.callback_query(lambda c: c.data and c.data.startswith("{{ entry.callbackData }}"))
+@dp.callback_query(lambda c: c.data and c.data.startswith("{{ escaped_callback_data }}"))
 {%- else -%}
-@dp.callback_query(lambda c: c.data == "{{ entry.callbackData }}")
+@dp.callback_query(lambda c: c.data == "{{ escaped_callback_data }}")
 {%- endif %}
 async def callback_trigger_{{ sanitized_node_id }}_handler(callback_query: types.CallbackQuery, state: FSMContext = None):
     user_id = callback_query.from_user.id
-    logging.info(f"Пользователь {user_id} нажал кнопку '{{ entry.callbackData }}' — триггер узла {{ entry.nodeId }}")
+    logging.info(f"Пользователь {user_id} нажал кнопку '{{ entry.callbackData | replace('{', '{{') | replace('}', '}}') }}' — триггер узла {{ entry.nodeId }}")
     {%- if entry.adminOnly %}
     if not await is_admin(user_id):
         await callback_query.answer("❌ У вас нет прав для выполнения этого действия")
