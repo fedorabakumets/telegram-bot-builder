@@ -11,3 +11,6 @@ export { BotDatabaseToggle } from './BotDatabaseToggle';
 export { BotExecutionTimer } from './BotExecutionTimer';
 export { BotSettingsGrid } from './BotSettingsGrid';
 export { BotLaunchHistory } from './BotLaunchHistory';
+export { BotCardViewToggle } from './BotCardViewToggle';
+export type { BotCardViewMode } from './BotCardViewToggle';
+export { BotEnvPanel } from './BotEnvPanel';

@@ -18,6 +18,8 @@ import { Separator } from '@/components/ui/separator';
 import { BotCardHeader } from './BotCardHeader';
 import { BotCardInfo } from './BotCardInfo';
 import { BotSettingsGrid } from './BotSettingsGrid';
+import { BotCardViewToggle, type BotCardViewMode } from './BotCardViewToggle';
+import { BotEnvPanel } from './BotEnvPanel';
 import { useBotControl } from '../bot-control-context';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import type { BotProject, BotToken } from '@shared/schema';
@@ -60,6 +62,9 @@ export function BotCard({
 
   /** Свёрнута ли карточка */
   const [isCollapsed, setIsCollapsed] = useState<boolean>(defaultCollapsed);
+
+  /** Режим отображения: настройки или переменные */
+  const [viewMode, setViewMode] = useState<BotCardViewMode>('settings');
 
   // Синхронизируем с внешним состоянием при его изменении (кнопка "Свернуть все")
   useEffect(() => {
@@ -110,19 +115,24 @@ export function BotCard({
             handleCancelEdit={handleCancelEdit} handleStartEdit={handleStartEdit}
             queryClient={queryClient}
           />
-          <BotSettingsGrid
-            projectId={project.id} tokenId={token.id}
-            botName={token.name ?? `Бот ${token.id}`}
-            userDatabaseEnabled={project.userDatabaseEnabled}
-            isBotRunning={isThisTokenRunning}
-            currentElapsedSeconds={currentElapsedSeconds}
-            allBotStatuses={allBotStatuses} token={token}
-            toggleDatabaseMutation={toggleDatabaseMutation}
-            launchMode={token.launchMode ?? 'polling'}
-            webhookBaseUrl={token.webhookBaseUrl ?? null}
-            webhookSecretToken={token.webhookSecretToken ?? null}
-            canManage={canManage}
-          />
+          <BotCardViewToggle mode={viewMode} onModeChange={setViewMode} />
+          {viewMode === 'settings' ? (
+            <BotSettingsGrid
+              projectId={project.id} tokenId={token.id}
+              botName={token.name ?? `Бот ${token.id}`}
+              userDatabaseEnabled={project.userDatabaseEnabled}
+              isBotRunning={isThisTokenRunning}
+              currentElapsedSeconds={currentElapsedSeconds}
+              allBotStatuses={allBotStatuses} token={token}
+              toggleDatabaseMutation={toggleDatabaseMutation}
+              launchMode={token.launchMode ?? 'polling'}
+              webhookBaseUrl={token.webhookBaseUrl ?? null}
+              webhookSecretToken={token.webhookSecretToken ?? null}
+              canManage={canManage}
+            />
+          ) : (
+            <BotEnvPanel projectId={project.id} tokenId={token.id} />
+          )}
         </div>
       </CardContent>
     </Card>
