@@ -279,3 +279,12 @@ export function hasPsqlQueryNodes(nodes: Node[]): boolean {
 export function hasConvertFileNodes(nodes: Node[]): boolean {
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'convert_file');
 }
+
+/**
+ * Проверяет наличие узлов loop в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа loop
+ */
+export function hasLoopNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'loop');
+}

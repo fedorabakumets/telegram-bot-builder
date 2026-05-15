@@ -4,4 +4,5 @@
  */
 
 export { collectLoopEntries, generateLoopHandlers } from './loop.renderer';
+export { loopEntrySchema } from './loop.schema';
 export type { LoopEntry, LoopTemplateParams } from './loop.params';
