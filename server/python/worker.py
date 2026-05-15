@@ -21,6 +21,7 @@ import os
 import signal
 import sys
 import traceback
+import types
 from datetime import datetime
 from typing import Any, Dict, Optional
 
@@ -138,13 +139,24 @@ class BotWorker:
 
         try:
             # Динамическая загрузка модуля бота
-            spec = importlib.util.spec_from_file_location(f"bot_{token_id}", ctx.bot_file)
-            if spec is None or spec.loader is None:
-                emit_log(token_id, f"Не удалось загрузить файл: {ctx.bot_file}", "stderr")
+            from pathlib import Path
+            bot_path = Path(ctx.bot_file)
+            
+            emit_log(token_id, f"Загрузка файла: {bot_path}", "stdout")
+            emit_log(token_id, f"Файл существует: {bot_path.exists()}", "stdout")
+            
+            if not bot_path.exists():
+                emit_log(token_id, f"Файл не найден: {bot_path}", "stderr")
                 ctx.status = "error"
                 return
 
-            module = importlib.util.module_from_spec(spec)
+            # Читаем и компилируем код напрямую (обходим проблемы importlib с кириллицей)
+            source_code = bot_path.read_text(encoding="utf-8")
+            compiled = compile(source_code, str(bot_path), "exec")
+            
+            module = types.ModuleType(f"bot_{token_id}")
+            module.__file__ = str(bot_path)
+            module.__loader__ = None
 
             # Подменяем переменные окружения для этого бота
             os.environ["BOT_TOKEN"] = ctx.token
@@ -167,7 +179,7 @@ class BotWorker:
             bot_logger.setLevel(logging.INFO)
 
             # Загружаем модуль (выполняет top-level код: создание bot, dp, хендлеров)
-            spec.loader.exec_module(module)
+            exec(compiled, module.__dict__)
 
             ctx.status = "running"
             ctx.started_at = datetime.now()
