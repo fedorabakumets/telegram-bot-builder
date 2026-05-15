@@ -160,7 +160,17 @@ async def init_all_user_vars(user_id: int) -> dict:
                     _tname = _r["table_name"]
                     _cname = _r["col_name"]
                     _cid = str(_r["col_id"])
-                    _data = _r["data"] if isinstance(_r["data"], dict) else {}
+                    _raw_data = _r["data"]
+                    if isinstance(_raw_data, str):
+                        import json as _json_tbl
+                        try:
+                            _data = _json_tbl.loads(_raw_data)
+                        except Exception:
+                            _data = {}
+                    elif isinstance(_raw_data, dict):
+                        _data = _raw_data
+                    else:
+                        _data = {}
                     _val = _data.get(_cid, "")
                     _cache[f"table.{_tname}.{_cname}"] = str(_val) if _val else ""
                 _bot_tables_cache = _cache
