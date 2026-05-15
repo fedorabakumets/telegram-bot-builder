@@ -19,6 +19,12 @@ export const psqlQueryParamsSchema = z.object({
   textTemplate: z.string(),
   /** ID следующего узла для автоперехода */
   autoTransitionTo: z.string(),
+  /** Источник подключения: builtin (db_pool), env (переменная окружения), custom (прямой URL) */
+  connectionSource: z.enum(['builtin', 'env', 'custom']).default('builtin'),
+  /** Имя переменной окружения для подключения (при env) */
+  connectionEnvVar: z.string().default(''),
+  /** Connection string для прямого подключения (при custom) */
+  connectionString: z.string().default(''),
 });
 
 /** Тип параметров, выведенный из схемы */

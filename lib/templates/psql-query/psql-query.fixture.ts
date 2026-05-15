@@ -29,6 +29,9 @@ export const validParamsEmpty: PsqlQueryTemplateParams = {
   resultFormat: 'first_row',
   textTemplate: '',
   autoTransitionTo: '',
+  connectionSource: 'builtin',
+  connectionEnvVar: '',
+  connectionString: '',
 };
 
 /** SELECT с first_row форматом */
@@ -39,6 +42,9 @@ export const validParamsSingle: PsqlQueryTemplateParams = {
   resultFormat: 'first_row',
   textTemplate: '',
   autoTransitionTo: '',
+  connectionSource: 'builtin',
+  connectionEnvVar: '',
+  connectionString: '',
 };
 
 /** SELECT с text форматом и textTemplate */
@@ -49,6 +55,9 @@ export const validParamsText: PsqlQueryTemplateParams = {
   resultFormat: 'text',
   textTemplate: '{name} — {score}',
   autoTransitionTo: 'node_next',
+  connectionSource: 'builtin',
+  connectionEnvVar: '',
+  connectionString: '',
 };
 
 /** UPDATE с affected форматом */
@@ -59,6 +68,35 @@ export const validParamsAffected: PsqlQueryTemplateParams = {
   resultFormat: 'affected',
   textTemplate: '',
   autoTransitionTo: '',
+  connectionSource: 'builtin',
+  connectionEnvVar: '',
+  connectionString: '',
+};
+
+/** Подключение через переменную окружения */
+export const validParamsEnvConnection: PsqlQueryTemplateParams = {
+  nodeId: 'node_env',
+  query: 'SELECT * FROM external_users',
+  saveResultTo: 'ext_users',
+  resultFormat: 'json',
+  textTemplate: '',
+  autoTransitionTo: '',
+  connectionSource: 'env',
+  connectionEnvVar: 'MY_EXTERNAL_DB',
+  connectionString: '',
+};
+
+/** Подключение через прямой connection string */
+export const validParamsCustomConnection: PsqlQueryTemplateParams = {
+  nodeId: 'node_custom',
+  query: 'SELECT count(*) as cnt FROM orders',
+  saveResultTo: 'order_count',
+  resultFormat: 'first_row',
+  textTemplate: '',
+  autoTransitionTo: '',
+  connectionSource: 'custom',
+  connectionEnvVar: '',
+  connectionString: 'postgresql://user:pass@db.example.com:5432/mydb',
 };
 
 // ─── Высокоуровневые фикстуры (Node[]) для collectPsqlQueryEntries ────────────
@@ -71,6 +109,9 @@ export const nodesWithPsqlQuery: Node[] = [
     resultFormat: 'first_row',
     textTemplate: '',
     autoTransitionTo: 'msg_1',
+    connectionSource: 'builtin',
+    connectionEnvVar: '',
+    connectionString: '',
   }),
   makeNode('msg_1', 'message', { messageText: 'Готово!' }),
 ];
@@ -90,6 +131,9 @@ export const nodesWithNullAndMixed: Node[] = [
     resultFormat: 'first_row',
     textTemplate: '',
     autoTransitionTo: '',
+    connectionSource: 'builtin',
+    connectionEnvVar: '',
+    connectionString: '',
   }),
   makeNode('msg_1', 'message', {}),
 ];

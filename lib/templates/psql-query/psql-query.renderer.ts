@@ -23,6 +23,9 @@ export function collectPsqlQueryEntries(nodes: Node[]): PsqlQueryTemplateParams[
       resultFormat: node.data?.resultFormat || 'first_row',
       textTemplate: node.data?.textTemplate || '',
       autoTransitionTo: node.data?.autoTransitionTo || '',
+      connectionSource: node.data?.connectionSource || 'builtin',
+      connectionEnvVar: node.data?.connectionEnvVar || '',
+      connectionString: node.data?.connectionString || '',
     }));
 }
 

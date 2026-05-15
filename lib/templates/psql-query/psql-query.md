@@ -12,6 +12,9 @@
 | `resultFormat`   | `json \| text \| first_row \| affected` | Формат обработки результата                       |
 | `textTemplate`   | `string`                               | Шаблон строки для формата `text`                  |
 | `autoTransitionTo` | `string`                             | ID следующего узла для автоперехода (или `""`)    |
+| `connectionSource` | `string` | ❌ | `builtin` / `env` / `custom` — источник подключения |
+| `connectionEnvVar` | `string` | ❌ | Имя переменной окружения (при `env`) |
+| `connectionString` | `string` | ❌ | Прямой URL подключения (при `custom`) |
 
 ## Форматы результата
 
@@ -70,4 +73,36 @@ const code = generatePsqlQueryHandlers(nodes);
 
 // Только сбор параметров (без рендеринга)
 const entries = collectPsqlQueryEntries(nodes);
+```
+
+## Подключение к внешней БД
+
+Параметр `connectionSource` определяет способ подключения к базе данных:
+
+### `builtin` (по умолчанию)
+
+Используется встроенный пул `db_pool`, который создаётся при старте бота. Если `db_pool` недоступен — обработчик завершается без ошибки.
+
+### `env`
+
+Подключение через переменную окружения. В `connectionEnvVar` указывается имя переменной, содержащей connection string. Пул создаётся на лету и закрывается после выполнения запроса.
+
+```typescript
+{
+  connectionSource: 'env',
+  connectionEnvVar: 'MY_EXTERNAL_DB',
+  connectionString: '',
+}
+```
+
+### `custom`
+
+Прямое подключение по URL. В `connectionString` указывается полный connection string. Пул создаётся на лету и закрывается после выполнения запроса.
+
+```typescript
+{
+  connectionSource: 'custom',
+  connectionEnvVar: '',
+  connectionString: 'postgresql://user:pass@host:5432/dbname',
+}
 ```

@@ -17,4 +17,10 @@ export interface PsqlQueryTemplateParams {
   textTemplate: string;
   /** ID следующего узла для автоперехода (пустая строка если нет) */
   autoTransitionTo: string;
+  /** Источник подключения: builtin (db_pool), env (переменная окружения), custom (прямой URL) */
+  connectionSource: 'builtin' | 'env' | 'custom';
+  /** Имя переменной окружения для подключения (при connectionSource === 'env') */
+  connectionEnvVar: string;
+  /** Connection string для прямого подключения (при connectionSource === 'custom') */
+  connectionString: string;
 }
