@@ -7,6 +7,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/queryClient';
 
+/** Переменные, которые хранятся как кастомные env-variables в bot_env_variables */
+const ENV_VAR_KEYS = new Set([
+  'API_BASE_URL', 'API_PORT', 'API_USE_SSL',
+  'API_TIMEOUT', 'DISABLE_ASYNC_LOG', 'REDIS_URL',
+]);
+
 /**
  * Хук для обновления системных переменных через API
  * @param projectId - ID проекта
@@ -15,10 +21,23 @@ import { apiRequest } from '@/queryClient';
  */
 export function useSystemEnvUpdate(projectId: number, tokenId: number) {
   const queryClient = useQueryClient();
+  const envBaseUrl = `/api/projects/${projectId}/tokens/${tokenId}/env-variables`;
 
   /** Мутация обновления системной переменной */
   const mutation = useMutation({
     mutationFn: async ({ key, value }: { key: string; value: string }) => {
+      if (ENV_VAR_KEYS.has(key)) {
+        /** Получаем список кастомных переменных для поиска существующей */
+        const res = await apiRequest('GET', envBaseUrl);
+        const existing = res.items?.find((v: any) => v.key === key);
+        if (existing) {
+          return apiRequest('PUT', `${envBaseUrl}/${existing.id}`, { value });
+        }
+        return apiRequest('POST', envBaseUrl, {
+          key, value, isSecret: key === 'REDIS_URL' ? 1 : 0,
+        });
+      }
+
       switch (key) {
         case 'BOT_TOKEN':
           return apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}`, { token: value });
@@ -36,6 +55,8 @@ export function useSystemEnvUpdate(projectId: number, tokenId: number) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+      /** Инвалидируем кастомные переменные чтобы обновить значения в панели */
+      queryClient.invalidateQueries({ queryKey: [envBaseUrl] });
     },
   });
 

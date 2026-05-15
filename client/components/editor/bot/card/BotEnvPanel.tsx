@@ -37,21 +37,35 @@ interface SystemVar {
   isSecret: boolean;
 }
 
+/** Переменные, которые нельзя редактировать */
+const READ_ONLY_KEYS = new Set(['PROJECT_ID', 'TOKEN_ID']);
+
 /**
  * Формирует массив системных переменных из данных токена
  * @param token - Объект токена
  * @param projectId - ID проекта
  * @param tokenId - ID токена
  * @param adminIds - ID администраторов
+ * @param customItems - Кастомные переменные для переопределения дефолтов
  * @returns Массив системных переменных
  */
-function buildSystemVars(token: BotToken, projectId: number, tokenId: number, adminIds: string): SystemVar[] {
+function buildSystemVars(token: BotToken, projectId: number, tokenId: number,
+  adminIds: string, customItems: Array<{ key: string; value: string }>): SystemVar[] {
+  /** Маппинг кастомных переменных для переопределения дефолтов */
+  const customMap = new Map(customItems.map(v => [v.key, v.value]));
+
   return [
     { key: 'BOT_TOKEN', value: token.token, isSecret: true },
     { key: 'ADMIN_IDS', value: adminIds || '123456789', isSecret: true },
     { key: 'PROJECT_ID', value: String(projectId), isSecret: false },
     { key: 'TOKEN_ID', value: String(tokenId), isSecret: false },
+    { key: 'API_BASE_URL', value: customMap.get('API_BASE_URL') ?? 'http://localhost:5000', isSecret: false },
+    { key: 'API_PORT', value: customMap.get('API_PORT') ?? '5000', isSecret: false },
+    { key: 'API_USE_SSL', value: customMap.get('API_USE_SSL') ?? 'auto', isSecret: false },
+    { key: 'API_TIMEOUT', value: customMap.get('API_TIMEOUT') ?? '10', isSecret: false },
     { key: 'LOG_LEVEL', value: token.logLevel || 'WARNING', isSecret: false },
+    { key: 'DISABLE_ASYNC_LOG', value: customMap.get('DISABLE_ASYNC_LOG') ?? 'true', isSecret: false },
+    { key: 'REDIS_URL', value: customMap.get('REDIS_URL') ?? 'redis://localhost:6379', isSecret: true },
     { key: 'PROTECT_CONTENT', value: token.protectContent ? 'true' : 'false', isSecret: false },
     { key: 'SAVE_INCOMING_MEDIA', value: token.saveIncomingMedia ? 'true' : 'false', isSecret: false },
   ];
@@ -70,14 +84,23 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
   const [showSearch, setShowSearch] = useState(false);
   const [search, setSearch] = useState('');
 
-  const systemVars = useMemo(() => buildSystemVars(token, projectId, tokenId, adminIds), [token, projectId, tokenId, adminIds]);
+  const systemVars = useMemo(
+    () => buildSystemVars(token, projectId, tokenId, adminIds, items),
+    [token, projectId, tokenId, adminIds, items],
+  );
+
+  /** Ключи системных переменных для фильтрации дублей */
+  const systemKeys = useMemo(() => new Set(systemVars.map(v => v.key)), [systemVars]);
 
   const filteredSystem = useMemo(() =>
     systemVars.filter(v => v.key.includes(search.toUpperCase())), [systemVars, search]);
-  const filteredCustom = useMemo(() =>
-    items.filter(v => v.key.includes(search.toUpperCase())), [items, search]);
 
-  const totalCount = systemVars.length + items.length;
+  /** Кастомные переменные без дублей с системными */
+  const filteredCustom = useMemo(() =>
+    items.filter(v => v.key.includes(search.toUpperCase()) && !systemKeys.has(v.key)),
+    [items, search, systemKeys]);
+
+  const totalCount = systemVars.length + filteredCustom.length;
 
   /** Обработчик создания переменной */
   function handleCreate(key: string, value: string, isSecret: number) {
@@ -115,7 +138,7 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
           <BotEnvRow
             key={v.key} id={null} envKey={v.key} value={v.value}
             isSecret={v.isSecret} isSystem={true}
-            onSystemUpdate={v.key !== 'PROJECT_ID' && v.key !== 'TOKEN_ID' ? handleSystemUpdate : undefined}
+            onSystemUpdate={!READ_ONLY_KEYS.has(v.key) ? handleSystemUpdate : undefined}
           />
         ))}
       </div>
