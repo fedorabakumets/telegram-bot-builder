@@ -18,6 +18,7 @@ import {
   telegramUsers,
   userBotData,
   projectCollaborators,
+  botEnvVariables,
 } from "@shared/schema";
 
 /** Тип вставки проекта бота по таблице Drizzle */
@@ -102,3 +103,9 @@ export type StorageBroadcastUpdate = Partial<StorageBroadcastInput>;
 
 /** Тип вставки результата рассылки по таблице Drizzle */
 export type StorageBroadcastResultInput = typeof broadcastResults.$inferInsert;
+
+/** Тип вставки переменной окружения бота по таблице Drizzle */
+export type StorageBotEnvVariableInput = typeof botEnvVariables.$inferInsert;
+
+/** Тип обновления переменной окружения бота */
+export type StorageBotEnvVariableUpdate = Partial<Omit<StorageBotEnvVariableInput, 'tokenId'>>;

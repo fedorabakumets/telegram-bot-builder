@@ -20,6 +20,7 @@ import {
   type Broadcast,
   type BroadcastResult,
   type BroadcastFilters,
+  type BotEnvVariable,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
 import type {
@@ -48,6 +49,8 @@ import type {
   StorageBroadcastInput,
   StorageBroadcastUpdate,
   StorageBroadcastResultInput,
+  StorageBotEnvVariableInput,
+  StorageBotEnvVariableUpdate,
 } from "./storageTypes";
 
 /**
@@ -885,6 +888,51 @@ export interface IStorage {
    * @returns Массив пользователей
    */
   getUsersForBroadcast(projectId: number, tokenId: number, filters: BroadcastFilters): Promise<UserBotData[]>;
+
+  // Переменные окружения бота
+
+  /**
+   * Получить все переменные окружения для токена
+   * @param tokenId - ID токена
+   * @returns Массив переменных окружения
+   */
+  getEnvVariables(tokenId: number): Promise<BotEnvVariable[]>;
+
+  /**
+   * Получить переменную окружения по ID
+   * @param id - ID переменной
+   * @returns Переменная окружения или undefined
+   */
+  getEnvVariable(id: number): Promise<BotEnvVariable | undefined>;
+
+  /**
+   * Создать новую переменную окружения
+   * @param data - Данные для создания
+   * @returns Созданная переменная
+   */
+  createEnvVariable(data: StorageBotEnvVariableInput): Promise<BotEnvVariable>;
+
+  /**
+   * Обновить переменную окружения
+   * @param id - ID переменной
+   * @param data - Данные для обновления
+   * @returns Обновлённая переменная или undefined
+   */
+  updateEnvVariable(id: number, data: StorageBotEnvVariableUpdate): Promise<BotEnvVariable | undefined>;
+
+  /**
+   * Удалить переменную окружения
+   * @param id - ID переменной
+   * @returns true, если переменная была удалена
+   */
+  deleteEnvVariable(id: number): Promise<boolean>;
+
+  /**
+   * Удалить все переменные окружения токена
+   * @param tokenId - ID токена
+   * @returns true, если переменные были удалены
+   */
+  deleteEnvVariablesByToken(tokenId: number): Promise<boolean>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных

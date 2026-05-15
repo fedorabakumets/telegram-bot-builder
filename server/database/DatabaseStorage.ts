@@ -2,10 +2,10 @@
  * @fileoverview Базовая реализация storage поверх Drizzle для серверной части конструктора
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable } from "@shared/schema";
 import { and, asc, desc, eq, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
-import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageUserBotDataInput, StorageUserBotDataUpdate, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput } from "../storages/storageTypes";
+import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageUserBotDataInput, StorageUserBotDataUpdate, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate } from "../storages/storageTypes";
 import { db } from "./db";
 
 /**
@@ -1876,5 +1876,77 @@ export class DatabaseStorage implements IStorage {
       createdAt: u.registeredAt ?? null,
       updatedAt: u.lastInteraction ?? null,
     })) as unknown as UserBotData[];
+  }
+
+  // Переменные окружения бота
+
+  /**
+   * Получить все переменные окружения для токена
+   * @param tokenId - ID токена
+   * @returns Массив переменных окружения
+   */
+  async getEnvVariables(tokenId: number): Promise<BotEnvVariable[]> {
+    return await this.db.select().from(botEnvVariables)
+      .where(eq(botEnvVariables.tokenId, tokenId))
+      .orderBy(asc(botEnvVariables.key));
+  }
+
+  /**
+   * Получить переменную окружения по ID
+   * @param id - ID переменной
+   * @returns Переменная окружения или undefined
+   */
+  async getEnvVariable(id: number): Promise<BotEnvVariable | undefined> {
+    const [variable] = await this.db.select().from(botEnvVariables)
+      .where(eq(botEnvVariables.id, id));
+    return variable || undefined;
+  }
+
+  /**
+   * Создать новую переменную окружения
+   * @param data - Данные для создания
+   * @returns Созданная переменная
+   */
+  async createEnvVariable(data: StorageBotEnvVariableInput): Promise<BotEnvVariable> {
+    const [variable] = await this.db.insert(botEnvVariables)
+      .values(data)
+      .returning();
+    return variable;
+  }
+
+  /**
+   * Обновить переменную окружения
+   * @param id - ID переменной
+   * @param data - Данные для обновления
+   * @returns Обновлённая переменная или undefined
+   */
+  async updateEnvVariable(id: number, data: StorageBotEnvVariableUpdate): Promise<BotEnvVariable | undefined> {
+    const [variable] = await this.db.update(botEnvVariables)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(botEnvVariables.id, id))
+      .returning();
+    return variable || undefined;
+  }
+
+  /**
+   * Удалить переменную окружения
+   * @param id - ID переменной
+   * @returns true, если переменная была удалена
+   */
+  async deleteEnvVariable(id: number): Promise<boolean> {
+    const result = await this.db.delete(botEnvVariables)
+      .where(eq(botEnvVariables.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  /**
+   * Удалить все переменные окружения токена
+   * @param tokenId - ID токена
+   * @returns true, если переменные были удалены
+   */
+  async deleteEnvVariablesByToken(tokenId: number): Promise<boolean> {
+    const result = await this.db.delete(botEnvVariables)
+      .where(eq(botEnvVariables.tokenId, tokenId));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 }

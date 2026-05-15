@@ -70,6 +70,9 @@ export type { AppSetting, InsertAppSetting } from "./schema/tables/app-settings"
 export { broadcasts, broadcastResults, insertBroadcastSchema, insertBroadcastResultSchema, broadcastFiltersSchema } from "./schema/tables/broadcasts";
 export type { Broadcast, InsertBroadcast, BroadcastResult, InsertBroadcastResult, BroadcastFilters } from "./schema/tables/broadcasts";
 
+export { botEnvVariables, insertBotEnvVariableSchema } from "./schema/tables/bot-env-variables";
+export type { BotEnvVariable, InsertBotEnvVariable } from "./schema/tables/bot-env-variables";
+
 export type TelegramUserDB = typeof telegramUsersTable.$inferSelect;
 
 // Импорты для обратной совместимости
