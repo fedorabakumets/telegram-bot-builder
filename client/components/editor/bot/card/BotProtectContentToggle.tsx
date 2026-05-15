@@ -15,6 +15,8 @@ interface BotProtectContentToggleProps {
   tokenId: number;
   protectContent: number | null;
   className?: string;
+  /** Колбэк для pending (если передан — не сохраняет мгновенно) */
+  onPendingChange?: (key: string, value: string) => void;
 }
 
 async function updateProtectContent(
@@ -38,6 +40,7 @@ export function BotProtectContentToggle({
   tokenId,
   protectContent,
   className = '',
+  onPendingChange,
 }: BotProtectContentToggleProps) {
   const [localEnabled, setLocalEnabled] = useState(protectContent === 1);
   const queryClient = useQueryClient();
@@ -97,7 +100,11 @@ export function BotProtectContentToggle({
           checked={localEnabled}
           onCheckedChange={(checked) => {
             setLocalEnabled(checked);
-            mutation.mutate(checked);
+            if (onPendingChange) {
+              onPendingChange('PROTECT_CONTENT', checked ? 'true' : 'false');
+            } else {
+              mutation.mutate(checked);
+            }
           }}
           disabled={mutation.isPending}
         />

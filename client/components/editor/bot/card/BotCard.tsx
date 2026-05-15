@@ -20,6 +20,8 @@ import { BotCardInfo } from './BotCardInfo';
 import { BotSettingsGrid } from './BotSettingsGrid';
 import { BotCardViewToggle, type BotCardViewMode } from './BotCardViewToggle';
 import { BotEnvPanel } from './BotEnvPanel';
+import { BotEnvStagingBar } from './BotEnvStagingBar';
+import { useEnvPendingChanges } from './use-env-pending-changes';
 import { useBotControl } from '../bot-control-context';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import type { BotProject, BotToken } from '@shared/schema';
@@ -65,6 +67,9 @@ export function BotCard({
 
   /** Режим отображения: настройки или переменные */
   const [viewMode, setViewMode] = useState<BotCardViewMode>('settings');
+
+  /** Общий pending state для переменных окружения (виден в обоих режимах) */
+  const pending = useEnvPendingChanges(project.id, token.id);
 
   // Синхронизируем с внешним состоянием при его изменении (кнопка "Свернуть все")
   useEffect(() => {
@@ -116,6 +121,15 @@ export function BotCard({
             queryClient={queryClient}
           />
           <BotCardViewToggle mode={viewMode} onModeChange={setViewMode} />
+          {pending.changesCount > 0 && (
+            <BotEnvStagingBar
+              changesCount={pending.changesCount}
+              isSaving={pending.isSaving}
+              onDiscard={pending.discardAll}
+              onSave={pending.saveAll}
+              onSaveAndRestart={pending.saveAndRestart}
+            />
+          )}
           {viewMode === 'settings' ? (
             <BotSettingsGrid
               projectId={project.id} tokenId={token.id}
@@ -129,6 +143,7 @@ export function BotCard({
               webhookBaseUrl={token.webhookBaseUrl ?? null}
               webhookSecretToken={token.webhookSecretToken ?? null}
               canManage={canManage}
+              onPendingChange={(key, value) => pending.addChange({ action: 'update', type: 'system', key, value })}
             />
           ) : (
             <BotEnvPanel
@@ -136,6 +151,7 @@ export function BotCard({
               tokenId={token.id}
               token={token}
               adminIds={project.adminIds || ''}
+              pending={pending}
             />
           )}
         </div>

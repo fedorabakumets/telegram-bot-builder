@@ -14,9 +14,8 @@ import { apiRequest } from '@/queryClient';
 import { BotEnvRow } from './BotEnvRow';
 import { BotEnvAddRow } from './BotEnvAddRow';
 import { BotEnvRawEditor } from './BotEnvRawEditor';
-import { BotEnvStagingBar } from './BotEnvStagingBar';
 import { useEnvVariables } from './use-env-variables';
-import { useEnvPendingChanges } from './use-env-pending-changes';
+import type { useEnvPendingChanges } from './use-env-pending-changes';
 import type { BotToken } from '@shared/schema';
 
 /** Свойства панели переменных окружения */
@@ -29,6 +28,8 @@ interface BotEnvPanelProps {
   token: BotToken;
   /** ID администраторов из проекта */
   adminIds: string;
+  /** Общий pending state из BotCard */
+  pending: ReturnType<typeof useEnvPendingChanges>;
 }
 
 /** Элемент системной переменной */
@@ -104,9 +105,8 @@ function buildSystemVars(token: BotToken, projectId: number, tokenId: number,
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanelProps) {
+export function BotEnvPanel({ projectId, tokenId, token, adminIds, pending }: BotEnvPanelProps) {
   const { items, revealValue } = useEnvVariables(projectId, tokenId);
-  const pending = useEnvPendingChanges(projectId, tokenId);
 
   /** Серверные переменные окружения (fallback для DATABASE_URL, REDIS_URL и т.д.) */
   const { data: serverEnvData } = useQuery<{ items: Array<{ key: string; value: string }> }>({
@@ -182,17 +182,6 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
       {showSearch && (
         <Input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Фильтр по имени..." className="h-7 text-xs" autoFocus />
-      )}
-
-      {/* Мини-бар несохранённых изменений */}
-      {pending.changesCount > 0 && (
-        <BotEnvStagingBar
-          changesCount={pending.changesCount}
-          isSaving={pending.isSaving}
-          onDiscard={pending.discardAll}
-          onSave={pending.saveAll}
-          onSaveAndRestart={pending.saveAndRestart}
-        />
       )}
 
       {showRaw ? (

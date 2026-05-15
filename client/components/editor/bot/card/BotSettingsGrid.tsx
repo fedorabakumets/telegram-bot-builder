@@ -57,6 +57,8 @@ interface BotSettingsGridProps {
   webhookBaseUrl: string | null;
   /** Секретный токен webhook */
   webhookSecretToken: string | null;
+  /** Колбэк для добавления изменения в pending */
+  onPendingChange?: (key: string, value: string) => void;
 }
 
 /**
@@ -78,6 +80,7 @@ export function BotSettingsGrid({
   webhookBaseUrl,
   webhookSecretToken,
   canManage,
+  onPendingChange,
 }: BotSettingsGridProps) {
   const resolvedBotName = botName ?? `Бот ${tokenId}`;
 
@@ -107,17 +110,20 @@ export function BotSettingsGrid({
         projectId={projectId}
         tokenId={tokenId}
         logLevel={token.logLevel ?? 'WARNING'}
+        onPendingChange={onPendingChange}
       />
       <BotProtectContentToggle
         projectId={projectId}
         tokenId={tokenId}
         protectContent={token.protectContent ?? 0}
+        onPendingChange={onPendingChange}
       />
       <BotSaveMediaToggle
         projectId={projectId}
         tokenId={tokenId}
         saveIncomingMedia={token.saveIncomingMedia ?? 0}
         userDatabaseEnabled={userDatabaseEnabled}
+        onPendingChange={onPendingChange}
       />
       {isBotRunning && (
         <BotExecutionTimer

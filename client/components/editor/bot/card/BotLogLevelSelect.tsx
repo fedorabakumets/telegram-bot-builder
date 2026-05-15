@@ -34,6 +34,8 @@ interface BotLogLevelSelectProps {
   tokenId: number;
   /** Текущий уровень логирования */
   logLevel: string | null;
+  /** Колбэк для pending (если передан — не сохраняет мгновенно) */
+  onPendingChange?: (key: string, value: string) => void;
 }
 
 /**
@@ -56,7 +58,7 @@ async function updateLogLevel(projectId: number, tokenId: number, logLevel: stri
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function BotLogLevelSelect({ projectId, tokenId, logLevel }: BotLogLevelSelectProps) {
+export function BotLogLevelSelect({ projectId, tokenId, logLevel, onPendingChange }: BotLogLevelSelectProps) {
   const [localLevel, setLocalLevel] = useState<LogLevel>((logLevel as LogLevel) ?? 'WARNING');
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -91,7 +93,11 @@ export function BotLogLevelSelect({ projectId, tokenId, logLevel }: BotLogLevelS
           value={localLevel}
           onValueChange={(val) => {
             setLocalLevel(val as LogLevel);
-            mutation.mutate(val);
+            if (onPendingChange) {
+              onPendingChange('LOG_LEVEL', val);
+            } else {
+              mutation.mutate(val);
+            }
           }}
           disabled={mutation.isPending}
         >

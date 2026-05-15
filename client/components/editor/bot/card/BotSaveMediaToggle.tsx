@@ -22,6 +22,8 @@ interface BotSaveMediaToggleProps {
   userDatabaseEnabled: number | null;
   /** Дополнительный CSS класс */
   className?: string;
+  /** Колбэк для pending (если передан — не сохраняет мгновенно) */
+  onPendingChange?: (key: string, value: string) => void;
 }
 
 /**
@@ -61,6 +63,7 @@ export function BotSaveMediaToggle({
   saveIncomingMedia,
   userDatabaseEnabled,
   className = '',
+  onPendingChange,
 }: BotSaveMediaToggleProps) {
   const [localEnabled, setLocalEnabled] = useState(saveIncomingMedia === 1);
   const queryClient = useQueryClient();
@@ -125,7 +128,11 @@ export function BotSaveMediaToggle({
           checked={localEnabled}
           onCheckedChange={(checked) => {
             setLocalEnabled(checked);
-            mutation.mutate(checked);
+            if (onPendingChange) {
+              onPendingChange('SAVE_INCOMING_MEDIA', checked ? 'true' : 'false');
+            } else {
+              mutation.mutate(checked);
+            }
           }}
           disabled={mutation.isPending}
         />
