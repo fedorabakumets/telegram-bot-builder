@@ -12,6 +12,7 @@ import { storage } from '../../../storages/storage';
 import { checkProcessExists, isPythonProcess, findBotProcessPid } from '../utils/processChecker';
 import { restoreProcessTracking } from '../utils/processRestorer';
 import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
+import { workerManager } from '../../../bots/botWorkerManager';
 
 /**
  * Обрабатывает запрос на получение статуса бота по токену
@@ -44,7 +45,10 @@ export async function handleBotStatusByToken(req: Request, res: Response): Promi
         const projectId = instance.projectId;
         const activeProcessInfo = findActiveProcessForToken(projectId, tokenId);
 
-        let actualStatus = activeProcessInfo ? 'running' : 'stopped';
+        // В режиме воркера проверяем через workerManager
+        const isRunningInWorker = process.env.USE_WORKER_POOL === 'true' && workerManager.isBotRunning(projectId, tokenId);
+
+        let actualStatus = (activeProcessInfo || isRunningInWorker) ? 'running' : 'stopped';
 
         // Если процесс не найден в активных, но есть в БД, проверяем его существование
         if (!activeProcessInfo && instance.processId && checkProcessExists(instance.processId)) {
