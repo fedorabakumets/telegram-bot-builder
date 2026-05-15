@@ -81,7 +81,12 @@ export function BotEnvRow({
 
   /** Начать редактирование */
   function handleStartEdit() {
-    setEditValue(revealed ?? actualValue);
+    // Для серверных ссылок — показываем ${{KEY}} вместо реального значения
+    if (isServerRef) {
+      setEditValue('');
+    } else {
+      setEditValue(revealed ?? actualValue);
+    }
     setEditing(true);
   }
 
