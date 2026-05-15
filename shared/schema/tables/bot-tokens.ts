@@ -58,7 +58,7 @@ export const botTokens = pgTable("bot_tokens", {
   /** Максимальное количество попыток автоперезапуска подряд */
   maxRestartAttempts: integer("max_restart_attempts").default(3),
   /** Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) */
-  logLevel: text("log_level").default("WARNING"),
+  logLevel: text("log_level").default("DEBUG"),
   /** Защита контента от копирования/пересылки (0 = выключено, 1 = включено) */
   protectContent: integer("protect_content").default(0),
   /** Флаг сохранения входящих медиафайлов от пользователей (0 = выключено, 1 = включено) */
@@ -108,7 +108,7 @@ export const insertBotTokenSchema = z.object({
   /** Максимальное количество попыток автоперезапуска подряд */
   maxRestartAttempts: z.number().min(1).max(10).default(3),
   /** Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) */
-  logLevel: z.enum(['DEBUG', 'INFO', 'WARNING', 'ERROR']).default('WARNING').optional(),
+  logLevel: z.enum(['DEBUG', 'INFO', 'WARNING', 'ERROR']).default('DEBUG').optional(),
   /** Защита контента от копирования/пересылки (0 = выключено, 1 = включено) */
   protectContent: z.number().min(0).max(1).default(0),
   /** Флаг сохранения входящих медиафайлов от пользователей (0 = выключено, 1 = включено) */
