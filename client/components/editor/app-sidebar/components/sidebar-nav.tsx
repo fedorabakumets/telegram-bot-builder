@@ -58,7 +58,7 @@ export function SidebarNav({ currentTab, onTabChange, isCollapsed }: SidebarNavP
             variant="ghost"
             onClick={() => onTabChange(tab)}
             className={cn(
-              'w-full justify-start gap-2 h-9 px-2',
+              'w-fit justify-start gap-2 h-9 px-2',
               isCollapsed && 'justify-center px-0',
               isActive
                 ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600'
