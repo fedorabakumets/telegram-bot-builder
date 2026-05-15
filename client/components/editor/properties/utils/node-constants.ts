@@ -42,6 +42,7 @@ export const MANAGEMENT_NODE_TYPES = [
   'set_variable' as any,
   'psql_query' as any,
   'convert_file' as any,
+  'loop' as any,
 ] as const;
 
 /**

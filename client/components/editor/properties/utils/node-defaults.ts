@@ -409,6 +409,32 @@ export function getNodeDefaults(type: Node['type']): any {
       /** Connection string для ручного ввода */
       connectionString: '',
     },
+    loop: {
+      /** Имя переменной с массивом */
+      sourceVariable: '',
+      /** Имя переменной для текущего элемента */
+      itemVariable: 'item',
+      /** Имя переменной для индекса итерации */
+      indexVariable: 'index',
+      /** Параллельное выполнение */
+      parallel: false,
+      /** Пауза между итерациями в секундах */
+      delaySeconds: 0,
+      /** Максимум итераций (0 = без лимита) */
+      maxIterations: 0,
+      /** ID первой ноды тела цикла */
+      autoTransitionTo: '',
+      /** ID ноды после завершения цикла */
+      afterLoopTo: '',
+      /** Включить автопереход в тело */
+      enableAutoTransition: true,
+      /** Кнопки (для совместимости) */
+      buttons: [],
+      /** Тип клавиатуры (для совместимости) */
+      keyboardType: 'none',
+      /** Текст сообщения (для совместимости) */
+      messageText: '',
+    },
   };
   return defaults[type] || {};
 }

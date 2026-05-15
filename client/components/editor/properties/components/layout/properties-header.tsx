@@ -128,6 +128,7 @@ export function PropertiesHeader({
                       <SelectItem value="broadcast">📢 Рассылка</SelectItem>
                       <SelectItem value="input">Сохранить ответ в переменную</SelectItem>
                       <SelectItem value="media">🖼️ Медиафайл</SelectItem>
+                      <SelectItem value="loop">🔄 Цикл (Loop)</SelectItem>
                     </SelectContent>
                   </Select>
                   <button

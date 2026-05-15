@@ -337,6 +337,15 @@ function inferConnectionsFromNodes(
       });
     }
 
+    // afterLoopTo — дополнительное соединение для узла loop (выход "Далее")
+    if ((node.type as any) === 'loop' && typeof data.afterLoopTo === 'string' && data.afterLoopTo) {
+      pushConnection({
+        fromId: node.id,
+        toId: data.afterLoopTo as string,
+        type: 'auto-transition',
+      });
+    }
+
     if (node.type === 'forward_message') {
       const sourceNodeId = typeof data.sourceMessageNodeId === 'string' ? data.sourceMessageNodeId.trim() : '';
       const sourceMode = typeof data.sourceMessageIdSource === 'string' ? data.sourceMessageIdSource : 'current_message';

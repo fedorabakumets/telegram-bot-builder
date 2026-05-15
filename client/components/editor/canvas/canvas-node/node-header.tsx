@@ -144,6 +144,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             {getNodeName('psql_query')}
           </span>
         );
+      /** Заголовок узла цикла */
+      case 'loop' as any:
+        return (
+          <span className="font-semibold text-violet-700 dark:text-violet-300">
+            🔄 {getNodeName('loop')}
+          </span>
+        );
       default:
         return null;
     }

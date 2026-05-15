@@ -10,7 +10,7 @@ import { allCommandPresets } from './massive/commands';
 import type { CommandPreset } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
 import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger } from './massive/triggers';
-import { conditionNode, setVariableNode } from './massive/logic';
+import { conditionNode, setVariableNode, loopNode } from './massive/logic';
 import { forwardMessage, createForumTopicNode } from './massive/content-management';
 import { httpRequestNode } from './massive/http-request';
 import { psqlQueryNode } from './massive/psql-query';
@@ -42,7 +42,7 @@ export const componentCategories: Array<{
   },
   {
     title: 'Интеграции',
-    components: [httpRequestNode, psqlQueryNode, convertFileNode, conditionNode, setVariableNode]
+    components: [httpRequestNode, psqlQueryNode, convertFileNode, conditionNode, setVariableNode, loopNode]
   }
 ];
 

@@ -340,6 +340,14 @@ export function collectConnections(nodes: Node[]): Connection[] {
         connections.push({ fromId: node.id, toId: kbNodeId, type: 'keyboard-link' });
       }
     }
+
+    // 10. Соединение afterLoopTo для узла loop (выход "Далее")
+    if ((node.type as any) === 'loop') {
+      const afterLoopTo = (node.data as any)?.afterLoopTo as string | undefined;
+      if (afterLoopTo && existingIds.has(afterLoopTo)) {
+        connections.push({ fromId: node.id, toId: afterLoopTo, type: 'auto-transition' });
+      }
+    }
   });
 
   return connections;
