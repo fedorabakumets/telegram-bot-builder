@@ -136,11 +136,11 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             HTTP запрос
           </span>
         );
-      /** Заголовок узла прямого SQL-запроса к базе данных */
+      /** Заголовок узла PostgreSQL */
       case 'psql_query' as any:
         return (
           <span className="font-semibold text-violet-700 dark:text-violet-300">
-            SQL-запрос
+            PostgreSQL
           </span>
         );
       default:
