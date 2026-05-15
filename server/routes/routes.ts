@@ -4816,6 +4816,114 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
     res.json({ items });
   });
 
+  /**
+   * Batch-обновление переменных окружения (единый эндпоинт)
+   * PUT /api/projects/:projectId/tokens/:tokenId/env-variables/batch
+   *
+   * Принимает массив изменений и маппит каждое на нужное хранилище:
+   * - BOT_TOKEN → bot_tokens.token
+   * - ADMIN_IDS → bot_projects.adminIds
+   * - LOG_LEVEL → bot_tokens.logLevel
+   * - PROTECT_CONTENT → bot_tokens.protectContent
+   * - SAVE_INCOMING_MEDIA → bot_tokens.saveIncomingMedia
+   * - Остальные → bot_env_variables (CRUD)
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/env-variables/batch", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const tokenId = parseInt(req.params.tokenId);
+      const { changes } = req.body as { changes: Array<{ action: string; key: string; value?: string; id?: number; isSecret?: number }> };
+
+      if (!Array.isArray(changes) || changes.length === 0) {
+        return res.status(400).json({ message: "Массив changes обязателен" });
+      }
+
+      /** Маппинг системных ключей на поля bot_tokens */
+      const tokenFieldMap: Record<string, string> = {
+        BOT_TOKEN: 'token',
+        LOG_LEVEL: 'logLevel',
+        PROTECT_CONTENT: 'protectContent',
+        SAVE_INCOMING_MEDIA: 'saveIncomingMedia',
+      };
+
+      /** Ключи, которые хранятся в bot_env_variables */
+      const envVarKeys = new Set([
+        'API_BASE_URL', 'API_PORT', 'API_USE_SSL', 'API_TIMEOUT',
+        'DISABLE_ASYNC_LOG', 'REDIS_URL', 'DATABASE_URL',
+        'MAX_UPDATE_AGE_SECONDS', 'WEBHOOK_PORT',
+      ]);
+
+      /** Секретные ключи */
+      const secretKeys = new Set(['REDIS_URL', 'DATABASE_URL']);
+
+      const results: string[] = [];
+
+      for (const change of changes) {
+        const { action, key, value, id, isSecret } = change;
+
+        if (action === 'delete' && id) {
+          await storage.deleteEnvVariable(id);
+          results.push(`deleted:${key || id}`);
+          continue;
+        }
+
+        if (action === 'create' && key && value !== undefined) {
+          await storage.createEnvVariable({ tokenId, key, value, isSecret: isSecret ?? 0 });
+          results.push(`created:${key}`);
+          continue;
+        }
+
+        if (action === 'update' && key && value !== undefined) {
+          // ADMIN_IDS → обновляем проект
+          if (key === 'ADMIN_IDS') {
+            await storage.updateBotProject(projectId, { adminIds: value });
+            results.push(`updated:ADMIN_IDS`);
+            continue;
+          }
+
+          // Поля bot_tokens (BOT_TOKEN, LOG_LEVEL, PROTECT_CONTENT, SAVE_INCOMING_MEDIA)
+          if (tokenFieldMap[key]) {
+            const field = tokenFieldMap[key];
+            let dbValue: any = value;
+            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA') {
+              dbValue = value === 'true' ? 1 : 0;
+            }
+            await storage.updateBotToken(tokenId, { [field]: dbValue });
+            results.push(`updated:${key}`);
+            continue;
+          }
+
+          // Переменные из bot_env_variables
+          if (envVarKeys.has(key)) {
+            const existing = await storage.getEnvVariables(tokenId);
+            const found = existing.find(v => v.key === key);
+            if (found) {
+              await storage.updateEnvVariable(found.id, { value });
+            } else {
+              await storage.createEnvVariable({ tokenId, key, value, isSecret: secretKeys.has(key) ? 1 : 0 });
+            }
+            results.push(`updated:${key}`);
+            continue;
+          }
+
+          // Кастомная переменная по ID
+          if (id) {
+            await storage.updateEnvVariable(id, { value });
+            results.push(`updated:${key || id}`);
+            continue;
+          }
+
+          results.push(`skipped:${key}`);
+        }
+      }
+
+      res.json({ success: true, applied: results.length, results });
+    } catch (error: any) {
+      console.error("Ошибка batch обновления env:", error);
+      res.status(500).json({ message: "Ошибка batch обновления переменных" });
+    }
+  });
+
   // Setup Google Auth routes
   setupGoogleAuthRoutes(app);
 }

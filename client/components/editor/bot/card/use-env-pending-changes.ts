@@ -1,6 +1,6 @@
 /**
  * @fileoverview Хук для управления несохранёнными изменениями переменных окружения
- * Накапливает изменения в локальном состоянии до явного сохранения пользователем
+ * Накапливает изменения и отправляет одним batch-запросом
  * @module components/editor/bot/card/use-env-pending-changes
  */
 
@@ -8,8 +8,6 @@ import { useState, useCallback } from 'react';
 import { apiRequest } from '@/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { useSystemEnvUpdate } from './use-system-env-update';
-import { useEnvVariables } from './use-env-variables';
 
 /** Одно несохранённое изменение */
 export interface PendingChange {
@@ -29,6 +27,7 @@ export interface PendingChange {
 
 /**
  * Хук для управления dirty state переменных окружения
+ * Отправляет все изменения одним batch-запросом
  * @param projectId - ID проекта
  * @param tokenId - ID токена
  * @returns Объект с состоянием и методами управления изменениями
@@ -38,8 +37,9 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { handleSystemUpdate } = useSystemEnvUpdate(projectId, tokenId);
-  const { updateMutation, createMutation, deleteMutation } = useEnvVariables(projectId, tokenId);
+
+  /** URL batch-эндпоинта */
+  const batchUrl = `/api/projects/${projectId}/tokens/${tokenId}/env-variables/batch`;
 
   /** Количество несохранённых изменений */
   const changesCount = changes.size;
@@ -48,7 +48,6 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
   const addChange = useCallback((change: PendingChange) => {
     setChanges(prev => {
       const next = new Map(prev);
-      /** Для удаления используем уникальный ключ с префиксом */
       const mapKey = change.action === 'delete' ? `__delete__${change.id}` : change.key;
       next.set(mapKey, change);
       return next;
@@ -65,40 +64,46 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
     return changes.get(key)?.value;
   }, [changes]);
 
-  /** Сохранить все изменения на сервер */
+  /** Инвалидировать кэши после сохранения */
+  const invalidateAll = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens/${tokenId}/env-variables`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/admin-ids`] });
+  }, [queryClient, projectId, tokenId]);
+
+  /** Сохранить все изменения одним batch-запросом */
   const saveAll = useCallback(async () => {
     setIsSaving(true);
     try {
       const entries = Array.from(changes.values());
-      for (const entry of entries) {
-        if (entry.action === 'delete' && entry.id) {
-          deleteMutation.mutate(entry.id);
-        } else if (entry.action === 'create') {
-          createMutation.mutate({ key: entry.key, value: entry.value, isSecret: entry.isSecret ?? 0 });
-        } else if (entry.action === 'update' && entry.type === 'system') {
-          handleSystemUpdate(entry.key, entry.value);
-        } else if (entry.action === 'update' && entry.id) {
-          updateMutation.mutate({ id: entry.id, value: entry.value });
-        }
-      }
+      await apiRequest('PUT', batchUrl, { changes: entries });
       setChanges(new Map());
+      invalidateAll();
       toast({ title: 'Сохранено', description: `${entries.length} изменений применено` });
+    } catch (error: any) {
+      toast({ title: 'Ошибка', description: error.message || 'Не удалось сохранить', variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
-  }, [changes, handleSystemUpdate, updateMutation, createMutation, deleteMutation, toast]);
+  }, [changes, batchUrl, invalidateAll, toast]);
 
   /** Сохранить и перезапустить бота */
   const saveAndRestart = useCallback(async () => {
-    await saveAll();
+    setIsSaving(true);
     try {
+      const entries = Array.from(changes.values());
+      await apiRequest('PUT', batchUrl, { changes: entries });
+      setChanges(new Map());
+      invalidateAll();
       await apiRequest('POST', `/api/projects/${projectId}/bot/start`, { tokenId });
       queryClient.invalidateQueries({ queryKey: [`/api/tokens/${tokenId}/bot-status`] });
       toast({ title: 'Бот перезапущен', description: 'Изменения сохранены, бот перезапущен' });
-    } catch {
-      toast({ title: 'Ошибка', description: 'Не удалось перезапустить бота', variant: 'destructive' });
+    } catch (error: any) {
+      toast({ title: 'Ошибка', description: error.message || 'Не удалось сохранить', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
     }
-  }, [saveAll, projectId, tokenId, queryClient, toast]);
+  }, [changes, batchUrl, projectId, tokenId, queryClient, invalidateAll, toast]);
 
   return { changes, changesCount, addChange, discardAll, getPendingValue, saveAll, saveAndRestart, isSaving };
 }
