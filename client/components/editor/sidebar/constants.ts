@@ -34,31 +34,19 @@ export const componentCategories: Array<{
   },
   {
     title: 'Сообщения',
-    components: [textMessage, mediaMessage, keyboardMessage]
+    components: [textMessage, mediaMessage, keyboardMessage, saveAnswerNode]
   },
   {
-    title: 'Ввод',
-    components: [saveAnswerNode]
-  },
-  {
-    title: 'Рассылка',
-    components: [broadcastNode]
+    title: 'Действия',
+    components: [broadcastNode, forwardMessage, editMessageNode, answerCallbackQueryNode, createForumTopicNode]
   },
   {
     title: 'Логика',
     components: [conditionNode, setVariableNode]
   },
   {
-    title: 'Управление контентом',
-    components: [forwardMessage, createForumTopicNode, editMessageNode]
-  },
-  {
     title: 'Интеграции',
-    components: [httpRequestNode, psqlQueryNode, convertFileNode, answerCallbackQueryNode]
-  },
-  {
-    title: 'Управление ботами',
-    components: [getManagedBotTokenNode]
+    components: [httpRequestNode, psqlQueryNode, convertFileNode, getManagedBotTokenNode]
   }
 ];
 
