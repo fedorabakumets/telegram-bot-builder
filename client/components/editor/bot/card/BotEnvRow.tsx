@@ -81,9 +81,9 @@ export function BotEnvRow({
 
   /** Начать редактирование */
   function handleStartEdit() {
-    // Для серверных ссылок — показываем ${{KEY}} вместо реального значения
+    // Для серверных ссылок — показываем ${{KEY}} как placeholder-значение
     if (isServerRef) {
-      setEditValue('');
+      setEditValue(`\${{${envKey}}}`);
     } else {
       setEditValue(revealed ?? actualValue);
     }
@@ -115,7 +115,7 @@ export function BotEnvRow({
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditing(false); }}
-            onBlur={handleSaveEdit}
+            onBlur={() => setTimeout(handleSaveEdit, 150)}
             className="h-6 text-xs flex-1 min-w-0"
             autoFocus
           />
