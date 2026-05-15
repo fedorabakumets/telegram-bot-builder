@@ -24,6 +24,8 @@ interface BotEnvRowProps {
   isSecret: boolean;
   /** Системная переменная */
   isSystem: boolean;
+  /** Значение подтянуто из серверного окружения (показывать как ${{KEY}}) */
+  isServerRef?: boolean;
   /** Колбэк раскрытия секрета (для кастомных) */
   onReveal?: (id: number) => Promise<string>;
   /** Колбэк при изменении значения (dirty state) */
@@ -40,7 +42,7 @@ interface BotEnvRowProps {
  * @returns JSX элемент
  */
 export function BotEnvRow({
-  id, envKey, value, isSecret, isSystem, onReveal, onPendingChange, onDelete, pendingValue,
+  id, envKey, value, isSecret, isSystem, isServerRef, onReveal, onPendingChange, onDelete, pendingValue,
 }: BotEnvRowProps) {
   /** Раскрытое значение секрета */
   const [revealed, setRevealed] = useState<string | null>(null);
@@ -58,7 +60,10 @@ export function BotEnvRow({
   /** Показать/скрыть секрет */
   async function handleToggleReveal() {
     if (revealed !== null) { setRevealed(null); return; }
-    if (isSystem) {
+    if (isServerRef) {
+      // Для серверных ссылок — показываем имя переменной как ${{KEY}}
+      setRevealed(`\${{${envKey}}}`);
+    } else if (isSystem) {
       setRevealed(actualValue);
     } else if (id && onReveal) {
       const val = await onReveal(id);
@@ -81,7 +86,11 @@ export function BotEnvRow({
   }
 
   /** Отображаемое значение */
-  const displayValue = isSecret ? (revealed ?? '••••••••') : actualValue;
+  const displayValue = isServerRef && isSecret
+    ? (revealed ?? `\${{${envKey}}}`)
+    : isSecret
+      ? (revealed ?? '••••••••')
+      : actualValue;
 
   /** Подсветка строки при наличии pending изменения */
   const pendingHighlight = pendingValue !== undefined
