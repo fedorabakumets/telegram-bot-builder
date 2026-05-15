@@ -1,6 +1,6 @@
 /**
  * @fileoverview Секция настройки подключения к БД для узла psql_query
- * Позволяет выбрать источник: серверная переменная, переменная бота или ручной ввод
+ * Единый селектор с группами: серверные переменные, переменные бота, ручной ввод
  * @module components/editor/properties/components/configuration/psql-connection-section
  */
 
@@ -8,8 +8,15 @@ import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, EyeOff, Unplug } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
+import { ChevronDown, Eye, EyeOff, Unplug, Server, Bot, Pencil } from 'lucide-react';
 
 /** Тип источника подключения */
 type ConnectionSource = 'builtin' | 'env' | 'custom';
@@ -44,6 +51,11 @@ interface PsqlConnectionSectionProps {
   onUpdate: (updates: Record<string, any>) => void;
 }
 
+/** Серверные переменные (доступны всегда) */
+const SERVER_VARIABLES = [
+  { key: 'DATABASE_URL', description: 'Основная БД платформы' },
+];
+
 /**
  * Парсит connection string в отдельные поля
  * @param url - PostgreSQL connection string
@@ -74,6 +86,18 @@ function buildConnectionString(fields: ParsedConnection): string {
 }
 
 /**
+ * Возвращает отображаемое название текущего подключения
+ * @param source - Источник подключения
+ * @param envVar - Имя env-переменной
+ * @returns Строка для отображения
+ */
+function getDisplayLabel(source: ConnectionSource, envVar: string): string {
+  if (source === 'builtin') return 'DATABASE_URL';
+  if (source === 'env') return envVar || 'Выберите переменную';
+  return 'Ручной ввод';
+}
+
+/**
  * Секция настройки подключения к БД
  * @param props - Пропсы компонента
  * @returns JSX элемент секции подключения
@@ -88,6 +112,23 @@ export function PsqlConnectionSection({
   const [showPassword, setShowPassword] = useState(false);
   const [showFields, setShowFields] = useState(false);
   const [parsedFields, setParsedFields] = useState<ParsedConnection | null>(null);
+
+  /** Обработчик выбора серверной переменной */
+  const handleSelectServer = (key: string) => {
+    onUpdate({ connectionSource: 'builtin', connectionEnvVar: key, connectionString: '' });
+    setShowFields(false);
+  };
+
+  /** Обработчик выбора переменной бота */
+  const handleSelectBotEnv = (key: string) => {
+    onUpdate({ connectionSource: 'env', connectionEnvVar: key, connectionString: '' });
+    setShowFields(false);
+  };
+
+  /** Обработчик выбора ручного ввода */
+  const handleSelectCustom = () => {
+    onUpdate({ connectionSource: 'custom', connectionEnvVar: '' });
+  };
 
   /** Обработчик разбора URL */
   const handleParse = () => {
@@ -114,57 +155,79 @@ export function PsqlConnectionSection({
         Подключение к БД
       </Label>
 
-      {/* Селектор источника */}
-      <Select
-        value={connectionSource}
-        onValueChange={(value) => onUpdate({ connectionSource: value })}
-      >
-        <SelectTrigger className="text-xs h-8 bg-white/60 dark:bg-slate-950/60">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="builtin">Серверная (DATABASE_URL)</SelectItem>
-          <SelectItem value="env">Переменная бота</SelectItem>
-          <SelectItem value="custom">Ввести вручную</SelectItem>
-        </SelectContent>
-      </Select>
-
-      {/* Выбор env-переменной бота */}
-      {connectionSource === 'env' && (
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">
-            Переменная окружения бота
-          </Label>
-          {envVariables.length > 0 ? (
-            <Select
-              value={connectionEnvVar || ''}
-              onValueChange={(value) => onUpdate({ connectionEnvVar: value })}
+      {/* Dropdown-селектор в стиле VariableSelector */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full h-8 justify-between text-xs font-mono bg-white/60 dark:bg-slate-950/60 border-violet-300/40 dark:border-violet-700/40"
+          >
+            <span className="truncate">{getDisplayLabel(connectionSource, connectionEnvVar)}</span>
+            <ChevronDown className="h-3.5 w-3.5 ml-2 flex-shrink-0 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          {/* Серверные переменные */}
+          <DropdownMenuLabel className="text-xs font-semibold flex items-center gap-1.5">
+            <Server className="w-3 h-3" />
+            Серверные
+          </DropdownMenuLabel>
+          {SERVER_VARIABLES.map((v) => (
+            <DropdownMenuItem
+              key={v.key}
+              onClick={() => handleSelectServer(v.key)}
+              className="cursor-pointer"
             >
-              <SelectTrigger className="text-xs h-8 bg-white/60 dark:bg-slate-950/60">
-                <SelectValue placeholder="Выберите переменную" />
-              </SelectTrigger>
-              <SelectContent>
-                {envVariables.map((v) => (
-                  <SelectItem key={v.key} value={v.key}>
-                    {v.key}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <p className="text-xs text-muted-foreground italic">
-              Нет переменных. Добавьте в настройках бота.
-            </p>
-          )}
-        </div>
-      )}
+              <div className="flex flex-col gap-0.5">
+                <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono font-semibold">
+                  {v.key}
+                </code>
+                <span className="text-[10px] text-muted-foreground">{v.description}</span>
+              </div>
+            </DropdownMenuItem>
+          ))}
 
-      {/* Ручной ввод connection string */}
+          <DropdownMenuSeparator />
+
+          {/* Переменные бота */}
+          <DropdownMenuLabel className="text-xs font-semibold flex items-center gap-1.5">
+            <Bot className="w-3 h-3" />
+            Переменные бота
+          </DropdownMenuLabel>
+          {envVariables.length > 0 ? (
+            envVariables.map((v) => (
+              <DropdownMenuItem
+                key={v.key}
+                onClick={() => handleSelectBotEnv(v.key)}
+                className="cursor-pointer"
+              >
+                <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono font-semibold">
+                  {v.key}
+                </code>
+              </DropdownMenuItem>
+            ))
+          ) : (
+            <div className="px-3 py-2 text-[10px] text-muted-foreground italic">
+              Нет переменных. Добавьте во вкладке «Бот».
+            </div>
+          )}
+
+          <DropdownMenuSeparator />
+
+          {/* Ручной ввод */}
+          <DropdownMenuItem onClick={handleSelectCustom} className="cursor-pointer">
+            <div className="flex items-center gap-1.5">
+              <Pencil className="w-3 h-3" />
+              <span className="text-xs font-medium">Ввести вручную</span>
+            </div>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Поле ручного ввода connection string */}
       {connectionSource === 'custom' && (
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">
-            Connection String
-          </Label>
           <div className="flex items-center gap-1">
             <Input
               type={showPassword ? 'text' : 'password'}
@@ -190,12 +253,7 @@ export function PsqlConnectionSection({
 
           {/* Кнопка разбора */}
           {connectionString && !showFields && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs h-7"
-              onClick={handleParse}
-            >
+            <Button variant="outline" size="sm" className="text-xs h-7" onClick={handleParse}>
               Разобрать URL
             </Button>
           )}
