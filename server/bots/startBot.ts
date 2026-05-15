@@ -359,9 +359,8 @@ export async function startBot(projectId: number, token: string, tokenId: number
     }
 
     // Запускаем бота
-    const pythonPath = process.platform === 'win32'
-      ? 'C:\\Users\\1\\AppData\\Local\\Programs\\Python\\Python313\\python.exe'
-      : 'python3';
+    const pythonPath = process.env.PYTHON_PATH ||
+      (process.platform === 'win32' ? 'python' : 'python3');
     const botProcess = spawn(pythonPath, [mainFile], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,

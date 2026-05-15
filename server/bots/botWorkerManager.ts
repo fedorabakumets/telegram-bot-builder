@@ -69,9 +69,8 @@ class BotWorkerManager extends EventEmitter {
     super();
     this.workerScript = join(__dirname, "..", "python", "worker.py");
     this.pythonPath =
-      process.platform === "win32"
-        ? "C:\\Users\\1\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
-        : "python3";
+      process.env.PYTHON_PATH ||
+      (process.platform === "win32" ? "python" : "python3");
   }
 
   /**
