@@ -20,7 +20,7 @@ import { answerCallbackQueryNode, editMessageNode } from './massive/actions';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
- * Разделяет компоненты на логические группы в интерфейсе
+ * Триггеры распределены по категориям в соответствии с контекстом использования
  */
 export const componentCategories: Array<{
   /** Название категории */
@@ -29,24 +29,20 @@ export const componentCategories: Array<{
   components: ComponentDefinition[];
 }> = [
   {
-    title: 'Триггеры',
-    components: [commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger]
-  },
-  {
     title: 'Сообщения',
-    components: [textMessage, mediaMessage, keyboardMessage, saveAnswerNode]
+    components: [commandTrigger, textTrigger, anyMessageTrigger, outgoingMessageTrigger, textMessage, mediaMessage, saveAnswerNode, editMessageNode, forwardMessage, broadcastNode]
   },
   {
-    title: 'Действия',
-    components: [broadcastNode, forwardMessage, editMessageNode, answerCallbackQueryNode, createForumTopicNode]
+    title: 'Клавиатура',
+    components: [callbackTrigger, incomingCallbackTrigger, keyboardMessage, answerCallbackQueryNode]
   },
   {
-    title: 'Логика',
-    components: [conditionNode, setVariableNode]
+    title: 'Группы',
+    components: [groupMessageTrigger, createForumTopicNode]
   },
   {
     title: 'Интеграции',
-    components: [httpRequestNode, psqlQueryNode, convertFileNode, getManagedBotTokenNode]
+    components: [managedBotUpdatedTrigger, httpRequestNode, psqlQueryNode, convertFileNode, getManagedBotTokenNode, conditionNode, setVariableNode]
   }
 ];
 
