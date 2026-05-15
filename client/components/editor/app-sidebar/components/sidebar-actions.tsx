@@ -33,11 +33,11 @@ export function SidebarActions({ onLoadTemplate, onSaveAsTemplate, isCollapsed }
     <div className="flex flex-col gap-1">
       <Button variant="ghost" className={btnClass} onClick={onLoadTemplate}>
         <FolderOpen className="h-4 w-4 flex-shrink-0" />
-        {!isCollapsed && <span className="text-sm">Загрузить сценарий</span>}
+        {!isCollapsed && <span className="text-sm whitespace-nowrap">Загрузить сценарий</span>}
       </Button>
       <Button variant="ghost" className={btnClass} onClick={onSaveAsTemplate}>
         <Save className="h-4 w-4 flex-shrink-0" />
-        {!isCollapsed && <span className="text-sm">Сохранить сценарий</span>}
+        {!isCollapsed && <span className="text-sm whitespace-nowrap">Сохранить сценарий</span>}
       </Button>
     </div>
   );

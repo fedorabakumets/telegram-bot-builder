@@ -66,7 +66,7 @@ export function SidebarNav({ currentTab, onTabChange, isCollapsed }: SidebarNavP
             )}
           >
             <Icon className="h-4 w-4 flex-shrink-0" />
-            {!isCollapsed && <span className="text-sm">{label}</span>}
+            {!isCollapsed && <span className="text-sm whitespace-nowrap">{label}</span>}
           </Button>
         );
       })}
