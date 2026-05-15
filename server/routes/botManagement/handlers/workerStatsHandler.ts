@@ -34,20 +34,11 @@ export async function handleWorkerStats(_req: Request, res: Response): Promise<v
   try {
     const stats = workerManager.getStats();
 
-    // Получаем детализацию из БД
-    const activeWorkers = await storage.getActiveWorkers();
-
-    const details: WorkerDetail[] = activeWorkers.map((w) => ({
-      projectId: w.projectId,
-      botsCount: w.botsCount,
-      status: w.status,
-      startedAt: w.startedAt,
-    }));
-
     res.json({
       workers: stats.workers,
       totalBots: stats.totalBots,
-      details,
+      totalMemoryMb: stats.totalMemoryMb,
+      details: stats.details,
     });
   } catch (error: any) {
     console.error("[WorkerStats] Ошибка получения статистики:", error.message);

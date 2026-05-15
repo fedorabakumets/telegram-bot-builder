@@ -411,14 +411,43 @@ class BotWorkerManager extends EventEmitter {
   }
 
   /**
-   * Возвращает общую статистику по всем воркерам
+   * Возвращает общую статистику по всем воркерам, включая RAM
    */
-  getStats(): { workers: number; totalBots: number } {
+  getStats(): { workers: number; totalBots: number; totalMemoryMb: number; details: Array<{ projectId: number; botsCount: number; memoryMb: number; pid: number | undefined }> } {
     let totalBots = 0;
+    let totalMemoryMb = 0;
+    const details: Array<{ projectId: number; botsCount: number; memoryMb: number; pid: number | undefined }> = [];
+
     for (const worker of this.workers.values()) {
-      totalBots += worker.activeBots.size;
+      const botsCount = worker.activeBots.size;
+      totalBots += botsCount;
+
+      // Получаем RSS памяти процесса воркера
+      let memoryMb = 0;
+      if (worker.process.pid) {
+        try {
+          const { execSync } = require("node:child_process");
+          if (process.platform === "win32") {
+            const output = execSync(`tasklist /FI "PID eq ${worker.process.pid}" /FO CSV /NH`, { encoding: "utf8" }).trim();
+            // Формат: "python.exe","1234","Console","1","150,000 K"
+            const match = output.match(/"([0-9,]+)\s*K"/);
+            if (match) {
+              memoryMb = Math.round(parseInt(match[1].replace(/,/g, "")) / 1024);
+            }
+          } else {
+            const output = execSync(`ps -o rss= -p ${worker.process.pid}`, { encoding: "utf8" }).trim();
+            memoryMb = Math.round(parseInt(output) / 1024);
+          }
+        } catch {
+          // Процесс мог завершиться
+        }
+      }
+
+      totalMemoryMb += memoryMb;
+      details.push({ projectId: worker.projectId, botsCount, memoryMb, pid: worker.process.pid });
     }
-    return { workers: this.workers.size, totalBots };
+
+    return { workers: this.workers.size, totalBots, totalMemoryMb, details };
   }
 }
 

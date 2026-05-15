@@ -13,11 +13,13 @@ interface WorkerStats {
   workers: number;
   /** Общее количество ботов во всех воркерах */
   totalBots: number;
+  /** Общее потребление памяти в МБ */
+  totalMemoryMb: number;
 }
 
 /**
  * Компактный индикатор состояния Worker Pool
- * Показывает количество активных воркеров и ботов
+ * Показывает количество активных воркеров, ботов и RAM
  * @returns JSX элемент или null если воркеров нет
  */
 export function WorkerPoolStatus() {
@@ -36,6 +38,12 @@ export function WorkerPoolStatus() {
       <span>{data.workers} воркер{data.workers > 1 ? 'а' : ''}</span>
       <span className="text-muted-foreground">·</span>
       <span>{data.totalBots} бот{data.totalBots > 1 ? 'а' : ''}</span>
+      {data.totalMemoryMb > 0 && (
+        <>
+          <span className="text-muted-foreground">·</span>
+          <span>{data.totalMemoryMb} MB</span>
+        </>
+      )}
     </div>
   );
 }
