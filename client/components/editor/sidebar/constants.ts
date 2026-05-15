@@ -30,7 +30,7 @@ export const componentCategories: Array<{
 }> = [
   {
     title: 'Сообщения',
-    components: [commandTrigger, textTrigger, anyMessageTrigger, outgoingMessageTrigger, textMessage, mediaMessage, saveAnswerNode, editMessageNode, forwardMessage, broadcastNode]
+    components: [commandTrigger, textTrigger, anyMessageTrigger, outgoingMessageTrigger, textMessage, mediaMessage, saveAnswerNode, editMessageNode, forwardMessage]
   },
   {
     title: 'Клавиатура',
