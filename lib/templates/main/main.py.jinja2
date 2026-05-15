@@ -178,6 +178,8 @@ async def main():
         print("⚠️ Получен сигнал остановки, завершаем работу...")
     except SystemExit:
         print("⚠️ Системное завершение, завершаем работу...")
+    except asyncio.CancelledError:
+        print("⚠️ Бот остановлен воркером (CancelledError)")
     except Exception as e:
         logging.error(f"Ошибка: {e}")
     finally:
