@@ -7,7 +7,6 @@ import { DesktopActions } from './desktop-actions';
 import { TelegramChatInvite } from './telegram-chat-invite';
 import { UserAuth } from './user-auth';
 import { Separator } from './separator';
-import { VersionBadge } from './version-badge';
 import { GithubButton } from './github-button';
 import { cn } from '@/utils/utils';
 import type { AppUser } from '@/types/telegram-user';
@@ -76,10 +75,9 @@ export function DesktopActionsFull({
       'flex',
       isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-1 lg:w-auto lg:order-none lg:ml-auto'
     )}>
-      {/* Версия и GitHub — только в горизонтальном режиме */}
+      {/* Версия перенесена в сайдбар */}
       {!isVertical && (
         <>
-          <VersionBadge version="2.1.9.4" />
           <GithubButton className="!p-0 !h-auto" />
         </>
       )}

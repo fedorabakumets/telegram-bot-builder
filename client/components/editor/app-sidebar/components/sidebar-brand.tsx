@@ -1,6 +1,6 @@
 /**
- * @fileoverview Брендинг сайдбара: логотип и название приложения
- * @description Показывает только лого и "BotCraft Studio" — без названия проекта (оно в шапке)
+ * @fileoverview Брендинг сайдбара: логотип, название и версия приложения
+ * @description Показывает лого, "BotCraft Studio" и бейдж версии
  */
 
 import { cn } from '@/utils/utils';
@@ -16,7 +16,7 @@ interface SidebarBrandProps {
 /**
  * Брендинговая секция сайдбара — лого + название приложения + версия
  * @param props - Свойства компонента
- * @returns JSX элемент с логотипом и названием приложения
+ * @returns JSX элемент с логотипом, названием и версией
  */
 export function SidebarBrand({ isCollapsed }: SidebarBrandProps) {
   return (
@@ -27,9 +27,14 @@ export function SidebarBrand({ isCollapsed }: SidebarBrandProps) {
       </div>
 
       {!isCollapsed && (
-        <span className="text-sm font-bold bg-gradient-to-r from-blue-500 to-blue-400 bg-clip-text text-transparent leading-tight whitespace-nowrap">
-          BotCraft Studio
-        </span>
+        <div className="flex flex-col leading-tight min-w-0">
+          <span className="text-sm font-bold bg-gradient-to-r from-blue-500 to-blue-400 bg-clip-text text-transparent whitespace-nowrap">
+            BotCraft Studio
+          </span>
+          <span className="text-[10px] text-muted-foreground/70 font-medium">
+            v2.1.9.4
+          </span>
+        </div>
       )}
     </div>
   );
