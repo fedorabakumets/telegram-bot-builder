@@ -62,7 +62,7 @@ import { getRedisPublisher } from '../redis/redisClient';
 export async function stopBot(projectId: number, tokenId: number): Promise<{ success: boolean; error?: string; }> {
   try {
     // ─── Режим воркера: остановка бота через worker pool ───
-    if (process.env.USE_WORKER_POOL === 'true') {
+    if (process.env.USE_WORKER_POOL !== 'false') {
       await workerManager.stopBot(projectId, tokenId);
 
       // Обновляем БД как обычно

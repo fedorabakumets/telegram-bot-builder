@@ -46,7 +46,7 @@ export async function handleBotStatusByToken(req: Request, res: Response): Promi
         const activeProcessInfo = findActiveProcessForToken(projectId, tokenId);
 
         // В режиме воркера проверяем через workerManager
-        const isRunningInWorker = process.env.USE_WORKER_POOL === 'true' && workerManager.isBotRunning(projectId, tokenId);
+        const isRunningInWorker = process.env.USE_WORKER_POOL !== 'false' && workerManager.isBotRunning(projectId, tokenId);
 
         let actualStatus = (activeProcessInfo || isRunningInWorker) ? 'running' : 'stopped';
 

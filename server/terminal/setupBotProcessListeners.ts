@@ -70,7 +70,7 @@ export function setupBotProcessListeners() {
     console.log('[Terminal] Прослушивание процессов ботов настроено');
 
     // ─── Режим воркера: подписка на логи из worker pool ───
-    if (process.env.USE_WORKER_POOL === 'true') {
+    if (process.env.USE_WORKER_POOL !== 'false') {
       workerManager.on('bot-log', (projectId: number, tokenId: number, type: string, content: string) => {
         // Маршрутизируем логи воркера через тот же механизм что и для обычных процессов
         const streamType = (type === 'stderr') ? 'stderr' : 'stdout';

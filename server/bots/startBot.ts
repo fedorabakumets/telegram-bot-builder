@@ -307,7 +307,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
     }
 
     // ─── Режим воркера: запуск бота через worker pool вместо отдельного процесса ───
-    if (process.env.USE_WORKER_POOL === 'true') {
+    if (process.env.USE_WORKER_POOL !== 'false') {
       console.log(`🏭 [WorkerPool] Запуск бота ${projectId}/${tokenId} через воркер...`);
       console.log(`🏭 [WorkerPool] mainFile: ${mainFile}`);
       try {

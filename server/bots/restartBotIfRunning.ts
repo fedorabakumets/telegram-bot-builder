@@ -37,7 +37,7 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
     console.log(`Перезапускаем бота ${projectId} из-за обновления кода...`);
 
     // ─── Режим воркера: мгновенный перезапуск без ожидания 5 секунд ───
-    if (process.env.USE_WORKER_POOL === 'true') {
+    if (process.env.USE_WORKER_POOL !== 'false') {
       await workerManager.stopBot(projectId, instance.tokenId);
       await new Promise(resolve => setTimeout(resolve, 500)); // Минимальная пауза
       const startResult = await startBot(projectId, instance.token, instance.tokenId);

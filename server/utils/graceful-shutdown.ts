@@ -69,7 +69,7 @@ import { execSync } from "node:child_process";
  */
 export async function shutdownAllBots(): Promise<void> {
   // ─── Режим воркера: останавливаем все воркеры через менеджер ───
-  if (process.env.USE_WORKER_POOL === 'true') {
+  if (process.env.USE_WORKER_POOL !== 'false') {
     await workerManager.shutdownAll();
   }
 
