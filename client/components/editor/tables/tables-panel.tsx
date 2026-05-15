@@ -8,6 +8,7 @@ import { ProjectSelector } from '@/components/editor/database/user-database/comp
 import { TableList } from './components/table-list';
 import { TableEditor } from './components/table-editor';
 import { TableSwitcher } from './components/table-switcher';
+import { AllTablesActions } from './components/all-tables-actions';
 import { useTablesState } from './hooks/use-tables-state';
 import type { TablesPanelProps } from './types';
 
@@ -62,6 +63,8 @@ export function TablesPanel({ projectId, allProjects, onProjectChange }: TablesP
             />
           )}
         </div>
+        {/* Экспорт/импорт всех таблиц */}
+        <AllTablesActions projectId={projectId} onImportTable={importNewTable} />
       </div>
 
       {/* Контент: список таблиц + редактор */}
