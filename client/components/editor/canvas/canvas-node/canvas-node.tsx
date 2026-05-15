@@ -478,9 +478,10 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
       {/* Порт выхода — снаружи основного div, позиционируется относительно wrapper */}
       {/* Узел condition имеет порты на каждой ветке — общий порт не нужен */}
+      {/* Узел loop имеет два порта (тело + далее) внутри превью */}
       {(node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger') ? (
         <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
-      ) : node.type !== 'condition' && node.type !== 'keyboard' ? (
+      ) : node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'loop' ? (
         <OutputPort portType={node.type === 'input' ? 'input-target' : 'auto-transition'} onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : null}
 
@@ -624,7 +625,14 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         {(node.type as any) === 'convert_file' && <ConvertFilePreview node={node} />}
 
         {/* Loop Preview */}
-        {(node.type as any) === 'loop' && <LoopPreview node={node} />}
+        {(node.type as any) === 'loop' && (
+          <LoopPreview
+            node={node}
+            onPortMouseDown={handlePortMouseDown}
+            isConnectionSource={isConnectionSource}
+            onButtonPortMount={onButtonPortMount}
+          />
+        )}
 
         {/* Condition Node Preview */}
         {node.type === 'condition' && (
