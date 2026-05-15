@@ -2,7 +2,7 @@
  * @fileoverview Вертикальная навигация по вкладкам сайдбара
  */
 
-import { LayoutDashboard, Code2, Bot, Users, Megaphone, BarChart2, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Code2, Bot, Users, Megaphone, BarChart2, MessageSquare, Table2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/utils';
 import type { HeaderTab } from '../types';
@@ -40,6 +40,7 @@ const NAV_ITEMS: NavItem[] = [
   { tab: 'dialogs',   label: 'Диалоги',    icon: MessageSquare },
   { tab: 'broadcast', label: 'Рассылки',   icon: Megaphone },
   { tab: 'analytics', label: 'Аналитика',  icon: BarChart2 },
+  { tab: 'tables',    label: 'Таблицы',    icon: Table2 },
 ];
 
 /**

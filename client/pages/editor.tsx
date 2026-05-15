@@ -52,6 +52,7 @@ import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
 import { BroadcastPanel } from '@/components/editor/broadcast';
 import { AnalyticsPanel } from '@/components/editor/analytics';
+import { TablesPanel } from '@/components/editor/tables';
 import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
 import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
@@ -1533,6 +1534,17 @@ export default function Editor() {
               />
             </div>
           )}
+          {currentTab === 'tables' && (
+            <div className="h-full overflow-hidden">
+              <TablesPanel
+                projectId={activeProject.id}
+                allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                onProjectChange={(projectId) => {
+                  setLocation(`/projects/${projectId}`);
+                }}
+              />
+            </div>
+          )}
           {currentTab === 'client-api' && (
             <div className="h-full p-6 bg-background overflow-auto">
               <div className="max-w-3xl mx-auto">
@@ -1862,6 +1874,16 @@ export default function Editor() {
                     projectId={activeProject.id}
                     selectedTokenId={selectedDatabaseTokenId}
                     onSelectToken={setSelectedDatabaseTokenId}
+                  />
+                </div>
+              ) : currentTab === 'tables' ? (
+                <div className="h-full overflow-hidden">
+                  <TablesPanel
+                    projectId={activeProject.id}
+                    allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                    onProjectChange={(projectId) => {
+                      setLocation(`/projects/${projectId}`);
+                    }}
                   />
                 </div>
               ) : currentTab === 'export' ? null : null}

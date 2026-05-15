@@ -26,7 +26,8 @@ export type EditorTab =
   | 'preview'
   | 'dialogs'
   | 'broadcast'
-  | 'analytics';
+  | 'analytics'
+  | 'tables';
 
 /**
  * Тип предыдущей вкладки
