@@ -983,6 +983,108 @@ test('I05', 'psql_query узел → НЕТ "# Нет обработчика д�
     'Найден комментарий "# Нет обработчика для узла типа psql_query" — узел не обрабатывается генератором');
 });
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// БЛОК J: Подключение к внешней БД (connectionSource)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+console.log('\n── Блок J: Подключение к внешней БД ───────────────────────────');
+
+test('J01', 'connectionSource: builtin (по умолчанию) → db_pool.acquire() присутствует', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1')]);
+  const code = gen(p, 'J01');
+  ok(code.includes('db_pool.acquire()'), 'db_pool.acquire() не найден для builtin');
+});
+
+test('J02', 'connectionSource: builtin → db_pool is None проверка присутствует', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', { connectionSource: 'builtin' })]);
+  const code = gen(p, 'J02');
+  ok(code.includes('db_pool is None'), 'db_pool is None не найден для builtin');
+});
+
+test('J03', 'connectionSource: env → asyncpg.create_pool(os.environ.get("MY_DB" присутствует', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    connectionSource: 'env',
+    connectionEnvVar: 'MY_DB',
+  })]);
+  const code = gen(p, 'J03');
+  ok(code.includes('asyncpg.create_pool(os.environ.get("MY_DB"'),
+    'asyncpg.create_pool(os.environ.get("MY_DB" не найден для env');
+});
+
+test('J04', 'connectionSource: env → НЕТ db_pool is None проверки', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    connectionSource: 'env',
+    connectionEnvVar: 'EXTERNAL_DB',
+  })]);
+  const code = gen(p, 'J04');
+  const fnIdx = code.indexOf('async def handle_callback_pq1(');
+  ok(fnIdx !== -1, 'handle_callback_pq1 не найден');
+  const fnBody = code.slice(fnIdx, fnIdx + 2000);
+  ok(!fnBody.includes('db_pool is None'), 'db_pool is None найден для env — не должно быть');
+});
+
+test('J05', 'connectionSource: env → _custom_pool.close() присутствует', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    connectionSource: 'env',
+    connectionEnvVar: 'MY_DB',
+  })]);
+  const code = gen(p, 'J05');
+  ok(code.includes('_custom_pool.close()'), '_custom_pool.close() не найден для env');
+});
+
+test('J06', 'connectionSource: custom → asyncpg.create_pool("postgresql://user:pass@host:5432/db" присутствует', () => {
+  const connStr = 'postgresql://user:pass@host:5432/db';
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    connectionSource: 'custom',
+    connectionString: connStr,
+  })]);
+  const code = gen(p, 'J06');
+  ok(code.includes(connStr), `Connection string "${connStr}" не найден для custom`);
+});
+
+test('J07', 'connectionSource: custom → НЕТ db_pool is None проверки', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    connectionSource: 'custom',
+    connectionString: 'postgresql://u:p@h:5432/d',
+  })]);
+  const code = gen(p, 'J07');
+  const fnIdx = code.indexOf('async def handle_callback_pq1(');
+  ok(fnIdx !== -1, 'handle_callback_pq1 не найден');
+  const fnBody = code.slice(fnIdx, fnIdx + 2000);
+  ok(!fnBody.includes('db_pool is None'), 'db_pool is None найден для custom — не должно быть');
+});
+
+test('J08', 'connectionSource: custom → _custom_pool.close() присутствует', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    connectionSource: 'custom',
+    connectionString: 'postgresql://u:p@h:5432/d',
+  })]);
+  const code = gen(p, 'J08');
+  ok(code.includes('_custom_pool.close()'), '_custom_pool.close() не найден для custom');
+});
+
+test('J09', 'connectionSource: env → синтаксис Python OK', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    connectionSource: 'env',
+    connectionEnvVar: 'ANALYTICS_DB',
+    saveResultTo: 'data',
+    resultFormat: 'json',
+  })], true);
+  const code = genDB(p, 'J09');
+  syntax(code, 'J09');
+});
+
+test('J10', 'connectionSource: custom → синтаксис Python OK', () => {
+  const p = makeCleanProject([makeStartNode(), makePsqlQueryNode('pq1', {
+    connectionSource: 'custom',
+    connectionString: 'postgresql://admin:secret@db.neon.tech:5432/myapp?sslmode=require',
+    saveResultTo: 'orders',
+    resultFormat: 'first_row',
+  })], true);
+  const code = genDB(p, 'J10');
+  syntax(code, 'J10');
+});
+
 // ─── Итоги ───────────────────────────────────────────────────────────────────
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
