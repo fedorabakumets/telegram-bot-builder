@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Lock, LockOpen, Check, X } from 'lucide-react';
+import { BotEnvServerVarsPopover } from './BotEnvServerVarsPopover';
 
 /** Свойства формы добавления переменной */
 interface BotEnvAddRowProps {
@@ -65,6 +66,7 @@ export function BotEnvAddRow({ onSave, onCancel, isPending }: BotEnvAddRowProps)
         className="h-7 text-xs flex-1 min-w-0"
         disabled={isPending}
       />
+      <BotEnvServerVarsPopover onSelect={(val) => setValue(val)} />
       <Button
         variant="ghost" size="icon"
         className="h-7 w-7 shrink-0"

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Braces, Eye, EyeOff, Copy } from 'lucide-react';
 import { BotEnvRowMenu } from './BotEnvRowMenu';
+import { BotEnvServerVarsPopover } from './BotEnvServerVarsPopover';
 
 /** Свойства строки переменной */
 interface BotEnvRowProps {
@@ -90,14 +91,17 @@ export function BotEnvRow({
       <span className="text-muted-foreground/50 text-xs">=</span>
 
       {editing ? (
-        <Input
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditing(false); }}
-          onBlur={handleSaveEdit}
-          className="h-6 text-xs flex-1 min-w-0"
-          autoFocus
-        />
+        <div className="flex items-center gap-1 flex-1 min-w-0">
+          <Input
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') setEditing(false); }}
+            onBlur={handleSaveEdit}
+            className="h-6 text-xs flex-1 min-w-0"
+            autoFocus
+          />
+          <BotEnvServerVarsPopover onSelect={(val) => setEditValue(val)} />
+        </div>
       ) : (
         <span
           className={`text-xs truncate flex-1 min-w-0 ${canEdit ? 'text-foreground/80 cursor-pointer' : 'text-muted-foreground/70'}`}
