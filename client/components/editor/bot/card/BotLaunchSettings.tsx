@@ -11,67 +11,10 @@ import { Globe, KeyRound, Link2, Rocket, ShieldAlert } from 'lucide-react';
 import { cn } from '@/utils/utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { updateLaunchSettings, buildWebhookPreview } from './bot-launch-helpers';
+import type { LaunchMode, BotLaunchSettingsProps } from './bot-launch-helpers';
 
-/** Режим запуска бота */
-type LaunchMode = 'polling' | 'webhook';
-
-/** Свойства блока выбора режима запуска */
-interface BotLaunchSettingsProps {
-  /** ID токена */
-  tokenId: number;
-  /** ID проекта */
-  projectId: number;
-  /** Текущий режим запуска из БД */
-  launchMode: string | null;
-  /** Базовый URL для webhook из БД */
-  webhookBaseUrl: string | null;
-  /** Секретный токен webhook из БД */
-  webhookSecretToken: string | null;
-  /** Дополнительный CSS-класс */
-  className?: string;
-}
-
-/**
- * Отправляет запрос на обновление настроек режима запуска
- * @param projectId - ID проекта
- * @param tokenId - ID токена
- * @param launchMode - Режим запуска
- * @param webhookBaseUrl - Базовый URL webhook
- * @param webhookSecretToken - Секретный токен webhook
- */
-async function updateLaunchSettings(
-  projectId: number,
-  tokenId: number,
-  launchMode: string,
-  webhookBaseUrl: string | null,
-  webhookSecretToken: string | null,
-): Promise<void> {
-  const res = await fetch(`/api/projects/${projectId}/tokens/${tokenId}/launch-settings`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ launchMode, webhookBaseUrl, webhookSecretToken }),
-  });
-  if (!res.ok) throw new Error('Ошибка обновления настроек запуска');
-}
-
-/**
- * Формирует предпросмотр полного webhook URL
- * @param baseUrl - Базовый адрес сервера
- * @param projectId - ID проекта
- * @param tokenId - ID токена
- * @returns Составленный URL
- */
-function buildWebhookPreview(baseUrl: string, projectId: number, tokenId: number): string {
-  const normalized = baseUrl.trim().replace(/\/+$/, '');
-  if (!normalized) return `/api/webhook/${projectId}/${tokenId}`;
-  return `${normalized}/api/webhook/${projectId}/${tokenId}`;
-}
-
-/**
- * Блок выбора режима запуска бота с сохранением в БД
- * @param props - Свойства компонента
- * @returns JSX элемент
- */
+/** Блок выбора режима запуска бота с сохранением в БД */
 export function BotLaunchSettings({
   tokenId,
   projectId,
@@ -79,6 +22,7 @@ export function BotLaunchSettings({
   webhookBaseUrl,
   webhookSecretToken,
   className,
+  onPendingChange,
 }: BotLaunchSettingsProps) {
   const [localMode, setLocalMode] = useState<LaunchMode>((launchMode as LaunchMode) ?? 'polling');
   const [localBaseUrl, setLocalBaseUrl] = useState(webhookBaseUrl ?? '');
@@ -97,31 +41,26 @@ export function BotLaunchSettings({
     },
   });
 
-  /** Debounce-сохранение при изменении текстовых полей webhook */
+  /** Debounce-сохранение при изменении текстовых полей webhook (только без pending) */
   useEffect(() => {
+    if (onPendingChange) return;
     if (localMode !== 'webhook') return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      mutation.mutate({
-        mode: localMode,
-        url: localBaseUrl || null,
-        secret: localSecret || null,
-      });
+      mutation.mutate({ mode: localMode, url: localBaseUrl || null, secret: localSecret || null });
     }, 800);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localBaseUrl, localSecret]);
 
-  /** Обработчик смены режима — сохраняет немедленно */
+  /** Обработчик смены режима — сохраняет немедленно или через pending */
   function handleModeChange(value: LaunchMode) {
     setLocalMode(value);
-    mutation.mutate({
-      mode: value,
-      url: localBaseUrl || null,
-      secret: localSecret || null,
-    });
+    if (onPendingChange) {
+      onPendingChange('LAUNCH_MODE', value);
+    } else {
+      mutation.mutate({ mode: value, url: localBaseUrl || null, secret: localSecret || null });
+    }
   }
 
   const webhookPreview = buildWebhookPreview(localBaseUrl, projectId, tokenId);
@@ -174,7 +113,10 @@ export function BotLaunchSettings({
             <Input
               id={`webhook-base-url-${tokenId}`}
               value={localBaseUrl}
-              onChange={(e) => setLocalBaseUrl(e.target.value)}
+              onChange={(e) => {
+                setLocalBaseUrl(e.target.value);
+                if (onPendingChange) onPendingChange('WEBHOOK_BASE_URL', e.target.value);
+              }}
               placeholder="https://example.com"
               className="h-9 text-xs"
             />
@@ -185,7 +127,10 @@ export function BotLaunchSettings({
             <Input
               id={`webhook-secret-${tokenId}`}
               value={localSecret}
-              onChange={(e) => setLocalSecret(e.target.value)}
+              onChange={(e) => {
+                setLocalSecret(e.target.value);
+                if (onPendingChange) onPendingChange('WEBHOOK_SECRET_TOKEN', e.target.value);
+              }}
               placeholder="Секретный токен для верификации запросов"
               className="h-9 text-xs"
             />

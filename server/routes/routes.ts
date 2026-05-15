@@ -4853,6 +4853,9 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
         SAVE_INCOMING_MEDIA: 'saveIncomingMedia',
         AUTO_RESTART: 'autoRestart',
         MAX_RESTART_ATTEMPTS: 'maxRestartAttempts',
+        LAUNCH_MODE: 'launchMode',
+        WEBHOOK_BASE_URL: 'webhookBaseUrl',
+        WEBHOOK_SECRET_TOKEN: 'webhookSecretToken',
       };
 
       /** Ключи, которые хранятся в bot_env_variables */
@@ -4907,6 +4910,9 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
             }
             if (key === 'MAX_RESTART_ATTEMPTS') {
               dbValue = parseInt(value!) || 3;
+            }
+            if (key === 'WEBHOOK_BASE_URL' || key === 'WEBHOOK_SECRET_TOKEN') {
+              dbValue = value || null;
             }
             await storage.updateBotToken(tokenId, { [field]: dbValue });
             results.push(`updated:${key}`);

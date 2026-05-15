@@ -93,6 +93,7 @@ export function BotSettingsGrid({
         webhookBaseUrl={webhookBaseUrl}
         webhookSecretToken={webhookSecretToken}
         className="sm:col-span-2"
+        onPendingChange={onPendingChange}
       />
       <BotDatabaseToggle
         projectId={projectId}
@@ -137,7 +138,7 @@ export function BotSettingsGrid({
           allBotStatuses={allBotStatuses}
         />
       )}
-      <BotAdminIds projectId={projectId} />
+      <BotAdminIds projectId={projectId} onPendingChange={onPendingChange} />
       <ProjectCollaborators projectId={projectId} canManage={canManage} />
       <BotLaunchHistory
         tokenId={tokenId}

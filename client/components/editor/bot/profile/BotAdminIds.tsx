@@ -17,6 +17,8 @@ import { useAdminIds } from './use-admin-ids';
 interface BotAdminIdsProps {
   /** ID проекта бота */
   projectId: number;
+  /** Колбэк для pending (если передан — кнопка "Сохранить" вызывает его вместо API) */
+  onPendingChange?: (key: string, value: string) => void;
 }
 
 /**
@@ -29,7 +31,7 @@ function uid() {
 /**
  * Блок редактирования ID администраторов бота (динамический список)
  */
-export function BotAdminIds({ projectId }: BotAdminIdsProps) {
+export function BotAdminIds({ projectId, onPendingChange }: BotAdminIdsProps) {
   const { ids, setIds, isSaving, isSaved, save } = useAdminIds(projectId);
 
   /**
@@ -94,7 +96,14 @@ export function BotAdminIds({ projectId }: BotAdminIdsProps) {
               ? 'text-green-500'
               : 'text-purple-600 dark:text-purple-400'
           }`}
-          onClick={save}
+          onClick={() => {
+            if (onPendingChange) {
+              const joined = ids.filter(Boolean).join(',');
+              onPendingChange('ADMIN_IDS', joined);
+            } else {
+              save();
+            }
+          }}
           disabled={isSaving}
           aria-label="Сохранить список администраторов"
           title="Сохранить"
