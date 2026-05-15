@@ -11,6 +11,8 @@
 USER_DATA_TTL = 3600
 # Метки времени последней активности пользователей
 _user_last_seen: dict[int, float] = {}
+# Кеш данных пользовательских таблиц проекта (Bot Tables)
+_bot_tables_cache: dict | None = None
 
 
 async def cleanup_user_data() -> None:
@@ -137,6 +139,39 @@ async def init_all_user_vars(user_id: int) -> dict:
     except Exception as e:
         logging.warning(f"⚠️ Не удалось загрузить переменные из БД: {e}")
 {%- endif %}
+    # Загружаем данные из пользовательских таблиц проекта (Bot Tables)
+    # Формат переменных: table.имя_таблицы.имя_колонки → значение из первой строки
+    global _bot_tables_cache
+    if _bot_tables_cache is None and db_pool:
+        try:
+            async with db_pool.acquire() as conn:
+                _tbl_rows = await conn.fetch("""
+                    SELECT bt.name AS table_name, btc.name AS col_name, btc.id AS col_id, btr.data
+                    FROM bot_tables bt
+                    JOIN bot_table_columns btc ON btc.table_id = bt.id
+                    JOIN bot_table_rows btr ON btr.table_id = bt.id
+                    WHERE bt.project_id = $1 AND btr.row_index = (
+                        SELECT MIN(row_index) FROM bot_table_rows WHERE table_id = bt.id
+                    )
+                    ORDER BY bt.id, btc.position
+                """, PROJECT_ID)
+                _cache = {}
+                for _r in _tbl_rows:
+                    _tname = _r["table_name"]
+                    _cname = _r["col_name"]
+                    _cid = str(_r["col_id"])
+                    _data = _r["data"] if isinstance(_r["data"], dict) else {}
+                    _val = _data.get(_cid, "")
+                    _cache[f"table.{_tname}.{_cname}"] = str(_val) if _val else ""
+                _bot_tables_cache = _cache
+        except Exception as e:
+            logging.warning(f"⚠️ Не удалось загрузить Bot Tables: {e}")
+            _bot_tables_cache = {}
+    if _bot_tables_cache:
+        for _tk, _tv in _bot_tables_cache.items():
+            if _tk not in all_vars:
+                all_vars[_tk] = _tv
+
     # Рекурсивно разворачиваем dict/list-значения в плоские ключи для dot-notation подстановки.
     # Поддерживает произвольную глубину вложенности (до max_depth уровней).
     # Гарантирует что {a.b.c} найдётся через all_vars["a.b.c"] даже при глубокой вложенности.
