@@ -59,6 +59,20 @@ export function useCodeGenerator({
     staleTime: 60000,
   });
 
+  /** Кастомные переменные окружения из БД */
+  const { data: envVarsData } = useQuery({
+    queryKey: [`/api/projects/${projectId}/tokens/first/env-variables`],
+    queryFn: async () => {
+      if (!projectId) return { items: [] };
+      // Сначала получаем первый токен, потом его переменные
+      const tokenData = await apiRequest('GET', `/api/projects/${projectId}/tokens/first`);
+      if (!tokenData?.id) return { items: [] };
+      return apiRequest('GET', `/api/projects/${projectId}/tokens/${tokenData.id}/env-variables`);
+    },
+    enabled: !!projectId,
+    staleTime: 60000,
+  });
+
   const defaultToken = tokenData?.hasToken && tokenData?.token ? tokenData.token : 'YOUR_BOT_TOKEN_HERE';
   const defaultAdminIds = adminIdsData?.adminIds || '123456789';
 
@@ -74,6 +88,7 @@ export function useCodeGenerator({
     userDatabaseEnabled,
     tokenDataStr: JSON.stringify(tokenData),
     adminIdsStr: JSON.stringify(adminIdsData),
+    envVarsStr: JSON.stringify(envVarsData),
   });
 
   useEffect(() => { codeContentRef.current = codeContent; }, [codeContent]);
@@ -154,14 +169,14 @@ export function useCodeGenerator({
         case 'dockerfile':
           return botGenerator.generateDockerfile();
         case 'env':
-          return botGenerator.generateEnvFile(defaultToken, defaultAdminIds, projectId || 1);
+          return botGenerator.generateEnvFile(defaultToken, defaultAdminIds, projectId || 1, 'WARNING', 'redis://localhost:6379', null, null, false, false, 0, (envVarsData?.items ?? []).map((v: any) => ({ key: v.key, value: v.value })));
         default:
           return '';
       }
     } catch (error) {
       return `# Ошибка генерации\n# ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`;
     }
-  }, [botData, projectName, userDatabaseEnabled, projectId, mode, defaultToken, defaultAdminIds]);
+  }, [botData, projectName, userDatabaseEnabled, projectId, mode, defaultToken, defaultAdminIds, envVarsData]);
 
   /**
    * Загружает содержимое для выбранного формата с кэшированием
@@ -172,18 +187,20 @@ export function useCodeGenerator({
     const currentBotDataStr = JSON.stringify(botData);
     const currentTokenDataStr = JSON.stringify(tokenData);
     const currentAdminIdsStr = JSON.stringify(adminIdsData);
+    const currentEnvVarsStr = JSON.stringify(envVarsData);
 
     const dataChanged =
       prev.botDataStr !== currentBotDataStr ||
       prev.projectName !== projectName ||
       prev.userDatabaseEnabled !== userDatabaseEnabled ||
       prev.tokenDataStr !== currentTokenDataStr ||
-      prev.adminIdsStr !== currentAdminIdsStr;
+      prev.adminIdsStr !== currentAdminIdsStr ||
+      prev.envVarsStr !== currentEnvVarsStr;
 
     if (dataChanged) {
       setCodeContent({ python: '', json: '', requirements: '', readme: '', dockerfile: '', env: '' });
       loadedFormatsRef.current.clear();
-      prevDataRef.current = { botDataStr: currentBotDataStr, projectName, userDatabaseEnabled, tokenDataStr: currentTokenDataStr, adminIdsStr: currentAdminIdsStr };
+      prevDataRef.current = { botDataStr: currentBotDataStr, projectName, userDatabaseEnabled, tokenDataStr: currentTokenDataStr, adminIdsStr: currentAdminIdsStr, envVarsStr: currentEnvVarsStr };
     }
 
     if (!botData) return;
@@ -206,7 +223,7 @@ export function useCodeGenerator({
     } finally {
       setIsLoading(false);
     }
-  }, [botData, projectName, userDatabaseEnabled, generateContent, tokenData, adminIdsData]);
+  }, [botData, projectName, userDatabaseEnabled, generateContent, tokenData, adminIdsData, envVarsData]);
 
   return { codeContent, setCodeContent, isLoading, loadContent, generateContent, loadedFormatsRef };
 }

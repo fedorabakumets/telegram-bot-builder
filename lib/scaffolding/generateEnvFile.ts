@@ -19,6 +19,7 @@
  * @param protectContent - Защищать контент от копирования/пересылки
  * @param saveIncomingMedia - Сохранять входящие фото от пользователей
  * @param tokenId - ID токена бота в системе (для сегментации данных в БД)
+ * @param customVariables - Массив пользовательских переменных окружения (key/value)
  * @returns Содержимое .env файла
  */
 export function generateEnvFile(
@@ -32,6 +33,7 @@ export function generateEnvFile(
   protectContent: boolean = false,
   saveIncomingMedia: boolean = false,
   tokenId: number = 0,
+  customVariables?: Array<{ key: string; value: string }>,
 ): string {
   const envLines: string[] = [];
 
@@ -85,6 +87,15 @@ export function generateEnvFile(
     if (webhookPort) {
       envLines.push('# Порт aiohttp сервера для webhook');
       envLines.push(`WEBHOOK_PORT=${webhookPort}`);
+    }
+  }
+
+  // Пользовательские переменные
+  if (customVariables && customVariables.length > 0) {
+    envLines.push('');
+    envLines.push('# Пользовательские переменные');
+    for (const { key, value } of customVariables) {
+      envLines.push(`${key}=${value}`);
     }
   }
 

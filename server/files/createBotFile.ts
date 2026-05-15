@@ -149,6 +149,10 @@ export async function createCompleteBotFiles(
   const protectContent = tokenRecord?.protectContent === 1;
   const saveIncomingMedia = tokenRecord?.saveIncomingMedia === 1;
 
+  // Получаем кастомные переменные окружения из БД
+  const customEnvVars = await storage.getEnvVariables(tokenId);
+  const customVariables = customEnvVars.map(v => ({ key: v.key, value: v.value }));
+
   const envContent = generateEnvFile(
     tokenRecord?.token || "YOUR_BOT_TOKEN_HERE",
     existingAdminIds,
@@ -160,6 +164,7 @@ export async function createCompleteBotFiles(
     protectContent,
     saveIncomingMedia,
     tokenId,
+    customVariables,
   );
   const envPath = join(botDir, '.env');
   writeFileSync(envPath, envContent, 'utf8');
