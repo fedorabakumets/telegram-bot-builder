@@ -24,6 +24,8 @@ export type EditorTab =
   | 'groups'
   | 'export'
   | 'preview'
+  | 'dialogs'
+  | 'broadcast'
   | 'analytics';
 
 /**
