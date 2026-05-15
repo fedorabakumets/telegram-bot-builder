@@ -117,6 +117,45 @@ const REPAIR_BOT_TOKENS_OWNER_ID = `
 `;
 
 /**
+ * SQL для создания таблицы пользовательских таблиц проекта.
+ */
+const CREATE_BOT_TABLES_TABLE = `
+  CREATE TABLE IF NOT EXISTS bot_tables (
+    id SERIAL PRIMARY KEY,
+    project_id INTEGER NOT NULL REFERENCES bot_projects(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS idx_bot_tables_project_id ON bot_tables(project_id);
+`;
+
+/**
+ * SQL для создания таблицы колонок пользовательских таблиц.
+ */
+const CREATE_BOT_TABLE_COLUMNS_TABLE = `
+  CREATE TABLE IF NOT EXISTS bot_table_columns (
+    id SERIAL PRIMARY KEY,
+    table_id INTEGER NOT NULL REFERENCES bot_tables(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0
+  );
+  CREATE INDEX IF NOT EXISTS idx_bot_table_columns_table_id ON bot_table_columns(table_id);
+`;
+
+/**
+ * SQL для создания таблицы строк пользовательских таблиц.
+ */
+const CREATE_BOT_TABLE_ROWS_TABLE = `
+  CREATE TABLE IF NOT EXISTS bot_table_rows (
+    id SERIAL PRIMARY KEY,
+    table_id INTEGER NOT NULL REFERENCES bot_tables(id) ON DELETE CASCADE,
+    row_index INTEGER NOT NULL,
+    data JSONB NOT NULL DEFAULT '{}'
+  );
+  CREATE INDEX IF NOT EXISTS idx_bot_table_rows_table_id ON bot_table_rows(table_id);
+`;
+
+/**
  * Запускает все необходимые миграции базы данных
  * @returns Promise<void>
  */
@@ -137,6 +176,12 @@ export async function runMigrations(): Promise<void> {
     console.log("[Migrations] Таблица broadcasts готова");
     await client.query(CREATE_BROADCAST_RESULTS_TABLE);
     console.log("[Migrations] Таблица broadcast_results готова");
+    await client.query(CREATE_BOT_TABLES_TABLE);
+    console.log("[Migrations] Таблица bot_tables готова");
+    await client.query(CREATE_BOT_TABLE_COLUMNS_TABLE);
+    console.log("[Migrations] Таблица bot_table_columns готова");
+    await client.query(CREATE_BOT_TABLE_ROWS_TABLE);
+    console.log("[Migrations] Таблица bot_table_rows готова");
   } catch (err) {
     console.error("[Migrations] Ошибка выполнения миграций:", err);
   } finally {

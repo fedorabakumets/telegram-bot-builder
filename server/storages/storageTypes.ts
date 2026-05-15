@@ -109,3 +109,20 @@ export type StorageBotEnvVariableInput = typeof botEnvVariables.$inferInsert;
 
 /** Тип обновления переменной окружения бота */
 export type StorageBotEnvVariableUpdate = Partial<Omit<StorageBotEnvVariableInput, 'tokenId'>>;
+
+import { botTables, botTableColumns, botTableRows } from "@shared/schema";
+
+/** Тип вставки пользовательской таблицы по таблице Drizzle */
+export type StorageBotTableInput = typeof botTables.$inferInsert;
+
+/** Тип обновления пользовательской таблицы */
+export type StorageBotTableUpdate = Partial<StorageBotTableInput>;
+
+/** Тип вставки колонки пользовательской таблицы по таблице Drizzle */
+export type StorageBotTableColumnInput = typeof botTableColumns.$inferInsert;
+
+/** Тип вставки строки пользовательской таблицы по таблице Drizzle */
+export type StorageBotTableRowInput = typeof botTableRows.$inferInsert;
+
+/** Тип обновления строки пользовательской таблицы */
+export type StorageBotTableRowUpdate = Partial<StorageBotTableRowInput>;

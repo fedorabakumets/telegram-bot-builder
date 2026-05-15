@@ -21,6 +21,9 @@ import {
   type BroadcastResult,
   type BroadcastFilters,
   type BotEnvVariable,
+  type BotTable,
+  type BotTableColumn,
+  type BotTableRow,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
 import type {
@@ -51,6 +54,9 @@ import type {
   StorageBroadcastResultInput,
   StorageBotEnvVariableInput,
   StorageBotEnvVariableUpdate,
+  StorageBotTableInput,
+  StorageBotTableColumnInput,
+  StorageBotTableRowInput,
 } from "./storageTypes";
 
 /**
@@ -933,6 +939,101 @@ export interface IStorage {
    * @returns true, если переменные были удалены
    */
   deleteEnvVariablesByToken(tokenId: number): Promise<boolean>;
+
+  // Пользовательские таблицы проекта (Bot Tables)
+
+  /**
+   * Получить все таблицы проекта
+   * @param projectId - ID проекта
+   * @returns Массив таблиц
+   */
+  getBotTables(projectId: number): Promise<BotTable[]>;
+
+  /**
+   * Создать новую таблицу проекта
+   * @param input - Данные для создания
+   * @returns Созданная таблица
+   */
+  createBotTable(input: StorageBotTableInput): Promise<BotTable>;
+
+  /**
+   * Удалить таблицу проекта
+   * @param id - ID таблицы
+   * @returns true, если таблица была удалена
+   */
+  deleteBotTable(id: number): Promise<boolean>;
+
+  /**
+   * Переименовать таблицу проекта
+   * @param id - ID таблицы
+   * @param name - Новое название
+   * @returns Обновлённая таблица или undefined
+   */
+  renameBotTable(id: number, name: string): Promise<BotTable | undefined>;
+
+  /**
+   * Получить колонки таблицы
+   * @param tableId - ID таблицы
+   * @returns Массив колонок
+   */
+  getBotTableColumns(tableId: number): Promise<BotTableColumn[]>;
+
+  /**
+   * Создать колонку таблицы
+   * @param input - Данные для создания
+   * @returns Созданная колонка
+   */
+  createBotTableColumn(input: StorageBotTableColumnInput): Promise<BotTableColumn>;
+
+  /**
+   * Удалить колонку таблицы
+   * @param id - ID колонки
+   * @returns true, если колонка была удалена
+   */
+  deleteBotTableColumn(id: number): Promise<boolean>;
+
+  /**
+   * Переименовать колонку таблицы
+   * @param id - ID колонки
+   * @param name - Новое название
+   * @returns Обновлённая колонка или undefined
+   */
+  renameBotTableColumn(id: number, name: string): Promise<BotTableColumn | undefined>;
+
+  /**
+   * Получить строки таблицы
+   * @param tableId - ID таблицы
+   * @returns Массив строк
+   */
+  getBotTableRows(tableId: number): Promise<BotTableRow[]>;
+
+  /**
+   * Создать строки таблицы (батч)
+   * @param inputs - Массив данных для создания
+   * @returns Массив созданных строк
+   */
+  createBotTableRows(inputs: StorageBotTableRowInput[]): Promise<BotTableRow[]>;
+
+  /**
+   * Обновить данные строки таблицы
+   * @param id - ID строки
+   * @param data - Новые данные строки
+   * @returns Обновлённая строка или undefined
+   */
+  updateBotTableRow(id: number, data: Record<string, string>): Promise<BotTableRow | undefined>;
+
+  /**
+   * Удалить строку таблицы
+   * @param id - ID строки
+   * @returns true, если строка была удалена
+   */
+  deleteBotTableRow(id: number): Promise<boolean>;
+
+  /**
+   * Переиндексировать строки таблицы (row_index = 0, 1, 2, ...)
+   * @param tableId - ID таблицы
+   */
+  reindexBotTableRows(tableId: number): Promise<void>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных

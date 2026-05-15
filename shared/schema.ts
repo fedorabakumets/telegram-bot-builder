@@ -73,6 +73,9 @@ export type { Broadcast, InsertBroadcast, BroadcastResult, InsertBroadcastResult
 export { botEnvVariables, insertBotEnvVariableSchema } from "./schema/tables/bot-env-variables";
 export type { BotEnvVariable, InsertBotEnvVariable } from "./schema/tables/bot-env-variables";
 
+export { botTables, botTableColumns, botTableRows, insertBotTableSchema, insertBotTableColumnSchema, insertBotTableRowSchema } from "./schema/tables/bot-tables";
+export type { BotTable, InsertBotTable, BotTableColumn, InsertBotTableColumn, BotTableRow, InsertBotTableRow } from "./schema/tables/bot-tables";
+
 export type TelegramUserDB = typeof telegramUsersTable.$inferSelect;
 
 // Импорты для обратной совместимости

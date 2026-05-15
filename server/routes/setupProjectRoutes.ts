@@ -10,6 +10,7 @@
 import type { Express } from "express";
 import { setupBotManagementRoutes } from "./setupBotManagementRoutes";
 import { setupDeleteProjectRoute } from "./setupDeleteProjectRoute";
+import { setupTablesRoutes } from "./tables/setupTablesRoutes";
 import { listProjectsHandler } from "./projectRoutes/handlers/listProjectsHandler";
 import { getAllProjectsHandler } from "./projectRoutes/handlers/getAllProjectsHandler";
 import { getProjectHandler } from "./projectRoutes/handlers/getProjectHandler";
@@ -80,4 +81,7 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
     // Управление ботом
     setupBotManagementRoutes(app);
+
+    // Пользовательские таблицы проекта
+    setupTablesRoutes(app, requireDbReady);
 }

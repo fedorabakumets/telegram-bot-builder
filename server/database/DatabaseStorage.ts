@@ -2,10 +2,10 @@
  * @fileoverview Базовая реализация storage поверх Drizzle для серверной части конструктора
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow } from "@shared/schema";
 import { and, asc, desc, eq, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
-import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageUserBotDataInput, StorageUserBotDataUpdate, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate } from "../storages/storageTypes";
+import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageUserBotDataInput, StorageUserBotDataUpdate, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput } from "../storages/storageTypes";
 import { db } from "./db";
 
 /**
@@ -1948,5 +1948,157 @@ export class DatabaseStorage implements IStorage {
     const result = await this.db.delete(botEnvVariables)
       .where(eq(botEnvVariables.tokenId, tokenId));
     return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Bot Tables
+
+  /**
+   * Получить все таблицы проекта
+   * @param projectId - ID проекта
+   * @returns Массив таблиц
+   */
+  async getBotTables(projectId: number): Promise<BotTable[]> {
+    return await this.db.select().from(botTables)
+      .where(eq(botTables.projectId, projectId))
+      .orderBy(asc(botTables.id));
+  }
+
+  /**
+   * Создать новую таблицу проекта
+   * @param input - Данные для создания
+   * @returns Созданная таблица
+   */
+  async createBotTable(input: StorageBotTableInput): Promise<BotTable> {
+    const [table] = await this.db.insert(botTables).values(input).returning();
+    return table;
+  }
+
+  /**
+   * Удалить таблицу проекта
+   * @param id - ID таблицы
+   * @returns true, если таблица была удалена
+   */
+  async deleteBotTable(id: number): Promise<boolean> {
+    const result = await this.db.delete(botTables).where(eq(botTables.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  /**
+   * Переименовать таблицу проекта
+   * @param id - ID таблицы
+   * @param name - Новое название
+   * @returns Обновлённая таблица или undefined
+   */
+  async renameBotTable(id: number, name: string): Promise<BotTable | undefined> {
+    const [table] = await this.db.update(botTables)
+      .set({ name })
+      .where(eq(botTables.id, id))
+      .returning();
+    return table || undefined;
+  }
+
+  /**
+   * Получить колонки таблицы
+   * @param tableId - ID таблицы
+   * @returns Массив колонок
+   */
+  async getBotTableColumns(tableId: number): Promise<BotTableColumn[]> {
+    return await this.db.select().from(botTableColumns)
+      .where(eq(botTableColumns.tableId, tableId))
+      .orderBy(asc(botTableColumns.position));
+  }
+
+  /**
+   * Создать колонку таблицы
+   * @param input - Данные для создания
+   * @returns Созданная колонка
+   */
+  async createBotTableColumn(input: StorageBotTableColumnInput): Promise<BotTableColumn> {
+    const [column] = await this.db.insert(botTableColumns).values(input).returning();
+    return column;
+  }
+
+  /**
+   * Удалить колонку таблицы
+   * @param id - ID колонки
+   * @returns true, если колонка была удалена
+   */
+  async deleteBotTableColumn(id: number): Promise<boolean> {
+    const result = await this.db.delete(botTableColumns).where(eq(botTableColumns.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  /**
+   * Переименовать колонку таблицы
+   * @param id - ID колонки
+   * @param name - Новое название
+   * @returns Обновлённая колонка или undefined
+   */
+  async renameBotTableColumn(id: number, name: string): Promise<BotTableColumn | undefined> {
+    const [column] = await this.db.update(botTableColumns)
+      .set({ name })
+      .where(eq(botTableColumns.id, id))
+      .returning();
+    return column || undefined;
+  }
+
+  /**
+   * Получить строки таблицы
+   * @param tableId - ID таблицы
+   * @returns Массив строк
+   */
+  async getBotTableRows(tableId: number): Promise<BotTableRow[]> {
+    return await this.db.select().from(botTableRows)
+      .where(eq(botTableRows.tableId, tableId))
+      .orderBy(asc(botTableRows.rowIndex));
+  }
+
+  /**
+   * Создать строки таблицы (батч)
+   * @param inputs - Массив данных для создания
+   * @returns Массив созданных строк
+   */
+  async createBotTableRows(inputs: StorageBotTableRowInput[]): Promise<BotTableRow[]> {
+    if (!inputs.length) return [];
+    return await this.db.insert(botTableRows).values(inputs).returning();
+  }
+
+  /**
+   * Обновить данные строки таблицы
+   * @param id - ID строки
+   * @param data - Новые данные строки
+   * @returns Обновлённая строка или undefined
+   */
+  async updateBotTableRow(id: number, data: Record<string, string>): Promise<BotTableRow | undefined> {
+    const [row] = await this.db.update(botTableRows)
+      .set({ data })
+      .where(eq(botTableRows.id, id))
+      .returning();
+    return row || undefined;
+  }
+
+  /**
+   * Удалить строку таблицы
+   * @param id - ID строки
+   * @returns true, если строка была удалена
+   */
+  async deleteBotTableRow(id: number): Promise<boolean> {
+    const result = await this.db.delete(botTableRows).where(eq(botTableRows.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  /**
+   * Переиндексировать строки таблицы (row_index = 0, 1, 2, ...)
+   * @param tableId - ID таблицы
+   */
+  async reindexBotTableRows(tableId: number): Promise<void> {
+    const rows = await this.db.select().from(botTableRows)
+      .where(eq(botTableRows.tableId, tableId))
+      .orderBy(asc(botTableRows.rowIndex));
+    await Promise.all(
+      rows.map((row, index) =>
+        this.db.update(botTableRows).set({ rowIndex: index }).where(eq(botTableRows.id, row.id))
+      )
+    );
   }
 }
