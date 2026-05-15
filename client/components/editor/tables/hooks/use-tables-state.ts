@@ -1,176 +1,156 @@
 /**
- * @fileoverview Хук состояния таблиц — spreadsheet-подобное управление
+ * @fileoverview Хук состояния таблиц — мост между react-query и компонентами
  * @module editor/tables/hooks/use-tables-state
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTablesQuery, useColumnsQuery, useRowsQuery, tableKeys } from './use-tables-query';
+import {
+  useCreateTable,
+  useDeleteTable,
+  useCreateColumn,
+  useDeleteColumn,
+  useRenameColumn,
+  useCreateRows,
+  useUpdateRow,
+  useDeleteRow,
+  useReindexRows,
+} from './use-tables-mutations';
+import * as api from '../api/tables-api';
 import type { BotTable, TableColumn, TableRow } from '../types';
-
-/** Генерирует короткий уникальный ID */
-function uid(): string {
-  return Math.random().toString(36).slice(2, 10);
-}
 
 /** Количество пустых строк при создании таблицы */
 const INITIAL_ROWS = 10;
 
 /**
- * Создаёт пустые строки с автоинкрементом ID
- * @param startId - Начальный ID
- * @param count - Количество строк
- * @returns Массив пустых строк
- */
-function createEmptyRows(startId: number, count: number): TableRow[] {
-  return Array.from({ length: count }, (_, i) => ({
-    id: startId + i,
-    cells: {},
-  }));
-}
-
-/**
- * Хук управления состоянием таблиц проекта
- * @param _projectId - Идентификатор проекта (для будущего API)
+ * Хук управления состоянием таблиц проекта (react-query)
+ * @param projectId - Идентификатор проекта
  * @returns Состояние и методы управления таблицами
  */
-export function useTablesState(_projectId: number) {
-  /** Список таблиц */
-  const [tables, setTables] = useState<BotTable[]>([]);
-  /** ID выбранной таблицы */
+export function useTablesState(projectId: number) {
+  const queryClient = useQueryClient();
+
+  /** ID выбранной таблицы (строка) */
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+
+  /** Числовой ID выбранной таблицы для запросов */
+  const numericTableId = selectedTableId ? Number(selectedTableId) : null;
+
+  /** Запросы данных */
+  const { data: serverTables = [] } = useTablesQuery(projectId);
+  const { data: serverColumns = [] } = useColumnsQuery(projectId, numericTableId);
+  const { data: serverRows = [] } = useRowsQuery(projectId, numericTableId);
+
+  /** Мутации */
+  const createTableMut = useCreateTable(projectId);
+  const deleteTableMut = useDeleteTable(projectId);
+  const createColumnMut = useCreateColumn(projectId);
+  const deleteColumnMut = useDeleteColumn(projectId);
+  const renameColumnMut = useRenameColumn(projectId);
+  const createRowsMut = useCreateRows(projectId);
+  const updateRowMut = useUpdateRow(projectId);
+  const deleteRowMut = useDeleteRow(projectId);
+  const reindexRowsMut = useReindexRows(projectId);
+
+  /** Колонки в клиентском формате */
+  const columns: TableColumn[] = useMemo(
+    () => serverColumns.map((c) => ({ id: String(c.id), name: c.name })),
+    [serverColumns],
+  );
+
+  /** Строки в клиентском формате */
+  const rows: TableRow[] = useMemo(
+    () => serverRows.map((r) => ({ id: r.id, cells: r.data ?? {} })),
+    [serverRows],
+  );
+
+  /** Список таблиц с колонками/строками для выбранной */
+  const tables: BotTable[] = useMemo(
+    () => serverTables.map((t) => ({
+      id: String(t.id),
+      name: t.name,
+      columns: t.id === numericTableId ? columns : [],
+      rows: t.id === numericTableId ? rows : [],
+    })),
+    [serverTables, numericTableId, columns, rows],
+  );
 
   /** Выбранная таблица */
   const selectedTable = tables.find((t) => t.id === selectedTableId) ?? null;
 
-  /** Создать новую таблицу с 10 пустыми строками */
-  const createTable = useCallback((name: string) => {
-    const newTable: BotTable = {
-      id: uid(),
-      name,
-      columns: [],
-      rows: createEmptyRows(1, INITIAL_ROWS),
-      nextRowId: INITIAL_ROWS + 1,
-    };
-    setTables((prev) => [...prev, newTable]);
-    setSelectedTableId(newTable.id);
-  }, []);
+  /** Создать таблицу с 10 пустыми строками */
+  const createTable = useCallback(async (name: string) => {
+    const created = await createTableMut.mutateAsync(name);
+    setSelectedTableId(String(created.id));
+    const emptyRows = Array.from({ length: INITIAL_ROWS }, (_, i) => ({
+      rowIndex: i + 1,
+      data: {},
+    }));
+    await createRowsMut.mutateAsync({ tableId: created.id, rows: emptyRows });
+  }, [createTableMut, createRowsMut]);
 
   /** Удалить таблицу */
   const deleteTable = useCallback((tableId: string) => {
-    setTables((prev) => prev.filter((t) => t.id !== tableId));
-    setSelectedTableId((prev) => (prev === tableId ? null : prev));
-  }, []);
-
-  /** Переименовать таблицу */
-  const renameTable = useCallback((tableId: string, name: string) => {
-    setTables((prev) =>
-      prev.map((t) => (t.id === tableId ? { ...t, name } : t))
-    );
-  }, []);
+    deleteTableMut.mutate(Number(tableId));
+    if (selectedTableId === tableId) setSelectedTableId(null);
+  }, [deleteTableMut, selectedTableId]);
 
   /** Добавить именованную колонку */
   const addColumn = useCallback((tableId: string, name: string) => {
-    setTables((prev) =>
-      prev.map((t) =>
-        t.id === tableId
-          ? { ...t, columns: [...t.columns, { id: uid(), name }] }
-          : t
-      )
-    );
-  }, []);
+    const position = serverColumns.length;
+    createColumnMut.mutate({ tableId: Number(tableId), name, position });
+  }, [createColumnMut, serverColumns.length]);
 
   /** Добавить 26 буквенных колонок (A-Z) */
-  const addAlphabetColumns = useCallback((tableId: string) => {
-    const letters = Array.from({ length: 26 }, (_, i) =>
-      String.fromCharCode(65 + i)
+  const addAlphabetColumns = useCallback(async (tableId: string) => {
+    const tid = Number(tableId);
+    const startPos = serverColumns.length;
+    const letters = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
+    await Promise.all(
+      letters.map((l, i) => api.createColumn(projectId, tid, l, startPos + i)),
     );
-    const newCols: TableColumn[] = letters.map((l) => ({ id: uid(), name: l }));
-    setTables((prev) =>
-      prev.map((t) =>
-        t.id === tableId
-          ? { ...t, columns: [...t.columns, ...newCols] }
-          : t
-      )
-    );
-  }, []);
+    queryClient.invalidateQueries({ queryKey: tableKeys.columns(projectId, tid) });
+  }, [projectId, serverColumns.length, queryClient]);
 
   /** Переименовать колонку */
   const renameColumn = useCallback((tableId: string, columnId: string, name: string) => {
-    setTables((prev) =>
-      prev.map((t) =>
-        t.id === tableId
-          ? { ...t, columns: t.columns.map((c) => (c.id === columnId ? { ...c, name } : c)) }
-          : t
-      )
-    );
-  }, []);
+    renameColumnMut.mutate({ tableId: Number(tableId), columnId: Number(columnId), name });
+  }, [renameColumnMut]);
 
-  /** Удалить колонку и данные из строк */
+  /** Удалить колонку */
   const deleteColumn = useCallback((tableId: string, columnId: string) => {
-    setTables((prev) =>
-      prev.map((t) => {
-        if (t.id !== tableId) return t;
-        return {
-          ...t,
-          columns: t.columns.filter((c) => c.id !== columnId),
-          rows: t.rows.map((r) => {
-            const cells = { ...r.cells };
-            delete cells[columnId];
-            return { ...r, cells };
-          }),
-        };
-      })
-    );
-  }, []);
+    deleteColumnMut.mutate({ tableId: Number(tableId), columnId: Number(columnId) });
+  }, [deleteColumnMut]);
 
-  /** Добавить N строк (по умолчанию 1) */
+  /** Добавить N строк */
   const addRows = useCallback((tableId: string, count = 1) => {
-    setTables((prev) =>
-      prev.map((t) => {
-        if (t.id !== tableId) return t;
-        const newRows = createEmptyRows(t.nextRowId, count);
-        return { ...t, rows: [...t.rows, ...newRows], nextRowId: t.nextRowId + count };
-      })
-    );
-  }, []);
+    const maxIndex = serverRows.reduce((max, r) => Math.max(max, r.rowIndex), 0);
+    const newRows = Array.from({ length: count }, (_, i) => ({
+      rowIndex: maxIndex + i + 1,
+      data: {},
+    }));
+    createRowsMut.mutate({ tableId: Number(tableId), rows: newRows });
+  }, [createRowsMut, serverRows]);
 
   /** Удалить строку */
   const deleteRow = useCallback((tableId: string, rowId: number) => {
-    setTables((prev) =>
-      prev.map((t) =>
-        t.id === tableId
-          ? { ...t, rows: t.rows.filter((r) => r.id !== rowId) }
-          : t
-      )
-    );
-  }, []);
+    deleteRowMut.mutate({ tableId: Number(tableId), rowId });
+  }, [deleteRowMut]);
 
-  /** Перезаписать ID строк (1, 2, 3...) */
+  /** Перенумеровать строки */
   const reindexRows = useCallback((tableId: string) => {
-    setTables((prev) =>
-      prev.map((t) => {
-        if (t.id !== tableId) return t;
-        const rows = t.rows.map((r, i) => ({ ...r, id: i + 1 }));
-        return { ...t, rows, nextRowId: rows.length + 1 };
-      })
-    );
-  }, []);
+    reindexRowsMut.mutate(Number(tableId));
+  }, [reindexRowsMut]);
 
   /** Обновить значение ячейки */
   const updateCell = useCallback(
     (tableId: string, rowId: number, columnId: string, value: string) => {
-      setTables((prev) =>
-        prev.map((t) => {
-          if (t.id !== tableId) return t;
-          return {
-            ...t,
-            rows: t.rows.map((r) =>
-              r.id === rowId ? { ...r, cells: { ...r.cells, [columnId]: value } } : r
-            ),
-          };
-        })
-      );
+      const row = serverRows.find((r) => r.id === rowId);
+      const newData = { ...(row?.data ?? {}), [columnId]: value };
+      updateRowMut.mutate({ tableId: Number(tableId), rowId, data: newData });
     },
-    []
+    [updateRowMut, serverRows],
   );
 
   return {
@@ -180,7 +160,6 @@ export function useTablesState(_projectId: number) {
     setSelectedTableId,
     createTable,
     deleteTable,
-    renameTable,
     addColumn,
     addAlphabetColumns,
     renameColumn,
