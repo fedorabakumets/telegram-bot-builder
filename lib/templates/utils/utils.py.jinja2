@@ -358,7 +358,13 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
         return resolved if resolved is not None else match.group(0)
 
     # Паттерн поддерживает: {var}, {a.b.c}, {a.b[0][1].c}
-    result = _re.sub(r'\{([\w.\[\]]+)\}', _replacer, text)
+    # Многопроходная замена: если после подстановки остались {}, делаем ещё проход (макс 3)
+    result = text
+    for _pass in range(3):
+        _new_result = _re.sub(r'\{([\w.\[\]]+)\}', _replacer, result)
+        if _new_result == result:
+            break
+        result = _new_result
     return result
 
 
