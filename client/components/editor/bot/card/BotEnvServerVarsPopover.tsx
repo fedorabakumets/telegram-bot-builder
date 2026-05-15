@@ -85,11 +85,8 @@ export function BotEnvServerVarsPopover({ onSelect }: BotEnvServerVarsPopoverPro
               className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-muted/60 transition-colors"
               onClick={() => handleSelect(item)}
             >
-              <span className="text-xs font-mono font-medium text-foreground shrink-0">
+              <span className="text-xs font-mono font-medium text-foreground">
                 {item.key}
-              </span>
-              <span className="text-xs text-muted-foreground truncate ml-auto">
-                {item.maskedValue}
               </span>
             </button>
           ))}
