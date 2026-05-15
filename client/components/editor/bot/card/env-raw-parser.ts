@@ -11,6 +11,7 @@ export const SYSTEM_KEYS = new Set([
   'BOT_TOKEN', 'ADMIN_IDS', 'LOG_LEVEL', 'PROTECT_CONTENT',
   'SAVE_INCOMING_MEDIA', 'API_BASE_URL', 'API_PORT', 'API_USE_SSL',
   'API_TIMEOUT', 'DISABLE_ASYNC_LOG', 'REDIS_URL',
+  'DATABASE_URL', 'MAX_UPDATE_AGE_SECONDS', 'WEBHOOK_PORT',
 ]);
 
 /** Ключи только для чтения (игнорируются при сохранении) */

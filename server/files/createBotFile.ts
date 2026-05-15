@@ -153,6 +153,11 @@ export async function createCompleteBotFiles(
   const customEnvVars = await storage.getEnvVariables(tokenId);
   const customVariables = customEnvVars.map(v => ({ key: v.key, value: v.value }));
 
+  // Добавляем DATABASE_URL из окружения сервера если не задан пользователем
+  if (!customVariables.some(v => v.key === 'DATABASE_URL') && process.env.DATABASE_URL) {
+    customVariables.push({ key: 'DATABASE_URL', value: process.env.DATABASE_URL });
+  }
+
   const envContent = generateEnvFile(
     tokenRecord?.token || "YOUR_BOT_TOKEN_HERE",
     existingAdminIds,

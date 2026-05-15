@@ -105,6 +105,12 @@ export function generateEnvFile(
   envLines.push('# Сохранение входящих фото от пользователей (true/false)');
   envLines.push(`SAVE_INCOMING_MEDIA=${saveIncomingMedia ? 'true' : 'false'}`);
   systemKeys.add('SAVE_INCOMING_MEDIA');
+  envLines.push('');
+  envLines.push('# URL базы данных PostgreSQL');
+  envLines.push(`DATABASE_URL=${resolve('DATABASE_URL', '')}`);
+  envLines.push('');
+  envLines.push('# Максимальный возраст апдейта в секундах (старые игнорируются)');
+  envLines.push(`MAX_UPDATE_AGE_SECONDS=${resolve('MAX_UPDATE_AGE_SECONDS', '300')}`);
 
   // Webhook режим (опционально)
   if (webhookUrl) {
@@ -112,11 +118,14 @@ export function generateEnvFile(
     envLines.push('# Webhook режим — URL для приёма апдейтов от Telegram');
     envLines.push(`WEBHOOK_URL=${webhookUrl}`);
     systemKeys.add('WEBHOOK_URL');
-    if (webhookPort) {
-      envLines.push('# Порт aiohttp сервера для webhook');
-      envLines.push(`WEBHOOK_PORT=${webhookPort}`);
-      systemKeys.add('WEBHOOK_PORT');
-    }
+    const resolvedWebhookPort = resolve('WEBHOOK_PORT', webhookPort ? String(webhookPort) : '8080');
+    envLines.push('# Порт aiohttp сервера для webhook');
+    envLines.push(`WEBHOOK_PORT=${resolvedWebhookPort}`);
+  } else {
+    // Даже без webhook — генерируем WEBHOOK_PORT для возможного будущего использования
+    envLines.push('');
+    envLines.push('# Порт webhook сервера (используется при включении webhook режима)');
+    envLines.push(`WEBHOOK_PORT=${resolve('WEBHOOK_PORT', '8080')}`);
   }
 
   // Пользовательские переменные (только те, что НЕ переопределяют системные)

@@ -11,6 +11,7 @@ import { apiRequest } from '@/queryClient';
 const ENV_VAR_KEYS = new Set([
   'API_BASE_URL', 'API_PORT', 'API_USE_SSL',
   'API_TIMEOUT', 'DISABLE_ASYNC_LOG', 'REDIS_URL',
+  'DATABASE_URL', 'MAX_UPDATE_AGE_SECONDS', 'WEBHOOK_PORT',
 ]);
 
 /**
@@ -34,7 +35,7 @@ export function useSystemEnvUpdate(projectId: number, tokenId: number) {
           return apiRequest('PUT', `${envBaseUrl}/${existing.id}`, { value });
         }
         return apiRequest('POST', envBaseUrl, {
-          key, value, isSecret: key === 'REDIS_URL' ? 1 : 0,
+          key, value, isSecret: (key === 'REDIS_URL' || key === 'DATABASE_URL') ? 1 : 0,
         });
       }
 

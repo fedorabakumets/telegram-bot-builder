@@ -69,6 +69,9 @@ function buildSystemVars(token: BotToken, projectId: number, tokenId: number,
     { key: 'REDIS_URL', value: customMap.get('REDIS_URL') ?? 'redis://localhost:6379', isSecret: true },
     { key: 'PROTECT_CONTENT', value: token.protectContent ? 'true' : 'false', isSecret: false },
     { key: 'SAVE_INCOMING_MEDIA', value: token.saveIncomingMedia ? 'true' : 'false', isSecret: false },
+    { key: 'DATABASE_URL', value: customMap.get('DATABASE_URL') ?? '', isSecret: true },
+    { key: 'MAX_UPDATE_AGE_SECONDS', value: customMap.get('MAX_UPDATE_AGE_SECONDS') ?? '300', isSecret: false },
+    { key: 'WEBHOOK_PORT', value: customMap.get('WEBHOOK_PORT') ?? '8080', isSecret: false },
   ];
 }
 
