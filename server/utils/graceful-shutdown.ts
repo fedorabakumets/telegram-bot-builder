@@ -15,6 +15,7 @@
  */
 import { botProcesses } from "../routes/routes";
 import { closeDbPool } from "../database/db";
+import { workerManager } from '../bots/botWorkerManager';
 
 /**
  * Модуль для взаимодействия с хранилищем данных
@@ -67,6 +68,11 @@ import { execSync } from "node:child_process";
  * @since 1.0.0
  */
 export async function shutdownAllBots(): Promise<void> {
+  // ─── Режим воркера: останавливаем все воркеры через менеджер ───
+  if (process.env.USE_WORKER_POOL === 'true') {
+    await workerManager.shutdownAll();
+  }
+
   if (globalThis.__dbPoolActive !== false) {
     try {
       const allInstances = await storage.getAllBotInstances();

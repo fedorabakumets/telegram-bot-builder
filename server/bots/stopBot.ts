@@ -3,6 +3,7 @@
  * @external child_process
  */
 import { execSync } from "node:child_process";
+import { workerManager } from './botWorkerManager';
 
 /**
  * Глобальная коллекция активных процессов ботов
@@ -60,6 +61,31 @@ import { getRedisPublisher } from '../redis/redisClient';
  */
 export async function stopBot(projectId: number, tokenId: number): Promise<{ success: boolean; error?: string; }> {
   try {
+    // ─── Режим воркера: остановка бота через worker pool ───
+    if (process.env.USE_WORKER_POOL === 'true') {
+      await workerManager.stopBot(projectId, tokenId);
+
+      // Обновляем БД как обычно
+      const activeHistory = await storage.getActiveLaunchHistory(tokenId);
+      if (activeHistory) {
+        await storage.updateLaunchHistory(activeHistory.id, {
+          status: 'stopped',
+          stoppedAt: new Date(),
+          errorMessage: null,
+        });
+      }
+      await storage.stopBotInstanceByToken(tokenId);
+
+      void broadcastProjectEvent(projectId, {
+        type: 'bot-stopped',
+        projectId,
+        tokenId,
+        timestamp: new Date().toISOString(),
+      });
+
+      return { success: true };
+    }
+
     const processKey = `${projectId}_${tokenId}`;
     const botProcess = botProcesses.get(processKey);
 

@@ -3,6 +3,7 @@ import { storage } from "../storages/storage";
 import { findActiveProcessForProject } from "../utils/findActiveProcessForProject";
 import { startBot } from "./startBot";
 import { stopBot } from "./stopBot";
+import { workerManager } from './botWorkerManager';
 
 /**
  * Асинхронная функция для перезапуска Telegram-бота, если он запущен
@@ -34,6 +35,14 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
     }
 
     console.log(`Перезапускаем бота ${projectId} из-за обновления кода...`);
+
+    // ─── Режим воркера: мгновенный перезапуск без ожидания 5 секунд ───
+    if (process.env.USE_WORKER_POOL === 'true') {
+      await workerManager.stopBot(projectId, instance.tokenId);
+      await new Promise(resolve => setTimeout(resolve, 500)); // Минимальная пауза
+      const startResult = await startBot(projectId, instance.token, instance.tokenId);
+      return startResult;
+    }
 
     // Останавливаем текущий бот
     const stopResult = await stopBot(projectId, instance.tokenId);

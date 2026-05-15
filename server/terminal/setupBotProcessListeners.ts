@@ -10,6 +10,8 @@
 
 import { botProcesses } from '../routes/routes';
 import { setupProcessOutputListener } from './setupProcessOutputListener';
+import { workerManager } from '../bots/botWorkerManager';
+import { sendOutputToTerminals } from './sendOutputToTerminals';
 
 /**
  * Хранилище функций очистки слушателей для каждого процесса.
@@ -66,4 +68,15 @@ export function setupBotProcessListeners() {
     }
 
     console.log('[Terminal] Прослушивание процессов ботов настроено');
+
+    // ─── Режим воркера: подписка на логи из worker pool ───
+    if (process.env.USE_WORKER_POOL === 'true') {
+      workerManager.on('bot-log', (projectId: number, tokenId: number, type: string, content: string) => {
+        // Маршрутизируем логи воркера через тот же механизм что и для обычных процессов
+        const streamType = (type === 'stderr') ? 'stderr' : 'stdout';
+        sendOutputToTerminals(content, streamType, projectId, tokenId);
+      });
+
+      console.log('[Terminal] Подписка на логи воркеров настроена');
+    }
 }

@@ -3,6 +3,7 @@
  * @external child_process
  */
 import { spawn } from "node:child_process";
+import { workerManager } from './botWorkerManager';
 
 /**
  * Модуль для работы с URL
@@ -303,6 +304,50 @@ export async function startBot(projectId: number, token: string, tokenId: number
     // Очищаем логи предыдущего запуска перед стартом нового (только при ручном запуске)
     if (shouldClearLogs) {
       await clearBotLogs(projectId, tokenId);
+    }
+
+    // ─── Режим воркера: запуск бота через worker pool вместо отдельного процесса ───
+    if (process.env.USE_WORKER_POOL === 'true') {
+      await workerManager.startBot(projectId, token, tokenId, mainFile);
+
+      // Сохраняем в БД как обычно
+      const existingBotInstance = await storage.getBotInstanceByToken(tokenId);
+      if (existingBotInstance) {
+        await storage.updateBotInstance(existingBotInstance.id, {
+          status: 'running',
+          token,
+          processId: `worker_${projectId}`,
+          errorMessage: null,
+          startedAt: new Date()
+        });
+      } else {
+        await storage.createBotInstance({
+          projectId,
+          tokenId,
+          status: 'running',
+          token,
+          processId: `worker_${projectId}`,
+        });
+      }
+
+      // Создаём запись в истории запусков
+      await storage.createLaunchHistory({
+        projectId,
+        tokenId,
+        status: 'running',
+        processId: `worker_${projectId}`,
+        startedAt: new Date(),
+      });
+
+      // Рассылаем событие о запуске бота
+      void broadcastProjectEvent(projectId, {
+        type: 'bot-started',
+        projectId,
+        tokenId,
+        timestamp: new Date().toISOString(),
+      });
+
+      return { success: true, processId: `worker_${projectId}` };
     }
 
     // Запускаем бота
