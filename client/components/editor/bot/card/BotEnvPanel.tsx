@@ -8,9 +8,10 @@ import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, FileCode } from 'lucide-react';
 import { BotEnvRow } from './BotEnvRow';
 import { BotEnvAddRow } from './BotEnvAddRow';
+import { BotEnvRawEditor } from './BotEnvRawEditor';
 import { useEnvVariables } from './use-env-variables';
 import { useSystemEnvUpdate } from './use-system-env-update';
 import type { BotToken } from '@shared/schema';
@@ -83,6 +84,7 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
   const [showAdd, setShowAdd] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [search, setSearch] = useState('');
+  const [showRaw, setShowRaw] = useState(false);
 
   const systemVars = useMemo(
     () => buildSystemVars(token, projectId, tokenId, adminIds, items),
@@ -113,6 +115,9 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs text-muted-foreground font-medium">{totalCount} переменных</span>
         <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowRaw(!showRaw)} title="Raw-редактор">
+            <FileCode className="h-3.5 w-3.5" />
+          </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSearch(!showSearch)} title="Поиск">
             <Search className="h-3.5 w-3.5" />
           </Button>
@@ -127,41 +132,55 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds }: BotEnvPanel
           placeholder="Фильтр по имени..." className="h-7 text-xs" autoFocus />
       )}
 
-      {showAdd && (
-        <BotEnvAddRow onSave={handleCreate} onCancel={() => setShowAdd(false)} isPending={createMutation.isPending} />
-      )}
-
-      {/* Системные переменные */}
-      <div className="space-y-0.5">
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2">Системные</span>
-        {filteredSystem.map(v => (
-          <BotEnvRow
-            key={v.key} id={null} envKey={v.key} value={v.value}
-            isSecret={v.isSecret} isSystem={true}
-            onSystemUpdate={!READ_ONLY_KEYS.has(v.key) ? handleSystemUpdate : undefined}
-          />
-        ))}
-      </div>
-
-      {/* Пользовательские переменные */}
-      {(filteredCustom.length > 0 || !showSearch) && (
+      {showRaw ? (
+        <BotEnvRawEditor
+          systemVars={systemVars}
+          customItems={filteredCustom.map(v => ({ id: v.id, key: v.key, value: v.value, isSecret: v.isSecret }))}
+          onSystemUpdate={handleSystemUpdate}
+          onCreate={handleCreate}
+          onUpdate={(id, val) => updateMutation.mutate({ id, value: val })}
+          onDelete={(id) => deleteMutation.mutate(id)}
+          onClose={() => setShowRaw(false)}
+        />
+      ) : (
         <>
-          <Separator className="opacity-30" />
+          {showAdd && (
+            <BotEnvAddRow onSave={handleCreate} onCancel={() => setShowAdd(false)} isPending={createMutation.isPending} />
+          )}
+
+          {/* Системные переменные */}
           <div className="space-y-0.5">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2">Пользовательские</span>
-            {filteredCustom.map(v => (
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2">Системные</span>
+            {filteredSystem.map(v => (
               <BotEnvRow
-                key={v.id} id={v.id} envKey={v.key} value={v.value}
-                isSecret={!!v.isSecret} isSystem={false}
-                onReveal={revealValue}
-                onUpdate={(id, val) => updateMutation.mutate({ id, value: val })}
-                onDelete={(id) => deleteMutation.mutate(id)}
+                key={v.key} id={null} envKey={v.key} value={v.value}
+                isSecret={v.isSecret} isSystem={true}
+                onSystemUpdate={!READ_ONLY_KEYS.has(v.key) ? handleSystemUpdate : undefined}
               />
             ))}
-            {filteredCustom.length === 0 && (
-              <p className="text-xs text-muted-foreground/50 px-2 py-2">Нет пользовательских переменных</p>
-            )}
           </div>
+
+          {/* Пользовательские переменные */}
+          {(filteredCustom.length > 0 || !showSearch) && (
+            <>
+              <Separator className="opacity-30" />
+              <div className="space-y-0.5">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2">Пользовательские</span>
+                {filteredCustom.map(v => (
+                  <BotEnvRow
+                    key={v.id} id={v.id} envKey={v.key} value={v.value}
+                    isSecret={!!v.isSecret} isSystem={false}
+                    onReveal={revealValue}
+                    onUpdate={(id, val) => updateMutation.mutate({ id, value: val })}
+                    onDelete={(id) => deleteMutation.mutate(id)}
+                  />
+                ))}
+                {filteredCustom.length === 0 && (
+                  <p className="text-xs text-muted-foreground/50 px-2 py-2">Нет пользовательских переменных</p>
+                )}
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
