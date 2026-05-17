@@ -28,6 +28,8 @@ const setVariableAssignmentSchema = z.object({
   })).optional().default([]),
   /** На что заменить (только для mode=str_replace, поддерживает {переменные}) */
   replaceWith: z.string().optional().default(''),
+  /** Условие пропуска: имя переменной — если пустая/0, assignment не выполняется */
+  skipIfEmpty: z.string().optional().default(''),
 });
 
 /** Схема для валидации параметров узла set_variable */
