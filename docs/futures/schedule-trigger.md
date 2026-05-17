@@ -433,9 +433,11 @@ schedule_trigger (interval: 5 мин)
 ```
 schedule_trigger (weekday: mon-fri, 09:00, tz: Europe/Moscow)
   → code:
-      subscribers = await table_get("subscribers", active=True)
+      # Получаем подписчиков из таблицы проекта
+      subscribers = bot_tables.get("table.subscribers", [])
       for sub in subscribers:
-          await bot.send_message(sub["user_id"], report_text)
+          if sub.get("active") == "true":
+              await bot.send_message(int(sub["user_id"]), report_text)
 ```
 
 ### Очистка старых данных (каждый час)
@@ -443,7 +445,9 @@ schedule_trigger (weekday: mon-fri, 09:00, tz: Europe/Moscow)
 ```
 schedule_trigger (interval: 60 мин)
   → code:
-      await db_execute("DELETE FROM rates WHERE updated_at < NOW() - INTERVAL '24 hours'")
+      # Удаляем устаревшие курсы через asyncpg
+      async with db_pool.acquire() as conn:
+          await conn.execute("DELETE FROM bot_table_rows WHERE table_id=$1 AND data->>'updated_at' < $2", rates_table_id, cutoff)
 ```
 
 ---
