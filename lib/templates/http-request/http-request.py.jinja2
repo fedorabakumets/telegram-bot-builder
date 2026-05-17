@@ -161,6 +161,26 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
         {% for field in batchResultFields %}
         {% if field.value == '__extracted__' %}
         _b_result["{{ field.key }}"] = _b_extracted
+        {% elif field.value == '__extracted_int__' %}
+        try:
+            _b_result["{{ field.key }}"] = str(int(float(_b_extracted))) if _b_extracted else "0"
+        except (ValueError, TypeError):
+            _b_result["{{ field.key }}"] = "0"
+        {% elif field.value == '__extracted_float__' %}
+        _b_result["{{ field.key }}"] = _b_extracted if _b_extracted else "0"
+        {% elif "={{" in field.value %}
+        # Вычисляем выражение в значении поля
+        _b_expr_vars = dict(_local_vars)
+        _b_expr_vars["__extracted__"] = _b_extracted or "0"
+        _b_field_tpl = {{ field.value | tojson }}
+        _b_field_str = replace_variables_in_text(_b_field_tpl, _b_expr_vars, {})
+        _b_re_sub = getattr(__import__('re'), 'sub')
+        def _b_resolve(_m):
+            try:
+                return str(_eval_expr(_m.group(1), _b_expr_vars))
+            except Exception:
+                return "0"
+        _b_result["{{ field.key }}"] = _b_re_sub({% raw %}r'=\{\{(.+?)\}\}'{% endraw %}, _b_resolve, _b_field_str)
         {% else %}
         _b_result["{{ field.key }}"] = replace_variables_in_text("{{ field.value }}", _local_vars, {})
         {% endif %}
