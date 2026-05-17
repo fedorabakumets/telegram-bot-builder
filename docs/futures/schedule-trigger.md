@@ -421,33 +421,28 @@ n8n использует `skip` — и мы тоже.
 
 ```
 schedule_trigger (interval: 5 мин)
-  → code:
-      import aiohttp, asyncio
-      exchangers = bot_tables["table.exchangers"]
-      results = await asyncio.gather(*[fetch(e["url"]) for e in exchangers])
-      # ... сохранить в rates ...
+  → loop (по table.exchangers, item=exchanger, parallel=true)
+      → http_request (GET {exchanger.url}, extractTo=current_rate)
+        → set_variable (rates_cache = {rates_cache} + "{exchanger.name}:{current_rate}\n")
 ```
+
+После цикла `rates_cache` содержит все курсы. Пользователь при нажатии «Сравнить» читает `rates_cache` мгновенно.
 
 ### Ежедневный отчёт (Пн-Пт в 9:00)
 
 ```
 schedule_trigger (weekday: mon-fri, 09:00, tz: Europe/Moscow)
-  → code:
-      # Получаем подписчиков из таблицы проекта
-      subscribers = bot_tables.get("table.subscribers", [])
-      for sub in subscribers:
-          if sub.get("active") == "true":
-              await bot.send_message(int(sub["user_id"]), report_text)
+  → loop (по table.subscribers, item=subscriber)
+      → message (текст: "Доброе утро! Курсы: {rates_cache}", target_user: {subscriber.user_id})
 ```
 
-### Очистка старых данных (каждый час)
+### Алерт при изменении курса (каждую минуту)
 
 ```
-schedule_trigger (interval: 60 мин)
-  → code:
-      # Удаляем устаревшие курсы через asyncpg
-      async with db_pool.acquire() as conn:
-          await conn.execute("DELETE FROM bot_table_rows WHERE table_id=$1 AND data->>'updated_at' < $2", rates_table_id, cutoff)
+schedule_trigger (interval: 1 мин)
+  → http_request (GET https://swop.is/valuta.json, extractTo=btc_rate)
+    → set_variable (expression: '{btc_rate}' if float('{btc_rate}') > float('{alert_threshold}') else '')
+      → message (если rate не пустой → уведомить админа)
 ```
 
 ---
