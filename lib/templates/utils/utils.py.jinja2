@@ -308,11 +308,18 @@ def _eval_expr(template: str, user_vars: dict):
             _ast_expr.Add, _ast_expr.Sub, _ast_expr.Mult, _ast_expr.Div,
             _ast_expr.FloorDiv, _ast_expr.Mod, _ast_expr.Pow,
             _ast_expr.USub, _ast_expr.UAdd,
+            _ast_expr.Call, _ast_expr.Name, _ast_expr.Load,
         )
+        _safe_funcs = {'round': round, 'abs': abs, 'int': int, 'float': float, 'min': min, 'max': max}
         for _node in _ast_expr.walk(tree):
             if not isinstance(_node, _allowed):
                 return template
-        return eval(compile(tree, '<expr>', 'eval'))
+            if isinstance(_node, _ast_expr.Name) and _node.id not in _safe_funcs:
+                return template
+            if isinstance(_node, _ast_expr.Call):
+                if not (isinstance(_node.func, _ast_expr.Name) and _node.func.id in _safe_funcs):
+                    return template
+        return eval(compile(tree, '<expr>', 'eval'), {"__builtins__": {}}, _safe_funcs)
     except Exception:
         return template
 
