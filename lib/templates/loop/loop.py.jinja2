@@ -50,33 +50,23 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
     _HARD_LIMIT = 10000
 
 {% if parallel %}
-    # Параллельное выполнение (HTTP-запросы конкурентные, результаты изолированы)
+    # Параллельное выполнение: HTTP параллельно, обработка результата — под Lock
     import asyncio as _asyncio_loop
 
-    async def _loop_iteration(_i, _item, _snapshot_vars):
-        """Каждая итерация работает со своей копией переменных."""
-        # Подготавливаем локальные переменные итерации
-        _local_vars = dict(_snapshot_vars)
-        _item_val = _item if isinstance(_item, dict) else str(_item) if _item is not None else ""
-        _local_vars["{{ itemVariable }}"] = _item_val
-        _local_vars["{{ indexVariable }}"] = str(_i)
-        if isinstance(_item, dict):
-            for _k, _v in _item.items():
-                _local_vars[f"{{ itemVariable }}.{_k}"] = str(_v) if _v is not None else ""
+    _loop_lock = _asyncio_loop.Lock()
 
-        # Записываем в user_data (для совместимости с init_all_user_vars в теле)
-        user_data[user_id]["{{ itemVariable }}"] = _item_val
-        user_data[user_id]["{{ indexVariable }}"] = str(_i)
-        if isinstance(_item, dict):
-            for _k, _v in _item.items():
-                user_data[user_id][f"{{ itemVariable }}.{_k}"] = str(_v) if _v is not None else ""
-
+    async def _loop_iteration(_i, _item):
+        """HTTP-запрос параллельно, обработка результата — под блокировкой."""
+        # Записываем переменные итерации и выполняем тело под Lock
+        async with _loop_lock:
+            user_data[user_id]["{{ itemVariable }}"] = _item if isinstance(_item, dict) else str(_item) if _item is not None else ""
+            user_data[user_id]["{{ indexVariable }}"] = str(_i)
+            if isinstance(_item, dict):
+                for _k, _v in _item.items():
+                    user_data[user_id][f"{{ itemVariable }}.{_k}"] = str(_v) if _v is not None else ""
 {% if autoTransitionTargetExists %}
-        await handle_callback_{{ autoTransitionToSafe }}(callback_query, state=state)
+            await handle_callback_{{ autoTransitionToSafe }}(callback_query, state=state)
 {% endif %}
-
-    # Снимаем снимок переменных до начала цикла
-    _snapshot = dict(_all_vars)
 
     _tasks = []
     for _i, _item in enumerate(_items):
@@ -85,7 +75,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
             break
         if _max_iterations > 0 and _i >= _max_iterations:
             break
-        _tasks.append(_loop_iteration(_i, _item, _snapshot))
+        _tasks.append(_loop_iteration(_i, _item))
 
     await _asyncio_loop.gather(*_tasks)
 {% else %}
