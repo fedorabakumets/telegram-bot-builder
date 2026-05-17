@@ -19,8 +19,13 @@ interface ScheduleTriggerPreviewProps {
 function formatRule(rule: any): string {
   if (!rule) return 'Не настроено';
   switch (rule.mode) {
-    case 'interval':
-      return `Каждые ${rule.intervalMinutes || 5} мин`;
+    case 'interval': {
+      const unit = rule.intervalUnit || 'minutes';
+      const val = rule.intervalValue || rule.intervalMinutes || 5;
+      const labels: Record<string, string> = { seconds: 'сек', minutes: 'мин', hours: 'ч', days: 'дн' };
+      if (unit === 'minutes' && !rule.intervalUnit) return `Каждые ${val} мин`;
+      return `Каждые ${val} ${labels[unit] || 'мин'}`;
+    }
     case 'weekday': {
       const dayNames: Record<string, string> = { mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Вс' };
       const days = (rule.days || []).map((d: string) => dayNames[d] || d).join(', ');

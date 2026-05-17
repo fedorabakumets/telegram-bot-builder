@@ -39,6 +39,14 @@ const MODES = [
   { value: 'cron', label: 'Cron' },
 ];
 
+/** Единицы измерения интервала */
+const INTERVAL_UNITS = [
+  { value: 'seconds', label: 'секунд', multiplier: 1 / 60 },
+  { value: 'minutes', label: 'минут', multiplier: 1 },
+  { value: 'hours', label: 'часов', multiplier: 60 },
+  { value: 'days', label: 'дней', multiplier: 1440 },
+];
+
 /**
  * Редактор одного правила расписания
  * @param props - Свойства компонента
@@ -89,11 +97,29 @@ export function ScheduleRuleEditor({ rule, index, canRemove, onChange, onRemove 
           <Input
             type="number"
             min={1}
-            value={rule.intervalMinutes || 5}
-            onChange={(e) => onChange({ ...rule, intervalMinutes: parseInt(e.target.value) || 5 })}
-            className="w-20 text-xs"
+            value={rule.intervalValue || Math.round((rule.intervalMinutes || 5) / (INTERVAL_UNITS.find(u => u.value === (rule.intervalUnit || 'minutes'))?.multiplier || 1))}
+            onChange={(e) => {
+              const val = parseInt(e.target.value) || 1;
+              const unit = INTERVAL_UNITS.find(u => u.value === (rule.intervalUnit || 'minutes'));
+              const minutes = Math.max(1, Math.round(val * (unit?.multiplier || 1)));
+              onChange({ ...rule, intervalValue: val, intervalMinutes: minutes });
+            }}
+            className="w-16 text-xs"
           />
-          <span className="text-xs text-slate-500">мин</span>
+          <select
+            value={rule.intervalUnit || 'minutes'}
+            onChange={(e) => {
+              const newUnit = INTERVAL_UNITS.find(u => u.value === e.target.value);
+              const val = rule.intervalValue || Math.round((rule.intervalMinutes || 5) / (INTERVAL_UNITS.find(u => u.value === (rule.intervalUnit || 'minutes'))?.multiplier || 1));
+              const minutes = Math.max(1, Math.round(val * (newUnit?.multiplier || 1)));
+              onChange({ ...rule, intervalUnit: e.target.value, intervalValue: val, intervalMinutes: minutes });
+            }}
+            className="text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5"
+          >
+            {INTERVAL_UNITS.map((u) => (
+              <option key={u.value} value={u.value}>{u.label}</option>
+            ))}
+          </select>
         </div>
       )}
 
