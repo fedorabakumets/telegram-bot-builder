@@ -103,33 +103,34 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     last_name = callback_query.from_user.last_name
 
     {% if userDatabaseEnabled %}
-    # Сохраняем пользователя в базу данных
-    # Аватарку запрашиваем если: ещё не получали в этой сессии И в БД нет (avatar_url IS NULL)
-    _avatar_url = None
-    _has_avatar_in_memory = user_data.get(user_id, {}).get("_avatar_fetched")
-    _has_avatar_in_db = user_data.get(user_id, {}).get("_avatar_url_cached")
-    if not _has_avatar_in_memory and not _has_avatar_in_db:
-        try:
-            _photos = await bot.get_user_profile_photos(user_id, limit=1)
-            if _photos and _photos.photos:
-                # Сохраняем file_id — он постоянный, в отличие от file_path/URL
-                _avatar_url = _photos.photos[0][-1].file_id
-                user_data.setdefault(user_id, {})["_avatar_url_cached"] = _avatar_url
-                logging.info(f"✅ Аватарка (file_id) получена для {user_id}")
-            else:
-                logging.info(f"ℹ️ У пользователя {user_id} нет аватарки")
-            user_data.setdefault(user_id, {})["_avatar_fetched"] = True
-        except Exception as _e:
-            logging.warning(f"⚠️ Не удалось получить аватарку для {user_id}: {_e}")
-    elif _has_avatar_in_db:
-        _avatar_url = _has_avatar_in_db
-    # Fire-and-forget: сохранение профиля не блокирует отправку сообщения
-    # Передаём deep_link_param и referrer_id из user_data — они уже записаны set_user_var до вызова save_user_to_db
-    asyncio.create_task(save_user_to_db(
-        user_id, username, first_name, last_name, _avatar_url,
-        deep_link_param=user_data.get(user_id, {}).get("deep_link_param"),
-        referrer_id=user_data.get(user_id, {}).get("referrer_id"),
-    ))
+    # Сохраняем пользователя в базу данных (пропускаем системного пользователя id=0 от schedule_trigger)
+    if user_id != 0:
+        # Аватарку запрашиваем если: ещё не получали в этой сессии И в БД нет (avatar_url IS NULL)
+        _avatar_url = None
+        _has_avatar_in_memory = user_data.get(user_id, {}).get("_avatar_fetched")
+        _has_avatar_in_db = user_data.get(user_id, {}).get("_avatar_url_cached")
+        if not _has_avatar_in_memory and not _has_avatar_in_db:
+            try:
+                _photos = await bot.get_user_profile_photos(user_id, limit=1)
+                if _photos and _photos.photos:
+                    # Сохраняем file_id — он постоянный, в отличие от file_path/URL
+                    _avatar_url = _photos.photos[0][-1].file_id
+                    user_data.setdefault(user_id, {})["_avatar_url_cached"] = _avatar_url
+                    logging.info(f"✅ Аватарка (file_id) получена для {user_id}")
+                else:
+                    logging.info(f"ℹ️ У пользователя {user_id} нет аватарки")
+                user_data.setdefault(user_id, {})["_avatar_fetched"] = True
+            except Exception as _e:
+                logging.warning(f"⚠️ Не удалось получить аватарку для {user_id}: {_e}")
+        elif _has_avatar_in_db:
+            _avatar_url = _has_avatar_in_db
+        # Fire-and-forget: сохранение профиля не блокирует отправку сообщения
+        # Передаём deep_link_param и referrer_id из user_data — они уже записаны set_user_var до вызова save_user_to_db
+        asyncio.create_task(save_user_to_db(
+            user_id, username, first_name, last_name, _avatar_url,
+            deep_link_param=user_data.get(user_id, {}).get("deep_link_param"),
+            referrer_id=user_data.get(user_id, {}).get("referrer_id"),
+        ))
 
     # Инициализируем базовые переменные пользователя (память — синхронно)
     user_name = await init_user_variables(user_id, callback_query.from_user)
