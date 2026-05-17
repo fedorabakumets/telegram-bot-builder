@@ -50,22 +50,18 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
     _HARD_LIMIT = 10000
 
 {% if parallel %}
-    # Параллельное выполнение: HTTP параллельно, обработка результата — под Lock
+    # Параллельное выполнение (безопасно: json_push с ={{}} вычисляет всё атомарно)
     import asyncio as _asyncio_loop
 
-    _loop_lock = _asyncio_loop.Lock()
-
     async def _loop_iteration(_i, _item):
-        """HTTP-запрос параллельно, обработка результата — под блокировкой."""
-        # Записываем переменные итерации и выполняем тело под Lock
-        async with _loop_lock:
-            user_data[user_id]["{{ itemVariable }}"] = _item if isinstance(_item, dict) else str(_item) if _item is not None else ""
-            user_data[user_id]["{{ indexVariable }}"] = str(_i)
-            if isinstance(_item, dict):
-                for _k, _v in _item.items():
-                    user_data[user_id][f"{{ itemVariable }}.{_k}"] = str(_v) if _v is not None else ""
+        """Параллельная итерация — переменные итерации + тело."""
+        user_data[user_id]["{{ itemVariable }}"] = _item if isinstance(_item, dict) else str(_item) if _item is not None else ""
+        user_data[user_id]["{{ indexVariable }}"] = str(_i)
+        if isinstance(_item, dict):
+            for _k, _v in _item.items():
+                user_data[user_id][f"{{ itemVariable }}.{_k}"] = str(_v) if _v is not None else ""
 {% if autoTransitionTargetExists %}
-            await handle_callback_{{ autoTransitionToSafe }}(callback_query, state=state)
+        await handle_callback_{{ autoTransitionToSafe }}(callback_query, state=state)
 {% endif %}
 
     _tasks = []

@@ -61,8 +61,9 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         user_data[user_id]["{{ safe_var }}"] = _sv_old_{{ loop.index }}.replace(_sv_search_{{ loop.index }}, _sv_replace_{{ loop.index }})
         logging.info(f"📝 set_variable [{{ nodeId }}]: str_replace «{{ safe_var }}» (искали: {_sv_search_{{ loop.index }}!r}, заменили на: {_sv_replace_{{ loop.index }}!r})")
         {%- elif assignment.mode == 'json_push' %}
-        # Добавляем объект в массив-переменную
+        # Добавляем объект в массив-переменную (поддерживает ={{выражения}})
         import json as _json_push_{{ loop.index }}
+        import re as _re_push_{{ loop.index }}
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
         _sv_arr_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}", [])
         if isinstance(_sv_arr_{{ loop.index }}, str):
@@ -74,6 +75,13 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
             _sv_arr_{{ loop.index }} = []
         _sv_push_tpl_{{ loop.index }} = {{ assignment.value | tojson }}
         _sv_push_str_{{ loop.index }} = replace_variables_in_text(_sv_push_tpl_{{ loop.index }}, _sv_vars_{{ loop.index }})
+        # Обрабатываем inline-выражения ={{...}}
+        def _resolve_expr_{{ loop.index }}(_m):
+            try:
+                return str(_eval_expr(_m.group(1), _sv_vars_{{ loop.index }}))
+            except Exception:
+                return "0"
+        _sv_push_str_{{ loop.index }} = _re_push_{{ loop.index }}.sub(r'=\{\{(.+?)\}\}', _resolve_expr_{{ loop.index }}, _sv_push_str_{{ loop.index }})
         try:
             _sv_push_obj_{{ loop.index }} = _json_push_{{ loop.index }}.loads(_sv_push_str_{{ loop.index }})
         except Exception:
