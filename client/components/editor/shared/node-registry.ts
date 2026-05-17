@@ -178,6 +178,12 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
     canvasColor: 'bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-300 dark:border-indigo-700/50 shadow-lg shadow-indigo-500/20',
   },
+  schedule_trigger: {
+    name: 'Расписание',
+    icon: 'fas fa-clock',
+    color: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
+    canvasColor: 'bg-gradient-to-br from-teal-50 to-cyan-100 dark:from-teal-900/30 dark:to-cyan-900/30 text-teal-600 dark:text-teal-400 border-2 border-teal-300 dark:border-teal-700/50 shadow-lg shadow-teal-500/20',
+  },
   // Управление контентом
   pin_message: {
     name: 'Закрепить сообщение',

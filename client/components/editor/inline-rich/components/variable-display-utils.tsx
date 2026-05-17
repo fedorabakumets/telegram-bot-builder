@@ -49,6 +49,7 @@ export function getBadgeText(variable: Variable): string {
     conditional: '❓ Условие',
     callback_trigger: '👆 Инлайн-триггер',
     managed_bot_updated_trigger: '🤖 Управляемый бот',
+    schedule_trigger: '⏰ Расписание',
     get_managed_bot_token: '🔑 Токен бота',
     message_id: '🆔 ID сообщения',
     http_request: '🌐 HTTP',
@@ -139,6 +140,14 @@ export function getNodeInfo(variable: Variable) {
     return (
       <div className="text-[10px] text-indigo-500 dark:text-indigo-400 mt-0.5 truncate">
         🤖 {variable.description}
+      </div>
+    );
+  }
+  // Для schedule_trigger показываем описание переменной
+  if ((variable.nodeType as string) === 'schedule_trigger') {
+    return (
+      <div className="text-[10px] text-teal-500 dark:text-teal-400 mt-0.5 truncate">
+        ⏰ {variable.description}
       </div>
     );
   }

@@ -422,6 +422,21 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
+  // Добавляем переменные от schedule_trigger нод
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'schedule_trigger') return;
+    const key = `schedule_trigger__${node.id}`;
+    if (!variablesMap.has(key)) {
+      variablesMap.set(key, {
+        name: '_schedule',
+        nodeId: node.id,
+        nodeType: 'schedule_trigger' as any,
+        sourceTable: 'bot_users',
+        description: 'Метаданные расписания (timestamp, runCount, nodeId)',
+      });
+    }
+  });
+
   // Добавляем системные переменные
   SYSTEM_VARIABLES.forEach(v => { 
     if (!variablesMap.has(v.name)) {

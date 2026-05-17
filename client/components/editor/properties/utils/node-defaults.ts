@@ -347,6 +347,14 @@ export function getNodeDefaults(type: Node['type']): any {
       filterByUserId: '',
       autoTransitionTo: '',
     },
+    schedule_trigger: {
+      rules: [{ mode: 'interval', intervalMinutes: 5 }],
+      timezone: 'Europe/Moscow',
+      autoTransitionTo: '',
+      runOnStart: false,
+      enabled: true,
+      maxConcurrent: 1,
+    },
     get_managed_bot_token: {
       botIdSource: 'variable',
       botIdVariable: 'bot_id',

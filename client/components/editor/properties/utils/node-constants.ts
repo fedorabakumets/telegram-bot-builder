@@ -72,6 +72,7 @@ export const TRIGGER_NODE_TYPES = [
   'incoming_callback_trigger' as any,
   'outgoing_message_trigger' as any,
   'managed_bot_updated_trigger' as any,
+  'schedule_trigger' as any,
 ] as const;
 
 /**

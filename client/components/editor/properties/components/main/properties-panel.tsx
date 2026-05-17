@@ -28,6 +28,7 @@ import { CallbackTriggerConfiguration } from '../trigger/CallbackTriggerConfigur
 import { IncomingCallbackTriggerConfiguration } from '../trigger/IncomingCallbackTriggerConfiguration';
 import { OutgoingMessageTriggerConfiguration } from '../trigger/OutgoingMessageTriggerConfiguration';
 import { ManagedBotUpdatedTriggerConfiguration } from '../trigger/ManagedBotUpdatedTriggerConfiguration';
+import { ScheduleTriggerConfiguration } from '../trigger/ScheduleTriggerConfiguration';
 import { ConditionNodeConfiguration } from '../condition/ConditionNodeConfiguration';
 import { PropertiesFooterWrapper } from './properties-footer-wrapper';
 import { PropertiesHeader } from '../layout/properties-header';
@@ -666,6 +667,14 @@ export function PropertiesPanel({
             <ManagedBotUpdatedTriggerConfiguration
               selectedNode={selectedNode}
               onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
+            />
+          )}
+          {isTriggerNode(selectedNode.type) && (selectedNode.type as any) === 'schedule_trigger' && (
+            <ScheduleTriggerConfiguration
+              selectedNode={selectedNode}
+              onUpdateNode={onNodeUpdate}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
               formatNodeDisplay={formatNodeDisplay}
             />
