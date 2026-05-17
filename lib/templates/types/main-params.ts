@@ -19,6 +19,8 @@ export interface MainTemplateParams {
   managedBotUpdatedTriggerMiddlewares?: string[];
   /** Список имён обработчиков для group_message_trigger */
   groupMessageTriggerHandlers?: string[];
+  /** Есть ли schedule_trigger ноды (для graceful shutdown) */
+  hasScheduleTrigger?: boolean;
   /** URL вебхука (если задан — включается webhook режим) */
   webhookUrl?: string | null;
   /** Порт aiohttp сервера для webhook режима */

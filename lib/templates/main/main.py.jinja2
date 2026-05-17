@@ -183,6 +183,14 @@ async def main():
     except Exception as e:
         logging.error(f"Ошибка: {e}")
     finally:
+        {%- if hasScheduleTrigger %}
+        # Останавливаем фоновые schedule-задачи
+        try:
+            await _cancel_schedule_tasks()
+        except Exception:
+            pass
+        {%- endif %}
+
         {%- if userDatabaseEnabled %}
         if db_pool:
             await db_pool.close()

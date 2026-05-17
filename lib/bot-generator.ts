@@ -486,6 +486,7 @@ function generateCodeSections(
       groupMessageTriggerHandlers: nodes
         .filter(n => n.type === 'group_message_trigger' && n.data?.autoTransitionTo)
         .map(n => `group_message_trigger_${n.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler`),
+      hasScheduleTrigger: nodes.some(n => (n.type as string) === 'schedule_trigger' && n.data?.autoTransitionTo),
       webhookUrl: context.options.webhookUrl ?? null,
       webhookPort: context.options.webhookPort ?? null,
       projectId: context.projectId ?? null,
