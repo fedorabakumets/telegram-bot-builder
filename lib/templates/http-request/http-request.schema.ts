@@ -83,6 +83,10 @@ export const httpRequestParamsSchema = z.object({
   paginationLimit: z.number().optional().default(10),
   /** Максимальное количество страниц для режима fetch_all */
   paginationMaxPages: z.number().optional().default(20),
+  /** JSON-путь для извлечения значения из ответа (поддерживает {переменные}) */
+  responseJsonPath: z.string().optional().default(''),
+  /** Переменная куда сохранить извлечённое по пути значение */
+  responseExtractTo: z.string().optional().default(''),
 });
 
 /** Тип параметров шаблона http_request */

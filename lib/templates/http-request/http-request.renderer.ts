@@ -71,6 +71,8 @@ export function nodeToHttpRequestParams(node: Node, context?: HttpRequestNodeCon
     paginationItemsField: typeof data?.httpRequestPaginationItemsField === 'string' ? data.httpRequestPaginationItemsField : 'items',
     paginationLimit: typeof data?.httpRequestPaginationLimit === 'number' ? data.httpRequestPaginationLimit : 10,
     paginationMaxPages: typeof data?.httpRequestPaginationMaxPages === 'number' ? data.httpRequestPaginationMaxPages : 20,
+    responseJsonPath: typeof data?.httpRequestResponseJsonPath === 'string' ? data.httpRequestResponseJsonPath : '',
+    responseExtractTo: typeof data?.httpRequestResponseExtractTo === 'string' ? data.httpRequestResponseExtractTo : '',
   };
 }
 

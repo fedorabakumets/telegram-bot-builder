@@ -190,6 +190,29 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
     await set_user_var(user_id, "{{ statusVariable }}", str(_status_code))
     {% endif %}
 
+    {% if responseJsonPath and responseExtractTo %}
+    # Извлечение значения по JSON-пути
+    try:
+        _json_path_raw = "{{ responseJsonPath }}"
+        _json_path_resolved = replace_variables_in_text(_json_path_raw, await init_all_user_vars(user_id), {})
+        _extracted = _response_data
+        for _path_seg in _json_path_resolved.split('.'):
+            if _path_seg and _extracted is not None:
+                if isinstance(_extracted, dict):
+                    _extracted = _extracted.get(_path_seg)
+                elif isinstance(_extracted, list) and _path_seg.isdigit():
+                    _extracted = _extracted[int(_path_seg)]
+                else:
+                    _extracted = None
+                    break
+        _extract_val = str(_extracted) if _extracted is not None else ""
+        await set_user_var(user_id, "{{ responseExtractTo }}", _extract_val)
+        logging.info(f"📎 http_request [{{ nodeId }}]: извлечено {{ responseExtractTo }}={_extract_val!r} по пути {_json_path_resolved}")
+    except Exception as _extract_err:
+        logging.warning(f"⚠️ http_request [{{ nodeId }}]: ошибка извлечения по пути: {_extract_err}")
+        await set_user_var(user_id, "{{ responseExtractTo }}", "")
+    {% endif %}
+
     {% if enablePagination and paginationMode == 'interactive' %}
     # Интерактивная пагинация — вычисляем nextOffset и prevOffset
     if isinstance(_response_data, dict):

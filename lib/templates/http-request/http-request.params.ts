@@ -81,4 +81,8 @@ export interface HttpRequestTemplateParams {
   paginationLimit?: number;
   /** Максимальное количество страниц для режима fetch_all */
   paginationMaxPages?: number;
+  /** JSON-путь для извлечения значения из ответа (поддерживает {переменные}) */
+  responseJsonPath?: string;
+  /** Переменная куда сохранить извлечённое по пути значение */
+  responseExtractTo?: string;
 }
