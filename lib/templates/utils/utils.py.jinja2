@@ -304,7 +304,9 @@ def _eval_expr(template: str, user_vars: dict):
                 val = val.get(key, 0)
             else:
                 return '0'
-        return str(val) if val is not None else '0'
+        if val is None or val == '':
+            return '0'
+        return str(val)
 
     expr = _re_expr.sub(r'\{([^}]+)\}', _replacer, template)
     try:
