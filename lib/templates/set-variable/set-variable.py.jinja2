@@ -62,13 +62,12 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         logging.info(f"📝 set_variable [{{ nodeId }}]: str_replace «{{ safe_var }}» (искали: {_sv_search_{{ loop.index }}!r}, заменили на: {_sv_replace_{{ loop.index }}!r})")
         {%- elif assignment.mode == 'json_push' %}
         # Добавляем объект в массив-переменную (поддерживает ={{выражения}})
-        import json as _json_push_{{ loop.index }}
-        import re as _re_push_{{ loop.index }}
+        import json as _json_lk
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
         _sv_arr_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}", [])
         if isinstance(_sv_arr_{{ loop.index }}, str):
             try:
-                _sv_arr_{{ loop.index }} = _json_push_{{ loop.index }}.loads(_sv_arr_{{ loop.index }})
+                _sv_arr_{{ loop.index }} = _json_lk.loads(_sv_arr_{{ loop.index }})
             except Exception:
                 _sv_arr_{{ loop.index }} = []
         if not isinstance(_sv_arr_{{ loop.index }}, list):
@@ -76,14 +75,16 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         _sv_push_tpl_{{ loop.index }} = {{ assignment.value | tojson }}
         _sv_push_str_{{ loop.index }} = replace_variables_in_text(_sv_push_tpl_{{ loop.index }}, _sv_vars_{{ loop.index }})
         # Обрабатываем inline-выражения ={{...}}
+        _sv_expr_vars_{{ loop.index }} = _sv_vars_{{ loop.index }}
         def _resolve_expr_{{ loop.index }}(_m):
             try:
-                return str(_eval_expr(_m.group(1), _sv_vars_{{ loop.index }}))
+                return str(_eval_expr(_m.group(1), _sv_expr_vars_{{ loop.index }}))
             except Exception:
                 return "0"
-        _sv_push_str_{{ loop.index }} = _re_push_{{ loop.index }}.sub(r'=\{\{(.+?)\}\}', _resolve_expr_{{ loop.index }}, _sv_push_str_{{ loop.index }})
+        _sv_re_sub = __import__('re').sub
+        _sv_push_str_{{ loop.index }} = _sv_re_sub(r'=\{\{(.+?)\}\}', _resolve_expr_{{ loop.index }}, _sv_push_str_{{ loop.index }})
         try:
-            _sv_push_obj_{{ loop.index }} = _json_push_{{ loop.index }}.loads(_sv_push_str_{{ loop.index }})
+            _sv_push_obj_{{ loop.index }} = _json_lk.loads(_sv_push_str_{{ loop.index }})
         except Exception:
             _sv_push_obj_{{ loop.index }} = _sv_push_str_{{ loop.index }}
         _sv_arr_{{ loop.index }}.append(_sv_push_obj_{{ loop.index }})
@@ -91,12 +92,12 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         logging.info(f"📝 set_variable [{{ nodeId }}]: json_push «{{ safe_var }}» (длина: {len(_sv_arr_{{ loop.index }})})")
         {%- elif assignment.mode == 'json_format' %}
         # Форматируем массив в строку с опциональной сортировкой
-        import json as _json_fmt_{{ loop.index }}
+        import json as _json_lk
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
         _sv_arr_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}", [])
         if isinstance(_sv_arr_{{ loop.index }}, str):
             try:
-                _sv_arr_{{ loop.index }} = _json_fmt_{{ loop.index }}.loads(_sv_arr_{{ loop.index }})
+                _sv_arr_{{ loop.index }} = _json_lk.loads(_sv_arr_{{ loop.index }})
             except Exception:
                 _sv_arr_{{ loop.index }} = []
         if not isinstance(_sv_arr_{{ loop.index }}, list):
