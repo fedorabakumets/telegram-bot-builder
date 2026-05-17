@@ -1,4 +1,7 @@
 {# Шаблон генерации Python-кода для schedule_trigger #}
+# Глобальный список фоновых schedule-задач
+_schedule_tasks: list = []
+
 {% for entry in entries %}
 # ═══ Schedule Trigger: {{ entry.nodeId }} ═══
 
@@ -45,7 +48,7 @@ async def _schedule_task_{{ entry.safeName }}():
     while True:
         try:
             _now = datetime.now(_tz)
-            _next_delay = _calc_delay_{{ entry.safeName }}(_now, _last_run)
+            _next_delay = max(1, _calc_delay_{{ entry.safeName }}(_now, _last_run))
             await asyncio.sleep(_next_delay)
             await _schedule_execute_{{ entry.safeName }}()
             _last_run = datetime.now(_tz)
@@ -68,7 +71,8 @@ def _calc_delay_{{ entry.safeName }}(_now, _last_run):
         _remaining = _interval_sec - _elapsed
         if _remaining > 0:
             return _remaining
-    return _interval_sec
+        return 0  # Интервал прошёл — запускаем немедленно (стратегия skip)
+    return _interval_sec  # Первый запуск — ждём полный интервал
 {% elif rule.mode == 'weekday' %}
     # Правило: {{ rule.days | default([]) | join(', ') }} в {{ rule.hour | default(0) }}:{{ rule.minute | default(0) }}
     _target_days = {{ rule.days | default([]) | tojson }}
@@ -176,3 +180,13 @@ async def _schedule_execute_{{ entry.safeName }}():
 # Регистрация фоновой задачи
 _schedule_tasks.append(asyncio.ensure_future(_schedule_task_{{ entry.safeName }}()))
 {% endfor %}
+
+
+async def _cancel_schedule_tasks():
+    """Отменяет все фоновые schedule-задачи при остановке бота."""
+    for _task in _schedule_tasks:
+        if not _task.done():
+            _task.cancel()
+    if _schedule_tasks:
+        await asyncio.gather(*_schedule_tasks, return_exceptions=True)
+        logging.info(f"⏰ Остановлено {len(_schedule_tasks)} schedule-задач")
