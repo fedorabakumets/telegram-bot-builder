@@ -73,6 +73,11 @@ export function nodeToHttpRequestParams(node: Node, context?: HttpRequestNodeCon
     paginationMaxPages: typeof data?.httpRequestPaginationMaxPages === 'number' ? data.httpRequestPaginationMaxPages : 20,
     responseJsonPath: typeof data?.httpRequestResponseJsonPath === 'string' ? data.httpRequestResponseJsonPath : '',
     responseExtractTo: typeof data?.httpRequestResponseExtractTo === 'string' ? data.httpRequestResponseExtractTo : '',
+    enableBatch: !!data?.httpRequestBatchEnabled,
+    batchSource: typeof data?.httpRequestBatchSource === 'string' ? data.httpRequestBatchSource : '',
+    batchItemVar: typeof data?.httpRequestBatchItemVar === 'string' ? data.httpRequestBatchItemVar : 'item',
+    batchResultVariable: typeof data?.httpRequestBatchResultVariable === 'string' ? data.httpRequestBatchResultVariable : '',
+    batchResultFields: Array.isArray(data?.httpRequestBatchResultFields) ? data.httpRequestBatchResultFields : [],
   };
 }
 

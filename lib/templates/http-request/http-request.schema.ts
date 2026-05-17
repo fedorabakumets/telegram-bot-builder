@@ -87,6 +87,19 @@ export const httpRequestParamsSchema = z.object({
   responseJsonPath: z.string().optional().default(''),
   /** Переменная куда сохранить извлечённое по пути значение */
   responseExtractTo: z.string().optional().default(''),
+  /** Включить batch-режим */
+  enableBatch: z.boolean().optional().default(false),
+  /** Переменная-источник с массивом */
+  batchSource: z.string().optional().default(''),
+  /** Имя элемента массива */
+  batchItemVar: z.string().optional().default('item'),
+  /** Переменная для массива результатов */
+  batchResultVariable: z.string().optional().default(''),
+  /** Поля результата: [{key, value}] */
+  batchResultFields: z.array(z.object({
+    key: z.string(),
+    value: z.string(),
+  })).optional().default([]),
 });
 
 /** Тип параметров шаблона http_request */

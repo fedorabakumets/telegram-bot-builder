@@ -85,4 +85,14 @@ export interface HttpRequestTemplateParams {
   responseJsonPath?: string;
   /** Переменная куда сохранить извлечённое по пути значение */
   responseExtractTo?: string;
+  /** Включить batch-режим */
+  enableBatch?: boolean;
+  /** Переменная-источник с массивом */
+  batchSource?: string;
+  /** Имя элемента массива */
+  batchItemVar?: string;
+  /** Переменная для массива результатов */
+  batchResultVariable?: string;
+  /** Поля результата: [{key, value}] */
+  batchResultFields?: Array<{key: string; value: string}>;
 }

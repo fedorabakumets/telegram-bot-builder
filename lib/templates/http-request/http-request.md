@@ -280,3 +280,62 @@ item.?from=CARDRUB&to=USDTTRC20.in
 ```
 
 XML парсится в dict, затем фильтрация находит нужную пару по `from`/`to` и извлекает курс из поля `in`.
+
+## Batch mode (параллельные запросы)
+
+Batch-режим позволяет одному узлу `http_request` выполнить параллельные HTTP-запросы по массиву данных через `asyncio.gather`. Это решает проблему race conditions, возникающих при параллельных циклах.
+
+### Параметры
+
+| Параметр | Тип | По умолчанию | Описание |
+|---|---|---|---|
+| `enableBatch` | boolean | `false` | Включить batch-режим |
+| `batchSource` | string | — | Переменная-источник с массивом (например `table.exchangers`) |
+| `batchItemVar` | string | `item` | Имя переменной элемента массива |
+| `batchResultVariable` | string | — | Переменная для сохранения массива результатов |
+| `batchResultFields` | array | `[]` | Поля результата `[{key, value}]`. Значение `__extracted__` — результат JSON path извлечения |
+
+### Как работает
+
+1. Загружает массив из переменной `batchSource`
+2. Для каждого элемента массива подготавливает локальные переменные (`item.field`)
+3. Выполняет HTTP-запрос с подстановкой переменных из локального контекста
+4. Извлекает значение по `responseJsonPath` (если задан)
+5. Формирует объект результата из `batchResultFields`
+6. Все запросы выполняются параллельно через `asyncio.gather`
+7. Массив результатов сохраняется в `batchResultVariable`
+8. Обычная логика одиночного запроса пропускается
+
+### Пример — параллельный опрос обменников
+
+```json
+{
+  "url": "{item.url}",
+  "method": "GET",
+  "responseJsonPath": "exchange.{item.local_from}.to.{item.local_to}.xr",
+  "enableBatch": true,
+  "batchSource": "table.exchangers",
+  "batchItemVar": "item",
+  "batchResultVariable": "batch_rates",
+  "batchResultFields": [
+    {"key": "name", "value": "{item.name}"},
+    {"key": "rate", "value": "__extracted__"}
+  ]
+}
+```
+
+Если `table.exchangers` содержит:
+```json
+[
+  {"name": "Exchange A", "url": "https://a.com/api", "local_from": "RUB", "local_to": "USDT"},
+  {"name": "Exchange B", "url": "https://b.com/api", "local_from": "RUB", "local_to": "USDT"}
+]
+```
+
+Результат в `batch_rates`:
+```json
+[
+  {"name": "Exchange A", "rate": "92.50"},
+  {"name": "Exchange B", "rate": "93.10"}
+]
+```

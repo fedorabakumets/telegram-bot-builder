@@ -34,6 +34,158 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
         except Exception:
             pass
 
+    {% if enableBatch %}
+    # === BATCH MODE: параллельные запросы по массиву ===
+    import json as _json_batch
+    _batch_items = _all_vars.get("{{ batchSource }}", [])
+    if isinstance(_batch_items, str):
+        try:
+            _batch_items = _json_batch.loads(_batch_items)
+        except Exception:
+            _batch_items = []
+    if not isinstance(_batch_items, list):
+        _batch_items = []
+
+    async def _batch_fetch_one(_b_item, _b_all_vars):
+        _local_vars = dict(_b_all_vars)
+        if isinstance(_b_item, dict):
+            for _bk, _bv in _b_item.items():
+                _local_vars[f"{{ batchItemVar }}.{_bk}"] = str(_bv) if _bv is not None else ""
+        _local_vars["{{ batchItemVar }}"] = _b_item if isinstance(_b_item, dict) else str(_b_item)
+
+        _b_url = replace_variables_in_text("{{ url }}", _local_vars, {})
+
+        {% if queryParams %}
+        try:
+            _qp_raw = """{{ queryParams }}"""
+            for _k, _v in _local_vars.items():
+                _qp_raw = _qp_raw.replace("{" + _k + "}", str(_v))
+            _qp_list = _json_batch.loads(_qp_raw)
+            if _qp_list:
+                from urllib.parse import urlencode as _urlencode
+                _qp_dict = {p['key']: p['value'] for p in _qp_list if p.get('key')}
+                if _qp_dict:
+                    _sep = '&' if '?' in _b_url else '?'
+                    _b_url = _b_url + _sep + _urlencode(_qp_dict)
+        except Exception:
+            pass
+        {% endif %}
+
+        _b_headers = {}
+        {% if headers %}
+        try:
+            _h_raw = """{{ headers }}"""
+            for _k, _v in _local_vars.items():
+                _h_raw = _h_raw.replace("{" + _k + "}", str(_v))
+            _b_headers = _json_batch.loads(_h_raw)
+        except Exception:
+            pass
+        {% endif %}
+
+        _b_extracted = None
+        _b_status = 0
+        try:
+            import aiohttp as _aiohttp_b
+            _b_connector = _aiohttp_b.TCPConnector(ssl={{ 'False' if ignoreSsl else 'True' }})
+            async with _aiohttp_b.ClientSession(connector=_b_connector) as _b_session:
+                async with _b_session.{{ method | lower }}(
+                    _b_url,
+                    headers=_b_headers or None,
+                    timeout=_aiohttp_b.ClientTimeout(total={{ timeout }}),
+                    allow_redirects={{ 'True' if followRedirects else 'False' }}
+                ) as _b_resp:
+                    _b_status = _b_resp.status
+                    try:
+                        _b_data = await _b_resp.json(content_type=None)
+                    except Exception:
+                        _b_text = await _b_resp.text()
+                        _b_ct = _b_resp.headers.get('Content-Type', '')
+                        if 'xml' in _b_ct or _b_text.strip().startswith('<?xml') or _b_text.strip().startswith('<'):
+                            try:
+                                import xml.etree.ElementTree as _ET_b
+                                _xml_root_b = _ET_b.fromstring(_b_text)
+                                def _xml_to_dict_b(el):
+                                    children = list(el)
+                                    if not children:
+                                        return el.text.strip() if el.text and el.text.strip() else ""
+                                    _groups = {}
+                                    for child in children:
+                                        tag = child.tag
+                                        if tag not in _groups:
+                                            _groups[tag] = []
+                                        _groups[tag].append(_xml_to_dict_b(child))
+                                    _result = {}
+                                    for tag, items in _groups.items():
+                                        _result[tag] = items[0] if len(items) == 1 else items
+                                    return _result
+                                _b_data = _xml_to_dict_b(_xml_root_b)
+                            except Exception:
+                                _b_data = _b_text
+                        else:
+                            _b_data = _b_text
+
+                    {% if responseJsonPath %}
+                    _b_json_path = replace_variables_in_text("{{ responseJsonPath }}", _local_vars, {})
+                    _b_extracted_val = _b_data
+                    for _seg in _b_json_path.split('.'):
+                        if _seg and _b_extracted_val is not None:
+                            if _seg.startswith('?') and isinstance(_b_extracted_val, list):
+                                _f_str = _seg[1:]
+                                _f_conds = {}
+                                for _fc in _f_str.split('&'):
+                                    if '=' in _fc:
+                                        _fk, _fv = _fc.split('=', 1)
+                                        _f_conds[_fk] = _fv
+                                _found = None
+                                for _fi in _b_extracted_val:
+                                    if isinstance(_fi, dict) and all(str(_fi.get(_ck, '')) == _cv for _ck, _cv in _f_conds.items()):
+                                        _found = _fi
+                                        break
+                                _b_extracted_val = _found
+                            elif isinstance(_b_extracted_val, dict):
+                                _b_extracted_val = _b_extracted_val.get(_seg)
+                            elif isinstance(_b_extracted_val, list) and _seg.isdigit():
+                                _b_extracted_val = _b_extracted_val[int(_seg)]
+                            else:
+                                _b_extracted_val = None
+                                break
+                    _b_extracted = str(_b_extracted_val) if _b_extracted_val is not None else ""
+                    {% else %}
+                    _b_extracted = str(_b_data) if _b_data is not None else ""
+                    {% endif %}
+        except Exception as _b_err:
+            logging.warning(f"batch http_request [{{ nodeId }}]: error for {_b_url}: {_b_err}")
+            _b_extracted = ""
+
+        _b_result = {}
+        {% for field in batchResultFields %}
+        {% if field.value == '__extracted__' %}
+        _b_result["{{ field.key }}"] = _b_extracted
+        {% else %}
+        _b_result["{{ field.key }}"] = replace_variables_in_text("{{ field.value }}", _local_vars, {})
+        {% endif %}
+        {% endfor %}
+        return _b_result
+
+    _batch_results = await asyncio.gather(*[_batch_fetch_one(_bi, _all_vars) for _bi in _batch_items])
+    _batch_results = [r for r in _batch_results if r is not None]
+    await set_user_var(user_id, "{{ batchResultVariable }}", list(_batch_results))
+    logging.info(f"batch http_request [{{ nodeId }}]: {len(_batch_results)} results saved to {{ batchResultVariable }}")
+
+    {% if autoTransitionTo and autoTransitionTargetExists %}
+    class _FakeCb:
+        def __init__(self, data, user, msg):
+            self.data = data
+            self.from_user = user
+            self.message = msg
+        async def answer(self, *a, **kw):
+            pass
+    _fake_cb = _FakeCb("{{ autoTransitionTo }}", callback_query.from_user, callback_query.message)
+    await handle_callback_{{ autoTransitionTo | replace('-', '_') | replace('.', '_') }}(_fake_cb, state=state)
+    {% endif %}
+    return
+    {% endif %}
+
     {% if enablePagination and paginationMode == 'interactive' and paginationOffsetVar %}
     # Инициализируем переменную offset если не задана или не является числом (первый вход в список)
     _pag_offset_raw = str(_all_vars.get("{{ paginationOffsetVar }}", "") or "")
