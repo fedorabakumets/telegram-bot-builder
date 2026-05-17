@@ -50,7 +50,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
     _HARD_LIMIT = 10000
 
 {% if parallel %}
-    # Параллельное выполнение (безопасно: json_push с ={{}} вычисляет всё атомарно)
+    # Параллельное выполнение (безопасно: json_push с выражениями вычисляет всё атомарно)
     import asyncio as _asyncio_loop
 
     async def _loop_iteration(_i, _item):
