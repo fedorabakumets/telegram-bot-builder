@@ -18,6 +18,7 @@
  *  N. Пагинация (9 тестов)
  *  O. Извлечение по JSON-пути (8 тестов)
  *  P. XML формат ответа (12 тестов)
+ *  Q. Batch mode — параллельные запросы (10 тестов)
  */
 
 import fs from 'fs';
@@ -1636,6 +1637,152 @@ test('P12', 'autodetect → проверка Content-Type на xml', () => {
   const code = gen(p, 'P12');
   ok(code.includes("'xml' in _ct") || code.includes('"xml" in _ct'),
     'Проверка Content-Type на xml не найдена в autodetect');
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// БЛОК Q: Batch mode (параллельные запросы по массиву)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+console.log('\n── Блок Q: Batch mode ──────────────────────────────────────────');
+
+test('Q01', 'enableBatch → BATCH MODE комментарий присутствует', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestBatchEnabled: true,
+    httpRequestBatchSource: 'table.exchangers',
+    httpRequestBatchItemVar: 'exchanger',
+    httpRequestBatchResultVariable: 'results',
+    httpRequestBatchResultFields: [{ key: 'name', value: '{exchanger.name}' }],
+  })]);
+  const code = gen(p, 'Q01');
+  ok(code.includes('BATCH MODE'), 'BATCH MODE комментарий не найден');
+});
+
+test('Q02', 'enableBatch → asyncio.gather присутствует', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestBatchEnabled: true,
+    httpRequestBatchSource: 'table.exchangers',
+    httpRequestBatchItemVar: 'exchanger',
+    httpRequestBatchResultVariable: 'results',
+    httpRequestBatchResultFields: [{ key: 'rate', value: '__extracted__' }],
+    httpRequestResponseJsonPath: 'exchange.{exchanger.from_id}.to.5',
+  })]);
+  const code = gen(p, 'Q02');
+  ok(code.includes('asyncio.gather'), 'asyncio.gather не найден в batch mode');
+});
+
+test('Q03', 'enableBatch → _batch_items из batchSource', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestBatchEnabled: true,
+    httpRequestBatchSource: 'table.exchangers',
+    httpRequestBatchItemVar: 'item',
+    httpRequestBatchResultVariable: 'res',
+    httpRequestBatchResultFields: [],
+  })]);
+  const code = gen(p, 'Q03');
+  ok(code.includes('table.exchangers'), 'table.exchangers не найден в batch mode');
+});
+
+test('Q04', 'enableBatch → set_user_var с batchResultVariable', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestBatchEnabled: true,
+    httpRequestBatchSource: 'table.items',
+    httpRequestBatchItemVar: 'item',
+    httpRequestBatchResultVariable: 'compare_results',
+    httpRequestBatchResultFields: [{ key: 'val', value: '__extracted__' }],
+  })]);
+  const code = gen(p, 'Q04');
+  ok(code.includes('"compare_results"'), 'compare_results не найден в set_user_var');
+});
+
+test('Q05', 'enableBatch → batchResultFields с __extracted__', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestBatchEnabled: true,
+    httpRequestBatchSource: 'table.exchangers',
+    httpRequestBatchItemVar: 'exchanger',
+    httpRequestBatchResultVariable: 'results',
+    httpRequestBatchResultFields: [
+      { key: 'name', value: '{exchanger.name}' },
+      { key: 'rate', value: '__extracted__' },
+    ],
+    httpRequestResponseJsonPath: 'price',
+  })]);
+  const code = gen(p, 'Q05');
+  ok(code.includes('_b_extracted'), '_b_extracted не найден — извлечение по json_path отсутствует');
+  ok(code.includes('"name"'), 'поле "name" не найдено в результатах');
+  ok(code.includes('"rate"'), 'поле "rate" не найдено в результатах');
+});
+
+test('Q06', 'enableBatch → _local_vars содержит batchItemVar поля', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestBatchEnabled: true,
+    httpRequestBatchSource: 'table.exchangers',
+    httpRequestBatchItemVar: 'exchanger',
+    httpRequestBatchResultVariable: 'results',
+    httpRequestBatchResultFields: [],
+  })]);
+  const code = gen(p, 'Q06');
+  ok(code.includes('exchanger.'), 'exchanger. не найден в _local_vars');
+});
+
+test('Q07', 'enableBatch → _batch_items присутствует в обработчике', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestBatchEnabled: true,
+    httpRequestBatchSource: 'table.items',
+    httpRequestBatchItemVar: 'item',
+    httpRequestBatchResultVariable: 'res',
+    httpRequestBatchResultFields: [],
+  })]);
+  const code = gen(p, 'Q07');
+  const fnIdx = code.indexOf('async def handle_callback_http1(');
+  const fnBody = code.slice(fnIdx, fnIdx + 2000);
+  ok(fnBody.includes('_batch_items'), '_batch_items не найден — batch mode не активирован');
+});
+
+test('Q08', 'enableBatch → return после batch (не выполняет обычный код)', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestBatchEnabled: true,
+    httpRequestBatchSource: 'table.items',
+    httpRequestBatchItemVar: 'item',
+    httpRequestBatchResultVariable: 'res',
+    httpRequestBatchResultFields: [],
+  })]);
+  const code = gen(p, 'Q08');
+  ok(code.includes('return'), 'return не найден после batch блока');
+});
+
+test('Q09', 'enableBatch → Синтаксис Python OK', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestUrl: 'https://api.example.com/{exchanger.path}',
+    httpRequestBatchEnabled: true,
+    httpRequestBatchSource: 'table.exchangers',
+    httpRequestBatchItemVar: 'exchanger',
+    httpRequestBatchResultVariable: 'compare_results',
+    httpRequestBatchResultFields: [
+      { key: 'name', value: '{exchanger.name}' },
+      { key: 'url', value: '{exchanger.ref_url}' },
+      { key: 'rate', value: '__extracted__' },
+    ],
+    httpRequestResponseJsonPath: 'exchange.{exchanger.from_id}.to.5',
+    httpRequestIgnoreHttpErrors: true,
+    httpRequestIgnoreSsl: true,
+  })]);
+  const code = gen(p, 'Q09');
+  syntax(code, 'Q09');
+});
+
+test('Q10', 'enableBatch + autoTransitionTo → переход после batch', () => {
+  const msgNode = makeMessageNode('msg-result', 'Результат');
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestBatchEnabled: true,
+    httpRequestBatchSource: 'table.items',
+    httpRequestBatchItemVar: 'item',
+    httpRequestBatchResultVariable: 'res',
+    httpRequestBatchResultFields: [{ key: 'val', value: '__extracted__' }],
+    autoTransitionTo: 'msg-result',
+  }), msgNode]);
+  const code = gen(p, 'Q10');
+  ok(code.includes('handle_callback_msg_result'), 'автопереход к msg-result не найден после batch');
+  syntax(code, 'Q10');
 });
 
 // ─── Итог ────────────────────────────────────────────────────────────────────
