@@ -135,7 +135,7 @@ async def _schedule_execute_{{ entry.safeName }}():
 
         from datetime import datetime
         user_data[_sched_user_id]["_schedule"] = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(_tz).strftime("%d.%m.%Y %H:%M:%S"),
             "nodeId": "{{ entry.nodeId }}",
             "runCount": _sched_count_{{ entry.safeName }},
         }
