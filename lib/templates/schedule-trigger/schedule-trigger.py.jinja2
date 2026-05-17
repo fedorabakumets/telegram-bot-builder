@@ -117,6 +117,8 @@ def _calc_delay_{{ entry.safeName }}(_now, _last_run):
 async def _schedule_execute_{{ entry.safeName }}():
     """Одно выполнение schedule-задачи {{ entry.nodeId }}."""
     global _sched_running_{{ entry.safeName }}, _sched_count_{{ entry.safeName }}
+    import pytz
+    _tz = pytz.timezone("{{ entry.timezone }}")
 
     if _sched_running_{{ entry.safeName }}:
         logging.warning(f"⏰ schedule [{{ entry.nodeId }}]: пропуск — предыдущий запуск ещё выполняется")
