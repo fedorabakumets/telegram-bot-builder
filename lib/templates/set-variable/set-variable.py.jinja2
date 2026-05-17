@@ -60,6 +60,70 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         _sv_replace_{{ loop.index }} = replace_variables_in_text({{ assignment.replaceWith | tojson }}, _sv_vars_{{ loop.index }})
         user_data[user_id]["{{ safe_var }}"] = _sv_old_{{ loop.index }}.replace(_sv_search_{{ loop.index }}, _sv_replace_{{ loop.index }})
         logging.info(f"📝 set_variable [{{ nodeId }}]: str_replace «{{ safe_var }}» (искали: {_sv_search_{{ loop.index }}!r}, заменили на: {_sv_replace_{{ loop.index }}!r})")
+        {%- elif assignment.mode == 'json_push' %}
+        # Добавляем объект в массив-переменную
+        import json as _json_push_{{ loop.index }}
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_arr_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}", [])
+        if isinstance(_sv_arr_{{ loop.index }}, str):
+            try:
+                _sv_arr_{{ loop.index }} = _json_push_{{ loop.index }}.loads(_sv_arr_{{ loop.index }})
+            except Exception:
+                _sv_arr_{{ loop.index }} = []
+        if not isinstance(_sv_arr_{{ loop.index }}, list):
+            _sv_arr_{{ loop.index }} = []
+        _sv_push_tpl_{{ loop.index }} = {{ assignment.value | tojson }}
+        _sv_push_str_{{ loop.index }} = replace_variables_in_text(_sv_push_tpl_{{ loop.index }}, _sv_vars_{{ loop.index }})
+        try:
+            _sv_push_obj_{{ loop.index }} = _json_push_{{ loop.index }}.loads(_sv_push_str_{{ loop.index }})
+        except Exception:
+            _sv_push_obj_{{ loop.index }} = _sv_push_str_{{ loop.index }}
+        _sv_arr_{{ loop.index }}.append(_sv_push_obj_{{ loop.index }})
+        user_data[user_id]["{{ safe_var }}"] = _sv_arr_{{ loop.index }}
+        logging.info(f"📝 set_variable [{{ nodeId }}]: json_push «{{ safe_var }}» (длина: {len(_sv_arr_{{ loop.index }})})")
+        {%- elif assignment.mode == 'json_format' %}
+        # Форматируем массив в строку с опциональной сортировкой
+        import json as _json_fmt_{{ loop.index }}
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_arr_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}", [])
+        if isinstance(_sv_arr_{{ loop.index }}, str):
+            try:
+                _sv_arr_{{ loop.index }} = _json_fmt_{{ loop.index }}.loads(_sv_arr_{{ loop.index }})
+            except Exception:
+                _sv_arr_{{ loop.index }} = []
+        if not isinstance(_sv_arr_{{ loop.index }}, list):
+            _sv_arr_{{ loop.index }} = []
+        {%- if assignment.lookupField %}
+        # Сортировка по полю {{ assignment.lookupField }} (по убыванию)
+        try:
+            _sv_arr_{{ loop.index }}.sort(key=lambda x: float(x.get("{{ assignment.lookupField }}", 0) or 0), reverse=True)
+        except Exception:
+            pass
+        {%- endif %}
+        # Форматируем каждый элемент по шаблону (первый = лучший, помечается 🏆)
+        _sv_tpl_{{ loop.index }} = {{ assignment.value | tojson }}
+        _sv_result_{{ loop.index }} = ""
+        _sv_first_{{ loop.index }} = True
+        for _sv_item_{{ loop.index }} in _sv_arr_{{ loop.index }}:
+            if isinstance(_sv_item_{{ loop.index }}, dict):
+                # Пропускаем элементы с нулевым rate
+                _sv_rate_val = _sv_item_{{ loop.index }}.get("rate", "0")
+                try:
+                    if float(_sv_rate_val) <= 0:
+                        continue
+                except (ValueError, TypeError):
+                    continue
+            _sv_item_vars_{{ loop.index }} = dict(_sv_vars_{{ loop.index }})
+            if isinstance(_sv_item_{{ loop.index }}, dict):
+                for _ik, _iv in _sv_item_{{ loop.index }}.items():
+                    _sv_item_vars_{{ loop.index }}[f"item.{_ik}"] = str(_iv) if _iv is not None else ""
+            _sv_line_{{ loop.index }} = replace_variables_in_text(_sv_tpl_{{ loop.index }}, _sv_item_vars_{{ loop.index }})
+            if _sv_first_{{ loop.index }}:
+                _sv_line_{{ loop.index }} = _sv_line_{{ loop.index }}.replace("🔸", "🏆", 1)
+                _sv_first_{{ loop.index }} = False
+            _sv_result_{{ loop.index }} += _sv_line_{{ loop.index }}
+        user_data[user_id]["{{ safe_var }}"] = _sv_result_{{ loop.index }}
+        logging.info(f"📝 set_variable [{{ nodeId }}]: json_format «{{ safe_var }}» ({len(_sv_arr_{{ loop.index }})} элементов)")
         {%- else %}
         # Устанавливаем переменную через шаблон
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
