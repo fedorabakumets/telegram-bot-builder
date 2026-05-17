@@ -715,6 +715,14 @@ export const nodeSchema = z.object({
     httpRequestPaginationLimit: z.number().default(10).optional(),
     /** Максимальное количество страниц для режима fetch_all */
     httpRequestPaginationMaxPages: z.number().default(20).optional(),
+    /** Включить batch-режим: параллельные запросы по массиву */
+    httpRequestBatchEnabled: z.boolean().default(false).optional(),
+    /** Переменная-источник с массивом для batch-режима */
+    httpRequestBatchSource: z.string().optional(),
+    /** Имя элемента массива (для подстановки в URL/path) */
+    httpRequestBatchItemVar: z.string().default('item').optional(),
+    /** Переменная для сохранения массива результатов */
+    httpRequestBatchResultVariable: z.string().optional(),
     /** Словарь обложек медиафайлов: ключ — URL видео, значение — URL обложки */
     attachedMediaThumbnails: z.record(z.string(), z.string()).optional().default({}),
     /** SQL-запрос для узла psql_query, поддерживает {переменные} */

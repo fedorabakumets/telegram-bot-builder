@@ -56,9 +56,21 @@ export function HttpRequestPreview({ node }: HttpRequestPreviewProps) {
   const ignoreSsl = !!(d.httpRequestIgnoreSsl);
   const ignoreErrors = !!(d.httpRequestIgnoreHttpErrors);
   const noRedirects = d.httpRequestFollowRedirects === false;
+  const batchEnabled = !!(d.httpRequestBatchEnabled);
 
   return (
     <div className="space-y-1.5 p-1">
+      {/* Batch mode индикатор */}
+      {batchEnabled && (
+        <div className="flex items-center gap-1">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 font-medium">
+            ⚡ Batch
+          </span>
+          {d.httpRequestBatchSource && (
+            <span className="text-xs text-muted-foreground font-mono">{String(d.httpRequestBatchSource)}</span>
+          )}
+        </div>
+      )}
       {/* Метод + URL */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <span className={`text-xs font-bold px-1.5 py-0.5 rounded font-mono ${METHOD_COLORS[method] || METHOD_COLORS.GET}`}>

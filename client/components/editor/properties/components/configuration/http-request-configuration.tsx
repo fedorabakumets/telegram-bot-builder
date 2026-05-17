@@ -307,6 +307,51 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
       </Section>
 
       <Section>
+        <SectionLabel>Пакетный режим (Batch)</SectionLabel>
+        <CheckOption
+          id="enableBatch"
+          label="Параллельные запросы по массиву"
+          checked={!!(data.httpRequestBatchEnabled)}
+          onCheckedChange={(v) => upd({ httpRequestBatchEnabled: v })}
+        />
+
+        {data.httpRequestBatchEnabled && (
+          <div className="mt-3 space-y-2">
+            <div className="flex gap-2 items-center">
+              <Label className="text-xs text-muted-foreground w-24 shrink-0">Источник</Label>
+              <Input
+                placeholder="table.exchangers"
+                value={(data.httpRequestBatchSource as string) || ''}
+                onChange={(e) => upd({ httpRequestBatchSource: e.target.value })}
+                className="h-7 font-mono text-xs flex-1"
+              />
+            </div>
+            <div className="flex gap-2 items-center">
+              <Label className="text-xs text-muted-foreground w-24 shrink-0">Элемент</Label>
+              <Input
+                placeholder="item"
+                value={(data.httpRequestBatchItemVar as string) || 'item'}
+                onChange={(e) => upd({ httpRequestBatchItemVar: e.target.value })}
+                className="h-7 font-mono text-xs flex-1"
+              />
+            </div>
+            <div className="flex gap-2 items-center">
+              <Label className="text-xs text-muted-foreground w-24 shrink-0">Результат</Label>
+              <Input
+                placeholder="results"
+                value={(data.httpRequestBatchResultVariable as string) || ''}
+                onChange={(e) => upd({ httpRequestBatchResultVariable: e.target.value })}
+                className="h-7 font-mono text-xs flex-1"
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Для каждого элемента массива выполняется запрос параллельно. URL и JSON-путь поддерживают {'{item.field}'}.
+            </p>
+          </div>
+        )}
+      </Section>
+
+      <Section>
         <SectionLabel>Пагинация</SectionLabel>
         <CheckOption
           id="enablePagination"
