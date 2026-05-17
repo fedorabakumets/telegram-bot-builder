@@ -417,7 +417,7 @@ n8n использует `skip` — и мы тоже.
 
 ## Примеры сценариев
 
-### Сборщик курсов (каждые 5 мин)
+### Сборщик курсов обменников (каждые 5 мин)
 
 ```
 schedule_trigger (interval: 5 мин)
@@ -428,22 +428,82 @@ schedule_trigger (interval: 5 мин)
 
 После цикла `rates_cache` содержит все курсы. Пользователь при нажатии «Сравнить» читает `rates_cache` мгновенно.
 
-### Ежедневный отчёт (Пн-Пт в 9:00)
+### Алерт при изменении курса BTC (каждую минуту)
+
+```
+schedule_trigger (interval: 1 мин)
+  → http_request (GET https://swop.is/valuta.json, jsonPath=exchange.2.to.5, extractTo=btc_rate)
+    → set_variable (expression: '{btc_rate}' if float('{btc_rate}') > float('{prev_btc_rate}') * 1.05 else '')
+      → set_variable (prev_btc_rate = {btc_rate})
+```
+
+Если курс BTC вырос на 5%+ — переменная `alert_text` не пустая, можно отправить уведомление.
+
+### Ежедневный отчёт подписчикам (Пн-Пт в 9:00)
 
 ```
 schedule_trigger (weekday: mon-fri, 09:00, tz: Europe/Moscow)
   → loop (по table.subscribers, item=subscriber)
-      → message (текст: "Доброе утро! Курсы: {rates_cache}", target_user: {subscriber.user_id})
+      → message (текст: "☀️ Доброе утро!\n\n{rates_cache}", target_user: {subscriber.user_id})
 ```
 
-### Алерт при изменении курса (каждую минуту)
+### Проверка доступности сайтов (каждые 10 мин)
 
 ```
-schedule_trigger (interval: 1 мин)
-  → http_request (GET https://swop.is/valuta.json, extractTo=btc_rate)
-    → set_variable (expression: '{btc_rate}' if float('{btc_rate}') > float('{alert_threshold}') else '')
-      → message (если rate не пустой → уведомить админа)
+schedule_trigger (interval: 10 мин)
+  → loop (по table.monitored_sites, item=site)
+      → http_request (GET {site.url}, statusVariable=site_status, timeout=10)
+        → set_variable (expression: '{site.name}: ❌' if int('{site_status}') >= 400 else '{site.name}: ✅')
 ```
+
+Результат — переменная с текущим статусом каждого сайта.
+
+### Напоминание о незавершённых заказах (каждый час)
+
+```
+schedule_trigger (interval: 60 мин)
+  → http_request (GET {api_url}/orders?status=pending, responseVariable=pending_orders)
+    → loop (по {pending_orders.items}, item=order)
+        → message (текст: "⏰ Заказ #{order.id} ожидает оплаты", target_user: {order.user_id})
+```
+
+### Обновление погоды для бота-ассистента (каждые 30 мин)
+
+```
+schedule_trigger (interval: 30 мин)
+  → http_request (GET https://api.weather.com/current?city=Moscow&key={weather_api_key}, extractTo=weather_temp)
+    → set_variable (weather_text = "🌡 Москва: {weather_temp}°C")
+```
+
+Пользователь спрашивает «Какая погода?» → бот отвечает мгновенно из `weather_text`.
+
+### Еженедельная статистика бота (Вс в 20:00)
+
+```
+schedule_trigger (weekday: sun, 20:00, tz: Europe/Moscow)
+  → http_request (GET {api_url}/stats?project_id={project_id}&period=week, responseVariable=stats)
+    → message (текст: "📊 Статистика за неделю:\n👥 Новых: {stats.new_users}\n💬 Сообщений: {stats.messages}", target_user: {admin_id})
+```
+
+### Автопродление подписок (каждый день в 00:05)
+
+```
+schedule_trigger (weekday: mon-sun, 00:05, tz: Europe/Moscow)
+  → http_request (GET {api_url}/subscriptions?expires_today=true, responseVariable=expiring)
+    → loop (по {expiring.items}, item=sub)
+        → http_request (POST {api_url}/subscriptions/{sub.id}/renew)
+          → message (текст: "✅ Подписка продлена до {sub.new_expires}", target_user: {sub.user_id})
+```
+
+### Синхронизация данных из Google Sheets (каждые 15 мин)
+
+```
+schedule_trigger (interval: 15 мин)
+  → http_request (GET https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values/A1:Z100?key={google_key}, responseVariable=sheet_data)
+    → set_variable (products_json = {sheet_data.values})
+```
+
+Бот всегда имеет актуальные данные из таблицы без ручного обновления.
 
 ---
 
