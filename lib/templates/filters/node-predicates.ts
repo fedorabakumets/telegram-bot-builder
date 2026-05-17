@@ -288,3 +288,13 @@ export function hasConvertFileNodes(nodes: Node[]): boolean {
 export function hasLoopNodes(nodes: Node[]): boolean {
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'loop');
 }
+
+/**
+ * Проверяет наличие узлов schedule_trigger в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа schedule_trigger
+ */
+export function hasScheduleTriggerNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'schedule_trigger');
+}

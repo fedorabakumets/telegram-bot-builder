@@ -1,0 +1,178 @@
+{# Шаблон генерации Python-кода для schedule_trigger #}
+{% for entry in entries %}
+# ═══ Schedule Trigger: {{ entry.nodeId }} ═══
+
+_sched_running_{{ entry.safeName }} = False
+_sched_count_{{ entry.safeName }} = 0
+
+async def _schedule_task_{{ entry.safeName }}():
+    """Фоновая задача: {{ entry.nodeId }} ({{ entry.rules | length }} правил)."""
+    global _sched_running_{{ entry.safeName }}, _sched_count_{{ entry.safeName }}
+    import pytz
+    from datetime import datetime, timedelta
+
+    _tz = pytz.timezone("{{ entry.timezone }}")
+
+    # Восстановление состояния из БД
+    _last_run = None
+    if db_pool:
+        try:
+            async with db_pool.acquire() as conn:
+                _state = await conn.fetchrow(
+                    "SELECT last_run_at, run_count FROM schedule_state "
+                    "WHERE project_id=$1 AND token_id=$2 AND node_id=$3",
+                    PROJECT_ID, TOKEN_ID, "{{ entry.nodeId }}"
+                )
+                if _state:
+                    _last_run = _state["last_run_at"]
+                    _sched_count_{{ entry.safeName }} = _state["run_count"] or 0
+                else:
+                    await conn.execute(
+                        "INSERT INTO schedule_state (project_id, token_id, node_id) "
+                        "VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+                        PROJECT_ID, TOKEN_ID, "{{ entry.nodeId }}"
+                    )
+        except Exception as _e:
+            logging.warning(f"⏰ schedule [{{ entry.nodeId }}]: ошибка чтения состояния: {_e}")
+
+{% if entry.runOnStart %}
+    # Запуск при старте бота
+    await asyncio.sleep(3)
+    await _schedule_execute_{{ entry.safeName }}()
+{% endif %}
+
+    # Основной цикл
+    while True:
+        try:
+            _now = datetime.now(_tz)
+            _next_delay = _calc_delay_{{ entry.safeName }}(_now, _last_run)
+            await asyncio.sleep(_next_delay)
+            await _schedule_execute_{{ entry.safeName }}()
+            _last_run = datetime.now(_tz)
+        except asyncio.CancelledError:
+            break
+        except Exception as _loop_err:
+            logging.error(f"⏰ schedule [{{ entry.nodeId }}]: ошибка в цикле: {_loop_err}")
+            await asyncio.sleep(60)
+
+
+def _calc_delay_{{ entry.safeName }}(_now, _last_run):
+    """Вычисляет задержку до следующего запуска."""
+    from datetime import timedelta
+{% for rule in entry.rules %}
+{% if rule.mode == 'interval' %}
+    # Правило: каждые {{ rule.intervalMinutes | default(5) }} мин
+    _interval_sec = {{ rule.intervalMinutes | default(5) }} * 60
+    if _last_run:
+        _elapsed = (_now - _last_run).total_seconds()
+        _remaining = _interval_sec - _elapsed
+        if _remaining > 0:
+            return _remaining
+    return _interval_sec
+{% elif rule.mode == 'weekday' %}
+    # Правило: {{ rule.days | default([]) | join(', ') }} в {{ rule.hour | default(0) }}:{{ rule.minute | default(0) }}
+    _target_days = {{ rule.days | default([]) | tojson }}
+    _day_map = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6}
+    _target_indices = [_day_map.get(d, 0) for d in _target_days]
+    _target_hour = {{ rule.hour | default(0) }}
+    _target_minute = {{ rule.minute | default(0) }}
+    _today = _now.weekday()
+    _target_time = _now.replace(hour=_target_hour, minute=_target_minute, second=0, microsecond=0)
+    for _offset in range(8):
+        _check_day = (_today + _offset) % 7
+        if _check_day in _target_indices:
+            _candidate = _target_time + timedelta(days=_offset)
+            if _candidate > _now:
+                return (_candidate - _now).total_seconds()
+    return 86400
+{% elif rule.mode == 'monthday' %}
+    # Правило: {{ rule.monthDays | default([1]) | join(', ') }}-е числа
+    _target_days_m = {{ rule.monthDays | default([1]) | tojson }}
+    _target_hour = {{ rule.hour | default(0) }}
+    _target_minute = {{ rule.minute | default(0) }}
+    for _offset in range(32):
+        _candidate = (_now + timedelta(days=_offset)).replace(hour=_target_hour, minute=_target_minute, second=0, microsecond=0)
+        if _candidate.day in _target_days_m and _candidate > _now:
+            return (_candidate - _now).total_seconds()
+    return 86400
+{% elif rule.mode == 'cron' %}
+    # Правило: cron {{ rule.cronExpression }}
+    try:
+        from croniter import croniter
+        _cron = croniter("{{ rule.cronExpression }}", _now)
+        _next = _cron.get_next(type(_now))
+        return (_next - _now).total_seconds()
+    except ImportError:
+        logging.warning("⏰ croniter не установлен, fallback 5 мин")
+        return 300
+{% endif %}
+{% endfor %}
+    return 300  # fallback
+
+
+async def _schedule_execute_{{ entry.safeName }}():
+    """Одно выполнение schedule-задачи {{ entry.nodeId }}."""
+    global _sched_running_{{ entry.safeName }}, _sched_count_{{ entry.safeName }}
+
+    if _sched_running_{{ entry.safeName }}:
+        logging.warning(f"⏰ schedule [{{ entry.nodeId }}]: пропуск — предыдущий запуск ещё выполняется")
+        return
+
+    _sched_running_{{ entry.safeName }} = True
+    _start_time = __import__('time').monotonic()
+    _error_text = None
+
+    try:
+        _sched_count_{{ entry.safeName }} += 1
+        _sched_user_id = 0
+
+        if _sched_user_id not in user_data:
+            user_data[_sched_user_id] = {}
+
+        from datetime import datetime
+        user_data[_sched_user_id]["_schedule"] = {
+            "timestamp": datetime.now().isoformat(),
+            "nodeId": "{{ entry.nodeId }}",
+            "runCount": _sched_count_{{ entry.safeName }},
+        }
+
+        logging.info(f"⏰ schedule [{{ entry.nodeId }}]: запуск #{_sched_count_{{ entry.safeName }}}")
+
+        class _SchedCb{{ entry.safeName }}:
+            def __init__(self):
+                self.data = "{{ entry.targetNodeId }}"
+                self.from_user = types.User(id=_sched_user_id, is_bot=False, first_name="_system")
+                self.message = None
+                self._is_fake = True
+            async def answer(self, *a, **kw):
+                pass
+
+        await handle_callback_{{ entry.targetNodeId | safe_name }}(_SchedCb{{ entry.safeName }}(), state=None)
+        logging.info(f"✅ schedule [{{ entry.nodeId }}]: выполнено за {__import__('time').monotonic() - _start_time:.1f}с")
+
+    except Exception as _sched_err:
+        _error_text = str(_sched_err)
+        logging.error(f"❌ schedule [{{ entry.nodeId }}]: {_sched_err}")
+
+    finally:
+        _sched_running_{{ entry.safeName }} = False
+        _duration_ms = int((__import__('time').monotonic() - _start_time) * 1000)
+
+        if db_pool:
+            try:
+                async with db_pool.acquire() as conn:
+                    await conn.execute(
+                        "UPDATE schedule_state SET last_run_at=NOW(), run_count=$4, "
+                        "last_duration_ms=$5, last_error=$6, last_status=$7, updated_at=NOW() "
+                        "WHERE project_id=$1 AND token_id=$2 AND node_id=$3",
+                        PROJECT_ID, TOKEN_ID, "{{ entry.nodeId }}",
+                        _sched_count_{{ entry.safeName }}, _duration_ms,
+                        _error_text, 'error' if _error_text else 'success'
+                    )
+            except Exception:
+                pass
+
+
+# Регистрация фоновой задачи
+_schedule_tasks.append(asyncio.ensure_future(_schedule_task_{{ entry.safeName }}()))
+{% endfor %}
