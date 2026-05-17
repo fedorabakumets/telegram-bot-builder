@@ -53,7 +53,7 @@ export function ScheduleTriggerPreview({ node }: ScheduleTriggerPreviewProps) {
     <div className="px-3 py-2 text-xs space-y-1">
       <div className="flex items-center gap-1.5 mb-1">
         <i className="fas fa-clock text-teal-500 text-[10px]" />
-        <span className="font-semibold text-teal-700 dark:text-teal-300 text-[11px]">Расписание</span>
+        <span className="font-semibold text-teal-700 dark:text-teal-300 text-[11px]">Запуск по таймеру</span>
       </div>
       <div className="font-medium text-teal-700 dark:text-teal-300 truncate">
         {formatRule(rules[0])}

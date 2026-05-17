@@ -49,7 +49,7 @@ export function getBadgeText(variable: Variable): string {
     conditional: '❓ Условие',
     callback_trigger: '👆 Инлайн-триггер',
     managed_bot_updated_trigger: '🤖 Управляемый бот',
-    schedule_trigger: '⏰ Расписание',
+    schedule_trigger: '⏰ Таймер',
     get_managed_bot_token: '🔑 Токен бота',
     message_id: '🆔 ID сообщения',
     http_request: '🌐 HTTP',

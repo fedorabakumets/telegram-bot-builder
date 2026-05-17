@@ -91,7 +91,7 @@ export function ScheduleTriggerConfiguration({
         <div className="flex items-center gap-2">
           <i className="fas fa-clock text-teal-600 dark:text-teal-400 text-sm" />
           <span className="text-sm font-medium text-teal-700 dark:text-teal-300">
-            Расписание
+            Запуск по таймеру
           </span>
         </div>
         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">

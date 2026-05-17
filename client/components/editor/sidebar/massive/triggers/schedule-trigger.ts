@@ -11,7 +11,7 @@ import { ComponentDefinition } from "@shared/schema";
  */
 export const scheduleTrigger: ComponentDefinition = {
   id: 'schedule-trigger',
-  name: 'Расписание',
+  name: 'Запуск по таймеру',
   description: 'Запуск по таймеру (интервал, день недели, cron)',
   icon: 'fas fa-clock',
   color: 'bg-teal-100 text-teal-600',
