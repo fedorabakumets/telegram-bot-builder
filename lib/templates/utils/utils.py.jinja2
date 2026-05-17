@@ -91,12 +91,19 @@ async def check_auth(user_id: int) -> bool:
 async def init_all_user_vars(user_id: int) -> dict:
     """Собирает все переменные пользователя из памяти и БД.
     Память (user_data) всегда имеет приоритет над БД.
+    Глобальные переменные (user_data[0]) доступны всем как fallback.
 
     Returns:
         dict: Объединённый словарь всех переменных пользователя,
               включая плоские ключи вида "responseVar.field"
     """
     all_vars = dict(user_data.get(user_id, {}))
+    # Fallback: глобальные переменные из системного пользователя (schedule_trigger)
+    # Не перезаписывают пользовательские, не копируют служебные поля
+    if user_id != 0:
+        for _gk, _gv in user_data.get(0, {}).items():
+            if _gk not in all_vars and not _gk.startswith("_"):
+                all_vars[_gk] = _gv
     # Добавляем системные переменные бота — доступны в URL и текстах узлов
     # Не перезаписываем bot_token если пользователь уже ввёл свой токен
     if "bot_token" not in all_vars:
