@@ -31,6 +31,8 @@ export function generateRequirementsTxt(): string {
     'gspread>=6.0.0',
     'telethon>=1.42.0  # For Client API (Userbot) broadcast functionality',
     'redis>=5.0.0  # Для Redis кэша, FSM хранилища и Pub/Sub уведомлений (redis[asyncio] включён)',
+    'pytz>=2024.1  # Для работы с часовыми поясами (schedule_trigger)',
+    'croniter>=1.4.1  # Для cron-выражений в schedule_trigger (опционально)',
     '',
     '# Note: These versions have pre-compiled wheels and do not require Rust',
     '# If you still encounter issues, try:',
