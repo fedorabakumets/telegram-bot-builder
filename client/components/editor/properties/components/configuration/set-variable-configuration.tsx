@@ -55,10 +55,10 @@ export function SetVariableConfiguration({
   /**
    * Обновляет поле конкретного присваивания
    * @param id - ID присваивания
-   * @param field - поле для изменения (variable, value или mode)
+   * @param field - поле для изменения
    * @param val - новое значение
    */
-  const handleChange = (id: string, field: 'variable' | 'value' | 'mode', val: string) => {
+  const handleChange = (id: string, field: string, val: any) => {
     const updated = assignments.map((a) =>
       a.id === id ? { ...a, [field]: val } : a
     );
