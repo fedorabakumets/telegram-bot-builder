@@ -344,8 +344,54 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
                 className="h-7 font-mono text-xs flex-1"
               />
             </div>
-            <p className="text-[10px] text-muted-foreground">
-              Для каждого элемента массива выполняется запрос параллельно. URL и JSON-путь поддерживают {'{item.field}'}.
+
+            {/* Поля результата */}
+            <div className="mt-3">
+              <Label className="text-xs font-medium mb-1.5 block">Поля результата</Label>
+              {((data.httpRequestBatchResultFields as any[]) || []).map((field: any, idx: number) => (
+                <div key={idx} className="flex gap-1 items-center mb-1">
+                  <Input
+                    placeholder="key"
+                    value={field.key || ''}
+                    onChange={(e) => {
+                      const fields = [...((data.httpRequestBatchResultFields as any[]) || [])];
+                      fields[idx] = { ...fields[idx], key: e.target.value };
+                      upd({ httpRequestBatchResultFields: fields } as any);
+                    }}
+                    className="h-6 font-mono text-xs w-20"
+                  />
+                  <span className="text-xs text-muted-foreground">=</span>
+                  <Input
+                    placeholder="{item.field} или __extracted__"
+                    value={field.value || ''}
+                    onChange={(e) => {
+                      const fields = [...((data.httpRequestBatchResultFields as any[]) || [])];
+                      fields[idx] = { ...fields[idx], value: e.target.value };
+                      upd({ httpRequestBatchResultFields: fields } as any);
+                    }}
+                    className="h-6 font-mono text-xs flex-1"
+                  />
+                  <button
+                    onClick={() => {
+                      const fields = [...((data.httpRequestBatchResultFields as any[]) || [])];
+                      fields.splice(idx, 1);
+                      upd({ httpRequestBatchResultFields: fields } as any);
+                    }}
+                    className="text-xs text-red-400 hover:text-red-600 px-1"
+                  >×</button>
+                </div>
+              ))}
+              <button
+                onClick={() => {
+                  const fields = [...((data.httpRequestBatchResultFields as any[]) || []), { key: '', value: '' }];
+                  upd({ httpRequestBatchResultFields: fields } as any);
+                }}
+                className="text-xs text-blue-500 hover:text-blue-700 mt-1"
+              >+ Добавить поле</button>
+            </div>
+
+            <p className="text-[10px] text-muted-foreground mt-2">
+              Для каждого элемента массива выполняется запрос параллельно. URL и JSON-путь поддерживают {'{item.field}'}. Значение <code className="bg-muted px-1 rounded">__extracted__</code> — результат извлечения по JSON Path.
             </p>
           </div>
         )}

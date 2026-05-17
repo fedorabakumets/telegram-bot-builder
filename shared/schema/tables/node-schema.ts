@@ -723,6 +723,13 @@ export const nodeSchema = z.object({
     httpRequestBatchItemVar: z.string().default('item').optional(),
     /** Переменная для сохранения массива результатов */
     httpRequestBatchResultVariable: z.string().optional(),
+    /** Поля результата batch-режима: [{key: "name", value: "{item.name}"}] */
+    httpRequestBatchResultFields: z.array(z.object({
+      /** Имя поля в объекте результата */
+      key: z.string(),
+      /** Шаблон значения ({item.field} или __extracted__ для извлечённого) */
+      value: z.string(),
+    })).optional().default([]),
     /** Словарь обложек медиафайлов: ключ — URL видео, значение — URL обложки */
     attachedMediaThumbnails: z.record(z.string(), z.string()).optional().default({}),
     /** SQL-запрос для узла psql_query, поддерживает {переменные} */
