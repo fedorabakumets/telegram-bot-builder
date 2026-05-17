@@ -520,33 +520,68 @@ schedule_trigger (interval: 15 мин)
 
 ## Этапы реализации
 
-### Этап 1 — MVP с интервалом (1-2 дня)
+### Этап 1 — MVP с интервалом ✅ ГОТОВО
 
-- [ ] SQL миграция: таблица `schedule_state`
-- [ ] Шаблон `schedule-trigger.py.jinja2` (mode=interval)
-- [ ] Schema + params + renderer
-- [ ] Интеграция с `main.py.jinja2`
-- [ ] Восстановление состояния из БД при старте
-- [ ] Сохранение last_run/run_count/error в БД
-- [ ] UI: базовая конфигурация (интервал + timezone)
+- [x] SQL миграция: таблица `schedule_state` (`migrations/0034_create_schedule_state.sql`)
+- [x] Шаблон `schedule-trigger.py.jinja2` (mode=interval)
+- [x] Schema + params + renderer (`lib/templates/schedule-trigger/`)
+- [x] Интеграция с `main.py.jinja2` (graceful shutdown `_cancel_schedule_tasks()`)
+- [x] Восстановление состояния из БД при старте
+- [x] Сохранение last_run/run_count/error в БД
+- [x] UI: базовая конфигурация (интервал + timezone)
+- [x] Единицы измерения интервала (секунды, минуты, часы, дни)
+- [x] Фазовый тест `test-phase28-schedule-trigger.ts` (46 тестов)
+- [x] Unit-тесты `schedule-trigger.test.ts` (22 теста)
+- [x] Зависимости `pytz` + `croniter` в `requirements.txt`
+- [x] Пропуск системного пользователя (id=0) при сохранении в БД
+- [x] Баг-фикс: `return 0` при просроченном интервале (стратегия skip)
+- [x] Баг-фикс: `max(1, delay)` для защиты от CPU spinning
+- [x] Баг-фикс: `_tz` доступна в `_schedule_execute_`
+- [x] Формат timestamp: `dd.mm.yyyy HH:MM:SS` вместо ISO
 
-### Этап 2 — Weekday/Monthday (1 день)
+### Этап 2 — Weekday/Monthday ✅ ГОТОВО
 
-- [ ] Расчёт next_run для weekday/monthday режимов
-- [ ] UI: чекбоксы дней + time picker
-- [ ] Превью следующих запусков
+- [x] Расчёт next_run для weekday/monthday режимов (в jinja2 шаблоне)
+- [x] UI: чекбоксы дней + time picker (`ScheduleRuleEditor.tsx`)
+- [ ] Превью следующих запусков (TODO)
 
-### Этап 3 — Cron + мониторинг (1 день)
+### Этап 3 — Cron ✅ ГОТОВО (частично)
 
-- [ ] `croniter` интеграция
-- [ ] UI: поле cron с валидацией
-- [ ] API endpoint `/api/projects/:id/schedules`
-- [ ] UI: статус-бар фоновых задач
-- [ ] Множественные правила в одной ноде
+- [x] `croniter` интеграция (в jinja2 шаблоне)
+- [x] UI: поле cron (`ScheduleRuleEditor.tsx`)
+- [x] Множественные правила в одной ноде
+- [ ] API endpoint `/api/projects/:id/schedules` (TODO)
+- [ ] UI: статус-бар фоновых задач (TODO)
 
-### Этап 4 — Продвинутые фичи
+### Этап 4 — Продвинутые фичи (TODO)
 
-- [ ] Стратегия пропущенных запусков (skip/catchUp/none)
+- [x] Стратегия пропущенных запусков: `skip` реализована по умолчанию
 - [ ] Ручной запуск из UI (кнопка «Запустить сейчас»)
 - [ ] История выполнений (таблица `schedule_history`)
 - [ ] Алерты при N ошибках подряд
+- [ ] Отправка сообщений конкретным пользователям (targetChatId / loop по bot_users)
+
+---
+
+## Статус реализации
+
+**Дата:** 17.05.2026
+
+| Компонент | Статус |
+|---|---|
+| Миграция БД | ✅ |
+| Фронтенд (сайдбар, канвас, панель свойств) | ✅ |
+| Генерация Python-кода (4 режима) | ✅ |
+| Персистентность в БД | ✅ |
+| Graceful shutdown | ✅ |
+| Unit-тесты | ✅ 22/22 |
+| Фазовый тест | ✅ 46/46 |
+| Протестировано в продакшене | ✅ (interval 15 сек) |
+| API мониторинга | ❌ TODO |
+| UI статус-бар | ❌ TODO |
+
+### Известные ограничения
+
+1. **Отправка сообщений** — schedule_trigger не может напрямую отправлять message-ноду пользователю (нет chat_id). Используйте `messageSendRecipients` с конкретным `chatId` или подключайте к `set_variable` / `http_request`.
+2. **Системный пользователь** — schedule использует `user_id=0` для хранения метаданных в `user_data`. Этот пользователь не сохраняется в БД.
+3. **`intervalMinutes` дробные** — поддерживаются (0.25 = 15 сек), но минимальный реальный интервал = 1 секунда (`max(1, delay)`).
