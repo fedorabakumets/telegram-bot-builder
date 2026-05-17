@@ -2,9 +2,33 @@
 
 ## Концепция
 
-Фоновая задача, которая запускает цепочку нод по таймеру без участия пользователя. Работает пока бот запущен. Аналог cron-задач, APScheduler, или «Автозапуск» в Salebot.
+Фоновая задача, которая запускает цепочку нод по таймеру без участия пользователя. Аналог Schedule Trigger в n8n — визуальный конструктор расписания с множественными правилами, timezone, персистентностью состояния в БД.
 
-Основной use-case: **фоновый сборщик данных** — опрашивает API, сохраняет результаты в таблицу, пользователь получает ответ мгновенно из кеша.
+---
+
+## Режимы расписания (как в n8n)
+
+### 4 режима в одной ноде
+
+| Режим | Пример | Описание |
+|---|---|---|
+| **Интервал** | Каждые 5 минут | Простой повтор |
+| **День недели** | Пн, Ср, Пт в 09:00 | Конкретные дни + время |
+| **День месяца** | 1-е и 15-е числа в 10:00 | Конкретные даты |
+| **Cron** | `*/5 9-18 * * 1-5` | Полный cron для продвинутых |
+
+### Множественные правила
+
+Одна нода может содержать **несколько правил** (как в n8n). Workflow запускается при срабатывании любого из них:
+
+```json
+{
+  "rules": [
+    { "mode": "interval", "intervalMinutes": 5 },
+    { "mode": "weekday", "days": ["mon", "wed", "fri"], "hour": 9, "minute": 0 }
+  ]
+}
+```
 
 ---
 
@@ -12,56 +36,117 @@
 
 | Поле | Тип | По умолчанию | Описание |
 |---|---|---|---|
-| `intervalMinutes` | number | 5 | Интервал запуска (минуты) |
-| `cronExpression` | string | — | Cron-выражение (альтернатива интервалу) |
+| `rules` | array | `[{mode: "interval", intervalMinutes: 5}]` | Массив правил расписания |
+| `timezone` | string | `Europe/Moscow` | Часовой пояс для расчёта времени |
 | `autoTransitionTo` | string | — | ID первой ноды цепочки |
-| `runOnStart` | boolean | true | Запустить сразу при старте бота |
+| `runOnStart` | boolean | false | Запустить сразу при старте бота |
 | `enabled` | boolean | true | Включён/выключен |
-| `maxConcurrent` | number | 1 | Макс. одновременных запусков (защита от наложения) |
-| `targetUsers` | string | `_system` | Для какого user_id выполнять (`_system` = без привязки к пользователю) |
+| `maxConcurrent` | number | 1 | Макс. одновременных запусков |
+
+### Схема правила
+
+```typescript
+interface ScheduleRule {
+  /** Режим: interval, weekday, monthday, cron */
+  mode: 'interval' | 'weekday' | 'monthday' | 'cron';
+
+  // --- interval ---
+  /** Интервал в минутах (mode=interval) */
+  intervalMinutes?: number;
+
+  // --- weekday ---
+  /** Дни недели: mon, tue, wed, thu, fri, sat, sun */
+  days?: string[];
+  /** Час запуска (0-23) */
+  hour?: number;
+  /** Минута запуска (0-59) */
+  minute?: number;
+
+  // --- monthday ---
+  /** Дни месяца (1-31) */
+  monthDays?: number[];
+
+  // --- cron ---
+  /** Cron-выражение */
+  cronExpression?: string;
+}
+```
 
 ---
 
-## Примеры использования
+## Выходные данные (как в n8n)
 
-### Сборщик курсов обменников
+При срабатывании schedule передаёт в следующую ноду metadata:
 
-```
-schedule_trigger (каждые 5 мин)
-  → code (asyncio.gather — параллельные запросы к 1000 обменникам)
-    → code (сохранить результаты в таблицу rates)
-```
-
-Пользователь нажимает «Сравнить»:
-```
-callback_trigger
-  → table_get (rates, ORDER BY rate DESC, LIMIT 10)
-    → message (топ-10 обменников — мгновенно)
+```python
+user_data[_sched_user_id]["_schedule"] = {
+    "lastExecution": "2026-05-17T09:00:00+03:00",
+    "timestamp": "2026-05-17T09:05:00+03:00",
+    "nodeId": "schedule-fetch-rates",
+    "runCount": 42,
+    "rule": {"mode": "interval", "intervalMinutes": 5}
+}
 ```
 
-### Алерт при изменении курса
+Доступно в следующих нодах через `{_schedule.timestamp}`, `{_schedule.runCount}`.
 
-```
-schedule_trigger (каждую минуту)
-  → http_request (GET курс BTC)
-    → condition (курс > порог?)
-      → broadcast (уведомить подписчиков)
+---
+
+## Персистентность в БД
+
+### Таблица `schedule_state`
+
+```sql
+CREATE TABLE schedule_state (
+    id SERIAL PRIMARY KEY,
+    project_id INTEGER NOT NULL,
+    token_id INTEGER NOT NULL,
+    node_id VARCHAR(255) NOT NULL,
+    last_run_at TIMESTAMPTZ,
+    next_run_at TIMESTAMPTZ,
+    run_count INTEGER DEFAULT 0,
+    last_duration_ms INTEGER,
+    last_error TEXT,
+    last_status VARCHAR(20) DEFAULT 'idle',  -- idle, running, success, error
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(project_id, token_id, node_id)
+);
 ```
 
-### Ежедневная рассылка
+### Что даёт персистентность
 
-```
-schedule_trigger (cron: "0 9 * * *" — каждый день в 9:00)
-  → table_get (subscribers, active=true)
-    → loop (по подписчикам)
-        → message (доброе утро + курсы)
-```
+1. **Восстановление после рестарта** — бот знает когда был последний запуск и не пропускает интервал
+2. **Мониторинг в UI** — показывает статус, последний запуск, ошибки
+3. **Пропуск пропущенных** — если бот был выключен 2 часа, при старте не запускает 24 пропущенных 5-минутных задачи (настраиваемо)
+4. **История выполнений** — для дебага и аналитики
 
-### Очистка устаревших данных
+### Логика восстановления при старте
 
-```
-schedule_trigger (каждый час)
-  → code (удалить записи старше 24ч из таблицы rates)
+```python
+async def _schedule_restore():
+    """Восстанавливает состояние schedule-задач из БД при старте бота."""
+    state = await db_get_schedule_state(PROJECT_ID, TOKEN_ID, node_id)
+
+    if state is None:
+        # Первый запуск — создаём запись
+        await db_create_schedule_state(PROJECT_ID, TOKEN_ID, node_id)
+        if run_on_start:
+            await _schedule_run()
+        return
+
+    # Вычисляем сколько времени прошло с последнего запуска
+    elapsed = datetime.now(tz) - state["last_run_at"]
+
+    if elapsed >= interval:
+        # Пора запускать
+        await _schedule_run()
+    else:
+        # Ждём оставшееся время
+        remaining = interval - elapsed
+        await asyncio.sleep(remaining.total_seconds())
+        await _schedule_run()
 ```
 
 ---
@@ -71,31 +156,109 @@ schedule_trigger (каждый час)
 ### Шаблон `schedule-trigger.py.jinja2`
 
 ```python
-# Фоновая задача: {{ nodeId }}
+# ═══ Schedule Trigger: {{ nodeId }} ═══
+
+_schedule_running_{{ safeName }} = False
+_schedule_run_count_{{ safeName }} = 0
+
 async def _schedule_task_{{ safeName }}():
-    """Фоновая задача по расписанию: каждые {{ intervalMinutes }} мин."""
+    """Фоновая задача: {{ nodeId }} ({{ rules | length }} правил)."""
+    global _schedule_running_{{ safeName }}, _schedule_run_count_{{ safeName }}
+    from datetime import datetime, timedelta
+    import pytz
+
+    _tz = pytz.timezone("{{ timezone }}")
+
+    # Восстанавливаем состояние из БД
+    _last_run = None
+    if db_pool:
+        try:
+            async with db_pool.acquire() as conn:
+                _state = await conn.fetchrow(
+                    "SELECT last_run_at, run_count FROM schedule_state WHERE project_id=$1 AND token_id=$2 AND node_id=$3",
+                    PROJECT_ID, TOKEN_ID, "{{ nodeId }}"
+                )
+                if _state:
+                    _last_run = _state["last_run_at"]
+                    _schedule_run_count_{{ safeName }} = _state["run_count"] or 0
+                else:
+                    await conn.execute(
+                        "INSERT INTO schedule_state (project_id, token_id, node_id) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+                        PROJECT_ID, TOKEN_ID, "{{ nodeId }}"
+                    )
+        except Exception as _e:
+            logging.warning(f"⏰ schedule [{{ nodeId }}]: ошибка чтения состояния: {_e}")
+
     {% if runOnStart %}
-    # Первый запуск сразу при старте
-    await asyncio.sleep(5)  # даём боту инициализироваться
-    await _schedule_run_{{ safeName }}()
+    # Запуск при старте бота
+    await asyncio.sleep(3)
+    await _schedule_execute_{{ safeName }}()
     {% endif %}
 
+    # Основной цикл
     while True:
-        await asyncio.sleep({{ intervalMinutes }} * 60)
-        await _schedule_run_{{ safeName }}()
+        _now = datetime.now(_tz)
+        _next_delay = _calculate_next_delay_{{ safeName }}(_now, _last_run)
+        await asyncio.sleep(_next_delay)
+        await _schedule_execute_{{ safeName }}()
+        _last_run = datetime.now(_tz)
 
 
-async def _schedule_run_{{ safeName }}():
-    """Одно выполнение фоновой задачи {{ nodeId }}."""
-    _sched_user_id = {{ targetUserId }}  # _system = 0
-    logging.info(f"⏰ schedule [{{ nodeId }}]: запуск (интервал: {{ intervalMinutes }} мин)")
+def _calculate_next_delay_{{ safeName }}(_now, _last_run):
+    """Вычисляет задержку до следующего запуска на основе правил."""
+    {% for rule in rules %}
+    {% if rule.mode == 'interval' %}
+    # Правило: каждые {{ rule.intervalMinutes }} мин
+    if _last_run:
+        _elapsed = (_now - _last_run).total_seconds()
+        _remaining = {{ rule.intervalMinutes }} * 60 - _elapsed
+        if _remaining > 0:
+            return _remaining
+    return {{ rule.intervalMinutes }} * 60
+    {% elif rule.mode == 'cron' %}
+    # Правило: cron {{ rule.cronExpression }}
+    try:
+        from croniter import croniter
+        _cron = croniter("{{ rule.cronExpression }}", _now)
+        _next = _cron.get_next(type(datetime.now()))
+        return (_next - _now).total_seconds()
+    except ImportError:
+        return 300  # fallback 5 мин
+    {% endif %}
+    {% endfor %}
+    return 300  # fallback
+
+
+async def _schedule_execute_{{ safeName }}():
+    """Одно выполнение schedule-задачи {{ nodeId }}."""
+    global _schedule_running_{{ safeName }}, _schedule_run_count_{{ safeName }}
+
+    if _schedule_running_{{ safeName }}:
+        logging.warning(f"⏰ schedule [{{ nodeId }}]: пропуск — предыдущий запуск ещё выполняется")
+        return
+
+    _schedule_running_{{ safeName }} = True
+    _start_time = __import__('time').monotonic()
+    _error_text = None
 
     try:
-        # Инициализируем контекст
+        _schedule_run_count_{{ safeName }} += 1
+        _sched_user_id = 0  # системный пользователь
+
         if _sched_user_id not in user_data:
             user_data[_sched_user_id] = {}
 
-        # Создаём fake callback для совместимости с цепочкой нод
+        # Metadata для следующих нод
+        from datetime import datetime
+        user_data[_sched_user_id]["_schedule"] = {
+            "timestamp": datetime.now().isoformat(),
+            "nodeId": "{{ nodeId }}",
+            "runCount": _schedule_run_count_{{ safeName }},
+        }
+
+        logging.info(f"⏰ schedule [{{ nodeId }}]: запуск #{_schedule_run_count_{{ safeName }}}")
+
+        # Запускаем цепочку
         class _SchedCallback:
             def __init__(self):
                 self.data = "{{ autoTransitionTo }}"
@@ -105,185 +268,183 @@ async def _schedule_run_{{ safeName }}():
             async def answer(self, *args, **kwargs):
                 pass
 
-        _sched_cb = _SchedCallback()
-        await handle_callback_{{ autoTransitionTo | safe_name }}(_sched_cb, state=None)
+        await handle_callback_{{ autoTransitionTo | safe_name }}(_SchedCallback(), state=None)
+        logging.info(f"✅ schedule [{{ nodeId }}]: выполнено за {__import__('time').monotonic() - _start_time:.1f}с")
 
-        logging.info(f"✅ schedule [{{ nodeId }}]: выполнено успешно")
     except Exception as _sched_err:
-        logging.error(f"❌ schedule [{{ nodeId }}]: ошибка: {_sched_err}")
+        _error_text = str(_sched_err)
+        logging.error(f"❌ schedule [{{ nodeId }}]: {_sched_err}")
+
+    finally:
+        _schedule_running_{{ safeName }} = False
+        _duration_ms = int((__import__('time').monotonic() - _start_time) * 1000)
+
+        # Сохраняем состояние в БД
+        if db_pool:
+            try:
+                async with db_pool.acquire() as conn:
+                    await conn.execute("""
+                        UPDATE schedule_state
+                        SET last_run_at = NOW(), run_count = $4, last_duration_ms = $5,
+                            last_error = $6, last_status = $7, updated_at = NOW()
+                        WHERE project_id = $1 AND token_id = $2 AND node_id = $3
+                    """, PROJECT_ID, TOKEN_ID, "{{ nodeId }}",
+                        _schedule_run_count_{{ safeName }}, _duration_ms,
+                        _error_text, 'error' if _error_text else 'success')
+            except Exception:
+                pass
 
 
-# Регистрация фоновой задачи (вызывается в main())
-_schedule_tasks.append(_schedule_task_{{ safeName }}())
+# Регистрация задачи
+_schedule_tasks.append(asyncio.ensure_future(_schedule_task_{{ safeName }}()))
 ```
 
-### Интеграция с main()
-
-В `main.py.jinja2` добавляется запуск всех schedule-задач:
+### Интеграция с main.py.jinja2
 
 ```python
+# Глобальный список schedule-задач
+_schedule_tasks = []
+
 async def main():
-    # ... инициализация бота ...
+    # ... инициализация ...
 
-    # Запуск фоновых задач
-    for _task_coro in _schedule_tasks:
-        asyncio.create_task(_task_coro)
+    # Запуск фоновых задач (schedule_trigger ноды)
+    # Задачи регистрируются автоматически при загрузке модуля
 
-    # Запуск polling
     await dp.start_polling(bot)
 ```
 
 ---
 
-## Cron-выражения
+## UI — визуальный конструктор расписания
 
-Если задан `cronExpression` вместо `intervalMinutes`, используется библиотека `croniter`:
+### Как в n8n — дропдауны вместо cron
 
-```python
-from croniter import croniter
-from datetime import datetime
-
-async def _schedule_task_{{ safeName }}():
-    """Фоновая задача по cron: {{ cronExpression }}"""
-    _cron = croniter("{{ cronExpression }}", datetime.now())
-
-    while True:
-        _next_run = _cron.get_next(datetime)
-        _delay = (_next_run - datetime.now()).total_seconds()
-        if _delay > 0:
-            await asyncio.sleep(_delay)
-        await _schedule_run_{{ safeName }}()
+```
+┌─────────────────────────────────────────────────────┐
+│ ⏰ Расписание                              + Правило │
+├─────────────────────────────────────────────────────┤
+│ Правило 1:                                     [🗑] │
+│ ┌─────────────────────────────────────────────────┐ │
+│ │ Режим: [Интервал ▾]                             │ │
+│ │ Каждые: [5 ▾] минут                            │ │
+│ └─────────────────────────────────────────────────┘ │
+│                                                     │
+│ Правило 2:                                     [🗑] │
+│ ┌─────────────────────────────────────────────────┐ │
+│ │ Режим: [День недели ▾]                          │ │
+│ │ Дни: [☑Пн ☑Ср ☑Пт ☐Вт ☐Чт ☐Сб ☐Вс]          │ │
+│ │ Время: [09]:[00]                               │ │
+│ └─────────────────────────────────────────────────┘ │
+│                                                     │
+│ Часовой пояс: [Europe/Moscow ▾]                     │
+│ ☐ Запустить сразу при старте бота                   │
+│ ☑ Пропускать если предыдущий ещё выполняется        │
+│                                                     │
+│ Следующий узел: [code-fetch-rates ▾]                │
+└─────────────────────────────────────────────────────┘
 ```
 
-**Зависимость:** `croniter` (pip install croniter, ~50KB).
+### Превью следующих запусков
 
-**Альтернатива без зависимости:** только интервал в минутах (покрывает 90% кейсов).
-
----
-
-## Защита от наложения
-
-Если предыдущий запуск ещё не завершился (например, 1000 HTTP-запросов за 5 минут):
-
-```python
-_schedule_running_{{ safeName }} = False
-
-async def _schedule_task_{{ safeName }}():
-    global _schedule_running_{{ safeName }}
-
-    while True:
-        await asyncio.sleep({{ intervalMinutes }} * 60)
-
-        if _schedule_running_{{ safeName }}:
-            logging.warning(f"⏰ schedule [{{ nodeId }}]: пропуск — предыдущий запуск ещё выполняется")
-            continue
-
-        _schedule_running_{{ safeName }} = True
-        try:
-            await _schedule_run_{{ safeName }}()
-        finally:
-            _schedule_running_{{ safeName }} = False
+Под конфигурацией показываем:
+```
+Следующие запуски:
+  • 17.05.2026 15:30 (через 2 мин)
+  • 17.05.2026 15:35 (через 7 мин)
+  • 17.05.2026 15:40 (через 12 мин)
 ```
 
 ---
 
-## Контекст выполнения
+## Мониторинг в UI
 
-Schedule-задача выполняется **без привязки к конкретному пользователю**. Это значит:
-
-- `user_id = 0` (системный) — или можно задать конкретного пользователя
-- `callback_query.message = None` — нельзя отправлять сообщения напрямую
-- Для рассылки нужен loop по подписчикам + `bot.send_message(user_id, ...)`
-
-### Системные переменные в schedule-контексте
-
-| Переменная | Значение |
-|---|---|
-| `user_id` | 0 (или заданный) |
-| `_is_schedule` | `True` |
-| `_schedule_node_id` | ID schedule-ноды |
-| `_schedule_run_count` | Номер запуска с момента старта бота |
-
----
-
-## UI — конфигурация
-
-```
-┌─────────────────────────────────────────────────┐
-│ ⏰ Расписание                                    │
-├─────────────────────────────────────────────────┤
-│ Режим:  ○ Интервал  ○ Cron                      │
-│                                                 │
-│ Каждые: [5] минут                               │
-│                                                 │
-│ ☑ Запустить сразу при старте бота               │
-│ ☑ Пропускать если предыдущий ещё выполняется    │
-│                                                 │
-│ Следующий узел: [setv-fetch-rates ▾]            │
-└─────────────────────────────────────────────────┘
-```
-
----
-
-## Связь с другими нодами
-
-### Полный сценарий: фоновый сборщик + мгновенный ответ
-
-**Лист «Фоновый сборщик»:**
-```
-schedule_trigger (5 мин)
-  → code:
-      import aiohttp, asyncio, json
-
-      exchangers = bot_tables.get("table.exchangers", [])
-      pairs = bot_tables.get("table.pairs", [])
-
-      async def fetch_rate(exchanger, pair):
-          url = exchanger["url"]
-          # ... подставить переменные, сделать запрос ...
-          return {"exchanger": exchanger["name"], "pair_id": pair["id"], "rate": rate}
-
-      tasks = [fetch_rate(e, p) for e in exchangers for p in pairs]
-      results = await asyncio.gather(*tasks, return_exceptions=True)
-
-      # Сохранить в таблицу rates
-      for r in results:
-          if not isinstance(r, Exception):
-              await table_set("rates", r, match_by=["exchanger", "pair_id"])
-```
-
-**Лист «Сравнение курсов» (пользовательский):**
-```
-callback_trigger (кнопка "Сравнить")
-  → code:
-      rates = await table_get("rates", filter={"pair_id": selected_pair}, order_by="rate DESC", limit=10)
-      lines = []
-      for i, r in enumerate(rates):
-          emoji = "🏆" if i == 0 else "🔸"
-          lines.append(f'{emoji} <a href="{r["ref_url"]}">{r["exchanger"]}</a>: <b>{r["rate"]}</b>')
-      rates_text = "\n".join(lines)
-  → message "{rates_text}"
-```
-
-**Результат:** пользователь получает ответ за <100мс вместо 10-30 сек.
-
----
-
-## Мониторинг
-
-В UI показывать статус schedule-задач:
+### Статус-бар (в панели бота)
 
 ```
 ⏰ Фоновые задачи:
-  • fetch-rates: последний запуск 2 мин назад ✅ (1.2 сек)
-  • cleanup: последний запуск 45 мин назад ✅ (0.1 сек)
+  • fetch-rates: ✅ последний запуск 2 мин назад (1.2с) | #42
+  • daily-report: 🕐 следующий запуск через 4ч 15мин
+  • cleanup: ❌ ошибка 10 мин назад: "connection timeout"
 ```
 
-Переменные для мониторинга (автоматически):
-- `_schedule.{nodeId}.last_run` — timestamp последнего запуска
-- `_schedule.{nodeId}.last_duration` — длительность в секундах
-- `_schedule.{nodeId}.last_error` — текст ошибки (если была)
-- `_schedule.{nodeId}.run_count` — количество запусков
+### API endpoint
+
+```
+GET /api/projects/:projectId/schedules
+```
+
+Ответ:
+```json
+[
+  {
+    "nodeId": "schedule-fetch-rates",
+    "status": "success",
+    "lastRunAt": "2026-05-17T15:25:00Z",
+    "nextRunAt": "2026-05-17T15:30:00Z",
+    "runCount": 42,
+    "lastDurationMs": 1200,
+    "lastError": null,
+    "enabled": true
+  }
+]
+```
+
+---
+
+## Timezone
+
+- По умолчанию: `Europe/Moscow`
+- Настраивается в UI (дропдаун с популярными зонами)
+- Используется `pytz` для корректного расчёта
+- Важно для режимов weekday/monthday (запуск в 9:00 по Москве, не по UTC)
+
+---
+
+## Обработка пропущенных запусков
+
+При рестарте бота — если прошло больше одного интервала:
+
+| Стратегия | Описание |
+|---|---|
+| `skip` (по умолчанию) | Запустить один раз сейчас, не компенсировать пропущенные |
+| `catchUp` | Запустить все пропущенные (опасно при длинных интервалах) |
+| `none` | Просто ждать следующего интервала |
+
+n8n использует `skip` — и мы тоже.
+
+---
+
+## Примеры сценариев
+
+### Сборщик курсов (каждые 5 мин)
+
+```
+schedule_trigger (interval: 5 мин)
+  → code:
+      import aiohttp, asyncio
+      exchangers = bot_tables["table.exchangers"]
+      results = await asyncio.gather(*[fetch(e["url"]) for e in exchangers])
+      # ... сохранить в rates ...
+```
+
+### Ежедневный отчёт (Пн-Пт в 9:00)
+
+```
+schedule_trigger (weekday: mon-fri, 09:00, tz: Europe/Moscow)
+  → code:
+      subscribers = await table_get("subscribers", active=True)
+      for sub in subscribers:
+          await bot.send_message(sub["user_id"], report_text)
+```
+
+### Очистка старых данных (каждый час)
+
+```
+schedule_trigger (interval: 60 мин)
+  → code:
+      await db_execute("DELETE FROM rates WHERE updated_at < NOW() - INTERVAL '24 hours'")
+```
 
 ---
 
@@ -292,45 +453,41 @@ callback_trigger (кнопка "Сравнить")
 | Зависимость | Обязательна | Зачем |
 |---|---|---|
 | `asyncio` | ✅ (встроен) | Фоновые задачи |
-| `croniter` | ❌ (опционально) | Cron-выражения |
-| `APScheduler` | ❌ (не нужен) | Слишком тяжёлый для нашего кейса |
+| `pytz` | ✅ | Timezone |
+| `croniter` | ❌ (только для cron-режима) | Парсинг cron-выражений |
+| `asyncpg` | ✅ (уже есть) | Персистентность в БД |
 
 ---
 
 ## Этапы реализации
 
-### Этап 1 — MVP (1 день)
+### Этап 1 — MVP с интервалом (1-2 дня)
 
-- [ ] Шаблон `schedule-trigger.py.jinja2`
-- [ ] Schema + params (`intervalMinutes`, `autoTransitionTo`, `runOnStart`)
-- [ ] Renderer — генерация Python-кода
-- [ ] Интеграция с `main.py.jinja2` (запуск задач)
-- [ ] UI — базовая конфигурация (интервал + чекбоксы)
+- [ ] SQL миграция: таблица `schedule_state`
+- [ ] Шаблон `schedule-trigger.py.jinja2` (mode=interval)
+- [ ] Schema + params + renderer
+- [ ] Интеграция с `main.py.jinja2`
+- [ ] Восстановление состояния из БД при старте
+- [ ] Сохранение last_run/run_count/error в БД
+- [ ] UI: базовая конфигурация (интервал + timezone)
 
-### Этап 2 — Защита и мониторинг (1 день)
+### Этап 2 — Weekday/Monthday (1 день)
 
-- [ ] Защита от наложения (`maxConcurrent`)
-- [ ] Логирование длительности и ошибок
-- [ ] Переменные мониторинга (`_schedule.*.last_run`)
-- [ ] UI статус-бар фоновых задач
+- [ ] Расчёт next_run для weekday/monthday режимов
+- [ ] UI: чекбоксы дней + time picker
+- [ ] Превью следующих запусков
 
-### Этап 3 — Cron (опционально)
+### Этап 3 — Cron + мониторинг (1 день)
 
-- [ ] Поддержка `cronExpression`
-- [ ] `croniter` в requirements
-- [ ] UI: переключатель Интервал/Cron + валидация выражения
+- [ ] `croniter` интеграция
+- [ ] UI: поле cron с валидацией
+- [ ] API endpoint `/api/projects/:id/schedules`
+- [ ] UI: статус-бар фоновых задач
+- [ ] Множественные правила в одной ноде
 
-### Этап 4 — Интеграция с code-нодой
+### Этап 4 — Продвинутые фичи
 
-- [ ] `table_set` / `table_get` хелперы доступные в code-ноде
-- [ ] `asyncio.gather` для параллельных запросов в code-ноде
-- [ ] Полный сценарий: schedule → code (fetch all) → table_set
-
----
-
-## Ограничения
-
-- Schedule-задача не может отправлять сообщения пользователю напрямую (нет `message` объекта)
-- Для рассылки нужен явный `bot.send_message(user_id, text)` через code-ноду
-- При остановке бота все schedule-задачи прекращаются
-- При перезапуске — стартуют заново (нет персистентного состояния между рестартами)
+- [ ] Стратегия пропущенных запусков (skip/catchUp/none)
+- [ ] Ручной запуск из UI (кнопка «Запустить сейчас»)
+- [ ] История выполнений (таблица `schedule_history`)
+- [ ] Алерты при N ошибках подряд
