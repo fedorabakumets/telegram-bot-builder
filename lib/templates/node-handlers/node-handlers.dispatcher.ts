@@ -245,6 +245,7 @@ export function generateNodeHandlers(
         audioInputVariable: node.data?.audioInputVariable || '',
         documentInputVariable: node.data?.documentInputVariable || '',
         formatMode: (['html', 'markdown', 'none'].includes(node.data?.formatMode)) ? node.data.formatMode : (node.data?.markdown ? 'markdown' : undefined),
+        disableLinkPreview: !!node.data?.disableLinkPreview,
         imageUrl: media.imageUrl,
         documentUrl: media.documentUrl,
         videoUrl: media.videoUrl,

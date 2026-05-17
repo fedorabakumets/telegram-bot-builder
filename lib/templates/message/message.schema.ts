@@ -17,6 +17,8 @@ export const messageParamsSchema = z.object({
   messageText: z.string().optional().default(''),
   /** Режим форматирования */
   formatMode: z.string().optional().transform(v => (['html', 'markdown', 'none'].includes(v as string) ? v : 'none') as 'html' | 'markdown' | 'none').default('none'),
+  /** Отключить превью ссылок */
+  disableLinkPreview: z.boolean().optional().default(false),
 
   // --- Доступ ---
   /** Только администраторы */

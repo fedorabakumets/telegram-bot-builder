@@ -254,6 +254,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {# из внешней области видимости обработчика.                           #}
     {# ------------------------------------------------------------------ #}
     {%- set parse_mode_arg = ', parse_mode="HTML"' if formatMode == 'html' else (', parse_mode="Markdown"' if formatMode == 'markdown' else '') %}
+    {%- set link_preview_arg = ', link_preview_options=types.LinkPreviewOptions(is_disabled=True)' if disableLinkPreview else '' %}
     {%- set effectiveKeyboard = 'ReplyKeyboardRemove()' if (hasHideAfterClickIncoming and keyboardType == 'none') else 'keyboard' %}
     async def _send_to_{{ nodeId|replace('-', '_') }}(_target_chat_id, _thread_id=None, _bot=None):
         """
@@ -272,7 +273,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             image_path = get_upload_file_path("{{ imageUrl }}")
             if not os.path.exists(image_path):
                 logging.error(f"❌ Медиафайл не найден: {image_path} (узел {{ nodeId }})")
-                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             _cached_fid = _media_file_id_cache.get("{{ imageUrl }}")
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка фото через in-memory file_id (без перегенерации)")
@@ -307,7 +308,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 return _sent_result
             else:
                 logging.warning(f"⚠️ Не удалось разрешить переменную imageUrl: {{ imageUrl | replace('{', '{{') | replace('}', '}}') }} (узел {{ nodeId }})")
-                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- else %}
 {%- set _cached_img_fid = (telegramFileIds or {})[imageUrl] if telegramFileIds and imageUrl in telegramFileIds else '' %}
 {%- if _cached_img_fid %}
@@ -360,7 +361,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             video_path = get_upload_file_path("{{ videoUrl }}")
             if not os.path.exists(video_path):
                 logging.error(f"❌ Медиафайл не найден: {video_path} (узел {{ nodeId }})")
-                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             _cached_fid = _media_file_id_cache.get("{{ videoUrl }}")
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка видео через in-memory file_id (без перегенерации)")
@@ -492,7 +493,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             audio_path = get_upload_file_path("{{ audioUrl }}")
             if not os.path.exists(audio_path):
                 logging.error(f"❌ Медиафайл не найден: {audio_path} (узел {{ nodeId }})")
-                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             _cached_fid = _media_file_id_cache.get("{{ audioUrl }}")
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка аудио через in-memory file_id (без перегенерации)")
@@ -558,7 +559,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             doc_path = get_upload_file_path("{{ documentUrl }}")
             if not os.path.exists(doc_path):
                 logging.error(f"❌ Медиафайл не найден: {doc_path} (узел {{ nodeId }})")
-                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             _cached_fid = _media_file_id_cache.get("{{ documentUrl }}")
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка документа через in-memory file_id (без перегенерации)")
@@ -666,7 +667,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 except Exception as _fe:
                     logging.error(f"❌ Узел {{ nodeId }}: ошибка отправки file-переменной: {_fe}")
 {%- endif %}
-            return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- else %}
             {# Медиагруппа из нескольких элементов attachedMedia #}
             _mg_items = []
@@ -753,14 +754,14 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     return await _b.send_audio(_target_chat_id, _solo_media, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
                 else:
                     return await _b.send_document(_target_chat_id, _solo_media, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
-            return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
 {%- else %}
-            return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
 {%- endif %}
 {%- else %}
-            return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+            return await _b.send_message(_target_chat_id, text{{ parse_mode_arg }}{{ link_preview_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {%- endif %}
         except Exception as _send_err:
             logging.error(f"❌ Ошибка отправки в {_target_chat_id}: {_send_err}")

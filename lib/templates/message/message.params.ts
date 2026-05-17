@@ -24,6 +24,8 @@ export interface MessageTemplateParams {
   messageText?: string;
   /** Режим форматирования */
   formatMode?: FormatMode;
+  /** Отключить превью ссылок */
+  disableLinkPreview?: boolean;
 
   // --- Доступ ---
   /** Только администраторы */
