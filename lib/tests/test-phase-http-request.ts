@@ -15,6 +15,8 @@
  *  K. Регрессия — отсутствие дублей обработчиков (5 тестов)
  *  L. Dot-notation переменные (4 теста)
  *  M. Автосохранение скалярных полей ответа (4 теста)
+ *  N. Пагинация (9 тестов)
+ *  O. Извлечение по JSON-пути (8 тестов)
  */
 
 import fs from 'fs';
@@ -1412,6 +1414,99 @@ test('N09', 'Интерактивная пагинация: инициализи
   ok(initIdx !== -1, '_all_vars.get("users_offset") не найден');
   ok(initIdx < urlIdx, 'Инициализация offset должна быть ДО replace_variables_in_text(_url)');
   syntax(code, 'N09');
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// БЛОК O: Извлечение по JSON-пути (responseJsonPath)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+console.log('\n── Блок O: Извлечение по JSON-пути (responseJsonPath) ─────────');
+
+test('O01', 'С responseJsonPath → код извлечения генерируется', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseJsonPath: 'exchange.2.to.55',
+    httpRequestResponseExtractTo: 'current_rate',
+  })]);
+  const code = gen(p, 'O01');
+  ok(code.includes('_json_path_raw'), '_json_path_raw не найден — код извлечения не генерируется');
+  ok(code.includes('_extracted'), '_extracted не найден — код извлечения не генерируется');
+});
+
+test('O02', 'С responseJsonPath → set_user_var с responseExtractTo генерируется', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseJsonPath: 'data.items.0.value',
+    httpRequestResponseExtractTo: 'first_value',
+  })]);
+  const code = gen(p, 'O02');
+  ok(code.includes('set_user_var(user_id, "first_value"'),
+    'set_user_var(user_id, "first_value" не найден');
+});
+
+test('O03', 'Без responseJsonPath → код извлечения НЕ генерируется', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseJsonPath: '',
+    httpRequestResponseExtractTo: '',
+  })]);
+  const code = gen(p, 'O03');
+  const fnIdx = code.indexOf('async def handle_callback_http1(');
+  ok(fnIdx !== -1, 'handle_callback_http1 не найден');
+  const fnBody = code.slice(fnIdx, fnIdx + 3000);
+  ok(!fnBody.includes('_json_path_raw'), '_json_path_raw найден — не должен генерироваться без responseJsonPath');
+});
+
+test('O04', 'responseJsonPath содержит переменные → replace_variables_in_text вызывается', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseJsonPath: 'exchange.{from_id}.to.{to_id}',
+    httpRequestResponseExtractTo: 'rate',
+  })]);
+  const code = gen(p, 'O04');
+  ok(code.includes('replace_variables_in_text(_json_path_raw'),
+    'replace_variables_in_text для json_path не найден');
+});
+
+test('O05', 'responseJsonPath → обработка ошибок (try/except)', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseJsonPath: 'deep.nested.path',
+    httpRequestResponseExtractTo: 'result',
+  })]);
+  const code = gen(p, 'O05');
+  const fnIdx = code.indexOf('_json_path_raw');
+  ok(fnIdx !== -1, '_json_path_raw не найден');
+  const extractBlock = code.slice(fnIdx - 200, fnIdx + 1000);
+  ok(extractBlock.includes('try') && extractBlock.includes('except'),
+    'try/except не найден вокруг кода извлечения');
+});
+
+test('O06', 'responseJsonPath → логирование результата (logging.info с 📎)', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseJsonPath: 'exchange.2.to.55',
+    httpRequestResponseExtractTo: 'current_rate',
+  })]);
+  const code = gen(p, 'O06');
+  ok(code.includes('📎 http_request'), '📎 http_request не найден в логе извлечения');
+});
+
+test('O07', 'Синтаксис Python OK с responseJsonPath', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseJsonPath: 'exchange.2.to.55.xr',
+    httpRequestResponseExtractTo: 'current_rate',
+  })]);
+  const code = gen(p, 'O07');
+  syntax(code, 'O07');
+});
+
+test('O08', 'Синтаксис Python OK с responseJsonPath + автопереход', () => {
+  const p = makeCleanProject([
+    makeStartNode(),
+    makeHttpRequestNode('http1', {
+      httpRequestResponseJsonPath: 'data.result',
+      httpRequestResponseExtractTo: 'api_result',
+      autoTransitionTo: 'msg1',
+    }),
+    makeMessageNode('msg1', 'Результат: {api_result}'),
+  ]);
+  const code = gen(p, 'O08');
+  syntax(code, 'O08');
 });
 
 // ─── Итог ────────────────────────────────────────────────────────────────────

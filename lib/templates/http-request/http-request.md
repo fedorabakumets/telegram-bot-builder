@@ -164,3 +164,51 @@
 ## Обработка ошибок
 
 При ошибке сети `_response_data` будет `None`, `_status_code` — `0`. Ошибка логируется через `logging.error`. При `ignoreHttpErrors: true` ошибки 4xx/5xx не прерывают выполнение.
+
+## Извлечение по JSON-пути
+
+Опциональная функция для извлечения вложенного значения из JSON-ответа по dot-notation пути.
+
+### Параметры
+
+| Параметр | Тип | По умолчанию | Описание |
+|---|---|---|---|
+| `responseJsonPath` | string | — | Путь для извлечения (поддерживает `{переменные}`) |
+| `responseExtractTo` | string | — | Переменная куда сохранить извлечённое значение |
+
+### Пример — извлечение курса из API обменника
+
+```json
+{
+  "url": "https://swop.is/valuta.json",
+  "method": "GET",
+  "responseVariable": "r_exch",
+  "responseJsonPath": "exchange.2.to.55",
+  "responseExtractTo": "current_rate"
+}
+```
+
+После выполнения:
+- `r_exch` = весь JSON-ответ (как обычно)
+- `current_rate` = `"82.70"` (извлечённое значение)
+
+### Пример — динамический путь с переменными
+
+```json
+{
+  "url": "{exchanger.url}",
+  "method": "GET",
+  "responseVariable": "r_exch",
+  "responseJsonPath": "exchange.{exchanger.local_from}.to.{exchanger.local_to}.xr",
+  "responseExtractTo": "current_rate"
+}
+```
+
+Переменные в пути подставляются через `replace_variables_in_text` перед обходом объекта.
+
+### Поведение
+
+- Если путь не найден — переменная получает пустую строку `""`
+- Если `responseJsonPath` пустой — извлечение не выполняется (обратная совместимость)
+- Оба поля (`responseJsonPath` и `responseExtractTo`) должны быть заполнены для работы
+- Поддерживает числовые индексы массивов: `items.0.name`
