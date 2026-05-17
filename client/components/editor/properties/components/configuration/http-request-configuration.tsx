@@ -223,6 +223,7 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
               <SelectContent>
                 <SelectItem value="autodetect" className="text-xs">Автоопределение</SelectItem>
                 <SelectItem value="json" className="text-xs">JSON</SelectItem>
+                <SelectItem value="xml" className="text-xs">XML</SelectItem>
                 <SelectItem value="text" className="text-xs">Текст</SelectItem>
                 {/* Формат file: ответ сохраняется как base64-строка для медиа-ноды */}
                 <SelectItem value="file" className="text-xs">Файл (base64)</SelectItem>

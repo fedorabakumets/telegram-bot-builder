@@ -12,8 +12,8 @@ export type HttpRequestAuthType = 'none' | 'basic' | 'bearer' | 'header' | 'quer
 /** Формат тела запроса */
 export type HttpRequestBodyFormat = 'json' | 'form-urlencoded' | 'raw';
 
-/** Формат ответа: autodetect — автоопределение, json — JSON, text — текст, file — бинарный файл в base64 */
-export type HttpRequestResponseFormat = 'autodetect' | 'json' | 'text' | 'file';
+/** Формат ответа: autodetect — автоопределение, json — JSON, text — текст, file — бинарный файл в base64, xml — XML→dict */
+export type HttpRequestResponseFormat = 'autodetect' | 'json' | 'text' | 'file' | 'xml';
 
 /** Параметры шаблона http_request */
 export interface HttpRequestTemplateParams {
@@ -59,7 +59,7 @@ export interface HttpRequestTemplateParams {
   queryParams?: string;
   /** Формат тела запроса: json, form-urlencoded, raw */
   bodyFormat?: HttpRequestBodyFormat;
-  /** Формат ответа: autodetect, json, text или file (base64-объект) */
+  /** Формат ответа: autodetect, json, text, file (base64-объект) или xml (XML→dict) */
   responseFormat?: HttpRequestResponseFormat;
   /** Не падать при HTTP ошибках 4xx/5xx */
   ignoreHttpErrors?: boolean;

@@ -152,6 +152,36 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
                         "mimeType": _resp_content_type,
                         "fileName": _resp_filename,
                     }
+                {% elif responseFormat == 'xml' %}
+                # Парсим XML-ответ в словарь
+                _xml_text = await _resp.text()
+                try:
+                    import xml.etree.ElementTree as _ET
+                    _xml_root = _ET.fromstring(_xml_text)
+                    def _xml_to_dict(el):
+                        """Рекурсивно конвертирует XML-элемент в dict/list."""
+                        children = list(el)
+                        if not children:
+                            return el.text.strip() if el.text and el.text.strip() else ""
+                        # Группируем дочерние элементы по тегу
+                        _groups = {}
+                        for child in children:
+                            tag = child.tag
+                            if tag not in _groups:
+                                _groups[tag] = []
+                            _groups[tag].append(_xml_to_dict(child))
+                        # Если тег повторяется — оставляем как список, иначе разворачиваем
+                        _result = {}
+                        for tag, items in _groups.items():
+                            if len(items) == 1:
+                                _result[tag] = items[0]
+                            else:
+                                _result[tag] = items
+                        return _result
+                    _response_data = _xml_to_dict(_xml_root)
+                except Exception as _xml_err:
+                    logging.warning(f"⚠️ http_request [{{ nodeId }}]: ошибка парсинга XML: {_xml_err}")
+                    _response_data = _xml_text
                 {% elif responseFormat == 'json' %}
                 _response_data = await _resp.json(content_type=None)
                 {% elif responseFormat == 'text' %}
@@ -160,7 +190,31 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
                 try:
                     _response_data = await _resp.json(content_type=None)
                 except Exception:
-                    _response_data = await _resp.text()
+                    _resp_text = await _resp.text()
+                    _ct = _resp.headers.get('Content-Type', '')
+                    if 'xml' in _ct or _resp_text.strip().startswith('<?xml') or _resp_text.strip().startswith('<'):
+                        try:
+                            import xml.etree.ElementTree as _ET
+                            _xml_root = _ET.fromstring(_resp_text)
+                            def _xml_to_dict_auto(el):
+                                children = list(el)
+                                if not children:
+                                    return el.text.strip() if el.text and el.text.strip() else ""
+                                _groups = {}
+                                for child in children:
+                                    tag = child.tag
+                                    if tag not in _groups:
+                                        _groups[tag] = []
+                                    _groups[tag].append(_xml_to_dict_auto(child))
+                                _result = {}
+                                for tag, items in _groups.items():
+                                    _result[tag] = items if len(items) > 1 else items[0]
+                                return _result
+                            _response_data = _xml_to_dict_auto(_xml_root)
+                        except Exception:
+                            _response_data = _resp_text
+                    else:
+                        _response_data = _resp_text
                 {% endif %}
                 {% if ignoreHttpErrors %}
                 # Ошибки HTTP 4xx/5xx игнорируются

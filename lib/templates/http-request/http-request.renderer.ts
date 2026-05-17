@@ -60,7 +60,7 @@ export function nodeToHttpRequestParams(node: Node, context?: HttpRequestNodeCon
     authQueryValue: data?.httpRequestAuthQueryValue || '',
     queryParams: data?.httpRequestQueryParams || '',
     bodyFormat: data?.httpRequestBodyFormat || 'json',
-    responseFormat: data?.httpRequestResponseFormat || 'autodetect',
+    responseFormat: data?.httpRequestResponseFormat || (typeof data?.httpRequestUrl === 'string' && data.httpRequestUrl.includes('.xml') ? 'xml' : 'autodetect'),
     ignoreHttpErrors: !!data?.httpRequestIgnoreHttpErrors,
     ignoreSsl: !!data?.httpRequestIgnoreSsl,
     followRedirects: data?.httpRequestFollowRedirects !== false,
