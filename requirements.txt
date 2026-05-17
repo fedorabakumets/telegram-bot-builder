@@ -8,3 +8,5 @@ gspread>=6.0.0
 telethon>=1.42.0
 python-dotenv>=1.0.0
 redis>=7.4.0
+pytz>=2025.2
+croniter>=6.0.0
