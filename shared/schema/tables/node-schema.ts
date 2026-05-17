@@ -119,6 +119,8 @@ export const nodeSchema = z.object({
     markdown: z.boolean().default(false),
     /** Режим форматирования текста: "html", "markdown", "none" */
     formatMode: z.enum(['html', 'markdown', 'none']).default('none'),
+    /** Отключить превью ссылок в сообщении */
+    disableLinkPreview: z.boolean().default(false),
     /**
      * @deprecated Синонимы команды — устаревшее поле.
      * Вместо синонимов используйте отдельные узлы command_trigger на холсте.

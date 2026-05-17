@@ -89,6 +89,19 @@ export function MessageTextSection({
             onNodeUpdate={onNodeUpdate}
             textVariables={[...textVariables, ...mediaVariables] as Variable[]}
           />
+          {/* Переключатель превью ссылок */}
+          <div className="flex items-center gap-2 pt-1">
+            <input
+              type="checkbox"
+              id="disableLinkPreview"
+              checked={!!selectedNode.data.disableLinkPreview}
+              onChange={(e) => onNodeUpdate(selectedNode.id, { disableLinkPreview: e.target.checked })}
+              className="h-3.5 w-3.5 rounded border-gray-300"
+            />
+            <label htmlFor="disableLinkPreview" className="text-xs text-muted-foreground cursor-pointer">
+              Отключить превью ссылок
+            </label>
+          </div>
         </>
       )}
 

@@ -9,6 +9,10 @@ def _wrap_bot_send_message(bot_instance):
 
     async def send_message_with_logging(chat_id, text, *args, node_id=None, **kwargs):
         """Обёртка для bot.send_message с автоматическим сохранением и логированием"""
+        # Отключаем превью ссылок если текст содержит HTML-ссылки
+        if text and '<a href=' in str(text) and 'link_preview_options' not in kwargs:
+            from aiogram.types import LinkPreviewOptions
+            kwargs['link_preview_options'] = LinkPreviewOptions(is_disabled=True)
         result = await original_send_message(chat_id, text, *args, **kwargs)
         message_data_obj = {"message_id": result.message_id if result else None}
         if "reply_markup" in kwargs:
