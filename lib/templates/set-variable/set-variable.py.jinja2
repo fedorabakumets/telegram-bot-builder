@@ -24,6 +24,33 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         _sv_expr_{{ loop.index }} = {{ assignment.value | tojson }}
         user_data[user_id]["{{ safe_var }}"] = _eval_expr(_sv_expr_{{ loop.index }}, _sv_vars_{{ loop.index }})
         logging.info(f"📝 set_variable [{{ nodeId }}]: «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (было: {_sv_old_{{ loop.index }}!r}, выражение: {_sv_expr_{{ loop.index }}!r})")
+        {%- elif assignment.mode == 'lookup' %}
+        # Поиск в таблице {{ assignment.lookupTable }}
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_old_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}")
+        _sv_table_{{ loop.index }} = _sv_vars_{{ loop.index }}.get("table.{{ assignment.lookupTable }}", [])
+        if isinstance(_sv_table_{{ loop.index }}, str):
+            try:
+                import json as _json_lk
+                _sv_table_{{ loop.index }} = _json_lk.loads(_sv_table_{{ loop.index }})
+            except Exception:
+                _sv_table_{{ loop.index }} = []
+        _sv_match_{{ loop.index }} = None
+        for _sv_row in (_sv_table_{{ loop.index }} if isinstance(_sv_table_{{ loop.index }}, list) else []):
+            _sv_row_match = True
+            {%- for cond in assignment.lookupWhere %}
+            _sv_cond_val_{{ loop.index }}_{{ loop.parent.loop.index }} = replace_variables_in_text({{ cond.value | tojson }}, _sv_vars_{{ loop.parent.loop.index }})
+            if str(_sv_row.get("{{ cond.field }}", "")) != str(_sv_cond_val_{{ loop.index }}_{{ loop.parent.loop.index }}):
+                _sv_row_match = False
+            {%- endfor %}
+            if _sv_row_match:
+                _sv_match_{{ loop.index }} = _sv_row
+                break
+        if _sv_match_{{ loop.index }} is not None:
+            user_data[user_id]["{{ safe_var }}"] = str(_sv_match_{{ loop.index }}.get("{{ assignment.lookupField }}", ""))
+        else:
+            user_data[user_id]["{{ safe_var }}"] = ""
+        logging.info(f"📝 set_variable [{{ nodeId }}]: lookup «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (таблица: {{ assignment.lookupTable }}, поле: {{ assignment.lookupField }})")
         {%- else %}
         # Устанавливаем переменную через шаблон
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)

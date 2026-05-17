@@ -13,8 +13,19 @@ const setVariableAssignmentSchema = z.object({
   variable: z.string(),
   /** Значение или шаблон с {переменными} */
   value: z.string(),
-  /** Режим: "text" — шаблон, "expression" — арифметическое выражение */
-  mode: z.enum(['text', 'expression']),
+  /** Режим: "text" — шаблон, "expression" — арифметическое выражение, "lookup" — поиск в таблице */
+  mode: z.enum(['text', 'expression', 'lookup']),
+  /** Имя таблицы для поиска (только для mode=lookup) */
+  lookupTable: z.string().optional().default(''),
+  /** Поле таблицы, значение которого сохранить (только для mode=lookup) */
+  lookupField: z.string().optional().default(''),
+  /** Условия поиска: массив [{field, value}] (только для mode=lookup) */
+  lookupWhere: z.array(z.object({
+    /** Поле таблицы для сравнения */
+    field: z.string(),
+    /** Значение для сравнения (поддерживает {переменные}) */
+    value: z.string(),
+  })).optional().default([]),
 });
 
 /** Схема для валидации параметров узла set_variable */
