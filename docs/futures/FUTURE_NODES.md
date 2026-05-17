@@ -7,24 +7,10 @@
 
 ## 🔴 Высокий приоритет
 
-### `schedule_trigger`
+### ~~`schedule_trigger`~~ ✅ РЕАЛИЗОВАНО
 **Запуск цепочки по расписанию без участия пользователя.**
 
-Поля:
-- `intervalMinutes` / `intervalHours` — интервал запуска
-- `cronExpression` — cron-выражение для продвинутых (например `0 9 * * *`)
-- `autoTransitionTo` — ID следующей ноды
-
-Пример использования:
-```
-schedule_trigger (каждые 5 минут)
-  → http_request (получить курсы)
-    → condition (курс изменился?)
-      → broadcast (уведомить подписчиков)
-```
-
-Реализация: `APScheduler` + `asyncio.gather` в `main()`.
-Сложность: средняя (~150 строк в генераторе).
+> Нода реализована и доступна в конструкторе. См. `docs/futures/schedule-trigger.md`.
 
 ---
 
@@ -80,25 +66,13 @@ webhook_trigger (POST /payment)
 
 ## 🟡 Средний приоритет
 
-### `json_extract`
+### ~~`json_extract`~~ ❌ НЕ НУЖНА
 **Извлечение вложенного поля из JSON по динамическому пути.**
 
-Поля:
-- `sourceVariable` — переменная с JSON объектом
-- `path` — путь с поддержкой переменных, например `exchange.{from_id}.to.{to_id}`
-- `targetVariable` — куда сохранить результат
-- `defaultValue` — значение если путь не найден
-
-Пример использования:
-```
-json_extract
-  source: rates_response
-  path:   exchange.{from_id}.to.{to_id}
-  target: current_rate
-```
-
-Решает проблему матричных API (обменники) без костылей с dot-notation.
-Сложность: низкая (~50 строк).
+> **Статус: не требуется.** Функция `replace_variables_in_text` в `utils.py.jinja2` уже поддерживает
+> dot-notation (`{response.exchange.2.to.55}`), индексы массивов (`{data[0].rate}`),
+> и многопроходную подстановку (3 прохода — `{response.exchange.{from_id}.to.{to_id}}` работает).
+> Используйте `http_request` с `jsonPath` или `set_variable` с выражением.
 
 ---
 
@@ -209,18 +183,18 @@ http_request (GET cryptobar.cc/...xml, responseFormat=text)
 ## Порядок реализации (рекомендуемый)
 
 ```
-1. convert_file xml_to_json  — быстро, подключает XML обменники
-2. json_extract              — быстро, решает матричные API
-3. delay                     — быстро, часто нужен
-4. schedule_trigger          — разблокирует алерты и автоматизацию
-5. webhook_trigger           — разблокирует интеграции с внешними системами
-6. api_response              — пара к webhook_trigger
-7. http_request_multi        — агрегация источников за один шаг
-8. ~~loop~~                  — ✅ РЕАЛИЗОВАНО
-9. try_catch                 — улучшает надёжность
-10. random                   — nice to have
-11. template                 — архитектурное изменение
-12. aggregate                — архитектурное изменение
+1. ~~convert_file xml_to_json~~  — быстро, подключает XML обменники
+2. ~~json_extract~~              — ❌ НЕ НУЖНА (dot-notation уже работает)
+3. delay                         — быстро, часто нужен
+4. ~~schedule_trigger~~          — ✅ РЕАЛИЗОВАНО
+5. webhook_trigger               — разблокирует интеграции с внешними системами
+6. api_response                  — пара к webhook_trigger
+7. http_request_multi            — агрегация источников за один шаг
+8. ~~loop~~                      — ✅ РЕАЛИЗОВАНО
+9. try_catch                     — улучшает надёжность
+10. random                       — nice to have
+11. template                     — архитектурное изменение
+12. aggregate                    — архитектурное изменение
 ```
 
 
