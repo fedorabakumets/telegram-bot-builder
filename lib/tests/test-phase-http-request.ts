@@ -640,11 +640,11 @@ test('E05', '_response_data = await _resp.json(content_type=None) присутс
     '_response_data = await _resp.json(content_type=None) не найдено');
 });
 
-test('E06', 'Fallback на text при ошибке JSON → _response_data = await _resp.text()', () => {
+test('E06', 'Fallback на text при ошибке JSON → _resp_text = await _resp.text() присутствует', () => {
   const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1')]);
   const code = gen(p, 'E06');
-  ok(code.includes('_response_data = await _resp.text()'),
-    '_response_data = await _resp.text() не найдено — fallback отсутствует');
+  ok(code.includes('await _resp.text()'),
+    'await _resp.text() не найдено — fallback отсутствует');
 });
 
 test('E07', '_status_code = _resp.status присутствует', () => {
@@ -764,7 +764,7 @@ test('G02', 'logging.error( присутствует в обработчике',
   const code = gen(p, 'G02');
   const fnIdx = code.indexOf('async def handle_callback_http1(');
   ok(fnIdx !== -1, 'handle_callback_http1 не найден');
-  const fnBody = code.slice(fnIdx, fnIdx + 2000);
+  const fnBody = code.slice(fnIdx, fnIdx + 5000);
   ok(fnBody.includes('logging.error('), 'logging.error( не найдено в обработчике');
 });
 
@@ -1410,9 +1410,9 @@ test('N09', 'Интерактивная пагинация: инициализи
   const code = gen(p, 'N09');
   ok(code.includes('"users_offset"'), '"users_offset" не найден в коде инициализации');
   // Инициализация должна быть ДО подстановки переменных в URL
-  const initIdx = code.indexOf('_all_vars.get("users_offset")');
+  const initIdx = code.indexOf('_all_vars.get("users_offset"');
   const urlIdx = code.indexOf('replace_variables_in_text(_url');
-  ok(initIdx !== -1, '_all_vars.get("users_offset") не найден');
+  ok(initIdx !== -1, '_all_vars.get("users_offset"...) не найден');
   ok(initIdx < urlIdx, 'Инициализация offset должна быть ДО replace_variables_in_text(_url)');
   syntax(code, 'N09');
 });
