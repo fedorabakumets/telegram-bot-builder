@@ -37,6 +37,8 @@ export const httpRequestNode: ComponentDefinition = {
     httpRequestPaginationItemsField: 'items',
     httpRequestPaginationLimit: 10,
     httpRequestPaginationMaxPages: 20,
+    httpRequestResponseJsonPath: '',
+    httpRequestResponseExtractTo: '',
     keyboardType: 'none',
     buttons: [],
   },

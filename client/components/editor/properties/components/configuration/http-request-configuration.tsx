@@ -233,6 +233,33 @@ export function HttpRequestConfiguration({ selectedNode, onNodeUpdate }: HttpReq
       </Section>
 
       <Section>
+        <SectionLabel>Извлечение по пути (опционально)</SectionLabel>
+        <div className="space-y-2">
+          <div className="flex gap-2 items-center">
+            <Label className="text-xs text-muted-foreground w-24 shrink-0">JSON путь</Label>
+            <Input
+              placeholder="exchange.{from_id}.to.{to_id}.xr"
+              value={(data.httpRequestResponseJsonPath as string) || ''}
+              onChange={(e) => upd({ httpRequestResponseJsonPath: e.target.value })}
+              className="h-7 font-mono text-xs flex-1"
+            />
+          </div>
+          <div className="flex gap-2 items-center">
+            <Label className="text-xs text-muted-foreground w-24 shrink-0">Сохранить в</Label>
+            <Input
+              placeholder="extracted_value"
+              value={(data.httpRequestResponseExtractTo as string) || ''}
+              onChange={(e) => upd({ httpRequestResponseExtractTo: e.target.value })}
+              className="h-7 font-mono text-xs flex-1"
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Извлекает значение из JSON-ответа по указанному пути. Поддерживает {'{переменные}'}.
+          </p>
+        </div>
+      </Section>
+
+      <Section>
         <SectionLabel>Статус код (опционально)</SectionLabel>
         <Input
           placeholder="status_code"
