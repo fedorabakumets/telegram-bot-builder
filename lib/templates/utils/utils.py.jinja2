@@ -13,6 +13,7 @@ USER_DATA_TTL = 3600
 _user_last_seen: dict[int, float] = {}
 # Кеш данных пользовательских таблиц проекта (Bot Tables)
 _bot_tables_cache: dict | None = None
+_bot_tables_cache_ts: float = 0
 
 
 async def cleanup_user_data() -> None:
@@ -149,7 +150,11 @@ async def init_all_user_vars(user_id: int) -> dict:
     # Загружаем данные из пользовательских таблиц проекта (Bot Tables)
     # Для таблиц с одной строкой: плоские переменные table.имя.колонка (обратная совместимость) + массив
     # Для таблиц с несколькими строками: только массив table.имя = [{col: val, ...}, ...]
-    global _bot_tables_cache
+    global _bot_tables_cache, _bot_tables_cache_ts
+    import time as _time_mod
+    # Сбрасываем кеш каждые 60 секунд
+    if _bot_tables_cache is not None and (_time_mod.time() - _bot_tables_cache_ts) > 60:
+        _bot_tables_cache = None
     if _bot_tables_cache is None and db_pool:
         try:
             async with db_pool.acquire() as conn:
@@ -198,6 +203,7 @@ async def init_all_user_vars(user_id: int) -> dict:
                         for _cname, _cval in _arr[0].items():
                             _cache[f"table.{_tname}.{_cname}"] = _cval
                 _bot_tables_cache = _cache
+                _bot_tables_cache_ts = _time_mod.time()
         except Exception as e:
             logging.warning(f"⚠️ Не удалось загрузить Bot Tables: {e}")
             _bot_tables_cache = {}
