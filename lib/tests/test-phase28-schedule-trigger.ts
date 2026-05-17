@@ -439,6 +439,119 @@ test('F08', 'содержит user_data[_sched_user_id]["_schedule"]', () => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
+// БЛОК G: Интеграция schedule + loop + http_request + set_variable
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок G: Интеграция schedule + loop + http_request + set_variable');
+
+function makeLoopNode(id: string, source: string, item: string, targetId: string, afterId = '') {
+  return {
+    id, type: 'loop', position: { x: 0, y: 0 },
+    data: { sourceVariable: source, itemVariable: item, indexVariable: 'i', parallel: false, delaySeconds: 0, maxIterations: 100, autoTransitionTo: targetId, afterLoopTo: afterId, buttons: [], keyboardType: 'none' },
+  };
+}
+
+function makeHttpNode(id: string, url: string, responseVar: string, targetId = '') {
+  return {
+    id, type: 'http_request', position: { x: 0, y: 0 },
+    data: { httpRequestUrl: url, httpRequestMethod: 'GET', httpRequestResponseVariable: responseVar, httpRequestResponseFormat: 'autodetect', httpRequestTimeout: 10, autoTransitionTo: targetId, buttons: [], keyboardType: 'none' },
+  };
+}
+
+function makeSetVarNode(id: string, assignments: any[], targetId = '') {
+  return {
+    id, type: 'set_variable', position: { x: 0, y: 0 },
+    data: { assignments, autoTransitionTo: targetId, buttons: [], keyboardType: 'none' },
+  };
+}
+
+test('G01', 'schedule → loop → http_request → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeScheduleNode('sched1', 'loop1'),
+    makeLoopNode('loop1', 'table.exchangers', 'exchanger', 'http1'),
+    makeHttpNode('http1', '{exchanger.url}', 'api_response'),
+  ]);
+  syntax(gen(p, 'g01'), 'g01');
+});
+
+test('G02', 'schedule → loop → http_request → set_variable → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeScheduleNode('sched1', 'loop1'),
+    makeLoopNode('loop1', 'table.exchangers', 'exchanger', 'http1'),
+    makeHttpNode('http1', '{exchanger.url}', 'api_response', 'sv1'),
+    makeSetVarNode('sv1', [{ id: 's1', variable: 'current_rate', value: '{api_response.exchange.2.to.55}', mode: 'text' }]),
+  ]);
+  syntax(gen(p, 'g02'), 'g02');
+});
+
+test('G03', 'set_variable с динамическим именем → replace_variables_in_text для имени', () => {
+  const p = makeCleanProject([
+    makeScheduleNode('sched1', 'sv1'),
+    makeSetVarNode('sv1', [{ id: 's1', variable: 'rate_{from_id}_{exchanger.name}', value: '82.70', mode: 'text' }]),
+  ]);
+  const code = gen(p, 'g03');
+  ok(code.includes('replace_variables_in_text("rate_{from_id}_{exchanger.name}"'), 'динамическое имя должно подставляться через replace_variables_in_text');
+});
+
+test('G04', 'set_variable со статическим именем → НЕТ replace_variables_in_text для имени', () => {
+  const p = makeCleanProject([
+    makeScheduleNode('sched1', 'sv1'),
+    makeSetVarNode('sv1', [{ id: 's1', variable: 'my_rate', value: '82.70', mode: 'text' }]),
+  ]);
+  const code = gen(p, 'g04');
+  ok(code.includes('_sv_varname_1 = "my_rate"'), 'статическое имя должно быть литералом');
+});
+
+test('G05', 'вложенный loop: schedule → loop(exchangers) → http → loop(pairs) → set_variable → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeScheduleNode('sched1', 'loop_ex'),
+    makeLoopNode('loop_ex', 'table.exchangers', 'exchanger', 'http1'),
+    makeHttpNode('http1', '{exchanger.url}', 'api_response', 'loop_pairs'),
+    makeLoopNode('loop_pairs', 'table.pairs', 'pair', 'sv1'),
+    makeSetVarNode('sv1', [
+      { id: 's1', variable: 'current_rate', value: '{api_response.exchange.{pair.from_id}.to.{pair.to_id}}', mode: 'text' },
+      { id: 's2', variable: 'rate_{pair.from_id}_{pair.to_id}_{exchanger.name}', value: '{current_rate}', mode: 'text' },
+    ]),
+  ]);
+  syntax(gen(p, 'g05'), 'g05');
+});
+
+test('G06', 'http_request URL с переменной из loop → replace_variables_in_text вызывается', () => {
+  const p = makeCleanProject([
+    makeScheduleNode('sched1', 'loop1'),
+    makeLoopNode('loop1', 'table.exchangers', 'exchanger', 'http1'),
+    makeHttpNode('http1', '{exchanger.url}', 'api_response'),
+  ]);
+  const code = gen(p, 'g06');
+  ok(code.includes('{exchanger.url}'), 'URL шаблон должен быть в коде');
+  ok(code.includes('replace_variables_in_text(_url'), 'replace_variables_in_text должен вызываться для URL');
+});
+
+test('G07', 'schedule + loop + http + set_variable + DB → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeScheduleNode('sched1', 'loop1'),
+    makeLoopNode('loop1', 'table.exchangers', 'exchanger', 'http1'),
+    makeHttpNode('http1', '{exchanger.url}', 'api_response', 'sv1'),
+    makeSetVarNode('sv1', [{ id: 's1', variable: 'rate_{exchanger.name}', value: '{api_response.rate}', mode: 'text' }]),
+  ]);
+  syntax(genDB(p, 'g07'), 'g07');
+});
+
+test('G08', 'schedule + command_trigger + loop + http → полный проект → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCommandTriggerNode('cmd1', '/start', 'msg1'),
+    makeMessageNode('msg1', 'Привет!'),
+    makeScheduleNode('sched1', 'loop1', { rules: [{ mode: 'interval', intervalMinutes: 5 }] }),
+    makeLoopNode('loop1', 'table.exchangers', 'exchanger', 'http1'),
+    makeHttpNode('http1', '{exchanger.url}', 'api_response', 'sv1'),
+    makeSetVarNode('sv1', [
+      { id: 's1', variable: 'rate_{exchanger.name}', value: '{api_response.exchange.2.to.55}', mode: 'text' },
+    ]),
+  ]);
+  syntax(genDB(p, 'g08'), 'g08');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // Итоги
 // ════════════════════════════════════════════════════════════════════════════
 
