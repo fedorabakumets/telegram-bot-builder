@@ -322,7 +322,7 @@ def _eval_expr(template: str, user_vars: dict):
             _ast_expr.IfExp, _ast_expr.Compare,
             _ast_expr.Gt, _ast_expr.GtE, _ast_expr.Lt, _ast_expr.LtE, _ast_expr.Eq, _ast_expr.NotEq,
         )
-        _safe_funcs = {'round': round, 'abs': abs, 'int': int, 'float': float, 'min': min, 'max': max, 'str': str}
+        _safe_funcs = {'round': round, 'abs': abs, 'int': int, 'float': float, 'min': min, 'max': max, 'str': str, 'thousands': lambda n: f"{int(float(n)):,}".replace(",", " ")}
         _safe_methods = {'replace', 'strip', 'lstrip', 'rstrip', 'lower', 'upper', 'startswith', 'endswith', 'split', 'join', 'count', 'find', 'format'}
         for _node in _ast_expr.walk(tree):
             if not isinstance(_node, _allowed):
