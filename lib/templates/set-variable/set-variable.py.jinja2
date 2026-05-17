@@ -74,7 +74,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
             _sv_arr_{{ loop.index }} = []
         _sv_push_tpl_{{ loop.index }} = {{ assignment.value | tojson }}
         _sv_push_str_{{ loop.index }} = replace_variables_in_text(_sv_push_tpl_{{ loop.index }}, _sv_vars_{{ loop.index }})
-        # Обрабатываем inline-выражения ={{...}}
+        # Обрабатываем inline-выражения (синтаксис: равно + двойные фигурные скобки)
         _sv_expr_vars_{{ loop.index }} = _sv_vars_{{ loop.index }}
         def _resolve_expr_{{ loop.index }}(_m):
             try:
