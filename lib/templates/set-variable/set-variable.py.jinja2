@@ -81,8 +81,8 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                 return str(_eval_expr(_m.group(1), _sv_expr_vars_{{ loop.index }}))
             except Exception:
                 return "0"
-        _sv_re_sub = __import__('re').sub
-        _sv_push_str_{{ loop.index }} = _sv_re_sub(r'=\{\{(.+?)\}\}', _resolve_expr_{{ loop.index }}, _sv_push_str_{{ loop.index }})
+        _sv_re_sub = getattr(__import__('re'), 'sub')
+        _sv_push_str_{{ loop.index }} = _sv_re_sub({% raw %}r'=\{\{(.+?)\}\}'{% endraw %}, _resolve_expr_{{ loop.index }}, _sv_push_str_{{ loop.index }})
         try:
             _sv_push_obj_{{ loop.index }} = _json_lk.loads(_sv_push_str_{{ loop.index }})
         except Exception:
