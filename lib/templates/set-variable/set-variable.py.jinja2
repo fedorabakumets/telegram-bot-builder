@@ -63,9 +63,14 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         {%- else %}
         # Устанавливаем переменную через шаблон
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
-        _sv_old_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}")
-        user_data[user_id]["{{ safe_var }}"] = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
-        logging.info(f"📝 set_variable [{{ nodeId }}]: «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (было: {_sv_old_{{ loop.index }}!r})")
+        {%- if '{' in assignment.variable %}
+        _sv_varname_{{ loop.index }} = replace_variables_in_text({{ assignment.variable | tojson }}, _sv_vars_{{ loop.index }})
+        {%- else %}
+        _sv_varname_{{ loop.index }} = "{{ safe_var }}"
+        {%- endif %}
+        _sv_old_{{ loop.index }} = user_data[user_id].get(_sv_varname_{{ loop.index }})
+        user_data[user_id][_sv_varname_{{ loop.index }}] = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        logging.info(f"📝 set_variable [{{ nodeId }}]: «{_sv_varname_{{ loop.index }}}» = {user_data[user_id][_sv_varname_{{ loop.index }}]!r} (было: {_sv_old_{{ loop.index }}!r})")
         {%- endif %}
         {% endfor %}
         logging.info(f"✅ set_variable [{{ nodeId }}]: установлено {{ assignments | length }} переменных для {user_id}")
