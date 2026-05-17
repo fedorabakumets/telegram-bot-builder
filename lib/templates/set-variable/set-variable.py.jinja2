@@ -52,6 +52,14 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         else:
             user_data[user_id]["{{ safe_var }}"] = ""
         logging.info(f"📝 set_variable [{{ nodeId }}]: lookup «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (таблица: {{ assignment.lookupTable }}, поле: {{ assignment.lookupField }})")
+        {%- elif assignment.mode == 'str_replace' %}
+        # Замена подстроки в переменной
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_old_{{ loop.index }} = str(user_data[user_id].get("{{ safe_var }}", ""))
+        _sv_search_{{ loop.index }} = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        _sv_replace_{{ loop.index }} = replace_variables_in_text({{ assignment.replaceWith | tojson }}, _sv_vars_{{ loop.index }})
+        user_data[user_id]["{{ safe_var }}"] = _sv_old_{{ loop.index }}.replace(_sv_search_{{ loop.index }}, _sv_replace_{{ loop.index }})
+        logging.info(f"📝 set_variable [{{ nodeId }}]: str_replace «{{ safe_var }}» (искали: {_sv_search_{{ loop.index }}!r}, заменили на: {_sv_replace_{{ loop.index }}!r})")
         {%- else %}
         # Устанавливаем переменную через шаблон
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)

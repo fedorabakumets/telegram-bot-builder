@@ -18,14 +18,16 @@ export interface Assignment {
   variable: string;
   /** Значение или шаблон */
   value: string;
-  /** Режим: "text" — шаблон, "expression" — выражение, "lookup" — поиск в таблице */
-  mode: 'text' | 'expression' | 'lookup';
+  /** Режим: "text" — шаблон, "expression" — выражение, "lookup" — поиск в таблице, "str_replace" — замена подстроки */
+  mode: 'text' | 'expression' | 'lookup' | 'str_replace';
   /** Имя таблицы для поиска (только lookup) */
   lookupTable?: string;
   /** Поле таблицы для извлечения (только lookup) */
   lookupField?: string;
   /** Условия поиска (только lookup) */
   lookupWhere?: Array<{ field: string; value: string }>;
+  /** На что заменить (только str_replace) */
+  replaceWith?: string;
 }
 
 /** Пропсы строки присваивания */
@@ -62,9 +64,9 @@ export function AssignmentRow({
     onChange(assignment.id, 'value', assignment.value + `{${varName}}`);
   };
 
-  /** Переключает режим между text, expression и lookup */
+  /** Переключает режим между text, expression, lookup и str_replace */
   const handleModeToggle = () => {
-    const modes: Array<'text' | 'expression' | 'lookup'> = ['text', 'expression', 'lookup'];
+    const modes: Array<'text' | 'expression' | 'lookup' | 'str_replace'> = ['text', 'expression', 'lookup', 'str_replace'];
     const currentIdx = modes.indexOf(assignment.mode);
     const nextMode = modes[(currentIdx + 1) % modes.length];
     onChange(assignment.id, 'mode', nextMode);
@@ -72,26 +74,29 @@ export function AssignmentRow({
 
   const isExpression = assignment.mode === 'expression';
   const isLookup = assignment.mode === 'lookup';
+  const isStrReplace = assignment.mode === 'str_replace';
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5">
-        {/* Переключатель режима T / = / 🔍 */}
+        {/* Переключатель режима T / = / 🔍 / ✂️ */}
         <Button
-          variant={isExpression ? 'default' : isLookup ? 'secondary' : 'outline'}
+          variant={isExpression ? 'default' : isLookup ? 'secondary' : isStrReplace ? 'secondary' : 'outline'}
           size="icon"
           className="h-8 w-8 flex-shrink-0 text-xs font-mono"
           title={isExpression
             ? 'Режим: выражение. Нажмите для lookup'
             : isLookup
-            ? 'Режим: поиск в таблице. Нажмите для текста'
+            ? 'Режим: поиск в таблице. Нажмите для замены'
+            : isStrReplace
+            ? 'Режим: замена подстроки. Нажмите для текста'
             : 'Режим: текст/шаблон. Нажмите для выражения'}
           onClick={handleModeToggle}
         >
-          {isExpression ? '=' : isLookup ? '🔍' : 'T'}
+          {isExpression ? '=' : isLookup ? '🔍' : isStrReplace ? '✂️' : 'T'}
         </Button>
 
-        {!isLookup && (
+        {!isLookup && !isStrReplace && (
           <>
             {/* Поле значения с кнопкой вставки переменной */}
             <div className="flex-1 flex items-center gap-1">
@@ -129,6 +134,25 @@ export function AssignmentRow({
               className="w-20 text-xs h-8 border-blue-400 dark:border-blue-600 bg-blue-50/30 dark:bg-blue-950/20"
             />
             <span className="text-muted-foreground text-xs flex-shrink-0">→</span>
+          </div>
+        )}
+
+        {isStrReplace && (
+          <div className="flex-1 flex items-center gap-1">
+            <Input
+              placeholder="искать"
+              value={assignment.value || ''}
+              onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
+              className="flex-1 text-xs h-8 border-purple-400 dark:border-purple-600 bg-purple-50/30 dark:bg-purple-950/20"
+            />
+            <span className="text-muted-foreground text-[10px]">→</span>
+            <Input
+              placeholder="заменить на"
+              value={assignment.replaceWith || ''}
+              onChange={(e) => onChange(assignment.id, 'replaceWith' as any, e.target.value)}
+              className="flex-1 text-xs h-8 border-purple-400 dark:border-purple-600 bg-purple-50/30 dark:bg-purple-950/20"
+            />
+            <span className="text-muted-foreground text-xs flex-shrink-0">в →</span>
           </div>
         )}
 

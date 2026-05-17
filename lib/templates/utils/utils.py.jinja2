@@ -273,19 +273,19 @@ async def _persist_user_var(user_id: int, key: str, value) -> None:
 
 
 def _eval_expr(template: str, user_vars: dict):
-    """Вычисляет арифметическое выражение с подстановкой переменных из user_vars.
+    """Вычисляет выражение с подстановкой переменных из user_vars.
 
-    Сначала подставляет {переменные} как числа (или 0 если не найдено),
-    затем безопасно вычисляет выражение через ast.parse.
-    Разрешены только числа и арифметические операторы (+, -, *, /, //, %, **).
+    Поддерживает арифметику (+, -, *, /, //, %, **), безопасные функции
+    (round, abs, int, float, min, max) и строковые методы
+    (replace, strip, lower, upper, startswith, endswith, split, join).
     При любой ошибке возвращает исходный шаблон без изменений.
 
     Args:
-        template: Строка-выражение, например "{step} + 1" или "{price} * {qty}"
+        template: Строка-выражение, например "{step} + 1" или "'{text}'.replace('a', 'b')"
         user_vars: Словарь переменных пользователя
 
     Returns:
-        Результат вычисления (число) или исходный шаблон при ошибке
+        Результат вычисления или исходный шаблон при ошибке
     """
     import re as _re_expr, ast as _ast_expr
 
@@ -309,15 +309,23 @@ def _eval_expr(template: str, user_vars: dict):
             _ast_expr.FloorDiv, _ast_expr.Mod, _ast_expr.Pow,
             _ast_expr.USub, _ast_expr.UAdd,
             _ast_expr.Call, _ast_expr.Name, _ast_expr.Load,
+            _ast_expr.Attribute, _ast_expr.Subscript, _ast_expr.Index, _ast_expr.Slice,
+            _ast_expr.IfExp, _ast_expr.Compare,
+            _ast_expr.Gt, _ast_expr.GtE, _ast_expr.Lt, _ast_expr.LtE, _ast_expr.Eq, _ast_expr.NotEq,
         )
-        _safe_funcs = {'round': round, 'abs': abs, 'int': int, 'float': float, 'min': min, 'max': max}
+        _safe_funcs = {'round': round, 'abs': abs, 'int': int, 'float': float, 'min': min, 'max': max, 'str': str}
+        _safe_methods = {'replace', 'strip', 'lstrip', 'rstrip', 'lower', 'upper', 'startswith', 'endswith', 'split', 'join', 'count', 'find'}
         for _node in _ast_expr.walk(tree):
             if not isinstance(_node, _allowed):
                 return template
             if isinstance(_node, _ast_expr.Name) and _node.id not in _safe_funcs:
                 return template
+            if isinstance(_node, _ast_expr.Attribute) and _node.attr not in _safe_methods:
+                return template
             if isinstance(_node, _ast_expr.Call):
-                if not (isinstance(_node.func, _ast_expr.Name) and _node.func.id in _safe_funcs):
+                if isinstance(_node.func, _ast_expr.Name) and _node.func.id not in _safe_funcs:
+                    return template
+                if isinstance(_node.func, _ast_expr.Attribute) and _node.func.attr not in _safe_methods:
                     return template
         return eval(compile(tree, '<expr>', 'eval'), {"__builtins__": {}}, _safe_funcs)
     except Exception:
