@@ -251,3 +251,32 @@ XML-ответ автоматически конвертируется в dict/l
 - Если `responseJsonPath` пустой — извлечение не выполняется (обратная совместимость)
 - Оба поля (`responseJsonPath` и `responseExtractTo`) должны быть заполнены для работы
 - Поддерживает числовые индексы массивов: `items.0.name`
+- Поддерживает фильтрацию массива: `items.?field=value&field2=value2.result`
+
+### Фильтрация массива
+
+Сегмент пути, начинающийся с `?`, ищет в массиве первый элемент, удовлетворяющий условиям:
+
+```
+item.?from=CARDRUB&to=USDTTRC20.in
+```
+
+Разбор:
+1. `item` — получить поле `item` (массив)
+2. `?from=CARDRUB&to=USDTTRC20` — найти элемент где `from == "CARDRUB"` И `to == "USDTTRC20"`
+3. `in` — взять поле `in` из найденного элемента
+
+### Пример — cryptobar.cc (XML → фильтрация)
+
+```json
+{
+  "url": "https://cryptobar.cc/request-exportnewxml.xml?lang=ru",
+  "method": "GET",
+  "responseFormat": "xml",
+  "responseVariable": "r_exch",
+  "responseJsonPath": "item.?from={cb_from}&to={cb_to}.in",
+  "responseExtractTo": "current_rate"
+}
+```
+
+XML парсится в dict, затем фильтрация находит нужную пару по `from`/`to` и извлекает курс из поля `in`.

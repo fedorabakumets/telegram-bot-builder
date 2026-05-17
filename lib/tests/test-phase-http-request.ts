@@ -1473,7 +1473,7 @@ test('O05', 'responseJsonPath → обработка ошибок (try/except)',
   const code = gen(p, 'O05');
   const fnIdx = code.indexOf('_json_path_raw');
   ok(fnIdx !== -1, '_json_path_raw не найден');
-  const extractBlock = code.slice(fnIdx - 200, fnIdx + 1000);
+  const extractBlock = code.slice(fnIdx - 400, fnIdx + 2500);
   ok(extractBlock.includes('try') && extractBlock.includes('except'),
     'try/except не найден вокруг кода извлечения');
 });

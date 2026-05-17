@@ -245,14 +245,28 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
     {% endif %}
 
     {% if responseJsonPath and responseExtractTo %}
-    # Извлечение значения по JSON-пути
+    # Извлечение значения по JSON-пути (поддерживает фильтрацию массива: ?field=value&field2=value2)
     try:
         _json_path_raw = "{{ responseJsonPath }}"
         _json_path_resolved = replace_variables_in_text(_json_path_raw, await init_all_user_vars(user_id), {})
         _extracted = _response_data
         for _path_seg in _json_path_resolved.split('.'):
             if _path_seg and _extracted is not None:
-                if isinstance(_extracted, dict):
+                if _path_seg.startswith('?') and isinstance(_extracted, list):
+                    # Фильтрация массива: ?field=value&field2=value2
+                    _filter_str = _path_seg[1:]
+                    _filter_conds = {}
+                    for _fc in _filter_str.split('&'):
+                        if '=' in _fc:
+                            _fk_f, _fv_f = _fc.split('=', 1)
+                            _filter_conds[_fk_f] = _fv_f
+                    _found_item = None
+                    for _item in _extracted:
+                        if isinstance(_item, dict) and all(str(_item.get(_ck, '')) == _cv for _ck, _cv in _filter_conds.items()):
+                            _found_item = _item
+                            break
+                    _extracted = _found_item
+                elif isinstance(_extracted, dict):
                     _extracted = _extracted.get(_path_seg)
                 elif isinstance(_extracted, list) and _path_seg.isdigit():
                     _extracted = _extracted[int(_path_seg)]
