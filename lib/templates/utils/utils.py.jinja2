@@ -348,6 +348,15 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
     import re as _re
     import json as _json
 
+    # ─── Встроенные переменные (доступны всегда) ────────────────────────────
+    from datetime import datetime as _dt
+    import pytz as _pytz
+    _msk = _pytz.timezone("Europe/Moscow")
+    _now_msk = _dt.now(_msk)
+    variables.setdefault("now", _now_msk.strftime("%d.%m.%Y %H:%M:%S"))
+    variables.setdefault("today", _now_msk.strftime("%d.%m.%Y"))
+    variables.setdefault("time", _now_msk.strftime("%H:%M:%S"))
+
     # ─── Обработка итерации по массиву в тексте ─────────────────────────────
     # Синтаксис в тексте пользователя: {каждый элемент} — см. документацию
     # Внутри блока доступны поля текущего элемента + __index (с 1)
