@@ -34,7 +34,7 @@
 |---|---|---|---|
 | `queryParams` | JSON string | — | Query параметры `[{key, value}]` |
 | `bodyFormat` | json/form-urlencoded/raw | `json` | Формат тела запроса |
-| `responseFormat` | autodetect/json/text/file | `autodetect` | Формат ответа. `file` — сохраняет ответ как base64-объект `{type, data, mimeType, fileName}` |
+| `responseFormat` | autodetect/json/text/file/xml | `autodetect` | Формат ответа. `file` — сохраняет ответ как base64-объект `{type, data, mimeType, fileName}`. `xml` — парсит XML в dict/list |
 | `ignoreHttpErrors` | boolean | `false` | Не падать при 4xx/5xx |
 | `ignoreSsl` | boolean | `false` | Игнорировать SSL сертификат |
 | `followRedirects` | boolean | `true` | Следовать редиректам |
@@ -133,6 +133,45 @@
 }
 ```
 Используй медиа-ноду с `{export_file}` для отправки файла пользователю.
+
+### Получение XML (парсинг в dict)
+
+```json
+{
+  "url": "https://cryptobar.cc/request-exportnewxml.xml?lang=ru",
+  "method": "GET",
+  "responseFormat": "xml",
+  "responseVariable": "xml_rates",
+  "responseJsonPath": "item.0.in",
+  "responseExtractTo": "first_rate"
+}
+```
+
+XML-ответ автоматически конвертируется в dict/list:
+- Повторяющиеся теги (например `<item>`) становятся массивом
+- Одиночные теги разворачиваются в значение
+
+Пример XML:
+```xml
+<rates>
+  <item><from>CARDRUB</from><to>USDTTRC20</to><in>95.15</in></item>
+  <item><from>CARDRUB</from><to>BTC</to><in>7361848.17</in></item>
+</rates>
+```
+
+Результат парсинга:
+```json
+{
+  "item": [
+    {"from": "CARDRUB", "to": "USDTTRC20", "in": "95.15"},
+    {"from": "CARDRUB", "to": "BTC", "in": "7361848.17"}
+  ]
+}
+```
+
+После этого можно использовать `responseJsonPath: "item.0.in"` для извлечения курса.
+
+В режиме `autodetect` XML также распознаётся автоматически по Content-Type или по `<?xml` в начале ответа.
 
 ## Подстановка переменных
 

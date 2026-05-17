@@ -17,6 +17,7 @@
  *  M. Автосохранение скалярных полей ответа (4 теста)
  *  N. Пагинация (9 тестов)
  *  O. Извлечение по JSON-пути (8 тестов)
+ *  P. XML формат ответа (12 тестов)
  */
 
 import fs from 'fs';
@@ -1507,6 +1508,134 @@ test('O08', 'Синтаксис Python OK с responseJsonPath + автопере
   ]);
   const code = gen(p, 'O08');
   syntax(code, 'O08');
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// БЛОК P: XML формат ответа
+// ═══════════════════════════════════════════════════════════════════════════════
+
+console.log('\n── Блок P: XML формат ответа ───────────────────────────────────');
+
+test('P01', 'responseFormat=xml → import xml.etree.ElementTree присутствует', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseFormat: 'xml',
+  })]);
+  const code = gen(p, 'P01');
+  ok(code.includes('import xml.etree.ElementTree as _ET'),
+    'import xml.etree.ElementTree as _ET не найдено для responseFormat=xml');
+});
+
+test('P02', 'responseFormat=xml → _xml_text = await _resp.text() присутствует', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseFormat: 'xml',
+  })]);
+  const code = gen(p, 'P02');
+  ok(code.includes('_xml_text = await _resp.text()'),
+    '_xml_text = await _resp.text() не найдено для responseFormat=xml');
+});
+
+test('P03', 'responseFormat=xml → _ET.fromstring(_xml_text) присутствует', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseFormat: 'xml',
+  })]);
+  const code = gen(p, 'P03');
+  ok(code.includes('_ET.fromstring(_xml_text)'),
+    '_ET.fromstring(_xml_text) не найдено для responseFormat=xml');
+});
+
+test('P04', 'responseFormat=xml → _xml_to_dict функция определена', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseFormat: 'xml',
+  })]);
+  const code = gen(p, 'P04');
+  ok(code.includes('def _xml_to_dict(el)'),
+    'def _xml_to_dict(el) не найдено для responseFormat=xml');
+});
+
+test('P05', 'responseFormat=xml → _response_data = _xml_to_dict(_xml_root) присутствует', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseFormat: 'xml',
+  })]);
+  const code = gen(p, 'P05');
+  ok(code.includes('_response_data = _xml_to_dict(_xml_root)'),
+    '_response_data = _xml_to_dict(_xml_root) не найдено для responseFormat=xml');
+});
+
+test('P06', 'responseFormat=xml → обработка ошибок парсинга XML (logging.warning)', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseFormat: 'xml',
+  })]);
+  const code = gen(p, 'P06');
+  ok(code.includes('ошибка парсинга XML'),
+    'Сообщение об ошибке парсинга XML не найдено');
+});
+
+test('P07', 'responseFormat=xml → НЕТ _resp.json (не пытается парсить как JSON)', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseFormat: 'xml',
+  })]);
+  const code = gen(p, 'P07');
+  const fnIdx = code.indexOf('async def handle_callback_http1(');
+  ok(fnIdx !== -1, 'handle_callback_http1 не найден');
+  const fnBody = code.slice(fnIdx, fnIdx + 4000);
+  ok(!fnBody.includes('_resp.json'), '_resp.json найдено для responseFormat=xml — не должно быть');
+});
+
+test('P08', 'responseFormat=xml + responseJsonPath → извлечение работает', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestUrl: 'https://cryptobar.cc/request-exportnewxml.xml',
+    httpRequestResponseFormat: 'xml',
+    httpRequestResponseJsonPath: 'item.0.in',
+    httpRequestResponseExtractTo: 'rate_value',
+  })]);
+  const code = gen(p, 'P08');
+  ok(code.includes('_json_path_raw'), '_json_path_raw не найдено — извлечение по пути не генерируется для XML');
+  ok(code.includes('set_user_var(user_id, "rate_value"'),
+    'set_user_var для rate_value не найдено');
+});
+
+test('P09', 'Синтаксис Python OK для responseFormat=xml', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestUrl: 'https://cryptobar.cc/request-exportnewxml.xml',
+    httpRequestResponseFormat: 'xml',
+    httpRequestResponseVariable: 'xml_data',
+  })]);
+  const code = gen(p, 'P09');
+  syntax(code, 'P09');
+});
+
+test('P10', 'Синтаксис Python OK для responseFormat=xml + jsonPath + автопереход', () => {
+  const p = makeCleanProject([
+    makeStartNode(),
+    makeHttpRequestNode('http1', {
+      httpRequestUrl: 'https://cryptobar.cc/request-exportnewxml.xml',
+      httpRequestResponseFormat: 'xml',
+      httpRequestResponseJsonPath: 'item.0.in',
+      httpRequestResponseExtractTo: 'rate',
+      autoTransitionTo: 'msg1',
+    }),
+    makeMessageNode('msg1', 'Курс: {rate}'),
+  ]);
+  const code = gen(p, 'P10');
+  syntax(code, 'P10');
+});
+
+test('P11', 'autodetect → XML fallback: _xml_to_dict_auto определена', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseFormat: 'autodetect',
+  })]);
+  const code = gen(p, 'P11');
+  ok(code.includes('def _xml_to_dict_auto(el)'),
+    'def _xml_to_dict_auto(el) не найдено — autodetect не пробует XML');
+});
+
+test('P12', 'autodetect → проверка Content-Type на xml', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestResponseFormat: 'autodetect',
+  })]);
+  const code = gen(p, 'P12');
+  ok(code.includes("'xml' in _ct") || code.includes('"xml" in _ct'),
+    'Проверка Content-Type на xml не найдена в autodetect');
 });
 
 // ─── Итог ────────────────────────────────────────────────────────────────────
