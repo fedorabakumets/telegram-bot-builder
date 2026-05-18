@@ -2743,6 +2743,39 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Эндпоинт получения всех сообщений проекта (для системной таблицы)
+   * @route GET /api/projects/:id/messages/all
+   * @param id - Идентификатор проекта
+   * @query limit - Лимит записей (по умолчанию 200)
+   * @query offset - Смещение (по умолчанию 0)
+   * @returns Массив сообщений [{id, userId, messageType, messageText, chatType, createdAt}]
+   */
+  app.get("/api/projects/:id/messages/all", async (req, res) => {
+    const projectId = parseInt(req.params.id);
+    const tokenId = getRequestTokenId(req);
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 200;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+
+    try {
+      const result = await dbPool.query(
+        `SELECT id, user_id AS "userId", message_type AS "messageType", 
+                COALESCE(SUBSTRING(message_text, 1, 100), '') AS "messageText",
+                chat_type AS "chatType", chat_id AS "chatId",
+                created_at AS "createdAt"
+         FROM bot_messages 
+         WHERE project_id = $1 AND ($2::integer IS NULL OR token_id = $2)
+         ORDER BY created_at DESC 
+         LIMIT $3 OFFSET $4`,
+        [projectId, tokenId, limit, offset]
+      );
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching all messages:", error);
+      res.status(500).json({ message: "Ошибка при получении сообщений" });
+    }
+  });
+
+  /**
    * Эндпоинт активности сообщений с поддержкой гранулярности и разбивки по направлению
    * @route GET /api/projects/:id/messages/activity
    * @param id - Идентификатор проекта

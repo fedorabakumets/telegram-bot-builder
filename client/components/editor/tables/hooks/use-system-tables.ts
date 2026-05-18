@@ -17,6 +17,15 @@ const USERS_COLUMNS: TableColumn[] = [
   { id: 'interaction_count', name: 'interactions' },
 ];
 
+/** Колонки системной таблицы сообщений */
+const MESSAGES_COLUMNS: TableColumn[] = [
+  { id: 'userId', name: 'user_id' },
+  { id: 'messageType', name: 'type' },
+  { id: 'messageText', name: 'text' },
+  { id: 'chatType', name: 'chat_type' },
+  { id: 'createdAt', name: 'time' },
+];
+
 /** Интерфейс ответа API пользователей (пагинированный режим) */
 interface UsersApiResponse {
   /** Массив пользователей */
@@ -33,6 +42,7 @@ interface UsersApiResponse {
  * @returns Массив виртуальных BotTable для отображения в списке таблиц
  */
 export function useSystemTables(projectId: number): BotTable[] {
+  /** Загрузка пользователей */
   const { data: usersData } = useQuery<UsersApiResponse | any[]>({
     queryKey: ['system-tables-users', projectId],
     queryFn: () => apiRequest('GET', `/api/projects/${projectId}/users?limit=200`),
@@ -40,8 +50,17 @@ export function useSystemTables(projectId: number): BotTable[] {
     refetchInterval: 10000,
   });
 
-  /** Преобразуем данные пользователей в формат BotTable */
+  /** Загрузка сообщений */
+  const { data: messagesData } = useQuery<any[]>({
+    queryKey: ['system-tables-messages', projectId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/messages/all?limit=200`),
+    enabled: !!projectId,
+    refetchInterval: 10000,
+  });
+
+  /** Преобразуем данные в формат BotTable */
   const systemTables = useMemo<BotTable[]>(() => {
+    // Пользователи
     const users = Array.isArray(usersData)
       ? usersData
       : (usersData as UsersApiResponse)?.users || [];
@@ -60,6 +79,23 @@ export function useSystemTables(projectId: number): BotTable[] {
       },
     }));
 
+    // Сообщения
+    const messages = Array.isArray(messagesData) ? messagesData : [];
+
+    const messagesRows: TableRow[] = messages.map((m: any, i: number) => ({
+      id: i + 1,
+      rowIndex: i + 1,
+      cells: {
+        userId: String(m.userId || ''),
+        messageType: m.messageType || '',
+        messageText: m.messageText || '',
+        chatType: m.chatType || 'private',
+        createdAt: m.createdAt
+          ? new Date(m.createdAt).toLocaleString('ru')
+          : '',
+      },
+    }));
+
     return [
       {
         id: '_system_users',
@@ -67,8 +103,14 @@ export function useSystemTables(projectId: number): BotTable[] {
         columns: USERS_COLUMNS,
         rows: usersRows,
       },
+      {
+        id: '_system_messages',
+        name: '🔒 Сообщения',
+        columns: MESSAGES_COLUMNS,
+        rows: messagesRows,
+      },
     ];
-  }, [usersData]);
+  }, [usersData, messagesData]);
 
   return systemTables;
 }
