@@ -117,6 +117,7 @@ export function useUpdateRow(projectId: number) {
     }) => api.updateRow(projectId, tableId, rowId, data),
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: tableKeys.rows(projectId, vars.tableId) });
+      qc.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
       toast({ title: "✓ Сохранено", description: "Значение обновлено" });
     },
   });
