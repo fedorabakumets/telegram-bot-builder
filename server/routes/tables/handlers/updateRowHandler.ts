@@ -43,6 +43,14 @@ export async function updateRowHandler(req: Request, res: Response): Promise<voi
         const contentTable = tables.find((t) => t.name === "_content");
         if (contentTable && contentTable.id === tableId) {
           await syncTableToScenario(projectId, tableId, data);
+          // Мгновенное уведомление бота через Redis pub/sub
+          try {
+            const { getRedisPublisher } = await import("../../../redis/redisClient");
+            const pub = getRedisPublisher();
+            if (pub) {
+              await pub.publish(`bot:content_updated:${projectId}`, "reload");
+            }
+          } catch {}
         }
       } catch (err) {
         console.error("[updateRowHandler] Ошибка обратной синхронизации _content:", err);

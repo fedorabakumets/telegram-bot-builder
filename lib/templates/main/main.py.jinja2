@@ -145,9 +145,12 @@ async def main():
         asyncio.create_task(cleanup_user_data())
 
 {%- if projectId %}
-        # Фоновая перезагрузка контента из _content каждые 60 сек
+        # Фоновая перезагрузка контента из _content каждые 60 сек (fallback)
         if db_pool:
             asyncio.create_task(_content_reload_loop(db_pool))
+        # Мгновенное обновление контента через Redis pub/sub
+        if _redis_connected:
+            asyncio.create_task(_content_subscribe_redis())
 {%- endif %}
 
         # Выбор режима запуска: webhook или polling
