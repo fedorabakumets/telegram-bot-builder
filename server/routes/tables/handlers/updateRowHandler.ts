@@ -34,7 +34,7 @@ export async function updateRowHandler(req: Request, res: Response): Promise<voi
 
     res.json(row);
 
-    // Обратная синхронизация: если это таблица _content — обновить JSON сценария
+    // Обратная синхронизация и уведомление бота
     const projectId = parseInt(req.params.id, 10);
     const tableId = parseInt(req.params.tableId, 10);
     if (!isNaN(projectId) && !isNaN(tableId)) {
@@ -43,18 +43,19 @@ export async function updateRowHandler(req: Request, res: Response): Promise<voi
         const contentTable = tables.find((t) => t.name === "_content");
         if (contentTable && contentTable.id === tableId) {
           await syncTableToScenario(projectId, tableId, data);
-          // Мгновенное уведомление бота через Redis pub/sub
-          try {
-            const { getRedisPublisher } = await import("../../../redis/redisClient");
-            const pub = getRedisPublisher();
-            if (pub) {
-              await pub.publish(`bot:content_updated:${projectId}`, "reload");
-            }
-          } catch {}
         }
       } catch (err) {
         console.error("[updateRowHandler] Ошибка обратной синхронизации _content:", err);
       }
+
+      // Мгновенное уведомление бота через Redis pub/sub (для любой таблицы проекта)
+      try {
+        const { getRedisPublisher } = await import("../../../redis/redisClient");
+        const pub = getRedisPublisher();
+        if (pub) {
+          await pub.publish(`bot:table_updated:${projectId}`, JSON.stringify({ tableId }));
+        }
+      } catch {}
     }
   } catch (error) {
     console.error("[updateRowHandler] Ошибка:", error);

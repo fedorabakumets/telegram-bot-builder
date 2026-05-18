@@ -93,11 +93,11 @@ async def _content_subscribe_redis():
             return
         sub_client = aioredis.from_url(redis_url)
         pubsub = sub_client.pubsub()
-        await pubsub.subscribe(f"bot:content_updated:{PROJECT_ID}")
-        logging.info(f"📋 [content] Подписка на Redis канал bot:content_updated:{PROJECT_ID}")
+        await pubsub.subscribe(f"bot:table_updated:{PROJECT_ID}")
+        logging.info(f"📋 [content] Подписка на Redis канал bot:table_updated:{PROJECT_ID}")
         async for message in pubsub.listen():
             if message["type"] == "message":
-                logging.info(f"📋 [content] Redis: получено уведомление об обновлении контента")
+                logging.info(f"📋 [content] Redis: таблица обновлена — перезагружаем контент")
                 await reload_content(db_pool)
     except Exception as e:
         logging.warning(f"📋 [content] Ошибка подписки Redis: {e}")
