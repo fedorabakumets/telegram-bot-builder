@@ -120,8 +120,34 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                         _match = True
 {% for cond in where %}
                         _cond_val_{{ loop.index }} = replace_variables_in_text({{ cond.value | tojson }}, _vars)
+{% if cond.operator == 'not_equals' %}
+                        if str(_named.get("{{ cond.column }}", "")) == str(_cond_val_{{ loop.index }}):
+                            _match = False
+{% elif cond.operator == 'greater_than' %}
+                        try:
+                            if not (float(_named.get("{{ cond.column }}", "0") or "0") > float(_cond_val_{{ loop.index }} or "0")):
+                                _match = False
+                        except (ValueError, TypeError):
+                            _match = False
+{% elif cond.operator == 'less_than' %}
+                        try:
+                            if not (float(_named.get("{{ cond.column }}", "0") or "0") < float(_cond_val_{{ loop.index }} or "0")):
+                                _match = False
+                        except (ValueError, TypeError):
+                            _match = False
+{% elif cond.operator == 'contains' %}
+                        if str(_cond_val_{{ loop.index }}) not in str(_named.get("{{ cond.column }}", "")):
+                            _match = False
+{% elif cond.operator == 'is_empty' %}
+                        if str(_named.get("{{ cond.column }}", "")).strip():
+                            _match = False
+{% elif cond.operator == 'is_not_empty' %}
+                        if not str(_named.get("{{ cond.column }}", "")).strip():
+                            _match = False
+{% else %}
                         if str(_named.get("{{ cond.column }}", "")) != str(_cond_val_{{ loop.index }}):
                             _match = False
+{% endif %}
 {% endfor %}
                         if _match:
                             # Атомарное обновление через SQL
@@ -155,7 +181,6 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                             )
 {% endif %}
 {% endfor %}
-                            break
                     # Инвалидация кеша
                     global _bot_tables_cache
                     _bot_tables_cache = None
@@ -286,12 +311,37 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                         _match = True
 {% for cond in where %}
                         _cond_val_{{ loop.index }} = replace_variables_in_text({{ cond.value | tojson }}, _vars)
+{% if cond.operator == 'not_equals' %}
+                        if str(_named.get("{{ cond.column }}", "")) == str(_cond_val_{{ loop.index }}):
+                            _match = False
+{% elif cond.operator == 'greater_than' %}
+                        try:
+                            if not (float(_named.get("{{ cond.column }}", "0") or "0") > float(_cond_val_{{ loop.index }} or "0")):
+                                _match = False
+                        except (ValueError, TypeError):
+                            _match = False
+{% elif cond.operator == 'less_than' %}
+                        try:
+                            if not (float(_named.get("{{ cond.column }}", "0") or "0") < float(_cond_val_{{ loop.index }} or "0")):
+                                _match = False
+                        except (ValueError, TypeError):
+                            _match = False
+{% elif cond.operator == 'contains' %}
+                        if str(_cond_val_{{ loop.index }}) not in str(_named.get("{{ cond.column }}", "")):
+                            _match = False
+{% elif cond.operator == 'is_empty' %}
+                        if str(_named.get("{{ cond.column }}", "")).strip():
+                            _match = False
+{% elif cond.operator == 'is_not_empty' %}
+                        if not str(_named.get("{{ cond.column }}", "")).strip():
+                            _match = False
+{% else %}
                         if str(_named.get("{{ cond.column }}", "")) != str(_cond_val_{{ loop.index }}):
                             _match = False
+{% endif %}
 {% endfor %}
                         if _match:
                             await conn.execute("DELETE FROM bot_table_rows WHERE id = $1", _row["id"])
-                            break
                     # Инвалидация кеша
                     global _bot_tables_cache
                     _bot_tables_cache = None

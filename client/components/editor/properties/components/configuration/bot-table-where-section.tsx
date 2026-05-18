@@ -6,11 +6,14 @@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 /** Условие WHERE */
 interface WhereCondition {
   /** Имя колонки */
   column: string;
+  /** Оператор сравнения */
+  operator: string;
   /** Значение для сравнения */
   value: string;
 }
@@ -23,6 +26,17 @@ interface BotTableWhereSectionProps {
   onChange: (where: WhereCondition[]) => void;
 }
 
+/** Метки операторов сравнения */
+const OPERATOR_LABELS: Record<string, string> = {
+  equals: '=',
+  not_equals: '≠',
+  greater_than: '>',
+  less_than: '<',
+  contains: '∋',
+  is_empty: 'пусто',
+  is_not_empty: 'не пусто',
+};
+
 /**
  * Секция условий WHERE для фильтрации строк таблицы
  * @param props - Пропсы компонента
@@ -31,7 +45,7 @@ interface BotTableWhereSectionProps {
 export function BotTableWhereSection({ where, onChange }: BotTableWhereSectionProps) {
   /** Добавить новое условие */
   const handleAdd = () => {
-    onChange([...where, { column: '', value: '' }]);
+    onChange([...where, { column: '', operator: 'equals', value: '' }]);
   };
 
   /** Обновить условие по индексу */
@@ -52,14 +66,26 @@ export function BotTableWhereSection({ where, onChange }: BotTableWhereSectionPr
         Условие (WHERE)
       </Label>
       {where.map((cond, i) => (
-        <div key={i} className="flex items-center gap-1.5">
+        <div key={i} className="flex items-center gap-1">
           <Input
             value={cond.column}
             onChange={(e) => handleUpdate(i, 'column', e.target.value)}
             placeholder="колонка"
             className="text-xs h-7 flex-1 bg-white/60 dark:bg-slate-950/60"
           />
-          <span className="text-xs text-muted-foreground">=</span>
+          <Select
+            value={cond.operator || 'equals'}
+            onValueChange={(val) => handleUpdate(i, 'operator', val)}
+          >
+            <SelectTrigger className="text-xs h-7 w-[72px] bg-white/60 dark:bg-slate-950/60">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(OPERATOR_LABELS).map(([val, label]) => (
+                <SelectItem key={val} value={val}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Input
             value={cond.value}
             onChange={(e) => handleUpdate(i, 'value', e.target.value)}
