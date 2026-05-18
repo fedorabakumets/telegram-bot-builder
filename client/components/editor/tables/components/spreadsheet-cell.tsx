@@ -1,5 +1,5 @@
 /**
- * @fileoverview Ячейка spreadsheet с клавиатурной навигацией (Tab/Enter/Escape/стрелки)
+ * @fileoverview Ячейка spreadsheet с клавиатурной навигацией (Tab/Escape/стрелки)
  * @module editor/tables/components/spreadsheet-cell
  */
 
@@ -28,7 +28,7 @@ interface SpreadsheetCellProps {
 }
 
 /**
- * Ячейка с inline-редактированием и клавиатурной навигацией
+ * Ячейка с inline-редактированием через textarea и клавиатурной навигацией
  * @param props - Пропсы компонента
  * @returns JSX элемент ячейки
  */
@@ -43,8 +43,8 @@ export function SpreadsheetCell({
 }: SpreadsheetCellProps) {
   /** Локальное значение при редактировании */
   const [localValue, setLocalValue] = useState(value);
-  /** Ссылка на input */
-  const inputRef = useRef<HTMLInputElement>(null);
+  /** Ссылка на textarea */
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /** Синхронизация при смене внешнего value */
   useEffect(() => {
@@ -53,9 +53,9 @@ export function SpreadsheetCell({
 
   /** Автофокус при активации ячейки */
   useEffect(() => {
-    if (isFocused && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+    if (isFocused && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.select();
     }
   }, [isFocused]);
 
@@ -67,40 +67,14 @@ export function SpreadsheetCell({
   };
 
   /** Обработчик клавиш навигации */
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Tab') {
       e.preventDefault();
       commit();
       onNavigate(e.shiftKey ? 'left' : 'right');
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      commit();
-      onNavigate(e.shiftKey ? 'up' : 'down');
     } else if (e.key === 'Escape') {
       setLocalValue(value);
       onBlurCell();
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      commit();
-      onNavigate('up');
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      commit();
-      onNavigate('down');
-    } else if (e.key === 'ArrowLeft') {
-      const input = inputRef.current;
-      if (input && input.selectionStart === 0 && input.selectionEnd === 0) {
-        e.preventDefault();
-        commit();
-        onNavigate('left');
-      }
-    } else if (e.key === 'ArrowRight') {
-      const input = inputRef.current;
-      if (input && input.selectionStart === localValue.length) {
-        e.preventDefault();
-        commit();
-        onNavigate('right');
-      }
     }
   };
 
@@ -111,14 +85,15 @@ export function SpreadsheetCell({
 
   if (isFocused) {
     return (
-      <input
-        ref={inputRef}
+      <textarea
+        ref={textareaRef}
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
+        rows={Math.max(3, localValue.split('\n').length)}
         className={cn(
-          'w-full h-full px-2 py-1 text-xs bg-background border-primary border outline-none',
+          'w-full px-2 py-1 text-xs bg-background border-primary border outline-none resize-y min-h-[60px]',
           className,
         )}
       />
