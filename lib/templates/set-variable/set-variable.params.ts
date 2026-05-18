@@ -11,8 +11,10 @@ export interface SetVariableAssignment {
   variable: string;
   /** Значение или шаблон с {переменными} */
   value: string;
-  /** Режим: "text" — шаблон, "expression" — арифметическое выражение */
-  mode: 'text' | 'expression';
+  /** Режим: "text" — шаблон, "expression" — арифметическое выражение, "random" — случайное число, "timestamp" — временная метка */
+  mode: 'text' | 'expression' | 'random' | 'timestamp';
+  /** Максимальное значение для mode=random */
+  maxValue?: string;
 }
 
 /** Параметры для генерации кода узла set_variable */

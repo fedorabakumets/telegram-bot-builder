@@ -142,6 +142,19 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
             _sv_result_{{ loop.index }} += _sv_line_{{ loop.index }}
         user_data[user_id]["{{ safe_var }}"] = _sv_result_{{ loop.index }}
         logging.info(f"📝 set_variable [{{ nodeId }}]: json_format «{{ safe_var }}» ({len(_sv_arr_{{ loop.index }})} элементов)")
+        {%- elif assignment.mode == 'random' %}
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_min_{{ loop.index }} = int(float(replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})))
+        _sv_max_{{ loop.index }} = int(float(replace_variables_in_text({{ assignment.maxValue | tojson }}, _sv_vars_{{ loop.index }})))
+        import random as _random_mod
+        user_data[user_id]["{{ safe_var }}"] = str(_random_mod.randint(_sv_min_{{ loop.index }}, _sv_max_{{ loop.index }}))
+        logging.info(f"📝 set_variable [{{ nodeId }}]: random «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']} (диапазон {_sv_min_{{ loop.index }}}-{_sv_max_{{ loop.index }}})")
+        {%- elif assignment.mode == 'timestamp' %}
+        import time as _time_mod_sv
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_offset_{{ loop.index }} = int(float(replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }}))) if {{ assignment.value | tojson }}.strip() else 0
+        user_data[user_id]["{{ safe_var }}"] = str(int(_time_mod_sv.time()) + _sv_offset_{{ loop.index }})
+        logging.info(f"📝 set_variable [{{ nodeId }}]: timestamp «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']} (offset={_sv_offset_{{ loop.index }}}s)")
         {%- else %}
         # Устанавливаем переменную через шаблон
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
