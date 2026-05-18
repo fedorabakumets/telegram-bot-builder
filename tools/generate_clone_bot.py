@@ -349,7 +349,7 @@ def build_start_menu() -> dict:
         "variable": "user.clan_id",
         "branches": [
             branch("br-no-clan", "Нет клана", "is_empty", "", "msg-no-clan"),
-            branch("br-has-clan", "Есть клан", "else", "", "tbl-read-clan"),
+            branch("br-has-clan", "Есть клан", "else", "", "msg-clan-info"),
         ],
     }))
     nodes.append(node("msg-no-clan", "message", 1000, 1200, {
@@ -359,15 +359,6 @@ def build_start_menu() -> dict:
         ),
         "keyboardType": "none",
         "buttons": [],
-    }))
-    nodes.append(node("tbl-read-clan", "bot_table", 1000, 1050, {
-        "tableName": "clans",
-        "operation": "read",
-        "where": [{"column": "id", "operator": "equals", "value": "{user.clan_id}"}],
-        "saveResultTo": "clan",
-        "resultFormat": "first_row",
-        "autoTransitionTo": "msg-clan-info",
-        "enableAutoTransition": True,
     }))
     nodes.append(node("msg-clan-info", "message", 1300, 1050, {
         "messageText": (
@@ -682,8 +673,8 @@ def build_earning() -> dict:
         "operation": "update",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "updates": [
-            {"column": "balance", "op": "increment", "value": "{salary}"},
-            {"column": "exp", "op": "increment", "value": "{exp_gained}"},
+            {"column": "balance", "op": "increment", "value": "700"},
+            {"column": "exp", "op": "increment", "value": "12"},
         ],
         "autoTransitionTo": "tbl-read-user-after-work",
         "enableAutoTransition": True,
