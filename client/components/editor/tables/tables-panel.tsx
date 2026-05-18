@@ -6,6 +6,8 @@
 import { Table2, RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
+import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
+import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { TableList } from './components/table-list';
 import { TableEditor } from './components/table-editor';
 import { TableSwitcher } from './components/table-switcher';
@@ -20,6 +22,8 @@ import type { TablesPanelProps } from './types';
  */
 export function TablesPanel({ projectId, allProjects, onProjectChange, selectedTokenId, onSelectToken }: TablesPanelProps) {
   const queryClient = useQueryClient();
+  const projectTokensInfo = useProjectTokens([projectId]);
+  const tokens = projectTokensInfo[0]?.tokens ?? [];
   const {
     tables,
     selectedTable,
@@ -62,6 +66,13 @@ export function TablesPanel({ projectId, allProjects, onProjectChange, selectedT
               projects={allProjects}
               selectedProjectId={projectId}
               onSelect={onProjectChange}
+            />
+          )}
+          {tokens.length > 0 && onSelectToken && (
+            <BotTokenSelector
+              tokens={tokens}
+              selectedTokenId={selectedTokenId ?? null}
+              onSelect={(id) => onSelectToken(id)}
             />
           )}
         </div>
