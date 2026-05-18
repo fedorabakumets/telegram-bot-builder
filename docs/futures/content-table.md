@@ -38,6 +38,9 @@
 | `buttons[].webAppUrl` | url | `{node_id}.btn.{btn_id}.webapp` |
 | `imageUrl` / `videoUrl` / `audioUrl` / `documentUrl` | media_url | `{node_id}.media` |
 | `httpRequestUrl` | api_url | `{node_id}.api` |
+| `httpRequestBody` | http_body | `{node_id}.body` |
+| `httpRequestHeaders` | http_headers | `{node_id}.headers` |
+| `psql_query.query` | sql | `{node_id}.sql` |
 | `command_trigger.description` | command | `{node_id}.desc` |
 | `inputPrompt` (collectUserInput) | prompt | `{node_id}.prompt` |
 
@@ -51,6 +54,9 @@
 | msg-welcome.btn.btn2.url | url | 🏠 Старт | 🔗 Сайт | https://example.com |
 | photo-1.media | media_url | 🏠 Старт | 🖼 Фото приветствия | https://example.com/welcome.jpg |
 | http-api.api | api_url | ⚙️ API | 🌐 Получение данных | https://api.example.com/users |
+| http-api.body | http_body | ⚙️ API | 📦 Тело запроса | {"user_id": "{user_id}"} |
+| http-api.headers | http_headers | ⚙️ API | 📋 Заголовки | {"Authorization": "Bearer {token}"} |
+| db-query.sql | sql | ⚙️ API | 🗄 SQL запрос | SELECT balance FROM profiles WHERE telegram_id = {user_id} |
 | cmd-start.desc | command | 🏠 Старт | 📋 /start | Запустить бота |
 | msg-ask-age.prompt | prompt | 🏠 Старт | ❓ Ввод возраста | Введите ваш возраст: |
 
@@ -72,6 +78,9 @@
    - `node_id.btn.btn_id.url` → обновляет `buttons[].url`
    - `node_id.media` → обновляет `imageUrl`/`videoUrl`/etc
    - `node_id.api` → обновляет `httpRequestUrl`
+   - `node_id.body` → обновляет `httpRequestBody`
+   - `node_id.headers` → обновляет `httpRequestHeaders`
+   - `node_id.sql` → обновляет `psql_query.query`
    - `node_id.desc` → обновляет `command_trigger.description`
    - `node_id.prompt` → обновляет `inputPrompt`
 2. Сохраняет проект
@@ -194,9 +203,8 @@ Fallback гарантирует что бот работает даже если
 ## Ограничения
 
 - Максимум 1000 записей на проект
-- Ключ содержит node_id — при дублировании ноды создаётся новая запись
-- SQL-запросы (`psql_query.query`) не синхронизируются (слишком сложная структура)
-- Тела HTTP-запросов (`httpRequestBody`) не синхронизируются (JSON внутри JSON)
+- Ключ содержит node_id — при дублировании ноды создаётся новая запись при следующем сохранении
+- Валидация при сохранении: JSON-поля (http_body, http_headers) проверяются на корректность синтаксиса
 
 ## Совместимость
 
