@@ -95,9 +95,10 @@ export function TableList({ tables, selectedTableId, onSelect, onCreate, onDelet
           </>
         )}
 
-        {/* Обычные таблицы проекта */}
+        {/* Обычные таблицы проекта (_content первой) */}
         {tables
           .filter((t) => !t.id.startsWith('_system_'))
+          .sort((a, b) => (a.name === '_content' ? -1 : b.name === '_content' ? 1 : 0))
           .map((table) => (
             <div
               key={table.id}
@@ -109,19 +110,27 @@ export function TableList({ tables, selectedTableId, onSelect, onCreate, onDelet
               )}
               onClick={() => onSelect(table.id)}
             >
-              <Table2 className="h-3.5 w-3.5 flex-shrink-0" />
-              <span className="truncate flex-1">{table.name}</span>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(table.id);
-                }}
-              >
-                <Trash2 className="h-3 w-3 text-destructive" />
-              </Button>
+              {table.name === '_content' ? (
+                <span className="text-sm flex-shrink-0">✏️</span>
+              ) : (
+                <Table2 className="h-3.5 w-3.5 flex-shrink-0" />
+              )}
+              <span className="truncate flex-1">
+                {table.name === '_content' ? 'Контент (авто)' : table.name}
+              </span>
+              {table.name !== '_content' && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(table.id);
+                  }}
+                >
+                  <Trash2 className="h-3 w-3 text-destructive" />
+                </Button>
+              )}
             </div>
           ))}
 

@@ -98,11 +98,13 @@ export function useTablesState(projectId: number, selectedTokenId?: number | nul
     await createRowsMut.mutateAsync({ tableId: created.id, rows: emptyRows });
   }, [createTableMut, createRowsMut]);
 
-  /** Удалить таблицу */
+  /** Удалить таблицу (кроме _content) */
   const deleteTable = useCallback((tableId: string) => {
+    const table = serverTables.find((t) => String(t.id) === tableId);
+    if (table?.name === '_content') return;
     deleteTableMut.mutate(Number(tableId));
     if (selectedTableId === tableId) setSelectedTableId(null);
-  }, [deleteTableMut, selectedTableId]);
+  }, [deleteTableMut, selectedTableId, serverTables]);
 
   /** Добавить именованную колонку */
   const addColumn = useCallback((tableId: string, name: string) => {

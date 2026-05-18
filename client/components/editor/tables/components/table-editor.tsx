@@ -3,7 +3,7 @@
  * @module editor/tables/components/table-editor
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Plus, Trash2, Lock, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import type { NavigateDirection } from './spreadsheet-cell';
 import { ColumnHeader } from './column-header';
 import { SpreadsheetToolbar } from './spreadsheet-toolbar';
 import { AddRowsFooter } from './add-rows-footer';
+import { ContentTableFilters } from './content-table-filters';
 import { parseClipboardTsv } from '../utils/parse-clipboard';
 import { tableToCsv } from '../utils/export-csv';
 import { downloadFile } from '../utils/download-file';
@@ -23,6 +24,8 @@ interface TableEditorProps {
   table: BotTable;
   /** Режим только чтение (для системных таблиц) */
   readOnly?: boolean;
+  /** Таблица контента (_content) — особый режим */
+  isContentTable?: boolean;
   /** Информация о контексте системной таблицы (токен/проект) */
   systemInfo?: string;
   /** Добавить именованную колонку */
@@ -63,6 +66,7 @@ interface FocusedCell {
 export function TableEditor({
   table,
   readOnly,
+  isContentTable,
   systemInfo,
   onAddColumn,
   onAddAlphabetColumns,
@@ -81,6 +85,22 @@ export function TableEditor({
   const [newColName, setNewColName] = useState('');
   /** Координаты ячейки в фокусе */
   const [focusedCell, setFocusedCell] = useState<FocusedCell | null>(null);
+  /** Фильтр по type (для _content) */
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  /** Фильтр по sheet (для _content) */
+  const [selectedSheet, setSelectedSheet] = useState<string | null>(null);
+
+  /** Отфильтрованные строки для _content */
+  const filteredRows = useMemo(() => {
+    if (!isContentTable) return table.rows;
+    const typeColId = table.columns.find((c) => c.name === 'type')?.id;
+    const sheetColId = table.columns.find((c) => c.name === 'sheet')?.id;
+    return table.rows.filter((row) => {
+      if (selectedType && typeColId && row.cells[typeColId] !== selectedType) return false;
+      if (selectedSheet && sheetColId && row.cells[sheetColId] !== selectedSheet) return false;
+      return true;
+    });
+  }, [isContentTable, table.rows, table.columns, selectedType, selectedSheet]);
 
   /** Подтверждение добавления колонки */
   const handleAddCol = () => {
@@ -96,7 +116,7 @@ export function TableEditor({
     (direction: NavigateDirection) => {
       setFocusedCell((prev) => {
         if (!prev) return null;
-        const maxRow = table.rows.length - 1;
+        const maxRow = filteredRows.length - 1;
         const maxCol = table.columns.length - 1;
         let { rowIndex, colIndex } = prev;
 
@@ -127,7 +147,7 @@ export function TableEditor({
         return { rowIndex, colIndex };
       });
     },
-    [table.rows.length, table.columns.length],
+    [filteredRows.length, table.columns.length],
   );
 
   /** Обработчик вставки из буфера (Ctrl+V) */
@@ -193,8 +213,30 @@ export function TableEditor({
         </div>
       )}
 
-      {/* Тулбар (скрыт в режиме только чтение) */}
-      {!readOnly && (
+      {/* Бейдж контент-таблицы */}
+      {isContentTable && (
+        <div className="px-4 py-2 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-200/40 dark:border-amber-800/30 flex items-center gap-2">
+          <span className="text-sm">✏️</span>
+          <span className="text-xs text-amber-700 dark:text-amber-400">
+            Таблица контента — key и type только для чтения, редактируйте value
+          </span>
+        </div>
+      )}
+
+      {/* Фильтры для _content */}
+      {isContentTable && (
+        <ContentTableFilters
+          rows={table.rows}
+          columns={table.columns}
+          selectedType={selectedType}
+          selectedSheet={selectedSheet}
+          onTypeChange={setSelectedType}
+          onSheetChange={setSelectedSheet}
+        />
+      )}
+
+      {/* Тулбар (скрыт в режиме только чтение и для _content) */}
+      {!readOnly && !isContentTable && (
         <SpreadsheetToolbar
           table={table}
           onAddAlphabet={onAddAlphabetColumns}
@@ -230,7 +272,7 @@ export function TableEditor({
                   )}
                 </th>
               ))}
-              {!readOnly && (
+              {!readOnly && !isContentTable && (
                 <th className="w-28 h-8 px-1 bg-muted/40 border-r border-border">
                   {addingCol ? (
                     <div className="flex items-center gap-1">
@@ -263,32 +305,47 @@ export function TableEditor({
           </thead>
 
           <tbody>
-            {table.rows.map((row, rowIdx) => (
+            {filteredRows.map((row, rowIdx) => (
               <tr key={row.id} className="group border-b border-border/50 hover:bg-muted/20">
                 <td className="h-8 px-2 text-muted-foreground bg-muted/30 border-r border-border select-none">
                   {row.rowIndex}
                 </td>
-                {table.columns.map((col, colIdx) => (
-                  <td key={col.id} className="h-8 border-r border-border/50 p-0">
-                    {readOnly ? (
-                      <span className="block px-2 py-1 text-xs truncate">
-                        {row.cells[col.id] ?? ''}
-                      </span>
-                    ) : (
-                      <SpreadsheetCell
-                        value={row.cells[col.id] ?? ''}
-                        onChange={(val) => onUpdateCell(row.id, col.id, val)}
-                        isFocused={
-                          focusedCell?.rowIndex === rowIdx && focusedCell?.colIndex === colIdx
-                        }
-                        onNavigate={navigate}
-                        onFocus={() => setFocusedCell({ rowIndex: rowIdx, colIndex: colIdx })}
-                        onBlurCell={() => setFocusedCell(null)}
-                      />
-                    )}
+                {table.columns.map((col, colIdx) => {
+                  const isReadOnlyCol = isContentTable && (col.name === 'key' || col.name === 'type');
+                  return (
+                    <td key={col.id} className="h-8 border-r border-border/50 p-0">
+                      {readOnly || isReadOnlyCol ? (
+                        <span className="block px-2 py-1 text-xs truncate text-muted-foreground">
+                          {row.cells[col.id] ?? ''}
+                        </span>
+                      ) : (
+                        <SpreadsheetCell
+                          value={row.cells[col.id] ?? ''}
+                          onChange={(val) => onUpdateCell(row.id, col.id, val)}
+                          isFocused={
+                            focusedCell?.rowIndex === rowIdx && focusedCell?.colIndex === colIdx
+                          }
+                          onNavigate={navigate}
+                          onFocus={() => setFocusedCell({ rowIndex: rowIdx, colIndex: colIdx })}
+                          onBlurCell={() => setFocusedCell(null)}
+                        />
+                      )}
+                    </td>
+                  );
+                })}
+                {!readOnly && !isContentTable && (
+                  <td className="h-8 w-8 p-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => onDeleteRow(row.id)}
+                    >
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
                   </td>
-                ))}
-                {!readOnly && (
+                )}
+                {isContentTable && (
                   <td className="h-8 w-8 p-0">
                     <Button
                       size="icon"

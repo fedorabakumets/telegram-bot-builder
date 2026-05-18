@@ -104,6 +104,7 @@ export function TablesPanel({ projectId, allProjects, onProjectChange, selectedT
           <TableEditor
             table={selectedTable}
             readOnly={selectedTable.id.startsWith('_system_')}
+            isContentTable={selectedTable.name === '_content'}
             systemInfo={selectedTable.id.startsWith('_system_')
               ? `Данные токена #${selectedTokenId ?? 'все'} • проект #${projectId}`
               : undefined
