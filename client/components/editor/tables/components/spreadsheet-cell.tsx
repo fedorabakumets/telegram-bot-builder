@@ -45,6 +45,8 @@ export function SpreadsheetCell({
   const [localValue, setLocalValue] = useState(value);
   /** Ссылка на textarea */
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  /** Индикатор сохранения */
+  const [saved, setSaved] = useState(false);
 
   /** Синхронизация при смене внешнего value */
   useEffect(() => {
@@ -63,6 +65,8 @@ export function SpreadsheetCell({
   const commit = () => {
     if (localValue !== value) {
       onChange(localValue);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
     }
   };
 
@@ -103,12 +107,17 @@ export function SpreadsheetCell({
   return (
     <div
       className={cn(
-        'w-full h-full px-2 py-1 text-xs cursor-text truncate leading-[22px]',
+        'w-full h-full px-2 py-1 text-xs cursor-text truncate leading-[22px] relative',
         className,
       )}
       onClick={() => { setLocalValue(value); onFocus(); }}
     >
       {value || '\u00A0'}
+      {saved && (
+        <span className="absolute right-1 top-1 text-[9px] text-green-500 font-medium animate-pulse">
+          ✓
+        </span>
+      )}
     </div>
   );
 }
