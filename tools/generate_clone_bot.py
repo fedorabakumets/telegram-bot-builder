@@ -837,11 +837,11 @@ def build_earning() -> dict:
         },
     }))
 
-    # === Правильная кнопка: рандом зарплаты и exp ===
+    # === Правильная кнопка: начисление награды ===
     nodes.append(node("set-work-reward", "set_variable", 1500, -100, {
         "assignments": [
-            {"id": "a-salary", "variable": "salary", "value": "500", "maxValue": "900", "mode": "random"},
-            {"id": "a-exp", "variable": "exp_gained", "value": "8", "maxValue": "16", "mode": "random"},
+            {"id": "a-salary", "variable": "salary", "value": "700", "mode": "text"},
+            {"id": "a-exp", "variable": "exp_gained", "value": "12", "mode": "text"},
         ],
         "autoTransitionTo": "tbl-work-update",
         "enableAutoTransition": True,
@@ -963,8 +963,8 @@ def build_earning() -> dict:
     nodes.append(node("msg-work-success", "message", 2800, 0, {
         "messageText": (
             "🤩 {user.nickname}, смена завершена!\n\n"
-            "💲 Зарплата: {salary}$\n"
-            "⭐ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +{exp_gained} exp\n\n"
+            "💲 Зарплата: 700$\n"
+            "⭐ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +12 exp\n\n"
             "😨 Следующая смена через: 01:30"
         ),
         "keyboardType": "none",
