@@ -748,10 +748,12 @@ def build_earning() -> dict:
     # Цепочка: trig-work → tbl-read-cd-work → cond-work-cd
     #   ├─ кулдаун активен → msg-work-cd
     #   └─ можно работать → tbl-read-user-work → msg-work-game (сетка 4x4)
-    #        ├─ правильная → tbl-work-update → tbl-work-set-cd → tbl-read-user-lvl → cond-level-up
-    #        │    ├─ level up → tbl-level-up → msg-level-up → msg-work-success
-    #        │    └─ нет → msg-work-success
-    #        └─ неправильная → tbl-work-set-cd-fail → msg-work-fail
+    #        ├─ правильная → set-work-reward (random) → tbl-work-update ({salary},{exp_gained})
+    #        │    → set-work-cd (timestamp 90) → tbl-work-save-cd (upsert)
+    #        │    → tbl-read-user-lvl → cond-level-up
+    #        │        ├─ level up → tbl-level-up → msg-level-up → msg-work-success
+    #        │        └─ нет → msg-work-success
+    #        └─ неправильная → set-work-cd-fail (timestamp 90) → tbl-work-save-cd-fail → msg-work-fail
 
     nodes.append(node("trig-work", "text_trigger", 100, 0, {
         "textMatchType": "exact",
@@ -814,9 +816,9 @@ def build_earning() -> dict:
         work_btn_ids.append(bid)
         # Кнопка с индексом 4 (🔧) — правильная
         if i == 4:
-            work_buttons.append(btn(bid, emoji, target="tbl-work-update"))
+            work_buttons.append(btn(bid, emoji, target="set-work-reward"))
         else:
-            work_buttons.append(btn(bid, emoji, target="tbl-work-set-cd-fail"))
+            work_buttons.append(btn(bid, emoji, target="set-work-cd-fail"))
 
     nodes.append(node("msg-work-game", "message", 1300, 0, {
         "messageText": "🏖 {user.nickname}, рабочая смена началась!\n\n❔ Нажмите на смайлик «🔧»:",
@@ -834,28 +836,47 @@ def build_earning() -> dict:
         },
     }))
 
-    # === Правильная кнопка: начисление награды ===
+    # === Правильная кнопка: рандом зарплаты и exp ===
+    nodes.append(node("set-work-reward", "set_variable", 1500, -100, {
+        "assignments": [
+            {"id": "a-salary", "variable": "salary", "value": "500", "maxValue": "900", "mode": "random"},
+            {"id": "a-exp", "variable": "exp_gained", "value": "8", "maxValue": "16", "mode": "random"},
+        ],
+        "autoTransitionTo": "tbl-work-update",
+        "enableAutoTransition": True,
+    }))
+
+    # Начисление награды (increment с переменными — движок поддерживает int(float()))
     nodes.append(node("tbl-work-update", "bot_table", 1600, 0, {
         "tableName": "users",
         "operation": "update",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "updates": [
-            {"column": "balance", "op": "increment", "value": "700"},
-            {"column": "exp", "op": "increment", "value": "12"},
+            {"column": "balance", "op": "increment", "value": "{salary}"},
+            {"column": "exp", "op": "increment", "value": "{exp_gained}"},
         ],
-        "autoTransitionTo": "tbl-work-set-cd",
+        "autoTransitionTo": "set-work-cd",
         "enableAutoTransition": True,
     }))
 
-    # Устанавливаем кулдаун после успешной работы (90 минут)
-    nodes.append(node("tbl-work-set-cd", "bot_table", 1900, 0, {
+    # Кулдаун через timestamp (текущее время + 90 секунд)
+    nodes.append(node("set-work-cd", "set_variable", 1800, 0, {
+        "assignments": [
+            {"id": "a-cd", "variable": "work_cooldown_until", "value": "90", "mode": "timestamp"},
+        ],
+        "autoTransitionTo": "tbl-work-save-cd",
+        "enableAutoTransition": True,
+    }))
+
+    # Сохраняем кулдаун в таблицу
+    nodes.append(node("tbl-work-save-cd", "bot_table", 2100, 0, {
         "tableName": "cooldowns",
         "operation": "upsert",
         "key": "user_id",
         "row": {
             "user_id": "{user_id}",
             "action_type": "work",
-            "expires_at": "{__now_plus_90}",
+            "expires_at": "{work_cooldown_until}",
         },
         "onConflict": "update",
         "autoTransitionTo": "tbl-read-user-lvl",
@@ -940,23 +961,31 @@ def build_earning() -> dict:
     nodes.append(node("msg-work-success", "message", 2800, 0, {
         "messageText": (
             "🤩 {user.nickname}, смена завершена!\n\n"
-            "💲 Зарплата: 700$\n"
-            "⭐ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +12 exp\n\n"
+            "💲 Зарплата: {salary}$\n"
+            "⭐ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +{exp_gained} exp\n\n"
             "😨 Следующая смена через: 01:30"
         ),
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    # === Неправильная кнопка: кулдаун + сообщение об ошибке ===
-    nodes.append(node("tbl-work-set-cd-fail", "bot_table", 1600, 200, {
+    # === Неправильная кнопка: кулдаун через timestamp + сообщение об ошибке ===
+    nodes.append(node("set-work-cd-fail", "set_variable", 1500, 300, {
+        "assignments": [
+            {"id": "a-cd-f", "variable": "work_cooldown_until", "value": "90", "mode": "timestamp"},
+        ],
+        "autoTransitionTo": "tbl-work-save-cd-fail",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("tbl-work-save-cd-fail", "bot_table", 1800, 300, {
         "tableName": "cooldowns",
         "operation": "upsert",
         "key": "user_id",
         "row": {
             "user_id": "{user_id}",
             "action_type": "work",
-            "expires_at": "{__now_plus_90}",
+            "expires_at": "{work_cooldown_until}",
         },
         "onConflict": "update",
         "autoTransitionTo": "msg-work-fail",
