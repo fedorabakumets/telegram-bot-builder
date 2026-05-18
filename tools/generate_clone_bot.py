@@ -119,7 +119,16 @@ def build_start_menu() -> dict:
             btn("btn-m-don", "🍩 Донат"),
             btn("btn-m-ref", "🤑 Реферальная система"),
         ],
-        "keyboardColumns": 3,
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-m-earn", "btn-m-games", "btn-m-prop"]},
+                {"buttonIds": ["btn-m-prof", "btn-m-clan", "btn-m-ach"]},
+                {"buttonIds": ["btn-m-cmd", "btn-m-don"]},
+                {"buttonIds": ["btn-m-ref"]},
+            ],
+        },
         "resizeKeyboard": True,
     }))
 
@@ -151,7 +160,15 @@ def build_start_menu() -> dict:
             btn("btn-e-biz", "💹 Бизнес"),
             btn("btn-e-back", "🐾 Меню"),
         ],
-        "keyboardColumns": 3,
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-e-work", "btn-e-mine", "btn-e-fish"]},
+                {"buttonIds": ["btn-e-ranch", "btn-e-crate", "btn-e-biz"]},
+                {"buttonIds": ["btn-e-back"]},
+            ],
+        },
         "resizeKeyboard": True,
     }))
 
@@ -183,7 +200,15 @@ def build_start_menu() -> dict:
             btn("btn-g-roul", "🎪 Рулетка"),
             btn("btn-g-back", "🐾 Меню"),
         ],
-        "keyboardColumns": 3,
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-g-casino", "btn-g-dice", "btn-g-bj"]},
+                {"buttonIds": ["btn-g-trade", "btn-g-duel", "btn-g-roul"]},
+                {"buttonIds": ["btn-g-back"]},
+            ],
+        },
         "resizeKeyboard": True,
     }))
 
@@ -215,7 +240,15 @@ def build_start_menu() -> dict:
             btn("btn-p-acc", "💍 Аксессуары"),
             btn("btn-p-back", "🐾 Меню"),
         ],
-        "keyboardColumns": 3,
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-p-house", "btn-p-car", "btn-p-pet"]},
+                {"buttonIds": ["btn-p-cloth", "btn-p-phone", "btn-p-acc"]},
+                {"buttonIds": ["btn-p-back"]},
+            ],
+        },
         "resizeKeyboard": True,
     }))
 
@@ -403,7 +436,16 @@ def build_start_menu() -> dict:
             btn("btn-mm-don", "🍩 Донат"),
             btn("btn-mm-ref", "🤑 Реферальная система"),
         ],
-        "keyboardColumns": 3,
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-mm-earn", "btn-mm-games", "btn-mm-prop"]},
+                {"buttonIds": ["btn-mm-prof", "btn-mm-clan", "btn-mm-ach"]},
+                {"buttonIds": ["btn-mm-cmd", "btn-mm-don"]},
+                {"buttonIds": ["btn-mm-ref"]},
+            ],
+        },
         "resizeKeyboard": True,
     }))
 
