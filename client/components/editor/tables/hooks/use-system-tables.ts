@@ -26,6 +26,15 @@ const MESSAGES_COLUMNS: TableColumn[] = [
   { id: 'createdAt', name: 'time' },
 ];
 
+/** Колонки системной таблицы групп */
+const GROUPS_COLUMNS: TableColumn[] = [
+  { id: 'group_id', name: 'group_id' },
+  { id: 'name', name: 'name' },
+  { id: 'member_count', name: 'members' },
+  { id: 'chat_type', name: 'type' },
+  { id: 'last_activity', name: 'last_activity' },
+];
+
 /** Интерфейс ответа API пользователей (пагинированный режим) */
 interface UsersApiResponse {
   /** Массив пользователей */
@@ -56,6 +65,14 @@ export function useSystemTables(projectId: number): BotTable[] {
     queryFn: () => apiRequest('GET', `/api/projects/${projectId}/messages/all?limit=200`),
     enabled: !!projectId,
     refetchInterval: 10000,
+  });
+
+  /** Загрузка групп */
+  const { data: groupsData } = useQuery<any[]>({
+    queryKey: ['system-tables-groups', projectId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/groups`),
+    enabled: !!projectId,
+    refetchInterval: 15000,
   });
 
   /** Преобразуем данные в формат BotTable */
@@ -96,6 +113,23 @@ export function useSystemTables(projectId: number): BotTable[] {
       },
     }));
 
+    // Группы
+    const groups = Array.isArray(groupsData) ? groupsData : [];
+
+    const groupsRows: TableRow[] = groups.map((g: any, i: number) => ({
+      id: i + 1,
+      rowIndex: i + 1,
+      cells: {
+        group_id: String(g.groupId || g.group_id || ''),
+        name: g.name || '',
+        member_count: String(g.memberCount || g.member_count || 0),
+        chat_type: g.chatType || g.chat_type || 'group',
+        last_activity: g.lastActivity || g.last_activity
+          ? new Date(g.lastActivity || g.last_activity).toLocaleString('ru')
+          : '',
+      },
+    }));
+
     return [
       {
         id: '_system_users',
@@ -109,8 +143,14 @@ export function useSystemTables(projectId: number): BotTable[] {
         columns: MESSAGES_COLUMNS,
         rows: messagesRows,
       },
+      {
+        id: '_system_groups',
+        name: '🔒 Группы',
+        columns: GROUPS_COLUMNS,
+        rows: groupsRows,
+      },
     ];
-  }, [usersData, messagesData]);
+  }, [usersData, messagesData, groupsData]);
 
   return systemTables;
 }
