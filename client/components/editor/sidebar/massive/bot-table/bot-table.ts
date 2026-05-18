@@ -8,7 +8,7 @@ import { ComponentDefinition } from '@shared/schema';
 /** Определение компонента узла работы с таблицами */
 export const botTableNode: ComponentDefinition = {
   id: 'bot-table-node',
-  name: '🗄️ Таблица',
+  name: 'Таблица',
   description: 'Чтение, запись и обновление данных в таблицах проекта',
   icon: 'fas fa-table',
   color: 'bg-amber-100 text-amber-600',
