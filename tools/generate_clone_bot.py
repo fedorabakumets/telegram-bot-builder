@@ -1180,168 +1180,25 @@ def build_property() -> dict:
 
 
 # ============================================================
-# Лист 5: 🛡 Клан + Таблицы (sheet-clan)
+# Лист 5: 🛡 Клан (sheet-clan)
 # ============================================================
 
 def build_clan() -> dict:
     """
-    Строит лист «🛡 Клан» с инициализацией всех таблиц проекта.
+    Строит лист «🛡 Клан» с гаванью (заглушка).
+    Таблицы инициализируются в цепочке /start на листе Старт/Меню.
     @returns словарь листа
     """
     nodes = []
 
-    # === Инициализация таблицы clans ===
-    nodes.append(node("tbl-init-clans", "bot_table", 100, 0, {
-        "tableName": "clans",
-        "operation": "upsert",
-        "key": "id",
-        "row": {
-            "id": "0",
-            "name": "_init",
-            "level": "1",
-            "exp": "0",
-            "exp_to_next": "100",
-            "treasury": "0",
-            "rating": "0",
-            "members_count": "0",
-            "max_members": "10",
-            "entry_type": "Открыт",
-            "leader_name": "",
-            "harbor_level": "1",
-            "harbor_storage": "0",
-            "harbor_max": "1000",
-            "harbor_rate": "10",
-        },
-        "onConflict": "ignore",
-    }))
-
-    # === Инициализация таблицы clan_members ===
-    nodes.append(node("tbl-init-clan-members", "bot_table", 100, 200, {
-        "tableName": "clan_members",
-        "operation": "upsert",
-        "key": "user_id",
-        "row": {
-            "user_id": "0",
-            "clan_id": "0",
-            "role": "member",
-            "joined_at": "",
-        },
-        "onConflict": "ignore",
-    }))
-
-    # === Инициализация таблицы cooldowns ===
-    nodes.append(node("tbl-init-cooldowns", "bot_table", 100, 400, {
-        "tableName": "cooldowns",
-        "operation": "upsert",
-        "key": "user_id",
-        "row": {
-            "user_id": "0",
-            "action_type": "_init",
-            "expires_at": "0",
-        },
-        "onConflict": "ignore",
-    }))
-
-    # === Инициализация таблицы user_cars ===
-    nodes.append(node("tbl-init-user-cars", "bot_table", 100, 600, {
-        "tableName": "user_cars",
-        "operation": "upsert",
-        "key": "user_id",
-        "row": {
-            "user_id": "0",
-            "car_id": "0",
-            "car_name": "_init",
-            "horsepower": "0",
-            "max_speed": "0",
-            "purchased_at": "",
-        },
-        "onConflict": "ignore",
-    }))
-
-    # === Инициализация таблицы user_houses ===
-    nodes.append(node("tbl-init-user-houses", "bot_table", 100, 800, {
-        "tableName": "user_houses",
-        "operation": "upsert",
-        "key": "user_id",
-        "row": {
-            "user_id": "0",
-            "house_id": "0",
-            "house_name": "_init",
-            "rooms": "0",
-            "purchased_at": "",
-        },
-        "onConflict": "ignore",
-    }))
-
-    # === Инициализация таблицы user_businesses ===
-    nodes.append(node("tbl-init-user-biz", "bot_table", 100, 1000, {
-        "tableName": "user_businesses",
-        "operation": "upsert",
-        "key": "user_id",
-        "row": {
-            "user_id": "0",
-            "business_id": "0",
-            "business_name": "_init",
-            "level": "0",
-            "profit_rate": "0",
-            "purchased_at": "",
-        },
-        "onConflict": "ignore",
-    }))
-
-    # === Инициализация таблицы achievements ===
-    nodes.append(node("tbl-init-achievements", "bot_table", 100, 1200, {
-        "tableName": "achievements",
-        "operation": "upsert",
-        "key": "user_id",
-        "row": {
-            "user_id": "0",
-            "achievement_id": "_init",
-            "progress": "0",
-            "max_progress": "100",
-            "completed": "false",
-        },
-        "onConflict": "ignore",
-    }))
-
-    # === Инициализация таблицы referrals ===
-    nodes.append(node("tbl-init-referrals", "bot_table", 100, 1400, {
-        "tableName": "referrals",
-        "operation": "upsert",
-        "key": "referrer_id",
-        "row": {
-            "referrer_id": "0",
-            "referred_id": "0",
-            "reward_earned": "0",
-            "created_at": "",
-        },
-        "onConflict": "ignore",
-    }))
-
-    # === Инициализация таблицы transactions ===
-    nodes.append(node("tbl-init-transactions", "bot_table", 100, 1600, {
-        "tableName": "transactions",
-        "operation": "upsert",
-        "key": "id",
-        "row": {
-            "id": "0",
-            "from_user_id": "0",
-            "to_user_id": "0",
-            "amount": "0",
-            "type": "_init",
-            "created_at": "",
-        },
-        "onConflict": "ignore",
-    }))
-
-    # === Гавань (заглушка) ===
-    nodes.append(node("trig-harbor-info", "text_trigger", 400, 0, {
+    # Гавань (заглушка)
+    nodes.append(node("trig-harbor-info", "text_trigger", 100, 0, {
         "textMatchType": "exact",
         "textSynonyms": ["⚓️ Гавань"],
         "autoTransitionTo": "msg-harbor-info",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-harbor-info", "message", 700, 0, {
+    nodes.append(node("msg-harbor-info", "message", 400, 0, {
         "messageText": "⚓️ Гавань — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
@@ -1349,7 +1206,7 @@ def build_clan() -> dict:
 
     return {
         "id": "sheet-clan",
-        "name": "🛡 Клан / Таблицы",
+        "name": "🛡 Клан",
         "nodes": nodes,
         "viewState": {"pan": {"x": 0, "y": 0}, "zoom": 100},
     }
