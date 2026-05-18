@@ -619,7 +619,7 @@ def build_sheet_automation() -> dict:
     nodes = [
         # Ежедневный сброс репутации до 50 (если < 50)
         make_node("sched-reset-rep", "schedule_trigger", 100, 100, {
-            "rules": [{"mode": "daily", "hour": 0, "minute": 0}],
+            "rules": [{"mode": "weekday", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "hour": 0, "minute": 0}],
             "timezone": "Europe/Moscow",
             "autoTransitionTo": "tbl-reset-rep-daily",
             "runOnStart": False,
@@ -633,7 +633,7 @@ def build_sheet_automation() -> dict:
 
         # Ежедневный сброс лимитов взаимодействий
         make_node("sched-reset-actions", "schedule_trigger", 100, 400, {
-            "rules": [{"mode": "daily", "hour": 0, "minute": 0}],
+            "rules": [{"mode": "weekday", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "hour": 0, "minute": 0}],
             "timezone": "Europe/Moscow",
             "autoTransitionTo": "tbl-reset-actions-daily",
             "runOnStart": False,
