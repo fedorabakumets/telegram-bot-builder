@@ -173,22 +173,22 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
 {% elif upd.op == 'increment' %}
                             await conn.execute(
                                 "UPDATE bot_table_rows SET data = data || jsonb_build_object($1::text, (COALESCE((data->>$1::text)::int, 0) + $2::int)::text) WHERE id = $3",
-                                _upd_col_id_{{ loop.index }}, _upd_val_{{ loop.index }}, _row["id"]
+                                _upd_col_id_{{ loop.index }}, int(float(_upd_val_{{ loop.index }})), _row["id"]
                             )
 {% elif upd.op == 'decrement' %}
                             await conn.execute(
                                 "UPDATE bot_table_rows SET data = data || jsonb_build_object($1::text, (COALESCE((data->>$1::text)::int, 0) - $2::int)::text) WHERE id = $3",
-                                _upd_col_id_{{ loop.index }}, _upd_val_{{ loop.index }}, _row["id"]
+                                _upd_col_id_{{ loop.index }}, int(float(_upd_val_{{ loop.index }})), _row["id"]
                             )
 {% elif upd.op == 'min' %}
                             await conn.execute(
                                 "UPDATE bot_table_rows SET data = data || jsonb_build_object($1::text, LEAST(COALESCE((data->>$1::text)::int, 0), $2::int)::text) WHERE id = $3",
-                                _upd_col_id_{{ loop.index }}, _upd_val_{{ loop.index }}, _row["id"]
+                                _upd_col_id_{{ loop.index }}, int(float(_upd_val_{{ loop.index }})), _row["id"]
                             )
 {% elif upd.op == 'max' %}
                             await conn.execute(
                                 "UPDATE bot_table_rows SET data = data || jsonb_build_object($1::text, GREATEST(COALESCE((data->>$1::text)::int, 0), $2::int)::text) WHERE id = $3",
-                                _upd_col_id_{{ loop.index }}, _upd_val_{{ loop.index }}, _row["id"]
+                                _upd_col_id_{{ loop.index }}, int(float(_upd_val_{{ loop.index }})), _row["id"]
                             )
 {% endif %}
 {% endfor %}
