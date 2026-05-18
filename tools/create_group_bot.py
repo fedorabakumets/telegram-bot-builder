@@ -207,6 +207,34 @@ def build_sheet_start() -> dict:
             "keyboardType": "none",
             "buttons": [],
         }),
+
+        # /setphoto → запрос фото → сохранение file_id → подтверждение
+        make_node("cmd-setphoto", "command_trigger", 100, 1100, {
+            "command": "/setphoto",
+            "description": "Установить фото профиля",
+            "showInMenu": False,
+            "autoTransitionTo": "msg-ask-photo",
+        }),
+        make_node("msg-ask-photo", "message", 400, 1100, {
+            "messageText": "📷 Отправьте фото для профиля:",
+            "keyboardType": "none",
+            "buttons": [],
+            "collectUserInput": True,
+            "enableTextInput": False,
+            "enablePhotoInput": True,
+            "inputVariable": "photo_file_id",
+            "inputTargetNodeId": "tbl-setphoto",
+        }),
+        make_bot_table_node("tbl-setphoto", 700, 1100, "profiles", "update",
+            where=[{"column": "telegram_id", "value": "{user_id}"}],
+            updates=[{"column": "photo", "op": "set", "value": "{photo_file_id}"}],
+            target="msg-photo-ok",
+        ),
+        make_node("msg-photo-ok", "message", 1000, 1100, {
+            "messageText": "✅ Фото профиля обновлено!",
+            "keyboardType": "none",
+            "buttons": [],
+        }),
     ]
     return {"id": "sheet-start", "name": "🏠 Старт / Профиль", "nodes": nodes}
 
