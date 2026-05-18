@@ -13,11 +13,14 @@ import type { Variable } from '../../../inline-rich/types';
 import { BotTableWhereSection } from './bot-table-where-section';
 import { BotTableUpdatesSection } from './bot-table-updates-section';
 import { BotTableRowSection } from './bot-table-row-section';
+import { useTablesQuery } from '../../../tables/hooks/use-tables-query';
 
 /** Пропсы компонента BotTableConfiguration */
 interface BotTableConfigurationProps {
   /** Выбранный узел bot_table */
   selectedNode: Node;
+  /** ID проекта для загрузки списка таблиц */
+  projectId: number;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
   /** Все узлы всех листов для выбора следующего узла */
@@ -44,6 +47,7 @@ const OPERATION_LABELS: Record<string, string> = {
  */
 export function BotTableConfiguration({
   selectedNode,
+  projectId,
   onNodeUpdate,
   getAllNodesFromAllSheets,
   formatNodeDisplay,
@@ -63,6 +67,9 @@ export function BotTableConfiguration({
   const orderDirection: string = data?.orderDirection || 'desc';
   const limit: number = data?.limit || 0;
   const autoTransitionTo: string = data?.autoTransitionTo || '';
+
+  /** Загрузка списка таблиц проекта */
+  const { data: tables = [] } = useTablesQuery(projectId);
 
   /** Показывать WHERE: read, update, delete */
   const showWhere = ['read', 'update', 'delete'].includes(operation);
@@ -97,12 +104,20 @@ export function BotTableConfiguration({
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
           Таблица
         </Label>
-        <Input
-          value={tableName}
-          onChange={(e) => onNodeUpdate(selectedNode.id, { tableName: e.target.value })}
-          placeholder="profiles"
-          className="text-xs h-8 bg-white/60 dark:bg-slate-950/60"
-        />
+        <Select
+          value={tableName || 'no-table'}
+          onValueChange={(value) => onNodeUpdate(selectedNode.id, { tableName: value === 'no-table' ? '' : value })}
+        >
+          <SelectTrigger className="text-xs h-8 bg-white/60 dark:bg-slate-950/60">
+            <SelectValue placeholder="Выберите таблицу" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="no-table" disabled>Выберите таблицу</SelectItem>
+            {tables.map((t: any) => (
+              <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Операция */}
