@@ -46,6 +46,11 @@
 }
 ```
 
+Рекомендации по `position`:
+- Шаг по X: 300 (между связанными узлами по горизонтали)
+- Шаг по Y: 200 (между параллельными ветками)
+- ID генерировать через nanoid (21 символ) или осмысленные slug'и
+
 ---
 
 ## Типы триггеров
@@ -59,6 +64,7 @@
 | `callback_trigger` | Конкретный `callback_data` |
 | `group_message_trigger` | Сообщение в группе |
 | `managed_bot_updated_trigger` | Обновление управляемого бота |
+| `schedule_trigger` | Запуск по расписанию (интервал / cron) |
 
 ### Поля command_trigger
 
@@ -86,6 +92,32 @@
   }
 }
 ```
+
+`textMatchType`: `"exact"` — точное совпадение, `"contains"` — содержит подстроку.
+
+### Поля schedule_trigger
+
+```json
+{
+  "type": "schedule_trigger",
+  "data": {
+    "rules": [
+      { "mode": "interval", "intervalMinutes": 5 }
+    ],
+    "timezone": "Europe/Moscow",
+    "autoTransitionTo": "nodeId",
+    "runOnStart": false,
+    "enabled": true,
+    "maxConcurrent": 1
+  }
+}
+```
+
+Режимы расписания (`rules[].mode`):
+- `"interval"` — каждые N минут (`intervalMinutes`)
+- `"daily"` — ежедневно в указанное время (`hour`, `minute`)
+- `"weekly"` — по дням недели (`weekdays: [0-6]`, `hour`, `minute`)
+- `"cron"` — cron-выражение (`cronExpression`)
 
 ---
 
@@ -193,6 +225,156 @@
 
 Операторы: `equals`, `not_equals`, `contains`, `not_contains`, `greater_than`, `less_than`, `is_empty`, `is_not_empty`, `else`
 
+### set_variable — установка переменных
+
+Узел для задания, изменения и вычисления переменных без HTTP-запроса.
+
+```json
+{
+  "type": "set_variable",
+  "data": {
+    "assignments": [
+      { "id": "assign_1", "variable": "score", "value": "0", "mode": "text" }
+    ],
+    "autoTransitionTo": "next_node_id",
+    "enableAutoTransition": true
+  }
+}
+```
+
+#### Режимы присваивания (`mode`)
+
+| mode | Описание | Пример `value` |
+|------|----------|----------------|
+| `text` | Простая подстановка строки/переменных | `"Привет, {first_name}"` |
+| `expression` | Арифметическое выражение (поддерживает +, -, *, /) | `"{balance} - 50"` |
+| `lookup` | Поиск значения в таблице-переменной | — |
+| `str_replace` | Замена подстроки | `"старый_текст"` + `replaceWith: "новый"` |
+| `json_push` | Добавить объект в массив-переменную | `"{\"name\": \"{item.name}\"}"` |
+| `json_format` | Форматировать массив в строку | шаблон строки |
+
+#### Примеры
+
+Начислить 10 к репутации:
+```json
+{ "id": "a1", "variable": "reputation", "value": "{reputation} + 10", "mode": "expression" }
+```
+
+Списать 50 🍪:
+```json
+{ "id": "a2", "variable": "balance", "value": "{balance} - 50", "mode": "expression" }
+```
+
+Установить текст:
+```json
+{ "id": "a3", "variable": "status", "value": "VIP", "mode": "text" }
+```
+
+Замена подстроки:
+```json
+{ "id": "a4", "variable": "bio", "value": "плохое_слово", "mode": "str_replace", "replaceWith": "***" }
+```
+
+#### Lookup (поиск в таблице)
+
+```json
+{
+  "id": "a5",
+  "variable": "user_rank",
+  "value": "",
+  "mode": "lookup",
+  "lookupTable": "ranks",
+  "lookupField": "title",
+  "lookupWhere": [
+    { "field": "user_id", "value": "{user_id}" }
+  ]
+}
+```
+
+### psql_query — SQL-запрос к PostgreSQL
+
+```json
+{
+  "type": "psql_query",
+  "data": {
+    "query": "SELECT balance FROM users WHERE telegram_id = {user_id}",
+    "saveResultTo": "db_result",
+    "resultFormat": "first_row",
+    "textTemplate": "",
+    "enableAutoTransition": true,
+    "autoTransitionTo": "next_node_id",
+    "connectionSource": "builtin",
+    "connectionEnvVar": "",
+    "connectionString": ""
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `query` | SQL-запрос (поддерживает `{переменные}`) |
+| `saveResultTo` | Имя переменной для результата |
+| `resultFormat` | `"first_row"` — первая строка как объект, `"all_rows"` — массив, `"scalar"` — одно значение |
+| `connectionSource` | `"builtin"` — встроенная БД, `"env"` — из переменной окружения, `"custom"` — строка подключения |
+
+#### Примеры SQL
+
+Создание таблицы:
+```sql
+CREATE TABLE IF NOT EXISTS profiles (
+  telegram_id BIGINT PRIMARY KEY,
+  balance INT DEFAULT 100,
+  reputation INT DEFAULT 100,
+  bio TEXT DEFAULT ''
+)
+```
+
+Вставка/обновление:
+```sql
+INSERT INTO profiles (telegram_id, balance) VALUES ({user_id}, 100)
+ON CONFLICT (telegram_id) DO NOTHING
+```
+
+Обновление поля:
+```sql
+UPDATE profiles SET reputation = reputation + 10 WHERE telegram_id = {target_user_id}
+```
+
+Выборка:
+```sql
+SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
+```
+
+### loop — цикл по массиву
+
+```json
+{
+  "type": "loop",
+  "data": {
+    "sourceVariable": "users_list",
+    "itemVariable": "item",
+    "indexVariable": "index",
+    "parallel": false,
+    "delaySeconds": 0,
+    "maxIterations": 0,
+    "autoTransitionTo": "body_first_node",
+    "afterLoopTo": "after_loop_node",
+    "enableAutoTransition": true
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `sourceVariable` | Переменная с массивом для итерации |
+| `itemVariable` | Имя переменной текущего элемента (доступ: `{item.field}`) |
+| `indexVariable` | Имя переменной индекса (0, 1, 2...) |
+| `parallel` | `true` — параллельное выполнение через asyncio.gather |
+| `delaySeconds` | Пауза между итерациями |
+| `maxIterations` | Лимит итераций (0 = без лимита) |
+| `autoTransitionTo` | Первый узел тела цикла |
+| `afterLoopTo` | Узел после завершения цикла |
+
 ### input — ожидать ввод пользователя
 
 ```json
@@ -235,6 +417,19 @@
 | `contact` | Отправить контакт |
 
 Все медиа-узлы поддерживают `mediaCaption` — подпись.
+
+### Пример photo
+
+```json
+{
+  "type": "photo",
+  "data": {
+    "imageUrl": "https://example.com/photo.jpg",
+    "mediaCaption": "Подпись к фото",
+    "autoTransitionTo": "next_node_id"
+  }
+}
+```
 
 ---
 
@@ -313,17 +508,23 @@
 
 ## Переменные
 
-Переменные используются в `messageText`, `httpRequestUrl`, `httpRequestBody` и других полях через синтаксис `{имя_переменной}`.
+Переменные используются в `messageText`, `httpRequestUrl`, `httpRequestBody`, `query` и других полях через синтаксис `{имя_переменной}`.
 
 Вложенные поля из HTTP-ответа: `{response.data.user.name}`
 
-Системные переменные:
-- `{user_id}` — Telegram ID пользователя
-- `{username}` — username пользователя
-- `{first_name}`, `{last_name}` — имя пользователя
-- `{callback_data}` — данные нажатой кнопки
+### Системные переменные
 
----
+| Переменная | Описание |
+|------------|----------|
+| `{user_id}` | Telegram ID пользователя |
+| `{username}` | username пользователя |
+| `{first_name}` | Имя пользователя |
+| `{last_name}` | Фамилия пользователя |
+| `{chat_id}` | ID чата |
+| `{callback_data}` | Данные нажатой кнопки |
+| `{reply_to_user_id}` | ID пользователя из reply-сообщения |
+| `{reply_to_username}` | Username из reply-сообщения |
+| `{message_id}` | ID текущего сообщения |
 
 ### Переменная типа `file`
 
@@ -346,6 +547,125 @@ HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет отве
 - `data.autoTransitionTo: "nodeId"` — автоматический переход после выполнения
 - `data.buttons[].target: "nodeId"` — переход по кнопке
 - `data.branches[].target: "nodeId"` — переход по ветке условия
+- `data.afterLoopTo: "nodeId"` — переход после завершения цикла
+
+---
+
+## Пример: сценарий с базой данных и логикой
+
+```json
+{
+  "version": 2,
+  "activeSheetId": "sheet1",
+  "sheets": [{
+    "id": "sheet1",
+    "name": "Профиль",
+    "nodes": [
+      {
+        "id": "cmd-profile",
+        "type": "command_trigger",
+        "position": { "x": 0, "y": 0 },
+        "data": {
+          "command": "/profile",
+          "description": "Мой профиль",
+          "showInMenu": true,
+          "autoTransitionTo": "db-get-profile"
+        }
+      },
+      {
+        "id": "db-get-profile",
+        "type": "psql_query",
+        "position": { "x": 300, "y": 0 },
+        "data": {
+          "query": "INSERT INTO profiles (telegram_id, balance, reputation) VALUES ({user_id}, 100, 100) ON CONFLICT (telegram_id) DO NOTHING; SELECT balance, reputation, bio FROM profiles WHERE telegram_id = {user_id}",
+          "saveResultTo": "profile",
+          "resultFormat": "first_row",
+          "enableAutoTransition": true,
+          "autoTransitionTo": "msg-profile",
+          "connectionSource": "builtin"
+        }
+      },
+      {
+        "id": "msg-profile",
+        "type": "message",
+        "position": { "x": 600, "y": 0 },
+        "data": {
+          "messageText": "👤 Профиль {first_name}\n\n💰 Баланс: {profile.balance} 🍪\n⭐ Репутация: {profile.reputation}\n📝 О себе: {profile.bio}",
+          "markdown": true,
+          "keyboardType": "inline",
+          "buttons": [
+            { "id": "btn-edit", "text": "✏️ Редактировать", "action": "goto", "target": "edit-menu" }
+          ]
+        }
+      }
+    ]
+  }]
+}
+```
+
+## Пример: schedule + loop (ежедневный сброс)
+
+```json
+{
+  "id": "sched-reset",
+  "type": "schedule_trigger",
+  "position": { "x": 0, "y": 0 },
+  "data": {
+    "rules": [{ "mode": "daily", "hour": 0, "minute": 0 }],
+    "timezone": "Europe/Moscow",
+    "autoTransitionTo": "db-reset-rep",
+    "enabled": true
+  }
+},
+{
+  "id": "db-reset-rep",
+  "type": "psql_query",
+  "position": { "x": 300, "y": 0 },
+  "data": {
+    "query": "UPDATE profiles SET reputation = 50 WHERE reputation < 50",
+    "saveResultTo": "",
+    "resultFormat": "scalar",
+    "connectionSource": "builtin"
+  }
+}
+```
+
+## Пример: text_trigger + set_variable (репутация)
+
+```json
+{
+  "id": "trig-plus-rep",
+  "type": "text_trigger",
+  "position": { "x": 0, "y": 400 },
+  "data": {
+    "textMatchType": "exact",
+    "textSynonyms": ["+реп", "плюс реп"],
+    "autoTransitionTo": "db-add-rep"
+  }
+},
+{
+  "id": "db-add-rep",
+  "type": "psql_query",
+  "position": { "x": 300, "y": 400 },
+  "data": {
+    "query": "UPDATE profiles SET reputation = LEAST(reputation + 10, 100) WHERE telegram_id = {reply_to_user_id} RETURNING reputation",
+    "saveResultTo": "new_rep",
+    "resultFormat": "scalar",
+    "enableAutoTransition": true,
+    "autoTransitionTo": "msg-rep-done",
+    "connectionSource": "builtin"
+  }
+},
+{
+  "id": "msg-rep-done",
+  "type": "message",
+  "position": { "x": 600, "y": 400 },
+  "data": {
+    "messageText": "✅ Репутация @{reply_to_username} теперь: {new_rep}",
+    "keyboardType": "none"
+  }
+}
+```
 
 ---
 
@@ -401,3 +721,7 @@ HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет отве
 | Шаблоны генерации | `lib/templates/` |
 | Примеры JSON | `bots/*/project.json` |
 | Типы condition | `shared/types/condition-node.ts` |
+| Шаблон set_variable | `lib/templates/set-variable/` |
+| Шаблон psql_query | `lib/templates/psql-query/` |
+| Шаблон schedule | `lib/templates/schedule-trigger/` |
+| Шаблон loop | `lib/templates/loop/` |
