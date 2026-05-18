@@ -56,5 +56,6 @@ export function useRowsQuery(projectId: number, tableId: number | null) {
     queryKey: tableKeys.rows(projectId, tableId!),
     queryFn: () => fetchRows(projectId, tableId!),
     enabled: !!projectId && !!tableId,
+    refetchInterval: 5000,
   });
 }
