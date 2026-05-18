@@ -738,20 +738,63 @@ def build_start_menu() -> dict:
 
 def build_earning() -> dict:
     """
-    Строит лист «💸 Заработок» с работой (мини-игра 4x4),
+    Строит лист «💸 Заработок» с работой (мини-игра 4x4 + кулдаун + level up),
     шахтой, рыбалкой, ранчо, ящиками и бизнесом.
     @returns словарь листа
     """
     nodes = []
 
     # === 🛠 Работа ===
+    # Цепочка: trig-work → tbl-read-cd-work → cond-work-cd
+    #   ├─ кулдаун активен → msg-work-cd
+    #   └─ можно работать → tbl-read-user-work → msg-work-game (сетка 4x4)
+    #        ├─ правильная → tbl-work-update → tbl-work-set-cd → tbl-read-user-lvl → cond-level-up
+    #        │    ├─ level up → tbl-level-up → msg-level-up → msg-work-success
+    #        │    └─ нет → msg-work-success
+    #        └─ неправильная → tbl-work-set-cd-fail → msg-work-fail
+
     nodes.append(node("trig-work", "text_trigger", 100, 0, {
         "textMatchType": "exact",
         "textSynonyms": ["🛠 Работа"],
-        "autoTransitionTo": "tbl-read-user-work",
+        "autoTransitionTo": "tbl-read-cd-work",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("tbl-read-user-work", "bot_table", 400, 0, {
+
+    # Читаем кулдаун работы
+    nodes.append(node("tbl-read-cd-work", "bot_table", 400, 0, {
+        "tableName": "cooldowns",
+        "operation": "read",
+        "where": [
+            {"column": "user_id", "operator": "equals", "value": "{user_id}"},
+            {"column": "action_type", "operator": "equals", "value": "work"},
+        ],
+        "saveResultTo": "cd",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "cond-work-cd",
+        "enableAutoTransition": True,
+    }))
+
+    # Проверяем: кулдаун ещё активен?
+    nodes.append(node("cond-work-cd", "condition", 700, 0, {
+        "variable": "cd.expires_at",
+        "branches": [
+            branch("br-cd-active", "Кулдаун активен", "greater_than", "{__now}", "msg-work-cd"),
+            branch("br-cd-expired", "Можно работать", "else", "", "tbl-read-user-work"),
+        ],
+    }))
+
+    # Сообщение о кулдауне
+    nodes.append(node("msg-work-cd", "message", 1000, -200, {
+        "messageText": (
+            "😨 {user.nickname}, следующая смена через: 01:30\n\n"
+            "⏳ Подождите окончания кулдауна."
+        ),
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # Читаем пользователя для мини-игры
+    nodes.append(node("tbl-read-user-work", "bot_table", 1000, 0, {
         "tableName": "users",
         "operation": "read",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
@@ -771,11 +814,11 @@ def build_earning() -> dict:
         work_btn_ids.append(bid)
         # Кнопка с индексом 4 (🔧) — правильная
         if i == 4:
-            work_buttons.append(btn(bid, emoji, target="set-work-reward"))
+            work_buttons.append(btn(bid, emoji, target="tbl-work-update"))
         else:
-            work_buttons.append(btn(bid, emoji, target="msg-work-fail"))
+            work_buttons.append(btn(bid, emoji, target="tbl-work-set-cd-fail"))
 
-    nodes.append(node("msg-work-game", "message", 700, 0, {
+    nodes.append(node("msg-work-game", "message", 1300, 0, {
         "messageText": "🏖 {user.nickname}, рабочая смена началась!\n\n❔ Нажмите на смайлик «🔧»:",
         "keyboardType": "inline",
         "buttons": work_buttons,
@@ -791,16 +834,8 @@ def build_earning() -> dict:
         },
     }))
 
-    # Награда за работу
-    nodes.append(node("set-work-reward", "set_variable", 1000, 0, {
-        "assignments": [
-            {"id": "a-salary", "variable": "salary", "value": "700", "mode": "text"},
-            {"id": "a-exp", "variable": "exp_gained", "value": "12", "mode": "text"},
-        ],
-        "autoTransitionTo": "tbl-work-update",
-        "enableAutoTransition": True,
-    }))
-    nodes.append(node("tbl-work-update", "bot_table", 1300, 0, {
+    # === Правильная кнопка: начисление награды ===
+    nodes.append(node("tbl-work-update", "bot_table", 1600, 0, {
         "tableName": "users",
         "operation": "update",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
@@ -808,31 +843,118 @@ def build_earning() -> dict:
             {"column": "balance", "op": "increment", "value": "700"},
             {"column": "exp", "op": "increment", "value": "12"},
         ],
-        "autoTransitionTo": "tbl-read-user-after-work",
+        "autoTransitionTo": "tbl-work-set-cd",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("tbl-read-user-after-work", "bot_table", 1600, 0, {
+
+    # Устанавливаем кулдаун после успешной работы (90 минут)
+    nodes.append(node("tbl-work-set-cd", "bot_table", 1900, 0, {
+        "tableName": "cooldowns",
+        "operation": "upsert",
+        "key": "user_id",
+        "row": {
+            "user_id": "{user_id}",
+            "action_type": "work",
+            "expires_at": "{__now_plus_5400}",
+        },
+        "onConflict": "update",
+        "autoTransitionTo": "tbl-read-user-lvl",
+        "enableAutoTransition": True,
+    }))
+
+    # Читаем обновлённого пользователя для проверки level up
+    nodes.append(node("tbl-read-user-lvl", "bot_table", 2200, 0, {
         "tableName": "users",
         "operation": "read",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "user",
         "resultFormat": "first_row",
+        "autoTransitionTo": "cond-level-up",
+        "enableAutoTransition": True,
+    }))
+
+    # Проверяем level up: exp >= exp_to_next
+    nodes.append(node("cond-level-up", "condition", 2500, 0, {
+        "variable": "user.exp",
+        "branches": [
+            branch("br-no-lvl", "Нет level up", "less_than", "{user.exp_to_next}", "msg-work-success"),
+            branch("br-lvl-up", "Level up", "else", "", "set-calc-next-lvl"),
+        ],
+    }))
+
+    # Вычисляем новый exp_to_next через set_variable (exp_to_next * 1.5)
+    nodes.append(node("set-calc-next-lvl", "set_variable", 2800, -200, {
+        "assignments": [
+            {"id": "a-new-exp-next", "variable": "new_exp_to_next",
+             "value": "{user.exp_to_next} * 1.5", "mode": "expression"},
+        ],
+        "autoTransitionTo": "tbl-level-up",
+        "enableAutoTransition": True,
+    }))
+
+    # Обновляем пользователя: level+1, exp - exp_to_next, exp_to_next = новое значение
+    nodes.append(node("tbl-level-up", "bot_table", 3100, -200, {
+        "tableName": "users",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "level", "op": "increment", "value": "1"},
+            {"column": "exp", "op": "decrement", "value": "{user.exp_to_next}"},
+            {"column": "exp_to_next", "op": "set", "value": "{new_exp_to_next}"},
+        ],
+        "autoTransitionTo": "tbl-read-user-after-lvl",
+        "enableAutoTransition": True,
+    }))
+
+    # Перечитываем пользователя после level up для актуальных данных
+    nodes.append(node("tbl-read-user-after-lvl", "bot_table", 3400, -200, {
+        "tableName": "users",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "user",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "msg-level-up",
+        "enableAutoTransition": True,
+    }))
+
+    # Сообщение о повышении уровня
+    nodes.append(node("msg-level-up", "message", 3700, -200, {
+        "messageText": "🎉 {user.nickname}, поздравляем! Вы достигли {user.level} уровня!",
+        "keyboardType": "none",
+        "buttons": [],
         "autoTransitionTo": "msg-work-success",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-work-success", "message", 1900, 0, {
+
+    # Сообщение об успешной работе
+    nodes.append(node("msg-work-success", "message", 2800, 0, {
         "messageText": (
             "🤩 {user.nickname}, смена завершена!\n\n"
-            "💲 Зарплата: {salary}$\n"
-            "⭐ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +{exp_gained} exp\n\n"
+            "💲 Зарплата: 700$\n"
+            "⭐ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +12 exp\n\n"
             "😨 Следующая смена через: 01:30"
         ),
         "keyboardType": "none",
         "buttons": [],
     }))
 
+    # === Неправильная кнопка: кулдаун + сообщение об ошибке ===
+    nodes.append(node("tbl-work-set-cd-fail", "bot_table", 1600, 200, {
+        "tableName": "cooldowns",
+        "operation": "upsert",
+        "key": "user_id",
+        "row": {
+            "user_id": "{user_id}",
+            "action_type": "work",
+            "expires_at": "{__now_plus_5400}",
+        },
+        "onConflict": "update",
+        "autoTransitionTo": "msg-work-fail",
+        "enableAutoTransition": True,
+    }))
+
     # Неправильный ответ
-    nodes.append(node("msg-work-fail", "message", 1000, 200, {
+    nodes.append(node("msg-work-fail", "message", 1900, 200, {
         "messageText": (
             "😢 {user.nickname}, к сожалению, вы нажали на неверный смайлик.\n"
             "Рабочая смена завершена\n"
