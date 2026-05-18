@@ -987,3 +987,69 @@ GIN-индекс на `bot_table_rows.data` для быстрого поиска
 - ✅ Репутация: `text_trigger(+реп)` → `bot_table(read me)` → `condition(rep >= 50)` → `bot_table(update target, increment)` → `message(результат)`
 - ✅ Магазин: `message(меню)` → `inline кнопки` → `condition(balance >= price)` → `bot_table(update, decrement balance)` → `message(успех)`
 - ✅ Расписание: `schedule_trigger(daily 00:00)` → `psql_query(UPDATE ... WHERE condition)` → `message(отчёт в админ-чат)`
+
+
+---
+
+## Таблица контента (_content)
+
+### Концепция
+
+Каждый проект автоматически имеет системную таблицу `_content` — единый реестр всего редактируемого контента бота. Тексты сообщений, подписи к медиа, тексты кнопок, URL ссылок — всё синхронизируется с JSON сценария.
+
+Бот читает контент из таблицы через кэш — **горячая перезагрузка без рестарта** (через Redis pub/sub или polling каждые 60 сек).
+
+### Структура таблицы
+
+| Колонка | Описание | Редактируемая |
+|---------|----------|:---:|
+| key | Уникальный ключ | ❌ |
+| type | Тип контента | ❌ |
+| sheet | Имя листа | ❌ |
+| value | Значение | ✅ |
+
+### Формат ключей
+
+| Источник | type | Формат key |
+|----------|------|------------|
+| `messageText` | message | `{node_id}` |
+| `mediaCaption` | caption | `{node_id}.caption` |
+| `buttons[].text` | button | `{node_id}.btn.{btn_id}` |
+| `buttons[].url` | url | `{node_id}.btn.{btn_id}.url` |
+| `buttons[].webAppUrl` | url | `{node_id}.btn.{btn_id}.webapp` |
+| `imageUrl`/`videoUrl`/`audioUrl`/`documentUrl` | media_url | `{node_id}.media` |
+| `httpRequestUrl` | api_url | `{node_id}.api` |
+| `httpRequestBody` | http_body | `{node_id}.body` |
+| `httpRequestHeaders` | http_headers | `{node_id}.headers` |
+| `psql_query.query` | sql | `{node_id}.sql` |
+| `command_trigger.description` | command | `{node_id}.desc` |
+| `inputPrompt` | prompt | `{node_id}.prompt` |
+
+### Keyboard-ноды
+
+Если кнопки хранятся в отдельной keyboard-ноде (поле `keyboardNodeId` в message-ноде), ключи в таблице используют **ID message-ноды**, а не keyboard-ноды. Это обеспечивает совпадение с ключами в сгенерированном коде бота.
+
+### Горячая перезагрузка
+
+Поля поддерживающие мгновенное обновление без рестарта бота:
+- ✅ `messageText` — текст сообщения
+- ✅ `buttons[].text` — текст inline и reply кнопок
+- ✅ `buttons[].url` — URL кнопок
+- ✅ `mediaCaption` — подпись к медиа (через text=caption)
+- ✅ `formatMode` — определяется динамически из HTML-тегов в тексте
+
+Поля требующие перезапуска бота:
+- Структура графа (связи, autoTransitionTo)
+- Типы нод, callback_data кнопок
+- Имена переменных
+- Операции bot_table
+
+### Где смотреть в коде
+
+| Что | Где |
+|-----|-----|
+| Синхронизация JSON → таблица | `server/services/content-table/sync-content-to-table.ts` |
+| Синхронизация таблица → JSON | `server/services/content-table/sync-table-to-scenario.ts` |
+| Маппинг ключей | `server/services/content-table/content-key-parser.ts` |
+| Шаблон Python (get_content) | `lib/templates/content/content.py.jinja2` |
+| Документация фичи | `docs/futures/content-table.md` |
