@@ -14,6 +14,7 @@ import { BotTableWhereSection } from './bot-table-where-section';
 import { BotTableUpdatesSection } from './bot-table-updates-section';
 import { BotTableRowSection } from './bot-table-row-section';
 import { useTablesQuery } from '../../../tables/hooks/use-tables-query';
+import { VariableSelector } from '../variables/variable-selector';
 
 /** Пропсы компонента BotTableConfiguration */
 interface BotTableConfigurationProps {
@@ -131,12 +132,18 @@ export function BotTableConfiguration({
             ))}
           </SelectContent>
         </Select>
-        <Input
-          value={tableName}
-          onChange={(e) => onNodeUpdate(selectedNode.id, { tableName: e.target.value })}
-          placeholder="или введите имя новой таблицы"
-          className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border-dashed"
-        />
+        <div className="flex items-center gap-1">
+          <Input
+            value={tableName}
+            onChange={(e) => onNodeUpdate(selectedNode.id, { tableName: e.target.value })}
+            placeholder="или введите имя новой таблицы"
+            className="text-xs h-7 flex-1 bg-white/60 dark:bg-slate-950/60 border-dashed"
+          />
+          <VariableSelector
+            availableVariables={textVariables}
+            onSelect={(name) => onNodeUpdate(selectedNode.id, { tableName: tableName + `{${name}}` })}
+          />
+        </div>
       </div>
 
       {/* Операция */}
