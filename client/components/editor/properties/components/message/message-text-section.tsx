@@ -10,6 +10,7 @@ import { MessageTextSectionContent } from './message-text-section-content';
 import { MessageRecipientSection } from './message-recipient-section';
 import { SaveMessageIdSection } from './save-message-id-section';
 import { BroadcastToggle } from '../broadcast/broadcast-toggle';
+import { ContentSyncBadge } from '../content-sync-badge';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Variable } from '../../../inline-rich/types';
 import type { Node } from '@shared/schema';
@@ -79,6 +80,7 @@ export function MessageTextSection({
               onNodeUpdate(selectedNode.id, { variableFilters: filters });
             }}
           />
+          <ContentSyncBadge />
           <MessageRecipientSection
             selectedNode={selectedNode}
             onNodeUpdate={onNodeUpdate}

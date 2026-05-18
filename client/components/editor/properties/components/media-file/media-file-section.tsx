@@ -13,6 +13,7 @@ import { MultiMediaSelector } from '../../media/multi-media-selector';
 import { InfoBlock } from '@/components/ui/info-block';
 import { VariableSelector } from '../variables/variable-selector';
 import { FileIdInput } from '../../media/file-id-input';
+import { ContentSyncBadge } from '../content-sync-badge';
 import { extractVariables } from '../../utils/variables-utils';
 import type { Variable } from '../../../inline-rich/types';
 
@@ -123,6 +124,7 @@ export function MediaFileSection({
 
       {isOpen && (
         <div className="space-y-3">
+          <ContentSyncBadge />
           {showMixedWarning && (
             <InfoBlock
               variant="warning"
