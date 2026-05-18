@@ -311,7 +311,7 @@ export function TableEditor({
                   {row.rowIndex}
                 </td>
                 {table.columns.map((col, colIdx) => {
-                  const isReadOnlyCol = isContentTable && (col.name === 'key' || col.name === 'type');
+                  const isReadOnlyCol = isContentTable && (col.name === 'key' || col.name === 'type' || col.name === 'sheet');
                   return (
                     <td key={col.id} className="h-8 border-r border-border/50 p-0">
                       {readOnly || isReadOnlyCol ? (
