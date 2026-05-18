@@ -35,7 +35,18 @@ async def reload_content(pool):
         logging.info(f"📋 [content] Получено {len(rows)} строк из БД")
         new_cache = {}
         for i, r in enumerate(rows):
-            data = r["data"]
+            raw_data = r["data"]
+            # asyncpg может вернуть JSONB как строку — парсим
+            if isinstance(raw_data, str):
+                try:
+                    import json
+                    data = json.loads(raw_data)
+                except Exception:
+                    if i < 3:
+                        logging.debug(f"📋 [content] Строка {i}: не удалось распарсить JSON")
+                    continue
+            else:
+                data = raw_data
             if isinstance(data, dict) and len(data) >= 4:
                 # Фильтруем только числовые ключи (ID колонок), пропускаем "undefined" и прочий мусор
                 numeric_items = [(k, v) for k, v in data.items() if k.isdigit()]
@@ -46,9 +57,9 @@ async def reload_content(pool):
                     if key_val and value_val:
                         new_cache[str(key_val)] = str(value_val)
                     elif i < 3:
-                        logging.debug(f"📋 [content] Строка {i}: key_val={key_val!r}, value_val={value_val!r} — пропущена")
+                        logging.debug(f"📋 [content] Строка {i}: key={key_val!r}, value={value_val!r} — пропущена")
             elif i < 3:
-                logging.debug(f"📋 [content] Строка {i}: data={data!r} — не dict или < 4 ключей")
+                logging.debug(f"📋 [content] Строка {i}: не dict или < 4 числовых ключей")
         _content_cache = new_cache
         logging.info(f"📋 [content] Кэш обновлён: {len(_content_cache)} записей")
     except Exception as e:
