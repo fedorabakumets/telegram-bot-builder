@@ -1046,6 +1046,16 @@ def build_help() -> dict:
         btn("btn-nav-misc", "☁", target="msg-help-misc"),
     ]
 
+    # Ручная раскладка для навигации help: 3 + 2
+    help_nav_layout = {
+        "autoLayout": False,
+        "columns": 3,
+        "rows": [
+            {"buttonIds": ["btn-nav-star", "btn-nav-earn", "btn-nav-game"]},
+            {"buttonIds": ["btn-nav-prop", "btn-nav-misc"]},
+        ],
+    }
+
     # /help
     nodes.append(node("cmd-help", "command_trigger", 100, 0, {
         "command": "/help",
@@ -1075,7 +1085,7 @@ def build_help() -> dict:
         ),
         "keyboardType": "inline",
         "buttons": help_nav_buttons[:],
-        "keyboardColumns": 3,
+        "keyboardLayout": help_nav_layout,
     }))
 
     # Раздел ⭐ Основное
@@ -1096,7 +1106,7 @@ def build_help() -> dict:
         ),
         "keyboardType": "inline",
         "buttons": help_nav_buttons[:],
-        "keyboardColumns": 3,
+        "keyboardLayout": help_nav_layout,
     }))
 
     # Раздел 🐾 Заработок
@@ -1112,7 +1122,7 @@ def build_help() -> dict:
         ),
         "keyboardType": "inline",
         "buttons": help_nav_buttons[:],
-        "keyboardColumns": 3,
+        "keyboardLayout": help_nav_layout,
     }))
 
     # Раздел 🎮 Игры
@@ -1123,7 +1133,7 @@ def build_help() -> dict:
         ),
         "keyboardType": "inline",
         "buttons": help_nav_buttons[:],
-        "keyboardColumns": 3,
+        "keyboardLayout": help_nav_layout,
     }))
 
     # Раздел 🏪 Имущество
@@ -1134,7 +1144,7 @@ def build_help() -> dict:
         ),
         "keyboardType": "inline",
         "buttons": help_nav_buttons[:],
-        "keyboardColumns": 3,
+        "keyboardLayout": help_nav_layout,
     }))
 
     # Раздел ☁ Прочее
@@ -1147,7 +1157,7 @@ def build_help() -> dict:
         ),
         "keyboardType": "inline",
         "buttons": help_nav_buttons[:],
-        "keyboardColumns": 3,
+        "keyboardLayout": help_nav_layout,
     }))
 
     # /faq
