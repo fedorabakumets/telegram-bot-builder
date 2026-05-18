@@ -49,6 +49,75 @@
 
 ---
 
+## Следующий этап: Гибридный подход
+
+### Концепция
+
+Бот остаётся сгенерированным Python-кодом (сохраняется экспорт в .py), но **весь контент** читается из БД через кэш. При изменении любого поля — мгновенная перезагрузка через Redis без рестарта.
+
+### Что меняется
+
+Вместо отдельной таблицы `_content` с маппингом — бот загружает **весь JSON сценария** из `bot_projects.data` в кэш и читает данные нод напрямую:
+
+```python
+_scenario_cache = {}
+
+async def load_scenario(pool):
+    """Загрузка JSON сценария в кэш"""
+    row = await pool.fetchrow("SELECT data FROM bot_projects WHERE id = $1", PROJECT_ID)
+    if row:
+        _scenario_cache = json.loads(row["data"]) if isinstance(row["data"], str) else row["data"]
+
+def get_node_data(node_id, field, fallback=""):
+    """Получить поле ноды из кэша сценария"""
+    for sheet in _scenario_cache.get("sheets", []):
+        for node in sheet.get("nodes", []):
+            if node["id"] == node_id:
+                return node.get("data", {}).get(field, fallback)
+    return fallback
+```
+
+### Что это даёт
+
+| Поле | Горячая перезагрузка |
+|------|:---:|
+| messageText | ✅ |
+| mediaCaption | ✅ |
+| buttons[].text | ✅ |
+| buttons[].url | ✅ |
+| imageUrl/videoUrl/audioUrl/documentUrl | ✅ |
+| httpRequestUrl/Body/Headers | ✅ |
+| psql_query.query | ✅ |
+| inputPrompt | ✅ |
+| condition branches (value) | ✅ |
+| formatMode | ✅ |
+
+### Что НЕ меняется без рестарта
+
+- Структура графа (добавление/удаление нод)
+- Связи между нодами (autoTransitionTo, buttons[].target)
+- Типы нод
+- Имена переменных
+- Регистрация обработчиков (декораторы @dp.callback_query)
+
+### Преимущества гибрида
+
+- Не нужна отдельная таблица `_content` для каждого поля — читаем прямо из JSON
+- Один SQL запрос загружает ВСЁ
+- Таблица `_content` остаётся как удобный UI для редактирования (но источник правды — JSON в `bot_projects.data`)
+- Экспорт в standalone .py сохраняется
+- Минимальные изменения в генераторе
+
+### План реализации
+
+1. В `content.py.jinja2` — добавить `load_scenario(pool)` рядом с `load_content`
+2. Заменить `get_content(key, fallback)` на `get_node_data(node_id, field, fallback)` в шаблонах
+3. Или оставить `get_content` как обёртку над `get_node_data`
+4. Redis notify при сохранении проекта — уже работает (`bot:table_updated`)
+5. Таблица `_content` становится **view** поверх JSON — удобный UI, но не источник данных для бота
+
+---
+
 ## Концепция
 
 Автоматическая таблица `_content` на уровне проекта — единый реестр всего редактируемого контента бота. Двусторонняя синхронизация с JSON сценария. Бот читает контент из таблицы (с кэшем) — горячая перезагрузка без рестарта.
