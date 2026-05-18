@@ -18,7 +18,7 @@ import type { TablesPanelProps } from './types';
  * @param props - Пропсы компонента
  * @returns JSX элемент панели таблиц
  */
-export function TablesPanel({ projectId, allProjects, onProjectChange }: TablesPanelProps) {
+export function TablesPanel({ projectId, allProjects, onProjectChange, selectedTokenId, onSelectToken }: TablesPanelProps) {
   const queryClient = useQueryClient();
   const {
     tables,
@@ -37,7 +37,7 @@ export function TablesPanel({ projectId, allProjects, onProjectChange }: TablesP
     updateCell,
     importNewTable,
     importRows,
-  } = useTablesState(projectId);
+  } = useTablesState(projectId, selectedTokenId);
 
   return (
     <div className="flex flex-col h-full bg-background">

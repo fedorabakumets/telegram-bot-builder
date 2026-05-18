@@ -41,4 +41,8 @@ export interface TablesPanelProps {
   allProjects?: Array<{ id: number; name: string }>;
   /** Обработчик смены проекта */
   onProjectChange?: (projectId: number) => void;
+  /** Идентификатор выбранного токена бота */
+  selectedTokenId?: number | null;
+  /** Обработчик выбора токена */
+  onSelectToken?: (tokenId: number | null) => void;
 }

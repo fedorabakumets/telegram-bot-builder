@@ -1548,6 +1548,8 @@ export default function Editor() {
             <div className="h-full overflow-hidden">
               <TablesPanel
                 projectId={activeProject.id}
+                selectedTokenId={selectedDatabaseTokenId}
+                onSelectToken={setSelectedDatabaseTokenId}
                 allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
                 onProjectChange={(projectId) => {
                   setLocation(`/projects/${projectId}`);
@@ -1890,6 +1892,8 @@ export default function Editor() {
                 <div className="h-full overflow-hidden">
                   <TablesPanel
                     projectId={activeProject.id}
+                    selectedTokenId={selectedDatabaseTokenId}
+                    onSelectToken={setSelectedDatabaseTokenId}
                     allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
                     onProjectChange={(projectId) => {
                       setLocation(`/projects/${projectId}`);

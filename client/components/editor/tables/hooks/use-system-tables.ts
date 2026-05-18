@@ -22,7 +22,6 @@ const USERS_COLUMNS: TableColumn[] = [
   { id: 'registered_at', name: 'registered_at' },
   { id: 'last_interaction', name: 'last_interaction' },
   { id: 'interaction_count', name: 'interactions' },
-  { id: 'user_data', name: 'user_data' },
 ];
 
 /** Колонки системной таблицы сообщений */
@@ -120,13 +119,18 @@ function formatFileSize(bytes: number): string {
 /**
  * Хук загрузки системных таблиц (read-only) из существующих API проекта
  * @param projectId - Идентификатор проекта
+ * @param selectedTokenId - Идентификатор выбранного токена бота
  * @returns Массив виртуальных BotTable для отображения в списке таблиц
  */
-export function useSystemTables(projectId: number): BotTable[] {
+export function useSystemTables(projectId: number, selectedTokenId?: number | null): BotTable[] {
+  /** Суффикс tokenId для API запросов */
+  const tokenParam = selectedTokenId ? `&tokenId=${selectedTokenId}` : '';
+  const tokenParamFirst = selectedTokenId ? `?tokenId=${selectedTokenId}` : '';
+
   /** Загрузка пользователей */
   const { data: usersData } = useQuery<UsersApiResponse | any[]>({
-    queryKey: ['system-tables-users', projectId],
-    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/users?limit=200`),
+    queryKey: ['system-tables-users', projectId, selectedTokenId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/users?limit=200${tokenParam}`),
     enabled: !!projectId,
     refetchInterval: 10000,
   });
@@ -134,8 +138,8 @@ export function useSystemTables(projectId: number): BotTable[] {
   /** Загрузка сообщений (с пагинацией) */
   const [messagesLimit, setMessagesLimit] = useState(200);
   const { data: messagesData } = useQuery<any[]>({
-    queryKey: ['system-tables-messages', projectId, messagesLimit],
-    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/messages/all?limit=${messagesLimit}`),
+    queryKey: ['system-tables-messages', projectId, selectedTokenId, messagesLimit],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/messages/all?limit=${messagesLimit}${tokenParam}`),
     enabled: !!projectId,
     refetchInterval: 10000,
   });
@@ -147,8 +151,8 @@ export function useSystemTables(projectId: number): BotTable[] {
 
   /** Загрузка групп */
   const { data: groupsData } = useQuery<any[]>({
-    queryKey: ['system-tables-groups', projectId],
-    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/groups`),
+    queryKey: ['system-tables-groups', projectId, selectedTokenId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/groups${tokenParamFirst}`),
     enabled: !!projectId,
     refetchInterval: 15000,
   });
@@ -171,32 +175,32 @@ export function useSystemTables(projectId: number): BotTable[] {
 
   /** Загрузка рассылок */
   const { data: broadcastsData } = useQuery<BroadcastsApiResponse>({
-    queryKey: ['system-tables-broadcasts', projectId],
-    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/broadcasts?limit=100`),
+    queryKey: ['system-tables-broadcasts', projectId, selectedTokenId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/broadcasts?limit=100${tokenParam}`),
     enabled: !!projectId,
     refetchInterval: 15000,
   });
 
   /** Загрузка переменных пользователей */
   const { data: variablesData } = useQuery<{ columns: string[]; rows: Record<string, string>[] }>({
-    queryKey: ['system-tables-variables', projectId],
-    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/users/variables?limit=200`),
+    queryKey: ['system-tables-variables', projectId, selectedTokenId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/users/variables?limit=200${tokenParam}`),
     enabled: !!projectId,
     refetchInterval: 10000,
   });
 
   /** Загрузка логов бота */
   const { data: logsData } = useQuery<any[]>({
-    queryKey: ['system-tables-logs', projectId],
-    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/logs/all?limit=200`),
+    queryKey: ['system-tables-logs', projectId, selectedTokenId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/logs/all?limit=200${tokenParam}`),
     enabled: !!projectId,
     refetchInterval: 10000,
   });
 
   /** Загрузка истории запусков */
   const { data: launchesData } = useQuery<any[]>({
-    queryKey: ['system-tables-launches', projectId],
-    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/launches/all`),
+    queryKey: ['system-tables-launches', projectId, selectedTokenId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/launches/all${tokenParamFirst}`),
     enabled: !!projectId,
     refetchInterval: 30000,
   });
@@ -228,9 +232,6 @@ export function useSystemTables(projectId: number): BotTable[] {
           ? new Date(u.lastInteraction).toLocaleString('ru')
           : '',
         interaction_count: String(u.interactionCount || 0),
-        user_data: u.userData && Object.keys(u.userData).length > 0
-          ? JSON.stringify(u.userData)
-          : '',
       },
     }));
 

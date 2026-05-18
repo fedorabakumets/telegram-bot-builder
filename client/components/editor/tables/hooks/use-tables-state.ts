@@ -27,13 +27,14 @@ const INITIAL_ROWS = 10;
 /**
  * Хук управления состоянием таблиц проекта (react-query)
  * @param projectId - Идентификатор проекта
+ * @param selectedTokenId - Идентификатор выбранного токена бота
  * @returns Состояние и методы управления таблицами
  */
-export function useTablesState(projectId: number) {
+export function useTablesState(projectId: number, selectedTokenId?: number | null) {
   const queryClient = useQueryClient();
 
   /** Системные (виртуальные) таблицы из API пользователей */
-  const systemTables = useSystemTables(projectId);
+  const systemTables = useSystemTables(projectId, selectedTokenId);
 
   /** ID выбранной таблицы (строка) */
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
