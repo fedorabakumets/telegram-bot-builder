@@ -345,6 +345,143 @@ UPDATE profiles SET reputation = reputation + 10 WHERE telegram_id = {target_use
 SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 ```
 
+### bot_table — работа с внутренними таблицами
+
+Узел для чтения, записи и обновления данных в таблицах проекта (Bot Tables). Без SQL — через визуальный интерфейс.
+
+#### Операции
+
+| operation | Описание |
+|-----------|----------|
+| `read` | Получить строку(и) по условию |
+| `insert` | Вставить новую строку (таблица создаётся автоматически) |
+| `update` | Обновить поля по условию (атомарный increment/decrement) |
+| `upsert` | Вставить или обновить если существует |
+| `delete` | Удалить строку по условию |
+
+#### read
+
+```json
+{
+  "type": "bot_table",
+  "data": {
+    "tableName": "profiles",
+    "operation": "read",
+    "where": [
+      { "column": "telegram_id", "value": "{user_id}" }
+    ],
+    "saveResultTo": "profile",
+    "resultFormat": "first_row",
+    "autoTransitionTo": "next_node",
+    "enableAutoTransition": true
+  }
+}
+```
+
+`resultFormat`: `"first_row"` (объект), `"all_rows"` (массив), `"scalar"` (одно значение), `"count"` (количество).
+
+После read доступно: `{profile.balance}`, `{profile.reputation}` и т.д.
+
+#### update
+
+```json
+{
+  "type": "bot_table",
+  "data": {
+    "tableName": "profiles",
+    "operation": "update",
+    "where": [
+      { "column": "telegram_id", "value": "{reply_to_user_id}" }
+    ],
+    "updates": [
+      { "column": "reputation", "op": "increment", "value": "10" },
+      { "column": "balance", "op": "decrement", "value": "5" }
+    ],
+    "autoTransitionTo": "next_node",
+    "enableAutoTransition": true
+  }
+}
+```
+
+Операции `op`: `set`, `increment`, `decrement`, `min`, `max`. Все атомарные (через SQL).
+
+#### insert
+
+```json
+{
+  "type": "bot_table",
+  "data": {
+    "tableName": "profiles",
+    "operation": "insert",
+    "row": {
+      "telegram_id": "{user_id}",
+      "balance": "100",
+      "reputation": "100"
+    },
+    "autoTransitionTo": "next_node",
+    "enableAutoTransition": true
+  }
+}
+```
+
+Если таблица не существует — создаётся автоматически с колонками из `row`.
+
+#### upsert
+
+```json
+{
+  "type": "bot_table",
+  "data": {
+    "tableName": "profiles",
+    "operation": "upsert",
+    "key": "telegram_id",
+    "row": {
+      "telegram_id": "{user_id}",
+      "balance": "100",
+      "reputation": "100"
+    },
+    "onConflict": "ignore",
+    "saveResultTo": "profile",
+    "autoTransitionTo": "next_node",
+    "enableAutoTransition": true
+  }
+}
+```
+
+`onConflict`: `"ignore"` (не трогать), `"update"` (перезаписать), `"merge"` (только пустые поля).
+
+#### delete
+
+```json
+{
+  "type": "bot_table",
+  "data": {
+    "tableName": "relationships",
+    "operation": "delete",
+    "where": [
+      { "column": "user_a", "value": "{user_id}" },
+      { "column": "user_b", "value": "{target_user_id}" }
+    ],
+    "autoTransitionTo": "next_node",
+    "enableAutoTransition": true
+  }
+}
+```
+
+#### Дополнительные поля (read)
+
+```json
+{
+  "orderBy": "reputation",
+  "orderDirection": "desc",
+  "limit": 10
+}
+```
+
+#### Имя таблицы с переменными
+
+`tableName` поддерживает `{переменные}`: `"orders_{chat_id}"`, `"data_{user_id}"`.
+
 ### loop — цикл по массиву
 
 ```json
@@ -725,3 +862,4 @@ HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет отве
 | Шаблон psql_query | `lib/templates/psql-query/` |
 | Шаблон schedule | `lib/templates/schedule-trigger/` |
 | Шаблон loop | `lib/templates/loop/` |
+| Шаблон bot_table | `lib/templates/bot-table/` |
