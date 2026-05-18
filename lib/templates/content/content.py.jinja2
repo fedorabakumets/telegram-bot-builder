@@ -7,19 +7,16 @@ async def load_content(pool):
     """Загрузка контента из таблицы _content при старте"""
     global _content_table_id
     try:
-        logging.info(f"📋 [content] Ищем таблицу _content для project_id={{ projectId }}")
         row = await pool.fetchrow(
             "SELECT id FROM bot_tables WHERE project_id = $1 AND name = '_content'",
             {{ projectId }}
         )
         if not row:
-            logging.info("📋 [content] Таблица _content не найдена — пропускаем")
             return
         _content_table_id = row["id"]
-        logging.info(f"📋 [content] Таблица найдена: id={_content_table_id}")
         await reload_content(pool)
     except Exception as e:
-        logging.warning(f"📋 [content] Не удалось загрузить таблицу контента: {e}")
+        logging.warning(f"📋 [content] Не удалось загрузить: {e}")
 
 
 async def reload_content(pool):
@@ -32,23 +29,18 @@ async def reload_content(pool):
             "SELECT data FROM bot_table_rows WHERE table_id = $1",
             _content_table_id
         )
-        logging.info(f"📋 [content] Получено {len(rows)} строк из БД")
         new_cache = {}
-        for i, r in enumerate(rows):
+        for r in rows:
             raw_data = r["data"]
-            # asyncpg может вернуть JSONB как строку — парсим
             if isinstance(raw_data, str):
                 try:
                     import json
                     data = json.loads(raw_data)
                 except Exception:
-                    if i < 3:
-                        logging.debug(f"📋 [content] Строка {i}: не удалось распарсить JSON")
                     continue
             else:
                 data = raw_data
             if isinstance(data, dict) and len(data) >= 4:
-                # Фильтруем только числовые ключи (ID колонок), пропускаем "undefined" и прочий мусор
                 numeric_items = [(k, v) for k, v in data.items() if k.isdigit()]
                 sorted_values = [v for _, v in sorted(numeric_items, key=lambda x: int(x[0]))]
                 if len(sorted_values) >= 4:
@@ -56,26 +48,18 @@ async def reload_content(pool):
                     value_val = sorted_values[3]
                     if key_val and value_val:
                         new_cache[str(key_val)] = str(value_val)
-                    elif i < 3:
-                        logging.debug(f"📋 [content] Строка {i}: key={key_val!r}, value={value_val!r} — пропущена")
-            elif i < 3:
-                logging.debug(f"📋 [content] Строка {i}: не dict или < 4 числовых ключей")
         _content_cache = new_cache
-        logging.info(f"📋 [content] Кэш обновлён: {len(_content_cache)} записей")
     except Exception as e:
         logging.warning(f"📋 [content] Ошибка перезагрузки: {e}")
 
 
 def get_content(key: str, fallback: str = "") -> str:
     """Получить контент по ключу с fallback на значение по умолчанию"""
-    result = _content_cache.get(key, fallback)
-    if result != fallback:
-        logging.debug(f"📋 [content] get_content({key!r}) → из кэша")
-    return result
+    return _content_cache.get(key, fallback)
 
 
 async def _content_reload_loop(pool):
-    """Фоновая перезагрузка кэша контента каждые 60 сек (fallback если Redis недоступен)"""
+    """Фоновая перезагрузка кэша контента каждые 60 сек"""
     while True:
         await asyncio.sleep(60)
         await reload_content(pool)
@@ -84,15 +68,12 @@ async def _content_reload_loop(pool):
 async def _content_subscribe_redis():
     """Подписка на Redis канал для мгновенного обновления контента"""
     if not _redis_client:
-        logging.info("📋 [content] Redis клиент недоступен — подписка пропущена")
         return
     try:
         pubsub = _redis_client.pubsub()
         await pubsub.subscribe(f"bot:table_updated:{PROJECT_ID}")
-        logging.info(f"📋 [content] Подписка на Redis канал bot:table_updated:{PROJECT_ID}")
         async for message in pubsub.listen():
             if message["type"] == "message":
-                logging.info("📋 [content] Redis: таблица обновлена — перезагружаем контент")
                 await reload_content(db_pool)
     except Exception as e:
         logging.warning(f"📋 [content] Ошибка подписки Redis: {e}")
