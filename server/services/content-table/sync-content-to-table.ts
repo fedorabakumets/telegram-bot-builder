@@ -84,10 +84,12 @@ export async function syncContentToTable(projectId: number, scenarioData: any): 
     const existing = rowsByKey.get(entry.key);
     if (existing) {
       const data = existing.data as Record<string, string>;
-      const curValue = getField(data, colMap, "value");
       const curSheet = getField(data, colMap, "sheet");
-      if (curValue !== entry.value || curSheet !== entry.sheet) {
-        await storage.updateBotTableRow(existing.id, entryToRowData(entry, colMap));
+      // Не перезаписываем value — пользователь мог изменить его через таблицу.
+      // Обновляем только sheet (группировка) если изменился.
+      if (curSheet !== entry.sheet) {
+        const updatedData = { ...data, [colMap.sheet]: entry.sheet };
+        await storage.updateBotTableRow(existing.id, updatedData);
       }
     } else {
       toCreate.push(entry);
