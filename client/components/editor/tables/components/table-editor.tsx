@@ -162,7 +162,23 @@ export function TableEditor({
             }}
           >
             <Download className="h-3 w-3" />
-            Экспорт CSV
+            CSV
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs gap-1.5"
+            onClick={() => {
+              const data = table.rows.map(row => {
+                const obj: Record<string, string> = {};
+                table.columns.forEach(col => { obj[col.name] = row.cells[col.id] ?? ''; });
+                return obj;
+              });
+              downloadFile(JSON.stringify(data, null, 2), `${table.name.replace('🔒 ', '')}.json`, 'application/json');
+            }}
+          >
+            <Download className="h-3 w-3" />
+            JSON
           </Button>
         </div>
       )}
