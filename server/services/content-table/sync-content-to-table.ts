@@ -18,7 +18,16 @@ const MAX_ENTRIES = 1000;
  */
 export async function syncContentToTable(projectId: number, scenarioData: any): Promise<void> {
   const tableId = await ensureContentTable(projectId);
-  const entries = extractContentFromNodes(scenarioData.sheets || []);
+
+  // Отладка: проверяем что приходит в scenarioData
+  const sheets = scenarioData?.sheets || [];
+  console.log(`[syncContentToTable] projectId=${projectId}, sheets=${sheets.length}, keys=${Object.keys(scenarioData || {}).join(',')}`);
+  if (sheets.length > 0) {
+    const totalNodes = sheets.reduce((sum: number, s: any) => sum + (s.nodes?.length || 0), 0);
+    console.log(`[syncContentToTable] totalNodes=${totalNodes}`);
+  }
+
+  const entries = extractContentFromNodes(sheets);
 
   // Ограничение на количество записей
   const limitedEntries = entries.slice(0, MAX_ENTRIES);
