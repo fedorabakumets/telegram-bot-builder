@@ -37,7 +37,7 @@ export async function updateRowHandler(req: Request, res: Response): Promise<voi
     // Обратная синхронизация: если это таблица _content — обновить JSON сценария
     const projectId = parseInt(req.params.id, 10);
     const tableId = parseInt(req.params.tableId, 10);
-    if (!isNaN(projectId) && !isNaN(tableId) && data.key && data.type) {
+    if (!isNaN(projectId) && !isNaN(tableId)) {
       try {
         const tables = await storage.getBotTables(projectId);
         const contentTable = tables.find((t) => t.name === "_content");

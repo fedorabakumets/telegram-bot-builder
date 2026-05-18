@@ -10,7 +10,7 @@ import { parseContentKey } from "./content-key-parser";
  * Обновляет JSON сценария проекта при изменении строки в таблице _content
  * @param projectId - ID проекта
  * @param tableId - ID таблицы _content
- * @param rowData - Данные строки (key, type, value и т.д.)
+ * @param rowData - Данные строки (ключи = ID колонок или имена колонок)
  */
 export async function syncTableToScenario(
   projectId: number,
@@ -20,15 +20,31 @@ export async function syncTableToScenario(
   const project = await storage.getBotProject(projectId);
   if (!project || !project.data) return;
 
+  // Строим маппинг ID колонки → имя колонки
+  const columns = await storage.getBotTableColumns(tableId);
+  const idToName: Record<string, string> = {};
+  for (const col of columns) {
+    idToName[String(col.id)] = col.name;
+  }
+
+  // Нормализуем rowData: преобразуем ключи из ID в имена
+  const normalized: Record<string, string> = {};
+  for (const [k, v] of Object.entries(rowData)) {
+    const name = idToName[k] || k;
+    normalized[name] = v;
+  }
+
+  if (!normalized.key || !normalized.type) return;
+
   const scenarioData = project.data as any;
   const sheets: any[] = scenarioData.sheets || [];
 
-  const parsed = parseContentKey(rowData.key, rowData.type);
+  const parsed = parseContentKey(normalized.key, normalized.type);
   const node = findNodeById(sheets, parsed.nodeId);
   if (!node) return;
 
   const data = node.data || {};
-  const value = rowData.value;
+  const value = normalized.value || "";
 
   switch (parsed.field) {
     case "messageText":
