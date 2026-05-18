@@ -62,13 +62,14 @@ export function BotTokenSelector({
     <div className="flex items-center gap-1.5">
       <Bot className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
       <Select
-        value={selectedTokenId != null ? String(selectedTokenId) : ''}
-        onValueChange={(value) => onSelect(value ? Number(value) : null)}
+        value={selectedTokenId != null ? String(selectedTokenId) : 'all'}
+        onValueChange={(value) => onSelect(value === 'all' ? null : Number(value))}
       >
         <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px] max-w-[180px]">
           <SelectValue placeholder="Бот" />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="all">Все боты</SelectItem>
           {tokens.map((token) => (
             <SelectItem key={token.id} value={String(token.id)}>
               {getTokenLabel(token)}
