@@ -92,7 +92,7 @@ export function TablesPanel({ projectId, allProjects, onProjectChange }: TablesP
         {selectedTable ? (
           <TableEditor
             table={selectedTable}
-            readOnly={false}
+            readOnly={selectedTable.id.startsWith('_system_')}
             onAddColumn={(name) => addColumn(selectedTable.id, name)}
             onAddAlphabetColumns={() => addAlphabetColumns(selectedTable.id)}
             onRenameColumn={(colId, name) => renameColumn(selectedTable.id, colId, name)}

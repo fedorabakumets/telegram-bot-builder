@@ -149,7 +149,7 @@ export function TableEditor({
           <div className="flex items-center gap-2">
             <Lock className="h-3.5 w-3.5 text-blue-500" />
             <span className="text-xs text-blue-600 dark:text-blue-400">
-              Системная таблица — только чтение
+              Системная таблица — создана автоматически, только чтение
             </span>
           </div>
           <Button
