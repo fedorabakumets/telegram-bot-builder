@@ -821,6 +821,16 @@ export default function Editor() {
     projectId: activeProject?.id || null
   });
 
+  // Обработчик кастомного события navigate-tab (из панели свойств)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const tab = (e as CustomEvent).detail;
+      if (tab) handleTabChange(tab);
+    };
+    window.addEventListener('navigate-tab', handler);
+    return () => window.removeEventListener('navigate-tab', handler);
+  }, [handleTabChange]);
+
   // Хук для управления операциями с листами
   const {
     handleSheetAdd,

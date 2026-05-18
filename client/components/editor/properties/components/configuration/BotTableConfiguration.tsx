@@ -106,12 +106,16 @@ export function BotTableConfiguration({
       </p>
 
       {/* Подсказка про управление таблицами */}
-      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-800/30">
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new CustomEvent('navigate-tab', { detail: 'tables' }))}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-800/30 hover:bg-amber-100/80 dark:hover:bg-amber-900/30 transition-colors cursor-pointer w-full text-left"
+      >
         <i className="fas fa-lightbulb text-amber-500 text-xs" />
         <span className="text-xs text-amber-700 dark:text-amber-400">
-          Управляйте данными таблиц во вкладке «Таблицы»
+          Управляйте данными во вкладке «Таблицы» →
         </span>
-      </div>
+      </button>
 
       {/* Имя таблицы */}
       <div className="space-y-1.5">
