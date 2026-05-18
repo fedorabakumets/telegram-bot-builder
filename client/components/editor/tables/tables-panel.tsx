@@ -3,7 +3,8 @@
  * @module editor/tables/tables-panel
  */
 
-import { Table2 } from 'lucide-react';
+import { Table2, RefreshCw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 import { TableList } from './components/table-list';
 import { TableEditor } from './components/table-editor';
@@ -18,6 +19,7 @@ import type { TablesPanelProps } from './types';
  * @returns JSX элемент панели таблиц
  */
 export function TablesPanel({ projectId, allProjects, onProjectChange }: TablesPanelProps) {
+  const queryClient = useQueryClient();
   const {
     tables,
     selectedTable,
@@ -63,8 +65,18 @@ export function TablesPanel({ projectId, allProjects, onProjectChange }: TablesP
             />
           )}
         </div>
-        {/* Экспорт/импорт всех таблиц */}
-        <AllTablesActions projectId={projectId} onImportTable={importNewTable} />
+        {/* Кнопка обновления + Экспорт/импорт всех таблиц */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['bot-tables'] })}
+            className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            title="Обновить данные таблиц"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
+          <AllTablesActions projectId={projectId} onImportTable={importNewTable} />
+        </div>
       </div>
 
       {/* Контент: список таблиц + редактор */}
