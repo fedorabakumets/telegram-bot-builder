@@ -869,16 +869,26 @@ def build_earning() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "user",
         "resultFormat": "first_row",
+        "autoTransitionTo": "set-check-lvl",
+        "enableAutoTransition": True,
+    }))
+
+    # Вычисляем разницу exp - exp_to_next для проверки level up
+    nodes.append(node("set-check-lvl", "set_variable", 2500, 0, {
+        "assignments": [
+            {"id": "a-exp-diff", "variable": "exp_diff",
+             "value": "{user.exp} - {user.exp_to_next}", "mode": "expression"},
+        ],
         "autoTransitionTo": "cond-level-up",
         "enableAutoTransition": True,
     }))
 
-    # Проверяем level up: exp >= exp_to_next
-    nodes.append(node("cond-level-up", "condition", 2500, 0, {
-        "variable": "user.exp",
+    # Проверяем level up: exp_diff >= 0 означает level up
+    nodes.append(node("cond-level-up", "condition", 2800, 0, {
+        "variable": "exp_diff",
         "branches": [
-            branch("br-no-lvl", "Нет level up", "less_than", "{user.exp_to_next}", "msg-work-success"),
-            branch("br-lvl-up", "Level up", "else", "", "set-calc-next-lvl"),
+            branch("br-lvl-up", "Level up", "greater_than", "-1", "set-calc-next-lvl"),
+            branch("br-no-lvl", "Нет level up", "else", "", "msg-work-success"),
         ],
     }))
 
