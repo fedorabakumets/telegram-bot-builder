@@ -2743,6 +2743,63 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Эндпоинт получения переменных пользователей (user_data развёрнутый в колонки)
+   * @route GET /api/projects/:id/users/variables
+   * @param id - Идентификатор проекта
+   * @query limit - Лимит записей (по умолчанию 200)
+   * @returns {columns: string[], rows: Array<{user_id, ...переменные}>}
+   */
+  app.get("/api/projects/:id/users/variables", async (req, res) => {
+    const projectId = parseInt(req.params.id);
+    const tokenId = getRequestTokenId(req);
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 200;
+
+    try {
+      const result = await dbPool.query(
+        `SELECT user_id, username, first_name, user_data
+         FROM bot_users 
+         WHERE project_id = $1 
+           AND ($2::integer IS NULL OR token_id = $2)
+           AND user_data IS NOT NULL 
+           AND user_data != '{}'
+         ORDER BY last_interaction DESC
+         LIMIT $3`,
+        [projectId, tokenId, limit]
+      );
+
+      // Собираем все уникальные ключи из user_data
+      const allKeys = new Set<string>();
+      for (const row of result.rows) {
+        if (row.user_data && typeof row.user_data === 'object') {
+          Object.keys(row.user_data).forEach(k => {
+            if (!k.startsWith('_') && !k.startsWith('waiting_') && !k.startsWith('input_')) {
+              allKeys.add(k);
+            }
+          });
+        }
+      }
+
+      const columns = ['user_id', 'username', ...Array.from(allKeys).sort()];
+      const rows = result.rows.map((r: any) => {
+        const row: Record<string, string> = {
+          user_id: String(r.user_id),
+          username: r.username || '',
+        };
+        for (const key of allKeys) {
+          const val = r.user_data?.[key];
+          row[key] = val != null ? (typeof val === 'object' ? JSON.stringify(val) : String(val)) : '';
+        }
+        return row;
+      });
+
+      res.json({ columns, rows });
+    } catch (error) {
+      console.error("Error fetching user variables:", error);
+      res.status(500).json({ message: "Ошибка при получении переменных" });
+    }
+  });
+
+  /**
    * Эндпоинт получения всех сообщений проекта (для системной таблицы)
    * @route GET /api/projects/:id/messages/all
    * @param id - Идентификатор проекта

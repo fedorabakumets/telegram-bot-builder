@@ -154,6 +154,14 @@ export function useSystemTables(projectId: number): BotTable[] {
     refetchInterval: 15000,
   });
 
+  /** Загрузка переменных пользователей */
+  const { data: variablesData } = useQuery<{ columns: string[]; rows: Record<string, string>[] }>({
+    queryKey: ['system-tables-variables', projectId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/users/variables?limit=200`),
+    enabled: !!projectId,
+    refetchInterval: 10000,
+  });
+
   /** Преобразуем данные в формат BotTable */
   const systemTables = useMemo<BotTable[]>(() => {
     // Пользователи
@@ -260,12 +268,29 @@ export function useSystemTables(projectId: number): BotTable[] {
       },
     }));
 
+    // Переменные пользователей (динамические колонки)
+    const varCols = variablesData?.columns || ['user_id', 'username'];
+    const varRows = variablesData?.rows || [];
+
+    const variablesColumns: TableColumn[] = varCols.map(c => ({ id: c, name: c }));
+    const variablesRows: TableRow[] = varRows.map((r: Record<string, string>, i: number) => ({
+      id: i + 1,
+      rowIndex: i + 1,
+      cells: r,
+    }));
+
     return [
       {
         id: '_system_users',
         name: '🔒 Пользователи',
         columns: USERS_COLUMNS,
         rows: usersRows,
+      },
+      {
+        id: '_system_variables',
+        name: '🔒 Переменные',
+        columns: variablesColumns,
+        rows: variablesRows,
       },
       {
         id: '_system_messages',
@@ -298,7 +323,7 @@ export function useSystemTables(projectId: number): BotTable[] {
         rows: broadcastsRows,
       },
     ];
-  }, [usersData, messagesData, groupsData, mediaData, tokensData, broadcastsData]);
+  }, [usersData, messagesData, groupsData, mediaData, tokensData, broadcastsData, variablesData]);
 
   return systemTables;
 }
