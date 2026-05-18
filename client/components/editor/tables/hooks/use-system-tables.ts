@@ -111,7 +111,7 @@ export function useSystemTables(projectId: number): BotTable[] {
   /** Загрузка сообщений */
   const { data: messagesData } = useQuery<any[]>({
     queryKey: ['system-tables-messages', projectId],
-    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/messages/all?limit=200`),
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/messages/all?limit=1000`),
     enabled: !!projectId,
     refetchInterval: 10000,
   });
