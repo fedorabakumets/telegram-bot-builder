@@ -322,7 +322,254 @@ schedule(00:00 МСК) → bot_table(update: SET reputation=50 WHERE reputation<
 
 ---
 
-## 8. Генерируемый Python-код
+## 8. Примеры (20+ сценариев)
+
+### Формат записи цепочек
+
+```
+триггер → узел → узел → ... → message
+```
+
+---
+
+### 8.1 Регистрация при /start
+
+```
+/start → bot_table(upsert: profiles, telegram_id={user_id}, balance=100, reputation=100) → message("Добро пожаловать!")
+```
+
+### 8.2 Просмотр своего профиля
+
+```
+/profile → bot_table(read: profiles WHERE telegram_id={user_id}) → message("Баланс: {me.balance} 🍪\nРепутация: {me.reputation}")
+```
+
+### 8.3 Просмотр чужого профиля через реплай
+
+```
+/profile (реплай) → bot_table(read: profiles WHERE telegram_id={reply_to_user_id}) → message("Профиль @{target.username}: {target.reputation} реп")
+```
+
+### 8.4 Установить возраст
+
+```
+/setage → saveAnswer(inputVariable=user_input) → bot_table(update: profiles SET age={user_input} WHERE telegram_id={user_id}) → message("Возраст сохранён")
+```
+
+### 8.5 Установить био
+
+```
+/setbio → saveAnswer(inputVariable=user_input) → bot_table(update: profiles SET bio={user_input} WHERE telegram_id={user_id}) → message("Био обновлено")
+```
+
+### 8.6 +реп через реплай
+
+```
+"+реп" → condition(reply_to_user_id не пустой?) → bot_table(read: cooldowns WHERE action_key={user_id}_rep) → condition(прошло 5 мин?) → bot_table(update: profiles SET reputation+10 WHERE telegram_id={reply_to_user_id}) → bot_table(upsert: cooldowns, last_used_at={__now__}) → message("✅ Репутация @{reply_to_username}: {rep_result.reputation}")
+```
+
+### 8.7 -реп через реплай
+
+```
+"-реп" → condition(reply_to_user_id не пустой?) → bot_table(read: profiles WHERE telegram_id={user_id}) → condition(reputation ≥ 50?) → bot_table(update: profiles SET reputation-10 WHERE telegram_id={reply_to_user_id}) → message("⬇️ Репутация @{reply_to_username}: {rep_result.reputation}")
+```
+
+### 8.8 Ежедневный сброс репутации
+
+```
+schedule(daily 00:00 МСК) → bot_table(update: profiles SET reputation=50 WHERE reputation < 50)
+```
+
+### 8.9 Магазин — показать товары
+
+```
+/shop → message("🛒 Магазин:\n1. Сброс лимитов — 100🍪\n2. +10 реп — 50🍪\n3. Префикс — 200🍪", buttons=[btn1, btn2, btn3])
+```
+
+### 8.10 Покупка +10 репутации за 50🍪
+
+```
+Кнопка "Купить +10 реп" → bot_table(read: profiles WHERE telegram_id={user_id}) → condition(balance ≥ 50?) → bot_table(update: profiles SET balance-50, reputation+10 WHERE telegram_id={user_id}) → message("✅ Куплено! Баланс: {after.balance}🍪")
+                                                                                   → else: message("❌ Недостаточно 🍪")
+```
+
+### 8.11 Покупка сброса лимитов за 100🍪
+
+```
+Кнопка "Сброс лимитов" → bot_table(read: profiles WHERE telegram_id={user_id}) → condition(balance ≥ 100?) → bot_table(update: profiles SET balance-100 WHERE telegram_id={user_id}) → bot_table(update: relationships SET actions_today=0 WHERE user_a={user_id}) → message("✅ Лимиты сброшены!")
+                                                                                  → else: message("❌ Нужно 100🍪")
+```
+
+### 8.12 Покупка кастомного префикса за 200🍪
+
+```
+Кнопка "Префикс" → bot_table(read: profiles WHERE telegram_id={user_id}) → condition(balance ≥ 200?) → message("Введите префикс (до 10 символов):") → saveAnswer(inputVariable=prefix_input) → bot_table(update: profiles SET balance-200, prefix={prefix_input} WHERE telegram_id={user_id}) → message("✅ Префикс установлен: {prefix_input}")
+```
+
+### 8.13 Обнять (позитивное взаимодействие)
+
+```
+"обнять" (реплай) → condition(reply есть?) → bot_table(read: profiles WHERE telegram_id={user_id}) → condition(reputation ≥ 80?) → bot_table(upsert: relationships, pair_id={user_id}_{reply_to_user_id}, score=0) → bot_table(read: relationships WHERE pair_id={user_id}_{reply_to_user_id}) → condition(actions_today < 3?) → bot_table(update: relationships SET score+5, actions_today+1 WHERE pair_id=...) → bot_table(update: profiles SET balance+5 WHERE telegram_id={user_id}) → message("🤗 Вы обняли @{reply_to_username}! Отношения: {rel.score}")
+                                                                                                      → else (реп < 80): message("❌ Нужна репутация ≥ 80")
+                                                                                                      → else (лимит): message("⏳ Лимит исчерпан (3/3)")
+```
+
+### 8.14 Пнуть (негативное взаимодействие)
+
+```
+"пнуть" (реплай) → condition(reply есть?) → bot_table(read: profiles WHERE telegram_id={user_id}) → condition(reputation ≥ 80?) → bot_table(upsert: relationships, pair_id=...) → bot_table(read: relationships WHERE pair_id=...) → condition(actions_today < 3?) → bot_table(update: relationships SET score-5, actions_today+1 WHERE pair_id=...) → bot_table(update: profiles SET balance+5 WHERE telegram_id={user_id}) → message("👊 Вы пнули @{reply_to_username}! Отношения: {rel.score}")
+```
+
+### 8.15 Назначить ранг (только HeadAdmin)
+
+```
+/setrank (реплай) → bot_table(read: profiles WHERE telegram_id={user_id}) → condition(rank == "headadmin"?) → saveAnswer(inputVariable=new_rank) → bot_table(update: profiles SET rank={new_rank} WHERE telegram_id={reply_to_user_id}) → message("✅ @{reply_to_username} теперь {new_rank}")
+                                                                            → else: message("❌ Только HeadAdmin может назначать ранги")
+```
+
+### 8.16 Мут пользователя (Admin+)
+
+```
+/mute (реплай) → bot_table(read: profiles WHERE telegram_id={user_id}) → condition(rank in [admin, headadmin]?) → mute_user(reply_to_user_id) → bot_table(insert: action_log, action=mute, target={reply_to_user_id}) → message("🔇 @{reply_to_username} замучен")
+```
+
+### 8.17 Автосообщения — настройка (/autoset)
+
+```
+/autoset → condition(is_admin?) → saveAnswer(inputVariable=auto_text) → bot_table(upsert: settings, key=auto_message_{chat_id}, message_text={auto_text}) → message("✅ Автосообщение сохранено")
+```
+
+### 8.18 Автосообщения — отправка по таймеру
+
+```
+schedule(interval 10 мин) → bot_table(read: settings WHERE setting_key=auto_message_{chat_id}) → condition(enabled == true?) → message("{auto_cfg.message_text}")
+```
+
+### 8.19 Топ-10 по репутации
+
+```
+/top → bot_table(read: profiles, all_rows, orderBy=reputation desc, limit=10) → loop(all_users, item=user) → set_variable(json_push: formatted, "{index+1}. {user.username} — {user.reputation} реп") → message("🏆 Топ репутации:\n{formatted}")
+```
+
+### 8.20 Статистика бота (/stats)
+
+```
+/stats → bot_table(read: profiles, count) → message("👥 Всего пользователей: {users_count}")
+```
+
+### 8.21 Проверка отношений (/relations)
+
+```
+/relations (реплай) → bot_table(read: relationships WHERE pair_id={user_id}_{reply_to_user_id}) → condition(найдено?) → message("💕 Отношения с @{reply_to_username}: {rel.score}/100")
+                                                                                                  → else: message("Вы ещё не взаимодействовали с @{reply_to_username}")
+```
+
+### 8.22 Ежедневный сброс лимитов взаимодействий
+
+```
+schedule(daily 00:00 МСК) → bot_table(update: relationships SET actions_today=0 WHERE actions_today > 0)
+```
+
+### 8.23 Логирование всех действий
+
+```
+(после любого действия) → bot_table(insert: action_log, user_id={user_id}, target_id={reply_to_user_id}, action=..., timestamp={__now__}, chat_id={chat_id})
+```
+
+### 8.24 Перевод 🍪 другому пользователю
+
+```
+/give 50 (реплай) → bot_table(read: profiles WHERE telegram_id={user_id}) → condition(balance ≥ 50?) → bot_table(update: profiles SET balance-50 WHERE telegram_id={user_id}) → bot_table(update: profiles SET balance+50 WHERE telegram_id={reply_to_user_id}) → message("✅ Переведено 50🍪 → @{reply_to_username}")
+                                                                             → else: message("❌ Недостаточно 🍪")
+```
+
+### 8.25 Ежедневный бонус (/daily)
+
+```
+/daily → bot_table(read: cooldowns WHERE action_key={user_id}_daily) → condition(прошло 24ч?) → bot_table(update: profiles SET balance+25 WHERE telegram_id={user_id}) → bot_table(upsert: cooldowns, action_key={user_id}_daily, last_used_at={__now__}) → message("✅ +25🍪! Баланс: {profile.balance}")
+                                                                      → else: message("⏳ Бонус доступен через {hours_left}ч")
+```
+
+### 8.26 Бан пользователя (HeadAdmin)
+
+```
+/ban (реплай) → bot_table(read: profiles WHERE telegram_id={user_id}) → condition(rank == headadmin?) → ban_user(reply_to_user_id) → bot_table(update: profiles SET rank=banned WHERE telegram_id={reply_to_user_id}) → bot_table(insert: action_log, action=ban) → message("🚫 @{reply_to_username} забанен")
+```
+
+### 8.27 Разбан пользователя
+
+```
+/unban (реплай) → bot_table(read: profiles WHERE telegram_id={user_id}) → condition(rank == headadmin?) → unban_user(reply_to_user_id) → bot_table(update: profiles SET rank=user WHERE telegram_id={reply_to_user_id}) → message("✅ @{reply_to_username} разбанен")
+```
+
+```json
+{
+  "id": "tbl-register",
+  "type": "bot_table",
+  "position": { "x": 300, "y": 0 },
+  "data": {
+    "tableName": "profiles",
+    "operation": "upsert",
+    "key": "telegram_id",
+    "row": {
+      "telegram_id": "{user_id}",
+      "username": "{username}",
+      "first_name": "{first_name}",
+      "balance": "100",
+      "reputation": "100",
+      "bio": "",
+      "rank": "user",
+      "registered_at": "{__now__}"
+    },
+    "onConflict": "ignore",
+    "saveResultTo": "profile",
+    "autoTransitionTo": "msg-welcome",
+    "enableAutoTransition": true
+  }
+}
+```
+
+
+
+---
+
+## 9. Дополнительные поля (расширение WHERE)
+
+Для сценариев типа "ежедневный сброс" и "топ-10" нужны расширенные условия:
+
+### WHERE с оператором
+
+```json
+{
+  "where": [
+    { "column": "reputation", "value": "50", "operator": "less_than" },
+    { "column": "enabled", "value": "true", "operator": "equals" }
+  ]
+}
+```
+
+Операторы WHERE:
+- `"equals"` (по умолчанию) — точное совпадение
+- `"not_equals"` — не равно
+- `"greater_than"` — больше
+- `"less_than"` — меньше
+- `"contains"` — содержит подстроку
+- `"is_empty"` — пустое значение
+- `"is_not_empty"` — не пустое
+
+### Сортировка и лимит (для read)
+
+```json
+{
+  "orderBy": "reputation",
+  "orderDirection": "desc",
+  "limit": 10
+}
+```
+
+---
+
+## 10. Генерируемый Python-код
 
 ### 8.1 Read
 
