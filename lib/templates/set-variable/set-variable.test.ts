@@ -154,3 +154,79 @@ describe('Производительность', () => {
     expect(Date.now() - start).toBeLessThan(100);
   });
 });
+
+// ─── Режим random ────────────────────────────────────────────────────────────
+
+describe('Режим random', () => {
+  it('содержит random.randint при mode: random', () => {
+    const nodes = [
+      { id: 'sv_rand', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'salary', value: '500', maxValue: '900', mode: 'random' }],
+        autoTransitionTo: '',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('randint');
+  });
+
+  it('содержит import random', () => {
+    const nodes = [
+      { id: 'sv_rand2', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'exp_gain', value: '8', maxValue: '16', mode: 'random' }],
+        autoTransitionTo: 'msg_1',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('import random');
+  });
+
+  it('содержит logging.info с random', () => {
+    const nodes = [
+      { id: 'sv_rand3', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'reward', value: '100', maxValue: '500', mode: 'random' }],
+        autoTransitionTo: '',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('random');
+    expect(r).toContain('logging.info');
+  });
+});
+
+// ─── Режим timestamp ─────────────────────────────────────────────────────────
+
+describe('Режим timestamp', () => {
+  it('содержит time.time() при mode: timestamp', () => {
+    const nodes = [
+      { id: 'sv_ts', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'cooldown_until', value: '90', mode: 'timestamp' }],
+        autoTransitionTo: '',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('time()');
+  });
+
+  it('содержит import time', () => {
+    const nodes = [
+      { id: 'sv_ts2', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'expires_at', value: '3600', mode: 'timestamp' }],
+        autoTransitionTo: 'msg_1',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('import time');
+  });
+
+  it('offset=0 генерирует текущий timestamp', () => {
+    const nodes = [
+      { id: 'sv_ts3', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'now_ts', value: '0', mode: 'timestamp' }],
+        autoTransitionTo: '',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('timestamp');
+    expect(r).toContain('logging.info');
+  });
+});
