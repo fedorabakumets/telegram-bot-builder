@@ -154,16 +154,25 @@ def build_sheet_start() -> dict:
             "buttons": [],
         }),
 
-        # /setage → обновление → подтверждение
+        # /setage → запрос возраста → обновление → подтверждение
         make_node("cmd-setage", "command_trigger", 100, 500, {
             "command": "/setage",
             "description": "Установить возраст",
             "showInMenu": False,
-            "autoTransitionTo": "tbl-setage",
+            "autoTransitionTo": "msg-ask-age",
         }),
-        make_bot_table_node("tbl-setage", 400, 500, "profiles", "update",
+        make_node("msg-ask-age", "message", 400, 500, {
+            "messageText": "🎂 Введите ваш возраст (число от 1 до 120):",
+            "keyboardType": "none",
+            "buttons": [],
+            "collectUserInput": True,
+            "enableTextInput": True,
+            "inputVariable": "user_age",
+            "inputTargetNodeId": "tbl-setage",
+        }),
+        make_bot_table_node("tbl-setage", 700, 500, "profiles", "update",
             where=[{"column": "telegram_id", "value": "{user_id}"}],
-            updates=[{"column": "age", "op": "set", "value": "{user_input}"}],
+            updates=[{"column": "age", "op": "set", "value": "{user_age}"}],
             target="msg-age-ok",
         ),
         make_node("msg-age-ok", "message", 700, 500, {
@@ -172,16 +181,25 @@ def build_sheet_start() -> dict:
             "buttons": [],
         }),
 
-        # /setbio
+        # /setbio → запрос био → обновление → подтверждение
         make_node("cmd-setbio", "command_trigger", 100, 700, {
             "command": "/setbio",
             "description": "Установить био",
             "showInMenu": False,
-            "autoTransitionTo": "tbl-setbio",
+            "autoTransitionTo": "msg-ask-bio",
         }),
-        make_bot_table_node("tbl-setbio", 400, 700, "profiles", "update",
+        make_node("msg-ask-bio", "message", 400, 700, {
+            "messageText": "📝 Введите текст о себе (до 300 символов):",
+            "keyboardType": "none",
+            "buttons": [],
+            "collectUserInput": True,
+            "enableTextInput": True,
+            "inputVariable": "user_bio",
+            "inputTargetNodeId": "tbl-setbio",
+        }),
+        make_bot_table_node("tbl-setbio", 700, 700, "profiles", "update",
             where=[{"column": "telegram_id", "value": "{user_id}"}],
-            updates=[{"column": "bio", "op": "set", "value": "{user_input}"}],
+            updates=[{"column": "bio", "op": "set", "value": "{user_bio}"}],
             target="msg-bio-ok",
         ),
         make_node("msg-bio-ok", "message", 700, 700, {
@@ -190,16 +208,25 @@ def build_sheet_start() -> dict:
             "buttons": [],
         }),
 
-        # /setstatus
+        # /setstatus → запрос статуса → обновление → подтверждение
         make_node("cmd-setstatus", "command_trigger", 100, 900, {
             "command": "/setstatus",
             "description": "Установить статус",
             "showInMenu": False,
-            "autoTransitionTo": "tbl-setstatus",
+            "autoTransitionTo": "msg-ask-status",
         }),
-        make_bot_table_node("tbl-setstatus", 400, 900, "profiles", "update",
+        make_node("msg-ask-status", "message", 400, 900, {
+            "messageText": "💬 Введите ваш статус (до 50 символов):",
+            "keyboardType": "none",
+            "buttons": [],
+            "collectUserInput": True,
+            "enableTextInput": True,
+            "inputVariable": "user_status",
+            "inputTargetNodeId": "tbl-setstatus",
+        }),
+        make_bot_table_node("tbl-setstatus", 700, 900, "profiles", "update",
             where=[{"column": "telegram_id", "value": "{user_id}"}],
-            updates=[{"column": "status", "op": "set", "value": "{user_input}"}],
+            updates=[{"column": "status", "op": "set", "value": "{user_status}"}],
             target="msg-status-ok",
         ),
         make_node("msg-status-ok", "message", 700, 900, {
