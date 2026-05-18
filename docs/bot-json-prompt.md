@@ -883,3 +883,107 @@ HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет отве
 | Шаблон schedule | `lib/templates/schedule-trigger/` |
 | Шаблон loop | `lib/templates/loop/` |
 | Шаблон bot_table | `lib/templates/bot-table/` |
+
+
+---
+
+## Архитектура данных
+
+### Уровни хранения
+
+| Уровень | Что хранит | Таблица БД | Фильтрация |
+|---------|-----------|------------|------------|
+| Платформа | Владельцы ботов, сессии | `telegram_users`, `session` | — |
+| Проект | Сценарий, шаблоны, пользовательские таблицы | `bot_projects`, `bot_tables`, `bot_table_rows` | `project_id` |
+| Токен (бот) | Пользователи, сообщения, логи, рассылки | `bot_users`, `bot_messages`, `bot_logs` | `project_id` + `token_id` |
+
+### Системные таблицы (read-only, уровень токена)
+
+Виртуальные таблицы, отображающие реальные данные бота в UI:
+
+| Таблица | Источник | API |
+|---------|----------|-----|
+| Пользователи | `bot_users` | `GET /api/projects/:id/users` |
+| Переменные | `bot_users.user_data` (JSONB → колонки) | `GET /api/projects/:id/users/variables` |
+| Сообщения | `bot_messages` | `GET /api/projects/:id/messages/all` |
+| Группы | `bot_groups` | `GET /api/projects/:id/groups` |
+| Логи | `bot_logs` | `GET /api/projects/:id/logs/all` |
+| Запуски | `bot_launch_history` | `GET /api/projects/:id/launches/all` |
+| Рассылки | `broadcasts` | `GET /api/projects/:id/broadcasts` |
+| Токены | `bot_tokens` | `GET /api/projects/:id/tokens` |
+| Медиафайлы | `media_files` | `GET /api/media/project/:id` |
+
+### Пользовательские таблицы (read-write, уровень проекта)
+
+Таблицы создаваемые пользователем в конструкторе. Используются нодами `bot_table`.
+
+Хранение: `bot_tables` → `bot_table_columns` → `bot_table_rows` (data: JSONB).
+
+GIN-индекс на `bot_table_rows.data` для быстрого поиска по ключам.
+
+### Переменные пользователей (user_data)
+
+Поле `bot_users.user_data` (JSONB) хранит все пользовательские переменные бота:
+
+```json
+{
+  "user_age": "25",
+  "user_bio": "текст",
+  "utm_source": "direct",
+  "score": "150"
+}
+```
+
+Доступ в сценарии: `{user_age}`, `{user_bio}` и т.д.
+
+Служебные ключи (не показываются в UI): `_*`, `waiting_*`, `input_*`.
+
+---
+
+## Правила генерации сценариев
+
+### Структура листов
+
+- Один лист = одна логическая группа (профиль, репутация, магазин, админка)
+- Имя листа: эмодзи + название (`"⭐ Репутация"`, `"🛒 Магазин"`)
+- Не более 15-20 узлов на лист
+
+### Позиционирование
+
+- Триггеры: `x = 100`, разные `y` (шаг 200)
+- Цепочка обработки: `x += 300` для каждого шага
+- Параллельные ветки: `y += 200`
+
+### ID узлов
+
+- Осмысленные: `cmd-start`, `tbl-read-profile`, `msg-welcome`, `cond-check-rep`
+- Префиксы: `cmd-` (команды), `trig-` (триггеры), `msg-` (сообщения), `tbl-` (bot_table), `cond-` (условия), `set-` (set_variable), `http-` (запросы), `loop-` (циклы)
+
+### Выбор между psql_query и bot_table
+
+| Критерий | psql_query | bot_table |
+|----------|-----------|-----------|
+| Сложные JOIN | ✅ | ❌ |
+| Агрегации (COUNT, SUM) | ✅ | ❌ |
+| Простой CRUD | Можно | ✅ Предпочтительно |
+| Автосоздание таблицы | ❌ | ✅ |
+| Атомарный increment | Через SQL | ✅ Встроено |
+| Безопасность (injection) | Нужна осторожность | ✅ Безопасно |
+
+**Рекомендация:** для простых операций (профиль, баланс, репутация) — `bot_table`. Для сложной аналитики и кросс-таблиц — `psql_query`.
+
+### Антипаттерны
+
+- ❌ Не хранить массивы как строку — использовать `json_push` в `set_variable`
+- ❌ Не делать SELECT + UPDATE в двух узлах — использовать `bot_table` с `operation: "update"` и `op: "increment"`
+- ❌ Не дублировать данные в `user_data` и в пользовательской таблице — выбрать одно место
+- ❌ Не использовать `psql_query` для простого чтения одной строки — `bot_table` проще и безопаснее
+- ❌ Не создавать таблицу на каждого пользователя (`orders_{user_id}`) — использовать одну таблицу с колонкой `user_id`
+
+### Паттерны
+
+- ✅ Регистрация: `command_trigger(/start)` → `bot_table(upsert, key=telegram_id)` → `message(приветствие)`
+- ✅ Профиль: `command_trigger(/profile)` → `bot_table(read)` → `message({profile.field})`
+- ✅ Репутация: `text_trigger(+реп)` → `bot_table(read me)` → `condition(rep >= 50)` → `bot_table(update target, increment)` → `message(результат)`
+- ✅ Магазин: `message(меню)` → `inline кнопки` → `condition(balance >= price)` → `bot_table(update, decrement balance)` → `message(успех)`
+- ✅ Расписание: `schedule_trigger(daily 00:00)` → `psql_query(UPDATE ... WHERE condition)` → `message(отчёт в админ-чат)`
