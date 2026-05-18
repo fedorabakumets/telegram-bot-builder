@@ -130,6 +130,8 @@ export const messageParamsSchema = z.object({
   // --- Служебные ---
   /** Есть ли входящие кнопки с hideAfterClick=true, ведущие к этому узлу */
   hasHideAfterClickIncoming: z.boolean().optional().default(false),
+  /** ID проекта для поддержки get_content (горячая перезагрузка контента) */
+  projectId: z.number().nullable().optional().default(null),
   /** Имя переменной для сохранения ID отправленного сообщения */
   saveMessageIdTo: z.string().optional(),
 

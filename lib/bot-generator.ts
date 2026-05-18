@@ -306,7 +306,8 @@ function generateCodeSections(
     !!context.options.enableComments,
     context.options.telegramFileIds || {},
     context.options.thumbnailFileIds || {},
-    context.options.thumbnailUrls || {}
+    context.options.thumbnailUrls || {},
+    context.projectId ?? null,
   );
 
   // --- allReferencedNodeIds (теперь часть контекста секции) ---

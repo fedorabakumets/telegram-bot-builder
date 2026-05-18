@@ -187,6 +187,7 @@ function generateCommandEntryHandler(node: Node, callbackHandlerCode: string): s
  * @param telegramFileIds - Словарь кэшированных Telegram file_id (ключ — URL, значение — file_id)
  * @param thumbnailFileIds - Словарь обложек видео (ключ — URL видео, значение — file_id обложки)
  * @param thumbnailUrls - Словарь прямых URL обложек видео (ключ — URL видео, значение — URL обложки)
+ * @param projectId - ID проекта (для поддержки get_content)
  * @returns Сгенерированный код обработчиков узлов
  *
  * @example
@@ -199,7 +200,8 @@ export function generateNodeHandlers(
   enableComments: boolean = true,
   telegramFileIds: Record<string, string> = {},
   thumbnailFileIds: Record<string, string> = {},
-  thumbnailUrls: Record<string, string> = {}
+  thumbnailUrls: Record<string, string> = {},
+  projectId: number | null = null,
 ): string {
   // Собираем код в массив строк
   const codeLines: string[] = [];
@@ -274,6 +276,7 @@ export function generateNodeHandlers(
         telegramFileIds: { ...(telegramFileIds || {}), ...((node.data as any)?.telegramFileIds || {}) },
         thumbnailFileIds: { ...(thumbnailFileIds || {}), ...((node.data as any)?.thumbnailFileIds || {}) },
         thumbnailUrls: { ...(thumbnailUrls || {}), ...((node.data as any)?.thumbnailUrls || {}) },
+        projectId,
       };
   };
 

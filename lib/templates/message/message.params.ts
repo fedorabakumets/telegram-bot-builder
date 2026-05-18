@@ -163,6 +163,9 @@ export interface MessageTemplateParams {
    */
   callbackPattern?: string;
 
+  /** ID проекта для поддержки get_content (горячая перезагрузка контента) */
+  projectId?: number | null;
+
   /** Имя переменной для сохранения ID отправленного сообщения */
   saveMessageIdTo?: string;
 
