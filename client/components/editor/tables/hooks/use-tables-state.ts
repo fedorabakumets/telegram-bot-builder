@@ -17,6 +17,7 @@ import {
   useDeleteRow,
   useReindexRows,
 } from './use-tables-mutations';
+import { useSystemTables } from './use-system-tables';
 import * as api from '../api/tables-api';
 import type { BotTable, TableColumn, TableRow } from '../types';
 
@@ -30,6 +31,9 @@ const INITIAL_ROWS = 10;
  */
 export function useTablesState(projectId: number) {
   const queryClient = useQueryClient();
+
+  /** Системные (виртуальные) таблицы из API пользователей */
+  const systemTables = useSystemTables(projectId);
 
   /** ID выбранной таблицы (строка) */
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
@@ -67,13 +71,16 @@ export function useTablesState(projectId: number) {
 
   /** Список таблиц с колонками/строками для выбранной */
   const tables: BotTable[] = useMemo(
-    () => serverTables.map((t) => ({
-      id: String(t.id),
-      name: t.name,
-      columns: t.id === numericTableId ? columns : [],
-      rows: t.id === numericTableId ? rows : [],
-    })),
-    [serverTables, numericTableId, columns, rows],
+    () => [
+      ...systemTables,
+      ...serverTables.map((t) => ({
+        id: String(t.id),
+        name: t.name,
+        columns: t.id === numericTableId ? columns : [],
+        rows: t.id === numericTableId ? rows : [],
+      })),
+    ],
+    [systemTables, serverTables, numericTableId, columns, rows],
   );
 
   /** Выбранная таблица */

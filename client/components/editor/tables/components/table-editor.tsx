@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SpreadsheetCell } from './spreadsheet-cell';
@@ -19,6 +19,8 @@ import type { BotTable } from '../types';
 interface TableEditorProps {
   /** Таблица для редактирования */
   table: BotTable;
+  /** Режим только чтение (для системных таблиц) */
+  readOnly?: boolean;
   /** Добавить именованную колонку */
   onAddColumn: (name: string) => void;
   /** Добавить 26 буквенных колонок */
@@ -56,6 +58,7 @@ interface FocusedCell {
  */
 export function TableEditor({
   table,
+  readOnly,
   onAddColumn,
   onAddAlphabetColumns,
   onRenameColumn,
@@ -137,17 +140,29 @@ export function TableEditor({
   );
 
   return (
-    <div className="flex flex-col h-full flex-1 overflow-hidden" onPaste={handlePaste}>
-      {/* Тулбар */}
-      <SpreadsheetToolbar
-        table={table}
-        onAddAlphabet={onAddAlphabetColumns}
-        onAdd100Rows={() => onAddRows(100)}
-        onReindex={onReindex}
-        onImportNew={onImportNew}
-        onImportRows={onImportRows}
-        hasSelectedTable={true}
-      />
+    <div className="flex flex-col h-full flex-1 overflow-hidden" onPaste={readOnly ? undefined : handlePaste}>
+      {/* Бейдж «только чтение» для системных таблиц */}
+      {readOnly && (
+        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950/20 border-b border-blue-200/40 dark:border-blue-800/30 flex items-center gap-2">
+          <Lock className="h-3.5 w-3.5 text-blue-500" />
+          <span className="text-xs text-blue-600 dark:text-blue-400">
+            Системная таблица — только чтение
+          </span>
+        </div>
+      )}
+
+      {/* Тулбар (скрыт в режиме только чтение) */}
+      {!readOnly && (
+        <SpreadsheetToolbar
+          table={table}
+          onAddAlphabet={onAddAlphabetColumns}
+          onAdd100Rows={() => onAddRows(100)}
+          onReindex={onReindex}
+          onImportNew={onImportNew}
+          onImportRows={onImportRows}
+          hasSelectedTable={true}
+        />
+      )}
 
       {/* Сетка */}
       <div className="flex-1 overflow-auto">
@@ -162,40 +177,46 @@ export function TableEditor({
                   key={col.id}
                   className="min-w-[120px] h-8 text-left font-medium text-muted-foreground border-r border-border bg-muted/60"
                 >
-                  <ColumnHeader
-                    column={col}
-                    onRename={(name) => onRenameColumn(col.id, name)}
-                    onDelete={() => onDeleteColumn(col.id)}
-                  />
+                  {readOnly ? (
+                    <span className="px-2 text-xs">{col.name}</span>
+                  ) : (
+                    <ColumnHeader
+                      column={col}
+                      onRename={(name) => onRenameColumn(col.id, name)}
+                      onDelete={() => onDeleteColumn(col.id)}
+                    />
+                  )}
                 </th>
               ))}
-              <th className="w-28 h-8 px-1 bg-muted/40 border-r border-border">
-                {addingCol ? (
-                  <div className="flex items-center gap-1">
-                    <Input
-                      autoFocus
-                      placeholder="Имя"
-                      value={newColName}
-                      onChange={(e) => setNewColName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleAddCol();
-                        if (e.key === 'Escape') setAddingCol(false);
-                      }}
-                      onBlur={handleAddCol}
-                      className="h-6 text-xs w-20"
-                    />
-                  </div>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 text-xs gap-1 w-full"
-                    onClick={() => setAddingCol(true)}
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                )}
-              </th>
+              {!readOnly && (
+                <th className="w-28 h-8 px-1 bg-muted/40 border-r border-border">
+                  {addingCol ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        autoFocus
+                        placeholder="Имя"
+                        value={newColName}
+                        onChange={(e) => setNewColName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleAddCol();
+                          if (e.key === 'Escape') setAddingCol(false);
+                        }}
+                        onBlur={handleAddCol}
+                        className="h-6 text-xs w-20"
+                      />
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 text-xs gap-1 w-full"
+                      onClick={() => setAddingCol(true)}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  )}
+                </th>
+              )}
             </tr>
           </thead>
 
@@ -207,36 +228,44 @@ export function TableEditor({
                 </td>
                 {table.columns.map((col, colIdx) => (
                   <td key={col.id} className="h-8 border-r border-border/50 p-0">
-                    <SpreadsheetCell
-                      value={row.cells[col.id] ?? ''}
-                      onChange={(val) => onUpdateCell(row.id, col.id, val)}
-                      isFocused={
-                        focusedCell?.rowIndex === rowIdx && focusedCell?.colIndex === colIdx
-                      }
-                      onNavigate={navigate}
-                      onFocus={() => setFocusedCell({ rowIndex: rowIdx, colIndex: colIdx })}
-                      onBlurCell={() => setFocusedCell(null)}
-                    />
+                    {readOnly ? (
+                      <span className="block px-2 py-1 text-xs truncate">
+                        {row.cells[col.id] ?? ''}
+                      </span>
+                    ) : (
+                      <SpreadsheetCell
+                        value={row.cells[col.id] ?? ''}
+                        onChange={(val) => onUpdateCell(row.id, col.id, val)}
+                        isFocused={
+                          focusedCell?.rowIndex === rowIdx && focusedCell?.colIndex === colIdx
+                        }
+                        onNavigate={navigate}
+                        onFocus={() => setFocusedCell({ rowIndex: rowIdx, colIndex: colIdx })}
+                        onBlurCell={() => setFocusedCell(null)}
+                      />
+                    )}
                   </td>
                 ))}
-                <td className="h-8 w-8 p-0">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => onDeleteRow(row.id)}
-                  >
-                    <Trash2 className="h-3 w-3 text-destructive" />
-                  </Button>
-                </td>
+                {!readOnly && (
+                  <td className="h-8 w-8 p-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => onDeleteRow(row.id)}
+                    >
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Футер — добавление строк */}
-      <AddRowsFooter onAddRows={onAddRows} />
+      {/* Футер — добавление строк (скрыт в режиме только чтение) */}
+      {!readOnly && <AddRowsFooter onAddRows={onAddRows} />}
     </div>
   );
 }

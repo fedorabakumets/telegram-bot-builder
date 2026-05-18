@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Plus, Table2, Trash2 } from 'lucide-react';
+import { Plus, Table2, Trash2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/utils/utils';
@@ -63,32 +63,67 @@ export function TableList({ tables, selectedTableId, onSelect, onCreate, onDelet
 
       {/* Список */}
       <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-0.5">
-        {tables.map((table) => (
-          <div
-            key={table.id}
-            className={cn(
-              'group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-sm',
-              selectedTableId === table.id
-                ? 'bg-primary/10 text-primary font-medium'
-                : 'text-muted-foreground hover:bg-muted/60'
-            )}
-            onClick={() => onSelect(table.id)}
-          >
-            <Table2 className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="truncate flex-1">{table.name}</span>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(table.id);
-              }}
+        {/* Системные таблицы */}
+        {tables.filter((t) => t.id.startsWith('_system_')).length > 0 && (
+          <>
+            <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider px-2 pt-2">
+              Системные
+            </span>
+            {tables
+              .filter((t) => t.id.startsWith('_system_'))
+              .map((table) => (
+                <div
+                  key={table.id}
+                  className={cn(
+                    'flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-sm',
+                    selectedTableId === table.id
+                      ? 'bg-blue-500/10 text-blue-600 font-medium'
+                      : 'text-muted-foreground hover:bg-muted/60',
+                  )}
+                  onClick={() => onSelect(table.id)}
+                >
+                  <Lock className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span className="truncate flex-1">{table.name}</span>
+                  <span className="text-[10px] text-muted-foreground/50">
+                    {table.rows.length}
+                  </span>
+                </div>
+              ))}
+            <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider px-2 pt-3">
+              Проект
+            </span>
+          </>
+        )}
+
+        {/* Обычные таблицы проекта */}
+        {tables
+          .filter((t) => !t.id.startsWith('_system_'))
+          .map((table) => (
+            <div
+              key={table.id}
+              className={cn(
+                'group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-sm',
+                selectedTableId === table.id
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'text-muted-foreground hover:bg-muted/60',
+              )}
+              onClick={() => onSelect(table.id)}
             >
-              <Trash2 className="h-3 w-3 text-destructive" />
-            </Button>
-          </div>
-        ))}
+              <Table2 className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate flex-1">{table.name}</span>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(table.id);
+                }}
+              >
+                <Trash2 className="h-3 w-3 text-destructive" />
+              </Button>
+            </div>
+          ))}
 
         {/* Форма создания */}
         {isCreating && (
@@ -116,7 +151,7 @@ export function TableList({ tables, selectedTableId, onSelect, onCreate, onDelet
         )}
 
         {/* Пустое состояние */}
-        {tables.length === 0 && !isCreating && (
+        {tables.filter((t) => !t.id.startsWith('_system_')).length === 0 && !isCreating && (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <Table2 className="h-8 w-8 text-muted-foreground/40 mb-2" />
             <p className="text-xs text-muted-foreground">Нет таблиц</p>
