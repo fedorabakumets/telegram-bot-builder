@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Plus, Trash2, Lock } from 'lucide-react';
+import { Plus, Trash2, Lock, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SpreadsheetCell } from './spreadsheet-cell';
@@ -13,6 +13,8 @@ import { ColumnHeader } from './column-header';
 import { SpreadsheetToolbar } from './spreadsheet-toolbar';
 import { AddRowsFooter } from './add-rows-footer';
 import { parseClipboardTsv } from '../utils/parse-clipboard';
+import { tableToCsv } from '../utils/export-csv';
+import { downloadFile } from '../utils/download-file';
 import type { BotTable } from '../types';
 
 /** Пропсы компонента TableEditor */
@@ -143,11 +145,25 @@ export function TableEditor({
     <div className="flex flex-col h-full flex-1 overflow-hidden" onPaste={readOnly ? undefined : handlePaste}>
       {/* Бейдж «только чтение» для системных таблиц */}
       {readOnly && (
-        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950/20 border-b border-blue-200/40 dark:border-blue-800/30 flex items-center gap-2">
-          <Lock className="h-3.5 w-3.5 text-blue-500" />
-          <span className="text-xs text-blue-600 dark:text-blue-400">
-            Системная таблица — только чтение
-          </span>
+        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950/20 border-b border-blue-200/40 dark:border-blue-800/30 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Lock className="h-3.5 w-3.5 text-blue-500" />
+            <span className="text-xs text-blue-600 dark:text-blue-400">
+              Системная таблица — только чтение
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs gap-1.5"
+            onClick={() => {
+              const csv = tableToCsv(table.columns, table.rows);
+              downloadFile(csv, `${table.name.replace('🔒 ', '')}.csv`, 'text/csv;charset=utf-8');
+            }}
+          >
+            <Download className="h-3 w-3" />
+            Экспорт CSV
+          </Button>
         </div>
       )}
 
