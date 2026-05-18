@@ -2729,20 +2729,21 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.get("/api/projects/:id/logs/all", async (req, res) => {
     const projectId = parseInt(req.params.id);
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 200;
+    const tokenId = getRequestTokenId(req);
 
     try {
       const result = await dbPool.query(
-        `SELECT bl.level, SUBSTRING(bl.message, 1, 150) AS message, bl.created_at AS "createdAt"
+        `SELECT bl.type AS level, SUBSTRING(bl.content, 1, 150) AS message, bl.timestamp AS "createdAt"
          FROM bot_logs bl
-         JOIN bot_tokens bt ON bt.id = bl.token_id
-         WHERE bt.project_id = $1
-         ORDER BY bl.created_at DESC
-         LIMIT $2`,
-        [projectId, limit]
+         WHERE bl.project_id = $1
+           AND ($2::integer IS NULL OR bl.token_id = $2)
+         ORDER BY bl.timestamp DESC
+         LIMIT $3`,
+        [projectId, tokenId, limit]
       );
       res.json(result.rows);
     } catch (error) {
-      // Таблица может не существовать
+      console.error("Error fetching logs:", error);
       res.json([]);
     }
   });
