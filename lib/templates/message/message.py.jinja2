@@ -257,7 +257,13 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {# Использует замыкание: text, keyboard и медиа-переменные доступны    #}
     {# из внешней области видимости обработчика.                           #}
     {# ------------------------------------------------------------------ #}
+    {%- if projectId %}
+    {# Динамическое определение parse_mode из текста (для горячей перезагрузки контента) #}
+    _parse_mode = "HTML" if any(tag in text for tag in ["<b>", "<i>", "<u>", "<s>", "<code>", "<pre>", "<a ", "<tg-spoiler>"]) else None
+    {%- set parse_mode_arg = ', parse_mode=_parse_mode' %}
+    {%- else %}
     {%- set parse_mode_arg = ', parse_mode="HTML"' if formatMode == 'html' else (', parse_mode="Markdown"' if formatMode == 'markdown' else '') %}
+    {%- endif %}
     {%- set link_preview_arg = ', link_preview_options=types.LinkPreviewOptions(is_disabled=True)' if disableLinkPreview else '' %}
     {%- set effectiveKeyboard = 'ReplyKeyboardRemove()' if (hasHideAfterClickIncoming and keyboardType == 'none') else 'keyboard' %}
     async def _send_to_{{ nodeId|replace('-', '_') }}(_target_chat_id, _thread_id=None, _bot=None):
