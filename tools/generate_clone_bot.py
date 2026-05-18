@@ -203,6 +203,7 @@ def build_start_menu() -> dict:
             "user_id": "0",
             "action_type": "_init",
             "expires_at": "0",
+            "notified": "true",
         },
         "onConflict": "ignore",
         "autoTransitionTo": "tbl-init-user-cars",
@@ -877,6 +878,7 @@ def build_earning() -> dict:
             "user_id": "{user_id}",
             "action_type": "work",
             "expires_at": "{work_cooldown_until}",
+            "notified": "false",
         },
         "onConflict": "update",
         "autoTransitionTo": "tbl-read-user-lvl",
@@ -986,6 +988,7 @@ def build_earning() -> dict:
             "user_id": "{user_id}",
             "action_type": "work",
             "expires_at": "{work_cooldown_until}",
+            "notified": "false",
         },
         "onConflict": "update",
         "autoTransitionTo": "msg-work-fail",
@@ -1858,6 +1861,100 @@ def build_basic() -> dict:
 
 
 # ============================================================
+# Лист 8: ⏰ Уведомления (sheet-notifications)
+# ============================================================
+
+def build_notifications() -> dict:
+    """
+    Строит лист «⏰ Уведомления».
+    Содержит schedule_trigger (1 мин) → чтение истёкших кулдаунов →
+    цикл → проверка → отправка уведомления → пометка notified=true.
+    @returns словарь листа
+    """
+    nodes = []
+
+    # Триггер по расписанию: каждую минуту
+    nodes.append(node("sched-cd-check", "schedule_trigger", 100, 0, {
+        "rules": [{"mode": "interval", "intervalMinutes": 1}],
+        "timezone": "Europe/Moscow",
+        "autoTransitionTo": "tbl-read-expired-cds",
+        "enabled": True,
+        "runOnStart": False,
+        "maxConcurrent": 1,
+    }))
+
+    # Читаем кулдауны, которые ещё не уведомлены
+    nodes.append(node("tbl-read-expired-cds", "bot_table", 400, 0, {
+        "tableName": "cooldowns",
+        "operation": "read",
+        "where": [
+            {"column": "action_type", "operator": "equals", "value": "work"},
+            {"column": "notified", "operator": "not_equals", "value": "true"},
+        ],
+        "saveResultTo": "expired_cds",
+        "resultFormat": "all_rows",
+        "autoTransitionTo": "loop-notify",
+        "enableAutoTransition": True,
+    }))
+
+    # Цикл по результатам
+    nodes.append(node("loop-notify", "loop", 700, 0, {
+        "sourceVariable": "expired_cds",
+        "itemVariable": "cd_item",
+        "indexVariable": "cd_index",
+        "parallel": False,
+        "delaySeconds": 0,
+        "maxIterations": 100,
+        "autoTransitionTo": "cond-cd-expired",
+        "afterLoopTo": "",
+        "enableAutoTransition": True,
+    }))
+
+    # Проверяем что expires_at < __now (кулдаун истёк)
+    nodes.append(node("cond-cd-expired", "condition", 1000, 0, {
+        "variable": "cd_item.expires_at",
+        "branches": [
+            branch("br-expired", "Кулдаун истёк", "less_than", "{__now}", "msg-cd-notify"),
+            branch("br-not-expired", "Ещё активен", "else", "", ""),
+        ],
+    }))
+
+    # Отправляем уведомление пользователю
+    nodes.append(node("msg-cd-notify", "message", 1300, 0, {
+        "messageText": "🔔 {cd_item.user_id}, вы можете начать новую рабочую смену.",
+        "targetChatIdSource": "variable",
+        "targetChatVariableName": "cd_item.user_id",
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-work-again", "🏖 Работать", target="trig-work"),
+        ],
+        "autoTransitionTo": "tbl-mark-notified",
+        "enableAutoTransition": True,
+    }))
+
+    # Помечаем кулдаун как уведомлённый
+    nodes.append(node("tbl-mark-notified", "bot_table", 1600, 0, {
+        "tableName": "cooldowns",
+        "operation": "update",
+        "where": [
+            {"column": "user_id", "operator": "equals", "value": "{cd_item.user_id}"},
+            {"column": "action_type", "operator": "equals", "value": "work"},
+        ],
+        "updates": [
+            {"column": "notified", "op": "set", "value": "true"},
+        ],
+    }))
+
+    return {
+        "id": "sheet-notifications",
+        "name": "⏰ Уведомления",
+        "nodes": nodes,
+        "viewState": {"pan": {"x": 0, "y": 0}, "zoom": 100},
+    }
+
+
+
+# ============================================================
 # Сборка и запись project.json
 # ============================================================
 
@@ -1877,6 +1974,7 @@ def build_project() -> dict:
             build_clan(),
             build_help(),
             build_basic(),
+            build_notifications(),
         ],
     }
 
