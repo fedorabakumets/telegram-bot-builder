@@ -22,6 +22,7 @@ const USERS_COLUMNS: TableColumn[] = [
   { id: 'registered_at', name: 'registered_at' },
   { id: 'last_interaction', name: 'last_interaction' },
   { id: 'interaction_count', name: 'interactions' },
+  { id: 'user_data', name: 'user_data' },
 ];
 
 /** Колонки системной таблицы сообщений */
@@ -232,6 +233,9 @@ export function useSystemTables(projectId: number, selectedTokenId?: number | nu
           ? new Date(u.lastInteraction).toLocaleString('ru')
           : '',
         interaction_count: String(u.interactionCount || 0),
+        user_data: u.userData && Object.keys(u.userData).length > 0
+          ? JSON.stringify(u.userData)
+          : '',
       },
     }));
 
