@@ -27,6 +27,7 @@ import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelec
 import { generateInteractiveCallbackHandlers } from './templates/keyboard-handlers/interactive-callback-handlers';
 import { generateGroupHandlers } from './templates/group-handlers/group-handlers.renderer';
 import { generateMediaFunctions } from './templates/media-functions/media-functions.renderer';
+import { generateContentCode } from './templates/content';
 import { generateMediaInputHandlers } from './templates/media-input-handlers';
 import { generateMessageLoggingCode } from './templates/middleware/middleware.renderer';
 import type { NodeItem } from './templates/handle-user-input/handle-user-input.params';
@@ -142,6 +143,7 @@ interface CodeSections {
   databaseCode: string;
   utils: string;
   mediaFunctions: string;
+  contentCode: string;
   nodeHandlers: string;
   interactiveCallbackHandlers: string;
   replyButtonHandlers: string;
@@ -287,6 +289,13 @@ function generateCodeSections(
   const mediaFunctions = emitOnce(state, COMPONENT_NAMES.MEDIA_FUNCTIONS, () =>
     userDatabaseEnabled || flags.hasMediaNodesResult || flags.hasUploadImagesResult
       ? generateMediaFunctions()
+      : ''
+  );
+
+  // --- content (загрузка из _content) ---
+  const contentCode = emitOnce(state, 'content', () =>
+    context.projectId
+      ? generateContentCode({ projectId: context.projectId, reloadIntervalSeconds: 60 })
       : ''
   );
 
@@ -577,6 +586,7 @@ function generateCodeSections(
     databaseCode,
     utils,
     mediaFunctions,
+    contentCode,
     nodeHandlers,
     interactiveCallbackHandlers,
     replyButtonHandlers,
@@ -629,6 +639,7 @@ function assembleAndValidate(
     sections.databaseCode,
     sections.utils,
     sections.mediaFunctions,
+    sections.contentCode,
     sections.nodeHandlers,
     sections.interactiveCallbackHandlers,
     sections.replyButtonHandlers,

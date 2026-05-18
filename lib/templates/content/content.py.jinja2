@@ -1,0 +1,65 @@
+# ═══ Загрузка контента из таблицы _content ═══
+
+_content_cache: dict = {}
+_content_table_id: int | None = None
+
+async def load_content(pool):
+    """Загрузка контента из таблицы _content при старте"""
+    global _content_table_id
+    try:
+        row = await pool.fetchrow(
+            "SELECT id FROM bot_tables WHERE project_id = $1 AND name = '_content'",
+            {{ projectId }}
+        )
+        if not row:
+            return
+        _content_table_id = row["id"]
+        await reload_content(pool)
+    except Exception as e:
+        logging.warning(f"Не удалось загрузить таблицу контента: {e}")
+
+
+async def reload_content(pool):
+    """Перезагрузка кэша контента из БД"""
+    global _content_cache
+    if not _content_table_id:
+        return
+    try:
+        rows = await pool.fetch(
+            "SELECT data FROM bot_table_rows WHERE table_id = $1",
+            _content_table_id
+        )
+        new_cache = {}
+        for r in rows:
+            data = r["data"]
+            if isinstance(data, dict):
+                # Данные хранятся с ключами = ID колонок
+                # Берём все значения и ищем пару key/value по структуре
+                values = list(data.values())
+                if len(values) >= 4:
+                    # Порядок колонок: key(0), type(1), sheet(2), value(3)
+                    key_val = values[0]
+                    value_val = values[3]
+                elif len(values) >= 2:
+                    key_val = values[0]
+                    value_val = values[-1]
+                else:
+                    continue
+                if key_val and value_val:
+                    new_cache[key_val] = value_val
+        _content_cache = new_cache
+        logging.info(f"📋 Контент загружен: {len(_content_cache)} записей")
+    except Exception as e:
+        logging.warning(f"Ошибка перезагрузки контента: {e}")
+
+
+def get_content(key: str, fallback: str = "") -> str:
+    """Получить контент по ключу с fallback на значение по умолчанию"""
+    return _content_cache.get(key, fallback)
+
+
+async def _content_reload_loop(pool):
+    """Фоновая перезагрузка кэша контента каждые {{ reloadIntervalSeconds }} сек"""
+    while True:
+        await asyncio.sleep({{ reloadIntervalSeconds }})
+        await reload_content(pool)
