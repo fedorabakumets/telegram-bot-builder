@@ -48,19 +48,30 @@ export function extractContentFromNodes(sheets: any[]): ContentEntry[] {
     const sheetName = sheet.name || "";
     const nodes: any[] = sheet.nodes || [];
 
+    // Строим индекс: keyboardNodeId → messageNodeId
+    const keyboardToMessage = new Map<string, string>();
+    for (const node of nodes) {
+      if (node.data?.keyboardNodeId) {
+        keyboardToMessage.set(node.data.keyboardNodeId, node.id);
+      }
+    }
+
     for (const node of nodes) {
       const id = node.id as string;
       const data = node.data || {};
       const nodeType = node.type as string;
 
+      // Для keyboard-нод используем ID связанной message-ноды
+      const contentId = nodeType === "keyboard" ? (keyboardToMessage.get(id) || id) : id;
+
       // messageText
       if (isNotEmpty(data.messageText)) {
-        entries.push({ key: id, type: "message", sheet: sheetName, value: data.messageText });
+        entries.push({ key: contentId, type: "message", sheet: sheetName, value: data.messageText });
       }
 
       // mediaCaption
       if (isNotEmpty(data.mediaCaption)) {
-        entries.push({ key: `${id}.caption`, type: "caption", sheet: sheetName, value: data.mediaCaption });
+        entries.push({ key: `${contentId}.caption`, type: "caption", sheet: sheetName, value: data.mediaCaption });
       }
 
       // buttons
@@ -68,53 +79,53 @@ export function extractContentFromNodes(sheets: any[]): ContentEntry[] {
       for (const btn of buttons) {
         const btnId = btn.id as string;
         if (isNotEmpty(btn.text)) {
-          entries.push({ key: `${id}.btn.${btnId}`, type: "button", sheet: sheetName, value: btn.text });
+          entries.push({ key: `${contentId}.btn.${btnId}`, type: "button", sheet: sheetName, value: btn.text });
         }
         if (isNotEmpty(btn.url)) {
-          entries.push({ key: `${id}.btn.${btnId}.url`, type: "url", sheet: sheetName, value: btn.url });
+          entries.push({ key: `${contentId}.btn.${btnId}.url`, type: "url", sheet: sheetName, value: btn.url });
         }
         if (isNotEmpty(btn.webAppUrl)) {
-          entries.push({ key: `${id}.btn.${btnId}.webapp`, type: "url", sheet: sheetName, value: btn.webAppUrl });
+          entries.push({ key: `${contentId}.btn.${btnId}.webapp`, type: "url", sheet: sheetName, value: btn.webAppUrl });
         }
       }
 
       // media URLs
       if (isNotEmpty(data.imageUrl)) {
-        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, value: data.imageUrl });
+        entries.push({ key: `${contentId}.media`, type: "media_url", sheet: sheetName, value: data.imageUrl });
       } else if (isNotEmpty(data.videoUrl)) {
-        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, value: data.videoUrl });
+        entries.push({ key: `${contentId}.media`, type: "media_url", sheet: sheetName, value: data.videoUrl });
       } else if (isNotEmpty(data.audioUrl)) {
-        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, value: data.audioUrl });
+        entries.push({ key: `${contentId}.media`, type: "media_url", sheet: sheetName, value: data.audioUrl });
       } else if (isNotEmpty(data.documentUrl)) {
-        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, value: data.documentUrl });
+        entries.push({ key: `${contentId}.media`, type: "media_url", sheet: sheetName, value: data.documentUrl });
       }
 
       // http_request
       if (nodeType === "http_request") {
         if (isNotEmpty(data.httpRequestUrl)) {
-          entries.push({ key: `${id}.api`, type: "api_url", sheet: sheetName, value: data.httpRequestUrl });
+          entries.push({ key: `${contentId}.api`, type: "api_url", sheet: sheetName, value: data.httpRequestUrl });
         }
         if (isNotEmpty(data.httpRequestBody)) {
-          entries.push({ key: `${id}.body`, type: "http_body", sheet: sheetName, value: data.httpRequestBody });
+          entries.push({ key: `${contentId}.body`, type: "http_body", sheet: sheetName, value: data.httpRequestBody });
         }
         if (isNotEmpty(data.httpRequestHeaders)) {
-          entries.push({ key: `${id}.headers`, type: "http_headers", sheet: sheetName, value: data.httpRequestHeaders });
+          entries.push({ key: `${contentId}.headers`, type: "http_headers", sheet: sheetName, value: data.httpRequestHeaders });
         }
       }
 
       // psql_query
       if (nodeType === "psql_query" && isNotEmpty(data.query)) {
-        entries.push({ key: `${id}.sql`, type: "sql", sheet: sheetName, value: data.query });
+        entries.push({ key: `${contentId}.sql`, type: "sql", sheet: sheetName, value: data.query });
       }
 
       // command_trigger
       if (nodeType === "command_trigger" && isNotEmpty(data.description)) {
-        entries.push({ key: `${id}.desc`, type: "command", sheet: sheetName, value: data.description });
+        entries.push({ key: `${contentId}.desc`, type: "command", sheet: sheetName, value: data.description });
       }
 
       // inputPrompt (collectUserInput)
       if (data.collectUserInput && isNotEmpty(data.inputPrompt)) {
-        entries.push({ key: `${id}.prompt`, type: "prompt", sheet: sheetName, value: data.inputPrompt });
+        entries.push({ key: `${contentId}.prompt`, type: "prompt", sheet: sheetName, value: data.inputPrompt });
       }
     }
   }
