@@ -59,34 +59,21 @@ export function BotTablePreview({ node }: BotTablePreviewProps) {
   const description = getDescription();
 
   return (
-    <div className="space-y-1.5 p-1">
-      {/* Заголовок с иконкой */}
-      <div className="flex items-center gap-1.5">
-        <i className="fas fa-table text-amber-500 dark:text-amber-400 text-xs" />
-        <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 truncate">
+    <div className="px-1 py-0.5">
+      {/* Таблица + операция в одну строку */}
+      <div className="flex items-center gap-1 truncate">
+        <span className="text-xs font-medium text-amber-700 dark:text-amber-300 truncate">
           {tableName || 'Таблица'}
         </span>
-      </div>
-
-      {/* Операция */}
-      <div className="flex items-center gap-1 flex-wrap">
-        <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium">
+        <span className="text-[10px] px-1 py-px rounded bg-amber-200/60 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 whitespace-nowrap">
           {OPERATION_LABELS[operation] || operation}
         </span>
-        {d?.saveResultTo && (
-          <span className="text-xs text-muted-foreground">
-            <span className="text-slate-400 dark:text-slate-500">→ </span>
-            <span className="font-mono text-amber-600 dark:text-amber-400">
-              {'{' + d.saveResultTo + '}'}
-            </span>
-          </span>
-        )}
       </div>
 
-      {/* Краткое описание */}
-      {description && (
-        <div className="text-xs font-mono text-muted-foreground bg-slate-50 dark:bg-slate-800/50 rounded px-1.5 py-0.5 truncate">
-          {description}
+      {/* Краткое описание — вторая строка */}
+      {(description || d?.saveResultTo) && (
+        <div className="text-[10px] text-muted-foreground truncate mt-0.5 font-mono">
+          {description}{description && d?.saveResultTo ? ' → ' : ''}{d?.saveResultTo ? `{${d.saveResultTo}}` : ''}
         </div>
       )}
     </div>
