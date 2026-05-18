@@ -2212,6 +2212,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         u.language_code AS "languageCode",
         u.deep_link_param AS "deepLinkParam",
         u.referrer_id AS "referrerId",
+        u.user_data AS "userData",
         lm.message_text AS "lastMessageText",
         lm.created_at AS "lastMessageAt",
         FALSE AS "isGroup",

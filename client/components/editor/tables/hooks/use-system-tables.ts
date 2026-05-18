@@ -13,8 +13,16 @@ const USERS_COLUMNS: TableColumn[] = [
   { id: 'user_id', name: 'user_id' },
   { id: 'username', name: 'username' },
   { id: 'first_name', name: 'first_name' },
+  { id: 'last_name', name: 'last_name' },
+  { id: 'is_active', name: 'is_active' },
+  { id: 'is_premium', name: 'is_premium' },
+  { id: 'language_code', name: 'language' },
+  { id: 'deep_link_param', name: 'deep_link' },
+  { id: 'referrer_id', name: 'referrer' },
+  { id: 'registered_at', name: 'registered_at' },
   { id: 'last_interaction', name: 'last_interaction' },
   { id: 'interaction_count', name: 'interactions' },
+  { id: 'user_data', name: 'user_data' },
 ];
 
 /** Колонки системной таблицы сообщений */
@@ -207,10 +215,22 @@ export function useSystemTables(projectId: number): BotTable[] {
         user_id: String(u.userId || ''),
         username: u.userName || '',
         first_name: u.firstName || '',
+        last_name: u.lastName || '',
+        is_active: u.isActive ? 'да' : 'нет',
+        is_premium: u.isPremium ? 'да' : 'нет',
+        language_code: u.languageCode || '',
+        deep_link_param: u.deepLinkParam || '',
+        referrer_id: u.referrerId || '',
+        registered_at: u.registeredAt
+          ? new Date(u.registeredAt).toLocaleString('ru')
+          : '',
         last_interaction: u.lastInteraction
           ? new Date(u.lastInteraction).toLocaleString('ru')
           : '',
         interaction_count: String(u.interactionCount || 0),
+        user_data: u.userData && Object.keys(u.userData).length > 0
+          ? JSON.stringify(u.userData)
+          : '',
       },
     }));
 
