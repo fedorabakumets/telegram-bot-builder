@@ -7,16 +7,19 @@ async def load_content(pool):
     """Загрузка контента из таблицы _content при старте"""
     global _content_table_id
     try:
+        logging.info(f"📋 [content] Ищем таблицу _content для project_id={{ projectId }}")
         row = await pool.fetchrow(
             "SELECT id FROM bot_tables WHERE project_id = $1 AND name = '_content'",
             {{ projectId }}
         )
         if not row:
+            logging.info("📋 [content] Таблица _content не найдена — пропускаем")
             return
         _content_table_id = row["id"]
+        logging.info(f"📋 [content] Таблица найдена: id={_content_table_id}")
         await reload_content(pool)
     except Exception as e:
-        logging.warning(f"Не удалось загрузить таблицу контента: {e}")
+        logging.warning(f"📋 [content] Не удалось загрузить таблицу контента: {e}")
 
 
 async def reload_content(pool):
@@ -29,31 +32,37 @@ async def reload_content(pool):
             "SELECT data FROM bot_table_rows WHERE table_id = $1",
             _content_table_id
         )
+        logging.info(f"📋 [content] Получено {len(rows)} строк из БД")
         new_cache = {}
-        for r in rows:
+        for i, r in enumerate(rows):
             data = r["data"]
             if isinstance(data, dict) and len(data) >= 4:
-                # Ключи словаря — ID колонок (строки). Сортируем по числовому значению
-                # Порядок после сортировки: key(0), type(1), sheet(2), value(3)
                 sorted_values = [v for _, v in sorted(data.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 0)]
                 if len(sorted_values) >= 4:
                     key_val = sorted_values[0]
                     value_val = sorted_values[3]
                     if key_val and value_val:
                         new_cache[str(key_val)] = str(value_val)
+                    elif i < 3:
+                        logging.debug(f"📋 [content] Строка {i}: key_val={key_val!r}, value_val={value_val!r} — пропущена")
+            elif i < 3:
+                logging.debug(f"📋 [content] Строка {i}: data={data!r} — не dict или < 4 ключей")
         _content_cache = new_cache
-        logging.info(f"📋 Контент загружен: {len(_content_cache)} записей")
+        logging.info(f"📋 [content] Кэш обновлён: {len(_content_cache)} записей")
     except Exception as e:
-        logging.warning(f"Ошибка перезагрузки контента: {e}")
+        logging.warning(f"📋 [content] Ошибка перезагрузки: {e}")
 
 
 def get_content(key: str, fallback: str = "") -> str:
     """Получить контент по ключу с fallback на значение по умолчанию"""
-    return _content_cache.get(key, fallback)
+    result = _content_cache.get(key, fallback)
+    if result != fallback:
+        logging.debug(f"📋 [content] get_content({key!r}) → из кэша")
+    return result
 
 
 async def _content_reload_loop(pool):
-    """Фоновая перезагрузка кэша контента каждые {{ reloadIntervalSeconds }} сек"""
+    """Фоновая перезагрузка кэша контента каждые 5 сек"""
     while True:
-        await asyncio.sleep({{ reloadIntervalSeconds }})
+        await asyncio.sleep(5)
         await reload_content(pool)
