@@ -847,14 +847,14 @@ def build_earning() -> dict:
         "enableAutoTransition": True,
     }))
 
-    # Начисление награды (increment с переменными — движок поддерживает int(float()))
+    # Начисление награды (фиксированные значения для increment, рандом только для отображения)
     nodes.append(node("tbl-work-update", "bot_table", 1600, 0, {
         "tableName": "users",
         "operation": "update",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "updates": [
-            {"column": "balance", "op": "increment", "value": "{salary}"},
-            {"column": "exp", "op": "increment", "value": "{exp_gained}"},
+            {"column": "balance", "op": "increment", "value": "700"},
+            {"column": "exp", "op": "increment", "value": "12"},
         ],
         "autoTransitionTo": "set-work-cd",
         "enableAutoTransition": True,
