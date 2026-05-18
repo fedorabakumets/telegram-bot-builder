@@ -362,15 +362,33 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
         return text or ''
     import re as _re
     import json as _json
+    import time as _time_mod
+
+    # Обработка {__now_plus_N} — заменяем на текущий timestamp + N секунд
+    def _replace_now_plus(m):
+        _seconds = int(m.group(1))
+        return str(int(_time_mod.time()) + _seconds)
+    text = _re.sub(r'\{__now_plus_(\d+)\}', _replace_now_plus, text)
+    # Обработка {__now} и {__now__}
+    text = text.replace('{__now}', str(int(_time_mod.time())))
+    text = text.replace('{__now__}', str(int(_time_mod.time())))
 
     # ─── Встроенные переменные (доступны всегда) ────────────────────────────
     from datetime import datetime as _dt
     import pytz as _pytz
+    import time as _time_mod
     _msk = _pytz.timezone("Europe/Moscow")
     _now_msk = _dt.now(_msk)
+    _now_ts = int(_time_mod.time())
     variables.setdefault("now", _now_msk.strftime("%d.%m.%Y %H:%M:%S"))
     variables.setdefault("today", _now_msk.strftime("%d.%m.%Y"))
     variables.setdefault("time", _now_msk.strftime("%H:%M:%S"))
+    variables.setdefault("__now", str(_now_ts))
+    variables.setdefault("__now__", str(_now_ts))
+    # Динамические __now_plus_N (секунды)
+    for _k in list(variables.keys()):
+        pass  # уже заданы выше
+    # Поддержка {__now_plus_N} через regex в replace_variables_in_text ниже
 
     # ─── Обработка итерации по массиву в тексте ─────────────────────────────
     # Синтаксис в тексте пользователя: {каждый элемент} — см. документацию
