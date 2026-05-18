@@ -14,6 +14,7 @@ import { conditionNode, setVariableNode, loopNode } from './massive/logic';
 import { forwardMessage, createForumTopicNode } from './massive/content-management';
 import { httpRequestNode } from './massive/http-request';
 import { psqlQueryNode } from './massive/psql-query';
+import { botTableNode } from './massive/bot-table';
 import { convertFileNode } from './massive/convert-file';
 import { getManagedBotTokenNode } from './massive/managed-bots';
 import { answerCallbackQueryNode, editMessageNode } from './massive/actions';
@@ -46,7 +47,7 @@ export const componentCategories: Array<{
   },
   {
     title: 'Интеграции',
-    components: [httpRequestNode, psqlQueryNode, convertFileNode, conditionNode, setVariableNode, loopNode]
+    components: [httpRequestNode, psqlQueryNode, botTableNode, convertFileNode, conditionNode, setVariableNode, loopNode]
   }
 ];
 

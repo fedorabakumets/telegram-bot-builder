@@ -443,6 +443,38 @@ export function getNodeDefaults(type: Node['type']): any {
       /** Текст сообщения (для совместимости) */
       messageText: '',
     },
+    bot_table: {
+      /** Имя таблицы */
+      tableName: '',
+      /** Операция: read, insert, update, upsert, delete */
+      operation: 'read',
+      /** Условия WHERE */
+      where: [],
+      /** Обновления полей */
+      updates: [],
+      /** Данные строки */
+      row: {},
+      /** Ключ для upsert */
+      key: '',
+      /** Поведение при конфликте */
+      onConflict: 'ignore',
+      /** Переменная для результата */
+      saveResultTo: '',
+      /** Формат результата */
+      resultFormat: 'first_row',
+      /** Колонки для возврата */
+      returnColumns: [],
+      /** Сортировка */
+      orderBy: '',
+      /** Направление сортировки */
+      orderDirection: 'desc',
+      /** Лимит строк */
+      limit: 0,
+      /** ID следующего узла */
+      autoTransitionTo: '',
+      /** Включить автопереход */
+      enableAutoTransition: false,
+    },
   };
   return defaults[type] || {};
 }

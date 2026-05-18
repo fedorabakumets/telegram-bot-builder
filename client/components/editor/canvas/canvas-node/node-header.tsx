@@ -151,6 +151,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             🔄 {getNodeName('loop')}
           </span>
         );
+      /** Заголовок узла таблицы */
+      case 'bot_table' as any:
+        return (
+          <span className="font-semibold text-amber-700 dark:text-amber-300">
+            {getNodeName('bot_table')}
+          </span>
+        );
       default:
         return null;
     }

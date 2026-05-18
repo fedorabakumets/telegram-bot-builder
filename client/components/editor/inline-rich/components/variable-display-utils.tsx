@@ -57,6 +57,7 @@ export function getBadgeText(variable: Variable): string {
     set_variable: '✏️ Переменная',
     psql_query: '🗄️ SQL',
     convert_file: '📄 Файл',
+    bot_table: '🗄️ Таблица',
     table: '📊 Таблица',
   };
   return labels[variable.nodeType] || '📌';
@@ -180,6 +181,14 @@ export function getNodeInfo(variable: Variable) {
     return (
       <div className="text-[10px] text-emerald-500 dark:text-emerald-400 mt-0.5 truncate">
         📄 {variable.description}
+      </div>
+    );
+  }
+  // Для bot_table показываем описание (таблица и операция)
+  if ((variable.nodeType as string) === 'bot_table') {
+    return (
+      <div className="text-[10px] text-amber-500 dark:text-amber-400 mt-0.5 truncate">
+        🗄️ {variable.description}
       </div>
     );
   }

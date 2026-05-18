@@ -48,6 +48,7 @@ import { SetVariablePreview } from './set-variable-preview';
 import { PsqlQueryPreview } from './psql-query-preview';
 import { ConvertFilePreview } from './convert-file-preview';
 import { LoopPreview } from './loop-preview';
+import { BotTablePreview } from './bot-table-preview';
 import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
 
 /**
@@ -624,6 +625,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* SQL Query Preview */}
         {(node.type as any) === 'psql_query' && <PsqlQueryPreview node={node} />}
+
+        {/* Bot Table Preview */}
+        {(node.type as any) === 'bot_table' && <BotTablePreview node={node} />}
 
         {/* Convert File Preview */}
         {(node.type as any) === 'convert_file' && <ConvertFilePreview node={node} />}

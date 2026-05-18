@@ -422,6 +422,23 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
+  // Добавляем переменные от bot_table-узлов
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'bot_table') return;
+    const data = node.data as any;
+    if (!data.saveResultTo?.trim()) return;
+    const key = `bot_table__${node.id}`;
+    if (!variablesMap.has(key)) {
+      variablesMap.set(key, {
+        name: data.saveResultTo,
+        nodeId: node.id,
+        nodeType: 'bot_table' as any,
+        sourceTable: 'bot_users',
+        description: `Результат таблицы "${data.tableName || '?'}" (${data.operation || 'read'})`,
+      });
+    }
+  });
+
   // Добавляем переменные от schedule_trigger нод
   allNodes.forEach(node => {
     if ((node.type as string) !== 'schedule_trigger') return;
