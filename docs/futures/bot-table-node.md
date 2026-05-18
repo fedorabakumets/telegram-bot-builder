@@ -728,8 +728,93 @@ async def handle_bot_table_tbl_add_rep(callback_query, state=None):
 | WHERE не нашёл строк (update) | Ничего не обновлять, логировать warning |
 | Increment на пустом поле | Считать как 0 + N |
 | Несколько строк подходят под WHERE | Для read: вернуть первую (first_row) или все (all_rows). Для update: обновить все подходящие |
-| Конкурентный доступ (race condition) | Для малых групп (< 500 юзеров) — допустимо. Для больших — рекомендовать `psql_query` |
+| Конкурентный доступ (race condition) | Для `increment`/`decrement`/`min`/`max` — атомарный SQL (см. ниже). Для `set` — последний пишет, конфликтов нет |
 | Кеш после записи | Инвалидировать `_bot_tables_cache = None` сразу после любой write-операции |
+
+---
+
+## Требование: атомарность increment/decrement
+
+### Проблема
+
+Если два пользователя одновременно дают +реп одному человеку, наивная реализация (read → Python math → write) теряет данные:
+
+```
+Юзер A: читает reputation=80 → +10 → пишет 90
+Юзер B: читает reputation=80 → +10 → пишет 90  ← потерял +10 от A
+```
+
+### Решение
+
+Для операций `increment`, `decrement`, `min`, `max` — генерировать **один атомарный SQL-запрос** с арифметикой внутри PostgreSQL, без промежуточного чтения в Python.
+
+### Генерируемый SQL
+
+**increment:**
+```sql
+UPDATE bot_table_rows 
+SET data = data || jsonb_build_object(
+  $col_id, 
+  (COALESCE((data->>$col_id)::int, 0) + 10)::text
+)
+WHERE id = $row_id
+RETURNING data->>$col_id AS new_value
+```
+
+**decrement:**
+```sql
+UPDATE bot_table_rows 
+SET data = data || jsonb_build_object(
+  $col_id, 
+  (COALESCE((data->>$col_id)::int, 0) - 10)::text
+)
+WHERE id = $row_id
+RETURNING data->>$col_id AS new_value
+```
+
+**min (не больше N):**
+```sql
+UPDATE bot_table_rows 
+SET data = data || jsonb_build_object(
+  $col_id, 
+  LEAST(COALESCE((data->>$col_id)::int, 0), 100)::text
+)
+WHERE id = $row_id
+RETURNING data->>$col_id AS new_value
+```
+
+**max (не меньше N):**
+```sql
+UPDATE bot_table_rows 
+SET data = data || jsonb_build_object(
+  $col_id, 
+  GREATEST(COALESCE((data->>$col_id)::int, 0), 50)::text
+)
+WHERE id = $row_id
+RETURNING data->>$col_id AS new_value
+```
+
+### Результат
+
+Два конкурентных +реп:
+```
+Юзер A: UPDATE reputation = reputation + 10  (80 → 90)  ← атомарно
+Юзер B: UPDATE reputation = reputation + 10  (90 → 100) ← атомарно
+```
+
+Итог: 100. Данные не теряются.
+
+### Правило для генератора
+
+| op | Реализация |
+|----|-----------|
+| `set` | Простой UPDATE, перезаписать значение |
+| `increment` | Атомарный SQL: `old + N` |
+| `decrement` | Атомарный SQL: `old - N` |
+| `min` | Атомарный SQL: `LEAST(old, N)` |
+| `max` | Атомарный SQL: `GREATEST(old, N)` |
+
+**Запрещено:** читать значение в Python, вычислять, записывать обратно. Только один SQL-запрос.
 
 ---
 
