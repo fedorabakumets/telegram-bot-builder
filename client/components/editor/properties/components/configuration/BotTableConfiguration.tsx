@@ -148,6 +148,9 @@ export function BotTableConfiguration({
             onSelect={(name) => onNodeUpdate(selectedNode.id, { tableName: tableName + `{${name}}` })}
           />
         </div>
+        <p className="text-[10px] text-muted-foreground/70 leading-tight">
+          Если таблица не существует — будет создана автоматически при первой записи
+        </p>
       </div>
 
       {/* Операция */}
