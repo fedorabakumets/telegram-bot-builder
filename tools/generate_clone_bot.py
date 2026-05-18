@@ -165,6 +165,138 @@ def build_start_menu() -> dict:
         },
         "onConflict": "ignore",
         "saveResultTo": "user",
+        "autoTransitionTo": "tbl-init-clans",
+        "enableAutoTransition": True,
+    }))
+
+    # === Цепочка инициализации таблиц (при первом /start) ===
+    nodes.append(node("tbl-init-clans", "bot_table", 700, -200, {
+        "tableName": "clans",
+        "operation": "upsert",
+        "key": "id",
+        "row": {
+            "id": "0",
+            "name": "_init",
+            "level": "1",
+            "exp": "0",
+            "exp_to_next": "100",
+            "treasury": "0",
+            "rating": "0",
+            "members_count": "0",
+            "max_members": "10",
+            "entry_type": "Открыт",
+            "leader_name": "",
+            "harbor_level": "1",
+            "harbor_storage": "0",
+            "harbor_max": "1000",
+            "harbor_rate": "10",
+        },
+        "onConflict": "ignore",
+        "autoTransitionTo": "tbl-init-cooldowns",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("tbl-init-cooldowns", "bot_table", 1000, -200, {
+        "tableName": "cooldowns",
+        "operation": "upsert",
+        "key": "user_id",
+        "row": {
+            "user_id": "0",
+            "action_type": "_init",
+            "expires_at": "0",
+        },
+        "onConflict": "ignore",
+        "autoTransitionTo": "tbl-init-user-cars",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("tbl-init-user-cars", "bot_table", 1300, -200, {
+        "tableName": "user_cars",
+        "operation": "upsert",
+        "key": "user_id",
+        "row": {
+            "user_id": "0",
+            "car_id": "0",
+            "car_name": "_init",
+            "horsepower": "0",
+            "max_speed": "0",
+            "purchased_at": "",
+        },
+        "onConflict": "ignore",
+        "autoTransitionTo": "tbl-init-user-houses",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("tbl-init-user-houses", "bot_table", 1600, -200, {
+        "tableName": "user_houses",
+        "operation": "upsert",
+        "key": "user_id",
+        "row": {
+            "user_id": "0",
+            "house_id": "0",
+            "house_name": "_init",
+            "rooms": "0",
+            "purchased_at": "",
+        },
+        "onConflict": "ignore",
+        "autoTransitionTo": "tbl-init-user-biz",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("tbl-init-user-biz", "bot_table", 1900, -200, {
+        "tableName": "user_businesses",
+        "operation": "upsert",
+        "key": "user_id",
+        "row": {
+            "user_id": "0",
+            "business_id": "0",
+            "business_name": "_init",
+            "level": "0",
+            "profit_rate": "0",
+            "purchased_at": "",
+        },
+        "onConflict": "ignore",
+        "autoTransitionTo": "tbl-init-achievements",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("tbl-init-achievements", "bot_table", 2200, -200, {
+        "tableName": "achievements",
+        "operation": "upsert",
+        "key": "user_id",
+        "row": {
+            "user_id": "0",
+            "achievement_id": "_init",
+            "progress": "0",
+            "max_progress": "100",
+            "completed": "false",
+        },
+        "onConflict": "ignore",
+        "autoTransitionTo": "tbl-init-referrals",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("tbl-init-referrals", "bot_table", 2500, -200, {
+        "tableName": "referrals",
+        "operation": "upsert",
+        "key": "referrer_id",
+        "row": {
+            "referrer_id": "0",
+            "referred_id": "0",
+            "reward_earned": "0",
+            "created_at": "",
+        },
+        "onConflict": "ignore",
+        "autoTransitionTo": "tbl-init-transactions",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("tbl-init-transactions", "bot_table", 2800, -200, {
+        "tableName": "transactions",
+        "operation": "upsert",
+        "key": "id",
+        "row": {
+            "id": "0",
+            "from_user_id": "0",
+            "to_user_id": "0",
+            "amount": "0",
+            "type": "_init",
+            "created_at": "",
+        },
+        "onConflict": "ignore",
         "autoTransitionTo": "msg-welcome",
         "enableAutoTransition": True,
     }))
