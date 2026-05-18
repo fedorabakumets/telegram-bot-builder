@@ -369,14 +369,14 @@ export class DatabaseBackup {
         templatesCount,
         tokensCount,
         mediaCount,
-        userDataCount
+        usersCount
       ] = await Promise.all([
         db.execute(sql`SELECT COUNT(*) as count FROM bot_projects`),
         db.execute(sql`SELECT COUNT(*) as count FROM bot_instances`),
         db.execute(sql`SELECT COUNT(*) as count FROM bot_templates`),
         db.execute(sql`SELECT COUNT(*) as count FROM bot_tokens`),
         db.execute(sql`SELECT COUNT(*) as count FROM media_files`),
-        db.execute(sql`SELECT COUNT(*) as count FROM user_bot_data`)
+        db.execute(sql`SELECT COUNT(*) as count FROM bot_users`)
       ]);
 
       const tables = [
@@ -406,8 +406,8 @@ export class DatabaseBackup {
           size: 'N/A'
         },
         {
-          name: 'userBotData',
-          count: Number(userDataCount.rows[0]?.count || 0),
+          name: 'botUsers',
+          count: Number(usersCount.rows[0]?.count || 0),
           size: 'N/A'
         }
       ];

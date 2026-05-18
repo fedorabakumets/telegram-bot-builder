@@ -142,18 +142,6 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
             avatarUrl = userResult.rows[0]?.avatar_url || null;
             console.log(`[avatar] bot_users lookup: user_id=${userId}, project_id=${projectId}, found=${avatarUrl ? 'yes' : 'no'}`);
 
-            // Если не найдено, пробуем user_bot_data
-            if (!avatarUrl) {
-                userResult = await pool.query(
-                    tokenId
-                        ? 'SELECT avatar_url FROM user_bot_data WHERE user_id = $1 AND project_id = $2 AND token_id = $3'
-                        : 'SELECT avatar_url FROM user_bot_data WHERE user_id = $1 AND project_id = $2',
-                    tokenId ? [userId, projectId, tokenId] : [userId, projectId]
-                );
-                avatarUrl = userResult.rows[0]?.avatar_url || null;
-                console.log(`[avatar] user_bot_data lookup: found=${avatarUrl ? 'yes' : 'no'}`);
-            }
-
             // Если avatar_url всё ещё пустой — пробуем получить напрямую из Telegram
             if (!avatarUrl) {
                 const tokenToUse = await resolveProjectBotToken(projectId, tokenId);

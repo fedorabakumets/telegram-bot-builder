@@ -259,8 +259,8 @@ export class DatabaseManager {
 
       // Очистка старых взаимодействий пользователей (опционально)
       await db.execute(sql`
-        DELETE FROM user_bot_data
-        WHERE is_active = 0 AND updated_at < ${cutoffDate}
+        DELETE FROM bot_users
+        WHERE is_active = 0 AND last_interaction < ${cutoffDate}
       `);
 
     } catch (error: any) {

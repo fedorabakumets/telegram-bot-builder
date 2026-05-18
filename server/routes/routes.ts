@@ -2406,40 +2406,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.json(stats);
     } catch (error) {
       console.error("Error fetching user stats:", error);
-      // Fallback to user_bot_data table if bot_users doesn't exist
-      try {
-        const fallbackResult = await dbPool.query(`
-          SELECT 
-            COUNT(*) as "totalUsers",
-            COUNT(*) FILTER (WHERE is_active = 1) as "activeUsers",
-            COUNT(*) FILTER (WHERE is_active = 0) as "blockedUsers",
-            COUNT(*) FILTER (WHERE is_premium = 1) as "premiumUsers",
-            COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}') as "usersWithResponses",
-            (SELECT COALESCE(COUNT(*), 0) FROM bot_messages bm
-             WHERE bm.project_id = $1
-               AND ($2::integer IS NULL OR bm.token_id = $2)) as "totalInteractions",
-            CASE WHEN COUNT(*) > 0
-              THEN (SELECT COALESCE(COUNT(*), 0)::float FROM bot_messages bm
-                    WHERE bm.project_id = $1
-                      AND ($2::integer IS NULL OR bm.token_id = $2)) / COUNT(*)
-              ELSE 0
-            END as "avgInteractionsPerUser"
-          FROM user_bot_data
-          WHERE project_id = $1
-            AND ($2::integer IS NULL OR token_id = $2)
-        `, [req.params.id, tokenId]);
-
-        const stats = fallbackResult.rows[0];
-        Object.keys(stats).forEach(key => {
-          if (typeof stats[key] === 'string' && !isNaN(stats[key] as any)) {
-            stats[key] = parseInt(stats[key] as any);
-          }
-        });
-
-        res.json(stats);
-      } catch (fallbackError) {
-        res.status(500).json({ message: "Failed to fetch user stats" });
-      }
+      res.status(500).json({ message: "Failed to fetch user stats" });
     }
   });
 
@@ -3391,21 +3358,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           return res.json({ message: "User data deleted successfully" });
         }
       } catch (dbError) {
-        console.log("bot_users table not found, falling back to user_bot_data");
-      }
-
-      // Fallback: удаляем из user_bot_data таблицы
-      const existingUserData = await storage.getUserBotDataByProjectAndUser(
-        projectId,
-        String(id),
-        tokenId ?? requestedTokenId
-      );
-      const success = existingUserData
-        ? await storage.deleteUserBotData(existingUserData.id)
-        : false;
-      if (!success) {
+        console.log("bot_users delete error:", (dbError as any).message);
         return res.status(404).json({ message: "User data not found" });
       }
+
       res.json({ message: "User data deleted successfully" });
     } catch (error) {
       console.error("Failed to delete user data:", error);
@@ -3458,17 +3414,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         console.log(`Deleted ${deleteMessagesResult.rowCount || 0} messages from bot_messages for project ${projectId}`);
       } catch (dbError) {
         console.log("bot_messages table not found or error:", (dbError as any).message);
-      }
-
-      // Подсчитываем количество записей в user_bot_data перед удалением
-      const existingUserData = await storage.getUserBotDataByProject(projectId, tokenId);
-      const userBotDataCount = existingUserData.length;
-
-      // Удаляем из user_bot_data таблицы
-      const fallbackSuccess = await storage.deleteUserBotDataByProject(projectId, tokenId);
-      if (fallbackSuccess) {
-        totalDeleted += userBotDataCount;
-        console.log(`Deleted ${userBotDataCount} users from user_bot_data for project ${projectId}`);
       }
 
       res.json({

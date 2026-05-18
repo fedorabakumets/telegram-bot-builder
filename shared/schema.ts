@@ -22,9 +22,6 @@ export type { BotTemplate, InsertBotTemplate } from "./schema/tables/bot-templat
 export { mediaFiles, insertMediaFileSchema } from "./schema/tables/media-files";
 export type { MediaFile, InsertMediaFile } from "./schema/tables/media-files";
 
-export { userBotData, insertUserBotDataSchema } from "./schema/tables/user-bot-data";
-export type { UserBotData, InsertUserBotData, DialogEntry } from "./schema/tables/user-bot-data";
-
 export { botUsers, insertBotUserSchema } from "./schema/tables/bot-users";
 export type { BotUser, InsertBotUser } from "./schema/tables/bot-users";
 
