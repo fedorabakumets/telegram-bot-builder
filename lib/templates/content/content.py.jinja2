@@ -32,21 +32,15 @@ async def reload_content(pool):
         new_cache = {}
         for r in rows:
             data = r["data"]
-            if isinstance(data, dict):
-                # Данные хранятся с ключами = ID колонок
-                # Берём все значения и ищем пару key/value по структуре
-                values = list(data.values())
-                if len(values) >= 4:
-                    # Порядок колонок: key(0), type(1), sheet(2), value(3)
-                    key_val = values[0]
-                    value_val = values[3]
-                elif len(values) >= 2:
-                    key_val = values[0]
-                    value_val = values[-1]
-                else:
-                    continue
-                if key_val and value_val:
-                    new_cache[key_val] = value_val
+            if isinstance(data, dict) and len(data) >= 4:
+                # Ключи словаря — ID колонок (строки). Сортируем по числовому значению
+                # Порядок после сортировки: key(0), type(1), sheet(2), value(3)
+                sorted_values = [v for _, v in sorted(data.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 0)]
+                if len(sorted_values) >= 4:
+                    key_val = sorted_values[0]
+                    value_val = sorted_values[3]
+                    if key_val and value_val:
+                        new_cache[str(key_val)] = str(value_val)
         _content_cache = new_cache
         logging.info(f"📋 Контент загружен: {len(_content_cache)} записей")
     except Exception as e:
