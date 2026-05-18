@@ -131,6 +131,12 @@ export function BotTableConfiguration({
             ))}
           </SelectContent>
         </Select>
+        <Input
+          value={tableName}
+          onChange={(e) => onNodeUpdate(selectedNode.id, { tableName: e.target.value })}
+          placeholder="или введите имя новой таблицы"
+          className="text-xs h-7 bg-white/60 dark:bg-slate-950/60 border-dashed"
+        />
       </div>
 
       {/* Операция */}
