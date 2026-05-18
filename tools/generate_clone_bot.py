@@ -1,7 +1,7 @@
 """
 @fileoverview Генератор project.json для полного клона RPG-бота.
-Создаёт все листы, узлы, кнопки и связи для игрового бота с системой
-заработка, кланов, бизнесов, профиля и справки.
+Создаёт все листы, узлы, кнопки и связи на основе данных из scrape_log_v3.json.
+Точное воспроизведение текстов, эмодзи и структуры оригинального бота.
 @module tools/generate_clone_bot
 """
 
@@ -60,18 +60,85 @@ def branch(bid: str, label: str, op: str, value: str, target: str) -> dict:
 
 
 # ============================================================
+# Главная reply-клавиатура
+# ============================================================
+
+MAIN_KB_BUTTONS = [
+    btn("btn-m-earn", "💸 Заработок"),
+    btn("btn-m-games", "🎮 Игры"),
+    btn("btn-m-prop", "🌇 Имущество"),
+    btn("btn-m-prof", "👤 Профиль"),
+    btn("btn-m-clan", "🛡 Клан"),
+    btn("btn-m-ach", "🏅 Ачивки"),
+    btn("btn-m-cmd", "📚 Команды"),
+    btn("btn-m-don", "🍩 Донат"),
+    btn("btn-m-ref", "🤑 Реферальная система"),
+]
+
+MAIN_KB_LAYOUT = {
+    "autoLayout": False,
+    "columns": 3,
+    "rows": [
+        {"buttonIds": ["btn-m-earn", "btn-m-games", "btn-m-prop"]},
+        {"buttonIds": ["btn-m-prof", "btn-m-clan", "btn-m-ach"]},
+        {"buttonIds": ["btn-m-cmd", "btn-m-don"]},
+        {"buttonIds": ["btn-m-ref"]},
+    ],
+}
+
+
+def main_menu_msg(msg_id: str, text: str, x: int, y: int) -> dict:
+    """
+    Создаёт сообщение с главной reply-клавиатурой.
+    @param msg_id - ID узла
+    @param text - текст сообщения
+    @param x - позиция X
+    @param y - позиция Y
+    @returns узел сообщения
+    """
+    return node(msg_id, "message", x, y, {
+        "messageText": text,
+        "keyboardType": "reply",
+        "buttons": [
+            btn(f"{msg_id}-earn", "💸 Заработок"),
+            btn(f"{msg_id}-games", "🎮 Игры"),
+            btn(f"{msg_id}-prop", "🌇 Имущество"),
+            btn(f"{msg_id}-prof", "👤 Профиль"),
+            btn(f"{msg_id}-clan", "🛡 Клан"),
+            btn(f"{msg_id}-ach", "🏅 Ачивки"),
+            btn(f"{msg_id}-cmd", "📚 Команды"),
+            btn(f"{msg_id}-don", "🍩 Донат"),
+            btn(f"{msg_id}-ref", "🤑 Реферальная система"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": [f"{msg_id}-earn", f"{msg_id}-games", f"{msg_id}-prop"]},
+                {"buttonIds": [f"{msg_id}-prof", f"{msg_id}-clan", f"{msg_id}-ach"]},
+                {"buttonIds": [f"{msg_id}-cmd", f"{msg_id}-don"]},
+                {"buttonIds": [f"{msg_id}-ref"]},
+            ],
+        },
+        "resizeKeyboard": True,
+    })
+
+
+
+# ============================================================
 # Лист 1: ⭐ Старт / Меню (sheet-start-menu)
 # ============================================================
 
 def build_start_menu() -> dict:
     """
     Строит лист «⭐ Старт / Меню».
-    Содержит /start, upsert пользователя, главное меню и все text_trigger кнопок.
+    Содержит /start, upsert пользователя, главное меню, профиль, клан, ачивки,
+    донат, реферальная система, возврат в меню.
     @returns словарь листа
     """
     nodes = []
 
-    # /start → upsert user → приветствие
+    # --- /start → upsert user → приветствие с главным меню ---
     nodes.append(node("cmd-start", "command_trigger", 100, 0, {
         "command": "/start",
         "description": "Запустить бота",
@@ -93,7 +160,7 @@ def build_start_menu() -> dict:
             "exp_to_next": "64",
             "profession": "Безработный",
             "clan_id": "",
-            "game_id": "",
+            "game_id": "{user_id}",
             "registered_at": "{__now}",
         },
         "onConflict": "ignore",
@@ -102,35 +169,7 @@ def build_start_menu() -> dict:
         "enableAutoTransition": True,
     }))
 
-    nodes.append(node("msg-welcome", "message", 700, 0, {
-        "messageText": (
-            "👋 Добро пожаловать в игру, {nickname}!\n\n"
-            "🎮 Используй меню для навигации."
-        ),
-        "keyboardType": "reply",
-        "buttons": [
-            btn("btn-m-earn", "💸 Заработок"),
-            btn("btn-m-games", "🎮 Игры"),
-            btn("btn-m-prop", "🌇 Имущество"),
-            btn("btn-m-prof", "👤 Профиль"),
-            btn("btn-m-clan", "🛡 Клан"),
-            btn("btn-m-ach", "🏅 Ачивки"),
-            btn("btn-m-cmd", "📚 Команды"),
-            btn("btn-m-don", "🍩 Донат"),
-            btn("btn-m-ref", "🤑 Реферальная система"),
-        ],
-        "keyboardLayout": {
-            "autoLayout": False,
-            "columns": 3,
-            "rows": [
-                {"buttonIds": ["btn-m-earn", "btn-m-games", "btn-m-prop"]},
-                {"buttonIds": ["btn-m-prof", "btn-m-clan", "btn-m-ach"]},
-                {"buttonIds": ["btn-m-cmd", "btn-m-don"]},
-                {"buttonIds": ["btn-m-ref"]},
-            ],
-        },
-        "resizeKeyboard": True,
-    }))
+    nodes.append(main_menu_msg("msg-welcome", "🚀", 700, 0))
 
     # --- text_trigger "💸 Заработок" ---
     nodes.append(node("trig-earning", "text_trigger", 100, 300, {
@@ -152,7 +191,7 @@ def build_start_menu() -> dict:
         "messageText": "💸 {user.nickname}, меню заработка:",
         "keyboardType": "reply",
         "buttons": [
-            btn("btn-e-work", "⚒ Работа"),
+            btn("btn-e-work", "🛠 Работа"),
             btn("btn-e-mine", "🌋 Шахта"),
             btn("btn-e-fish", "🎣 Рыбалка"),
             btn("btn-e-ranch", "🏞 Ранчо"),
@@ -193,6 +232,7 @@ def build_start_menu() -> dict:
             "🎮 {user.nickname}, меню игр:\n\n"
             "🎲 💡 В чатах можно сыграть с другими игроками — Кости, Дуэль, Рулетка и др."
         ),
+        "formatMode": "markdown",
         "keyboardType": "reply",
         "buttons": [
             btn("btn-g-slots", "🎰 Слоты"),
@@ -239,20 +279,20 @@ def build_start_menu() -> dict:
         "messageText": "🌇 {user.nickname}, меню имущества:",
         "keyboardType": "reply",
         "buttons": [
+            btn("btn-p-car", "🚘 Машина"),
             btn("btn-p-house", "🏠 Дом"),
-            btn("btn-p-car", "🚗 Транспорт"),
-            btn("btn-p-pet", "🐕 Питомцы"),
-            btn("btn-p-cloth", "👕 Одежда"),
-            btn("btn-p-phone", "📱 Телефон"),
-            btn("btn-p-acc", "💍 Аксессуары"),
+            btn("btn-p-biz", "💹 Бизнес"),
+            btn("btn-p-mining", "🪫 Майнинг ферма"),
+            btn("btn-p-shop", "🛒 Магазин"),
             btn("btn-p-back", "⬅️ Меню"),
         ],
         "keyboardLayout": {
             "autoLayout": False,
             "columns": 3,
             "rows": [
-                {"buttonIds": ["btn-p-house", "btn-p-car", "btn-p-pet"]},
-                {"buttonIds": ["btn-p-cloth", "btn-p-phone", "btn-p-acc"]},
+                {"buttonIds": ["btn-p-car", "btn-p-house", "btn-p-biz"]},
+                {"buttonIds": ["btn-p-mining"]},
+                {"buttonIds": ["btn-p-shop"]},
                 {"buttonIds": ["btn-p-back"]},
             ],
         },
@@ -281,7 +321,7 @@ def build_start_menu() -> dict:
             "🌟 Уровень: {user.level} ({user.exp}/{user.exp_to_next})\n"
             "💰 Баланс: {user.balance}$\n\n"
             "👨\u200d🏭 Профессия: {user.profession}\n\n"
-            "🎭 Клан: {user.clan_id}\n"
+            "🎭 Клан: {user.clan_id} (👤)\n"
             "🆔 Игровой ид: {user.game_id}\n"
             "📚 Дата регистрации: {user.registered_at}"
         ),
@@ -331,10 +371,10 @@ def build_start_menu() -> dict:
     }))
     nodes.append(node("msg-clan-info", "message", 1300, 1050, {
         "messageText": (
-            "❓ {user.nickname}, ваш клан:\n\n"
+            "❔ {user.nickname}, ваш клан:\n\n"
             "🎭 Название: {clan.name} (ID: {clan.id})\n"
-            "⭐ Уровень: {clan.level} ({clan.exp}/{clan.exp_to_next})\n"
-            "💲 Казна: {clan.treasury}$\n"
+            "⭐️ Уровень: {clan.level} ({clan.exp}/{clan.exp_to_next})\n"
+            "💰 Казна: {clan.treasury}$\n"
             "🏆 Рейтинг: {clan.rating}\n"
             "👥 Участники: {clan.members_count}/{clan.max_members}\n\n"
             "🔓 Вход: {clan.entry_type}\n"
@@ -344,28 +384,87 @@ def build_start_menu() -> dict:
         "buttons": [
             btn("btn-cl-season", "🏆 Сезон", target="msg-clan-season-wip"),
             btn("btn-cl-members", "👥 Участники", target="msg-clan-members-wip"),
-            btn("btn-cl-harbor", "⚓ Гавань", target="msg-clan-harbor"),
-            btn("btn-cl-bonus", "⭐ Бонусы", target="msg-clan-bonus-wip"),
+            btn("btn-cl-harbor", "⚓️ Гавань", target="msg-clan-harbor-wip"),
+            btn("btn-cl-bonus", "⭐️ Бонусы", target="msg-clan-bonus-wip"),
             btn("btn-cl-mprof", "👤 Профиль участника", target="msg-clan-mprof-wip"),
-            btn("btn-cl-leave", "📕 Покинуть клан", target="msg-clan-leave-wip"),
+            btn("btn-cl-leave", "🚪 Покинуть клан", target="msg-clan-leave-wip"),
         ],
-        "keyboardColumns": 2,
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 2,
+            "rows": [
+                {"buttonIds": ["btn-cl-season", "btn-cl-members"]},
+                {"buttonIds": ["btn-cl-harbor", "btn-cl-bonus"]},
+                {"buttonIds": ["btn-cl-mprof"]},
+                {"buttonIds": ["btn-cl-leave"]},
+            ],
+        },
     }))
+
+    # Заглушки кнопок клана
+    for wip_id, wip_text in [
+        ("msg-clan-season-wip", "🏆 Раздел «Сезон» в разработке."),
+        ("msg-clan-members-wip", "👥 Раздел «Участники» в разработке."),
+        ("msg-clan-harbor-wip", "⚓️ Раздел «Гавань» в разработке."),
+        ("msg-clan-bonus-wip", "⭐️ Раздел «Бонусы» в разработке."),
+        ("msg-clan-mprof-wip", "👤 Раздел «Профиль участника» в разработке."),
+        ("msg-clan-leave-wip", "🚪 Вы покинули клан. (заглушка)"),
+    ]:
+        nodes.append(node(wip_id, "message", 1600, 1050, {
+            "messageText": wip_text,
+            "keyboardType": "none",
+            "buttons": [],
+        }))
 
     # --- text_trigger "🏅 Ачивки" ---
     nodes.append(node("trig-achiev", "text_trigger", 100, 1300, {
         "textMatchType": "exact",
         "textSynonyms": ["🏅 Ачивки"],
-        "autoTransitionTo": "msg-achiev-wip",
+        "autoTransitionTo": "tbl-read-user-ach",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-achiev-wip", "message", 400, 1300, {
-        "messageText": "🏅 Раздел «Ачивки» находится в разработке. Следите за обновлениями!",
+    nodes.append(node("tbl-read-user-ach", "bot_table", 400, 1300, {
+        "tableName": "users",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "user",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "msg-achiev",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("msg-achiev", "message", 700, 1300, {
+        "messageText": "🏅 {user.nickname}, прогресс ваших достижений:",
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-ach-1", "🤺 Стажер года (0% / 100%)", target="msg-ach-wip"),
+            btn("btn-ach-2", "🎰 Мечта (0% / 100%)", target="msg-ach-wip"),
+            btn("btn-ach-3", "💣 Сапёр (0% / 100%)", target="msg-ach-wip"),
+            btn("btn-ach-4", "🌋 Шахтер (0% / 100%)", target="msg-ach-wip"),
+            btn("btn-ach-5", "🏎 Шумахер (0% / 100%)", target="msg-ach-wip"),
+            btn("btn-ach-prev", "<", target="msg-ach-wip"),
+            btn("btn-ach-page", "1 / 3", action="goto", target="msg-ach-wip"),
+            btn("btn-ach-next", ">", target="msg-ach-wip"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 1,
+            "rows": [
+                {"buttonIds": ["btn-ach-1"]},
+                {"buttonIds": ["btn-ach-2"]},
+                {"buttonIds": ["btn-ach-3"]},
+                {"buttonIds": ["btn-ach-4"]},
+                {"buttonIds": ["btn-ach-5"]},
+                {"buttonIds": ["btn-ach-prev", "btn-ach-page", "btn-ach-next"]},
+            ],
+        },
+    }))
+    nodes.append(node("msg-ach-wip", "message", 1000, 1300, {
+        "messageText": "🏅 Достижения — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    # --- text_trigger "📚 Команды" → /help ---
+    # --- text_trigger "📚 Команды" ---
     nodes.append(node("trig-commands", "text_trigger", 100, 1500, {
         "textMatchType": "exact",
         "textSynonyms": ["📚 Команды"],
@@ -386,14 +485,51 @@ def build_start_menu() -> dict:
     nodes.append(node("trig-donate", "text_trigger", 100, 1700, {
         "textMatchType": "exact",
         "textSynonyms": ["🍩 Донат"],
-        "autoTransitionTo": "msg-donate-wip",
+        "autoTransitionTo": "tbl-read-user-donate",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-donate-wip", "message", 400, 1700, {
-        "messageText": "🍩 Раздел «Донат» находится в разработке. Следите за обновлениями!",
-        "keyboardType": "none",
-        "buttons": [],
+    nodes.append(node("tbl-read-user-donate", "bot_table", 400, 1700, {
+        "tableName": "users",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "user",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "msg-donate",
+        "enableAutoTransition": True,
     }))
+    nodes.append(node("msg-donate", "message", 700, 1700, {
+        "messageText": (
+            "🍩 {user.nickname}, меню доната:\n\n"
+            "💶 Ваш баланс: 0 QC\n\n"
+            "❗ Приглашайте друзей и получайте 5% от их пополнений!\n"
+            "❔ Пополните баланс или перейдите к выбору товара:"
+        ),
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-don-items", "🛍 Товары", target="msg-don-items-wip"),
+            btn("btn-don-topup", "💷 Пополнить баланс", target="msg-don-topup-wip"),
+            btn("btn-don-gift", "🎁 Подарить QC", target="msg-don-gift-wip"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 1,
+            "rows": [
+                {"buttonIds": ["btn-don-items"]},
+                {"buttonIds": ["btn-don-topup"]},
+                {"buttonIds": ["btn-don-gift"]},
+            ],
+        },
+    }))
+    for wip_id, wip_text in [
+        ("msg-don-items-wip", "🛍 Товары — раздел в разработке."),
+        ("msg-don-topup-wip", "💷 Пополнение баланса — раздел в разработке."),
+        ("msg-don-gift-wip", "🎁 Подарить QC — раздел в разработке."),
+    ]:
+        nodes.append(node(wip_id, "message", 1000, 1700, {
+            "messageText": wip_text,
+            "keyboardType": "none",
+            "buttons": [],
+        }))
 
     # --- text_trigger "🤑 Реферальная система" ---
     nodes.append(node("trig-referral", "text_trigger", 100, 1900, {
@@ -408,16 +544,40 @@ def build_start_menu() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "user",
         "resultFormat": "first_row",
-        "autoTransitionTo": "msg-referral-info",
+        "autoTransitionTo": "msg-referral",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-referral-info", "message", 700, 1900, {
+    nodes.append(node("msg-referral", "message", 700, 1900, {
         "messageText": (
-            "🤑 {user.nickname}, реферальная система:\n\n"
-            "Приглашайте друзей и получайте бонусы!\n\n"
-            "🔗 Ваша реферальная ссылка: t.me/botname?start=ref_{user_id}\n\n"
-            "— Раздел в разработке."
+            "🫶 {user.nickname}, зарабатывай, приглашая друзей:\n\n"
+            "💰 Баланс: 0$\n"
+            "💸 Всего заработано: 0$\n"
+            "🧲 Приглашено друзей: 0\n\n"
+            "🔗 Твоя реферальная ссылка:\n"
+            "⠀- https://t.me/botname?start=rl{user.game_id}\n\n"
+            "🎁 Что ты получаешь:\n"
+            "• 🤑 7,500$ — за регистрацию друга\n"
+            "• 🌟 45,000$ — за каждый уровень друга\n"
+            "• 🏖 1% — с каждой зарплаты друга\n"
+            "• 💎 5% — с каждого доната друга"
         ),
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-ref-share", "↪️ Поделиться", action="url",
+                url="https://t.me/share/url?url=https://t.me/botname?start=rl{user.game_id}"),
+            btn("btn-ref-withdraw", "💸 Снять баланс", target="msg-ref-withdraw-wip"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 1,
+            "rows": [
+                {"buttonIds": ["btn-ref-share"]},
+                {"buttonIds": ["btn-ref-withdraw"]},
+            ],
+        },
+    }))
+    nodes.append(node("msg-ref-withdraw-wip", "message", 1000, 1900, {
+        "messageText": "💸 Снятие баланса — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
@@ -426,35 +586,19 @@ def build_start_menu() -> dict:
     nodes.append(node("trig-back-menu", "text_trigger", 100, 2100, {
         "textMatchType": "exact",
         "textSynonyms": ["⬅️ Меню"],
+        "autoTransitionTo": "tbl-read-user-back",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("tbl-read-user-back", "bot_table", 400, 2100, {
+        "tableName": "users",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "user",
+        "resultFormat": "first_row",
         "autoTransitionTo": "msg-main-menu",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-main-menu", "message", 400, 2100, {
-        "messageText": "⬅️ Главное меню:",
-        "keyboardType": "reply",
-        "buttons": [
-            btn("btn-mm-earn", "💸 Заработок"),
-            btn("btn-mm-games", "🎮 Игры"),
-            btn("btn-mm-prop", "🌇 Имущество"),
-            btn("btn-mm-prof", "👤 Профиль"),
-            btn("btn-mm-clan", "🛡 Клан"),
-            btn("btn-mm-ach", "🏅 Ачивки"),
-            btn("btn-mm-cmd", "📚 Команды"),
-            btn("btn-mm-don", "🍩 Донат"),
-            btn("btn-mm-ref", "🤑 Реферальная система"),
-        ],
-        "keyboardLayout": {
-            "autoLayout": False,
-            "columns": 3,
-            "rows": [
-                {"buttonIds": ["btn-mm-earn", "btn-mm-games", "btn-mm-prop"]},
-                {"buttonIds": ["btn-mm-prof", "btn-mm-clan", "btn-mm-ach"]},
-                {"buttonIds": ["btn-mm-cmd", "btn-mm-don"]},
-                {"buttonIds": ["btn-mm-ref"]},
-            ],
-        },
-        "resizeKeyboard": True,
-    }))
+    nodes.append(main_menu_msg("msg-main-menu", "📖 {user.nickname}, вы вернулись в меню:", 700, 2100))
 
     return {
         "id": "sheet-start-menu",
@@ -471,124 +615,61 @@ def build_start_menu() -> dict:
 
 def build_earning() -> dict:
     """
-    Строит лист «💸 Заработок» с работой (мини-игра 3 раунда),
+    Строит лист «💸 Заработок» с работой (мини-игра 4x4),
     шахтой, рыбалкой, ранчо, ящиками и бизнесом.
     @returns словарь листа
     """
     nodes = []
 
-    # === ⚒ Работа ===
+    # === 🛠 Работа ===
     nodes.append(node("trig-work", "text_trigger", 100, 0, {
         "textMatchType": "exact",
-        "textSynonyms": ["⚒ Работа"],
-        "autoTransitionTo": "tbl-read-cd-work",
+        "textSynonyms": ["🛠 Работа"],
+        "autoTransitionTo": "tbl-read-user-work",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("tbl-read-cd-work", "bot_table", 400, 0, {
-        "tableName": "cooldowns",
+    nodes.append(node("tbl-read-user-work", "bot_table", 400, 0, {
+        "tableName": "users",
         "operation": "read",
-        "where": [
-            {"column": "user_id", "operator": "equals", "value": "{user_id}"},
-            {"column": "action_type", "operator": "equals", "value": "work"},
-        ],
-        "saveResultTo": "cd",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "user",
         "resultFormat": "first_row",
-        "autoTransitionTo": "cond-work-cd",
+        "autoTransitionTo": "msg-work-game",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("cond-work-cd", "condition", 700, 0, {
-        "variable": "cd.expires_at",
-        "branches": [
-            branch("br-cd-active", "Кулдаун активен", "greater_than", "{__now}", "msg-work-cd"),
-            branch("br-cd-off", "Можно работать", "else", "", "msg-work-r1"),
-        ],
-    }))
-    nodes.append(node("msg-work-cd", "message", 1000, 100, {
-        "messageText": (
-            "😨 {nickname}, следующая смена через: ...\n\n"
-            "⏳ Дождитесь окончания кулдауна."
-        ),
-        "keyboardType": "none",
-        "buttons": [],
-    }))
 
-    # Раунд 1
-    nodes.append(node("msg-work-r1", "message", 1000, -100, {
-        "messageText": "🏖 {nickname}, рабочая смена началась!\n\n❓ Нажмите на смайлик «⚒»:",
+    # Мини-игра работы: сетка 4x4 с одной правильной кнопкой
+    work_emojis = ["🔨", "🚧", "💡", "💎", "🔧", "🌋", "⚡️", "💡",
+                   "⛓️", "🪛", "🪤", "🔥", "🧯", "🚧", "⛓️", "🧯"]
+    work_buttons = []
+    work_btn_ids = []
+    for i, emoji in enumerate(work_emojis):
+        bid = f"btn-work-{i}"
+        work_btn_ids.append(bid)
+        # Кнопка с индексом 4 (🔧) — правильная
+        if i == 4:
+            work_buttons.append(btn(bid, emoji, target="set-work-reward"))
+        else:
+            work_buttons.append(btn(bid, emoji, target="msg-work-fail"))
+
+    nodes.append(node("msg-work-game", "message", 700, 0, {
+        "messageText": "🏖 {user.nickname}, рабочая смена началась!\n\n❔ Нажмите на смайлик «🔧»:",
         "keyboardType": "inline",
-        "buttons": [
-            btn("btn-r1-1", "🎯", target="msg-work-fail"),
-            btn("btn-r1-2", "🌟", target="msg-work-fail"),
-            btn("btn-r1-3", "⚒", target="msg-work-r2"),
-            btn("btn-r1-4", "🎪", target="msg-work-fail"),
-            btn("btn-r1-5", "🏀", target="msg-work-fail"),
-            btn("btn-r1-6", "⚽", target="msg-work-fail"),
-            btn("btn-r1-7", "🎵", target="msg-work-fail"),
-            btn("btn-r1-8", "🎸", target="msg-work-fail"),
-            btn("btn-r1-9", "🎹", target="msg-work-fail"),
-            btn("btn-r1-10", "🎺", target="msg-work-fail"),
-            btn("btn-r1-11", "🎻", target="msg-work-fail"),
-            btn("btn-r1-12", "🥁", target="msg-work-fail"),
-            btn("btn-r1-13", "🎤", target="msg-work-fail"),
-            btn("btn-r1-14", "🎧", target="msg-work-fail"),
-            btn("btn-r1-15", "🎬", target="msg-work-fail"),
-            btn("btn-r1-16", "📷", target="msg-work-fail"),
-        ],
-        "keyboardColumns": 4,
+        "buttons": work_buttons,
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 4,
+            "rows": [
+                {"buttonIds": work_btn_ids[0:4]},
+                {"buttonIds": work_btn_ids[4:8]},
+                {"buttonIds": work_btn_ids[8:12]},
+                {"buttonIds": work_btn_ids[12:16]},
+            ],
+        },
     }))
 
-    # Раунд 2
-    nodes.append(node("msg-work-r2", "message", 1300, -100, {
-        "messageText": "✅ Верно! Раунд 2/3\n\n❓ {nickname}, нажмите на «💡»:",
-        "keyboardType": "inline",
-        "buttons": [
-            btn("btn-r2-1", "🌙", target="msg-work-fail"),
-            btn("btn-r2-2", "☀️", target="msg-work-fail"),
-            btn("btn-r2-3", "🌈", target="msg-work-fail"),
-            btn("btn-r2-4", "💡", target="msg-work-r3"),
-            btn("btn-r2-5", "💫", target="msg-work-fail"),
-            btn("btn-r2-6", "✨", target="msg-work-fail"),
-            btn("btn-r2-7", "🌟", target="msg-work-fail"),
-            btn("btn-r2-8", "🔥", target="msg-work-fail"),
-            btn("btn-r2-9", "❄️", target="msg-work-fail"),
-            btn("btn-r2-10", "🌊", target="msg-work-fail"),
-            btn("btn-r2-11", "🍀", target="msg-work-fail"),
-            btn("btn-r2-12", "🌸", target="msg-work-fail"),
-            btn("btn-r2-13", "🌺", target="msg-work-fail"),
-            btn("btn-r2-14", "🌻", target="msg-work-fail"),
-            btn("btn-r2-15", "🌼", target="msg-work-fail"),
-            btn("btn-r2-16", "🌷", target="msg-work-fail"),
-        ],
-        "keyboardColumns": 4,
-    }))
-
-    # Раунд 3
-    nodes.append(node("msg-work-r3", "message", 1600, -100, {
-        "messageText": "✅ Верно! Раунд 3/3\n\n❓ {nickname}, нажмите на «🎯»:",
-        "keyboardType": "inline",
-        "buttons": [
-            btn("btn-r3-1", "🏆", target="msg-work-fail"),
-            btn("btn-r3-2", "🥇", target="msg-work-fail"),
-            btn("btn-r3-3", "🥈", target="msg-work-fail"),
-            btn("btn-r3-4", "🥉", target="msg-work-fail"),
-            btn("btn-r3-5", "🎯", target="set-work-reward"),
-            btn("btn-r3-6", "🎳", target="msg-work-fail"),
-            btn("btn-r3-7", "🏓", target="msg-work-fail"),
-            btn("btn-r3-8", "🏸", target="msg-work-fail"),
-            btn("btn-r3-9", "🥊", target="msg-work-fail"),
-            btn("btn-r3-10", "🥋", target="msg-work-fail"),
-            btn("btn-r3-11", "⛳", target="msg-work-fail"),
-            btn("btn-r3-12", "🎿", target="msg-work-fail"),
-            btn("btn-r3-13", "🛷", target="msg-work-fail"),
-            btn("btn-r3-14", "🥌", target="msg-work-fail"),
-            btn("btn-r3-15", "🤺", target="msg-work-fail"),
-            btn("btn-r3-16", "🏇", target="msg-work-fail"),
-        ],
-        "keyboardColumns": 4,
-    }))
-
-    # Награда
-    nodes.append(node("set-work-reward", "set_variable", 1900, -100, {
+    # Награда за работу
+    nodes.append(node("set-work-reward", "set_variable", 1000, 0, {
         "assignments": [
             {"id": "a-salary", "variable": "salary", "value": "700", "mode": "text"},
             {"id": "a-exp", "variable": "exp_gained", "value": "12", "mode": "text"},
@@ -596,7 +677,7 @@ def build_earning() -> dict:
         "autoTransitionTo": "tbl-work-update",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("tbl-work-update", "bot_table", 2200, -100, {
+    nodes.append(node("tbl-work-update", "bot_table", 1300, 0, {
         "tableName": "users",
         "operation": "update",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
@@ -604,23 +685,10 @@ def build_earning() -> dict:
             {"column": "balance", "op": "increment", "value": "{salary}"},
             {"column": "exp", "op": "increment", "value": "{exp_gained}"},
         ],
-        "autoTransitionTo": "tbl-work-upsert-cd",
-        "enableAutoTransition": True,
-    }))
-    nodes.append(node("tbl-work-upsert-cd", "bot_table", 2500, -100, {
-        "tableName": "cooldowns",
-        "operation": "upsert",
-        "key": "user_id",
-        "row": {
-            "user_id": "{user_id}",
-            "action_type": "work",
-            "expires_at": "{__now_plus_5400}",
-        },
-        "onConflict": "update",
         "autoTransitionTo": "tbl-read-user-after-work",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("tbl-read-user-after-work", "bot_table", 2800, -100, {
+    nodes.append(node("tbl-read-user-after-work", "bot_table", 1600, 0, {
         "tableName": "users",
         "operation": "read",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
@@ -629,9 +697,9 @@ def build_earning() -> dict:
         "autoTransitionTo": "msg-work-success",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-work-success", "message", 3100, -100, {
+    nodes.append(node("msg-work-success", "message", 1900, 0, {
         "messageText": (
-            "🤩 {nickname}, смена завершена!\n\n"
+            "🤩 {user.nickname}, смена завершена!\n\n"
             "💲 Зарплата: {salary}$\n"
             "⭐ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +{exp_gained} exp\n\n"
             "😨 Следующая смена через: 01:30"
@@ -641,30 +709,17 @@ def build_earning() -> dict:
     }))
 
     # Неправильный ответ
-    nodes.append(node("msg-work-fail", "message", 1300, 200, {
+    nodes.append(node("msg-work-fail", "message", 1000, 200, {
         "messageText": (
-            "😢 {nickname}, к сожалению, вы нажали на неверный смайлик.\n"
+            "😢 {user.nickname}, к сожалению, вы нажали на неверный смайлик.\n"
             "Рабочая смена завершена\n"
             "😨 Начать новую смену можно через: 01:30"
         ),
         "keyboardType": "none",
         "buttons": [],
-        "autoTransitionTo": "tbl-work-upsert-cd-fail",
-        "enableAutoTransition": True,
-    }))
-    nodes.append(node("tbl-work-upsert-cd-fail", "bot_table", 1600, 200, {
-        "tableName": "cooldowns",
-        "operation": "upsert",
-        "key": "user_id",
-        "row": {
-            "user_id": "{user_id}",
-            "action_type": "work",
-            "expires_at": "{__now_plus_5400}",
-        },
-        "onConflict": "update",
     }))
 
-    # === 🌋 Шахта ===
+    # === 🌋 Шахта (lvl 3) ===
     nodes.append(node("trig-mine", "text_trigger", 100, 400, {
         "textMatchType": "exact",
         "textSynonyms": ["🌋 Шахта"],
@@ -689,7 +744,7 @@ def build_earning() -> dict:
     }))
     nodes.append(node("msg-mine-locked", "message", 1000, 500, {
         "messageText": (
-            "😢 {nickname}, 🌋 шахта станет доступна после достижения "
+            "😢 {user.nickname}, 🌋 шахта станет доступна после достижения "
             "⭐3-го уровня. Уровень можно повысить выполняя разную активность."
         ),
         "keyboardType": "inline",
@@ -701,7 +756,7 @@ def build_earning() -> dict:
         "buttons": [],
     }))
 
-    # === 🎣 Рыбалка ===
+    # === 🎣 Рыбалка (lvl 7) ===
     nodes.append(node("trig-fish", "text_trigger", 100, 600, {
         "textMatchType": "exact",
         "textSynonyms": ["🎣 Рыбалка"],
@@ -726,7 +781,7 @@ def build_earning() -> dict:
     }))
     nodes.append(node("msg-fish-locked", "message", 1000, 700, {
         "messageText": (
-            "😓 {nickname}, 🎣 Рыбалка станет доступна после достижения "
+            "☹️ {user.nickname}, 🎣 Рыбалка станет доступна после достижения "
             "⭐7-го уровня. Уровень можно повысить выполняя разную активность."
         ),
         "keyboardType": "inline",
@@ -738,7 +793,7 @@ def build_earning() -> dict:
         "buttons": [],
     }))
 
-    # === 🏞 Ранчо ===
+    # === 🏞 Ранчо (lvl 15) ===
     nodes.append(node("trig-ranch", "text_trigger", 100, 800, {
         "textMatchType": "exact",
         "textSynonyms": ["🏞 Ранчо"],
@@ -763,7 +818,7 @@ def build_earning() -> dict:
     }))
     nodes.append(node("msg-ranch-locked", "message", 1000, 900, {
         "messageText": (
-            "😔 {nickname}, 🏞 ранчо станет доступно после достижения "
+            "☹️ {user.nickname}, 🏞 ранчо станет доступно после достижения "
             "⭐15-го уровня. Уровень можно повысить выполняя разную активность."
         ),
         "keyboardType": "inline",
@@ -779,62 +834,60 @@ def build_earning() -> dict:
     nodes.append(node("trig-crates", "text_trigger", 100, 1000, {
         "textMatchType": "exact",
         "textSynonyms": ["📦 Ящики"],
-        "autoTransitionTo": "msg-crates-empty",
+        "autoTransitionTo": "tbl-read-user-crates",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-crates-empty", "message", 400, 1000, {
-        "messageText": "😓 {nickname}, к сожалению, у вас еще нет ящиков. Их можно получить за разные активности.",
+    nodes.append(node("tbl-read-user-crates", "bot_table", 400, 1000, {
+        "tableName": "users",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "user",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "msg-crates",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("msg-crates", "message", 700, 1000, {
+        "messageText": "😔 {user.nickname}, к сожалению, у вас еще нет ящиков. Их можно получить за разные активности.",
         "keyboardType": "none",
         "buttons": [],
     }))
 
     # === 💹 Бизнес ===
-    nodes.append(node("trig-business", "text_trigger", 100, 1200, {
+    nodes.append(node("trig-biz", "text_trigger", 100, 1200, {
         "textMatchType": "exact",
         "textSynonyms": ["💹 Бизнес"],
         "autoTransitionTo": "tbl-read-user-biz",
         "enableAutoTransition": True,
     }))
     nodes.append(node("tbl-read-user-biz", "bot_table", 400, 1200, {
-        "tableName": "user_businesses",
+        "tableName": "users",
         "operation": "read",
-        "where": [{"column": "user_id", "operator": "equals", "value": "{user_id}"}],
-        "saveResultTo": "biz",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "user",
         "resultFormat": "first_row",
-        "autoTransitionTo": "cond-has-biz",
+        "autoTransitionTo": "msg-no-biz",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("cond-has-biz", "condition", 700, 1200, {
-        "variable": "biz.business_id",
-        "branches": [
-            branch("br-has-biz", "Есть бизнес", "is_not_empty", "", "msg-biz-info-wip"),
-            branch("br-no-biz", "Нет бизнеса", "else", "", "msg-no-biz"),
-        ],
-    }))
-    nodes.append(node("msg-no-biz", "message", 1000, 1300, {
-        "messageText": "😢 {nickname}, У вас нет бизнеса.",
+    nodes.append(node("msg-no-biz", "message", 700, 1200, {
+        "messageText": "😓 {user.nickname}, У вас нет бизнеса.",
         "keyboardType": "inline",
-        "buttons": [btn("btn-biz-cat", "🛍 Каталог бизнесов", target="msg-biz-catalog")],
+        "buttons": [btn("btn-biz-catalog", "🛍 Каталог бизнесов", target="msg-biz-catalog-wip")],
     }))
-    nodes.append(node("msg-biz-info-wip", "message", 1000, 1150, {
-        "messageText": "💹 Информация о вашем бизнесе — раздел в разработке.",
+    nodes.append(node("msg-biz-catalog-wip", "message", 1000, 1200, {
+        "messageText": "🛍 Каталог бизнесов — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    # === Как повысить уровень ===
+    # === Общая заглушка «Как повысить уровень» ===
     nodes.append(node("msg-how-level", "message", 1300, 600, {
         "messageText": (
-            "📈 {nickname}, как повысить уровень?\n\n"
-            "💡 Как работает система уровней?\n"
-            " - Чтобы повысить уровень, вам нужно набрать очки опыта (EXP).\n"
-            " - С каждым новым уровнем потребуется все больше EXP для перехода на следующий.\n\n"
-            "🍥 Где получить EXP?\n"
-            "1️⃣ Выполнение рабочих смен – работайте и зарабатывайте опыт.\n"
-            "2️⃣ Открытие ящиков – в ящиках можно найти дополнительный опыт.\n"
-            "3️⃣ Участие в специальных событиях – принимайте участие в мероприятиях и получайте щедрые награды.\n\n"
-            "🔓 Что дает повышение уровня?\n"
-            " - С каждым новым уровнем вы получаете доступ к новым работам, активностям и уникальным возможностям, которых нет на начальных этапах игры."
+            "📖 Как повысить уровень?\n\n"
+            "Выполняйте различные активности:\n"
+            "• 🛠 Работа\n"
+            "• 🎮 Игры\n"
+            "• 💬 Общение в чатах\n"
+            "• 📦 Открытие ящиков"
         ),
         "keyboardType": "none",
         "buttons": [],
@@ -850,178 +903,202 @@ def build_earning() -> dict:
 
 
 # ============================================================
-# Лист 3: 💹 Бизнес (sheet-business)
+# Лист 3: 🎮 Игры (sheet-games)
 # ============================================================
 
-def build_business() -> dict:
+def build_games() -> dict:
     """
-    Строит лист «💹 Бизнес» с каталогом бизнесов и покупкой.
+    Строит лист «🎮 Игры» с заглушками для каждой игры.
     @returns словарь листа
     """
     nodes = []
 
-    # Каталог бизнесов (inline callback)
-    nodes.append(node("msg-biz-catalog", "message", 100, 0, {
-        "messageText": (
-            "☕ {nickname}, информация о бизнесе:\n\n"
-            "📈 Макс. прибыль: 500$/час\n"
-            "⭐ Макс. уровень прокачки: 10\n\n"
-            "💰 Стоимость: 5000$\n\n"
-            "Используйте кнопки для навигации по каталогу."
-        ),
-        "keyboardType": "inline",
-        "buttons": [
-            btn("btn-biz-buy", "✅ Приобрести", target="tbl-check-balance-biz"),
-            btn("btn-biz-prev", "<", target="msg-biz-catalog"),
-            btn("btn-biz-page", "1/14", target="msg-biz-catalog"),
-            btn("btn-biz-next", ">", target="msg-biz-catalog"),
-        ],
-        "keyboardColumns": 4,
-    }))
+    games = [
+        ("trig-slots", "🎰 Слоты", "msg-slots-wip", "🎰 Слоты — раздел в разработке."),
+        ("trig-mines", "💣 Мины", "msg-mines-wip", "💣 Мины — раздел в разработке."),
+        ("trig-safe", "🔑 Сейф", "msg-safe-wip", "🔑 Сейф — раздел в разработке."),
+        ("trig-crash", "🚀 Краш", "msg-crash-wip", "🚀 Краш — раздел в разработке."),
+        ("trig-tower", "🗼 Башня", "msg-tower-wip", "🗼 Башня — раздел в разработке."),
+        ("trig-bj", "♠️ Блекджек", "msg-bj-wip", "♠️ Блекджек — раздел в разработке."),
+        ("trig-basket", "🏀 Баскетбол", "msg-basket-wip", "🏀 Баскетбол — раздел в разработке."),
+        ("trig-penalty", "⚽ Пенальти", "msg-penalty-wip", "⚽ Пенальти — раздел в разработке."),
+        ("trig-darts", "🎯 Дартс", "msg-darts-wip", "🎯 Дартс — раздел в разработке."),
+    ]
 
-    # Проверка баланса для покупки
-    nodes.append(node("tbl-check-balance-biz", "bot_table", 400, 0, {
-        "tableName": "users",
-        "operation": "read",
-        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
-        "saveResultTo": "user",
-        "resultFormat": "first_row",
-        "autoTransitionTo": "cond-biz-afford",
-        "enableAutoTransition": True,
-    }))
-    nodes.append(node("cond-biz-afford", "condition", 700, 0, {
-        "variable": "user.balance",
-        "branches": [
-            branch("br-biz-can", "Хватает денег", "greater_than", "4999", "tbl-buy-biz"),
-            branch("br-biz-cant", "Не хватает", "else", "", "msg-biz-no-money"),
-        ],
-    }))
-    nodes.append(node("msg-biz-no-money", "answer_callback_query", 1000, 100, {
-        "messageText": "😢 Вам не хватает денег на покупку бизнеса.",
-        "showAlert": True,
-    }))
-    nodes.append(node("tbl-buy-biz", "bot_table", 1000, -100, {
-        "tableName": "user_businesses",
-        "operation": "insert",
-        "row": {
-            "user_id": "{user_id}",
-            "business_id": "1",
-            "business_name": "Кофейня",
-            "level": "1",
-            "profit_rate": "50",
-            "purchased_at": "{__now}",
-        },
-        "autoTransitionTo": "tbl-biz-decrement",
-        "enableAutoTransition": True,
-    }))
-    nodes.append(node("tbl-biz-decrement", "bot_table", 1300, -100, {
-        "tableName": "users",
-        "operation": "update",
-        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
-        "updates": [
-            {"column": "balance", "op": "decrement", "value": "5000"},
-        ],
-        "autoTransitionTo": "msg-biz-bought",
-        "enableAutoTransition": True,
-    }))
-    nodes.append(node("msg-biz-bought", "message", 1600, -100, {
-        "messageText": "🎉 {nickname}, бизнес «Кофейня» приобретён! Поздравляем!",
-        "keyboardType": "none",
-        "buttons": [],
-    }))
+    for i, (trig_id, trigger_text, msg_id, msg_text) in enumerate(games):
+        y = i * 200
+        nodes.append(node(trig_id, "text_trigger", 100, y, {
+            "textMatchType": "exact",
+            "textSynonyms": [trigger_text],
+            "autoTransitionTo": msg_id,
+            "enableAutoTransition": True,
+        }))
+        nodes.append(node(msg_id, "message", 400, y, {
+            "messageText": msg_text,
+            "keyboardType": "none",
+            "buttons": [],
+        }))
 
     return {
-        "id": "sheet-business",
-        "name": "💹 Бизнес",
+        "id": "sheet-games",
+        "name": "🎮 Игры",
         "nodes": nodes,
         "viewState": {"pan": {"x": 0, "y": 0}, "zoom": 100},
     }
 
 
 # ============================================================
-# Лист 4: 🛡 Клан (sheet-clan)
+# Лист 4: 🌇 Имущество (sheet-property)
 # ============================================================
 
-def build_clan() -> dict:
+def build_property() -> dict:
     """
-    Строит лист «🛡 Клан» с информацией о клане, гаванью и заглушками.
+    Строит лист «🌇 Имущество» с машиной, домом, бизнесом,
+    майнинг фермой и магазином.
     @returns словарь листа
     """
     nodes = []
 
-    # Заглушки кнопок клана
-    nodes.append(node("msg-clan-season-wip", "message", 100, 0, {
-        "messageText": "🏆 Сезон клана — раздел в разработке.",
-        "keyboardType": "none",
-        "buttons": [],
+    # === 🚘 Машина ===
+    nodes.append(node("trig-car", "text_trigger", 100, 0, {
+        "textMatchType": "exact",
+        "textSynonyms": ["🚘 Машина"],
+        "autoTransitionTo": "msg-car-wip",
+        "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-clan-members-wip", "message", 100, 200, {
-        "messageText": "👥 Список участников — раздел в разработке.",
-        "keyboardType": "none",
-        "buttons": [],
+    nodes.append(node("msg-car-wip", "message", 400, 0, {
+        "messageText": "🚘 У вас нет машины. Купите в магазине!",
+        "keyboardType": "inline",
+        "buttons": [btn("btn-car-shop", "🛒 Магазин", target="msg-shop")],
     }))
-    nodes.append(node("msg-clan-bonus-wip", "message", 100, 400, {
-        "messageText": "⭐ Бонусы клана — раздел в разработке.",
-        "keyboardType": "none",
-        "buttons": [],
+
+    # === 🏠 Дом ===
+    nodes.append(node("trig-house", "text_trigger", 100, 200, {
+        "textMatchType": "exact",
+        "textSynonyms": ["🏠 Дом"],
+        "autoTransitionTo": "msg-house-wip",
+        "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-clan-mprof-wip", "message", 100, 600, {
-        "messageText": "👤 Введите ID участника — раздел в разработке.",
-        "keyboardType": "none",
-        "buttons": [],
+    nodes.append(node("msg-house-wip", "message", 400, 200, {
+        "messageText": "🏠 У вас нет дома. Купите в магазине!",
+        "keyboardType": "inline",
+        "buttons": [btn("btn-house-shop", "🛒 Магазин", target="msg-shop")],
     }))
-    nodes.append(node("msg-clan-leave-wip", "message", 100, 800, {
-        "messageText": "📕 Покинуть клан — раздел в разработке.",
+
+    # === 🪫 Майнинг ферма ===
+    nodes.append(node("trig-mining", "text_trigger", 100, 400, {
+        "textMatchType": "exact",
+        "textSynonyms": ["🪫 Майнинг ферма"],
+        "autoTransitionTo": "msg-mining-wip",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("msg-mining-wip", "message", 400, 400, {
+        "messageText": "🪫 Майнинг ферма — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    # Гавань клана
-    nodes.append(node("msg-clan-harbor", "message", 400, 0, {
+    # === 🛒 Магазин ===
+    nodes.append(node("trig-shop", "text_trigger", 100, 600, {
+        "textMatchType": "exact",
+        "textSynonyms": ["🛒 Магазин"],
+        "autoTransitionTo": "tbl-read-user-shop",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("tbl-read-user-shop", "bot_table", 400, 600, {
+        "tableName": "users",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "user",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "msg-shop",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("msg-shop", "message", 700, 600, {
         "messageText": (
-            "⚓ {nickname}, гавань клана:\n\n"
-            "🔥 Уровень: {clan.harbor_level}\n"
-            "🏖 Склад: {clan.harbor_storage} ед./{clan.harbor_max} ед.\n"
-            "🚢 Добыча: {clan.harbor_rate} ед./мин\n\n"
-            "⚙ Используйте кнопки ниже для управления гаванью!"
+            "🛒 {user.nickname}, разделы магазина:\n"
+            "⠀⠀- 🚘 Машины\n"
+            "⠀⠀- 🏡 Дома\n"
+            "⠀⠀- 💼 Бизнесы"
         ),
         "keyboardType": "inline",
         "buttons": [
-            btn("btn-h-upgrade", "🆙 Улучшение", target="msg-harbor-upgrade-wip"),
-            btn("btn-h-invest", "🏆 Инвесторы", target="msg-harbor-invest-wip"),
-            btn("btn-h-prod", "🚢 Добыча", target="msg-harbor-prod-wip"),
-            btn("btn-h-storage", "🏖 Склад", target="msg-harbor-storage-wip"),
-            btn("btn-h-raid", "🏴 Рейд", target="msg-harbor-raid-wip"),
-            btn("btn-h-back", "⬅ Назад", target="msg-clan-info"),
+            btn("btn-shop-cars", "🚘 Машины", target="msg-shop-cars-wip"),
+            btn("btn-shop-houses", "🏡 Дома", target="msg-shop-houses-wip"),
+            btn("btn-shop-biz", "💼 Бизнесы", target="msg-shop-biz-wip"),
         ],
-        "keyboardColumns": 2,
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 2,
+            "rows": [
+                {"buttonIds": ["btn-shop-cars", "btn-shop-houses"]},
+                {"buttonIds": ["btn-shop-biz"]},
+            ],
+        },
+    }))
+    for wip_id, wip_text in [
+        ("msg-shop-cars-wip", "🚘 Машины — каталог в разработке."),
+        ("msg-shop-houses-wip", "🏡 Дома — каталог в разработке."),
+        ("msg-shop-biz-wip", "💼 Бизнесы — каталог в разработке."),
+    ]:
+        nodes.append(node(wip_id, "message", 1000, 600, {
+            "messageText": wip_text,
+            "keyboardType": "none",
+            "buttons": [],
+        }))
+
+    return {
+        "id": "sheet-property",
+        "name": "🌇 Имущество",
+        "nodes": nodes,
+        "viewState": {"pan": {"x": 0, "y": 0}, "zoom": 100},
+    }
+
+
+
+# ============================================================
+# Лист 5: 🛡 Клан (sheet-clan)
+# ============================================================
+
+def build_clan() -> dict:
+    """
+    Строит лист «🛡 Клан» с таблицей кланов и заглушками.
+    @returns словарь листа
+    """
+    nodes = []
+
+    # Таблица кланов (определение структуры)
+    nodes.append(node("tbl-def-clans", "bot_table", 100, 0, {
+        "tableName": "clans",
+        "operation": "upsert",
+        "key": "id",
+        "row": {
+            "id": "1",
+            "name": "Тестовый клан",
+            "level": "1",
+            "exp": "0",
+            "exp_to_next": "100",
+            "treasury": "0",
+            "rating": "0",
+            "members_count": "1",
+            "max_members": "10",
+            "entry_type": "Открыт",
+            "leader_name": "Admin",
+        },
+        "onConflict": "ignore",
     }))
 
-    # Заглушки гавани
-    nodes.append(node("msg-harbor-upgrade-wip", "message", 700, 0, {
-        "messageText": "🆙 Улучшение гавани — раздел в разработке.",
-        "keyboardType": "inline",
-        "buttons": [btn("btn-hb1", "⬅ Назад", target="msg-clan-harbor")],
+    # Гавань (заглушка)
+    nodes.append(node("trig-harbor-info", "text_trigger", 100, 200, {
+        "textMatchType": "exact",
+        "textSynonyms": ["⚓️ Гавань"],
+        "autoTransitionTo": "msg-harbor-info",
+        "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-harbor-invest-wip", "message", 700, 200, {
-        "messageText": "🏆 Инвесторы гавани — раздел в разработке.",
-        "keyboardType": "inline",
-        "buttons": [btn("btn-hb2", "⬅ Назад", target="msg-clan-harbor")],
-    }))
-    nodes.append(node("msg-harbor-prod-wip", "message", 700, 400, {
-        "messageText": "🚢 Добыча гавани — раздел в разработке.",
-        "keyboardType": "inline",
-        "buttons": [btn("btn-hb3", "⬅ Назад", target="msg-clan-harbor")],
-    }))
-    nodes.append(node("msg-harbor-storage-wip", "message", 700, 600, {
-        "messageText": "🏖 Склад гавани — раздел в разработке.",
-        "keyboardType": "inline",
-        "buttons": [btn("btn-hb4", "⬅ Назад", target="msg-clan-harbor")],
-    }))
-    nodes.append(node("msg-harbor-raid-wip", "message", 700, 800, {
-        "messageText": "🏴 Рейд — раздел в разработке.",
-        "keyboardType": "inline",
-        "buttons": [btn("btn-hb5", "⬅ Назад", target="msg-clan-harbor")],
+    nodes.append(node("msg-harbor-info", "message", 400, 200, {
+        "messageText": "⚓️ Гавань — раздел в разработке.",
+        "keyboardType": "none",
+        "buttons": [],
     }))
 
     return {
@@ -1032,41 +1109,21 @@ def build_clan() -> dict:
     }
 
 
-
 # ============================================================
-# Лист 5: 📖 Справка (sheet-help)
+# Лист 6: 📖 Справка (sheet-help)
 # ============================================================
 
 def build_help() -> dict:
     """
-    Строит лист «📖 Справка» с /help, /faq и разделами команд.
+    Строит лист «📖 Справка» с /help, разделами команд и /faq.
     @returns словарь листа
     """
     nodes = []
 
-    # Общие inline-кнопки навигации по разделам
-    help_nav_buttons = [
-        btn("btn-nav-star", "⭐️", target="msg-help-basic"),
-        btn("btn-nav-earn", "💸", target="msg-help-earning"),
-        btn("btn-nav-game", "🎮", target="msg-help-games"),
-        btn("btn-nav-prop", "🌆", target="msg-help-property"),
-        btn("btn-nav-misc", "☁️", target="msg-help-misc"),
-    ]
-
-    # Ручная раскладка для навигации help: 3 + 2
-    help_nav_layout = {
-        "autoLayout": False,
-        "columns": 3,
-        "rows": [
-            {"buttonIds": ["btn-nav-star", "btn-nav-earn", "btn-nav-game"]},
-            {"buttonIds": ["btn-nav-prop", "btn-nav-misc"]},
-        ],
-    }
-
-    # /help
+    # === /help ===
     nodes.append(node("cmd-help", "command_trigger", 100, 0, {
         "command": "/help",
-        "description": "Список команд",
+        "description": "Справка по командам",
         "showInMenu": True,
         "autoTransitionTo": "tbl-read-user-help2",
         "enableAutoTransition": True,
@@ -1083,103 +1140,215 @@ def build_help() -> dict:
     nodes.append(node("msg-help", "message", 700, 0, {
         "messageText": (
             "📚 {user.nickname}, выберите раздел с командами:\n"
-            "- ⭐️ Основное\n"
-            "- 💸 Заработок\n"
-            "- 🎮 Игры\n"
-            "- 🌆 Имущество\n"
-            "- ☁️ Прочее\n\n"
+            "⠀- ⭐️ Основное\n"
+            "⠀- 💸 Заработок\n"
+            "⠀- 🎮 Игры\n"
+            "⠀- 🌆 Имущество\n"
+            "⠀- ☁️ Прочее\n\n"
             "✅ Добавить бота в чат"
         ),
         "keyboardType": "inline",
-        "buttons": help_nav_buttons[:],
-        "keyboardLayout": help_nav_layout,
+        "buttons": [
+            btn("btn-help-basic", "⭐️", target="msg-help-basic"),
+            btn("btn-help-earn", "💸", target="msg-help-earning"),
+            btn("btn-help-games", "🎮", target="msg-help-games"),
+            btn("btn-help-prop", "🌆", target="msg-help-property"),
+            btn("btn-help-other", "☁️", target="msg-help-other"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-help-basic", "btn-help-earn", "btn-help-games"]},
+                {"buttonIds": ["btn-help-prop", "btn-help-other"]},
+            ],
+        },
     }))
 
-    # Раздел ⭐ Основное
-    nodes.append(node("msg-help-basic", "message", 100, 300, {
+    # === Раздел ⭐️ Основное ===
+    nodes.append(node("msg-help-basic", "message", 1000, 0, {
         "messageText": (
-            "⭐️ {nickname}, список команд из раздела \"Основное\":\n"
-            "- 👤 Профиль - ваш профиль\n"
-            "- 🛡 Клан - ваш клан\n"
-            "- 👥 Рефералы - деньги за друзей\n"
-            "- 💸 Передать - перевод денег\n"
-            "- 🎁 Бонус - ежедневный подарок\n"
-            "- 🔮 Артефакты - ваши артефакты\n"
-            "- 🐧 Чат - деньги за чат\n\n"
-            "- 🛡 Клан вступить [ид клана]\n"
-            "- 🏅 Достижения\n"
-            "- 🍩 Донат\n"
-            "- 📕 Правила"
+            "⭐️ {user.nickname}, список команд из раздела \"Основное\":\n"
+            "⠀- 👤 Профиль - ваш профиль\n"
+            "⠀- 🛡 Клан - ваш клан\n"
+            "⠀- 👥 Рефералы - деньги за друзей\n"
+            "⠀- 💸 Передать - перевод денег\n"
+            "⠀- 🎁 Бонус - ежедневный подарок\n"
+            "⠀- 🔮 Артефакты - ваши артефакты\n"
+            "⠀- 💭 Чат - деньги за чат\n\n"
+            "⠀- 🛡 Клан вступить [ид клана]\n"
+            "⠀- 🏅 Достижения\n"
+            "⠀- 🍩 Донат\n"
+            "⠀- 📜 Правила"
         ),
         "keyboardType": "inline",
-        "buttons": help_nav_buttons[:],
-        "keyboardLayout": help_nav_layout,
+        "buttons": [
+            btn("btn-hb-basic", "⭐️", target="msg-help-basic"),
+            btn("btn-hb-earn", "💸", target="msg-help-earning"),
+            btn("btn-hb-games", "🎮", target="msg-help-games"),
+            btn("btn-hb-prop", "🌆", target="msg-help-property"),
+            btn("btn-hb-other", "☁️", target="msg-help-other"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-hb-basic", "btn-hb-earn", "btn-hb-games"]},
+                {"buttonIds": ["btn-hb-prop", "btn-hb-other"]},
+            ],
+        },
     }))
 
-    # Раздел 💸 Заработок
-    nodes.append(node("msg-help-earning", "message", 100, 500, {
+    # === Раздел 💸 Заработок ===
+    nodes.append(node("msg-help-earning", "message", 1000, 200, {
         "messageText": (
-            "💸 {nickname}, список команд из раздела \"Заработок\":\n"
-            "- ⚒ Работа - заработать деньги\n"
-            "- 🌋 Шахта - добыча ресурсов (с 3 ур.)\n"
-            "- 🎣 Рыбалка - ловля рыбы (с 7 ур.)\n"
-            "- 🏞 Ранчо - фермерство (с 15 ур.)\n"
-            "- 📦 Ящики - открытие ящиков\n"
-            "- 💹 Бизнес - пассивный доход"
+            "💸 {user.nickname}, список команд из раздела \"Заработок\":\n"
+            "⠀- 🛠 Работать - начать работу\n"
+            "⠀- 👔 Работы - список работ\n"
+            "⠀- 🌋 Шахта - сходить в шахту\n"
+            "⠀- 🎣 Рыбалка - порыбачить\n"
+            "⠀- 📦 Ящики - открыть ящик\n"
+            "⠀- 🪫 Майнинг - майнинг-ферма\n"
+            "⠀- 🏞 Ранчо - выращивать урожай\n"
+            "⠀- 💹 Бизнес - меню бизнеса\n"
+            "⠀- 🏦 Вклады - открыть вклад"
         ),
         "keyboardType": "inline",
-        "buttons": help_nav_buttons[:],
-        "keyboardLayout": help_nav_layout,
+        "buttons": [
+            btn("btn-he-basic", "⭐️", target="msg-help-basic"),
+            btn("btn-he-earn", "💸", target="msg-help-earning"),
+            btn("btn-he-games", "🎮", target="msg-help-games"),
+            btn("btn-he-prop", "🌆", target="msg-help-property"),
+            btn("btn-he-other", "☁️", target="msg-help-other"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-he-basic", "btn-he-earn", "btn-he-games"]},
+                {"buttonIds": ["btn-he-prop", "btn-he-other"]},
+            ],
+        },
     }))
 
-    # Раздел 🎮 Игры
-    nodes.append(node("msg-help-games", "message", 100, 700, {
+    # === Раздел 🎮 Игры ===
+    nodes.append(node("msg-help-games", "message", 1000, 400, {
         "messageText": (
-            "🎮 {nickname}, список команд из раздела \"Игры\":\n"
-            "- Раздел в разработке. Следите за обновлениями!"
+            "🎮 {user.nickname}, список команд из раздела \"Игры\":\n"
+            "⠀- 🎰 Слоты\n"
+            "⠀- 💣 Мины\n"
+            "⠀- 🪙 Монетка\n"
+            "⠀- 🏁 Гонки\n"
+            "⠀- 🎡 Рулетка\n"
+            "⠀- ✂ КНБ\n"
+            "⠀- 🔫 Дуэль\n"
+            "⠀- 🎲 Кости\n"
+            "⠀- 🕵️ Прятки\n"
+            "⠀- 🏀 Баскетбол\n"
+            "⠀- ⚽ Пенальти\n"
+            "⠀- 🎯 Дартс\n"
+            "⠀- 🚀 Краш\n"
+            "⠀- ♠️ Блекджек\n"
+            "⠀- 🗼 Башня\n"
+            "⠀- 🔑 Сейф [10-99]"
         ),
         "keyboardType": "inline",
-        "buttons": help_nav_buttons[:],
-        "keyboardLayout": help_nav_layout,
+        "buttons": [
+            btn("btn-hg-basic", "⭐️", target="msg-help-basic"),
+            btn("btn-hg-earn", "💸", target="msg-help-earning"),
+            btn("btn-hg-games", "🎮", target="msg-help-games"),
+            btn("btn-hg-prop", "🌆", target="msg-help-property"),
+            btn("btn-hg-other", "☁️", target="msg-help-other"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-hg-basic", "btn-hg-earn", "btn-hg-games"]},
+                {"buttonIds": ["btn-hg-prop", "btn-hg-other"]},
+            ],
+        },
     }))
 
-    # Раздел 🌆 Имущество
-    nodes.append(node("msg-help-property", "message", 100, 900, {
+    # === Раздел 🌆 Имущество ===
+    nodes.append(node("msg-help-property", "message", 1000, 600, {
         "messageText": (
-            "🌆 {nickname}, список команд из раздела \"Имущество\":\n"
-            "- Раздел в разработке. Следите за обновлениями!"
+            "🌆 {user.nickname}, список команд из раздела \"Имущество\":\n"
+            "⠀- 🚘 Машина\n"
+            "⠀- 🏠 Дом\n"
+            "⠀- 💹 Бизнес\n"
+            "⠀- 🪫 Ферма"
         ),
         "keyboardType": "inline",
-        "buttons": help_nav_buttons[:],
-        "keyboardLayout": help_nav_layout,
+        "buttons": [
+            btn("btn-hp-basic", "⭐️", target="msg-help-basic"),
+            btn("btn-hp-earn", "💸", target="msg-help-earning"),
+            btn("btn-hp-games", "🎮", target="msg-help-games"),
+            btn("btn-hp-prop", "🌆", target="msg-help-property"),
+            btn("btn-hp-other", "☁️", target="msg-help-other"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-hp-basic", "btn-hp-earn", "btn-hp-games"]},
+                {"buttonIds": ["btn-hp-prop", "btn-hp-other"]},
+            ],
+        },
     }))
 
-    # Раздел ☁️ Прочее
-    nodes.append(node("msg-help-misc", "message", 100, 1100, {
+    # === Раздел ☁️ Прочее ===
+    nodes.append(node("msg-help-other", "message", 1000, 800, {
         "messageText": (
-            "☁️ {nickname}, список команд из раздела \"Прочее\":\n"
-            "- /faq - справочник\n"
-            "- /help - список команд\n"
-            "- 📕 Правила - правила бота"
+            "☁️ {user.nickname}, список команд из раздела \"Прочее\":\n"
+            "⠀- 🏆 Топ - богатые игроки\n"
+            "⠀- ✏️ Ник - изменить имя\n"
+            "⠀- 💰 Баланс - ваш баланс\n\n"
+            "⠀- ⚡️ Бусты\n"
+            "⠀- 🛒 Магазин\n"
+            "⠀- 🎁 Промокод\n"
+            "⠀- 🌀 Упоминания [вкл/выкл]"
         ),
         "keyboardType": "inline",
-        "buttons": help_nav_buttons[:],
-        "keyboardLayout": help_nav_layout,
+        "buttons": [
+            btn("btn-ho-basic", "⭐️", target="msg-help-basic"),
+            btn("btn-ho-earn", "💸", target="msg-help-earning"),
+            btn("btn-ho-games", "🎮", target="msg-help-games"),
+            btn("btn-ho-prop", "🌆", target="msg-help-property"),
+            btn("btn-ho-other", "☁️", target="msg-help-other"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-ho-basic", "btn-ho-earn", "btn-ho-games"]},
+                {"buttonIds": ["btn-ho-prop", "btn-ho-other"]},
+            ],
+        },
     }))
 
-    # /faq
-    nodes.append(node("cmd-faq", "command_trigger", 400, 1300, {
+    # === /faq ===
+    nodes.append(node("cmd-faq", "command_trigger", 100, 1000, {
         "command": "/faq",
         "description": "Справочник",
         "showInMenu": True,
+        "autoTransitionTo": "tbl-read-user-faq",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("tbl-read-user-faq", "bot_table", 400, 1000, {
+        "tableName": "users",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "user",
+        "resultFormat": "first_row",
         "autoTransitionTo": "msg-faq",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-faq", "message", 700, 1300, {
+    nodes.append(node("msg-faq", "message", 700, 1000, {
         "messageText": (
-            "📒 {nickname}, меню справочника:\n\n"
+            "📒 {user.nickname}, меню справочника:\n\n"
             "Здесь вы найдёте ответы на все вопросы об игровых системах.\n"
-            "🔒 Некоторые разделы становятся доступны только после достижения определённого уровня.\n\n"
+            "🔓 Некоторые разделы становятся доступны только после достижения определённого уровня.\n\n"
             "🔽 Выбери интересующий раздел с помощью кнопок ниже:"
         ),
         "keyboardType": "inline",
@@ -1187,15 +1356,21 @@ def build_help() -> dict:
             btn("btn-faq-vip", "💎 VIP", target="msg-faq-vip-wip"),
             btn("btn-faq-harbor", "⚓ Гавань", target="msg-faq-harbor-wip"),
         ],
-        "keyboardColumns": 2,
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 2,
+            "rows": [
+                {"buttonIds": ["btn-faq-vip", "btn-faq-harbor"]},
+            ],
+        },
     }))
-    nodes.append(node("msg-faq-vip-wip", "message", 1000, 1300, {
+    nodes.append(node("msg-faq-vip-wip", "message", 1000, 1000, {
         "messageText": "💎 VIP — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
-    nodes.append(node("msg-faq-harbor-wip", "message", 1000, 1500, {
-        "messageText": "⚓ Гавань — раздел справочника в разработке.",
+    nodes.append(node("msg-faq-harbor-wip", "message", 1000, 1100, {
+        "messageText": "⚓ Гавань — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
@@ -1210,25 +1385,25 @@ def build_help() -> dict:
 
 
 # ============================================================
-# Лист 6: 👤 Основное (sheet-basic-commands)
+# Лист 7: 👤 Основное (sheet-basic)
 # ============================================================
 
-def build_basic_commands() -> dict:
+def build_basic() -> dict:
     """
-    Строит лист «👤 Основное» с текстовыми командами:
-    Рефералы, Передать, Бонус, Артефакты, Чат, Достижения, Правила.
+    Строит лист «👤 Основное» с рефералами, бонусом, правилами
+    и прочими extra-командами.
     @returns словарь листа
     """
     nodes = []
 
-    # Рефералы
+    # === 👥 Рефералы ===
     nodes.append(node("trig-referals", "text_trigger", 100, 0, {
         "textMatchType": "exact",
-        "textSynonyms": ["Рефералы", "👥 Рефералы"],
-        "autoTransitionTo": "tbl-read-user-refs",
+        "textSynonyms": ["👥 Рефералы"],
+        "autoTransitionTo": "tbl-read-user-referals",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("tbl-read-user-refs", "bot_table", 400, 0, {
+    nodes.append(node("tbl-read-user-referals", "bot_table", 400, 0, {
         "tableName": "users",
         "operation": "read",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
@@ -1239,121 +1414,170 @@ def build_basic_commands() -> dict:
     }))
     nodes.append(node("msg-referals", "message", 700, 0, {
         "messageText": (
-            "🤑 {user.nickname}, реферальная система:\n\n"
-            "Приглашайте друзей и получайте бонусы!\n\n"
-            "🔗 Ваша реферальная ссылка: t.me/botname?start=ref_{user_id}\n\n"
-            "— Раздел в разработке."
+            "🫶 {user.nickname}, зарабатывай, приглашая друзей:\n\n"
+            "💰 Баланс: 0$\n"
+            "💸 Всего заработано: 0$\n"
+            "🧲 Приглашено друзей: 0\n\n"
+            "🔗 Твоя реферальная ссылка:\n"
+            "⠀- https://t.me/botname?start=rl{user.game_id}\n\n"
+            "🎁 Что ты получаешь:\n"
+            "• 🤑 7,500$ — за регистрацию друга\n"
+            "• 🌟 45,000$ — за каждый уровень друга\n"
+            "• 🏖 1% — с каждой зарплаты друга\n"
+            "• 💎 5% — с каждого доната друга"
         ),
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-ref2-share", "↪️ Поделиться", action="url",
+                url="https://t.me/share/url?url=https://t.me/botname?start=rl{user.game_id}"),
+            btn("btn-ref2-withdraw", "💸 Снять баланс", target="msg-ref2-withdraw-wip"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 1,
+            "rows": [
+                {"buttonIds": ["btn-ref2-share"]},
+                {"buttonIds": ["btn-ref2-withdraw"]},
+            ],
+        },
+    }))
+    nodes.append(node("msg-ref2-withdraw-wip", "message", 1000, 0, {
+        "messageText": "💸 Снятие баланса — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    # Передать
-    nodes.append(node("trig-transfer", "text_trigger", 100, 200, {
+    # === 🎁 Бонус ===
+    nodes.append(node("trig-bonus", "text_trigger", 100, 200, {
         "textMatchType": "exact",
-        "textSynonyms": ["Передать", "💸 Передать"],
-        "autoTransitionTo": "msg-transfer",
+        "textSynonyms": ["🎁 Бонус"],
+        "autoTransitionTo": "tbl-read-user-bonus",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-transfer", "message", 400, 200, {
-        "messageText": (
-            "💸 {nickname}, перевод денег:\n\n"
-            "Ответьте на сообщение пользователя и напишите: Передать [сумма]\n\n"
-            "— Раздел в разработке."
-        ),
-        "keyboardType": "none",
-        "buttons": [],
-    }))
-
-    # Бонус
-    nodes.append(node("trig-bonus", "text_trigger", 100, 400, {
-        "textMatchType": "exact",
-        "textSynonyms": ["Бонус", "🎁 Бонус"],
+    nodes.append(node("tbl-read-user-bonus", "bot_table", 400, 200, {
+        "tableName": "users",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "user",
+        "resultFormat": "first_row",
         "autoTransitionTo": "msg-bonus",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-bonus", "message", 400, 400, {
-        "messageText": (
-            "🎁 {nickname}, ежедневный бонус:\n\n"
-            "— Раздел в разработке."
-        ),
+    nodes.append(node("msg-bonus", "message", 700, 200, {
+        "messageText": "😓 {user.nickname}, необходимо подписаться на наш канал, чтобы получать ежедневный бонус:",
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-bonus-sub", "✅ Подписаться", action="url", url="https://t.me/qalais_news"),
+            btn("btn-bonus-check", "🔄 Проверить", target="msg-bonus-check-wip"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 1,
+            "rows": [
+                {"buttonIds": ["btn-bonus-sub"]},
+                {"buttonIds": ["btn-bonus-check"]},
+            ],
+        },
+    }))
+    nodes.append(node("msg-bonus-check-wip", "message", 1000, 200, {
+        "messageText": "🔄 Проверка подписки — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    # Артефакты
-    nodes.append(node("trig-artifacts", "text_trigger", 100, 600, {
+    # === 📜 Правила ===
+    nodes.append(node("trig-rules", "text_trigger", 100, 400, {
         "textMatchType": "exact",
-        "textSynonyms": ["Артефакты", "🔮 Артефакты"],
-        "autoTransitionTo": "msg-artifacts",
+        "textSynonyms": ["📜 Правила"],
+        "autoTransitionTo": "msg-rules-wip",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-artifacts", "message", 400, 600, {
-        "messageText": (
-            "🔮 {nickname}, ваши артефакты:\n\n"
-            "У вас пока нет артефактов.\n\n"
-            "— Раздел в разработке."
-        ),
+    nodes.append(node("msg-rules-wip", "message", 400, 400, {
+        "messageText": "📜 Правила — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    # Чат
-    nodes.append(node("trig-chat-earn", "text_trigger", 100, 800, {
+    # === 💸 Передать ===
+    nodes.append(node("trig-transfer", "text_trigger", 100, 600, {
         "textMatchType": "exact",
-        "textSynonyms": ["Чат", "🐧 Чат"],
-        "autoTransitionTo": "msg-chat-earn",
+        "textSynonyms": ["💸 Передать"],
+        "autoTransitionTo": "msg-transfer-wip",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-chat-earn", "message", 400, 800, {
-        "messageText": (
-            "🐧 {nickname}, деньги за чат:\n\n"
-            "Пишите в чат и получайте монеты за активность!\n\n"
-            "— Раздел в разработке."
-        ),
+    nodes.append(node("msg-transfer-wip", "message", 400, 600, {
+        "messageText": "💸 Передача денег — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    # Достижения
-    nodes.append(node("trig-achieve", "text_trigger", 100, 1000, {
+    # === 🔮 Артефакты ===
+    nodes.append(node("trig-artifacts", "text_trigger", 100, 800, {
         "textMatchType": "exact",
-        "textSynonyms": ["Достижения", "🏅 Достижения"],
-        "autoTransitionTo": "msg-achieve",
+        "textSynonyms": ["🔮 Артефакты"],
+        "autoTransitionTo": "msg-artifacts-wip",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-achieve", "message", 400, 1000, {
-        "messageText": (
-            "🏅 {nickname}, ваши достижения:\n\n"
-            "У вас пока нет достижений.\n\n"
-            "— Раздел в разработке."
-        ),
+    nodes.append(node("msg-artifacts-wip", "message", 400, 800, {
+        "messageText": "🔮 Артефакты — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    # Правила
-    nodes.append(node("trig-rules", "text_trigger", 100, 1200, {
+    # === 💭 Чат ===
+    nodes.append(node("trig-chat", "text_trigger", 100, 1000, {
         "textMatchType": "exact",
-        "textSynonyms": ["Правила", "📕 Правила"],
-        "autoTransitionTo": "msg-rules",
+        "textSynonyms": ["💭 Чат"],
+        "autoTransitionTo": "msg-chat-wip",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-rules", "message", 400, 1200, {
-        "messageText": (
-            "📕 Правила бота:\n\n"
-            "1. Запрещено использование багов\n"
-            "2. Запрещён мультиаккаунтинг\n"
-            "3. Запрещена реклама\n"
-            "4. Уважайте других игроков\n\n"
-            "Нарушение правил ведёт к бану."
-        ),
+    nodes.append(node("msg-chat-wip", "message", 400, 1000, {
+        "messageText": "💭 Чат — раздел в разработке.",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # === 🏆 Топ ===
+    nodes.append(node("trig-top", "text_trigger", 100, 1200, {
+        "textMatchType": "exact",
+        "textSynonyms": ["🏆 Топ"],
+        "autoTransitionTo": "msg-top-wip",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("msg-top-wip", "message", 400, 1200, {
+        "messageText": "🏆 Топ — раздел в разработке.",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # === ✏️ Ник ===
+    nodes.append(node("trig-nick", "text_trigger", 100, 1400, {
+        "textMatchType": "exact",
+        "textSynonyms": ["✏️ Ник"],
+        "autoTransitionTo": "msg-nick-wip",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("msg-nick-wip", "message", 400, 1400, {
+        "messageText": "✏️ Ник — раздел в разработке.",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # === 🎁 Промокод ===
+    nodes.append(node("trig-promo", "text_trigger", 100, 1600, {
+        "textMatchType": "exact",
+        "textSynonyms": ["🎁 Промокод"],
+        "autoTransitionTo": "msg-promo-wip",
+        "enableAutoTransition": True,
+    }))
+    nodes.append(node("msg-promo-wip", "message", 400, 1600, {
+        "messageText": "🎁 Промокод — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
 
     return {
-        "id": "sheet-basic-commands",
+        "id": "sheet-basic",
         "name": "👤 Основное",
         "nodes": nodes,
         "viewState": {"pan": {"x": 0, "y": 0}, "zoom": 100},
@@ -1362,139 +1586,52 @@ def build_basic_commands() -> dict:
 
 
 # ============================================================
-# Лист 7: 🎮 Игры (sheet-games)
+# Сборка и запись project.json
 # ============================================================
 
-def build_games() -> dict:
+def build_project() -> dict:
     """
-    Строит лист «🎮 Игры» с заглушками для каждой мини-игры.
-    @returns словарь листа
+    Собирает полный project.json из всех листов.
+    @returns полная структура проекта
     """
-    nodes = []
-
-    games = [
-        ("trig-slots", "🎰 Слоты", "msg-slots-wip", 0),
-        ("trig-mines", "💣 Мины", "msg-mines-wip", 200),
-        ("trig-safe", "🔑 Сейф", "msg-safe-wip", 400),
-        ("trig-crash", "🚀 Краш", "msg-crash-wip", 600),
-        ("trig-tower", "🗼 Башня", "msg-tower-wip", 800),
-        ("trig-blackjack", "♠️ Блекджек", "msg-bj-wip", 1000),
-        ("trig-basketball", "🏀 Баскетбол", "msg-basket-wip", 1200),
-        ("trig-penalty", "⚽ Пенальти", "msg-penalty-wip", 1400),
-        ("trig-darts", "🎯 Дартс", "msg-darts-wip", 1600),
-    ]
-
-    for trig_id, text, msg_id, y_pos in games:
-        nodes.append(node(trig_id, "text_trigger", 100, y_pos, {
-            "textMatchType": "exact",
-            "textSynonyms": [text],
-            "autoTransitionTo": msg_id,
-            "enableAutoTransition": True,
-        }))
-        nodes.append(node(msg_id, "message", 400, y_pos, {
-            "messageText": f"{text} — раздел в разработке. Следите за обновлениями!",
-            "keyboardType": "none",
-            "buttons": [],
-        }))
-
     return {
-        "id": "sheet-games",
-        "name": "🎮 Игры",
-        "nodes": nodes,
-        "viewState": {"pan": {"x": 0, "y": 0}, "zoom": 100},
+        "version": 2,
+        "activeSheetId": "sheet-start-menu",
+        "sheets": [
+            build_start_menu(),
+            build_earning(),
+            build_games(),
+            build_property(),
+            build_clan(),
+            build_help(),
+            build_basic(),
+        ],
     }
 
-
-# ============================================================
-# Лист 8: 🌇 Имущество (sheet-property)
-# ============================================================
-
-def build_property() -> dict:
-    """
-    Строит лист «🌇 Имущество» с заглушками для каждого раздела.
-    @returns словарь листа
-    """
-    nodes = []
-
-    items = [
-        ("trig-house", "🏠 Дом", "msg-house-wip", 0),
-        ("trig-car", "🚗 Транспорт", "msg-car-wip", 200),
-        ("trig-pets", "🐕 Питомцы", "msg-pets-wip", 400),
-        ("trig-clothes", "👕 Одежда", "msg-clothes-wip", 600),
-        ("trig-phone", "📱 Телефон", "msg-phone-wip", 800),
-        ("trig-accessories", "💍 Аксессуары", "msg-acc-wip", 1000),
-    ]
-
-    for trig_id, text, msg_id, y_pos in items:
-        nodes.append(node(trig_id, "text_trigger", 100, y_pos, {
-            "textMatchType": "exact",
-            "textSynonyms": [text],
-            "autoTransitionTo": msg_id,
-            "enableAutoTransition": True,
-        }))
-        nodes.append(node(msg_id, "message", 400, y_pos, {
-            "messageText": f"{text} — раздел в разработке. Следите за обновлениями!",
-            "keyboardType": "none",
-            "buttons": [],
-        }))
-
-    return {
-        "id": "sheet-property",
-        "name": "🌇 Имущество",
-        "nodes": nodes,
-        "viewState": {"pan": {"x": 0, "y": 0}, "zoom": 100},
-    }
-
-
-# ============================================================
-# Главная функция: сборка и запись project.json
-# ============================================================
 
 def main():
     """
-    Собирает все листы в единый project.json и записывает на диск.
-    Выводит статистику по листам и узлам.
+    Точка входа: генерирует project.json и записывает в папку бота.
     """
-    sheets = [
-        build_start_menu(),
-        build_earning(),
-        build_business(),
-        build_clan(),
-        build_help(),
-        build_basic_commands(),
-        build_games(),
-        build_property(),
-    ]
+    project = build_project()
 
-    project = {
-        "version": 2,
-        "activeSheetId": "sheet-start-menu",
-        "sheets": sheets,
-    }
-
-    # Путь для записи
-    output_dir = Path(r"c:\Users\1\Desktop\telegram-bot-builder\bots\клон")
+    # Определяем путь к выходному файлу
+    output_dir = Path(__file__).resolve().parent.parent / "bots" / "клон"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "project.json"
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(project, f, ensure_ascii=False, indent=2)
 
-    # Статистика
-    total_nodes = 0
-    print("=" * 50)
-    print("📊 СТАТИСТИКА ГЕНЕРАЦИИ RPG-БОТА")
-    print("=" * 50)
-    for sheet in sheets:
-        count = len(sheet["nodes"])
-        total_nodes += count
-        print(f"  📄 {sheet['name']}: {count} узлов")
-    print("-" * 50)
-    print(f"  📁 Всего листов: {len(sheets)}")
-    print(f"  🔗 Всего узлов: {total_nodes}")
-    print(f"  💾 Файл: {output_path}")
-    print("=" * 50)
-    print("✅ Генерация завершена успешно!")
+    # Подсчёт статистики
+    total_nodes = sum(len(sheet["nodes"]) for sheet in project["sheets"])
+    total_sheets = len(project["sheets"])
+
+    print(f"✅ project.json сгенерирован успешно!")
+    print(f"   📁 Путь: {output_path}")
+    print(f"   📄 Листов: {total_sheets}")
+    print(f"   🔲 Узлов: {total_nodes}")
+    print(f"   📦 Размер: {output_path.stat().st_size / 1024:.1f} KB")
 
 
 if __name__ == "__main__":
