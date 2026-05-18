@@ -786,7 +786,7 @@ def build_earning() -> dict:
     # Сообщение о кулдауне
     nodes.append(node("msg-work-cd", "message", 1000, -200, {
         "messageText": (
-            "😨 {user.nickname}, следующая смена через: 01:30\n\n"
+            "😨 {user.nickname}, следующая смена через: ...\n\n"
             "⏳ Подождите окончания кулдауна."
         ),
         "keyboardType": "none",
@@ -855,7 +855,7 @@ def build_earning() -> dict:
         "row": {
             "user_id": "{user_id}",
             "action_type": "work",
-            "expires_at": "{__now_plus_5400}",
+            "expires_at": "{__now_plus_90}",
         },
         "onConflict": "update",
         "autoTransitionTo": "tbl-read-user-lvl",
@@ -946,7 +946,7 @@ def build_earning() -> dict:
         "row": {
             "user_id": "{user_id}",
             "action_type": "work",
-            "expires_at": "{__now_plus_5400}",
+            "expires_at": "{__now_plus_90}",
         },
         "onConflict": "update",
         "autoTransitionTo": "msg-work-fail",
