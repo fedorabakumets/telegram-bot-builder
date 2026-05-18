@@ -171,7 +171,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                     # Автосоздание таблицы
                     _tbl = await conn.fetchrow("INSERT INTO bot_tables (project_id, name) VALUES ($1, $2) RETURNING id", PROJECT_ID, _table_name)
                     _pos = 0
-{% for col_name in row.keys() %}
+{% for col_name, col_value in row %}
                     await conn.execute("INSERT INTO bot_table_columns (table_id, name, position) VALUES ($1, $2, $3)", _tbl["id"], "{{ col_name }}", _pos)
                     _pos += 1
 {% endfor %}
@@ -179,7 +179,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                 _name_to_id = {c["name"]: str(c["id"]) for c in _cols}
                 _max_idx = await conn.fetchval("SELECT COALESCE(MAX(row_index), -1) FROM bot_table_rows WHERE table_id = $1", _tbl["id"])
                 _new_data = {}
-{% for col_name, col_value in row.items() %}
+{% for col_name, col_value in row %}
                 _new_data[_name_to_id.get("{{ col_name }}", "{{ col_name }}")] = replace_variables_in_text({{ col_value | tojson }}, _vars)
 {% endfor %}
                 await conn.execute(
@@ -199,7 +199,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                     # Автосоздание таблицы
                     _tbl = await conn.fetchrow("INSERT INTO bot_tables (project_id, name) VALUES ($1, $2) RETURNING id", PROJECT_ID, _table_name)
                     _pos = 0
-{% for col_name in row.keys() %}
+{% for col_name, col_value in row %}
                     await conn.execute("INSERT INTO bot_table_columns (table_id, name, position) VALUES ($1, $2, $3)", _tbl["id"], "{{ col_name }}", _pos)
                     _pos += 1
 {% endfor %}
@@ -220,7 +220,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
 {% if onConflict == 'update' %}
                     # onConflict=update: перезаписать все поля
                     _upd_data = {}
-{% for col_name, col_value in row.items() %}
+{% for col_name, col_value in row %}
                     _upd_data[_name_to_id.get("{{ col_name }}", "{{ col_name }}")] = replace_variables_in_text({{ col_value | tojson }}, _vars)
 {% endfor %}
                     await conn.execute(
@@ -230,7 +230,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
 {% elif onConflict == 'merge' %}
                     # onConflict=merge: обновить только пустые поля
                     _existing = _found_row["data"] if isinstance(_found_row["data"], dict) else json.loads(_found_row["data"])
-{% for col_name, col_value in row.items() %}
+{% for col_name, col_value in row %}
                     _merge_col_id_{{ loop.index }} = _name_to_id.get("{{ col_name }}", "{{ col_name }}")
                     if not str(_existing.get(_merge_col_id_{{ loop.index }}, "")).strip():
                         _existing[_merge_col_id_{{ loop.index }}] = replace_variables_in_text({{ col_value | tojson }}, _vars)
@@ -254,7 +254,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                     # Строка не найдена — вставляем новую
                     _max_idx = await conn.fetchval("SELECT COALESCE(MAX(row_index), -1) FROM bot_table_rows WHERE table_id = $1", _tbl["id"])
                     _new_data = {}
-{% for col_name, col_value in row.items() %}
+{% for col_name, col_value in row %}
                     _new_data[_name_to_id.get("{{ col_name }}", "{{ col_name }}")] = replace_variables_in_text({{ col_value | tojson }}, _vars)
 {% endfor %}
                     await conn.execute(
