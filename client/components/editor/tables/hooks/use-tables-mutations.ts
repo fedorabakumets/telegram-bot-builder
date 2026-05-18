@@ -4,6 +4,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
 import * as api from '../api/tables-api';
 import { tableKeys } from './use-tables-query';
 
@@ -114,8 +115,10 @@ export function useUpdateRow(projectId: number) {
       rowId: number;
       data: Record<string, string>;
     }) => api.updateRow(projectId, tableId, rowId, data),
-    onSuccess: (_, vars) =>
-      qc.invalidateQueries({ queryKey: tableKeys.rows(projectId, vars.tableId) }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: tableKeys.rows(projectId, vars.tableId) });
+      toast({ title: "✓ Сохранено", description: "Значение обновлено" });
+    },
   });
 }
 
