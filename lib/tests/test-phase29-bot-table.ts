@@ -226,7 +226,7 @@ test('C01', 'increment через SQL, не через Python math', () => {
   const p = makeCleanProject([makeBotTableNode('tbl1', { tableName: 'profiles', operation: 'update', where: [{ column: 'telegram_id', value: '{user_id}' }], updates: [{ column: 'reputation', op: 'increment', value: '10' }], autoTransitionTo: '' })]);
   const code = gen(p, 'c01');
   // Должен быть атомарный SQL, а не Python math
-  ok(code.includes('COALESCE((data->>$1)::int, 0) + $2'), 'атомарный SQL increment должен быть в коде');
+  ok(code.includes('COALESCE((data->>$1::text)::int, 0) + $2::int'), 'атомарный SQL increment должен быть в коде');
   ok(!code.includes('_old_val + 10'), 'Python math НЕ должен быть в коде');
 });
 
