@@ -94,6 +94,12 @@ async def main():
             except Exception as _cache_err:
                 logging.warning(f"⚠️ Не удалось загрузить file_id кэш из БД: {_cache_err}")
 
+{%- if projectId %}
+        # Загрузка контента из таблицы _content
+        if db_pool:
+            await load_content(db_pool)
+{%- endif %}
+
         {%- if menuCommands and menuCommands | length > 0 %}
         await set_bot_commands()
         {%- endif %}
@@ -137,6 +143,12 @@ async def main():
 
         # Запускаем фоновую задачу TTL-очистки user_data
         asyncio.create_task(cleanup_user_data())
+
+{%- if projectId %}
+        # Фоновая перезагрузка контента из _content каждые 60 сек
+        if db_pool:
+            asyncio.create_task(_content_reload_loop(db_pool))
+{%- endif %}
 
         # Выбор режима запуска: webhook или polling
         if WEBHOOK_URL:
