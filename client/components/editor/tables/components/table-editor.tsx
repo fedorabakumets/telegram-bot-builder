@@ -298,6 +298,18 @@ export function TableEditor({
 
       {/* Футер — добавление строк (скрыт в режиме только чтение) */}
       {!readOnly && <AddRowsFooter onAddRows={onAddRows} />}
+      {readOnly && table.rows.length >= 200 && (
+        <div className="px-4 py-2 border-t border-border/50 flex items-center justify-center">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs"
+            onClick={() => (window as any).__loadMoreMessages?.()}
+          >
+            Загрузить ещё (+200)
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

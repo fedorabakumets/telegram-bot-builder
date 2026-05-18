@@ -3,7 +3,7 @@
  * @module editor/tables/hooks/use-system-tables
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/queryClient';
 import type { BotTable, TableColumn, TableRow } from '../types';
@@ -108,13 +108,19 @@ export function useSystemTables(projectId: number): BotTable[] {
     refetchInterval: 10000,
   });
 
-  /** Загрузка сообщений */
+  /** Загрузка сообщений (с пагинацией) */
+  const [messagesLimit, setMessagesLimit] = useState(200);
   const { data: messagesData } = useQuery<any[]>({
-    queryKey: ['system-tables-messages', projectId],
-    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/messages/all?limit=1000`),
+    queryKey: ['system-tables-messages', projectId, messagesLimit],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/messages/all?limit=${messagesLimit}`),
     enabled: !!projectId,
     refetchInterval: 10000,
   });
+
+  /** Подписка на событие "загрузить ещё сообщений" */
+  if (typeof window !== 'undefined') {
+    (window as any).__loadMoreMessages = () => setMessagesLimit(prev => prev + 200);
+  }
 
   /** Загрузка групп */
   const { data: groupsData } = useQuery<any[]>({
