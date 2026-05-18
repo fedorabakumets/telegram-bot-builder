@@ -37,7 +37,9 @@ async def reload_content(pool):
         for i, r in enumerate(rows):
             data = r["data"]
             if isinstance(data, dict) and len(data) >= 4:
-                sorted_values = [v for _, v in sorted(data.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 0)]
+                # Фильтруем только числовые ключи (ID колонок), пропускаем "undefined" и прочий мусор
+                numeric_items = [(k, v) for k, v in data.items() if k.isdigit()]
+                sorted_values = [v for _, v in sorted(numeric_items, key=lambda x: int(x[0]))]
                 if len(sorted_values) >= 4:
                     key_val = sorted_values[0]
                     value_val = sorted_values[3]
