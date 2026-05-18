@@ -84,20 +84,15 @@ async def _content_reload_loop(pool):
 async def _content_subscribe_redis():
     """Подписка на Redis канал для мгновенного обновления контента"""
     if not _redis_client:
+        logging.info("📋 [content] Redis клиент недоступен — подписка пропущена")
         return
     try:
-        import redis.asyncio as aioredis
-        import os
-        redis_url = os.environ.get("REDIS_URL", "")
-        if not redis_url:
-            return
-        sub_client = aioredis.from_url(redis_url)
-        pubsub = sub_client.pubsub()
+        pubsub = _redis_client.pubsub()
         await pubsub.subscribe(f"bot:table_updated:{PROJECT_ID}")
         logging.info(f"📋 [content] Подписка на Redis канал bot:table_updated:{PROJECT_ID}")
         async for message in pubsub.listen():
             if message["type"] == "message":
-                logging.info(f"📋 [content] Redis: таблица обновлена — перезагружаем контент")
+                logging.info("📋 [content] Redis: таблица обновлена — перезагружаем контент")
                 await reload_content(db_pool)
     except Exception as e:
         logging.warning(f"📋 [content] Ошибка подписки Redis: {e}")
