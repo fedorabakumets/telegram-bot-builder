@@ -637,6 +637,37 @@ test('G03', 'text_trigger → bot_table(read) → condition → bot_table(update
 });
 
 // ════════════════════════════════════════════════════════════════════════════
+// БЛОК H: Автосоздание колонок (3 теста)
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок H: Автосоздание колонок ───────────────────────────────────');
+
+test('H01', 'update содержит блок автосоздания колонки (INSERT INTO bot_table_columns)', () => {
+  const p = makeCleanProject([
+    makeBotTableNode('tbl1', { tableName: 'profiles', operation: 'update', where: [{ column: 'telegram_id', value: '{user_id}' }], updates: [{ column: 'new_field', op: 'set', value: 'test' }], autoTransitionTo: '' }),
+  ]);
+  const code = gen(p, 'h01');
+  ok(code.includes('INSERT INTO bot_table_columns'), 'автосоздание колонки (INSERT INTO bot_table_columns) должно быть в коде update');
+});
+
+test('H02', 'update содержит проверку if not _upd_col_id', () => {
+  const p = makeCleanProject([
+    makeBotTableNode('tbl1', { tableName: 'profiles', operation: 'update', where: [{ column: 'telegram_id', value: '{user_id}' }], updates: [{ column: 'age', op: 'set', value: '25' }], autoTransitionTo: '' }),
+  ]);
+  const code = gen(p, 'h02');
+  ok(code.includes('if not _upd_col_id_1'), 'проверка if not _upd_col_id должна быть в коде');
+});
+
+test('H03', 'update с автосозданием колонки → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCommandTrigger('cmd1', '/setage', 'tbl1'),
+    makeBotTableNode('tbl1', { tableName: 'profiles', operation: 'update', where: [{ column: 'telegram_id', value: '{user_id}' }], updates: [{ column: 'age', op: 'set', value: '{user_input}' }], autoTransitionTo: 'msg1' }),
+    makeMessageNode('msg1', 'Возраст сохранён'),
+  ]);
+  syntax(gen(p, 'h03'), 'h03');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // Итоги
 // ════════════════════════════════════════════════════════════════════════════
 
