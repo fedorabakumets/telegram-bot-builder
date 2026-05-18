@@ -153,6 +153,12 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                             # Атомарное обновление через SQL
 {% for upd in updates %}
                             _upd_col_id_{{ loop.index }} = _name_to_id.get("{{ upd.column }}", "")
+                            if not _upd_col_id_{{ loop.index }}:
+                                # Автосоздание колонки если не существует
+                                _max_pos = await conn.fetchval("SELECT COALESCE(MAX(position), -1) FROM bot_table_columns WHERE table_id = $1", _tbl["id"])
+                                _new_col = await conn.fetchrow("INSERT INTO bot_table_columns (table_id, name, position) VALUES ($1, $2, $3) RETURNING id", _tbl["id"], "{{ upd.column }}", (_max_pos or 0) + 1)
+                                _upd_col_id_{{ loop.index }} = str(_new_col["id"])
+                                _name_to_id["{{ upd.column }}"] = _upd_col_id_{{ loop.index }}
                             _upd_val_{{ loop.index }} = replace_variables_in_text({{ upd.value | tojson }}, _vars)
 {% if upd.op == 'set' %}
                             await conn.execute(
