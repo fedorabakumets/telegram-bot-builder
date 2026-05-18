@@ -36,7 +36,6 @@ function entryToRowData(entry: ContentEntry, colMap: Record<string, string>): Re
     [colMap.key]: entry.key,
     [colMap.type]: entry.type,
     [colMap.sheet]: entry.sheet,
-    [colMap.label]: entry.label,
     [colMap.value]: entry.value,
   };
 }
@@ -86,9 +85,8 @@ export async function syncContentToTable(projectId: number, scenarioData: any): 
     if (existing) {
       const data = existing.data as Record<string, string>;
       const curValue = getField(data, colMap, "value");
-      const curLabel = getField(data, colMap, "label");
       const curSheet = getField(data, colMap, "sheet");
-      if (curValue !== entry.value || curLabel !== entry.label || curSheet !== entry.sheet) {
+      if (curValue !== entry.value || curSheet !== entry.sheet) {
         await storage.updateBotTableRow(existing.id, entryToRowData(entry, colMap));
       }
     } else {

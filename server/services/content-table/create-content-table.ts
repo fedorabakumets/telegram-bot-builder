@@ -9,7 +9,7 @@ import { storage } from "../../storages/storage";
 const CONTENT_TABLE_NAME = "_content";
 
 /** Колонки таблицы _content в порядке позиций */
-const CONTENT_COLUMNS = ["key", "type", "sheet", "label", "value"] as const;
+const CONTENT_COLUMNS = ["key", "type", "sheet", "value"] as const;
 
 /**
  * Находит или создаёт таблицу _content с 5 колонками для проекта

@@ -11,8 +11,6 @@ export interface ContentEntry {
   type: string;
   /** Имя листа (sheet) */
   sheet: string;
-  /** Человекочитаемое описание */
-  label: string;
   /** Значение (текст, URL и т.д.) */
   value: string;
 }
@@ -27,16 +25,6 @@ export interface ParsedContentKey {
   subId?: string;
   /** Подполе вложенного элемента */
   subField?: string;
-}
-
-/**
- * Обрезает строку до указанной длины
- * @param text - Исходная строка
- * @param max - Максимальная длина
- * @returns Обрезанная строка
- */
-function truncate(text: string, max: number): string {
-  return text.length > max ? text.slice(0, max) + "…" : text;
 }
 
 /**
@@ -67,12 +55,12 @@ export function extractContentFromNodes(sheets: any[]): ContentEntry[] {
 
       // messageText
       if (isNotEmpty(data.messageText)) {
-        entries.push({ key: id, type: "message", sheet: sheetName, label: truncate(data.messageText, 30), value: data.messageText });
+        entries.push({ key: id, type: "message", sheet: sheetName, value: data.messageText });
       }
 
       // mediaCaption
       if (isNotEmpty(data.mediaCaption)) {
-        entries.push({ key: `${id}.caption`, type: "caption", sheet: sheetName, label: truncate(data.mediaCaption, 30), value: data.mediaCaption });
+        entries.push({ key: `${id}.caption`, type: "caption", sheet: sheetName, value: data.mediaCaption });
       }
 
       // buttons
@@ -80,53 +68,53 @@ export function extractContentFromNodes(sheets: any[]): ContentEntry[] {
       for (const btn of buttons) {
         const btnId = btn.id as string;
         if (isNotEmpty(btn.text)) {
-          entries.push({ key: `${id}.btn.${btnId}`, type: "button", sheet: sheetName, label: `🔘 ${btn.text}`, value: btn.text });
+          entries.push({ key: `${id}.btn.${btnId}`, type: "button", sheet: sheetName, value: btn.text });
         }
         if (isNotEmpty(btn.url)) {
-          entries.push({ key: `${id}.btn.${btnId}.url`, type: "url", sheet: sheetName, label: `🔗 ${btn.text || ""}`, value: btn.url });
+          entries.push({ key: `${id}.btn.${btnId}.url`, type: "url", sheet: sheetName, value: btn.url });
         }
         if (isNotEmpty(btn.webAppUrl)) {
-          entries.push({ key: `${id}.btn.${btnId}.webapp`, type: "url", sheet: sheetName, label: `🌐 ${btn.text || ""}`, value: btn.webAppUrl });
+          entries.push({ key: `${id}.btn.${btnId}.webapp`, type: "url", sheet: sheetName, value: btn.webAppUrl });
         }
       }
 
       // media URLs
       if (isNotEmpty(data.imageUrl)) {
-        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, label: "🖼 Медиа", value: data.imageUrl });
+        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, value: data.imageUrl });
       } else if (isNotEmpty(data.videoUrl)) {
-        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, label: "🎬 Медиа", value: data.videoUrl });
+        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, value: data.videoUrl });
       } else if (isNotEmpty(data.audioUrl)) {
-        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, label: "🎵 Медиа", value: data.audioUrl });
+        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, value: data.audioUrl });
       } else if (isNotEmpty(data.documentUrl)) {
-        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, label: "📄 Медиа", value: data.documentUrl });
+        entries.push({ key: `${id}.media`, type: "media_url", sheet: sheetName, value: data.documentUrl });
       }
 
       // http_request
       if (nodeType === "http_request") {
         if (isNotEmpty(data.httpRequestUrl)) {
-          entries.push({ key: `${id}.api`, type: "api_url", sheet: sheetName, label: `🌐 ${truncate(data.httpRequestUrl, 30)}`, value: data.httpRequestUrl });
+          entries.push({ key: `${id}.api`, type: "api_url", sheet: sheetName, value: data.httpRequestUrl });
         }
         if (isNotEmpty(data.httpRequestBody)) {
-          entries.push({ key: `${id}.body`, type: "http_body", sheet: sheetName, label: "📦 Тело запроса", value: data.httpRequestBody });
+          entries.push({ key: `${id}.body`, type: "http_body", sheet: sheetName, value: data.httpRequestBody });
         }
         if (isNotEmpty(data.httpRequestHeaders)) {
-          entries.push({ key: `${id}.headers`, type: "http_headers", sheet: sheetName, label: "📋 Заголовки", value: data.httpRequestHeaders });
+          entries.push({ key: `${id}.headers`, type: "http_headers", sheet: sheetName, value: data.httpRequestHeaders });
         }
       }
 
       // psql_query
       if (nodeType === "psql_query" && isNotEmpty(data.query)) {
-        entries.push({ key: `${id}.sql`, type: "sql", sheet: sheetName, label: `🗄 ${truncate(data.query, 30)}`, value: data.query });
+        entries.push({ key: `${id}.sql`, type: "sql", sheet: sheetName, value: data.query });
       }
 
       // command_trigger
       if (nodeType === "command_trigger" && isNotEmpty(data.description)) {
-        entries.push({ key: `${id}.desc`, type: "command", sheet: sheetName, label: `📋 ${truncate(data.description, 30)}`, value: data.description });
+        entries.push({ key: `${id}.desc`, type: "command", sheet: sheetName, value: data.description });
       }
 
       // inputPrompt (collectUserInput)
       if (data.collectUserInput && isNotEmpty(data.inputPrompt)) {
-        entries.push({ key: `${id}.prompt`, type: "prompt", sheet: sheetName, label: `❓ ${truncate(data.inputPrompt, 30)}`, value: data.inputPrompt });
+        entries.push({ key: `${id}.prompt`, type: "prompt", sheet: sheetName, value: data.inputPrompt });
       }
     }
   }
