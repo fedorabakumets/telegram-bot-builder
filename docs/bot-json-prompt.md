@@ -368,7 +368,7 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
     "tableName": "profiles",
     "operation": "read",
     "where": [
-      { "column": "telegram_id", "value": "{user_id}" }
+      { "column": "telegram_id", "operator": "equals", "value": "{user_id}" }
     ],
     "saveResultTo": "profile",
     "resultFormat": "first_row",
@@ -379,6 +379,8 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 ```
 
 `resultFormat`: `"first_row"` (объект), `"all_rows"` (массив), `"scalar"` (одно значение), `"count"` (количество).
+
+Операторы WHERE: `equals` (по умолчанию), `not_equals`, `greater_than`, `less_than`, `contains`, `is_empty`, `is_not_empty`.
 
 После read доступно: `{profile.balance}`, `{profile.reputation}` и т.д.
 
@@ -391,7 +393,7 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
     "tableName": "profiles",
     "operation": "update",
     "where": [
-      { "column": "telegram_id", "value": "{reply_to_user_id}" }
+      { "column": "telegram_id", "operator": "equals", "value": "{reply_to_user_id}" }
     ],
     "updates": [
       { "column": "reputation", "op": "increment", "value": "10" },
@@ -404,6 +406,8 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 ```
 
 Операции `op`: `set`, `increment`, `decrement`, `min`, `max`. Все атомарные (через SQL).
+
+Обновляет ВСЕ строки подходящие под WHERE (не только первую).
 
 #### insert
 
@@ -459,14 +463,16 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
     "tableName": "relationships",
     "operation": "delete",
     "where": [
-      { "column": "user_a", "value": "{user_id}" },
-      { "column": "user_b", "value": "{target_user_id}" }
+      { "column": "user_a", "operator": "equals", "value": "{user_id}" },
+      { "column": "user_b", "operator": "equals", "value": "{target_user_id}" }
     ],
     "autoTransitionTo": "next_node",
     "enableAutoTransition": true
   }
 }
 ```
+
+Удаляет ВСЕ строки подходящие под WHERE. Поддерживает все операторы.
 
 #### Дополнительные поля (read)
 
