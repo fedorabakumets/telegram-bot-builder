@@ -155,11 +155,16 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                             _upd_col_id_{{ loop.index }} = _name_to_id.get("{{ upd.column }}", "")
                             if not _upd_col_id_{{ loop.index }}:
                                 # Автосоздание колонки если не существует
+                                logging.info(f"🗄️ bot_table [{{ nodeId }}]: колонка '{{ upd.column }}' не найдена, создаём...")
                                 _max_pos = await conn.fetchval("SELECT COALESCE(MAX(position), -1) FROM bot_table_columns WHERE table_id = $1", _tbl["id"])
                                 _new_col = await conn.fetchrow("INSERT INTO bot_table_columns (table_id, name, position) VALUES ($1, $2, $3) RETURNING id", _tbl["id"], "{{ upd.column }}", (_max_pos or 0) + 1)
                                 _upd_col_id_{{ loop.index }} = str(_new_col["id"])
                                 _name_to_id["{{ upd.column }}"] = _upd_col_id_{{ loop.index }}
+                                logging.info(f"🗄️ bot_table [{{ nodeId }}]: колонка '{{ upd.column }}' создана с id={_upd_col_id_{{ loop.index }}}")
+                            else:
+                                logging.info(f"🗄️ bot_table [{{ nodeId }}]: колонка '{{ upd.column }}' найдена, id={_upd_col_id_{{ loop.index }}}")
                             _upd_val_{{ loop.index }} = replace_variables_in_text({{ upd.value | tojson }}, _vars)
+                            logging.info(f"🗄️ bot_table [{{ nodeId }}]: UPDATE col_id={_upd_col_id_{{ loop.index }}}, val={_upd_val_{{ loop.index }}}, row_id={_row['id']}")
 {% if upd.op == 'set' %}
                             await conn.execute(
                                 "UPDATE bot_table_rows SET data = data || jsonb_build_object($1, $2) WHERE id = $3",
