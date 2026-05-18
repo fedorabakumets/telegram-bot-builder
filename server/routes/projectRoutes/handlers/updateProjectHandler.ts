@@ -50,6 +50,14 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
         if (validatedData.data) {
             try {
                 await syncContentToTable(projectId, validatedData.data);
+                // Уведомляем бота о обновлении контента через Redis
+                try {
+                    const { getRedisPublisher } = await import("../../../redis/redisClient");
+                    const pub = getRedisPublisher();
+                    if (pub) {
+                        await pub.publish(`bot:table_updated:${projectId}`, "reload");
+                    }
+                } catch {}
             } catch (err) {
                 console.error(`[updateProjectHandler] Ошибка синхронизации _content для проекта ${projectId}:`, err);
             }
