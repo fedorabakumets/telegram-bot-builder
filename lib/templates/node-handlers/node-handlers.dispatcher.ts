@@ -38,6 +38,7 @@ import { generateAnswerCallbackQuery } from '../answer-callback-query/answer-cal
 import { generateEditMessageHandlers } from '../edit-message';
 import { generateSetVariableHandlers } from '../set-variable/set-variable.renderer';
 import { generatePsqlQueryHandlers } from '../psql-query/psql-query.renderer';
+import { generateBotTableHandlers } from '../bot-table';
 import { generateConvertFileHandlers } from '../convert-file/convert-file.renderer';
 import { generateLoopHandlers } from '../loop';
 import { generateGetManagedBotToken } from '../get-managed-bot-token/get-managed-bot-token.renderer';
@@ -432,6 +433,13 @@ export function generateNodeHandlers(
     psqlQueryCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Обработчики узлов bot_table (работа с таблицами) ---
+  const botTableCode = generateBotTableHandlers(nodes);
+  if (botTableCode) {
+    codeLines.push('\n# Обработчики узлов bot_table (работа с таблицами)');
+    botTableCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   // --- Обработчики узлов convert_file ---
   const convertFileCode = generateConvertFileHandlers(nodes);
   if (convertFileCode) {
@@ -455,7 +463,7 @@ export function generateNodeHandlers(
 
   nodes.forEach((node: Node) => {
     // Пропускаем триггеры — они уже обработаны выше
-    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message' || (node.type as any) === 'set_variable' || (node.type as any) === 'psql_query' || (node.type as any) === 'convert_file' || (node.type as any) === 'loop' || (node.type as any) === 'schedule_trigger') {
+    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message' || (node.type as any) === 'set_variable' || (node.type as any) === 'psql_query' || (node.type as any) === 'bot_table' || (node.type as any) === 'convert_file' || (node.type as any) === 'loop' || (node.type as any) === 'schedule_trigger') {
       return;
     }
 

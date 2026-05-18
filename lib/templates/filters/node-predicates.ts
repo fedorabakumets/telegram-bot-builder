@@ -298,3 +298,12 @@ export function hasScheduleTriggerNodes(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'schedule_trigger');
 }
+
+/**
+ * Проверяет наличие узлов bot_table в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа bot_table
+ */
+export function hasBotTableNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'bot_table');
+}
