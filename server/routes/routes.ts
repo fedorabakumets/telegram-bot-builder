@@ -2818,12 +2818,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         [projectId, tokenId, limit]
       );
 
-      // Собираем все уникальные ключи из user_data
+      // Базовые колонки, которые не дублируем из user_data
+      const baseColumns = new Set(['user_id', 'username', 'user_name', 'first_name', 'last_name']);
+
+      // Собираем все уникальные ключи из user_data (исключая базовые и служебные)
       const allKeys = new Set<string>();
       for (const row of result.rows) {
         if (row.user_data && typeof row.user_data === 'object') {
           Object.keys(row.user_data).forEach(k => {
-            if (!k.startsWith('_') && !k.startsWith('waiting_') && !k.startsWith('input_')) {
+            if (!k.startsWith('_') && !k.startsWith('waiting_') && !k.startsWith('input_') && !baseColumns.has(k)) {
               allKeys.add(k);
             }
           });
