@@ -93,6 +93,10 @@ export function TablesPanel({ projectId, allProjects, onProjectChange, selectedT
           <TableEditor
             table={selectedTable}
             readOnly={selectedTable.id.startsWith('_system_')}
+            systemInfo={selectedTable.id.startsWith('_system_')
+              ? `Данные токена #${selectedTokenId ?? 'все'} • проект #${projectId}`
+              : undefined
+            }
             onAddColumn={(name) => addColumn(selectedTable.id, name)}
             onAddAlphabetColumns={() => addAlphabetColumns(selectedTable.id)}
             onRenameColumn={(colId, name) => renameColumn(selectedTable.id, colId, name)}

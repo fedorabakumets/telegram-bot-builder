@@ -67,7 +67,7 @@ export function TableList({ tables, selectedTableId, onSelect, onCreate, onDelet
         {tables.filter((t) => t.id.startsWith('_system_')).length > 0 && (
           <>
             <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider px-2 pt-2">
-              Системные
+              Системные (токен)
             </span>
             {tables
               .filter((t) => t.id.startsWith('_system_'))
@@ -90,7 +90,7 @@ export function TableList({ tables, selectedTableId, onSelect, onCreate, onDelet
                 </div>
               ))}
             <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider px-2 pt-3">
-              Проект
+              Пользовательские (проект)
             </span>
           </>
         )}

@@ -23,6 +23,8 @@ interface TableEditorProps {
   table: BotTable;
   /** Режим только чтение (для системных таблиц) */
   readOnly?: boolean;
+  /** Информация о контексте системной таблицы (токен/проект) */
+  systemInfo?: string;
   /** Добавить именованную колонку */
   onAddColumn: (name: string) => void;
   /** Добавить 26 буквенных колонок */
@@ -61,6 +63,7 @@ interface FocusedCell {
 export function TableEditor({
   table,
   readOnly,
+  systemInfo,
   onAddColumn,
   onAddAlphabetColumns,
   onRenameColumn,
@@ -148,9 +151,16 @@ export function TableEditor({
         <div className="px-4 py-2 bg-blue-50 dark:bg-blue-950/20 border-b border-blue-200/40 dark:border-blue-800/30 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Lock className="h-3.5 w-3.5 text-blue-500" />
-            <span className="text-xs text-blue-600 dark:text-blue-400">
-              Системная таблица — создана автоматически, только чтение
-            </span>
+            <div className="flex flex-col">
+              <span className="text-xs text-blue-600 dark:text-blue-400">
+                Системная таблица — данные токена, только чтение
+              </span>
+              {systemInfo && (
+                <span className="text-[10px] text-muted-foreground">
+                  {systemInfo}
+                </span>
+              )}
+            </div>
           </div>
           <Button
             size="sm"
