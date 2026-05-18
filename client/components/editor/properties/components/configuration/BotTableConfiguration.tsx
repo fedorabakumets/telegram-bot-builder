@@ -99,6 +99,19 @@ export function BotTableConfiguration({
         </span>
       </div>
 
+      {/* Описание */}
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Чтение, запись и обновление данных во внутренних таблицах проекта. Поддерживает операции: чтение, вставка, обновление, upsert и удаление.
+      </p>
+
+      {/* Подсказка про управление таблицами */}
+      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/40 dark:border-amber-800/30">
+        <i className="fas fa-lightbulb text-amber-500 text-xs" />
+        <span className="text-xs text-amber-700 dark:text-amber-400">
+          Управляйте данными таблиц во вкладке «Таблицы»
+        </span>
+      </div>
+
       {/* Имя таблицы */}
       <div className="space-y-1.5">
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
