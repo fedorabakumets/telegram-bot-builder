@@ -400,6 +400,11 @@ export default function Editor() {
   // Активный проект
   const activeProject = projectId ? currentProject : firstProject;
 
+  /** Сброс выбранного токена при смене проекта */
+  useEffect(() => {
+    setSelectedDatabaseTokenId(null);
+  }, [activeProject?.id]);
+
   // Загрузка пользователей для вкладки "Пользователи"
   const { data: users = [] } = useQuery<UserBotData[]>({
     queryKey: [`/api/projects/${activeProject?.id}/users`],
@@ -1552,6 +1557,7 @@ export default function Editor() {
                 onSelectToken={setSelectedDatabaseTokenId}
                 allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
                 onProjectChange={(projectId) => {
+                  setSelectedDatabaseTokenId(null);
                   setLocation(`/projects/${projectId}`);
                 }}
               />
@@ -1896,6 +1902,7 @@ export default function Editor() {
                     onSelectToken={setSelectedDatabaseTokenId}
                     allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
                     onProjectChange={(projectId) => {
+                      setSelectedDatabaseTokenId(null);
                       setLocation(`/projects/${projectId}`);
                     }}
                   />
