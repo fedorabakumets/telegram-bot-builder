@@ -1,0 +1,1817 @@
+{
+  "/start": {
+    "text": "🚀",
+    "reply_keyboard": [
+      [
+        "💸 Заработок",
+        "🎮 Игры",
+        "🌇 Имущество"
+      ],
+      [
+        "👤 Профиль",
+        "🛡 Клан",
+        "🏅 Ачивки"
+      ],
+      [
+        "📚 Команды",
+        "🍩 Донат"
+      ],
+      [
+        "🤑 Реферальная система"
+      ]
+    ],
+    "inline_keyboard": [],
+    "has_media": false
+  },
+  "_main_keyboard": [
+    [
+      "💸 Заработок",
+      "🎮 Игры",
+      "🌇 Имущество"
+    ],
+    [
+      "👤 Профиль",
+      "🛡 Клан",
+      "🏅 Ачивки"
+    ],
+    [
+      "📚 Команды",
+      "🍩 Донат"
+    ],
+    [
+      "🤑 Реферальная система"
+    ]
+  ],
+  "main:💸 Заработок": {
+    "text": "💸 [хуй](tg://user?id=1612141295), меню заработка:",
+    "reply_keyboard": [
+      [
+        "🛠 Работа",
+        "🌋 Шахта",
+        "🎣 Рыбалка"
+      ],
+      [
+        "🏞 Ранчо",
+        "📦 Ящики",
+        "💹 Бизнес"
+      ],
+      [
+        "⬅️ Меню"
+      ]
+    ],
+    "inline_keyboard": [],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "_kb:💸 Заработок": [
+    [
+      "🛠 Работа",
+      "🌋 Шахта",
+      "🎣 Рыбалка"
+    ],
+    [
+      "🏞 Ранчо",
+      "📦 Ящики",
+      "💹 Бизнес"
+    ],
+    [
+      "⬅️ Меню"
+    ]
+  ],
+  "main:🎮 Игры": {
+    "text": "🎮 [хуй](tg://user?id=1612141295), меню игр:\n\n🎲 __💡 В чатах можно сыграть с другими игроками — Кости, Дуэль, Рулетка и др.__",
+    "reply_keyboard": [
+      [
+        "🎰 Слоты",
+        "💣 Мины",
+        "🔑 Сейф"
+      ],
+      [
+        "🚀 Краш",
+        "🗼 Башня",
+        "♠️ Блекджек"
+      ],
+      [
+        "🏀 Баскетбол",
+        "⚽ Пенальти",
+        "🎯 Дартс"
+      ],
+      [
+        "⬅️ Меню"
+      ]
+    ],
+    "inline_keyboard": [],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityItalic",
+        "offset": 22,
+        "length": 73
+      }
+    ]
+  },
+  "_kb:🎮 Игры": [
+    [
+      "🎰 Слоты",
+      "💣 Мины",
+      "🔑 Сейф"
+    ],
+    [
+      "🚀 Краш",
+      "🗼 Башня",
+      "♠️ Блекджек"
+    ],
+    [
+      "🏀 Баскетбол",
+      "⚽ Пенальти",
+      "🎯 Дартс"
+    ],
+    [
+      "⬅️ Меню"
+    ]
+  ],
+  "main:🌇 Имущество": {
+    "text": "🌇 [хуй](tg://user?id=1612141295), меню имущества:",
+    "reply_keyboard": [
+      [
+        "🚘 Машина",
+        "🏠 Дом",
+        "💹 Бизнес"
+      ],
+      [
+        "🪫 Майнинг ферма"
+      ],
+      [
+        "🛒 Магазин"
+      ],
+      [
+        "⬅️ Меню"
+      ]
+    ],
+    "inline_keyboard": [],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "_kb:🌇 Имущество": [
+    [
+      "🚘 Машина",
+      "🏠 Дом",
+      "💹 Бизнес"
+    ],
+    [
+      "🪫 Майнинг ферма"
+    ],
+    [
+      "🛒 Магазин"
+    ],
+    [
+      "⬅️ Меню"
+    ]
+  ],
+  "main:👤 Профиль": {
+    "text": "🧢 [хуй](tg://user?id=1612141295), ваш профиль:\n\n🌟 Уровень: `2` (55/64)\n💰 Баланс: `3,894$`\n\n👨‍🏭 Профессия: `Сварщик`\n\n🎭 Клан: `потужнi` (👤)\n🆔 Игровой ид: `156182`\n📚 Дата регистрации: `2026-05-17 23:22`",
+    "reply_keyboard": [],
+    "inline_keyboard": [],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 34,
+        "length": 1
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 55,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 80,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 98,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 126,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 154,
+        "length": 16
+      }
+    ]
+  },
+  "main:🛡 Клан": {
+    "text": "❔ [хуй](tg://user?id=1612141295), ваш клан:\n\n🎭 Название: `потужнi` (ID: `212`)\n⭐️ Уровень: `7` (`10,284/12,544`)\n💰 Казна: `32,776,669$`\n🏆 Рейтинг: `3,168`\n👥 Участники: `9/10`\n\n🔓 Вход: **Открыт**\n👑 Лидер клана: BlecKing",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "🏆 Сезон",
+          "callback_data": "action:1612141295:clan_season:::"
+        },
+        {
+          "text": "👥 Участники",
+          "callback_data": "action:1612141295:clan_members:::"
+        }
+      ],
+      [
+        {
+          "text": "⚓️ Гавань",
+          "callback_data": "action:1612141295:clan_harbor:::"
+        },
+        {
+          "text": "⭐️ Бонусы",
+          "callback_data": "action:1612141295:clan_improvements:::"
+        }
+      ],
+      [
+        {
+          "text": "👤 Профиль участника",
+          "callback_data": "action:1612141295:clan_my_profile:::"
+        }
+      ],
+      [
+        {
+          "text": "🚪 Покинуть клан",
+          "callback_data": "action:1612141295:clan_leave:0::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 2,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 31,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 44,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 61,
+        "length": 1
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 64,
+        "length": 13
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 89,
+        "length": 11
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 113,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 133,
+        "length": 4
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 148,
+        "length": 6
+      }
+    ]
+  },
+  "main:🏅 Ачивки": {
+    "text": "🏅 [хуй](tg://user?id=1612141295), прогресс ваших достижений:",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "🤺 Стажер года (6% / 100%)",
+          "callback_data": "achievement:1612141295:work:0"
+        }
+      ],
+      [
+        {
+          "text": "🎰 Мечта (0% / 100%)",
+          "callback_data": "achievement:1612141295:casino:0"
+        }
+      ],
+      [
+        {
+          "text": "💣 Сапёр (0% / 100%)",
+          "callback_data": "achievement:1612141295:mines:0"
+        }
+      ],
+      [
+        {
+          "text": "🌋 Шахтер (0% / 100%)",
+          "callback_data": "achievement:1612141295:mine:0"
+        }
+      ],
+      [
+        {
+          "text": "🏎 Шумахер (0% / 100%)",
+          "callback_data": "achievement:1612141295:schumacher:0"
+        }
+      ],
+      [
+        {
+          "text": "<",
+          "callback_data": "page:1612141295:achievements:-1:"
+        },
+        {
+          "text": "1 / 3",
+          "callback_data": "pass"
+        },
+        {
+          "text": ">",
+          "callback_data": "page:1612141295:achievements:1:"
+        }
+      ]
+    ],
+    "has_media": true,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "main:📚 Команды": {
+    "text": "📚 [хуй](tg://user?id=1612141295), выберите раздел с командами:\n⠀- ⭐️ Основное\n⠀- 💸 Заработок\n⠀- 🎮 Игры\n⠀- 🌆 Имущество\n⠀- ☁️ Прочее\n\n[**✅ Добавить бота в чат**](https://t.me/qalais_bot?startgroup=new)",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "⭐️",
+          "callback_data": "action:1612141295:section_commands:::basic"
+        },
+        {
+          "text": "💸",
+          "callback_data": "action:1612141295:section_commands:::earning"
+        },
+        {
+          "text": "🎮",
+          "callback_data": "action:1612141295:section_commands:::games"
+        }
+      ],
+      [
+        {
+          "text": "🌆",
+          "callback_data": "action:1612141295:section_commands:::property"
+        },
+        {
+          "text": "☁️",
+          "callback_data": "action:1612141295:section_commands:::other"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityTextUrl",
+        "offset": 109,
+        "length": 21,
+        "url": "https://t.me/qalais_bot?startgroup=new"
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 109,
+        "length": 21
+      }
+    ]
+  },
+  "main:🍩 Донат": {
+    "text": "🍩 [хуй](tg://user?id=1612141295), меню доната:\n\n💶 Ваш баланс: `0 QC`\n\n❗ Приглашайте друзей и получайте **5% от их пополнений!**\n❔ Пополните баланс или перейдите к выбору товара:",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "🛍 Товары",
+          "callback_data": "action:1612141295:donate_items:::"
+        }
+      ],
+      [
+        {
+          "text": "💷 Пополнить баланс",
+          "callback_data": "action:1612141295:donate_topup:::"
+        }
+      ],
+      [
+        {
+          "text": "🎁 Подарить QC",
+          "callback_data": "action:1612141295:donate_gift:::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 37,
+        "length": 4
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 76,
+        "length": 20
+      }
+    ]
+  },
+  "main:🤑 Реферальная система": {
+    "text": "🫶 [хуй](tg://user?id=1612141295), зарабатывай, приглашая друзей:\n\n💰 Баланс: `0$`\n💸 Всего заработано: `0$`  \n🧲 Приглашено друзей: `0`\n\n🔗 **Твоя реферальная ссылка:**  \n⠀- `https://t.me/qalais_bot?start=rl156182`\n\n🎁 **Что ты получаешь:**\n• 🤑 **7,500$** — за регистрацию друга  \n• 🌟 **45,000$** — за каждый уровень друга  \n• 🏖 **1%** — с каждой зарплаты друга\n• 💎 **5%** — с каждого доната друга",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "↪️ Поделиться",
+          "url": "https://t.me/share/url?url=https://t.me/qalais_bot?start=rl156182"
+        }
+      ],
+      [
+        {
+          "text": "💸 Снять баланс",
+          "callback_data": "action:1612141295:referals_withdraw:::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 51,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 75,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 102,
+        "length": 1
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 108,
+        "length": 24
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 138,
+        "length": 38
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 181,
+        "length": 17
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 204,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 241,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 282,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 316,
+        "length": 2
+      }
+    ]
+  },
+  "_earn_keyboard": [
+    [
+      "🛠 Работа",
+      "🌋 Шахта",
+      "🎣 Рыбалка"
+    ],
+    [
+      "🏞 Ранчо",
+      "📦 Ящики",
+      "💹 Бизнес"
+    ],
+    [
+      "⬅️ Меню"
+    ]
+  ],
+  "earn:🛠 Работа": {
+    "text": "🏖 [хуй](tg://user?id=1612141295), рабочая смена началась!\n\n❔ Нажмите на смайлик «🔧»:",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "🔨",
+          "callback_data": "work:1612141295:0:127"
+        },
+        {
+          "text": "🚧",
+          "callback_data": "work:1612141295:0:627"
+        },
+        {
+          "text": "💡",
+          "callback_data": "work:1612141295:0:733"
+        },
+        {
+          "text": "💎",
+          "callback_data": "work:1612141295:0:780"
+        }
+      ],
+      [
+        {
+          "text": "🔧",
+          "callback_data": "work:1612141295:1:707"
+        },
+        {
+          "text": "🌋",
+          "callback_data": "work:1612141295:0:463"
+        },
+        {
+          "text": "⚡️",
+          "callback_data": "work:1612141295:0:106"
+        },
+        {
+          "text": "💡",
+          "callback_data": "work:1612141295:0:873"
+        }
+      ],
+      [
+        {
+          "text": "⛓️",
+          "callback_data": "work:1612141295:0:5"
+        },
+        {
+          "text": "🪛",
+          "callback_data": "work:1612141295:0:582"
+        },
+        {
+          "text": "🪤",
+          "callback_data": "work:1612141295:0:397"
+        },
+        {
+          "text": "🔥",
+          "callback_data": "work:1612141295:0:31"
+        }
+      ],
+      [
+        {
+          "text": "🧯",
+          "callback_data": "work:1612141295:0:864"
+        },
+        {
+          "text": "🚧",
+          "callback_data": "work:1612141295:0:250"
+        },
+        {
+          "text": "⛓️",
+          "callback_data": "work:1612141295:0:62"
+        },
+        {
+          "text": "🧯",
+          "callback_data": "work:1612141295:0:934"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "earn:🌋 Шахта": {
+    "text": "😢 [хуй](tg://user?id=1612141295), **🌋 шахта** станет доступна после достижения **⭐3-го уровня**. Уровень можно повысить выполняя разную активность.",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "📖 Как повысить уровень?",
+          "callback_data": "action:1612141295:how_up_level:::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 8,
+        "length": 8
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 50,
+        "length": 12
+      }
+    ]
+  },
+  "earn:🎣 Рыбалка": {
+    "text": "☹️ [хуй](tg://user?id=1612141295), **🎣 Рыбалка** станет доступна после достижения **⭐7-го уровня**. Уровень можно повысить выполняя разную активность.",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "📖 Как повысить уровень?",
+          "callback_data": "action:1612141295:how_up_level:::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 8,
+        "length": 10
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 52,
+        "length": 12
+      }
+    ]
+  },
+  "earn:🏞 Ранчо": {
+    "text": "☹️ [хуй](tg://user?id=1612141295), **🏞 ранчо** станет доступно после достижения **⭐15-го уровня**. Уровень можно повысить выполняя разную активность.",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "📖 Как повысить уровень?",
+          "callback_data": "action:1612141295:how_up_level:::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 8,
+        "length": 8
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 50,
+        "length": 13
+      }
+    ]
+  },
+  "earn:📦 Ящики": {
+    "text": "😔 [хуй](tg://user?id=1612141295), к сожалению, у вас еще нет ящиков. Их можно получить за разные активности.",
+    "reply_keyboard": [],
+    "inline_keyboard": [],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "earn:💹 Бизнес": {
+    "text": "😓 [хуй](tg://user?id=1612141295), У вас нет бизнеса.",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "🛍 Каталог бизнесов",
+          "callback_data": "page:1612141295:businesses:0:"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "extra:🏆 Топ": {
+    "text": "😓 [хуй](tg://user?id=1612141295), У вас нет бизнеса.",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "🛍 Каталог бизнесов",
+          "callback_data": "page:1612141295:businesses:0:"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "extra:✏️ Ник": {
+    "text": "😓 [хуй](tg://user?id=1612141295), У вас нет бизнеса.",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "🛍 Каталог бизнесов",
+          "callback_data": "page:1612141295:businesses:0:"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "extra:💰 Баланс": null,
+  "extra:⚡️ Бусты": null,
+  "extra:🛒 Магазин": {
+    "text": "🛒 [хуй](tg://user?id=1612141295), разделы магазина:\n⠀⠀- 🚘 Машины\n⠀⠀- 🏡 Дома\n⠀⠀- 💼 Бизнесы",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "🚘 Машины",
+          "callback_data": "page:1612141295:cars:0:"
+        },
+        {
+          "text": "🏡 Дома",
+          "callback_data": "page:1612141295:houses:0:"
+        }
+      ],
+      [
+        {
+          "text": "💼 Бизнесы",
+          "callback_data": "page:1612141295:businesses:0:"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "extra:🎁 Промокод": {
+    "text": "🛒 [хуй](tg://user?id=1612141295), разделы магазина:\n⠀⠀- 🚘 Машины\n⠀⠀- 🏡 Дома\n⠀⠀- 💼 Бизнесы",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "🚘 Машины",
+          "callback_data": "page:1612141295:cars:0:"
+        },
+        {
+          "text": "🏡 Дома",
+          "callback_data": "page:1612141295:houses:0:"
+        }
+      ],
+      [
+        {
+          "text": "💼 Бизнесы",
+          "callback_data": "page:1612141295:businesses:0:"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "extra:🎁 Бонус": {
+    "text": "😓 [хуй](tg://user?id=1612141295), необходимо подписаться на наш канал, чтобы получать ежедневный бонус:",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "✅ Подписаться",
+          "url": "https://t.me/qalais_news"
+        }
+      ],
+      [
+        {
+          "text": "🔄 Проверить",
+          "callback_data": "action:1612141295:bonus:1::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "extra:📜 Правила": {
+    "text": "😓 [хуй](tg://user?id=1612141295), необходимо подписаться на наш канал, чтобы получать ежедневный бонус:",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "✅ Подписаться",
+          "url": "https://t.me/qalais_news"
+        }
+      ],
+      [
+        {
+          "text": "🔄 Проверить",
+          "callback_data": "action:1612141295:bonus:1::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "extra:💭 Чат": {
+    "text": "😓 [хуй](tg://user?id=1612141295), необходимо подписаться на наш канал, чтобы получать ежедневный бонус:",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "✅ Подписаться",
+          "url": "https://t.me/qalais_news"
+        }
+      ],
+      [
+        {
+          "text": "🔄 Проверить",
+          "callback_data": "action:1612141295:bonus:1::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      }
+    ]
+  },
+  "extra:👥 Рефералы": {
+    "text": "🫶 [хуй](tg://user?id=1612141295), зарабатывай, приглашая друзей:\n\n💰 Баланс: `0$`\n💸 Всего заработано: `0$`  \n🧲 Приглашено друзей: `0`\n\n🔗 **Твоя реферальная ссылка:**  \n⠀- `https://t.me/qalais_bot?start=rl156182`\n\n🎁 **Что ты получаешь:**\n• 🤑 **7,500$** — за регистрацию друга  \n• 🌟 **45,000$** — за каждый уровень друга  \n• 🏖 **1%** — с каждой зарплаты друга\n• 💎 **5%** — с каждого доната друга",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "↪️ Поделиться",
+          "url": "https://t.me/share/url?url=https://t.me/qalais_bot?start=rl156182"
+        }
+      ],
+      [
+        {
+          "text": "💸 Снять баланс",
+          "callback_data": "action:1612141295:referals_withdraw:::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 51,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 75,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 102,
+        "length": 1
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 108,
+        "length": 24
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 138,
+        "length": 38
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 181,
+        "length": 17
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 204,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 241,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 282,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 316,
+        "length": 2
+      }
+    ]
+  },
+  "extra:💸 Передать": {
+    "text": "🫶 [хуй](tg://user?id=1612141295), зарабатывай, приглашая друзей:\n\n💰 Баланс: `0$`\n💸 Всего заработано: `0$`  \n🧲 Приглашено друзей: `0`\n\n🔗 **Твоя реферальная ссылка:**  \n⠀- `https://t.me/qalais_bot?start=rl156182`\n\n🎁 **Что ты получаешь:**\n• 🤑 **7,500$** — за регистрацию друга  \n• 🌟 **45,000$** — за каждый уровень друга  \n• 🏖 **1%** — с каждой зарплаты друга\n• 💎 **5%** — с каждого доната друга",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "↪️ Поделиться",
+          "url": "https://t.me/share/url?url=https://t.me/qalais_bot?start=rl156182"
+        }
+      ],
+      [
+        {
+          "text": "💸 Снять баланс",
+          "callback_data": "action:1612141295:referals_withdraw:::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 51,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 75,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 102,
+        "length": 1
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 108,
+        "length": 24
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 138,
+        "length": 38
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 181,
+        "length": 17
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 204,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 241,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 282,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 316,
+        "length": 2
+      }
+    ]
+  },
+  "extra:🔮 Артефакты": {
+    "text": "🫶 [хуй](tg://user?id=1612141295), зарабатывай, приглашая друзей:\n\n💰 Баланс: `0$`\n💸 Всего заработано: `0$`  \n🧲 Приглашено друзей: `0`\n\n🔗 **Твоя реферальная ссылка:**  \n⠀- `https://t.me/qalais_bot?start=rl156182`\n\n🎁 **Что ты получаешь:**\n• 🤑 **7,500$** — за регистрацию друга  \n• 🌟 **45,000$** — за каждый уровень друга  \n• 🏖 **1%** — с каждой зарплаты друга\n• 💎 **5%** — с каждого доната друга",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "↪️ Поделиться",
+          "url": "https://t.me/share/url?url=https://t.me/qalais_bot?start=rl156182"
+        }
+      ],
+      [
+        {
+          "text": "💸 Снять баланс",
+          "callback_data": "action:1612141295:referals_withdraw:::"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 51,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 75,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 102,
+        "length": 1
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 108,
+        "length": 24
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 138,
+        "length": 38
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 181,
+        "length": 17
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 204,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 241,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 282,
+        "length": 2
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 316,
+        "length": 2
+      }
+    ]
+  },
+  "/help": {
+    "text": "📚 [хуй](tg://user?id=1612141295), выберите раздел с командами:\n⠀- ⭐️ Основное\n⠀- 💸 Заработок\n⠀- 🎮 Игры\n⠀- 🌆 Имущество\n⠀- ☁️ Прочее\n\n[**✅ Добавить бота в чат**](https://t.me/qalais_bot?startgroup=new)",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "⭐️",
+          "callback_data": "action:1612141295:section_commands:::basic"
+        },
+        {
+          "text": "💸",
+          "callback_data": "action:1612141295:section_commands:::earning"
+        },
+        {
+          "text": "🎮",
+          "callback_data": "action:1612141295:section_commands:::games"
+        }
+      ],
+      [
+        {
+          "text": "🌆",
+          "callback_data": "action:1612141295:section_commands:::property"
+        },
+        {
+          "text": "☁️",
+          "callback_data": "action:1612141295:section_commands:::other"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityTextUrl",
+        "offset": 109,
+        "length": 21,
+        "url": "https://t.me/qalais_bot?startgroup=new"
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 109,
+        "length": 21
+      }
+    ]
+  },
+  "help_section:basic": {
+    "text": "⭐️ [хуй](tg://user?id=1612141295), список команд из раздела \"**Основное**\":\n⠀- 👤 **Профиль** - `ваш профиль`\n⠀- 🛡 **Клан** - `ваш клан`\n⠀- 👥 **Рефералы** - `деньги за друзей`\n⠀- 💸 **Передать** - `перевод денег`\n⠀- 🎁 **Бонус** - `ежедневный подарок`\n⠀- 🔮 **Артефакты** - `ваши артефакты`\n⠀- 💭 **Чат** - `деньги за чат`\n\n⠀- 🛡 **Клан вступить** `[ид клана]`\n⠀- 🏅 **Достижения**\n⠀- 🍩 **Донат**\n⠀- 📜 **Правила**",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "⭐️",
+          "callback_data": "action:1612141295:section_commands:::basic"
+        },
+        {
+          "text": "💸",
+          "callback_data": "action:1612141295:section_commands:::earning"
+        },
+        {
+          "text": "🎮",
+          "callback_data": "action:1612141295:section_commands:::games"
+        }
+      ],
+      [
+        {
+          "text": "🌆",
+          "callback_data": "action:1612141295:section_commands:::property"
+        },
+        {
+          "text": "☁️",
+          "callback_data": "action:1612141295:section_commands:::other"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 34,
+        "length": 8
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 51,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 61,
+        "length": 11
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 79,
+        "length": 4
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 86,
+        "length": 8
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 101,
+        "length": 8
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 112,
+        "length": 16
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 135,
+        "length": 8
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 146,
+        "length": 13
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 166,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 174,
+        "length": 18
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 199,
+        "length": 9
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 211,
+        "length": 14
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 232,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 238,
+        "length": 13
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 259,
+        "length": 13
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 273,
+        "length": 10
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 290,
+        "length": 10
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 307,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 319,
+        "length": 7
+      }
+    ]
+  },
+  "help_section:earning": {
+    "text": "💸 [хуй](tg://user?id=1612141295), список команд из раздела \"**Заработок**\":\n⠀- 🛠 **Работать** - `начать работу`\n⠀- 👔 **Работы** - `список работ`\n⠀- 🌋 **Шахта** - `сходить в шахту`\n⠀- 🎣 **Рыбалка** - `порыбачить`\n⠀- 📦 **Ящики** - `открыть ящик`\n⠀- 🪫 **Майнинг** - `майнинг-ферма`\n⠀- 🏞 **Ранчо** - `выращивать урожай`\n⠀- 💹 **Бизнес** - `меню бизнеса`\n⠀- 🏦 **Вклады** - `открыть вклад`",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "⭐️",
+          "callback_data": "action:1612141295:section_commands:::basic"
+        },
+        {
+          "text": "💸",
+          "callback_data": "action:1612141295:section_commands:::earning"
+        },
+        {
+          "text": "🎮",
+          "callback_data": "action:1612141295:section_commands:::games"
+        }
+      ],
+      [
+        {
+          "text": "🌆",
+          "callback_data": "action:1612141295:section_commands:::property"
+        },
+        {
+          "text": "☁️",
+          "callback_data": "action:1612141295:section_commands:::other"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 34,
+        "length": 9
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 52,
+        "length": 8
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 63,
+        "length": 13
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 83,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 92,
+        "length": 12
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 111,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 119,
+        "length": 15
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 141,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 151,
+        "length": 10
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 168,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 176,
+        "length": 12
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 195,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 205,
+        "length": 13
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 225,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 233,
+        "length": 17
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 257,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 266,
+        "length": 12
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 285,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 294,
+        "length": 13
+      }
+    ]
+  },
+  "help_section:games": {
+    "text": "🎮 [хуй](tg://user?id=1612141295), список команд из раздела \"**Игры**\":\n⠀- 🎰 **Слоты**\n⠀- 💣 **Мины**\n⠀- 🪙 **Монетка**\n⠀- 🏁 **Гонки**\n⠀- 🎡 **Рулетка**\n⠀- ✂ **КНБ**\n⠀- 🔫 **Дуэль**\n⠀- 🎲 **Кости**\n⠀- 🕵️ **Прятки**\n⠀- 🏀 **Баскетбол**\n⠀- ⚽ **Пенальти**\n⠀- 🎯 **Дартс**\n⠀- 🚀 **Краш**\n⠀- ♠️ **Блекджек**\n⠀- 🗼 **Башня**\n⠀- 🔑 **Сейф** `[10-99]`",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "⭐️",
+          "callback_data": "action:1612141295:section_commands:::basic"
+        },
+        {
+          "text": "💸",
+          "callback_data": "action:1612141295:section_commands:::earning"
+        },
+        {
+          "text": "🎮",
+          "callback_data": "action:1612141295:section_commands:::games"
+        }
+      ],
+      [
+        {
+          "text": "🌆",
+          "callback_data": "action:1612141295:section_commands:::property"
+        },
+        {
+          "text": "☁️",
+          "callback_data": "action:1612141295:section_commands:::other"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 34,
+        "length": 4
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 47,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 59,
+        "length": 4
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 70,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 84,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 96,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 109,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 119,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 131,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 144,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 157,
+        "length": 9
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 172,
+        "length": 8
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 187,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 199,
+        "length": 4
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 210,
+        "length": 8
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 225,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 237,
+        "length": 4
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 242,
+        "length": 7
+      }
+    ]
+  },
+  "help_section:property": {
+    "text": "🌆 [хуй](tg://user?id=1612141295), список команд из раздела \"**Имущество**\":\n⠀- 🚘 **Машина**\n⠀- 🏠 **Дом**\n⠀- 💹 **Бизнес**\n⠀- 🪫 **Ферма**",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "⭐️",
+          "callback_data": "action:1612141295:section_commands:::basic"
+        },
+        {
+          "text": "💸",
+          "callback_data": "action:1612141295:section_commands:::earning"
+        },
+        {
+          "text": "🎮",
+          "callback_data": "action:1612141295:section_commands:::games"
+        }
+      ],
+      [
+        {
+          "text": "🌆",
+          "callback_data": "action:1612141295:section_commands:::property"
+        },
+        {
+          "text": "☁️",
+          "callback_data": "action:1612141295:section_commands:::other"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 34,
+        "length": 9
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 52,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 65,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 75,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 88,
+        "length": 5
+      }
+    ]
+  },
+  "help_section:other": {
+    "text": "☁️ [хуй](tg://user?id=1612141295), список команд из раздела \"**Прочее**\":\n⠀- 🏆 **Топ** - `богатые игроки`\n⠀- ✏️ **Ник** - `изменить имя`\n⠀- 💰 **Баланс** - `ваш баланс`\n\n⠀- ⚡️ **Бусты**\n⠀- 🛒 **Магазин**\n⠀- 🎁 **Промокод**\n⠀- 🌀 **Упоминания** `[вкл/выкл]`",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "⭐️",
+          "callback_data": "action:1612141295:section_commands:::basic"
+        },
+        {
+          "text": "💸",
+          "callback_data": "action:1612141295:section_commands:::earning"
+        },
+        {
+          "text": "🎮",
+          "callback_data": "action:1612141295:section_commands:::games"
+        }
+      ],
+      [
+        {
+          "text": "🌆",
+          "callback_data": "action:1612141295:section_commands:::property"
+        },
+        {
+          "text": "☁️",
+          "callback_data": "action:1612141295:section_commands:::other"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 34,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 49,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 55,
+        "length": 14
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 76,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 82,
+        "length": 12
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 101,
+        "length": 6
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 110,
+        "length": 10
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 128,
+        "length": 5
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 140,
+        "length": 7
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 154,
+        "length": 8
+      },
+      {
+        "type": "MessageEntityBold",
+        "offset": 169,
+        "length": 10
+      },
+      {
+        "type": "MessageEntityCode",
+        "offset": 180,
+        "length": 10
+      }
+    ]
+  },
+  "/faq": {
+    "text": "📒 [хуй](tg://user?id=1612141295), меню справочника:\n\n__Здесь вы найдёте ответы на все вопросы об игровых системах.\n🔓 Некоторые разделы становятся доступны только после достижения определённого уровня.__\n\n🔽 __Выбери интересующий раздел с помощью кнопок ниже:__",
+    "reply_keyboard": [],
+    "inline_keyboard": [
+      [
+        {
+          "text": "💎 VIP",
+          "callback_data": "action:1612141295:handbook_category:::vip"
+        },
+        {
+          "text": "⚓ Гавань",
+          "callback_data": "action:1612141295:handbook_category:::clan_harbor"
+        }
+      ]
+    ],
+    "has_media": false,
+    "entities": [
+      {
+        "type": "MessageEntityMentionName",
+        "offset": 3,
+        "length": 3
+      },
+      {
+        "type": "MessageEntityItalic",
+        "offset": 27,
+        "length": 146
+      },
+      {
+        "type": "MessageEntityItalic",
+        "offset": 178,
+        "length": 49
+      }
+    ]
+  }
+}
