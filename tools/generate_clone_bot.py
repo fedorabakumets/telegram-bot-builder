@@ -773,15 +773,23 @@ def build_earning() -> dict:
         ],
         "saveResultTo": "cd",
         "resultFormat": "first_row",
+        "autoTransitionTo": "set-now-ts",
+        "enableAutoTransition": True,
+    }))
+
+    # Проверяем: кулдаун ещё активен? Сначала получаем текущий timestamp
+    nodes.append(node("set-now-ts", "set_variable", 650, 0, {
+        "assignments": [
+            {"id": "a-now", "variable": "now_ts", "value": "0", "mode": "timestamp"},
+        ],
         "autoTransitionTo": "cond-work-cd",
         "enableAutoTransition": True,
     }))
 
-    # Проверяем: кулдаун ещё активен?
-    nodes.append(node("cond-work-cd", "condition", 700, 0, {
+    nodes.append(node("cond-work-cd", "condition", 900, 0, {
         "variable": "cd.expires_at",
         "branches": [
-            branch("br-cd-active", "Кулдаун активен", "greater_than", "{__now}", "msg-work-cd"),
+            branch("br-cd-active", "Кулдаун активен", "greater_than", "{now_ts}", "msg-work-cd"),
             branch("br-cd-expired", "Можно работать", "else", "", "tbl-read-user-work"),
         ],
     }))
