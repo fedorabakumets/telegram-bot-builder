@@ -308,8 +308,8 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     canvasColor: 'bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800',
   },
   bot_table: {
-    name: '🗄️ Таблица',
-    icon: 'fas fa-table',
+    name: 'Таблица',
+    icon: '',
     color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
     canvasColor: 'bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800',
   },
