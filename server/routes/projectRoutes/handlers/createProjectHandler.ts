@@ -13,6 +13,7 @@ import { z } from "zod";
 import { storage } from "../../../storages/storage";
 import type { StorageBotProjectInput } from "../../../storages/storageTypes";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
+import { ensureContentTable } from "../../../services/content-table";
 
 /**
  * Обрабатывает запрос на создание проекта
@@ -42,6 +43,14 @@ export async function createProjectHandler(req: Request, res: Response): Promise
         };
 
         const project = await storage.createBotProject(projectData);
+
+        // Создаём таблицу _content для нового проекта
+        try {
+            await ensureContentTable(project.id);
+        } catch (err) {
+            console.error(`[createProjectHandler] Ошибка создания _content для проекта ${project.id}:`, err);
+        }
+
         res.status(201).json(project);
     } catch (error) {
         if (error instanceof z.ZodError) {

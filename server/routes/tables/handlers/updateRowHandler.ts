@@ -5,6 +5,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
+import { syncTableToScenario } from "../../../services/content-table";
 
 /**
  * Обрабатывает PUT /api/projects/:id/tables/:tableId/rows/:rowId
@@ -32,6 +33,21 @@ export async function updateRowHandler(req: Request, res: Response): Promise<voi
     }
 
     res.json(row);
+
+    // Обратная синхронизация: если это таблица _content — обновить JSON сценария
+    const projectId = parseInt(req.params.id, 10);
+    const tableId = parseInt(req.params.tableId, 10);
+    if (!isNaN(projectId) && !isNaN(tableId) && data.key && data.type) {
+      try {
+        const tables = await storage.getBotTables(projectId);
+        const contentTable = tables.find((t) => t.name === "_content");
+        if (contentTable && contentTable.id === tableId) {
+          await syncTableToScenario(projectId, tableId, data);
+        }
+      } catch (err) {
+        console.error("[updateRowHandler] Ошибка обратной синхронизации _content:", err);
+      }
+    }
   } catch (error) {
     console.error("[updateRowHandler] Ошибка:", error);
     res.status(500).json({ message: "Не удалось обновить строку" });
