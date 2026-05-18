@@ -35,6 +35,31 @@ const GROUPS_COLUMNS: TableColumn[] = [
   { id: 'last_activity', name: 'last_activity' },
 ];
 
+/** Колонки системной таблицы медиафайлов */
+const MEDIA_COLUMNS: TableColumn[] = [
+  { id: 'file_name', name: 'file_name' },
+  { id: 'file_type', name: 'file_type' },
+  { id: 'file_size', name: 'file_size' },
+  { id: 'url', name: 'url' },
+  { id: 'created_at', name: 'created_at' },
+];
+
+/** Колонки системной таблицы токенов бота */
+const TOKENS_COLUMNS: TableColumn[] = [
+  { id: 'name', name: 'name' },
+  { id: 'bot_username', name: 'bot_username' },
+  { id: 'is_active', name: 'is_active' },
+  { id: 'last_used_at', name: 'last_used_at' },
+];
+
+/** Колонки системной таблицы рассылок */
+const BROADCASTS_COLUMNS: TableColumn[] = [
+  { id: 'text', name: 'text' },
+  { id: 'status', name: 'status' },
+  { id: 'sent_count', name: 'sent_count' },
+  { id: 'created_at', name: 'created_at' },
+];
+
 /** Интерфейс ответа API пользователей (пагинированный режим) */
 interface UsersApiResponse {
   /** Массив пользователей */
@@ -43,6 +68,30 @@ interface UsersApiResponse {
   total: number;
   /** Есть ли ещё записи */
   hasMore: boolean;
+}
+
+/** Интерфейс ответа API рассылок (пагинированный режим) */
+interface BroadcastsApiResponse {
+  /** Массив рассылок */
+  broadcasts: any[];
+  /** Общее количество */
+  total: number;
+  /** Текущая страница */
+  page: number;
+  /** Лимит на страницу */
+  limit: number;
+}
+
+/**
+ * Форматирует размер файла в читаемый вид (KB/MB)
+ * @param bytes - Размер в байтах
+ * @returns Отформатированная строка размера
+ */
+function formatFileSize(bytes: number): string {
+  if (!bytes || bytes <= 0) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /**
@@ -71,6 +120,30 @@ export function useSystemTables(projectId: number): BotTable[] {
   const { data: groupsData } = useQuery<any[]>({
     queryKey: ['system-tables-groups', projectId],
     queryFn: () => apiRequest('GET', `/api/projects/${projectId}/groups`),
+    enabled: !!projectId,
+    refetchInterval: 15000,
+  });
+
+  /** Загрузка медиафайлов */
+  const { data: mediaData } = useQuery<any[]>({
+    queryKey: ['system-tables-media', projectId],
+    queryFn: () => apiRequest('GET', `/api/media/project/${projectId}`),
+    enabled: !!projectId,
+    refetchInterval: 30000,
+  });
+
+  /** Загрузка токенов бота */
+  const { data: tokensData } = useQuery<any[]>({
+    queryKey: ['system-tables-tokens', projectId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/tokens`),
+    enabled: !!projectId,
+    refetchInterval: 30000,
+  });
+
+  /** Загрузка рассылок */
+  const { data: broadcastsData } = useQuery<BroadcastsApiResponse>({
+    queryKey: ['system-tables-broadcasts', projectId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/broadcasts?limit=100`),
     enabled: !!projectId,
     refetchInterval: 15000,
   });
@@ -130,6 +203,57 @@ export function useSystemTables(projectId: number): BotTable[] {
       },
     }));
 
+    // Медиафайлы
+    const media = Array.isArray(mediaData) ? mediaData : [];
+
+    const mediaRows: TableRow[] = media.map((f: any, i: number) => ({
+      id: i + 1,
+      rowIndex: i + 1,
+      cells: {
+        file_name: f.fileName || f.file_name || '',
+        file_type: f.fileType || f.file_type || '',
+        file_size: formatFileSize(f.fileSize || f.file_size || 0),
+        url: f.url || '',
+        created_at: f.createdAt || f.created_at
+          ? new Date(f.createdAt || f.created_at).toLocaleString('ru')
+          : '',
+      },
+    }));
+
+    // Токены бота
+    const tokens = Array.isArray(tokensData) ? tokensData : [];
+
+    const tokensRows: TableRow[] = tokens.map((t: any, i: number) => ({
+      id: i + 1,
+      rowIndex: i + 1,
+      cells: {
+        name: t.name || '',
+        bot_username: t.botUsername || t.bot_username || '',
+        is_active: t.isActive || t.is_active ? 'да' : 'нет',
+        last_used_at: t.lastUsedAt || t.last_used_at
+          ? new Date(t.lastUsedAt || t.last_used_at).toLocaleString('ru')
+          : '—',
+      },
+    }));
+
+    // Рассылки
+    const broadcasts = Array.isArray(broadcastsData)
+      ? broadcastsData
+      : (broadcastsData as BroadcastsApiResponse)?.broadcasts || [];
+
+    const broadcastsRows: TableRow[] = broadcasts.map((b: any, i: number) => ({
+      id: i + 1,
+      rowIndex: i + 1,
+      cells: {
+        text: (b.text || b.message || '').slice(0, 50),
+        status: b.status || '',
+        sent_count: String(b.sentCount || b.sent_count || 0),
+        created_at: b.createdAt || b.created_at
+          ? new Date(b.createdAt || b.created_at).toLocaleString('ru')
+          : '',
+      },
+    }));
+
     return [
       {
         id: '_system_users',
@@ -149,8 +273,26 @@ export function useSystemTables(projectId: number): BotTable[] {
         columns: GROUPS_COLUMNS,
         rows: groupsRows,
       },
+      {
+        id: '_system_media',
+        name: '🔒 Медиафайлы',
+        columns: MEDIA_COLUMNS,
+        rows: mediaRows,
+      },
+      {
+        id: '_system_tokens',
+        name: '🔒 Токены бота',
+        columns: TOKENS_COLUMNS,
+        rows: tokensRows,
+      },
+      {
+        id: '_system_broadcasts',
+        name: '🔒 Рассылки',
+        columns: BROADCASTS_COLUMNS,
+        rows: broadcastsRows,
+      },
     ];
-  }, [usersData, messagesData, groupsData]);
+  }, [usersData, messagesData, groupsData, mediaData, tokensData, broadcastsData]);
 
   return systemTables;
 }
