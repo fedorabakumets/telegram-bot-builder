@@ -5,7 +5,7 @@
  * базы данных, восстановления из резервных копий и управления файлами резервных копий.
  */
 
-import { botInstances, botProjects, botTemplates, botTokens, mediaFiles, userBotData } from '@shared/schema';
+import { botInstances, botProjects, botTemplates, botTokens, mediaFiles } from '@shared/schema';
 import { sql } from 'drizzle-orm';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
@@ -27,7 +27,6 @@ interface BackupData {
     botTemplates: any[];
     botTokens: any[];
     mediaFiles: any[];
-    userBotData: any[];
   };
 }
 
@@ -83,14 +82,12 @@ export class DatabaseBackup {
         templatesData,
         tokensData,
         mediaData,
-        userBotDataResult
       ] = await Promise.all([
         db.select().from(botProjects),
         db.select().from(botInstances),
         db.select().from(botTemplates),
         db.select().from(botTokens),
         db.select().from(mediaFiles),
-        db.select().from(userBotData)
       ]);
 
       const backupData: BackupData = {
@@ -98,7 +95,7 @@ export class DatabaseBackup {
           version: '1.0.0',
           timestamp: new Date().toISOString(),
           description: description || 'Полный дамп базы данных',
-          tables: ['botProjects', 'botInstances', 'botTemplates', 'botTokens', 'mediaFiles', 'userBotData']
+          tables: ['botProjects', 'botInstances', 'botTemplates', 'botTokens', 'mediaFiles']
         },
         data: {
           botProjects: projectsData,
@@ -106,7 +103,6 @@ export class DatabaseBackup {
           botTemplates: templatesData,
           botTokens: tokensData,
           mediaFiles: mediaData,
-          userBotData: userBotDataResult
         }
       };
 
@@ -162,7 +158,6 @@ export class DatabaseBackup {
         'botTokens',
         'mediaFiles',
         'botInstances',
-        'userBotData'
       ];
 
       for (const tableName of restoreOrder) {
@@ -220,11 +215,6 @@ export class DatabaseBackup {
             await db.insert(mediaFiles).values(data).onConflictDoNothing();
           }
           break;
-        case 'userBotData':
-          if (data.length > 0) {
-            await db.insert(userBotData).values(data).onConflictDoNothing();
-          }
-          break;
         default:
           console.warn(`Неизвестная таблица: ${tableName}`);
       }
@@ -241,7 +231,6 @@ export class DatabaseBackup {
    */
   private async clearAllTables(skipTables?: string[]): Promise<void> {
     const tablesToClear = [
-      'userBotData',
       'botInstances',
       'mediaFiles',
       'botTokens',
@@ -268,9 +257,6 @@ export class DatabaseBackup {
             break;
           case 'mediaFiles':
             await db.delete(mediaFiles);
-            break;
-          case 'userBotData':
-            await db.delete(userBotData);
             break;
         }
         console.log(`Очищена таблица: ${tableName}`);

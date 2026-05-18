@@ -116,18 +116,17 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     systemHealth: any;
     cacheStats: any;
   }> {
-    const [projects, templates, instances, users] = await Promise.all([
+    const [projects, templates, instances] = await Promise.all([
       this.getAllBotProjects(),
       this.getAllBotTemplates(),
       this.getAllBotInstances(),
-      this.getAllUserBotData()
     ]);
 
     return {
       projects: projects.length,
       templates: templates.length,
       activeInstances: instances.filter(i => i.status === 'running').length,
-      totalUsers: users.length,
+      totalUsers: 0,
       systemHealth: dbManager.getConnectionStats(),
       cacheStats: cachedOps.getStats()
     };

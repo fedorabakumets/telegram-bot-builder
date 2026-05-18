@@ -9,7 +9,6 @@
 import { getRedisSubscriber } from './redisClient';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { waitForRedis } from './waitForRedis';
-import { storage } from '../storages/storage';
 import type { ProjectEvent } from '../terminal/ProjectEvent';
 
 /**
@@ -85,7 +84,16 @@ async function maybeEmitNewUser(projectId: number, tokenId: number, data: unknow
     const userId = msgData?.userId as string | undefined;
     if (!userId || msgData?.messageType !== 'user') return;
 
-    const user = await storage.getUserBotDataByProjectAndUser(projectId, userId, tokenId);
+    const { pool: dbPool } = await import('../database/db');
+    const result = await dbPool.query(
+      `SELECT user_id AS "userId", username AS "userName", first_name AS "firstName",
+              last_name AS "lastName", avatar_url AS "avatarUrl", is_bot AS "isBot",
+              is_premium AS "isPremium", interaction_count AS "interactionCount",
+              registered_at AS "registeredAt"
+       FROM bot_users WHERE project_id = $1 AND user_id = $2 AND token_id = $3 LIMIT 1`,
+      [projectId, userId, tokenId]
+    );
+    const user = result.rows[0];
     if (!user) return;
 
     // Считаем пользователя новым если interactionCount === 1 (только что создан)
@@ -103,7 +111,7 @@ async function maybeEmitNewUser(projectId: number, tokenId: number, data: unknow
         avatarUrl: user.avatarUrl ?? null,
         isBot: user.isBot ?? 0,
         isPremium: user.isPremium ?? 0,
-        registeredAt: user.createdAt?.toISOString() ?? new Date().toISOString(),
+        registeredAt: user.registeredAt?.toISOString() ?? new Date().toISOString(),
       },
       timestamp: new Date().toISOString(),
     };

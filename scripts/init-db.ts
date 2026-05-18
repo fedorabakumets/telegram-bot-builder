@@ -134,38 +134,6 @@ async function initDatabase() {
     `);
 
     await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS user_bot_data (
-        id SERIAL PRIMARY KEY,
-        project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
-        user_id TEXT NOT NULL,
-        user_name TEXT,
-        first_name TEXT,
-        last_name TEXT,
-        language_code TEXT,
-        is_bot INTEGER DEFAULT 0,
-        is_premium INTEGER DEFAULT 0,
-        last_interaction TIMESTAMP DEFAULT NOW(),
-        interaction_count INTEGER DEFAULT 0,
-        user_data JSONB DEFAULT '{}',
-        current_state TEXT,
-        preferences JSONB DEFAULT '{}',
-        commands_used JSONB DEFAULT '{}',
-        sessions_count INTEGER DEFAULT 1,
-        total_messages_sent INTEGER DEFAULT 0,
-        total_messages_received INTEGER DEFAULT 0,
-        device_info TEXT,
-        location_data JSONB,
-        contact_data JSONB,
-        is_blocked INTEGER DEFAULT 0,
-        is_active INTEGER DEFAULT 1,
-        tags TEXT[] DEFAULT '{}',
-        notes TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
-
-    await db.execute(sql`
       CREATE TABLE IF NOT EXISTS telegram_users (
         id BIGINT PRIMARY KEY,
         first_name TEXT NOT NULL,

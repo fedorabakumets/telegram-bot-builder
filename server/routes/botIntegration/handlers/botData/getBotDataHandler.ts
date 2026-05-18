@@ -130,7 +130,7 @@ export async function getBotDataHandler(req: Request, res: Response): Promise<vo
             return;
         }
 
-        // Форматируем в формат UserBotData для совместимости
+        // Форматируем в формат bot_users для совместимости
         res.json({
             id: botId,
             userId: botId,

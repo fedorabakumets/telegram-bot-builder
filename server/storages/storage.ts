@@ -15,7 +15,6 @@ import {
   type GroupMember,
   type MediaFile,
   type TelegramUserDB,
-  type UserBotData,
   type ProjectCollaborator,
   type Broadcast,
   type BroadcastResult,
@@ -48,8 +47,6 @@ import type {
   StorageMediaFileInput,
   StorageMediaFileUpdate,
   StorageTelegramUserInput,
-  StorageUserBotDataInput,
-  StorageUserBotDataUpdate,
   StorageBroadcastInput,
   StorageBroadcastUpdate,
   StorageBroadcastResultInput,
@@ -479,110 +476,6 @@ export interface IStorage {
    */
   searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]>;
 
-  // User bot data
-  /**
-   * Получить данные пользователя бота по ID
-   * @param id - ID данных пользователя
-   * @returns Данные пользователя бота или undefined, если не найдены
-   */
-  getUserBotData(id: number): Promise<UserBotData | undefined>;
-
-  /**
-   * Получить данные пользователя бота по ID проекта и ID пользователя
-   * @param projectId - ID проекта
-   * @param userId - ID пользователя
-   * @returns Данные пользователя бота или undefined, если не найдены
-   */
-  getUserBotDataByProjectAndUser(projectId: number, userId: string, tokenId?: number | null): Promise<UserBotData | undefined>;
-
-  /**
-   * Получить все данные пользователей бота по ID проекта
-   * @param projectId - ID проекта
-   * @returns Массив данных пользователей бота
-   */
-  getUserBotDataByProject(projectId: number, tokenId?: number | null): Promise<UserBotData[]>;
-
-  /**
-   * Получить все данные пользователей ботов
-   * @returns Массив всех данных пользователей ботов
-   */
-  getAllUserBotData(): Promise<UserBotData[]>;
-
-  /**
-   * Создать новые данные пользователя бота
-   * @param userData - Данные для создания
-   * @returns Созданные данные пользователя бота
-   */
-  createUserBotData(userData: StorageUserBotDataInput): Promise<UserBotData>;
-
-  /**
-   * Обновить данные пользователя бота
-   * @param id - ID данных
-   * @param userData - Данные для обновления
-   * @returns Обновленные данные пользователя бота или undefined, если не найдены
-   */
-  updateUserBotData(id: number, userData: StorageUserBotDataUpdate): Promise<UserBotData | undefined>;
-
-  /**
-   * Удалить данные пользователя бота
-   * @param id - ID данных
-   * @returns true, если данные были удалены, иначе false
-   */
-  deleteUserBotData(id: number): Promise<boolean>;
-
-  /**
-   * Удалить все данные пользователей бота по ID проекта
-   * @param projectId - ID проекта
-   * @returns true, если данные были удалены, иначе false
-   */
-  deleteUserBotDataByProject(projectId: number, tokenId?: number | null): Promise<boolean>;
-
-  /**
-   * Увеличить счетчик взаимодействий пользователя
-   * @param id - ID данных пользователя
-   * @returns true, если счетчик был увеличен, иначе false
-   */
-  incrementUserInteraction(id: number): Promise<boolean>;
-
-  /**
-   * Увеличить счетчик взаимодействий пользователя бота (bot_users)
-   * @param userId - ID пользователя в Telegram
-   * @param projectId - ID проекта
-   * @param tokenId - ID токена бота
-   * @returns true, если счетчик был увеличен, иначе false
-   */
-  incrementBotUserInteraction(userId: number, projectId: number, tokenId: number): Promise<boolean>;
-
-  /**
-   * Обновить состояние пользователя
-   * @param id - ID данных пользователя
-   * @param state - Новое состояние
-   * @returns true, если состояние было обновлено, иначе false
-   */
-  updateUserState(id: number, state: string): Promise<boolean>;
-
-  /**
-   * Поиск данных пользователей бота по проекту и запросу
-   * @param projectId - ID проекта
-   * @param query - Поисковый запрос
-   * @returns Массив найденных данных пользователей
-   */
-  searchUserBotData(projectId: number, query: string, tokenId?: number | null): Promise<UserBotData[]>;
-
-  /**
-   * Получить статистику по данным пользователей бота
-   * @param projectId - ID проекта
-   * @returns Объект со статистикой пользователей
-   */
-  getUserBotDataStats(projectId: number, tokenId?: number | null): Promise<{
-    totalUsers: number;
-    activeUsers: number;
-    blockedUsers: number;
-    premiumUsers: number;
-    totalInteractions: number;
-    avgInteractionsPerUser: number;
-  }>;
-
   // Bot groups
   /**
    * Получить группу бота по ID
@@ -895,7 +788,7 @@ export interface IStorage {
    * @param filters - Фильтры аудитории
    * @returns Массив пользователей
    */
-  getUsersForBroadcast(projectId: number, tokenId: number, filters: BroadcastFilters): Promise<UserBotData[]>;
+  getUsersForBroadcast(projectId: number, tokenId: number, filters: BroadcastFilters): Promise<any[]>;
 
   // Переменные окружения бота
 

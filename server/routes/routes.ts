@@ -2,7 +2,7 @@
  * @fileoverview Основной роутер HTTP API для проектов, токенов, интеграций и базы пользователей
  */
 
-import { insertBotTemplateSchema, insertBotTokenSchema, insertUserBotDataSchema } from "@shared/schema";
+import { insertBotTemplateSchema, insertBotTokenSchema } from "@shared/schema";
 import { ChildProcess } from "child_process";
 import PostgresStore from "connect-pg-simple";
 import type { Express, RequestHandler } from "express";
@@ -2342,9 +2342,20 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.json(result.rows);
     } catch (error) {
       console.error("Error fetching user data:", error);
-      // Fallback to storage interface if bot_users table doesn't exist
+      // Fallback: прямой запрос к bot_users если основной запрос не сработал
       try {
-        const users = await storage.getUserBotDataByProject(parseInt(req.params.id), tokenId);
+        const fallbackResult = await dbPool.query(
+          `SELECT user_id AS "userId", username AS "userName", first_name AS "firstName",
+                  last_name AS "lastName", registered_at AS "registeredAt",
+                  last_interaction AS "lastInteraction", interaction_count AS "interactionCount",
+                  user_data AS "userData", is_active AS "isActive", avatar_url AS "avatarUrl",
+                  is_bot AS "isBot", project_id AS "projectId", token_id AS "tokenId",
+                  is_premium AS "isPremium", language_code AS "languageCode"
+           FROM bot_users WHERE project_id = $1 AND token_id = $2
+           ORDER BY last_interaction DESC`,
+          [parseInt(req.params.id), tokenId]
+        );
+        const users = fallbackResult.rows;
         const projectId = parseInt(req.params.id);
         console.log(`Found ${users.length} users for project ${projectId} from fallback`);
         res.json(limit !== null ? { users, total: users.length, hasMore: false } : users);
@@ -3200,12 +3211,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Get specific user data by ID
   app.get("/api/users/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const userData = await storage.getUserBotData(id);
-      if (!userData) {
+      const id = req.params.id;
+      const result = await dbPool.query(
+        `SELECT * FROM bot_users WHERE user_id = $1 LIMIT 1`,
+        [id]
+      );
+      if (result.rows.length === 0) {
         return res.status(404).json({ message: "User data not found" });
       }
-      res.json(userData);
+      res.json(result.rows[0]);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user data" });
     }
@@ -3217,11 +3231,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const projectId = parseInt(req.params.projectId);
       const userId = req.params.userId;
       const tokenId = getRequestTokenId(req);
-      const userData = await storage.getUserBotDataByProjectAndUser(projectId, userId, tokenId);
-      if (!userData) {
+      const result = await dbPool.query(
+        `SELECT * FROM bot_users WHERE project_id = $1 AND user_id = $2 AND token_id = $3 LIMIT 1`,
+        [projectId, userId, tokenId ?? 0]
+      );
+      if (result.rows.length === 0) {
         return res.status(404).json({ message: "User data not found" });
       }
-      res.json(userData);
+      res.json(result.rows[0]);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user data" });
     }
@@ -3232,13 +3249,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const projectId = parseInt(req.params.id);
       const tokenId = getRequestTokenId(req) ?? 0;
-      const validatedData = insertUserBotDataSchema.parse({
-        ...req.body,
-        projectId,
-        tokenId,
-      });
-      const userData = await storage.createUserBotData(validatedData);
-      res.status(201).json(userData);
+      const { userId, username, firstName, lastName, languageCode, isBot, isPremium } = req.body;
+      if (!userId) {
+        return res.status(400).json({ message: "userId обязателен" });
+      }
+      const result = await dbPool.query(
+        `INSERT INTO bot_users (user_id, project_id, token_id, username, first_name, last_name, language_code, is_bot, is_premium, registered_at, last_interaction)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+         ON CONFLICT (user_id, project_id, token_id) DO UPDATE SET last_interaction = NOW()
+         RETURNING *`,
+        [userId, projectId, tokenId, username ?? null, firstName ?? null, lastName ?? null, languageCode ?? null, isBot ?? 0, isPremium ?? 0]
+      );
+      res.status(201).json(result.rows[0]);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
@@ -3300,28 +3322,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.json(result.rows[0]);
     } catch (error) {
       console.error("Ошибка обновления пользователя в bot_users:", error);
-      // Fallback to regular update if bot_users table doesn't exist
-      try {
-        const validatedData = insertUserBotDataSchema.partial().parse({
-          ...req.body,
-          projectId,
-          tokenId: effectiveTokenId ?? requestedTokenId ?? 0,
-        });
-        const existingUserData = await storage.getUserBotDataByProjectAndUser(
-          projectId,
-          userId,
-          effectiveTokenId ?? requestedTokenId
-        );
-        const userData = existingUserData
-          ? await storage.updateUserBotData(existingUserData.id, validatedData)
-          : undefined;
-        if (!userData) {
-          return res.status(404).json({ message: "User data not found" });
-        }
-        res.json(userData);
-      } catch (fallbackError) {
-        res.status(500).json({ message: "Failed to update user data" });
-      }
+      res.status(500).json({ message: "Failed to update user data" });
     }
   });
 
@@ -3447,8 +3448,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: "Search query is required" });
       }
 
-      const users = await storage.searchUserBotData(projectId, query.trim(), tokenId);
-      res.json(users);
+      const searchTerm = `%${query.trim().toLowerCase()}%`;
+      const result = await dbPool.query(
+        `SELECT * FROM bot_users
+         WHERE project_id = $1 AND token_id = $2
+           AND (username ILIKE $3 OR first_name ILIKE $3 OR last_name ILIKE $3 OR user_id::text ILIKE $3)
+         ORDER BY last_interaction DESC`,
+        [projectId, tokenId ?? 0, searchTerm]
+      );
+      res.json(result.rows);
     } catch (error) {
       res.status(500).json({ message: "Failed to search user data" });
     }
@@ -3457,9 +3465,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Increment user interaction count
   app.post("/api/users/:id/interaction", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const success = await storage.incrementUserInteraction(id);
-      if (!success) {
+      const id = req.params.id;
+      const projectId = Number(req.body?.projectId ?? 0);
+      const tokenId = getRequestTokenId(req) ?? 0;
+      const result = await dbPool.query(
+        `UPDATE bot_users SET interaction_count = interaction_count + 1, last_interaction = NOW()
+         WHERE user_id = $1 AND project_id = $2 AND token_id = $3`,
+        [id, projectId, tokenId]
+      );
+      if (!result.rowCount || result.rowCount === 0) {
         return res.status(404).json({ message: "User data not found" });
       }
       res.json({ message: "Interaction count incremented" });
@@ -3471,15 +3485,21 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Update user state
   app.put("/api/users/:id/state", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const { state } = req.body;
+      const projectId = Number(req.body?.projectId ?? 0);
+      const tokenId = getRequestTokenId(req) ?? 0;
 
       if (!state || typeof state !== 'string') {
         return res.status(400).json({ message: "State is required and must be a string" });
       }
 
-      const success = await storage.updateUserState(id, state);
-      if (!success) {
+      const result = await dbPool.query(
+        `UPDATE bot_users SET user_data = jsonb_set(COALESCE(user_data, '{}'), '{current_state}', to_jsonb($1::text))
+         WHERE user_id = $2 AND project_id = $3 AND token_id = $4`,
+        [state, id, projectId, tokenId]
+      );
+      if (!result.rowCount || result.rowCount === 0) {
         return res.status(404).json({ message: "User data not found" });
       }
       res.json({ message: "User state updated successfully" });

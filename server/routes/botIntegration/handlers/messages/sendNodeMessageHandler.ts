@@ -59,7 +59,13 @@ export async function sendNodeMessageHandler(req: Request, res: Response): Promi
       return;
     }
 
-    const user = await storage.getUserBotDataByProjectAndUser(projectId, userId, effectiveTokenId);
+    const userResult = await (await import("../../../../database/db")).pool.query(
+      `SELECT user_id AS "userId", username AS "userName", first_name AS "firstName",
+              last_name AS "lastName", user_data AS "userData"
+       FROM bot_users WHERE project_id = $1 AND user_id = $2 AND token_id = $3 LIMIT 1`,
+      [projectId, userId, effectiveTokenId]
+    );
+    const user = userResult.rows[0] ?? null;
     const userDataFromDb = (user?.userData as Record<string, unknown>) || {};
     const userNameFromData = userDataFromDb.user_name;
     const telegramUser = {

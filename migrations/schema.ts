@@ -214,42 +214,6 @@ export const groupMembers = pgTable("group_members", {
 		}).onDelete("cascade"),
 ]);
 
-export const userBotData = pgTable("user_bot_data", {
-	id: serial().primaryKey().notNull(),
-	projectId: integer("project_id").notNull(),
-	userId: text("user_id").notNull(),
-	userName: text("user_name"),
-	firstName: text("first_name"),
-	lastName: text("last_name"),
-	languageCode: text("language_code"),
-	isBot: integer("is_bot").default(0),
-	isPremium: integer("is_premium").default(0),
-	lastInteraction: timestamp("last_interaction", { mode: 'string' }).defaultNow(),
-	interactionCount: integer("interaction_count").default(0),
-	userData: jsonb("user_data").default({}),
-	currentState: text("current_state"),
-	preferences: jsonb().default({}),
-	commandsUsed: jsonb("commands_used").default({}),
-	sessionsCount: integer("sessions_count").default(1),
-	totalMessagesSent: integer("total_messages_sent").default(0),
-	totalMessagesReceived: integer("total_messages_received").default(0),
-	deviceInfo: text("device_info"),
-	locationData: jsonb("location_data"),
-	contactData: jsonb("contact_data"),
-	isBlocked: integer("is_blocked").default(0),
-	isActive: integer("is_active").default(1),
-	tags: text().array().default([""]),
-	notes: text(),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow(),
-}, (table) => [
-	foreignKey({
-			columns: [table.projectId],
-			foreignColumns: [botProjects.id],
-			name: "user_bot_data_project_id_bot_projects_id_fk"
-		}).onDelete("cascade"),
-]);
-
 export const userTelegramSettings = pgTable("user_telegram_settings", {
 	id: serial().primaryKey().notNull(),
 	userId: text("user_id").notNull(),

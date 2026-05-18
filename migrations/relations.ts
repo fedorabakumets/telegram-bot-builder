@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { botProjects, botInstances, botTokens, telegramUsers, botTemplates, botMessages, mediaFiles, botMessageMedia, botGroups, groupMembers, userBotData } from "./schema";
+import { botProjects, botInstances, botTokens, telegramUsers, botTemplates, botMessages, mediaFiles, botMessageMedia, botGroups, groupMembers } from "./schema";
 
 export const botInstancesRelations = relations(botInstances, ({one}) => ({
 	botProject: one(botProjects, {
@@ -16,7 +16,6 @@ export const botProjectsRelations = relations(botProjects, ({one, many}) => ({
 	botInstances: many(botInstances),
 	botTokens: many(botTokens),
 	botMessages: many(botMessages),
-	userBotData: many(userBotData),
 	botGroups: many(botGroups),
 	mediaFiles: many(mediaFiles),
 	telegramUser: one(telegramUsers, {
@@ -97,9 +96,3 @@ export const botGroupsRelations = relations(botGroups, ({one, many}) => ({
 	}),
 }));
 
-export const userBotDataRelations = relations(userBotData, ({one}) => ({
-	botProject: one(botProjects, {
-		fields: [userBotData.projectId],
-		references: [botProjects.id]
-	}),
-}));

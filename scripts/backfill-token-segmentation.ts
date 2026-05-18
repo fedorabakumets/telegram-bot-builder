@@ -92,7 +92,6 @@ async function backfillProject(
   const tables = [
     'bot_users',
     'bot_messages',
-    'user_bot_data',
   ] as const;
 
   for (const tableName of tables) {
@@ -156,7 +155,7 @@ async function main(): Promise<void> {
       console.log(`Проект ${context.projectId}: перенос legacy token_id=0 -> token_id=${context.tokenId}`);
       const summary = await backfillProject(pool, context);
       console.log(
-        `  bot_users=${summary.bot_users}, bot_messages=${summary.bot_messages}, user_bot_data=${summary.user_bot_data}`
+        `  bot_users=${summary.bot_users}, bot_messages=${summary.bot_messages}`
       );
     }
   } finally {

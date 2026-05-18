@@ -19,9 +19,8 @@ import { getTelegramUser } from "./utils/getTelegramUser";
  *
  * @description
  * Ищет пользователя в следующем порядке:
- * 1. user_bot_data (специфично для проекта)
- * 2. bot_users (глобальная таблица)
- * 3. Telegram API (по username или ID)
+ * 1. bot_users (таблица пользователей бота)
+ * 2. Telegram API (по username или ID)
  *
  * @route GET /api/projects/:projectId/bot/search-user/:query
  */

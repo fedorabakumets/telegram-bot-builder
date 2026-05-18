@@ -54,7 +54,6 @@ async function executeWithRetry(db: any, query: any, description: string, maxRet
  * - bot_instances: экземпляры запущенных ботов
  * - bot_templates: сценарии ботов
  * - media_files: медиафайлы, используемые в ботах
- * - user_bot_data: данные пользователей ботов
  * - bot_groups: группы, в которых работают боты
  * - group_members: участники групп
  * - bot_users: пользователи ботов
@@ -248,39 +247,6 @@ export async function initializeDatabaseTables() {
         updated_at TIMESTAMP DEFAULT NOW()
       );
     `, "Создание таблицы media_files");
-
-    await executeWithRetry(db, sql`
-      CREATE TABLE IF NOT EXISTS user_bot_data (
-        id SERIAL PRIMARY KEY,
-        project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
-        token_id INTEGER NOT NULL DEFAULT 0,
-        user_id TEXT NOT NULL,
-        user_name TEXT,
-        first_name TEXT,
-        last_name TEXT,
-        language_code TEXT,
-        is_bot INTEGER DEFAULT 0,
-        is_premium INTEGER DEFAULT 0,
-        last_interaction TIMESTAMP DEFAULT NOW(),
-        interaction_count INTEGER DEFAULT 0,
-        user_data JSONB DEFAULT '{}',
-        current_state TEXT,
-        preferences JSONB DEFAULT '{}',
-        commands_used JSONB DEFAULT '{}',
-        sessions_count INTEGER DEFAULT 1,
-        total_messages_sent INTEGER DEFAULT 0,
-        total_messages_received INTEGER DEFAULT 0,
-        device_info TEXT,
-        location_data JSONB,
-        contact_data JSONB,
-        is_blocked INTEGER DEFAULT 0,
-        is_active INTEGER DEFAULT 1,
-        tags TEXT[] DEFAULT '{}',
-        notes TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      );
-    `, "Создание таблицы user_bot_data");
 
     await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_groups (
@@ -624,16 +590,6 @@ export async function initializeDatabaseTables() {
       }
     } catch (error) {
       console.log('⚠️ Ошибка при миграции таблицы bot_users:', error);
-    }
-
-    // Миграция: добавить token_id в user_bot_data
-    try {
-      await executeWithRetry(db, sql`
-        ALTER TABLE user_bot_data
-        ADD COLUMN IF NOT EXISTS token_id INTEGER NOT NULL DEFAULT 0;
-      `, "Миграция: добавление token_id в user_bot_data");
-    } catch (error) {
-      console.log('⚠️ Ошибка при миграции token_id в user_bot_data:', error);
     }
 
     // Миграция: добавить token_id в bot_messages

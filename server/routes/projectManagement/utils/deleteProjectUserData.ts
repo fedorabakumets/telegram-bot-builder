@@ -2,26 +2,25 @@
  * @fileoverview Утилита удаления пользовательских данных
  *
  * Этот модуль предоставляет функцию для удаления данных
- * пользователей проекта из базы данных.
+ * пользователей проекта из базы данных bot_users.
  *
  * @module projectManagement/utils/deleteProjectUserData
  */
 
-import { storage } from "../../../storages/storage";
+import { pool as dbPool } from "../../../database/db";
 
 /**
- * Удаляет пользовательские данные проекта
+ * Удаляет пользовательские данные проекта из таблицы bot_users
  *
- * @function deleteProjectUserData
- * @param {number} projectId - Идентификатор проекта
- * @returns {Promise<void>}
+ * @param projectId - Идентификатор проекта
+ * @returns Promise<void>
  */
 export async function deleteProjectUserData(projectId: number): Promise<void> {
     try {
-        const userData = await storage.getUserBotDataByProject(projectId);
-        for (const data of userData) {
-            await storage.deleteUserBotData(data.id);
-        }
+        await dbPool.query(
+            `DELETE FROM bot_users WHERE project_id = $1`,
+            [projectId]
+        );
         console.log(`✅ Пользовательские данные удалены`);
     } catch (error) {
         console.error(`❌ Ошибка удаления пользовательских данных:`, error);

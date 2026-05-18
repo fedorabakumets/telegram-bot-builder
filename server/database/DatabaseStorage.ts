@@ -2,10 +2,10 @@
  * @fileoverview Базовая реализация storage поверх Drizzle для серверной части конструктора
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, type UserBotData, userBotData, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess } from "@shared/schema";
 import { and, asc, desc, eq, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
-import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageUserBotDataInput, StorageUserBotDataUpdate, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
+import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
 import { db } from "./db";
 
 /**
@@ -827,283 +827,6 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(mediaFiles.usageCount), desc(mediaFiles.createdAt));
   }
 
-  // User Bot Data
-  /**
-   * Получить данные пользователя бота по ID из базы данных
-   * @param id - ID данных пользователя
-   * @returns Данные пользователя бота или undefined, если не найдены
-   */
-  async getUserBotData(id: number): Promise<UserBotData | undefined> {
-    const [userData] = await this.db.select().from(userBotData).where(eq(userBotData.id, id));
-    return userData || undefined;
-  }
-
-  /**
-   * Получить данные пользователя бота по ID проекта и ID пользователя из базы данных
-   * @param projectId - ID проекта
-   * @param userId - ID пользователя
-   * @returns Данные пользователя бота или undefined, если не найдены
-   */
-  async getUserBotDataByProjectAndUser(
-    projectId: number,
-    userId: string,
-    tokenId?: number | null
-  ): Promise<UserBotData | undefined> {
-    const conditions = [
-      eq(userBotData.projectId, projectId),
-      eq(userBotData.userId, userId),
-    ];
-
-    if (tokenId !== null && tokenId !== undefined) {
-      conditions.push(eq(userBotData.tokenId, tokenId));
-    }
-
-    const [userData] = await this.db.select().from(userBotData)
-      .where(and(...conditions));
-    return userData || undefined;
-  }
-
-  /**
-   * Получить все данные пользователей бота по ID проекта из базы данных
-   * @param projectId - ID проекта
-   * @returns Массив данных пользователей бота
-   */
-  async getUserBotDataByProject(projectId: number, tokenId?: number | null): Promise<UserBotData[]> {
-    const conditions = [eq(userBotData.projectId, projectId)];
-
-    if (tokenId !== null && tokenId !== undefined) {
-      conditions.push(eq(userBotData.tokenId, tokenId));
-    }
-
-    return await this.db.select().from(userBotData)
-      .where(and(...conditions))
-      .orderBy(desc(userBotData.lastInteraction));
-  }
-
-  /**
-   * Получить все данные пользователей ботов из базы данных
-   * @returns Массив всех данных пользователей ботов
-   */
-  async getAllUserBotData(): Promise<UserBotData[]> {
-    return await this.db.select().from(userBotData).orderBy(desc(userBotData.lastInteraction));
-  }
-
-  /**
-   * Создать новые данные пользователя бота в базе данных
-   * @param insertUserData - Данные для создания
-   * @returns Созданные данные пользователя бота
-   */
-  async createUserBotData(insertUserData: StorageUserBotDataInput): Promise<UserBotData> {
-    const [userData] = await this.db
-      .insert(userBotData)
-      .values(insertUserData)
-      .returning();
-    return userData;
-  }
-
-  /**
-   * Обновить данные пользователя бота в базе данных
-   * @param id - ID данных
-   * @param updateData - Данные для обновления
-   * @returns Обновленные данные пользователя бота или undefined, если не найдены
-   */
-  async updateUserBotData(id: number, updateData: StorageUserBotDataUpdate): Promise<UserBotData | undefined> {
-    const [userData] = await this.db
-      .update(userBotData)
-      .set({ ...updateData, updatedAt: new Date() })
-      .where(eq(userBotData.id, id))
-      .returning();
-    return userData || undefined;
-  }
-
-  /**
-   * Удалить данные пользователя бота из базы данных
-   * @param id - ID данных
-   * @returns true, если данные были удалены, иначе false
-   */
-  async deleteUserBotData(id: number): Promise<boolean> {
-    const result = await this.db.delete(userBotData).where(eq(userBotData.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
-  }
-
-  /**
-   * Удалить все данные пользователей бота по ID проекта из базы данных
-   * @param projectId - ID проекта
-   * @returns true, если данные были удалены, иначе false
-   */
-  async deleteUserBotDataByProject(projectId: number, tokenId?: number | null): Promise<boolean> {
-    const conditions = [eq(userBotData.projectId, projectId)];
-
-    if (tokenId !== null && tokenId !== undefined) {
-      conditions.push(eq(userBotData.tokenId, tokenId));
-    }
-
-    const result = await this.db.delete(userBotData).where(and(...conditions));
-    return result.rowCount ? result.rowCount > 0 : false;
-  }
-
-  /**
-   * Увеличить счетчик взаимодействий пользователя в базе данных
-   * @param id - ID данных пользователя
-   * @returns true, если счетчик был увеличен, иначе false
-   */
-  async incrementUserInteraction(id: number): Promise<boolean> {
-    const [userData] = await this.db.select().from(userBotData).where(eq(userBotData.id, id));
-    if (!userData) return false;
-
-    const result = await this.db
-      .update(userBotData)
-      .set({
-        interactionCount: (userData.interactionCount || 0) + 1,
-        lastInteraction: new Date(),
-        updatedAt: new Date()
-      })
-      .where(eq(userBotData.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
-  }
-
-  /**
-   * Увеличить счетчик взаимодействий пользователя бота (bot_users)
-   * @param userId - ID пользователя в Telegram
-   * @param projectId - ID проекта
-   * @param tokenId - ID токена бота
-   * @returns true, если счетчик был увеличен, иначе false
-   */
-  async incrementBotUserInteraction(
-    userId: number,
-    projectId: number,
-    tokenId: number
-  ): Promise<boolean> {
-    const conditions = [
-      eq(botUsers.userId, userId),
-      eq(botUsers.projectId, projectId),
-      eq(botUsers.tokenId, tokenId),
-    ];
-
-    const [user] = await this.db.select().from(botUsers).where(and(...conditions));
-    if (!user) return false;
-
-    const result = await this.db
-      .update(botUsers)
-      .set({
-        interactionCount: (user.interactionCount || 0) + 1,
-        lastInteraction: new Date(),
-      })
-      .where(and(...conditions));
-    return result.rowCount ? result.rowCount > 0 : false;
-  }
-
-  /**
-   * Обновить состояние пользователя в базе данных
-   * @param id - ID данных пользователя
-   * @param state - Новое состояние
-   * @returns true, если состояние было обновлено, иначе false
-   */
-  async updateUserState(id: number, state: string): Promise<boolean> {
-    const result = await this.db
-      .update(userBotData)
-      .set({
-        currentState: state,
-        updatedAt: new Date()
-      })
-      .where(eq(userBotData.id, id));
-    return result.rowCount ? result.rowCount > 0 : false;
-  }
-
-  /**
-   * Поиск данных пользователей бота по проекту и запросу в базе данных
-   * @param projectId - ID проекта
-   * @param query - Поисковый запрос
-   * @returns Массив найденных данных пользователей
-   */
-  async searchUserBotData(projectId: number, query: string, tokenId?: number | null): Promise<UserBotData[]> {
-    const searchTerm = `%${query.toLowerCase()}%`;
-    const conditions = [
-      eq(userBotData.projectId, projectId),
-      or(
-        ilike(userBotData.userName, searchTerm),
-        ilike(userBotData.firstName, searchTerm),
-        ilike(userBotData.lastName, searchTerm),
-        ilike(userBotData.notes, searchTerm)
-      ),
-    ];
-
-    if (tokenId !== null && tokenId !== undefined) {
-      conditions.push(eq(userBotData.tokenId, tokenId));
-    }
-
-    return await this.db.select().from(userBotData)
-      .where(and(...conditions))
-      .orderBy(desc(userBotData.lastInteraction));
-  }
-
-  /**
-   * Поиск пользователей ботов по запросу в базе данных
-   * @param query - Поисковый запрос
-   * @returns Массив найденных пользователей ботов
-   */
-  async searchBotUsers(query: string, projectId?: number): Promise<BotUser[]> {
-    // Убираем @ символ если есть
-    const cleanQuery = query.startsWith('@') ? query.slice(1) : query;
-    const searchTerm = `%${cleanQuery.toLowerCase()}%`;
-    const numericQuery = parseInt(cleanQuery);
-
-    const conditions = [
-      or(
-        ilike(botUsers.username, searchTerm),
-        ilike(botUsers.firstName, searchTerm),
-        ilike(botUsers.lastName, searchTerm),
-        isNaN(numericQuery) ? sql`false` : eq(botUsers.userId, numericQuery)
-      )
-    ];
-
-    if (projectId !== undefined) {
-      conditions.push(eq(botUsers.projectId, projectId));
-    }
-
-    return await this.db.select().from(botUsers)
-      .where(and(...conditions))
-      .orderBy(desc(botUsers.lastInteraction));
-  }
-
-  /**
-   * Получить статистику по данным пользователей бота из базы данных
-   * @param projectId - ID проекта
-   * @returns Объект со статистикой пользователей
-   */
-  async getUserBotDataStats(projectId: number, tokenId?: number | null): Promise<{
-    totalUsers: number;
-    activeUsers: number;
-    blockedUsers: number;
-    premiumUsers: number;
-    totalInteractions: number;
-    avgInteractionsPerUser: number;
-  }> {
-    const conditions = [eq(userBotData.projectId, projectId)];
-
-    if (tokenId !== null && tokenId !== undefined) {
-      conditions.push(eq(userBotData.tokenId, tokenId));
-    }
-
-    const users = await this.db.select().from(userBotData).where(and(...conditions));
-
-    const totalUsers = users.length;
-    const activeUsers = users.filter(u => u.isActive === 1).length;
-    const blockedUsers = users.filter(u => u.isBlocked === 1).length;
-    const premiumUsers = users.filter(u => u.isPremium === 1).length;
-    const totalInteractions = users.reduce((sum, u) => sum + (u.interactionCount || 0), 0);
-    const avgInteractionsPerUser = totalUsers > 0 ? totalInteractions / totalUsers : 0;
-
-    return {
-      totalUsers,
-      activeUsers,
-      blockedUsers,
-      premiumUsers,
-      totalInteractions,
-      avgInteractionsPerUser
-    };
-  }
-
   // Bot Groups
   /**
    * Получить группу бота по ID из базы данных
@@ -1807,7 +1530,7 @@ export class DatabaseStorage implements IStorage {
    * @param filters - Фильтры аудитории (теги, даты регистрации, активности)
    * @returns Массив пользователей, подходящих под фильтры
    */
-  async getUsersForBroadcast(projectId: number, tokenId: number, filters: BroadcastFilters): Promise<UserBotData[]> {
+  async getUsersForBroadcast(projectId: number, tokenId: number, filters: BroadcastFilters): Promise<any[]> {
     // Используем таблицу bot_users — там хранятся реальные пользователи бота
     const conditions = [
       eq(botUsers.projectId, projectId),
@@ -1845,7 +1568,7 @@ export class DatabaseStorage implements IStorage {
       });
     }
 
-    // Приводим BotUser к UserBotData для совместимости с очередью отправки
+    // Приводим BotUser к формату совместимому с очередью отправки
     return filtered.map(u => ({
       id: 0,
       projectId: u.projectId,
@@ -1875,7 +1598,7 @@ export class DatabaseStorage implements IStorage {
       notes: null,
       createdAt: u.registeredAt ?? null,
       updatedAt: u.lastInteraction ?? null,
-    })) as unknown as UserBotData[];
+    })) as unknown as any[];
   }
 
   // Переменные окружения бота

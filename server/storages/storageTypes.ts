@@ -16,7 +16,6 @@ import {
   groupMembers,
   mediaFiles,
   telegramUsers,
-  userBotData,
   projectCollaborators,
   botEnvVariables,
 } from "@shared/schema";
@@ -60,11 +59,8 @@ export type StorageGroupMemberInput = typeof groupMembers.$inferInsert;
 /** Тип обновления участника группы */
 export type StorageGroupMemberUpdate = Partial<StorageGroupMemberInput>;
 
-/** Тип вставки пользовательских данных бота по таблице Drizzle */
-export type StorageUserBotDataInput = typeof userBotData.$inferInsert;
-
-/** Тип обновления пользовательских данных бота */
-export type StorageUserBotDataUpdate = Partial<StorageUserBotDataInput>;
+/** Тип вставки Telegram-пользователя по таблице Drizzle */
+export type StorageTelegramUserInput = typeof telegramUsers.$inferInsert;
 
 /** Тип вставки сообщения бота по таблице Drizzle */
 export type StorageBotMessageInput = typeof botMessages.$inferInsert;
@@ -86,9 +82,6 @@ export type StorageBotLaunchHistoryInput = typeof botLaunchHistory.$inferInsert;
 
 /** Тип обновления записи истории запуска */
 export type StorageBotLaunchHistoryUpdate = Partial<StorageBotLaunchHistoryInput>;
-
-/** Тип вставки Telegram-пользователя по таблице Drizzle */
-export type StorageTelegramUserInput = typeof telegramUsers.$inferInsert;
 
 /** Тип вставки коллаборатора проекта по таблице Drizzle */
 export type StorageProjectCollaboratorInput = typeof projectCollaborators.$inferInsert;

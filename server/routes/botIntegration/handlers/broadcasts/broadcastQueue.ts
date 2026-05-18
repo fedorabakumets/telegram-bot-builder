@@ -8,7 +8,6 @@ import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEven
 import { replaceVariablesInText } from "../messages/replace-variables";
 import { sendTelegramMessage } from "../messages/send-telegram-message";
 import type { SendMediaFile } from "../messages/extract-media";
-import type { UserBotData } from "@shared/schema";
 
 /** Размер батча пользователей для обработки */
 const BATCH_SIZE = 100;
@@ -210,7 +209,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
       // Проверяем флаг остановки перед каждым батчем
       if (activeBroadcasts.get(broadcastId) === "stopped") break;
 
-      const batch: UserBotData[] = users.slice(i, i + BATCH_SIZE);
+      const batch: any[] = users.slice(i, i + BATCH_SIZE);
 
       for (const user of batch) {
         // Проверяем флаг остановки внутри батча

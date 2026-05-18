@@ -6,8 +6,6 @@
  * Поддерживает формат хранения {value: "..."} как в Python-боте.
  */
 
-import { UserBotData } from "@shared/schema";
-
 /**
  * Параметры для замены переменных
  */
@@ -17,7 +15,7 @@ export interface ReplaceVariablesParams {
   /** Данные пользователя из БД */
   userData?: Record<string, unknown>;
   /** Данные Telegram пользователя */
-  telegramUser?: Partial<UserBotData> & { user_name_from_db?: string };
+  telegramUser?: Partial<Record<string, unknown>> & { id?: number; firstName?: string; lastName?: string; userName?: string; user_name_from_db?: string };
 }
 
 /**
@@ -62,7 +60,7 @@ export async function replaceVariablesInText(
   // Базовое имя: приоритет user_name из БД (из вопросов/форм) > firstName из Telegram > username из Telegram
   const firstName = telegramUser.firstName;
   const userName = telegramUser.userName;
-  const userNameFromDb = (telegramUser as Partial<UserBotData> & { user_name_from_db?: string }).user_name_from_db;
+  const userNameFromDb = (telegramUser as { user_name_from_db?: string }).user_name_from_db;
   
   // Определяем user_name с приоритетом
   if (userNameFromDb) {
