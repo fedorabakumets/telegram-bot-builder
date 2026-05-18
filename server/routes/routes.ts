@@ -2743,6 +2743,57 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Эндпоинт получения логов бота для проекта (системная таблица)
+   * @route GET /api/projects/:id/logs/all
+   * @returns Массив логов [{level, message, timestamp}]
+   */
+  app.get("/api/projects/:id/logs/all", async (req, res) => {
+    const projectId = parseInt(req.params.id);
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 200;
+
+    try {
+      const result = await dbPool.query(
+        `SELECT bl.level, SUBSTRING(bl.message, 1, 150) AS message, bl.created_at AS "createdAt"
+         FROM bot_logs bl
+         JOIN bot_tokens bt ON bt.id = bl.token_id
+         WHERE bt.project_id = $1
+         ORDER BY bl.created_at DESC
+         LIMIT $2`,
+        [projectId, limit]
+      );
+      res.json(result.rows);
+    } catch (error) {
+      // Таблица может не существовать
+      res.json([]);
+    }
+  });
+
+  /**
+   * Эндпоинт получения истории запусков бота для проекта
+   * @route GET /api/projects/:id/launches/all
+   * @returns Массив запусков [{status, started_at, stopped_at, error_message}]
+   */
+  app.get("/api/projects/:id/launches/all", async (req, res) => {
+    const projectId = parseInt(req.params.id);
+
+    try {
+      const result = await dbPool.query(
+        `SELECT blh.status, blh.started_at AS "startedAt", blh.stopped_at AS "stoppedAt",
+                SUBSTRING(blh.error_message, 1, 100) AS "errorMessage"
+         FROM bot_launch_history blh
+         JOIN bot_tokens bt ON bt.id = blh.token_id
+         WHERE bt.project_id = $1
+         ORDER BY blh.started_at DESC
+         LIMIT 100`,
+        [projectId]
+      );
+      res.json(result.rows);
+    } catch (error) {
+      res.json([]);
+    }
+  });
+
+  /**
    * Эндпоинт получения переменных пользователей (user_data развёрнутый в колонки)
    * @route GET /api/projects/:id/users/variables
    * @param id - Идентификатор проекта

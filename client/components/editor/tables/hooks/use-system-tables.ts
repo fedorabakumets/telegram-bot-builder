@@ -60,6 +60,21 @@ const BROADCASTS_COLUMNS: TableColumn[] = [
   { id: 'created_at', name: 'created_at' },
 ];
 
+/** Колонки системной таблицы логов */
+const LOGS_COLUMNS: TableColumn[] = [
+  { id: 'level', name: 'level' },
+  { id: 'message', name: 'message' },
+  { id: 'createdAt', name: 'time' },
+];
+
+/** Колонки системной таблицы запусков */
+const LAUNCHES_COLUMNS: TableColumn[] = [
+  { id: 'status', name: 'status' },
+  { id: 'startedAt', name: 'started_at' },
+  { id: 'stoppedAt', name: 'stopped_at' },
+  { id: 'errorMessage', name: 'error' },
+];
+
 /** Интерфейс ответа API пользователей (пагинированный режим) */
 interface UsersApiResponse {
   /** Массив пользователей */
@@ -160,6 +175,22 @@ export function useSystemTables(projectId: number): BotTable[] {
     queryFn: () => apiRequest('GET', `/api/projects/${projectId}/users/variables?limit=200`),
     enabled: !!projectId,
     refetchInterval: 10000,
+  });
+
+  /** Загрузка логов бота */
+  const { data: logsData } = useQuery<any[]>({
+    queryKey: ['system-tables-logs', projectId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/logs/all?limit=200`),
+    enabled: !!projectId,
+    refetchInterval: 10000,
+  });
+
+  /** Загрузка истории запусков */
+  const { data: launchesData } = useQuery<any[]>({
+    queryKey: ['system-tables-launches', projectId],
+    queryFn: () => apiRequest('GET', `/api/projects/${projectId}/launches/all`),
+    enabled: !!projectId,
+    refetchInterval: 30000,
   });
 
   /** Преобразуем данные в формат BotTable */
@@ -279,6 +310,31 @@ export function useSystemTables(projectId: number): BotTable[] {
       cells: r,
     }));
 
+    // Логи бота
+    const logs = Array.isArray(logsData) ? logsData : [];
+    const logsRows: TableRow[] = logs.map((l: any, i: number) => ({
+      id: i + 1,
+      rowIndex: i + 1,
+      cells: {
+        level: l.level || '',
+        message: l.message || '',
+        createdAt: l.createdAt ? new Date(l.createdAt).toLocaleString('ru') : '',
+      },
+    }));
+
+    // История запусков
+    const launches = Array.isArray(launchesData) ? launchesData : [];
+    const launchesRows: TableRow[] = launches.map((l: any, i: number) => ({
+      id: i + 1,
+      rowIndex: i + 1,
+      cells: {
+        status: l.status || '',
+        startedAt: l.startedAt ? new Date(l.startedAt).toLocaleString('ru') : '',
+        stoppedAt: l.stoppedAt ? new Date(l.stoppedAt).toLocaleString('ru') : '',
+        errorMessage: l.errorMessage || '',
+      },
+    }));
+
     return [
       {
         id: '_system_users',
@@ -322,8 +378,20 @@ export function useSystemTables(projectId: number): BotTable[] {
         columns: BROADCASTS_COLUMNS,
         rows: broadcastsRows,
       },
+      {
+        id: '_system_logs',
+        name: '🔒 Логи бота',
+        columns: LOGS_COLUMNS,
+        rows: logsRows,
+      },
+      {
+        id: '_system_launches',
+        name: '🔒 История запусков',
+        columns: LAUNCHES_COLUMNS,
+        rows: launchesRows,
+      },
     ];
-  }, [usersData, messagesData, groupsData, mediaData, tokensData, broadcastsData, variablesData]);
+  }, [usersData, messagesData, groupsData, mediaData, tokensData, broadcastsData, variablesData, logsData, launchesData]);
 
   return systemTables;
 }
