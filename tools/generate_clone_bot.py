@@ -480,8 +480,8 @@ def build_start_menu() -> dict:
     nodes.append(node("cond-has-clan", "condition", 700, 1100, {
         "variable": "user.clan_id",
         "branches": [
-            branch("br-no-clan", "Нет клана", "is_empty", "", "msg-no-clan"),
-            branch("br-has-clan", "Есть клан", "else", "", "msg-clan-info"),
+            branch("br-has-clan", "Есть клан", "is_not_empty", "", "msg-clan-info"),
+            branch("br-no-clan", "Нет клана", "else", "", "msg-no-clan"),
         ],
     }))
     nodes.append(node("msg-no-clan", "message", 1000, 1200, {
