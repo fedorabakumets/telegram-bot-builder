@@ -34,7 +34,7 @@ export function DelayPreview({ data }: DelayPreviewProps) {
   const value = data?.seconds || '3';
   const unit = data?.unit || 'seconds';
   const mode = data?.mode || 'blocking';
-  const modeIcon = mode === 'background' ? '🚀' : '⏸';
+  const modeIcon = mode === 'background' ? '⚡' : '●';
   const modeLabel = mode === 'background' ? 'фоновый' : 'пауза';
 
   return (
