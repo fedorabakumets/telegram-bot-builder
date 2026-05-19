@@ -250,10 +250,10 @@ def build_start_menu() -> dict:
     # --- Приветственное сообщение с главным меню ---
     welcome_text = (
         f"🚀 Добро пожаловать на борт, {MENTION}!\n\n"
-        "Вы на планете: 🌍 {pilot.current_planet}\n"
-        "💰 Кредиты: {pilot.credits}\n"
-        "⛽ Топливо: {pilot.fuel}\n"
-        "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}"
+        "📍 Планета: <b>{pilot.current_planet}</b>\n"
+        "💰 Кредиты: <code>{pilot.credits}</code>\n"
+        "⛽ Топливо: <code>{pilot.fuel}</code>\n"
+        "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
     )
     # Позиция X после всех руд
     welcome_x = 1700 + len(ORES) * 200
@@ -322,10 +322,10 @@ def build_start_menu() -> dict:
 
     main_menu_text = (
         f"🚀 {MENTION}, главное меню:\n\n"
-        "🌍 Планета: {pilot.current_planet}\n"
-        "💰 Кредиты: {pilot.credits}\n"
-        "⛽ Топливо: {pilot.fuel}\n"
-        "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}"
+        "📍 Планета: <b>{pilot.current_planet}</b>\n"
+        "💰 Кредиты: <code>{pilot.credits}</code>\n"
+        "⛽ Топливо: <code>{pilot.fuel}</code>\n"
+        "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
     )
     nodes.append(main_menu_msg("msg-main-menu", main_menu_text, 700, 1200))
 
@@ -407,9 +407,9 @@ def build_trade() -> dict:
 
     trade_menu_text = (
         f"🛒 {MENTION}, меню торговли:\n\n"
-        "🌍 Вы на: {pilot.current_planet}\n"
-        "💰 Кредиты: {pilot.credits}\n"
-        "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}"
+        "📍 Планета: <b>{pilot.current_planet}</b>\n"
+        "💰 Кредиты: <code>{pilot.credits}</code>\n"
+        "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
     )
     nodes.append(node("msg-trade-menu", "message", 400, 0, {
         "messageText": trade_menu_text,
@@ -467,9 +467,9 @@ def build_trade() -> dict:
     # Сообщение с inline-кнопками для покупки (8 руд)
     # Цены показываются из base_price_{planet} — в будущем заменим на ore_prices
     buy_text = (
-        f"🛒 {MENTION}, руды на планете {{pilot.current_planet}}:\n\n"
-        "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}\n"
-        "💰 Кредиты: {pilot.credits}\n\n"
+        f"🛒 {MENTION}, руды на планете <b>{{pilot.current_planet}}</b>:\n\n"
+        "💰 Кредиты: <code>{pilot.credits}</code>\n"
+        "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\n"
         "Выберите руду для покупки (1 шт):"
     )
     buy_buttons = []
@@ -524,7 +524,8 @@ def build_trade() -> dict:
 
         # Не хватает кредитов
         nodes.append(node(f"msg-buy-no-money-{ore['id']}", "message", 1000, y_pos - 100, {
-            "messageText": f"❌ Недостаточно кредитов для покупки {ore['emoji']} {ore['name']}!\n\n💰 Нужно: {{ore_price}} кр.\n💰 У вас: {{pilot.credits}} кр.",
+            "messageText": f"❌ Недостаточно кредитов!\n\n{ore['emoji']} {ore['name']}\n💰 Нужно: <code>{{ore_price}}</code> кр.\n💰 У вас: <code>{{pilot.credits}}</code> кр.",
+            "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
         }))
@@ -540,7 +541,8 @@ def build_trade() -> dict:
 
         # Трюм полон
         nodes.append(node(f"msg-buy-full-{ore['id']}", "message", 1300, y_pos - 100, {
-            "messageText": "❌ Трюм полон! 📦 {pilot.cargo_used}/{pilot.cargo_max}\n\nПродайте руду или улучшите трюм.",
+            "messageText": "❌ Трюм полон!\n\n📦 <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\nПродайте руду или улучшите трюм.",
+            "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
         }))
@@ -610,7 +612,8 @@ def build_trade() -> dict:
 
         # Успешная покупка
         nodes.append(node(f"msg-buy-ok-{ore['id']}", "message", 2500, y_pos, {
-            "messageText": f"✅ Куплено: {ore['emoji']} {ore['name']} (1 шт.)\n\n💰 Списано: {{ore_price}} кр.\n📦 Трюм: {{pilot.cargo_used}}/{{pilot.cargo_max}}",
+            "messageText": f"✅ Куплено: {ore['emoji']} <b>{ore['name']}</b> (1 шт.)\n\n💰 Списано: <code>{{ore_price}}</code> кр.\n📦 Трюм: <code>{{pilot.cargo_used}}/{{pilot.cargo_max}}</code>",
+            "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
         }))
@@ -663,8 +666,8 @@ def build_trade() -> dict:
     # Меню продажи — inline кнопки для каждой руды
     sell_text = (
         f"💰 {MENTION}, продажа руд:\n\n"
-        "🌍 Планета: {pilot.current_planet}\n"
-        "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}\n\n"
+        "📍 Планета: <b>{{pilot.current_planet}}</b>\n"
+        "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\n"
         "Выберите руду для продажи (всё количество):"
     )
     sell_buttons = []
@@ -778,7 +781,8 @@ def build_trade() -> dict:
 
         # Успешная продажа
         nodes.append(node(f"msg-sell-ok-{ore['id']}", "message", 2200, y_pos, {
-            "messageText": f"✅ Продано: {ore['emoji']} {ore['name']} x{{sell_item.quantity}}\n\n💰 Получено: {{sell_income}} кр.\n💰 Баланс: {{pilot.credits}} кр.",
+            "messageText": f"✅ Продано: {ore['emoji']} <b>{ore['name']}</b> x{{sell_item.quantity}}\n\n💰 Получено: <code>{{sell_income}}</code> кр.\n💰 Баланс: <code>{{pilot.credits}}</code> кр.",
+            "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
         }))
@@ -815,7 +819,7 @@ def build_trade() -> dict:
 
     cargo_text = (
         f"📦 {MENTION}, содержимое трюма:\n\n"
-        "📦 Занято: {pilot.cargo_used}/{pilot.cargo_max}\n\n"
+        "📦 Занято: <code>{{pilot.cargo_used}}/{{pilot.cargo_max}}</code>\n\n"
         "Используйте «💰 Продать» для продажи руд."
     )
     nodes.append(node("msg-cargo-view", "message", 1000, 7000, {
@@ -857,7 +861,7 @@ def build_map() -> dict:
 
     map_menu_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
-        "📍 Вы здесь: {pilot.current_planet}"
+        "📍 Вы здесь: <b>{{pilot.current_planet}}</b>"
     )
     nodes.append(node("msg-map-menu", "message", 400, 0, {
         "messageText": map_menu_text,
@@ -949,9 +953,9 @@ def build_ship() -> dict:
 
     ship_menu_text = (
         f"🔧 {MENTION}, ваш корабль:\n\n"
-        "📦 Трюм: ур. {pilot.hull_level}\n"
-        "🚀 Двигатель: ур. {pilot.engine_level}\n"
-        "🛡 Броня: ур. {pilot.armor_level}"
+        "📦 Трюм: ур. <code>{{pilot.hull_level}}</code>\n"
+        "🚀 Двигатель: ур. <code>{{pilot.engine_level}}</code>\n"
+        "🛡 Броня: ур. <code>{{pilot.armor_level}}</code>"
     )
     nodes.append(node("msg-ship-menu", "message", 400, 0, {
         "messageText": ship_menu_text,
