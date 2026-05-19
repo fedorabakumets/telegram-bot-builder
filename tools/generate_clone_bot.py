@@ -1031,7 +1031,7 @@ def build_earning() -> dict:
         "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
-            btn("btn-success-work", "🏖 Работать", target="trig-work"),
+            btn("btn-success-work", "🏖 Работать", target="tbl-read-cd-work"),
         ],
         "autoTransitionTo": "delay-cd-notify",
         "enableAutoTransition": True,
@@ -1090,7 +1090,7 @@ def build_earning() -> dict:
         "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
-            btn("btn-fail-work", "🏖 Работать", target="trig-work"),
+            btn("btn-fail-work", "🏖 Работать", target="tbl-read-cd-work"),
         ],
     }))
 
@@ -2005,7 +2005,7 @@ def build_notifications() -> dict:
         "targetChatVariableName": "cd_item.user_id",
         "keyboardType": "inline",
         "buttons": [
-            btn("btn-work-again", "🏖 Работать", target="trig-work"),
+            btn("btn-work-again", "🏖 Работать", target="tbl-read-cd-work"),
         ],
         "autoTransitionTo": "tbl-mark-notified",
         "enableAutoTransition": True,
