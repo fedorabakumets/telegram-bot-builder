@@ -365,7 +365,7 @@ def build_start_menu() -> dict:
             "🎮 {user.nickname}, меню игр:\n\n"
             "🎲 💡 В чатах можно сыграть с другими игроками — Кости, Дуэль, Рулетка и др."
         ),
-        "formatMode": "markdown",
+        "formatMode": "html",
         "keyboardType": "reply",
         "buttons": [
             btn("btn-g-slots", "🎰 Слоты"),
@@ -1059,10 +1059,10 @@ def build_earning() -> dict:
     }))
     nodes.append(node("msg-mine-locked", "message", 1000, 500, {
         "messageText": (
-            "😢 {user.nickname}, *🌋 шахта* станет доступна после достижения "
-            "*⭐3-го уровня*. Уровень можно повысить выполняя разную активность."
+            "😢 {user.nickname}, <b>🌋 шахта</b> станет доступна после достижения "
+            "<b>⭐3-го уровня</b>. Уровень можно повысить выполняя разную активность."
         ),
-        "formatMode": "markdown",
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [btn("btn-how-lvl-m", "📖 Как повысить уровень?", target="msg-how-level")],
     }))
@@ -1097,10 +1097,10 @@ def build_earning() -> dict:
     }))
     nodes.append(node("msg-fish-locked", "message", 1000, 700, {
         "messageText": (
-            "☹️ {user.nickname}, *🎣 Рыбалка* станет доступна после достижения "
-            "*⭐7-го уровня*. Уровень можно повысить выполняя разную активность."
+            "☹️ {user.nickname}, <b>🎣 Рыбалка</b> станет доступна после достижения "
+            "<b>⭐7-го уровня</b>. Уровень можно повысить выполняя разную активность."
         ),
-        "formatMode": "markdown",
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [btn("btn-how-lvl-f", "📖 Как повысить уровень?", target="msg-how-level")],
     }))
@@ -1135,10 +1135,10 @@ def build_earning() -> dict:
     }))
     nodes.append(node("msg-ranch-locked", "message", 1000, 900, {
         "messageText": (
-            "☹️ {user.nickname}, *🏞 ранчо* станет доступно после достижения "
-            "*⭐15-го уровня*. Уровень можно повысить выполняя разную активность."
+            "☹️ {user.nickname}, <b>🏞 ранчо</b> станет доступно после достижения "
+            "<b>⭐15-го уровня</b>. Уровень можно повысить выполняя разную активность."
         ),
-        "formatMode": "markdown",
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [btn("btn-how-lvl-r", "📖 Как повысить уровень?", target="msg-how-level")],
     }))
@@ -1201,17 +1201,17 @@ def build_earning() -> dict:
     nodes.append(node("msg-how-level", "message", 1300, 600, {
         "messageText": (
             "📈 {user.nickname}, как повысить уровень?\n\n"
-            "💡 *Как работает система уровней?*\n"
-            "⠀- Чтобы повысить уровень, вам нужно набрать *очки опыта (EXP)*.\n"
+            "💡 <b>Как работает система уровней?</b>\n"
+            "⠀- Чтобы повысить уровень, вам нужно набрать <b>очки опыта (EXP)</b>.\n"
             "⠀- С каждым новым уровнем потребуется все больше EXP для перехода на следующий.\n\n"
-            "🎯 *Где получить EXP?*\n"
-            "⠀1️⃣ *Выполнение рабочих смен* – работайте и зарабатывайте опыт.\n"
-            "⠀2️⃣ *Открытие ящиков* – в ящиках можно найти дополнительный опыт.\n"
-            "⠀3️⃣ *Участие в специальных событиях* – принимайте участие в мероприятиях и получайте щедрые награды.\n\n"
-            "🔓 *Что дает повышение уровня?*\n"
-            "⠀- С каждым новым уровнем вы получаете доступ к новым *работам, активностям* и *уникальным возможностям*, которых нет на начальных этапах игры."
+            "🎯 <b>Где получить EXP?</b>\n"
+            "⠀1️⃣ <b>Выполнение рабочих смен</b> – работайте и зарабатывайте опыт.\n"
+            "⠀2️⃣ <b>Открытие ящиков</b> – в ящиках можно найти дополнительный опыт.\n"
+            "⠀3️⃣ <b>Участие в специальных событиях</b> – принимайте участие в мероприятиях и получайте щедрые награды.\n\n"
+            "🔓 <b>Что дает повышение уровня?</b>\n"
+            "⠀- С каждым новым уровнем вы получаете доступ к новым <b>работам, активностям</b> и <b>уникальным возможностям</b>, которых нет на начальных этапах игры."
         ),
-        "formatMode": "markdown",
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
@@ -1447,14 +1447,14 @@ def build_help() -> dict:
     nodes.append(node("msg-help", "message", 700, 0, {
         "messageText": (
             "📚 {user.nickname}, выберите раздел с командами:\n"
-            "⠀- ⭐️ *Основное*\n"
-            "⠀- 💸 *Заработок*\n"
-            "⠀- 🎮 *Игры*\n"
-            "⠀- 🌆 *Имущество*\n"
-            "⠀- ☁️ *Прочее*\n\n"
-            "[*✅ Добавить бота в чат*](https://t.me/botname?startgroup=new)"
+            "⠀- ⭐️ <b>Основное</b>\n"
+            "⠀- 💸 <b>Заработок</b>\n"
+            "⠀- 🎮 <b>Игры</b>\n"
+            "⠀- 🌆 <b>Имущество</b>\n"
+            "⠀- ☁️ <b>Прочее</b>\n\n"
+            "<a href=\"https://t.me/botname?startgroup=new\"><b>✅ Добавить бота в чат</b></a>"
         ),
-        "formatMode": "markdown",
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
             btn("btn-help-basic", "⭐️", target="edit-help-basic"),
@@ -1497,20 +1497,20 @@ def build_help() -> dict:
     nodes.append(node("edit-help-basic", "edit_message", 1000, 0, {
         "editMode": "both",
         "editMessageText": (
-            "⭐️ {user.nickname}, список команд из раздела \"*Основное*\":\n"
-            "⠀- 👤 *Профиль* - `ваш профиль`\n"
-            "⠀- 🛡 *Клан* - `ваш клан`\n"
-            "⠀- 👥 *Рефералы* - `деньги за друзей`\n"
-            "⠀- 💸 *Передать* - `перевод денег`\n"
-            "⠀- 🎁 *Бонус* - `ежедневный подарок`\n"
-            "⠀- 🔮 *Артефакты* - `ваши артефакты`\n"
-            "⠀- 💭 *Чат* - `деньги за чат`\n\n"
-            "⠀- 🛡 *Клан вступить* `[ид клана]`\n"
-            "⠀- 🏅 *Достижения*\n"
-            "⠀- 🍩 *Донат*\n"
-            "⠀- 📜 *Правила*"
+            "⭐️ {user.nickname}, список команд из раздела \"<b>Основное</b>\":\n"
+            "⠀- 👤 <b>Профиль</b> - <code>ваш профиль</code>\n"
+            "⠀- 🛡 <b>Клан</b> - <code>ваш клан</code>\n"
+            "⠀- 👥 <b>Рефералы</b> - <code>деньги за друзей</code>\n"
+            "⠀- 💸 <b>Передать</b> - <code>перевод денег</code>\n"
+            "⠀- 🎁 <b>Бонус</b> - <code>ежедневный подарок</code>\n"
+            "⠀- 🔮 <b>Артефакты</b> - <code>ваши артефакты</code>\n"
+            "⠀- 💭 <b>Чат</b> - <code>деньги за чат</code>\n\n"
+            "⠀- 🛡 <b>Клан вступить</b> <code>[ид клана]</code>\n"
+            "⠀- 🏅 <b>Достижения</b>\n"
+            "⠀- 🍩 <b>Донат</b>\n"
+            "⠀- 📜 <b>Правила</b>"
         ),
-        "editFormatMode": "markdown",
+        "editFormatMode": "html",
         "editMessageIdSource": "last_bot_message",
         "editMessageIdManual": "",
         "editKeyboardMode": "keep",
@@ -1523,18 +1523,18 @@ def build_help() -> dict:
     nodes.append(node("edit-help-earning", "edit_message", 1000, 200, {
         "editMode": "both",
         "editMessageText": (
-            "💸 {user.nickname}, список команд из раздела \"*Заработок*\":\n"
-            "⠀- 🛠 *Работать* - `начать работу`\n"
-            "⠀- 👔 *Работы* - `список работ`\n"
-            "⠀- 🌋 *Шахта* - `сходить в шахту`\n"
-            "⠀- 🎣 *Рыбалка* - `порыбачить`\n"
-            "⠀- 📦 *Ящики* - `открыть ящик`\n"
-            "⠀- 🪫 *Майнинг* - `майнинг-ферма`\n"
-            "⠀- 🏞 *Ранчо* - `выращивать урожай`\n"
-            "⠀- 💹 *Бизнес* - `меню бизнеса`\n"
-            "⠀- 🏦 *Вклады* - `открыть вклад`"
+            "💸 {user.nickname}, список команд из раздела \"<b>Заработок</b>\":\n"
+            "⠀- 🛠 <b>Работать</b> - <code>начать работу</code>\n"
+            "⠀- 👔 <b>Работы</b> - <code>список работ</code>\n"
+            "⠀- 🌋 <b>Шахта</b> - <code>сходить в шахту</code>\n"
+            "⠀- 🎣 <b>Рыбалка</b> - <code>порыбачить</code>\n"
+            "⠀- 📦 <b>Ящики</b> - <code>открыть ящик</code>\n"
+            "⠀- 🪫 <b>Майнинг</b> - <code>майнинг-ферма</code>\n"
+            "⠀- 🏞 <b>Ранчо</b> - <code>выращивать урожай</code>\n"
+            "⠀- 💹 <b>Бизнес</b> - <code>меню бизнеса</code>\n"
+            "⠀- 🏦 <b>Вклады</b> - <code>открыть вклад</code>"
         ),
-        "editFormatMode": "markdown",
+        "editFormatMode": "html",
         "editMessageIdSource": "last_bot_message",
         "editMessageIdManual": "",
         "editKeyboardMode": "keep",
@@ -1547,25 +1547,25 @@ def build_help() -> dict:
     nodes.append(node("edit-help-games", "edit_message", 1000, 400, {
         "editMode": "both",
         "editMessageText": (
-            "🎮 {user.nickname}, список команд из раздела \"*Игры*\":\n"
-            "⠀- 🎰 *Слоты*\n"
-            "⠀- 💣 *Мины*\n"
-            "⠀- 🪙 *Монетка*\n"
-            "⠀- 🏁 *Гонки*\n"
-            "⠀- 🎡 *Рулетка*\n"
-            "⠀- ✂ *КНБ*\n"
-            "⠀- 🔫 *Дуэль*\n"
-            "⠀- 🎲 *Кости*\n"
-            "⠀- 🕵️ *Прятки*\n"
-            "⠀- 🏀 *Баскетбол*\n"
-            "⠀- ⚽ *Пенальти*\n"
-            "⠀- 🎯 *Дартс*\n"
-            "⠀- 🚀 *Краш*\n"
-            "⠀- ♠️ *Блекджек*\n"
-            "⠀- 🗼 *Башня*\n"
-            "⠀- 🔑 *Сейф* `[10-99]`"
+            "🎮 {user.nickname}, список команд из раздела \"<b>Игры</b>\":\n"
+            "⠀- 🎰 <b>Слоты</b>\n"
+            "⠀- 💣 <b>Мины</b>\n"
+            "⠀- 🪙 <b>Монетка</b>\n"
+            "⠀- 🏁 <b>Гонки</b>\n"
+            "⠀- 🎡 <b>Рулетка</b>\n"
+            "⠀- ✂ <b>КНБ</b>\n"
+            "⠀- 🔫 <b>Дуэль</b>\n"
+            "⠀- 🎲 <b>Кости</b>\n"
+            "⠀- 🕵️ <b>Прятки</b>\n"
+            "⠀- 🏀 <b>Баскетбол</b>\n"
+            "⠀- ⚽ <b>Пенальти</b>\n"
+            "⠀- 🎯 <b>Дартс</b>\n"
+            "⠀- 🚀 <b>Краш</b>\n"
+            "⠀- ♠️ <b>Блекджек</b>\n"
+            "⠀- 🗼 <b>Башня</b>\n"
+            "⠀- 🔑 <b>Сейф</b> <code>[10-99]</code>"
         ),
-        "editFormatMode": "markdown",
+        "editFormatMode": "html",
         "editMessageIdSource": "last_bot_message",
         "editMessageIdManual": "",
         "editKeyboardMode": "keep",
@@ -1578,13 +1578,13 @@ def build_help() -> dict:
     nodes.append(node("edit-help-property", "edit_message", 1000, 600, {
         "editMode": "both",
         "editMessageText": (
-            "🌆 {user.nickname}, список команд из раздела \"*Имущество*\":\n"
-            "⠀- 🚘 *Машина*\n"
-            "⠀- 🏠 *Дом*\n"
-            "⠀- 💹 *Бизнес*\n"
-            "⠀- 🪫 *Ферма*"
+            "🌆 {user.nickname}, список команд из раздела \"<b>Имущество</b>\":\n"
+            "⠀- 🚘 <b>Машина</b>\n"
+            "⠀- 🏠 <b>Дом</b>\n"
+            "⠀- 💹 <b>Бизнес</b>\n"
+            "⠀- 🪫 <b>Ферма</b>"
         ),
-        "editFormatMode": "markdown",
+        "editFormatMode": "html",
         "editMessageIdSource": "last_bot_message",
         "editMessageIdManual": "",
         "editKeyboardMode": "keep",
@@ -1597,16 +1597,16 @@ def build_help() -> dict:
     nodes.append(node("edit-help-other", "edit_message", 1000, 800, {
         "editMode": "both",
         "editMessageText": (
-            "☁️ {user.nickname}, список команд из раздела \"*Прочее*\":\n"
-            "⠀- 🏆 *Топ* - `богатые игроки`\n"
-            "⠀- ✏️ *Ник* - `изменить имя`\n"
-            "⠀- 💰 *Баланс* - `ваш баланс`\n\n"
-            "⠀- ⚡️ *Бусты*\n"
-            "⠀- 🛒 *Магазин*\n"
-            "⠀- 🎁 *Промокод*\n"
-            "⠀- 🌀 *Упоминания* `[вкл/выкл]`"
+            "☁️ {user.nickname}, список команд из раздела \"<b>Прочее</b>\":\n"
+            "⠀- 🏆 <b>Топ</b> - <code>богатые игроки</code>\n"
+            "⠀- ✏️ <b>Ник</b> - <code>изменить имя</code>\n"
+            "⠀- 💰 <b>Баланс</b> - <code>ваш баланс</code>\n\n"
+            "⠀- ⚡️ <b>Бусты</b>\n"
+            "⠀- 🛒 <b>Магазин</b>\n"
+            "⠀- 🎁 <b>Промокод</b>\n"
+            "⠀- 🌀 <b>Упоминания</b> <code>[вкл/выкл]</code>"
         ),
-        "editFormatMode": "markdown",
+        "editFormatMode": "html",
         "editMessageIdSource": "last_bot_message",
         "editMessageIdManual": "",
         "editKeyboardMode": "keep",
