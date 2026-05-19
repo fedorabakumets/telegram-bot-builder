@@ -1198,11 +1198,11 @@ def build_map() -> dict:
             "enableAutoTransition": True,
         }))
 
-        # Проверяем сработал ли update (fly_result.id пустое = не обновлено)
+        # Проверяем сработал ли update (fly_result.id > 0 = обновлено, летим)
         nodes.append(node(f"fly-cond-updated-{planet['id']}", "condition", 2100, y_pos, {
             "variable": "fly_result.id",
             "branches": [
-                branch(f"br-updated-{planet['id']}", "Обновлено", "is_not_empty", "", f"msg-fly-start-{planet['id']}"),
+                branch(f"br-updated-{planet['id']}", "Обновлено", "greater_than", "0", f"msg-fly-start-{planet['id']}"),
                 branch(f"br-not-updated-{planet['id']}", "Не обновлено", "else", "", f"msg-fly-inflight-{planet['id']}"),
             ],
         }))
