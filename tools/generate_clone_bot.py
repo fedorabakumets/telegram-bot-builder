@@ -596,9 +596,9 @@ def build_start_menu() -> dict:
         "enableAutoTransition": True,
     }))
 
-    # 5. Input нода — ожидание ввода названия
+    # 5. Input нода — ожидание ввода названия (только текст, не callback)
     nodes.append(node("input-clan-name", "input", 2200, 1300, {
-        "inputType": "any",
+        "inputType": "text",
         "inputVariable": "clan_name",
         "inputTargetNodeId": "tbl-count-clans",
         "inputPrompt": "",
