@@ -31,8 +31,12 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         _notification_text = replace_variables_in_text({{ entry.notificationText | format_python_text }}, _all_vars, {})
         logging.info(f"🔔 answer_callback_query [{{ entry.nodeId }}]: text='{_notification_text}', show_alert={{ entry.showAlert | to_python_boolean }}, is_fake={getattr(callback_query, '_is_fake', False)}")
         if getattr(callback_query, '_is_fake', False):
-            # Fake callback — невозможно показать alert, только логируем
-            logging.warning(f"⚠️ answer_callback_query [{{ entry.nodeId }}]: пропущен — callback_query fake (вход через текстовый триггер), текст: '{_notification_text}'")
+            # Fake callback — отправляем как обычное сообщение (вход через текстовый триггер)
+            logging.info(f"⚠️ answer_callback_query [{{ entry.nodeId }}]: fake callback — отправляем как сообщение для {user_id}")
+            try:
+                await callback_query.message.answer(_notification_text)
+            except Exception as _msg_err:
+                logging.warning(f"⚠️ answer_callback_query [{{ entry.nodeId }}]: не удалось отправить сообщение: {_msg_err}")
         else:
             await callback_query.answer(text=_notification_text, show_alert={{ entry.showAlert | to_python_boolean }}, cache_time={{ entry.cacheTime }})
             logging.info(f"✅ answer_callback_query [{{ entry.nodeId }}]: alert отправлен для {user_id}")
