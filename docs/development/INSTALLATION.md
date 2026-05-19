@@ -486,12 +486,7 @@ cd telegram-bot-builder
 <details>
 <summary><strong>Шаг 8: Настройка окружения</strong></summary>
 
-**Пример `.env` для всех систем:**
-```env
-NODE_ENV=development
-PORT=5000
-DATABASE_URL=postgresql://tbb:builder2025!@localhost:5432/telegram_bot_builder
-```
+**1. Скопируйте шаблон:**
 
 <table>
 <tr>
@@ -526,6 +521,23 @@ nano .env
 </td>
 </tr>
 </table>
+
+**2. Минимальные переменные для локальной разработки:**
+
+```env
+NODE_ENV=development
+PORT=5000
+HOST=0.0.0.0
+SESSION_SECRET=change-this-secret-in-production
+
+# PostgreSQL
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/telegram_bot_builder
+
+# Redis (Memurai на Windows, redis на Linux/macOS)
+REDIS_URL=redis://localhost:6379
+```
+
+> 💡 Telegram Login настраивается через Setup Wizard при первом запуске — вручную заполнять не нужно.
 
 </details>
 
