@@ -10,12 +10,14 @@ export const delayNode: ComponentDefinition = {
   id: 'delay-node',
   name: '⏱ Задержка',
   description: 'Пауза или фоновый таймер перед следующим действием',
-  icon: 'fas fa-hourglass-half',
+  icon: 'fas fa-stopwatch',
   color: 'bg-amber-100 text-amber-600',
   type: 'delay',
   defaultData: {
     /** Задержка в секундах (поддерживает {переменные}) */
     seconds: '3',
+    /** Единица измерения времени */
+    unit: 'seconds',
     /** Режим: blocking — пауза, background — фоновый таймер */
     mode: 'blocking',
     /** ID следующего узла для автоперехода */

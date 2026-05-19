@@ -478,6 +478,8 @@ export function getNodeDefaults(type: Node['type']): any {
     delay: {
       /** Задержка в секундах (поддерживает {переменные}) */
       seconds: '3',
+      /** Единица измерения времени */
+      unit: 'seconds',
       /** Режим: blocking — пауза, background — фоновый таймер */
       mode: 'blocking',
       /** ID следующего узла */

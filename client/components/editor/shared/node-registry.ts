@@ -322,10 +322,10 @@ export const nodeRegistry: Record<string, NodeMeta> = {
   },
   // Логика — задержка
   delay: {
-    name: '⏱ Задержка',
-    icon: 'fas fa-hourglass-half',
+    name: 'Задержка',
+    icon: 'fas fa-stopwatch',
     color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-    canvasColor: 'bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800',
+    canvasColor: 'bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-600 dark:text-amber-400 border-2 border-amber-300 dark:border-amber-700/50 shadow-lg shadow-amber-500/20',
   },
 };
 

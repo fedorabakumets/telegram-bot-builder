@@ -580,7 +580,7 @@ export function PropertiesPanel({
 
           {/* Delay Section */}
           {(selectedNode.type as any) === 'delay' && (
-            <DelayConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
+            <DelayConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} textVariables={textVariables as Variable[]} />
           )}
 
           {/* SQL Query Section */}
