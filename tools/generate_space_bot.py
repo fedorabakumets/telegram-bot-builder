@@ -1177,18 +1177,32 @@ def build_map() -> dict:
         }))
 
         # Списываем топливо и ставим timestamp полёта + целевую планету
+        # WHERE включает проверку flight_expires_at — атомарная защита от race condition
         nodes.append(node(f"fly-do-{planet['id']}", "bot_table", 1800, y_pos, {
             "tableName": "pilots",
             "operation": "update",
-            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+            "where": [
+                {"column": "telegram_id", "operator": "equals", "value": "{user_id}"},
+                {"column": "flight_expires_at", "operator": "is_empty", "value": ""},
+            ],
             "updates": [
                 {"column": "fuel", "op": "decrement", "value": "{flight_fuel}"},
                 {"column": "flight_expires_at", "op": "set", "value": "{flight_expires_at}"},
                 {"column": "flight_target_planet", "op": "set", "value": planet['id']},
                 {"column": "flight_target_name", "op": "set", "value": planet['full']},
             ],
-            "autoTransitionTo": f"msg-fly-start-{planet['id']}",
+            "saveResultTo": "fly_updated",
+            "autoTransitionTo": f"fly-cond-updated-{planet['id']}",
             "enableAutoTransition": True,
+        }))
+
+        # Проверяем сработал ли update (0 = уже в полёте, кто-то успел раньше)
+        nodes.append(node(f"fly-cond-updated-{planet['id']}", "condition", 2100, y_pos, {
+            "variable": "fly_updated",
+            "branches": [
+                branch(f"br-not-updated-{planet['id']}", "Не обновлено", "equals", "0", f"msg-fly-inflight-{planet['id']}"),
+                branch(f"br-updated-{planet['id']}", "Обновлено", "else", "", f"msg-fly-start-{planet['id']}"),
+            ],
         }))
 
         # Сообщение "Летим..."

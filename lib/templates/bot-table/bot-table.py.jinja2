@@ -309,6 +309,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                     _col_map = {str(c["id"]): c["name"] for c in _cols}
                     _name_to_id = {c["name"]: str(c["id"]) for c in _cols}
                     _rows = await conn.fetch("SELECT id, data FROM bot_table_rows WHERE table_id = $1", _tbl["id"])
+                    _bt_updated_count = 0
                     for _row in _rows:
                         _data = _row["data"] if isinstance(_row["data"], dict) else json.loads(_row["data"])
                         _named = {_col_map.get(k, k): str(v) if v is not None else "" for k, v in _data.items()}
@@ -346,6 +347,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
 {% endfor %}
                         if _match:
                             # Атомарное обновление через SQL
+                            _bt_updated_count += 1
 {% for upd in updates %}
                             _upd_col_id_{{ loop.index }} = _name_to_id.get("{{ upd.column }}", "")
                             if not _upd_col_id_{{ loop.index }}:
@@ -390,7 +392,10 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                     # Инвалидация кеша
                     global _bot_tables_cache
                     _bot_tables_cache = None
-                    logging.info(f"🗄️ bot_table [{{ nodeId }}]: update завершён")
+{% if saveResultTo %}
+                    user_data[user_id]["{{ saveResultTo }}"] = str(_bt_updated_count)
+{% endif %}
+                    logging.info(f"🗄️ bot_table [{{ nodeId }}]: update завершён, обновлено {_bt_updated_count} строк")
                 else:
                     logging.warning(f"🗄️ bot_table [{{ nodeId }}]: таблица '{_table_name}' не найдена")
 {% elif operation == 'insert' %}
