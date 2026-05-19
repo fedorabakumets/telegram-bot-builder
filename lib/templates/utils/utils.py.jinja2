@@ -303,10 +303,23 @@ def _eval_expr(template: str, user_vars: dict):
     import re as _re_expr, ast as _ast_expr
 
     def _replacer(match):
-        path = match.group(1).split('.')
+        full_path = match.group(1)
+        path = full_path.split('.')
+        # Сначала пробуем полный путь как плоский ключ (напр. "sell_item.quantity")
+        if full_path in user_vars:
+            val = user_vars[full_path]
+            if val is None or val == '':
+                return '0'
+            return str(val)
+        # Пробуем составные плоские ключи (напр. "pilot.credits" → ищем "pilot.credits")
         val = user_vars
         for key in path:
             if isinstance(val, dict):
+                # Сначала пробуем оставшийся путь как плоский ключ
+                remaining = '.'.join(path[path.index(key):])
+                if remaining in val:
+                    val = val[remaining]
+                    break
                 val = val.get(key, 0)
             else:
                 return '0'

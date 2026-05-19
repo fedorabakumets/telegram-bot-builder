@@ -740,18 +740,10 @@ def build_trade() -> dict:
             "enableAutoTransition": True,
         }))
 
-        # Устанавливаем цену продажи
+        # Устанавливаем цену и вычисляем доход (в одном узле — assignments последовательны)
         nodes.append(node(f"sell-set-price-{ore['id']}", "set_variable", 1000, y_pos, {
             "assignments": [
                 {"id": f"a-sell-price-{ore['id']}", "variable": "sell_price", "value": "{sell_ore.base_price_{pilot.current_planet}}", "mode": "text"},
-            ],
-            "autoTransitionTo": f"sell-set-income-{ore['id']}",
-            "enableAutoTransition": True,
-        }))
-
-        # Вычисляем доход (отдельный узел чтобы sell_price уже был установлен)
-        nodes.append(node(f"sell-set-income-{ore['id']}", "set_variable", 1300, y_pos, {
-            "assignments": [
                 {"id": f"a-sell-qty-{ore['id']}", "variable": "sell_qty", "value": "{sell_item.quantity}", "mode": "text"},
                 {"id": f"a-sell-income-{ore['id']}", "variable": "sell_income", "value": "{sell_item.quantity} * {sell_price}", "mode": "expression"},
             ],

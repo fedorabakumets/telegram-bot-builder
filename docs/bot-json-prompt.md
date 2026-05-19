@@ -1270,30 +1270,23 @@ GIN-индекс на `bot_table_rows.data` для быстрого поиска
 
 ## ⚠️ Частые ошибки и подводные камни
 
-### 1. set_variable: нельзя использовать переменную в том же узле где она устанавливается
+### 1. set_variable: вложенные переменные (obj.field) в mode expression
 
-**НЕПРАВИЛЬНО** — `sell_income` использует `{sell_price}`, который устанавливается в том же `set_variable`:
+При использовании `{obj.field}` в выражениях, переменные хранятся как плоские ключи (`sell_item.quantity`), а не как вложенные объекты. `_eval_expr` теперь корректно ищет сначала полный путь как плоский ключ.
+
+**Работает корректно:**
 ```json
 {
   "type": "set_variable",
   "data": {
     "assignments": [
-      { "id": "a1", "variable": "sell_price", "value": "50", "mode": "text" },
-      { "id": "a2", "variable": "sell_income", "value": "{quantity} * {sell_price}", "mode": "expression" }
+      { "id": "a1", "variable": "sell_price", "value": "{sell_ore.base_price_earth}", "mode": "text" },
+      { "id": "a2", "variable": "sell_income", "value": "{sell_item.quantity} * {sell_price}", "mode": "expression" }
     ]
   }
 }
 ```
-Результат: `sell_income = 0`, потому что `{sell_price}` ещё не существует на момент вычисления.
-
-**ПРАВИЛЬНО** — разделить на 2 узла:
-```json
-// Узел 1: установить цену
-{ "assignments": [{ "variable": "sell_price", "value": "50", "mode": "text" }], "autoTransitionTo": "node-2" }
-
-// Узел 2: вычислить доход (sell_price уже существует)
-{ "assignments": [{ "variable": "sell_income", "value": "{quantity} * {sell_price}", "mode": "expression" }] }
-```
+Каждый следующий assignment видит результат предыдущего (assignments выполняются последовательно).
 
 ### 2. bot_table upsert: ключ должен быть уникальным идентификатором записи
 
