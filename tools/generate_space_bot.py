@@ -460,12 +460,39 @@ def build_trade() -> dict:
         "where": [],
         "saveResultTo": "ores_list",
         "resultFormat": "all_rows",
+        "autoTransitionTo": "buy-set-prices",
+        "enableAutoTransition": True,
+    }))
+
+    # Вычисляем цены на текущей планете для каждой руды (для кнопок)
+    price_assignments = []
+    for ore in ORES:
+        price_assignments.append({
+            "id": f"a-price-{ore['id']}",
+            "variable": f"price_{ore['id']}",
+            "value": f"{{buy_ore_{ore['id']}.base_price_{{pilot.current_planet}}}}",
+            "mode": "text",
+        })
+    # Нужно сначала прочитать каждую руду — используем lookup из ores_list
+    lookup_assignments = []
+    for ore in ORES:
+        lookup_assignments.append({
+            "id": f"a-lk-{ore['id']}",
+            "variable": f"price_{ore['id']}",
+            "value": "",
+            "mode": "lookup",
+            "lookupTable": "ores",
+            "lookupField": f"base_price_{{pilot.current_planet}}",
+            "lookupWhere": [{"field": "id", "value": ore['id']}],
+        })
+
+    nodes.append(node("buy-set-prices", "set_variable", 900, 300, {
+        "assignments": lookup_assignments,
         "autoTransitionTo": "msg-buy-menu",
         "enableAutoTransition": True,
     }))
 
-    # Сообщение с inline-кнопками для покупки (8 руд)
-    # Цены показываются из base_price_{planet} — в будущем заменим на ore_prices
+    # Сообщение с inline-кнопками для покупки (8 руд с ценами)
     buy_text = (
         f"🛒 {MENTION}, руды на планете <b>{{pilot.current_planet}}</b>:\n\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
@@ -476,12 +503,12 @@ def build_trade() -> dict:
     for ore in ORES:
         buy_buttons.append({
             "id": f"btn-buy-{ore['id']}",
-            "text": f"{ore['emoji']} {ore['name']}",
+            "text": f"{ore['emoji']} {ore['name']} — {{price_{ore['id']}}} кр.",
             "action": "goto",
             "target": f"buy-check-{ore['id']}",
         })
 
-    nodes.append(node("msg-buy-menu", "message", 1000, 300, {
+    nodes.append(node("msg-buy-menu", "message", 1100, 300, {
         "messageText": buy_text,
         "formatMode": "html",
         "keyboardType": "inline",
@@ -655,33 +682,56 @@ def build_trade() -> dict:
         "variable": "pilot.cargo_used",
         "branches": [
             branch("br-sell-empty", "Пусто", "equals", "0", "msg-sell-empty"),
-            branch("br-sell-has", "Есть руда", "else", "", "msg-sell-menu"),
+            branch("br-sell-has", "Есть руда", "else", "", "sell-set-quantities"),
         ],
     }))
 
     nodes.append(node("msg-sell-empty", "message", 1300, 3850, {
         "messageText": "📦 Ваш трюм пуст! Нечего продавать.\n\nКупите руду на текущей планете.",
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    # Меню продажи — inline кнопки для каждой руды
+    # Вычисляем количество каждой руды в трюме (для кнопок)
+    qty_assignments = []
+    for ore in ORES:
+        qty_assignments.append({
+            "id": f"a-qty-{ore['id']}",
+            "variable": f"qty_{ore['id']}",
+            "value": "",
+            "mode": "lookup",
+            "lookupTable": "pilot_cargo",
+            "lookupField": "quantity",
+            "lookupWhere": [
+                {"field": "pilot_id", "value": "{user_id}"},
+                {"field": "ore_id", "value": ore['id']},
+            ],
+        })
+
+    nodes.append(node("sell-set-quantities", "set_variable", 1300, 4000, {
+        "assignments": qty_assignments,
+        "autoTransitionTo": "msg-sell-menu",
+        "enableAutoTransition": True,
+    }))
+
+    # Меню продажи — inline кнопки с количеством
     sell_text = (
         f"💰 {MENTION}, продажа руд:\n\n"
         "📍 Планета: <b>{{pilot.current_planet}}</b>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\n"
-        "Выберите руду для продажи (всё количество):"
+        "Выберите руду для продажи:"
     )
     sell_buttons = []
     for ore in ORES:
         sell_buttons.append({
             "id": f"btn-sell-{ore['id']}",
-            "text": f"{ore['emoji']} {ore['name']}",
+            "text": f"{ore['emoji']} {ore['name']} x{{qty_{ore['id']}}}",
             "action": "goto",
             "target": f"sell-check-{ore['id']}",
         })
 
-    nodes.append(node("msg-sell-menu", "message", 1300, 4000, {
+    nodes.append(node("msg-sell-menu", "message", 1600, 4000, {
         "messageText": sell_text,
         "formatMode": "html",
         "keyboardType": "inline",
