@@ -594,6 +594,46 @@ pip install -r requirements.txt
 
 </details>
 
+---
+
+<details>
+<summary><strong>Шаг 10: Настройка Telegram Login (Setup Wizard)</strong></summary>
+
+При первом открытии приложения появится Setup Wizard — он попросит ввести данные для авторизации через Telegram.
+
+**Как получить данные из BotFather:**
+
+**1.** Откройте [@BotFather](https://t.me/BotFather) → выберите бота → **Bot Settings** → **Login Widget**
+
+![Login Widget](../../assets/images/botfather-login-widget.png)
+
+**2.** Переключитесь на OIDC:
+
+![Switch to OIDC](../../assets/images/botfather-switch-to-oidc.png)
+
+**3.** Подтвердите переключение:
+
+![Confirm OIDC](../../assets/images/botfather-confirm-oidc.png)
+
+**4.** Скопируйте **Client ID** и **Client Secret**:
+
+![Client ID and Secret](../../assets/images/botfather-client-id-secret.png)
+
+**5.** Укажите Redirect URIs (адрес вашего приложения):
+
+![Redirect URIs](../../assets/images/botfather-redirect-uris.png)
+
+> Для локальной разработки: `http://localhost:5000`
+
+**6.** Введите полученные данные в Setup Wizard:
+- **Client ID** — числовой ID
+- **Client Secret** — секретный ключ
+- **Bot Username** — имя бота без @
+
+✅ После сохранения приложение готово к работе!
+
+</details>
+
 > 💡 **Нужно обновить проект?** См. [🔄 Как обновить проект с GitHub](HOW_TO_UPDATE.md)
 
 ---
