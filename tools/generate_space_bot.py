@@ -1030,17 +1030,33 @@ def build_map() -> dict:
             "buttons": [],
         }))
 
-        # Вычисляем стоимость перелёта (фиксированная для простоты — берём макс из всех маршрутов к этой планете)
-        # Для корректности нужно знать откуда летим — используем lookup
-        nodes.append(node(f"fly-set-cost-{planet['id']}", "set_variable", 1000, y_pos, {
-            "assignments": [
-                {"id": f"a-fuel-{planet['id']}", "variable": "flight_fuel", "value": "10", "mode": "text"},
-                {"id": f"a-time-{planet['id']}", "variable": "flight_time", "value": "120", "mode": "text"},
-                {"id": f"a-time-fmt-{planet['id']}", "variable": "flight_time_fmt", "value": "120", "mode": "format_duration"},
-            ],
-            "autoTransitionTo": f"fly-cond-fuel-{planet['id']}",
-            "enableAutoTransition": True,
+        # Вычисляем стоимость перелёта в зависимости от текущей планеты
+        # Condition по pilot.current_planet → разные стоимости
+        other_planets = [p for p in PLANETS if p['id'] != planet['id']]
+        cost_branches = []
+        for op in other_planets:
+            fuel, seconds = get_flight_cost(op['id'], planet['id'])
+            cost_branches.append(
+                branch(f"br-from-{op['id']}-to-{planet['id']}", f"С {op['name']}", "equals", op['id'], f"fly-cost-{op['id']}-{planet['id']}")
+            )
+
+        nodes.append(node(f"fly-set-cost-{planet['id']}", "condition", 1000, y_pos, {
+            "variable": "pilot.current_planet",
+            "branches": cost_branches,
         }))
+
+        # Для каждого маршрута — set_variable с конкретной стоимостью
+        for j, op in enumerate(other_planets):
+            fuel, seconds = get_flight_cost(op['id'], planet['id'])
+            nodes.append(node(f"fly-cost-{op['id']}-{planet['id']}", "set_variable", 1300, y_pos - 100 + j * 100, {
+                "assignments": [
+                    {"id": f"a-fuel-{op['id']}-{planet['id']}", "variable": "flight_fuel", "value": str(fuel), "mode": "text"},
+                    {"id": f"a-time-{op['id']}-{planet['id']}", "variable": "flight_time", "value": str(seconds), "mode": "text"},
+                    {"id": f"a-fmt-{op['id']}-{planet['id']}", "variable": "flight_time_fmt", "value": str(seconds), "mode": "format_duration"},
+                ],
+                "autoTransitionTo": f"fly-cond-fuel-{planet['id']}",
+                "enableAutoTransition": True,
+            }))
 
         # Проверка топлива
         nodes.append(node(f"fly-cond-fuel-{planet['id']}", "condition", 1300, y_pos, {
