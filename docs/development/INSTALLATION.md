@@ -599,7 +599,9 @@ pip install -r requirements.txt
 <details>
 <summary><strong>Шаг 10: Настройка Telegram Login (Setup Wizard)</strong></summary>
 
-При первом открытии приложения появится Setup Wizard — он попросит ввести данные для авторизации через Telegram.
+> ⚠️ **Для локальной разработки (`NODE_ENV=development`) этот шаг необязателен** — приложение работает без авторизации. Setup Wizard нужен только при деплое в продакшен.
+
+При первом открытии приложения в продакшене появится Setup Wizard — он попросит ввести данные для авторизации через Telegram.
 
 **Как получить данные из BotFather:**
 
