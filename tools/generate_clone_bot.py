@@ -14,6 +14,19 @@ from pathlib import Path
 # Вспомогательные функции
 # ============================================================
 
+def nick() -> str:
+    """
+    Возвращает HTML-ссылку на пользователя (как в оригинальном боте).
+    Формат: <a href='tg://user?id={user_id}'>{user.nickname}</a>
+    @returns строка-шаблон для подстановки в messageText
+    """
+    return "<a href='tg://user?id={user_id}'>{user.nickname}</a>"
+
+
+# Константа для удобства — HTML mention пользователя
+NICK = "<a href='tg://user?id={user_id}'>{user.nickname}</a>"
+
+
 def btn(btn_id: str, text: str, action: str = "goto", **kwargs) -> dict:
     """
     Создаёт объект кнопки.
@@ -321,7 +334,8 @@ def build_start_menu() -> dict:
         "enableAutoTransition": True,
     }))
     nodes.append(node("msg-earn-menu", "message", 700, 300, {
-        "messageText": "💸 {user.nickname}, меню заработка:",
+        "messageText": "💸 <a href='tg://user?id={user_id}'>{user.nickname}</a>, меню заработка:",
+        "formatMode": "html",
         "keyboardType": "reply",
         "buttons": [
             btn("btn-e-work", "🛠 Работа"),
@@ -362,7 +376,7 @@ def build_start_menu() -> dict:
     }))
     nodes.append(node("msg-games-menu", "message", 700, 500, {
         "messageText": (
-            "🎮 {user.nickname}, меню игр:\n\n"
+            "🎮 <a href='tg://user?id={user_id}'>{user.nickname}</a>, меню игр:\n\n"
             "🎲 💡 В чатах можно сыграть с другими игроками — Кости, Дуэль, Рулетка и др."
         ),
         "formatMode": "html",
@@ -409,7 +423,8 @@ def build_start_menu() -> dict:
         "enableAutoTransition": True,
     }))
     nodes.append(node("msg-prop-menu", "message", 700, 700, {
-        "messageText": "🌇 {user.nickname}, меню имущества:",
+        "messageText": "🌇 <a href='tg://user?id={user_id}'>{user.nickname}</a>, меню имущества:",
+        "formatMode": "html",
         "keyboardType": "reply",
         "buttons": [
             btn("btn-p-car", "🚘 Машина"),
@@ -450,7 +465,7 @@ def build_start_menu() -> dict:
     }))
     nodes.append(node("msg-profile", "message", 700, 900, {
         "messageText": (
-            "🧢 {user.nickname}, ваш профиль:\n\n"
+            "🧢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, ваш профиль:\n\n"
             "🌟 Уровень: {user.level} ({user.exp}/{user.exp_to_next})\n"
             "💰 Баланс: {user.balance}$\n\n"
             "👨\u200d🏭 Профессия: {user.profession}\n\n"
@@ -458,6 +473,7 @@ def build_start_menu() -> dict:
             "🆔 Игровой ид: {user.game_id}\n"
             "📚 Дата регистрации: {user.registered_at}"
         ),
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
@@ -487,15 +503,16 @@ def build_start_menu() -> dict:
     }))
     nodes.append(node("msg-no-clan", "message", 1000, 1200, {
         "messageText": (
-            "😢 {user.nickname}, вы не состоите в клане.\n\n"
+            "😢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, вы не состоите в клане.\n\n"
             "Используйте команду: 🛡 Клан вступить [ид клана]"
         ),
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
     nodes.append(node("msg-clan-info", "message", 1300, 1050, {
         "messageText": (
-            "❔ {user.nickname}, ваш клан:\n\n"
+            "❔ <a href='tg://user?id={user_id}'>{user.nickname}</a>, ваш клан:\n\n"
             "🎭 Название: {clan.name} (ID: {clan.id})\n"
             "⭐️ Уровень: {clan.level} ({clan.exp}/{clan.exp_to_next})\n"
             "💰 Казна: {clan.treasury}$\n"
@@ -504,6 +521,7 @@ def build_start_menu() -> dict:
             "🔓 Вход: {clan.entry_type}\n"
             "👑 Лидер клана: {clan.leader_name}"
         ),
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
             btn("btn-cl-season", "🏆 Сезон", target="msg-clan-season-wip"),
@@ -557,7 +575,8 @@ def build_start_menu() -> dict:
         "enableAutoTransition": True,
     }))
     nodes.append(node("msg-achiev", "message", 700, 1300, {
-        "messageText": "🏅 {user.nickname}, прогресс ваших достижений:",
+        "messageText": "🏅 <a href='tg://user?id={user_id}'>{user.nickname}</a>, прогресс ваших достижений:",
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
             btn("btn-ach-1", "🤺 Стажер года (0% / 100%)", target="msg-ach-wip"),
@@ -623,11 +642,12 @@ def build_start_menu() -> dict:
     }))
     nodes.append(node("msg-donate", "message", 700, 1700, {
         "messageText": (
-            "🍩 {user.nickname}, меню доната:\n\n"
+            "🍩 <a href='tg://user?id={user_id}'>{user.nickname}</a>, меню доната:\n\n"
             "💶 Ваш баланс: 0 QC\n\n"
             "❗ Приглашайте друзей и получайте 5% от их пополнений!\n"
             "❔ Пополните баланс или перейдите к выбору товара:"
         ),
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
             btn("btn-don-items", "🛍 Товары", target="msg-don-items-wip"),
@@ -673,7 +693,7 @@ def build_start_menu() -> dict:
     }))
     nodes.append(node("msg-referral", "message", 700, 1900, {
         "messageText": (
-            "🫶 {user.nickname}, зарабатывай, приглашая друзей:\n\n"
+            "🫶 <a href='tg://user?id={user_id}'>{user.nickname}</a>, зарабатывай, приглашая друзей:\n\n"
             "💰 Баланс: 0$\n"
             "💸 Всего заработано: 0$\n"
             "🧲 Приглашено друзей: 0\n\n"
@@ -685,6 +705,7 @@ def build_start_menu() -> dict:
             "• 🏖 1% — с каждой зарплаты друга\n"
             "• 💎 5% — с каждого доната друга"
         ),
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
             btn("btn-ref-share", "↪️ Поделиться", action="url",
@@ -722,7 +743,7 @@ def build_start_menu() -> dict:
         "autoTransitionTo": "msg-main-menu",
         "enableAutoTransition": True,
     }))
-    nodes.append(main_menu_msg("msg-main-menu", "📖 {user.nickname}, вы вернулись в меню:", 700, 2100))
+    nodes.append(main_menu_msg("msg-main-menu", "📖 <a href='tg://user?id={user_id}'>{user.nickname}</a>, вы вернулись в меню:", 700, 2100))
 
     return {
         "id": "sheet-start-menu",
@@ -797,9 +818,10 @@ def build_earning() -> dict:
     # Сообщение о кулдауне
     nodes.append(node("msg-work-cd", "message", 1000, -200, {
         "messageText": (
-            "😨 {user.nickname}, следующая смена через: ...\n\n"
+            "😨 <a href='tg://user?id={user_id}'>{user.nickname}</a>, следующая смена через: ...\n\n"
             "⏳ Подождите окончания кулдауна."
         ),
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
@@ -828,7 +850,8 @@ def build_earning() -> dict:
 
     # Мини-игра: сообщение с динамическими кнопками (shuffle + 4 колонки)
     nodes.append(node("msg-work-game", "message", 1300, 0, {
-        "messageText": "🏖 {user.nickname}, рабочая смена началась!\n\n❔ Нажмите на смайлик «{target_emoji}»:",
+        "messageText": "🏖 <a href='tg://user?id={user_id}'>{user.nickname}</a>, рабочая смена началась!\n\n❔ Нажмите на смайлик «{target_emoji}»:",
+        "formatMode": "html",
         "keyboardType": "inline",
         "shuffleButtons": True,
         "enableDynamicButtons": True,
@@ -982,7 +1005,8 @@ def build_earning() -> dict:
 
     # Сообщение о повышении уровня
     nodes.append(node("msg-level-up", "message", 3700, -200, {
-        "messageText": "🎉 {user.nickname}, поздравляем! Вы достигли {user.level} уровня!",
+        "messageText": "🎉 <a href='tg://user?id={user_id}'>{user.nickname}</a>, поздравляем! Вы достигли {user.level} уровня!",
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
         "autoTransitionTo": "msg-work-success",
@@ -992,11 +1016,12 @@ def build_earning() -> dict:
     # Сообщение об успешной работе
     nodes.append(node("msg-work-success", "message", 2800, 0, {
         "messageText": (
-            "🤩 {user.nickname}, смена завершена!\n\n"
+            "🤩 <a href='tg://user?id={user_id}'>{user.nickname}</a>, смена завершена!\n\n"
             "💲 Зарплата: 700$\n"
             "⭐ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +12 exp\n\n"
             "😨 Следующая смена через: 01:30"
         ),
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
         "autoTransitionTo": "delay-cd-notify",
@@ -1014,7 +1039,8 @@ def build_earning() -> dict:
 
     # Уведомление после кулдауна
     nodes.append(node("msg-cd-notify", "message", 3400, 0, {
-        "messageText": "🔔 {user.nickname}, вы можете начать новую рабочую смену.",
+        "messageText": "🔔 <a href='tg://user?id={user_id}'>{user.nickname}</a>, вы можете начать новую рабочую смену.",
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
             btn("btn-work-again", "🏖 Работать", target="set-now-ts"),
@@ -1048,10 +1074,11 @@ def build_earning() -> dict:
     # Неправильный ответ
     nodes.append(node("msg-work-fail", "message", 1900, 200, {
         "messageText": (
-            "😢 {user.nickname}, к сожалению, вы нажали на неверный смайлик.\n"
+            "😢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, к сожалению, вы нажали на неверный смайлик.\n"
             "Рабочая смена завершена\n"
             "😨 Начать новую смену можно через: 01:30"
         ),
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
@@ -1081,7 +1108,7 @@ def build_earning() -> dict:
     }))
     nodes.append(node("msg-mine-locked", "message", 1000, 500, {
         "messageText": (
-            "😢 {user.nickname}, <b>🌋 шахта</b> станет доступна после достижения "
+            "😢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, <b>🌋 шахта</b> станет доступна после достижения "
             "<b>⭐3-го уровня</b>. Уровень можно повысить выполняя разную активность."
         ),
         "formatMode": "html",
@@ -1119,7 +1146,7 @@ def build_earning() -> dict:
     }))
     nodes.append(node("msg-fish-locked", "message", 1000, 700, {
         "messageText": (
-            "☹️ {user.nickname}, <b>🎣 Рыбалка</b> станет доступна после достижения "
+            "☹️ <a href='tg://user?id={user_id}'>{user.nickname}</a>, <b>🎣 Рыбалка</b> станет доступна после достижения "
             "<b>⭐7-го уровня</b>. Уровень можно повысить выполняя разную активность."
         ),
         "formatMode": "html",
@@ -1157,7 +1184,7 @@ def build_earning() -> dict:
     }))
     nodes.append(node("msg-ranch-locked", "message", 1000, 900, {
         "messageText": (
-            "☹️ {user.nickname}, <b>🏞 ранчо</b> станет доступно после достижения "
+            "☹️ <a href='tg://user?id={user_id}'>{user.nickname}</a>, <b>🏞 ранчо</b> станет доступно после достижения "
             "<b>⭐15-го уровня</b>. Уровень можно повысить выполняя разную активность."
         ),
         "formatMode": "html",
@@ -1187,7 +1214,8 @@ def build_earning() -> dict:
         "enableAutoTransition": True,
     }))
     nodes.append(node("msg-crates", "message", 700, 1000, {
-        "messageText": "😔 {user.nickname}, к сожалению, у вас еще нет ящиков. Их можно получить за разные активности.",
+        "messageText": "😔 <a href='tg://user?id={user_id}'>{user.nickname}</a>, к сожалению, у вас еще нет ящиков. Их можно получить за разные активности.",
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
@@ -1209,7 +1237,8 @@ def build_earning() -> dict:
         "enableAutoTransition": True,
     }))
     nodes.append(node("msg-no-biz", "message", 700, 1200, {
-        "messageText": "😓 {user.nickname}, У вас нет бизнеса.",
+        "messageText": "😓 <a href='tg://user?id={user_id}'>{user.nickname}</a>, У вас нет бизнеса.",
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [btn("btn-biz-catalog", "🛍 Каталог бизнесов", target="msg-biz-catalog-wip")],
     }))
@@ -1222,7 +1251,7 @@ def build_earning() -> dict:
     # === Общая заглушка «Как повысить уровень» ===
     nodes.append(node("msg-how-level", "message", 1300, 600, {
         "messageText": (
-            "📈 {user.nickname}, как повысить уровень?\n\n"
+            "📈 <a href='tg://user?id={user_id}'>{user.nickname}</a>, как повысить уровень?\n\n"
             "💡 <b>Как работает система уровней?</b>\n"
             "⠀- Чтобы повысить уровень, вам нужно набрать <b>очки опыта (EXP)</b>.\n"
             "⠀- С каждым новым уровнем потребуется все больше EXP для перехода на следующий.\n\n"
@@ -1361,11 +1390,12 @@ def build_property() -> dict:
     }))
     nodes.append(node("msg-shop", "message", 700, 600, {
         "messageText": (
-            "🛒 {user.nickname}, разделы магазина:\n"
+            "🛒 <a href='tg://user?id={user_id}'>{user.nickname}</a>, разделы магазина:\n"
             "⠀⠀- 🚘 Машины\n"
             "⠀⠀- 🏡 Дома\n"
             "⠀⠀- 💼 Бизнесы"
         ),
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
             btn("btn-shop-cars", "🚘 Машины", target="msg-shop-cars-wip"),
@@ -1468,7 +1498,7 @@ def build_help() -> dict:
     # --- Первое сообщение с inline-кнопками (target → edit_message ноды) ---
     nodes.append(node("msg-help", "message", 700, 0, {
         "messageText": (
-            "📚 {user.nickname}, выберите раздел с командами:\n"
+            "📚 <a href='tg://user?id={user_id}'>{user.nickname}</a>, выберите раздел с командами:\n"
             "⠀- ⭐️ <b>Основное</b>\n"
             "⠀- 💸 <b>Заработок</b>\n"
             "⠀- 🎮 <b>Игры</b>\n"
@@ -1519,7 +1549,7 @@ def build_help() -> dict:
     nodes.append(node("edit-help-basic", "edit_message", 1000, 0, {
         "editMode": "both",
         "editMessageText": (
-            "⭐️ {user.nickname}, список команд из раздела \"<b>Основное</b>\":\n"
+            "⭐️ <a href='tg://user?id={user_id}'>{user.nickname}</a>, список команд из раздела \"<b>Основное</b>\":\n"
             "⠀- 👤 <b>Профиль</b> - <code>ваш профиль</code>\n"
             "⠀- 🛡 <b>Клан</b> - <code>ваш клан</code>\n"
             "⠀- 👥 <b>Рефералы</b> - <code>деньги за друзей</code>\n"
@@ -1545,7 +1575,7 @@ def build_help() -> dict:
     nodes.append(node("edit-help-earning", "edit_message", 1000, 200, {
         "editMode": "both",
         "editMessageText": (
-            "💸 {user.nickname}, список команд из раздела \"<b>Заработок</b>\":\n"
+            "💸 <a href='tg://user?id={user_id}'>{user.nickname}</a>, список команд из раздела \"<b>Заработок</b>\":\n"
             "⠀- 🛠 <b>Работать</b> - <code>начать работу</code>\n"
             "⠀- 👔 <b>Работы</b> - <code>список работ</code>\n"
             "⠀- 🌋 <b>Шахта</b> - <code>сходить в шахту</code>\n"
@@ -1569,7 +1599,7 @@ def build_help() -> dict:
     nodes.append(node("edit-help-games", "edit_message", 1000, 400, {
         "editMode": "both",
         "editMessageText": (
-            "🎮 {user.nickname}, список команд из раздела \"<b>Игры</b>\":\n"
+            "🎮 <a href='tg://user?id={user_id}'>{user.nickname}</a>, список команд из раздела \"<b>Игры</b>\":\n"
             "⠀- 🎰 <b>Слоты</b>\n"
             "⠀- 💣 <b>Мины</b>\n"
             "⠀- 🪙 <b>Монетка</b>\n"
@@ -1600,7 +1630,7 @@ def build_help() -> dict:
     nodes.append(node("edit-help-property", "edit_message", 1000, 600, {
         "editMode": "both",
         "editMessageText": (
-            "🌆 {user.nickname}, список команд из раздела \"<b>Имущество</b>\":\n"
+            "🌆 <a href='tg://user?id={user_id}'>{user.nickname}</a>, список команд из раздела \"<b>Имущество</b>\":\n"
             "⠀- 🚘 <b>Машина</b>\n"
             "⠀- 🏠 <b>Дом</b>\n"
             "⠀- 💹 <b>Бизнес</b>\n"
@@ -1619,7 +1649,7 @@ def build_help() -> dict:
     nodes.append(node("edit-help-other", "edit_message", 1000, 800, {
         "editMode": "both",
         "editMessageText": (
-            "☁️ {user.nickname}, список команд из раздела \"<b>Прочее</b>\":\n"
+            "☁️ <a href='tg://user?id={user_id}'>{user.nickname}</a>, список команд из раздела \"<b>Прочее</b>\":\n"
             "⠀- 🏆 <b>Топ</b> - <code>богатые игроки</code>\n"
             "⠀- ✏️ <b>Ник</b> - <code>изменить имя</code>\n"
             "⠀- 💰 <b>Баланс</b> - <code>ваш баланс</code>\n\n"
@@ -1656,11 +1686,12 @@ def build_help() -> dict:
     }))
     nodes.append(node("msg-faq", "message", 700, 1000, {
         "messageText": (
-            "📒 {user.nickname}, меню справочника:\n\n"
+            "📒 <a href='tg://user?id={user_id}'>{user.nickname}</a>, меню справочника:\n\n"
             "Здесь вы найдёте ответы на все вопросы об игровых системах.\n"
             "🔓 Некоторые разделы становятся доступны только после достижения определённого уровня.\n\n"
             "🔽 Выбери интересующий раздел с помощью кнопок ниже:"
         ),
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
             btn("btn-faq-vip", "💎 VIP", target="msg-faq-vip-wip"),
@@ -1724,7 +1755,7 @@ def build_basic() -> dict:
     }))
     nodes.append(node("msg-referals", "message", 700, 0, {
         "messageText": (
-            "🫶 {user.nickname}, зарабатывай, приглашая друзей:\n\n"
+            "🫶 <a href='tg://user?id={user_id}'>{user.nickname}</a>, зарабатывай, приглашая друзей:\n\n"
             "💰 Баланс: 0$\n"
             "💸 Всего заработано: 0$\n"
             "🧲 Приглашено друзей: 0\n\n"
@@ -1736,6 +1767,7 @@ def build_basic() -> dict:
             "• 🏖 1% — с каждой зарплаты друга\n"
             "• 💎 5% — с каждого доната друга"
         ),
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
             btn("btn-ref2-share", "↪️ Поделиться", action="url",
@@ -1774,7 +1806,8 @@ def build_basic() -> dict:
         "enableAutoTransition": True,
     }))
     nodes.append(node("msg-bonus", "message", 700, 200, {
-        "messageText": "😓 {user.nickname}, необходимо подписаться на наш канал, чтобы получать ежедневный бонус:",
+        "messageText": "😓 <a href='tg://user?id={user_id}'>{user.nickname}</a>, необходимо подписаться на наш канал, чтобы получать ежедневный бонус:",
+        "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
             btn("btn-bonus-sub", "✅ Подписаться", action="url", url="https://t.me/qalais_news"),
