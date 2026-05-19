@@ -183,7 +183,7 @@ export function KeyboardNodeProperties({
             />
           )}
           {/* Перемешивание кнопок */}
-          {selectedNode.data.keyboardType === 'inline' && buttons.length > 1 && (
+          {selectedNode.data.keyboardType === 'inline' && (buttons.length > 1 || enableDynamicButtons) && (
             <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/30 dark:border-amber-800/30">
               <label htmlFor="shuffleButtons" className="text-xs font-medium text-amber-800 dark:text-amber-200 cursor-pointer">
                 🔀 Перемешивать кнопки
