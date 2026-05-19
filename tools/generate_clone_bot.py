@@ -1418,7 +1418,9 @@ def build_clan() -> dict:
 
 def build_help() -> dict:
     """
-    Строит лист «📖 Справка» с /help, разделами команд и /faq.
+    Строит лист «📖 Справка» с /help, разделами команд (edit_message) и /faq.
+    Разделы (⭐️💸🎮🌆☁️) обновляют текст и кнопки того же сообщения
+    через edit_message ноды вместо отдельных message-нод.
     @returns словарь листа
     """
     nodes = []
@@ -1440,6 +1442,8 @@ def build_help() -> dict:
         "autoTransitionTo": "msg-help",
         "enableAutoTransition": True,
     }))
+
+    # --- Первое сообщение с inline-кнопками (target → edit_message ноды) ---
     nodes.append(node("msg-help", "message", 700, 0, {
         "messageText": (
             "📚 {user.nickname}, выберите раздел с командами:\n"
@@ -1452,11 +1456,11 @@ def build_help() -> dict:
         ),
         "keyboardType": "inline",
         "buttons": [
-            btn("btn-help-basic", "⭐️", target="msg-help-basic"),
-            btn("btn-help-earn", "💸", target="msg-help-earning"),
-            btn("btn-help-games", "🎮", target="msg-help-games"),
-            btn("btn-help-prop", "🌆", target="msg-help-property"),
-            btn("btn-help-other", "☁️", target="msg-help-other"),
+            btn("btn-help-basic", "⭐️", target="edit-help-basic"),
+            btn("btn-help-earn", "💸", target="edit-help-earning"),
+            btn("btn-help-games", "🎮", target="edit-help-games"),
+            btn("btn-help-prop", "🌆", target="edit-help-property"),
+            btn("btn-help-other", "☁️", target="edit-help-other"),
         ],
         "keyboardLayout": {
             "autoLayout": False,
@@ -1468,9 +1472,30 @@ def build_help() -> dict:
         },
     }))
 
-    # === Раздел ⭐️ Основное ===
-    nodes.append(node("msg-help-basic", "message", 1000, 0, {
-        "messageText": (
+    # --- Keyboard-нода с навигационными кнопками (переиспользуется edit_message нодами) ---
+    nodes.append(node("kbd-help-nav", "keyboard", 1000, -200, {
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-nav-star", "⭐️", target="edit-help-basic"),
+            btn("btn-nav-earn", "💸", target="edit-help-earning"),
+            btn("btn-nav-game", "🎮", target="edit-help-games"),
+            btn("btn-nav-prop", "🌆", target="edit-help-property"),
+            btn("btn-nav-misc", "☁️", target="edit-help-other"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-nav-star", "btn-nav-earn", "btn-nav-game"]},
+                {"buttonIds": ["btn-nav-prop", "btn-nav-misc"]},
+            ],
+        },
+    }))
+
+    # === edit_message: ⭐️ Основное ===
+    nodes.append(node("edit-help-basic", "edit_message", 1000, 0, {
+        "editMode": "both",
+        "editMessageText": (
             "⭐️ {user.nickname}, список команд из раздела \"Основное\":\n"
             "⠀- 👤 Профиль - ваш профиль\n"
             "⠀- 🛡 Клан - ваш клан\n"
@@ -1484,27 +1509,19 @@ def build_help() -> dict:
             "⠀- 🍩 Донат\n"
             "⠀- 📜 Правила"
         ),
-        "keyboardType": "inline",
-        "buttons": [
-            btn("btn-hb-basic", "⭐️", target="msg-help-basic"),
-            btn("btn-hb-earn", "💸", target="msg-help-earning"),
-            btn("btn-hb-games", "🎮", target="msg-help-games"),
-            btn("btn-hb-prop", "🌆", target="msg-help-property"),
-            btn("btn-hb-other", "☁️", target="msg-help-other"),
-        ],
-        "keyboardLayout": {
-            "autoLayout": False,
-            "columns": 3,
-            "rows": [
-                {"buttonIds": ["btn-hb-basic", "btn-hb-earn", "btn-hb-games"]},
-                {"buttonIds": ["btn-hb-prop", "btn-hb-other"]},
-            ],
-        },
+        "editFormatMode": "none",
+        "editMessageIdSource": "last_bot_message",
+        "editMessageIdManual": "",
+        "editKeyboardMode": "node",
+        "editKeyboardNodeId": "kbd-help-nav",
+        "autoTransitionTo": "",
+        "enableAutoTransition": False,
     }))
 
-    # === Раздел 💸 Заработок ===
-    nodes.append(node("msg-help-earning", "message", 1000, 200, {
-        "messageText": (
+    # === edit_message: 💸 Заработок ===
+    nodes.append(node("edit-help-earning", "edit_message", 1000, 200, {
+        "editMode": "both",
+        "editMessageText": (
             "💸 {user.nickname}, список команд из раздела \"Заработок\":\n"
             "⠀- 🛠 Работать - начать работу\n"
             "⠀- 👔 Работы - список работ\n"
@@ -1516,27 +1533,19 @@ def build_help() -> dict:
             "⠀- 💹 Бизнес - меню бизнеса\n"
             "⠀- 🏦 Вклады - открыть вклад"
         ),
-        "keyboardType": "inline",
-        "buttons": [
-            btn("btn-he-basic", "⭐️", target="msg-help-basic"),
-            btn("btn-he-earn", "💸", target="msg-help-earning"),
-            btn("btn-he-games", "🎮", target="msg-help-games"),
-            btn("btn-he-prop", "🌆", target="msg-help-property"),
-            btn("btn-he-other", "☁️", target="msg-help-other"),
-        ],
-        "keyboardLayout": {
-            "autoLayout": False,
-            "columns": 3,
-            "rows": [
-                {"buttonIds": ["btn-he-basic", "btn-he-earn", "btn-he-games"]},
-                {"buttonIds": ["btn-he-prop", "btn-he-other"]},
-            ],
-        },
+        "editFormatMode": "none",
+        "editMessageIdSource": "last_bot_message",
+        "editMessageIdManual": "",
+        "editKeyboardMode": "node",
+        "editKeyboardNodeId": "kbd-help-nav",
+        "autoTransitionTo": "",
+        "enableAutoTransition": False,
     }))
 
-    # === Раздел 🎮 Игры ===
-    nodes.append(node("msg-help-games", "message", 1000, 400, {
-        "messageText": (
+    # === edit_message: 🎮 Игры ===
+    nodes.append(node("edit-help-games", "edit_message", 1000, 400, {
+        "editMode": "both",
+        "editMessageText": (
             "🎮 {user.nickname}, список команд из раздела \"Игры\":\n"
             "⠀- 🎰 Слоты\n"
             "⠀- 💣 Мины\n"
@@ -1555,54 +1564,38 @@ def build_help() -> dict:
             "⠀- 🗼 Башня\n"
             "⠀- 🔑 Сейф [10-99]"
         ),
-        "keyboardType": "inline",
-        "buttons": [
-            btn("btn-hg-basic", "⭐️", target="msg-help-basic"),
-            btn("btn-hg-earn", "💸", target="msg-help-earning"),
-            btn("btn-hg-games", "🎮", target="msg-help-games"),
-            btn("btn-hg-prop", "🌆", target="msg-help-property"),
-            btn("btn-hg-other", "☁️", target="msg-help-other"),
-        ],
-        "keyboardLayout": {
-            "autoLayout": False,
-            "columns": 3,
-            "rows": [
-                {"buttonIds": ["btn-hg-basic", "btn-hg-earn", "btn-hg-games"]},
-                {"buttonIds": ["btn-hg-prop", "btn-hg-other"]},
-            ],
-        },
+        "editFormatMode": "none",
+        "editMessageIdSource": "last_bot_message",
+        "editMessageIdManual": "",
+        "editKeyboardMode": "node",
+        "editKeyboardNodeId": "kbd-help-nav",
+        "autoTransitionTo": "",
+        "enableAutoTransition": False,
     }))
 
-    # === Раздел 🌆 Имущество ===
-    nodes.append(node("msg-help-property", "message", 1000, 600, {
-        "messageText": (
+    # === edit_message: 🌆 Имущество ===
+    nodes.append(node("edit-help-property", "edit_message", 1000, 600, {
+        "editMode": "both",
+        "editMessageText": (
             "🌆 {user.nickname}, список команд из раздела \"Имущество\":\n"
             "⠀- 🚘 Машина\n"
             "⠀- 🏠 Дом\n"
             "⠀- 💹 Бизнес\n"
             "⠀- 🪫 Ферма"
         ),
-        "keyboardType": "inline",
-        "buttons": [
-            btn("btn-hp-basic", "⭐️", target="msg-help-basic"),
-            btn("btn-hp-earn", "💸", target="msg-help-earning"),
-            btn("btn-hp-games", "🎮", target="msg-help-games"),
-            btn("btn-hp-prop", "🌆", target="msg-help-property"),
-            btn("btn-hp-other", "☁️", target="msg-help-other"),
-        ],
-        "keyboardLayout": {
-            "autoLayout": False,
-            "columns": 3,
-            "rows": [
-                {"buttonIds": ["btn-hp-basic", "btn-hp-earn", "btn-hp-games"]},
-                {"buttonIds": ["btn-hp-prop", "btn-hp-other"]},
-            ],
-        },
+        "editFormatMode": "none",
+        "editMessageIdSource": "last_bot_message",
+        "editMessageIdManual": "",
+        "editKeyboardMode": "node",
+        "editKeyboardNodeId": "kbd-help-nav",
+        "autoTransitionTo": "",
+        "enableAutoTransition": False,
     }))
 
-    # === Раздел ☁️ Прочее ===
-    nodes.append(node("msg-help-other", "message", 1000, 800, {
-        "messageText": (
+    # === edit_message: ☁️ Прочее ===
+    nodes.append(node("edit-help-other", "edit_message", 1000, 800, {
+        "editMode": "both",
+        "editMessageText": (
             "☁️ {user.nickname}, список команд из раздела \"Прочее\":\n"
             "⠀- 🏆 Топ - богатые игроки\n"
             "⠀- ✏️ Ник - изменить имя\n"
@@ -1612,22 +1605,13 @@ def build_help() -> dict:
             "⠀- 🎁 Промокод\n"
             "⠀- 🌀 Упоминания [вкл/выкл]"
         ),
-        "keyboardType": "inline",
-        "buttons": [
-            btn("btn-ho-basic", "⭐️", target="msg-help-basic"),
-            btn("btn-ho-earn", "💸", target="msg-help-earning"),
-            btn("btn-ho-games", "🎮", target="msg-help-games"),
-            btn("btn-ho-prop", "🌆", target="msg-help-property"),
-            btn("btn-ho-other", "☁️", target="msg-help-other"),
-        ],
-        "keyboardLayout": {
-            "autoLayout": False,
-            "columns": 3,
-            "rows": [
-                {"buttonIds": ["btn-ho-basic", "btn-ho-earn", "btn-ho-games"]},
-                {"buttonIds": ["btn-ho-prop", "btn-ho-other"]},
-            ],
-        },
+        "editFormatMode": "none",
+        "editMessageIdSource": "last_bot_message",
+        "editMessageIdManual": "",
+        "editKeyboardMode": "node",
+        "editKeyboardNodeId": "kbd-help-nav",
+        "autoTransitionTo": "",
+        "enableAutoTransition": False,
     }))
 
     # === /faq ===
