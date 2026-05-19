@@ -554,7 +554,7 @@ def build_trade() -> dict:
                 {"column": "credits", "op": "decrement", "value": "{ore_price}"},
                 {"column": "cargo_used", "op": "increment", "value": "1"},
             ],
-            "autoTransitionTo": f"buy-cargo-upsert-{ore['id']}",
+            "autoTransitionTo": f"buy-cargo-check-{ore['id']}",
             "enableAutoTransition": True,
         }))
 
