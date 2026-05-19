@@ -527,8 +527,6 @@ nano .env
 ```env
 NODE_ENV=development
 PORT=5000
-HOST=0.0.0.0
-SESSION_SECRET=change-this-secret-in-production
 
 # PostgreSQL
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/telegram_bot_builder
