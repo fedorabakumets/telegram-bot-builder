@@ -239,6 +239,9 @@
 
 Операторы: `equals`, `not_equals`, `contains`, `not_contains`, `greater_than`, `less_than`, `is_empty`, `is_not_empty`, `else`
 
+Значения в `value` и `value2` поддерживают переменные: `{user.balance}`, `{item.price}`, `{now_ts}` и т.д.
+Переменные раскрываются в рантайме через `replace_variables_in_text`.
+
 ### set_variable — установка переменных
 
 Узел для задания, изменения и вычисления переменных без HTTP-запроса.
