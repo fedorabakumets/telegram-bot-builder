@@ -1029,9 +1029,17 @@ def build_map() -> dict:
         nodes.append(node(f"fly-cond-inflight-check-{planet['id']}", "condition", 700, y_pos - 60, {
             "variable": "pilot.flight_expires_at",
             "branches": [
-                branch(f"br-no-flight-{planet['id']}", "Нет полёта", "is_empty", "", f"fly-cond-same-{planet['id']}"),
-                branch(f"br-flight-expired-{planet['id']}", "Истёк", "less_than", "{now_ts}", f"fly-recover-{planet['id']}"),
-                branch(f"br-inflight-{planet['id']}", "В полёте", "else", "", f"msg-fly-inflight-{planet['id']}"),
+                branch(f"br-inflight-{planet['id']}", "В полёте", "greater_than", "{now_ts}", f"msg-fly-inflight-{planet['id']}"),
+                branch(f"br-flight-expired-{planet['id']}", "Истёк/нет", "else", "", f"fly-recover-check-{planet['id']}"),
+            ],
+        }))
+
+        # Проверяем нужно ли восстановление (есть ли flight_target_planet)
+        nodes.append(node(f"fly-recover-check-{planet['id']}", "condition", 700, y_pos + 30, {
+            "variable": "pilot.flight_target_planet",
+            "branches": [
+                branch(f"br-need-recover-{planet['id']}", "Нужно восстановить", "is_not_empty", "", f"fly-recover-{planet['id']}"),
+                branch(f"br-no-recover-{planet['id']}", "Свободен", "else", "", f"fly-cond-same-{planet['id']}"),
             ],
         }))
 
@@ -1052,7 +1060,8 @@ def build_map() -> dict:
         }))
 
         nodes.append(node(f"msg-fly-inflight-{planet['id']}", "message", 700, y_pos - 160, {
-            "messageText": "🚀 Вы уже в полёте! Дождитесь прибытия.",
+            "messageText": "🚀 Вы в полёте на <b>{pilot.flight_target_name}</b>!\n\nДождитесь прибытия.",
+            "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
         }))
