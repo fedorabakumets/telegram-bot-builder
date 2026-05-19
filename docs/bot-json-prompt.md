@@ -552,6 +552,43 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 | `autoTransitionTo` | Первый узел тела цикла |
 | `afterLoopTo` | Узел после завершения цикла |
 
+### delay — задержка
+
+```json
+{
+  "type": "delay",
+  "data": {
+    "seconds": "90",
+    "unit": "seconds",
+    "mode": "blocking",
+    "autoTransitionTo": "next_node_id",
+    "enableAutoTransition": true
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `seconds` | Значение задержки (поддерживает {переменные}) |
+| `unit` | Единица: `"seconds"`, `"minutes"`, `"hours"`, `"days"`, `"weeks"` |
+| `mode` | `"blocking"` — пауза (ждёт), `"background"` — фоновый таймер (цепочка завершается) |
+
+Режим `blocking`: `await asyncio.sleep(N)` → переход к следующему узлу.
+Режим `background`: `asyncio.create_task()` → переход через N времени, текущая цепочка завершается сразу.
+
+Пример: уведомление после кулдауна:
+```json
+{
+  "type": "delay",
+  "data": {
+    "seconds": "90",
+    "unit": "seconds",
+    "mode": "background",
+    "autoTransitionTo": "msg-cd-notify"
+  }
+}
+```
+
 ### input — ожидать ввод пользователя
 
 ```json
