@@ -962,17 +962,57 @@ def build_map() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "pilot",
         "resultFormat": "first_row",
-        "autoTransitionTo": "msg-map-menu",
+        "autoTransitionTo": "map-set-now",
         "enableAutoTransition": True,
     }))
 
+    # Проверяем в полёте ли мы (для отображения разного текста)
+    nodes.append(node("map-set-now", "set_variable", 250, 0, {
+        "assignments": [
+            {"id": "a-map-now", "variable": "now_ts", "value": "0", "mode": "timestamp"},
+        ],
+        "autoTransitionTo": "map-cond-inflight",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("map-cond-inflight", "condition", 400, 0, {
+        "variable": "pilot.flight_expires_at",
+        "branches": [
+            branch("br-map-inflight", "В полёте", "greater_than", "{now_ts}", "msg-map-inflight"),
+            branch("br-map-free", "Свободен", "else", "", "msg-map-menu"),
+        ],
+    }))
+
+    # Сообщение карты когда В ПОЛЁТЕ
+    map_inflight_text = (
+        f"🗺 {MENTION}, карта галактики:\n\n"
+        "🚀 <b>В полёте на {pilot.flight_target_name}</b>\n"
+        "⛽ Топливо: <code>{pilot.fuel}</code>"
+    )
+    nodes.append(node("msg-map-inflight", "message", 700, -100, {
+        "messageText": map_inflight_text,
+        "formatMode": "html",
+        "keyboardType": "reply",
+        "buttons": [
+            btn("btn-m-back-inflight", "⬅️ Меню"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 1,
+            "rows": [
+                {"buttonIds": ["btn-m-back-inflight"]},
+            ],
+        },
+        "resizeKeyboard": True,
+    }))
+
+    # Сообщение карты когда НА ПЛАНЕТЕ
     map_menu_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
         "📍 Вы здесь: <b>{pilot.current_planet_name}</b>\n"
-        "⛽ Топливо: <code>{pilot.fuel}</code>\n"
-        "🚀 В полёте на: {pilot.flight_target_name}"
+        "⛽ Топливо: <code>{pilot.fuel}</code>"
     )
-    nodes.append(node("msg-map-menu", "message", 400, 0, {
+    nodes.append(node("msg-map-menu", "message", 700, 100, {
         "messageText": map_menu_text,
         "formatMode": "html",
         "keyboardType": "reply",
