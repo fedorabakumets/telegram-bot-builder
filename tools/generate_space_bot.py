@@ -162,6 +162,7 @@ def build_start_menu() -> dict:
             "nickname": "{first_name}",
             "credits": "500",
             "current_planet": "earth",
+            "current_planet_name": "🌍 Земля",
             "fuel": "50",
             "cargo_used": "0",
             "cargo_max": "10",
@@ -250,7 +251,7 @@ def build_start_menu() -> dict:
     # --- Приветственное сообщение с главным меню ---
     welcome_text = (
         f"🚀 Добро пожаловать на борт, {MENTION}!\n\n"
-        "📍 Планета: <b>{pilot.current_planet}</b>\n"
+        "📍 Планета: <b>{pilot.current_planet_name}</b>\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
@@ -322,7 +323,7 @@ def build_start_menu() -> dict:
 
     main_menu_text = (
         f"🚀 {MENTION}, главное меню:\n\n"
-        "📍 Планета: <b>{pilot.current_planet}</b>\n"
+        "📍 Планета: <b>{pilot.current_planet_name}</b>\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
@@ -357,7 +358,7 @@ def build_start_menu() -> dict:
         f"👤 {MENTION}, ваш профиль:\n\n"
         "🆔 ID: <code>{pilot.game_id}</code>\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
-        "🌍 Планета: <code>{pilot.current_planet}</code>\n"
+        "🌍 Планета: <code>{pilot.current_planet_name}</code>\n"
         "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>\n"
         "🌀 Фрагменты Эфира: <code>{pilot.fragments}</code>\n\n"
@@ -407,7 +408,7 @@ def build_trade() -> dict:
 
     trade_menu_text = (
         f"🛒 {MENTION}, меню торговли:\n\n"
-        "📍 Планета: <b>{pilot.current_planet}</b>\n"
+        "📍 Планета: <b>{pilot.current_planet_name}</b>\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
     )
@@ -494,7 +495,7 @@ def build_trade() -> dict:
 
     # Сообщение с inline-кнопками для покупки (8 руд с ценами)
     buy_text = (
-        f"🛒 {MENTION}, руды на планете <b>{{pilot.current_planet}}</b>:\n\n"
+        f"🛒 {MENTION}, руды на планете <b>{{pilot.current_planet_name}}</b>:\n\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\n"
         "Выберите руду для покупки (1 шт):"
@@ -718,7 +719,7 @@ def build_trade() -> dict:
     # Меню продажи — inline кнопки с количеством
     sell_text = (
         f"💰 {MENTION}, продажа руд:\n\n"
-        "📍 Планета: <b>{pilot.current_planet}</b>\n"
+        "📍 Планета: <b>{pilot.current_planet_name}</b>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\n"
         "Выберите руду для продажи:"
     )
@@ -922,7 +923,7 @@ def build_map() -> dict:
 
     map_menu_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
-        "📍 Вы здесь: <b>{pilot.current_planet}</b>"
+        "📍 Вы здесь: <b>{pilot.current_planet_name}</b>"
     )
     nodes.append(node("msg-map-menu", "message", 400, 0, {
         "messageText": map_menu_text,
