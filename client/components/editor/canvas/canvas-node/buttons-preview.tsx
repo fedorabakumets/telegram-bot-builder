@@ -86,6 +86,7 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
         keyboardType={effectiveKeyboardType}
         isDynamicMode={enableDynamicButtons}
         dynamicSummary={dynamicSummary}
+        shuffleButtons={node.data.shuffleButtons || false}
       />
 
       {enableDynamicButtons && dynamicButtons && (

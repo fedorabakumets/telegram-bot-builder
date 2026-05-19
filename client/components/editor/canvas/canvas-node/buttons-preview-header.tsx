@@ -3,6 +3,8 @@ interface ButtonsPreviewHeaderProps {
   keyboardType?: 'inline' | 'reply';
   isDynamicMode?: boolean;
   dynamicSummary?: string;
+  /** Перемешивание кнопок включено */
+  shuffleButtons?: boolean;
 }
 
 export function ButtonsPreviewHeader({
@@ -10,6 +12,7 @@ export function ButtonsPreviewHeader({
   keyboardType,
   isDynamicMode,
   dynamicSummary,
+  shuffleButtons,
 }: ButtonsPreviewHeaderProps) {
   const getKeyboardLabel = () => {
     if (isDynamicMode) return 'Dynamic inline';
@@ -35,6 +38,11 @@ export function ButtonsPreviewHeader({
           <div className="text-xs text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded-full">
             <i className="fas fa-check-double text-xs mr-1"></i>
             Мульти-выбор
+          </div>
+        )}
+        {shuffleButtons && (
+          <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 px-2 py-1 rounded-full">
+            🔀
           </div>
         )}
       </div>
