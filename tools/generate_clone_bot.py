@@ -811,15 +811,6 @@ def build_earning() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "user",
         "resultFormat": "first_row",
-        "autoTransitionTo": "set-target-emoji",
-        "enableAutoTransition": True,
-    }))
-
-    # Выбираем случайный целевой эмодзи
-    nodes.append(node("set-target-emoji", "set_variable", 1150, 0, {
-        "assignments": [
-            {"id": "a-emoji", "variable": "target_emoji", "value": "🔧,💥,💡,⚡,🔨,🌋,🪛,🧯", "mode": "random_item"},
-        ],
         "autoTransitionTo": "msg-work-game",
         "enableAutoTransition": True,
     }))
@@ -839,7 +830,7 @@ def build_earning() -> dict:
             work_buttons.append(btn(bid, emoji, target="set-work-cd-fail"))
 
     nodes.append(node("msg-work-game", "message", 1300, 0, {
-        "messageText": "🏖 {user.nickname}, рабочая смена началась!\n\n❔ Нажмите на смайлик «{target_emoji}»:",
+        "messageText": "🏖 {user.nickname}, рабочая смена началась!\n\n❔ Нажмите на смайлик «🔧»:",
         "keyboardType": "inline",
         "shuffleButtons": True,
         "buttons": work_buttons,
