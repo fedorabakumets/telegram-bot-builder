@@ -174,7 +174,7 @@ def build_start_menu() -> dict:
             "registered_at": "{today} {time}",
             "fragments": "0",
         },
-        "onConflict": "ignore",
+        "onConflict": "merge",
         "saveResultTo": "pilot",
         "autoTransitionTo": "tbl-init-planets",
         "enableAutoTransition": True,

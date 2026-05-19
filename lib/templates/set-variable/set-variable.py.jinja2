@@ -51,6 +51,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
             _sv_lookup_field_{{ outer_idx }} = replace_variables_in_text({{ assignment.lookupField | tojson }}, _sv_vars_{{ outer_idx }})
             user_data[user_id]["{{ safe_var }}"] = str(_sv_match_{{ outer_idx }}.get(_sv_lookup_field_{{ outer_idx }}, ""))
         else:
+            _sv_lookup_field_{{ outer_idx }} = {{ assignment.lookupField | tojson }}
             user_data[user_id]["{{ safe_var }}"] = ""
         logging.info(f"📝 set_variable [{{ nodeId }}]: lookup «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (таблица: {{ assignment.lookupTable }}, поле: {_sv_lookup_field_{{ outer_idx }}})")
         {%- elif assignment.mode == 'str_replace' %}
