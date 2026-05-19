@@ -187,6 +187,22 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                 _sv_result_{{ loop.index }} = None
         user_data[user_id]["{{ safe_var }}"] = str(_sv_result_{{ loop.index }}) if _sv_result_{{ loop.index }} is not None else ""
         logging.info(f"📝 set_variable [{{ nodeId }}]: array_item «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']} (индекс/ключ: {_sv_index_raw_{{ loop.index }}})")
+        {%- elif assignment.mode == 'format_duration' %}
+        # Форматирование секунд в MM:SS или HH:MM:SS
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_old_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}")
+        _sv_expr_{{ loop.index }} = {{ assignment.value | tojson }}
+        _sv_seconds_{{ loop.index }} = int(float(_eval_expr(_sv_expr_{{ loop.index }}, _sv_vars_{{ loop.index }})))
+        if _sv_seconds_{{ loop.index }} < 0:
+            _sv_seconds_{{ loop.index }} = 0
+        _sv_h_{{ loop.index }} = _sv_seconds_{{ loop.index }} // 3600
+        _sv_m_{{ loop.index }} = (_sv_seconds_{{ loop.index }} % 3600) // 60
+        _sv_s_{{ loop.index }} = _sv_seconds_{{ loop.index }} % 60
+        if _sv_h_{{ loop.index }} > 0:
+            user_data[user_id]["{{ safe_var }}"] = f"{_sv_h_{{ loop.index }}:02d}:{_sv_m_{{ loop.index }}:02d}:{_sv_s_{{ loop.index }}:02d}"
+        else:
+            user_data[user_id]["{{ safe_var }}"] = f"{_sv_m_{{ loop.index }}:02d}:{_sv_s_{{ loop.index }}:02d}"
+        logging.info(f"📝 set_variable [{{ nodeId }}]: format_duration «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']} ({_sv_seconds_{{ loop.index }}}s)")
         {%- elif assignment.mode == 'timestamp' %}
         import time as _time_mod_sv
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)

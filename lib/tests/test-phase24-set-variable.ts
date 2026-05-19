@@ -242,6 +242,43 @@ test('E3_03', 'array_item синтаксис Python OK', () => {
   ]), 'E3_03'), 'E3_03');
 });
 
+// ─── Блок E4: Режим format_duration ─────────────────────────────────────────
+console.log('\n─── Блок E4: Режим format_duration ───');
+
+test('E4_01', 'format_duration содержит // 3600', () => {
+  const code = gen(makeCleanProject([makeSV('sv_fd', [{ id: 'a1', variable: 'cd_text', value: '{cd_expires} - {now_ts}', mode: 'format_duration' }])]), 'E4_01');
+  ok(code.includes('3600'), 'Нет деления на 3600');
+});
+
+test('E4_02', 'format_duration содержит _eval_expr', () => {
+  const code = gen(makeCleanProject([makeSV('sv_fd2', [{ id: 'a1', variable: 'timer', value: '90', mode: 'format_duration' }])]), 'E4_02');
+  ok(code.includes('_eval_expr'), 'Нет _eval_expr');
+});
+
+test('E4_03', 'format_duration содержит format_duration в логе', () => {
+  const code = gen(makeCleanProject([makeSV('sv_fd3', [{ id: 'a1', variable: 'remaining', value: '{expires_at} - {now}', mode: 'format_duration' }])]), 'E4_03');
+  ok(code.includes('format_duration'), 'Нет format_duration в логе');
+});
+
+test('E4_04', 'format_duration синтаксис Python OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCmd('cmd1', '/cd', 'sv1'),
+    makeSV('sv1', [
+      { id: 'a1', variable: 'now_ts', value: '0', mode: 'timestamp' },
+      { id: 'a2', variable: 'cd_text', value: '{cd_expires} - {now_ts}', mode: 'format_duration' },
+    ], 'msg1'),
+    makeMsg('msg1', 'Осталось: {cd_text}'),
+  ]), 'E4_04'), 'E4_04');
+});
+
+test('E4_05', 'format_duration с фиксированным значением синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCmd('cmd1', '/timer', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'time_str', value: '90', mode: 'format_duration' }], 'msg1'),
+    makeMsg('msg1', 'Таймер: {time_str}'),
+  ]), 'E4_05'), 'E4_05');
+});
+
 // ─── Блок F: Автопереход ─────────────────────────────────────────────────────
 console.log('\n─── Блок F: Автопереход ───');
 
