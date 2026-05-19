@@ -1,4 +1,7 @@
 <div align="center">
+
+  **🇷🇺 Русский** | [🇬🇧 English](README.en.md)
+
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=2">
     <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=2">
