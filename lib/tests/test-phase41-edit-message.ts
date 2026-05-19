@@ -1635,7 +1635,7 @@ test('L06', 'полный сценарий пагинации: edit-kb-next-only
   syntax(code, 'l06');
 });
 
-test('L07', 'keyboard-нода без привязки ни к message ни к edit_message (orphan) → очищается нормализатором → в коде нет её кнопок → синтаксис OK', () => {
+test('L07', 'keyboard-нода без привязки ни к message ни к edit_message (orphan) → генерирует edit_reply_markup обработчик → синтаксис OK', () => {
   const p = makeCleanProject([
     makeCommandTriggerNode('cmd1', '/start', 'msg1'),
     makeMessageNode('msg1', 'Привет'),
@@ -1644,7 +1644,8 @@ test('L07', 'keyboard-нода без привязки ни к message ни к e
     }),
   ]);
   const code = gen(p, 'l07');
-  ok(!code.includes('orphan_btn_unique_xyz'), 'кнопки orphan-ноды не должны быть в коде');
+  ok(code.includes('edit_reply_markup'), 'orphan keyboard должна генерировать edit_reply_markup');
+  ok(code.includes('orphan_btn_unique_xyz'), 'кнопки orphan-ноды должны быть в edit_reply_markup обработчике');
   syntax(code, 'l07');
 });
 

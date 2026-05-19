@@ -204,8 +204,9 @@ describe('normalizeKeyboardBindings', () => {
     const normalized = normalizeKeyboardBindings(nodes, []);
     const keyboard = normalized[0];
 
-    assert.equal(keyboard.data.keyboardType, 'none');
-    assert.equal((keyboard.data.buttons as unknown[]).length, 0);
+    // Orphan keyboard с кнопками сохраняет данные для генерации edit_reply_markup
+    assert.equal(keyboard.data.keyboardType, 'inline');
+    assert.equal((keyboard.data.buttons as unknown[]).length, 1);
   });
 
   it('переносит dynamicButtons из keyboard-узла в host message', () => {
