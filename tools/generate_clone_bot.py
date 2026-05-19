@@ -820,18 +820,17 @@ def build_earning() -> dict:
         "assignments": [
             {"id": "a-cd-fmt", "variable": "cd_text", "value": "{cd.expires_at} - {now_ts}", "mode": "format_duration"},
         ],
-        "autoTransitionTo": "msg-work-cd",
+        "autoTransitionTo": "alert-work-cd",
         "enableAutoTransition": True,
     }))
 
-    # Сообщение о кулдауне с оставшимся временем и кнопкой «Работать»
-    nodes.append(node("msg-work-cd", "message", 1000, -200, {
-        "messageText": "😨 <a href='tg://user?id={user_id}'>{user.nickname}</a>, начать новую смену можно через: <code>{cd_text}</code>",
-        "formatMode": "html",
-        "keyboardType": "inline",
-        "buttons": [
-            btn("btn-cd-work", "🏖 Работать", target="trig-work"),
-        ],
+    # Popup alert с оставшимся временем кулдауна
+    nodes.append(node("alert-work-cd", "answer_callback_query", 1000, -200, {
+        "callbackNotificationText": "😨 Начать новую смену можно через: {cd_text}",
+        "callbackShowAlert": True,
+        "callbackCacheTime": 0,
+        "autoTransitionTo": "",
+        "enableAutoTransition": False,
     }))
 
     # Читаем пользователя для мини-игры
