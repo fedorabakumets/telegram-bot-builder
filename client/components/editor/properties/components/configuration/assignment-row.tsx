@@ -162,7 +162,7 @@ export function AssignmentRow({
       {/* Верхняя строка: переменная = ... */}
       <div className="flex items-center gap-1.5">
         {/* Имя переменной (слева) */}
-        <div className="w-[140px] flex-shrink-0">
+        <div className="w-[180px] flex-shrink-0">
           <VariableNameInput
             value={assignment.variable}
             availableVariables={textVariables}
