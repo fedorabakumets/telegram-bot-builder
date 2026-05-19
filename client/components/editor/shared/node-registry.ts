@@ -290,8 +290,8 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     canvasColor: 'bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
   },
   set_variable: {
-    name: 'Установить переменные',
-    icon: 'fas fa-pen',
+    name: 'Переменные',
+    icon: 'fas fa-calculator',
     color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
     canvasColor: 'bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
   },

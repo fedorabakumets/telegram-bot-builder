@@ -95,20 +95,20 @@ export function SetVariableConfiguration({
       {/* Заголовок секции */}
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <i className="fas fa-pen text-emerald-500 dark:text-emerald-400 text-sm" />
+          <span className="text-base">🧮</span>
           <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-            Установить переменные
+            Переменные
           </span>
         </div>
         <p className="text-xs text-muted-foreground">
-          Задайте переменные и их значения. Поддерживаются шаблоны: {'{first_name}'}, {'{response.data.name}'}
+          Вычисления и присваивания. Каждая строка выполняется последовательно.
         </p>
       </div>
 
       {/* Список присваиваний */}
       <div className="space-y-2">
         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Значение → Переменная
+          Переменная = Значение
         </Label>
 
         <div className="space-y-2">

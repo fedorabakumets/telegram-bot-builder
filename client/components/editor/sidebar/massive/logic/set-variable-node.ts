@@ -14,9 +14,9 @@ import { ComponentDefinition } from '@shared/schema';
  */
 export const setVariableNode: ComponentDefinition = {
   id: 'set-variable-node',
-  name: 'Установить переменные',
-  description: 'Задать или изменить переменные без HTTP-запроса',
-  icon: 'fas fa-pen',
+  name: 'Переменные',
+  description: 'Вычисления, присваивания и работа с данными',
+  icon: 'fas fa-calculator',
   color: 'bg-emerald-100 text-emerald-600',
   type: 'set_variable',
   defaultData: {
