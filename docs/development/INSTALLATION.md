@@ -1,5 +1,7 @@
 ## 📜 Пошаговая инструкция
 
+**🇷🇺 Русский** | [🇬🇧 English](INSTALLATION.en.md)
+
 <details>
 <summary><strong>🐳 Быстрый старт: Docker (рекомендуется)</strong></summary>
 

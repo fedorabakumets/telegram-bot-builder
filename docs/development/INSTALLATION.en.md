@@ -1,5 +1,7 @@
 ## 📜 Step-by-Step Guide
 
+[🇷🇺 Русский](INSTALLATION.md) | **🇬🇧 English**
+
 <details>
 <summary><strong>🐳 Quick Start: Docker (recommended)</strong></summary>
 
