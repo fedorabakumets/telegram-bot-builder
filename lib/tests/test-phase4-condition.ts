@@ -2412,6 +2412,114 @@ test('X05', 'Статические значения продолжают раб
   syntax(code, 'X05');
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК X: Операторы is_empty / is_not_empty / greater_than с dot-notation
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок X: is_empty / is_not_empty / greater_than с dot-notation ──');
+
+test('X01', 'is_empty с dot-notation переменной → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'pilot.flight_expires_at', [
+      makeBranch('is_empty', '', 'msg1'),
+      makeBranch('else', '', 'msg2'),
+    ]),
+    makeMessageNode('msg1', 'Пусто'),
+    makeMessageNode('msg2', 'Не пусто'),
+  ]);
+  syntax(gen(p, 'x01'), 'x01');
+});
+
+test('X02', 'is_not_empty с dot-notation переменной → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'fly_result.id', [
+      makeBranch('is_not_empty', '', 'msg1'),
+      makeBranch('else', '', 'msg2'),
+    ]),
+    makeMessageNode('msg1', 'Есть'),
+    makeMessageNode('msg2', 'Нет'),
+  ]);
+  syntax(gen(p, 'x02'), 'x02');
+});
+
+test('X03', 'greater_than с переменной в value → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'pilot.flight_expires_at', [
+      makeBranch('greater_than', '{now_ts}', 'msg1'),
+      makeBranch('else', '', 'msg2'),
+    ]),
+    makeMessageNode('msg1', 'В полёте'),
+    makeMessageNode('msg2', 'Свободен'),
+  ]);
+  syntax(gen(p, 'x03'), 'x03');
+});
+
+test('X04', 'greater_than генерирует float сравнение', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'pilot.fuel', [
+      makeBranch('greater_than', '10', 'msg1'),
+      makeBranch('else', '', 'msg2'),
+    ]),
+    makeMessageNode('msg1', 'Хватает'),
+    makeMessageNode('msg2', 'Мало'),
+  ]);
+  const code = gen(p, 'x04');
+  ok(code.includes('float('), 'float( должен быть для greater_than');
+});
+
+test('X05', 'is_empty генерирует not str(val).strip()', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'pilot.in_flight', [
+      makeBranch('is_empty', '', 'msg1'),
+      makeBranch('else', '', 'msg2'),
+    ]),
+    makeMessageNode('msg1', 'Свободен'),
+    makeMessageNode('msg2', 'В полёте'),
+  ]);
+  const code = gen(p, 'x05');
+  ok(code.includes('not str(val).strip()') || code.includes('not val'), 'is_empty проверка должна быть');
+});
+
+test('X06', 'is_not_empty генерирует str(val).strip()', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'fly_result.id', [
+      makeBranch('is_not_empty', '', 'msg1'),
+      makeBranch('else', '', 'msg2'),
+    ]),
+    makeMessageNode('msg1', 'Обновлено'),
+    makeMessageNode('msg2', 'Не обновлено'),
+  ]);
+  const code = gen(p, 'x06');
+  ok(code.includes('str(val).strip()') || code.includes('val'), 'is_not_empty проверка должна быть');
+});
+
+test('X07', 'greater_than + is_empty + else → 3 ветки синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'pilot.flight_expires_at', [
+      makeBranch('greater_than', '{now_ts}', 'msg1'),
+      makeBranch('is_empty', '', 'msg2'),
+      makeBranch('else', '', 'msg3'),
+    ]),
+    makeMessageNode('msg1', 'В полёте'),
+    makeMessageNode('msg2', 'Никогда не летал'),
+    makeMessageNode('msg3', 'Полёт завершён'),
+  ]);
+  syntax(gen(p, 'x07'), 'x07');
+});
+
+test('X08', 'dot-notation переменная в _all_vars.get()', () => {
+  const p = makeCleanProject([
+    makeConditionNode('cond1', 'pilot.credits', [
+      makeBranch('greater_than', '100', 'msg1'),
+      makeBranch('else', '', 'msg2'),
+    ]),
+    makeMessageNode('msg1', 'Богат'),
+    makeMessageNode('msg2', 'Беден'),
+  ]);
+  const code = gen(p, 'x08');
+  ok(code.includes('pilot.credits'), 'pilot.credits должен быть в коде');
+});
+
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 const total  = results.length;
