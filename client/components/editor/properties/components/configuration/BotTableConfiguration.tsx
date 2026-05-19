@@ -7,7 +7,6 @@ import { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { VariableNameInput } from '../variables/variable-name-input';
 import type { Variable } from '../../../inline-rich/types';
 import { BotTableWhereSection } from './bot-table-where-section';
@@ -177,7 +176,7 @@ export function BotTableConfiguration({
       {/* WHERE секция */}
       {showWhere && (
         <BotTableWhereSection
-          where={where}
+          where={where as any}
           onChange={(w) => onNodeUpdate(selectedNode.id, { where: w })}
         />
       )}
@@ -241,7 +240,7 @@ export function BotTableConfiguration({
           </Label>
           <Select
             value={resultFormat}
-            onValueChange={(value) => onNodeUpdate(selectedNode.id, { resultFormat: value })}
+            onValueChange={(value) => onNodeUpdate(selectedNode.id, { resultFormat: value as any })}
           >
             <SelectTrigger className="text-xs h-8 bg-white/60 dark:bg-slate-950/60">
               <SelectValue />
