@@ -35,7 +35,7 @@ docker compose logs -f     # Логи
 - **Python** ≥ 3.10 (рекомендуется 3.13, для сгенерированных ботов)
 - **Git**
 <details>
-<summary><strong>Шаг 1: Обновление системы и установка зависимостей</strong></summary>
+<summary><strong>Шаг 1: Установка Git</strong></summary>
 
 <table>
 <tr>
