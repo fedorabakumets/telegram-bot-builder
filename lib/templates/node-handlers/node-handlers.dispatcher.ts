@@ -121,29 +121,76 @@ function getSafeAutoTransitionParams(node: Node, nodes: Node[]): {
 }
 
 /**
- * Генерирует безопасный no-op обработчик для keyboard-ноды.
- *
- * Keyboard-нода в новой модели используется только как отдельный узел привязки.
- * На уровне генератора она не должна отправлять самостоятельное сообщение.
+ * Генерирует обработчик для keyboard-ноды.
+ * При вызове обновляет inline-кнопки текущего сообщения (editMessageReplyMarkup).
  *
  * @param node - Узел keyboard
+ * @param nodes - Все узлы проекта (для resolving targets)
  * @returns Python-код обработчика keyboard-ноды
  */
-function generateKeyboardHandler(node: Node): string {
+function generateKeyboardHandler(node: Node, nodes?: Node[]): string {
   const safeName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  const buttons: any[] = node.data?.buttons || [];
 
-  return [
+  // Если нет кнопок — генерируем no-op
+  if (buttons.length === 0) {
+    return [
+      `@dp.callback_query(lambda c: c.data == "${node.id}")`,
+      `async def handle_callback_${safeName}(callback_query: types.CallbackQuery, state: FSMContext = None):`,
+      `    """Обработчик keyboard-ноды ${node.id} (пустая клавиатура)."""`,
+      `    try:`,
+      `        await callback_query.answer()`,
+      `        await callback_query.message.edit_reply_markup(reply_markup=None)`,
+      `    except Exception as e:`,
+      `        logging.error(f"❌ Ошибка в keyboard node ${node.id}: {e}")`,
+    ].join('\n');
+  }
+
+  // Строим кнопки и обновляем reply_markup
+  const lines: string[] = [
     `@dp.callback_query(lambda c: c.data == "${node.id}")`,
     `async def handle_callback_${safeName}(callback_query: types.CallbackQuery, state: FSMContext = None):`,
-    `    """Обработчик keyboard-ноды ${node.id} без самостоятельной отправки сообщения."""`,
+    `    """Обработчик keyboard-ноды ${node.id} — обновляет inline-кнопки сообщения."""`,
     `    try:`,
     `        user_id = callback_query.from_user.id`,
-    `        logging.info(f"⌨️ Keyboard node ${node.id} вызвана для пользователя {user_id}")`,
+    `        logging.info(f"⌨️ Keyboard node ${node.id}: обновляем кнопки для {user_id}")`,
+    `        await callback_query.answer()`,
+    `        all_user_vars = await init_all_user_vars(user_id)`,
+    `        builder = InlineKeyboardBuilder()`,
+  ];
+
+  for (const btn of buttons) {
+    const textExpr = `replace_variables_in_text(${JSON.stringify(btn.text || 'Кнопка')}, all_user_vars, {})`;
+    if (btn.action === 'url' && btn.url) {
+      lines.push(`        builder.add(InlineKeyboardButton(text=${textExpr}, url="${btn.url}"))`);
+    } else if (btn.action === 'goto' || btn.action === 'complete') {
+      const cbData = btn.customCallbackData || btn.target || btn.id || 'no_action';
+      lines.push(`        builder.add(InlineKeyboardButton(text=${textExpr}, callback_data="${cbData}"))`);
+    } else {
+      const cbData = btn.id || btn.target || 'btn';
+      lines.push(`        builder.add(InlineKeyboardButton(text=${textExpr}, callback_data="${cbData}"))`);
+    }
+  }
+
+  // Раскладка кнопок
+  const layout = node.data?.keyboardLayout;
+  if (layout && !layout.autoLayout && layout.rows?.length > 0) {
+    const counts = layout.rows.map((r: any) => (r.buttonIds || []).length).filter((n: number) => n > 0);
+    if (counts.length > 0) {
+      lines.push(`        builder.adjust(${counts.join(', ')})`);
+    }
+  } else {
+    const cols = layout?.columns || (buttons.length >= 6 ? 2 : 1);
+    lines.push(`        builder.adjust(${cols})`);
+  }
+
+  lines.push(
+    `        await callback_query.message.edit_reply_markup(reply_markup=builder.as_markup())`,
     `    except Exception as e:`,
     `        logging.error(f"❌ Ошибка в keyboard node ${node.id}: {e}")`,
-    `        return`,
-    `    return`,
-  ].join('\n');
+  );
+
+  return lines.join('\n');
 }
 
 function generateCommandEntryHandler(node: Node, callbackHandlerCode: string): string {
@@ -312,7 +359,7 @@ export function generateNodeHandlers(
     demote_user: generateUserHandlerFromNode,
     admin_rights: generateAdminRightsFromNode,
     broadcast: (node) => generateBroadcastHandler(node, nodes, enableComments),
-    keyboard: generateKeyboardHandler,
+    keyboard: (node) => generateKeyboardHandler(node, nodes),
     input: generateUserInputNodeHandler,
     answer_callback_query: (node) => {
       const entry = {
