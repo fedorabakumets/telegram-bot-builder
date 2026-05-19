@@ -189,9 +189,16 @@ sudo systemctl start postgresql
 </td>
 <td valign="top">
 
-**Способ 1: Через winget:**
+**Способ 1: Через winget (рекомендуется):**
 ```powershell
-winget install PostgreSQL.PostgreSQL
+winget install PostgreSQL.PostgreSQL.17
+```
+
+> При установке запомните пароль для пользователя `postgres` (по умолчанию: `postgres`). Порт: `5432`.
+
+**Проверка установки:**
+```powershell
+psql -U postgres -c "SELECT version();"
 ```
 
 **Способ 2: С сайта:**
