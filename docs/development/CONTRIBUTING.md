@@ -2,76 +2,92 @@
 
 Спасибо за интерес к развитию Telegram Bot Builder! Мы рады любой помощи.
 
-## 🐛 Сообщить об ошибке
+## � Связь
 
-1. Проверь, что ошибка еще не была [зарегистрирована](https://github.com/fedorabakumets/telegram-bot-builder/issues)
-2. Создай новый Issue с подробным описанием:
-   - Что ты делал
-   - Что ожидал получить
-   - Что получил на самом деле
+Хотите участвовать в разработке? Напишите в наш [Telegram-чат](https://t.me/bot_builder_chat) — обсудим задачи и направления.
+
+- [Telegram-чат](https://t.me/bot_builder_chat) — обсуждение, вопросы, координация
+- [Telegram-канал](https://t.me/botcraft_studio) — новости и обновления
+- [GitHub Issues](https://github.com/fedorabakumets/telegram-bot-builder/issues) — баги и предложения
+- [GitHub Discussions](https://github.com/fedorabakumets/telegram-bot-builder/discussions) — идеи и обсуждения
+
+---
+
+## �🐛 Сообщить об ошибке
+
+1. Проверь, что ошибка ещё не была [зарегистрирована](https://github.com/fedorabakumets/telegram-bot-builder/issues)
+2. Создай новый Issue с описанием:
+   - Что делал
+   - Что ожидал
+   - Что получил
    - Скриншоты (если возможно)
 
-## 💡 Предложить улучшение
-
-1. Открой [Discussion](https://github.com/fedorabakumets/telegram-bot-builder/discussions)
-2. Опиши свою идею подробно
-3. Объясни, как это поможет пользователям
+---
 
 ## 🔧 Внести изменения в код
 
-### Быстрый старт для разработчиков:
+### Быстрый старт
 
+Подробная инструкция по установке: **[INSTALLATION.md](INSTALLATION.md)**
+
+Кратко:
 ```bash
-# Склонируй репозиторий
 git clone https://github.com/fedorabakumets/telegram-bot-builder.git
 cd telegram-bot-builder
-
-# Установи зависимости
 npm install
-
-# Настрой базу данных (PostgreSQL должен быть запущен)
+pip install -r requirements.txt
 cp .env.example .env
-# Отредактируй .env с твоими настройками БД
-
-# Запусти в режиме разработки
 npm run dev
 ```
 
-### Процесс внесения изменений:
+> Требуется: Node.js ≥ 18, PostgreSQL ≥ 17, Redis ≥ 7 (Memurai на Windows), Python ≥ 3.10
+
+### Процесс внесения изменений
 
 1. **Fork** репозитория
-2. Создай **ветку** для своих изменений: `git checkout -b feature/amazing-feature`
-3. **Внеси изменения** и протестируй их
-4. **Закоммить**: `git commit -m 'Add amazing feature'`
-5. **Push** в свой fork: `git push origin feature/amazing-feature`
+2. Создай ветку: `git checkout -b feature/amazing-feature`
+3. Внеси изменения и протестируй
+4. Закоммить: `git commit -m 'Add amazing feature'`
+5. Push: `git push origin feature/amazing-feature`
 6. Создай **Pull Request**
+
+---
 
 ## 📋 Стандарты кода
 
-- Используй **TypeScript** для типизации
+- **TypeScript** — весь серверный и клиентский код
+- **JSDoc на русском языке** — все комментарии обязательно на русском (см. [JSDOC_STANDARDS.md](../JSDOC_STANDARDS.md))
+- **100 строк на файл** — стремиться к компактным файлам, максимум 150 строк за итерацию
 - Следуй существующему стилю кода
-- Добавляй комментарии для сложной логики
-- Тестируй изменения перед отправкой
+- Не запускай `npm run check` или `npx tsc --noEmit` — используй проверку конкретных файлов
+
+---
 
 ## 🏗️ Архитектура проекта
 
-- `client/` - React frontend
-- `server/` - Express backend
-- `shared/` - Общие типы и схемы
-- `migrations/` - Миграции базы данных
+| Директория | Назначение |
+|-----------|-----------|
+| `client/` | React frontend (визуальный редактор) |
+| `server/` | Express backend (API, генерация кода) |
+| `server/bots/` | Запуск и управление Python-процессами ботов |
+| `server/redis/` | Redis pub/sub, события платформы |
+| `server/routes/` | API маршруты |
+| `server/templates/` | Jinja2-шаблоны генерации Python-кода |
+| `shared/` | Общие типы и схемы (Drizzle ORM) |
+| `bots/` | Сгенерированные Python-боты |
+| `docs/` | Документация |
+| `migrations/` | Миграции базы данных |
+
+---
 
 ## 🎯 Приоритетные области для помощи
 
-1. **Новые типы узлов** для редактора
+1. **Новые типы узлов** — см. [adding-new-trigger.md](adding-new-trigger.md)
 2. **Улучшение UI/UX** интерфейса
 3. **Оптимизация производительности**
 4. **Документация и примеры**
 5. **Тестирование на разных платформах**
 
-## 📞 Связь
-
-- GitHub Issues - для багов и предложений
-- GitHub Discussions - для обсуждений
-- Pull Requests - для изменений кода
+---
 
 Спасибо за помощь в развитии проекта! 🚀
