@@ -867,7 +867,7 @@ def build_earning() -> dict:
     # Триггер нажатия кнопки мини-игры (перехватывает все work_*)
     nodes.append(node("trig-work-callback", "incoming_callback_trigger", 1600, -200, {
         "callbackData": "work_",
-        "matchType": "startswith",
+        "matchType": "startsWith",
         "autoTransitionTo": "set-check-work-answer",
         "enableAutoTransition": True,
     }))
