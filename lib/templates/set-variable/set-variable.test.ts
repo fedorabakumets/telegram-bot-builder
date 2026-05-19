@@ -230,3 +230,41 @@ describe('Режим timestamp', () => {
     expect(r).toContain('logging.info');
   });
 });
+
+// ─── Режим random_item ───────────────────────────────────────────────────────
+
+describe('Режим random_item', () => {
+  it('содержит random.choice при mode: random_item', () => {
+    const nodes = [
+      { id: 'sv_ri', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'emoji', value: '🔧,💥,💡,⚡', mode: 'random_item' }],
+        autoTransitionTo: '',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('choice');
+  });
+
+  it('содержит split(",") для разделения элементов', () => {
+    const nodes = [
+      { id: 'sv_ri2', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'greeting', value: 'Привет,Здравствуйте,Хай', mode: 'random_item' }],
+        autoTransitionTo: '',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('split');
+  });
+
+  it('содержит logging.info с random_item', () => {
+    const nodes = [
+      { id: 'sv_ri3', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'item', value: 'a,b,c', mode: 'random_item' }],
+        autoTransitionTo: '',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('random_item');
+    expect(r).toContain('logging.info');
+  });
+});

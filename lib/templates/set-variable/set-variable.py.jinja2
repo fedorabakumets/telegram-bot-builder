@@ -149,6 +149,16 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         import random as _random_mod
         user_data[user_id]["{{ safe_var }}"] = str(_random_mod.randint(_sv_min_{{ loop.index }}, _sv_max_{{ loop.index }}))
         logging.info(f"📝 set_variable [{{ nodeId }}]: random «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']} (диапазон {_sv_min_{{ loop.index }}}-{_sv_max_{{ loop.index }}})")
+        {%- elif assignment.mode == 'random_item' %}
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_list_raw_{{ loop.index }} = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        _sv_items_{{ loop.index }} = [item.strip() for item in _sv_list_raw_{{ loop.index }}.split(",") if item.strip()]
+        import random as _random_mod_ri
+        if _sv_items_{{ loop.index }}:
+            user_data[user_id]["{{ safe_var }}"] = _random_mod_ri.choice(_sv_items_{{ loop.index }})
+        else:
+            user_data[user_id]["{{ safe_var }}"] = ""
+        logging.info(f"📝 set_variable [{{ nodeId }}]: random_item «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']} (из {len(_sv_items_{{ loop.index }})} элементов)")
         {%- elif assignment.mode == 'timestamp' %}
         import time as _time_mod_sv
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)

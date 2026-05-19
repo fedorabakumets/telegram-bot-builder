@@ -18,8 +18,8 @@ export interface Assignment {
   variable: string;
   /** Значение или шаблон */
   value: string;
-  /** Режим: "text" — шаблон, "expression" — выражение, "lookup" — поиск в таблице, "str_replace" — замена подстроки, "random" — случайное число, "timestamp" — временная метка */
-  mode: 'text' | 'expression' | 'lookup' | 'str_replace' | 'random' | 'timestamp';
+  /** Режим: "text" — шаблон, "expression" — выражение, "lookup" — поиск в таблице, "str_replace" — замена подстроки, "random" — случайное число, "random_item" — случайный элемент из списка, "timestamp" — временная метка */
+  mode: 'text' | 'expression' | 'lookup' | 'str_replace' | 'random' | 'random_item' | 'timestamp';
   /** Имя таблицы для поиска (только lookup) */
   lookupTable?: string;
   /** Поле таблицы для извлечения (только lookup) */
@@ -66,9 +66,9 @@ export function AssignmentRow({
     onChange(assignment.id, 'value', assignment.value + `{${varName}}`);
   };
 
-  /** Переключает режим между text, expression, lookup, str_replace, random и timestamp */
+  /** Переключает режим между text, expression, lookup, str_replace, random, random_item и timestamp */
   const handleModeToggle = () => {
-    const modes: Array<'text' | 'expression' | 'lookup' | 'str_replace' | 'random' | 'timestamp'> = ['text', 'expression', 'lookup', 'str_replace', 'random', 'timestamp'];
+    const modes: Array<'text' | 'expression' | 'lookup' | 'str_replace' | 'random' | 'random_item' | 'timestamp'> = ['text', 'expression', 'lookup', 'str_replace', 'random', 'random_item', 'timestamp'];
     const currentIdx = modes.indexOf(assignment.mode);
     const nextMode = modes[(currentIdx + 1) % modes.length];
     onChange(assignment.id, 'mode', nextMode);
@@ -78,14 +78,15 @@ export function AssignmentRow({
   const isLookup = assignment.mode === 'lookup';
   const isStrReplace = assignment.mode === 'str_replace';
   const isRandom = assignment.mode === 'random';
+  const isRandomItem = assignment.mode === 'random_item';
   const isTimestamp = assignment.mode === 'timestamp';
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5">
-        {/* Переключатель режима T / = / 🔍 / ✂️ / 🎲 / ⏱ */}
+        {/* Переключатель режима T / = / 🔍 / ✂️ / 🎲 / 🎯 / ⏱ */}
         <Button
-          variant={isExpression ? 'default' : isLookup ? 'secondary' : isStrReplace ? 'secondary' : isRandom ? 'secondary' : isTimestamp ? 'secondary' : 'outline'}
+          variant={isExpression ? 'default' : isLookup ? 'secondary' : isStrReplace ? 'secondary' : isRandom ? 'secondary' : isRandomItem ? 'secondary' : isTimestamp ? 'secondary' : 'outline'}
           size="icon"
           className="h-8 w-8 flex-shrink-0 text-xs font-mono"
           title={isExpression
@@ -95,16 +96,18 @@ export function AssignmentRow({
             : isStrReplace
             ? 'Режим: замена подстроки. Нажмите для случайного числа'
             : isRandom
-            ? 'Режим: случайное число. Нажмите для временной метки'
+            ? 'Режим: случайное число. Нажмите для случайного элемента'
+            : isRandomItem
+            ? 'Режим: случайный элемент. Нажмите для временной метки'
             : isTimestamp
             ? 'Режим: временная метка. Нажмите для текста'
             : 'Режим: текст/шаблон. Нажмите для выражения'}
           onClick={handleModeToggle}
         >
-          {isExpression ? '=' : isLookup ? '🔍' : isStrReplace ? '✂️' : isRandom ? '🎲' : isTimestamp ? '⏱' : 'T'}
+          {isExpression ? '=' : isLookup ? '🔍' : isStrReplace ? '✂️' : isRandom ? '🎲' : isRandomItem ? '🎯' : isTimestamp ? '⏱' : 'T'}
         </Button>
 
-        {!isLookup && !isStrReplace && !isRandom && !isTimestamp && (
+        {!isLookup && !isStrReplace && !isRandom && !isRandomItem && !isTimestamp && (
           <>
             {/* Поле значения с кнопкой вставки переменной */}
             <div className="flex-1 flex items-center gap-1">
@@ -140,6 +143,22 @@ export function AssignmentRow({
               value={assignment.maxValue || ''}
               onChange={(e) => onChange(assignment.id, 'maxValue' as any, e.target.value)}
               className="flex-1 text-xs h-8 border-green-400 dark:border-green-600 bg-green-50/30 dark:bg-green-950/20"
+            />
+            <span className="text-muted-foreground text-xs flex-shrink-0">→</span>
+          </div>
+        )}
+
+        {isRandomItem && (
+          <div className="flex-1 flex items-center gap-1">
+            <Input
+              placeholder="элемент1, элемент2, элемент3"
+              value={assignment.value || ''}
+              onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
+              className="flex-1 text-xs h-8 border-emerald-400 dark:border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20"
+            />
+            <VariableSelector
+              availableVariables={textVariables}
+              onSelect={handleInsertVariable}
             />
             <span className="text-muted-foreground text-xs flex-shrink-0">→</span>
           </div>

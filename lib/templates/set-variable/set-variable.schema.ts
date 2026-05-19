@@ -13,8 +13,8 @@ const setVariableAssignmentSchema = z.object({
   variable: z.string(),
   /** Значение или шаблон с {переменными} */
   value: z.string(),
-  /** Режим: "text" — шаблон, "expression" — выражение, "lookup" — поиск, "str_replace" — замена подстроки, "json_push" — добавить объект в массив, "json_format" — форматировать массив в строку, "random" — случайное число, "timestamp" — временная метка */
-  mode: z.enum(['text', 'expression', 'lookup', 'str_replace', 'json_push', 'json_format', 'random', 'timestamp']),
+  /** Режим: "text" — шаблон, "expression" — выражение, "lookup" — поиск, "str_replace" — замена подстроки, "json_push" — добавить объект в массив, "json_format" — форматировать массив в строку, "random" — случайное число, "random_item" — случайный элемент из списка, "timestamp" — временная метка */
+  mode: z.enum(['text', 'expression', 'lookup', 'str_replace', 'json_push', 'json_format', 'random', 'random_item', 'timestamp']),
   /** Имя таблицы для поиска (только для mode=lookup) */
   lookupTable: z.string().optional().default(''),
   /** Поле таблицы, значение которого сохранить (только для mode=lookup) */

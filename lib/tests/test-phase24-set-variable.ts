@@ -200,6 +200,27 @@ test('E04', 'Синтаксис Python валиден (timestamp)', () => {
   ]), 'E04'), 'E04');
 });
 
+// ─── Блок E2: Режим random_item ─────────────────────────────────────────────
+console.log('\n─── Блок E2: Режим random_item ───');
+
+test('E2_01', 'random_item содержит choice', () => {
+  const code = gen(makeCleanProject([makeSV('sv_ri', [{ id: 'a1', variable: 'emoji', value: '🔧,💥,💡', mode: 'random_item' }])]), 'E2_01');
+  ok(code.includes('choice'), 'Нет choice');
+});
+
+test('E2_02', 'random_item содержит split', () => {
+  const code = gen(makeCleanProject([makeSV('sv_ri2', [{ id: 'a1', variable: 'msg', value: 'Привет,Хай,Здравствуйте', mode: 'random_item' }])]), 'E2_02');
+  ok(code.includes('split'), 'Нет split');
+});
+
+test('E2_03', 'random_item синтаксис Python OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCmd('cmd1', '/roll', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'result', value: 'камень,ножницы,бумага', mode: 'random_item' }], 'msg1'),
+    makeMsg('msg1', 'Выпало: {result}'),
+  ]), 'E2_03'), 'E2_03');
+});
+
 // ─── Блок F: Автопереход ─────────────────────────────────────────────────────
 console.log('\n─── Блок F: Автопереход ───');
 
