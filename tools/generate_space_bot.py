@@ -1036,6 +1036,7 @@ def build_map() -> dict:
             "assignments": [
                 {"id": f"a-fuel-{planet['id']}", "variable": "flight_fuel", "value": "10", "mode": "text"},
                 {"id": f"a-time-{planet['id']}", "variable": "flight_time", "value": "120", "mode": "text"},
+                {"id": f"a-time-fmt-{planet['id']}", "variable": "flight_time_fmt", "value": "120", "mode": "format_duration"},
             ],
             "autoTransitionTo": f"fly-cond-fuel-{planet['id']}",
             "enableAutoTransition": True,
@@ -1051,7 +1052,7 @@ def build_map() -> dict:
         }))
 
         nodes.append(node(f"msg-fly-no-fuel-{planet['id']}", "message", 1600, y_pos - 80, {
-            "messageText": f"⛽ Недостаточно топлива для перелёта на {planet['emoji']} <b>{planet['name']}</b>!\n\nНужно: <code>{{flight_fuel}}</code>\nУ вас: <code>{{pilot.fuel}}</code>",
+            "messageText": f"⛽ Недостаточно топлива для перелёта на {planet['emoji']} <b>{planet['name']}</b>!\n\nНужно: <code>{{flight_fuel}}</code> ⛽\nУ вас: <code>{{pilot.fuel}}</code> ⛽",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -1071,7 +1072,7 @@ def build_map() -> dict:
 
         # Сообщение "Летим..."
         nodes.append(node(f"msg-fly-start-{planet['id']}", "message", 1900, y_pos, {
-            "messageText": f"🚀 Летим на {planet['emoji']} <b>{planet['name']}</b>!\n\n⛽ Топливо: -{{flight_fuel}}\n🕐 Время в пути: {{flight_time}} сек.",
+            "messageText": f"🚀 Летим на {planet['emoji']} <b>{planet['name']}</b>!\n\n⛽ Топливо: -{{flight_fuel}}\n🕐 Время в пути: {{flight_time_fmt}}",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
