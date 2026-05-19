@@ -18,6 +18,12 @@
 - [GitHub Topics](development/GITHUB_TOPICS.md) - Темы GitHub
 - [How to Update](development/HOW_TO_UPDATE.md) - Как обновить проект с GitHub
 
+## 🧩 Разработка нод
+- [Добавление нового узла](development/adding-new-trigger.md) - Инструкция по созданию новой ноды
+- [Типы узлов](features/NODE_TYPES.md) - Полный список доступных блоков
+- [Возможные триггеры и действия](features/POSSIBLE_TRIGGERS_AND_ACTIONS.md) - Справочник триггеров
+- [Кнопки — план развития](features/buttons-roadmap.md) - Роадмап по кнопкам
+
 ## 📊 Анализ проекта
 - [Project Structure Analysis](analysis/PROJECT_STRUCTURE_ANALYSIS.md) - Анализ структуры проекта
 - [Project Structure Diagram](analysis/PROJECT_STRUCTURE_DIAGRAM.md) - Диаграмма структуры проекта
