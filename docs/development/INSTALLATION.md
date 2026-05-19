@@ -1,4 +1,33 @@
 ## 📜 Пошаговая инструкция
+
+<details>
+<summary><strong>🐳 Быстрый старт: Docker (рекомендуется)</strong></summary>
+
+**Требования:** Docker и Docker Compose
+
+```bash
+git clone https://github.com/fedorabakumets/telegram-bot-builder.git
+cd telegram-bot-builder
+docker compose up -d
+docker compose logs -f
+```
+
+**Полезные команды:**
+
+```bash
+docker compose down        # Остановить
+docker compose build --no-cache  # Пересобрать
+docker compose logs -f     # Логи
+```
+
+✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
+
+</details>
+
+---
+
+### Ручная установка
+
 ### Требования
 - **Node.js** ≥ 18.0.0
 - **PostgreSQL** ≥ 15
@@ -555,32 +584,6 @@ npm install
 |-------|---------|----------|
 | **🧪 Разработка** | `npm run dev` | Запуск с автоперезагрузкой при изменениях |
 | **🚀 Продакшен** | `npm run build` → `npm run start` | Сборка и запуск готовой версии |
-
-✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
-
-</details>
-
----
-
-<details>
-<summary><strong>🐳 Альтернатива: Docker (любая ОС)</strong></summary>
-
-**Требования:** Docker и Docker Compose
-
-```bash
-git clone https://github.com/fedorabakumets/telegram-bot-builder.git
-cd telegram-bot-builder
-docker compose up -d
-docker compose logs -f
-```
-
-**Полезные команды:**
-
-```bash
-docker compose down        # Остановить
-docker compose build --no-cache  # Пересобрать
-docker compose logs -f     # Логи
-```
 
 ✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
 
