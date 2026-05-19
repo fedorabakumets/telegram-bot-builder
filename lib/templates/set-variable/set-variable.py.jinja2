@@ -52,7 +52,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
             user_data[user_id]["{{ safe_var }}"] = str(_sv_match_{{ outer_idx }}.get(_sv_lookup_field_{{ outer_idx }}, ""))
         else:
             user_data[user_id]["{{ safe_var }}"] = ""
-        logging.info(f"📝 set_variable [{{ nodeId }}]: lookup «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (таблица: {{ assignment.lookupTable }}, поле: {{ assignment.lookupField }})")
+        logging.info(f"📝 set_variable [{{ nodeId }}]: lookup «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (таблица: {{ assignment.lookupTable }}, поле: {_sv_lookup_field_{{ outer_idx }}})")
         {%- elif assignment.mode == 'str_replace' %}
         # Замена подстроки в переменной
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
