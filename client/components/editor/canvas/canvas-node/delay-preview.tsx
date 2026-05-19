@@ -39,6 +39,10 @@ export function DelayPreview({ data }: DelayPreviewProps) {
 
   return (
     <div className="px-3 py-2 text-xs space-y-1">
+      <div className="flex items-center gap-1.5">
+        <i className="fas fa-stopwatch text-amber-500 text-[10px]" />
+        <span className="font-semibold text-amber-700 dark:text-amber-300 text-[11px]">Задержка</span>
+      </div>
       <div className="font-medium text-amber-700 dark:text-amber-300 truncate">
         {formatDelay(value, unit)}
       </div>
