@@ -194,14 +194,14 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
           <Input
             value={branch.value}
             onChange={e => onChange(branch.id, 'value', e.target.value)}
-            placeholder={isBetween ? 'от' : 'введите значение'}
+            placeholder={isBetween ? 'от (или {переменная})' : 'значение или {переменная}'}
             className="text-sm h-7 flex-1"
           />
           {isBetween && (
             <Input
               value={branch.value2 ?? ''}
               onChange={e => onChange(branch.id, 'value2', e.target.value)}
-              placeholder="до"
+              placeholder="до (или {переменная})"
               className="text-sm h-7 flex-1"
             />
           )}
