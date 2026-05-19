@@ -995,7 +995,7 @@ def build_earning() -> dict:
         "messageText": "🔔 {user.nickname}, вы можете начать новую рабочую смену.",
         "keyboardType": "inline",
         "buttons": [
-            btn("btn-work-again", "🏖 Работать", target="trig-work"),
+            btn("btn-work-again", "🏖 Работать", target="set-now-ts"),
         ],
     }))
 
