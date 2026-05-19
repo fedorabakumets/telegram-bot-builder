@@ -95,6 +95,8 @@ export const nodeSchema = z.object({
     keyboardType: z.enum(['reply', 'inline', 'none']).default('none'),
     /** Массив кнопок клавиатуры */
     buttons: z.array(buttonSchema).default([]),
+    /** Перемешивать порядок inline-кнопок при каждом показе */
+    shuffleButtons: z.boolean().default(false),
     /** Включить генерацию кнопок из HTTP-ответа */
     enableDynamicButtons: z.boolean().default(false),
     /** Конфигурация динамических кнопок (генерация из HTTP-ответа) */

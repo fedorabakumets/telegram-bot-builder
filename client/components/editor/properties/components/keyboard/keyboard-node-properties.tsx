@@ -132,6 +132,22 @@ export function KeyboardNodeProperties({
         <MultipleSelectionSettings selectedNode={selectedNode} keyboardType={selectedNode.data.keyboardType as 'inline' | 'reply'} onNodeUpdate={onNodeUpdate} />
       )}
 
+      {/* Перемешивание кнопок — только для inline с >1 кнопкой */}
+      {selectedNode.data.keyboardType === 'inline' && buttons.length > 1 && (
+        <div className="flex items-center gap-2 px-1 py-1">
+          <input
+            type="checkbox"
+            id="shuffleButtons"
+            checked={selectedNode.data.shuffleButtons || false}
+            onChange={(e) => onNodeUpdate(selectedNode.id, { shuffleButtons: e.target.checked })}
+            className="h-3.5 w-3.5 rounded border-gray-300"
+          />
+          <label htmlFor="shuffleButtons" className="text-xs text-muted-foreground cursor-pointer">
+            🔀 Перемешивать кнопки при каждом показе
+          </label>
+        </div>
+      )}
+
       {/* Переключатель динамических кнопок */}
       <div className="flex items-center justify-between rounded-lg border border-amber-200/40 dark:border-amber-800/40 bg-amber-50/30 dark:bg-amber-950/20 p-3">
         <div className="flex items-center gap-2">

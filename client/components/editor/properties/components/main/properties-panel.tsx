@@ -782,6 +782,22 @@ export function PropertiesPanel({
                         />
                       </div>
 
+                      {/* Перемешивание кнопок — только для inline с >1 кнопкой */}
+                      {selectedNode.data.keyboardType === 'inline' && (selectedNode.data.buttons?.length ?? 0) > 1 && (
+                        <div className="flex items-center gap-2 px-1 py-1">
+                          <input
+                            type="checkbox"
+                            id="shuffleButtonsLegacy"
+                            checked={selectedNode.data.shuffleButtons || false}
+                            onChange={(e) => onNodeUpdate(selectedNode.id, { shuffleButtons: e.target.checked })}
+                            className="h-3.5 w-3.5 rounded border-gray-300"
+                          />
+                          <label htmlFor="shuffleButtonsLegacy" className="text-xs text-muted-foreground cursor-pointer">
+                            🔀 Перемешивать кнопки при каждом показе
+                          </label>
+                        </div>
+                      )}
+
                       {/* РљРЅРѕРїРєРё РґРѕР±Р°РІР»РµРЅРёСЏ */}
                       <KeyboardButtonsSection
                         selectedNode={selectedNode}
