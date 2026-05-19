@@ -29,8 +29,11 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         {% if entry.notificationText %}
         _all_vars = await init_all_user_vars(user_id)
         _notification_text = replace_variables_in_text({{ entry.notificationText | format_python_text }}, _all_vars, {})
+        logging.info(f"🔔 answer_callback_query [{{ entry.nodeId }}]: text='{_notification_text}', show_alert={{ entry.showAlert | to_python_boolean }}, is_fake={getattr(callback_query, '_is_fake', False)}")
         await callback_query.answer(text=_notification_text, show_alert={{ entry.showAlert | to_python_boolean }}, cache_time={{ entry.cacheTime }})
+        logging.info(f"✅ answer_callback_query [{{ entry.nodeId }}]: alert отправлен для {user_id}")
         {% else %}
+        logging.info(f"🔔 answer_callback_query [{{ entry.nodeId }}]: пустой текст, is_fake={getattr(callback_query, '_is_fake', False)}")
         await callback_query.answer()
         {% endif %}
 
