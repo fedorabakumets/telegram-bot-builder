@@ -24,9 +24,7 @@ export function collectAnswerCallbackQueryEntries(nodes: Node[]): AnswerCallback
     if (node.type !== 'answer_callback_query') continue;
 
     const targetNodeId: string = (node.data as any)?.autoTransitionTo ?? '';
-    if (!targetNodeId) continue;
-
-    const targetNode = nodeMap.get(targetNodeId);
+    const targetNode = targetNodeId ? nodeMap.get(targetNodeId) : undefined;
     const targetNodeType = targetNode?.type ?? 'message';
 
     entries.push({
