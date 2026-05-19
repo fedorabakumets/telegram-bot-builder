@@ -3,18 +3,21 @@
 
   @param {string} nodeId          — ID узла
   @param {string} tableName       — Имя таблицы (поддерживает {переменные})
-  @param {string} operation       — Операция: read, insert, update, upsert, delete
+  @param {string} operation       — Операция: read, insert, update, upsert, delete, count, sum, max, min, avg, distinct, delete_all
   @param {array}  where           — Условия WHERE [{column, value, operator}]
   @param {array}  updates         — Обновления [{column, op, value}]
   @param {object} row             — Данные строки (для insert, upsert)
   @param {string} key             — Ключ для upsert
   @param {string} onConflict      — Поведение при конфликте: ignore, update, merge
   @param {string} saveResultTo    — Переменная для сохранения результата
-  @param {string} resultFormat    — Формат результата: first_row, all_rows, scalar, count
+  @param {string} resultFormat    — Формат результата: first_row, all_rows, scalar, count, random_row
   @param {array}  returnColumns   — Колонки для возврата
   @param {string} orderBy         — Сортировка
   @param {string} orderDirection  — Направление сортировки
   @param {number} limit           — Лимит строк
+  @param {number} offset          — Смещение строк (для пагинации)
+  @param {string} aggregateColumn — Колонка для агрегации (sum, max, min, avg, distinct)
+  @param {boolean} returnInsertedId — Вернуть ID вставленной строки
   @param {string} autoTransitionTo — ID следующего узла
 #}
 {%- set safe_node_id = nodeId | safe_name -%}
@@ -84,6 +87,9 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                     except (ValueError, TypeError):
                         pass
 {% endif %}
+{% if offset > 0 %}
+                    _results = _results[{{ offset }}:]
+{% endif %}
 {% if limit > 0 %}
                     _results = _results[:{{ limit }}]
 {% endif %}
@@ -100,9 +106,198 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                     if _results:
                         _first_val = list(_results[0].values())[0] if _results[0] else ""
                         user_data[user_id]["{{ saveResultTo }}"] = _first_val
+{% elif resultFormat == 'random_row' %}
+                    if _results:
+                        import random as _rnd_bt
+                        _random_row = _rnd_bt.choice(_results)
+                        for _k, _v in _random_row.items():
+                            user_data[user_id]["{{ saveResultTo }}." + _k] = _v
 {% endif %}
                     logging.info(f"🗄️ bot_table [{{ nodeId }}]: read завершён, найдено {len(_results)} строк")
                 else:
+                    logging.warning(f"🗄️ bot_table [{{ nodeId }}]: таблица '{_table_name}' не найдена")
+{% elif operation == 'count' %}
+        # === Операция COUNT ===
+        if db_pool:
+            async with db_pool.acquire() as conn:
+                _tbl = await conn.fetchrow("SELECT id FROM bot_tables WHERE project_id = $1 AND name = $2", PROJECT_ID, _table_name)
+                if _tbl:
+                    _cols = await conn.fetch("SELECT id, name FROM bot_table_columns WHERE table_id = $1 ORDER BY position", _tbl["id"])
+                    _col_map = {str(c["id"]): c["name"] for c in _cols}
+                    _rows = await conn.fetch("SELECT id, data FROM bot_table_rows WHERE table_id = $1", _tbl["id"])
+                    _count = 0
+                    for _row in _rows:
+                        _data = _row["data"] if isinstance(_row["data"], dict) else json.loads(_row["data"])
+                        _named = {_col_map.get(k, k): str(v) if v is not None else "" for k, v in _data.items()}
+                        _match = True
+{% for cond in where %}
+                        _cond_val_{{ loop.index }} = replace_variables_in_text({{ cond.value | tojson }}, _vars)
+{% if cond.operator == 'not_equals' %}
+                        if str(_named.get("{{ cond.column }}", "")) == str(_cond_val_{{ loop.index }}):
+                            _match = False
+{% elif cond.operator == 'greater_than' %}
+                        try:
+                            if not (float(_named.get("{{ cond.column }}", "0") or "0") > float(_cond_val_{{ loop.index }} or "0")):
+                                _match = False
+                        except (ValueError, TypeError):
+                            _match = False
+{% elif cond.operator == 'less_than' %}
+                        try:
+                            if not (float(_named.get("{{ cond.column }}", "0") or "0") < float(_cond_val_{{ loop.index }} or "0")):
+                                _match = False
+                        except (ValueError, TypeError):
+                            _match = False
+{% elif cond.operator == 'contains' %}
+                        if str(_cond_val_{{ loop.index }}) not in str(_named.get("{{ cond.column }}", "")):
+                            _match = False
+{% elif cond.operator == 'is_empty' %}
+                        if str(_named.get("{{ cond.column }}", "")).strip():
+                            _match = False
+{% elif cond.operator == 'is_not_empty' %}
+                        if not str(_named.get("{{ cond.column }}", "")).strip():
+                            _match = False
+{% else %}
+                        if str(_named.get("{{ cond.column }}", "")) != str(_cond_val_{{ loop.index }}):
+                            _match = False
+{% endif %}
+{% endfor %}
+                        if _match:
+                            _count += 1
+                    user_data[user_id]["{{ saveResultTo }}"] = str(_count)
+                    logging.info(f"🗄️ bot_table [{{ nodeId }}]: count завершён, результат: {_count}")
+                else:
+                    user_data[user_id]["{{ saveResultTo }}"] = "0"
+                    logging.warning(f"🗄️ bot_table [{{ nodeId }}]: таблица '{_table_name}' не найдена")
+{% elif operation == 'sum' or operation == 'max' or operation == 'min' or operation == 'avg' %}
+        # === Операция {{ operation | upper }} (колонка: {{ aggregateColumn }}) ===
+        if db_pool:
+            async with db_pool.acquire() as conn:
+                _tbl = await conn.fetchrow("SELECT id FROM bot_tables WHERE project_id = $1 AND name = $2", PROJECT_ID, _table_name)
+                if _tbl:
+                    _cols = await conn.fetch("SELECT id, name FROM bot_table_columns WHERE table_id = $1 ORDER BY position", _tbl["id"])
+                    _col_map = {str(c["id"]): c["name"] for c in _cols}
+                    _rows = await conn.fetch("SELECT id, data FROM bot_table_rows WHERE table_id = $1", _tbl["id"])
+                    _values = []
+                    for _row in _rows:
+                        _data = _row["data"] if isinstance(_row["data"], dict) else json.loads(_row["data"])
+                        _named = {_col_map.get(k, k): str(v) if v is not None else "" for k, v in _data.items()}
+                        _match = True
+{% for cond in where %}
+                        _cond_val_{{ loop.index }} = replace_variables_in_text({{ cond.value | tojson }}, _vars)
+{% if cond.operator == 'not_equals' %}
+                        if str(_named.get("{{ cond.column }}", "")) == str(_cond_val_{{ loop.index }}):
+                            _match = False
+{% elif cond.operator == 'greater_than' %}
+                        try:
+                            if not (float(_named.get("{{ cond.column }}", "0") or "0") > float(_cond_val_{{ loop.index }} or "0")):
+                                _match = False
+                        except (ValueError, TypeError):
+                            _match = False
+{% elif cond.operator == 'less_than' %}
+                        try:
+                            if not (float(_named.get("{{ cond.column }}", "0") or "0") < float(_cond_val_{{ loop.index }} or "0")):
+                                _match = False
+                        except (ValueError, TypeError):
+                            _match = False
+{% elif cond.operator == 'contains' %}
+                        if str(_cond_val_{{ loop.index }}) not in str(_named.get("{{ cond.column }}", "")):
+                            _match = False
+{% elif cond.operator == 'is_empty' %}
+                        if str(_named.get("{{ cond.column }}", "")).strip():
+                            _match = False
+{% elif cond.operator == 'is_not_empty' %}
+                        if not str(_named.get("{{ cond.column }}", "")).strip():
+                            _match = False
+{% else %}
+                        if str(_named.get("{{ cond.column }}", "")) != str(_cond_val_{{ loop.index }}):
+                            _match = False
+{% endif %}
+{% endfor %}
+                        if _match:
+                            try:
+                                _values.append(float(_named.get("{{ aggregateColumn }}", "0") or "0"))
+                            except (ValueError, TypeError):
+                                pass
+{% if operation == 'sum' %}
+                    _result = str(int(sum(_values))) if _values else "0"
+{% elif operation == 'max' %}
+                    _result = str(int(max(_values))) if _values else "0"
+{% elif operation == 'min' %}
+                    _result = str(int(min(_values))) if _values else "0"
+{% elif operation == 'avg' %}
+                    _result = str(round(sum(_values) / len(_values), 2)) if _values else "0"
+{% endif %}
+                    user_data[user_id]["{{ saveResultTo }}"] = _result
+                    logging.info(f"🗄️ bot_table [{{ nodeId }}]: {{ operation }} завершён, результат: {_result}")
+                else:
+                    user_data[user_id]["{{ saveResultTo }}"] = "0"
+                    logging.warning(f"🗄️ bot_table [{{ nodeId }}]: таблица '{_table_name}' не найдена")
+{% elif operation == 'distinct' %}
+        # === Операция DISTINCT (колонка: {{ aggregateColumn }}) ===
+        if db_pool:
+            async with db_pool.acquire() as conn:
+                _tbl = await conn.fetchrow("SELECT id FROM bot_tables WHERE project_id = $1 AND name = $2", PROJECT_ID, _table_name)
+                if _tbl:
+                    _cols = await conn.fetch("SELECT id, name FROM bot_table_columns WHERE table_id = $1 ORDER BY position", _tbl["id"])
+                    _col_map = {str(c["id"]): c["name"] for c in _cols}
+                    _rows = await conn.fetch("SELECT id, data FROM bot_table_rows WHERE table_id = $1", _tbl["id"])
+                    _unique_values = set()
+                    for _row in _rows:
+                        _data = _row["data"] if isinstance(_row["data"], dict) else json.loads(_row["data"])
+                        _named = {_col_map.get(k, k): str(v) if v is not None else "" for k, v in _data.items()}
+                        _match = True
+{% for cond in where %}
+                        _cond_val_{{ loop.index }} = replace_variables_in_text({{ cond.value | tojson }}, _vars)
+{% if cond.operator == 'not_equals' %}
+                        if str(_named.get("{{ cond.column }}", "")) == str(_cond_val_{{ loop.index }}):
+                            _match = False
+{% elif cond.operator == 'greater_than' %}
+                        try:
+                            if not (float(_named.get("{{ cond.column }}", "0") or "0") > float(_cond_val_{{ loop.index }} or "0")):
+                                _match = False
+                        except (ValueError, TypeError):
+                            _match = False
+{% elif cond.operator == 'less_than' %}
+                        try:
+                            if not (float(_named.get("{{ cond.column }}", "0") or "0") < float(_cond_val_{{ loop.index }} or "0")):
+                                _match = False
+                        except (ValueError, TypeError):
+                            _match = False
+{% elif cond.operator == 'contains' %}
+                        if str(_cond_val_{{ loop.index }}) not in str(_named.get("{{ cond.column }}", "")):
+                            _match = False
+{% elif cond.operator == 'is_empty' %}
+                        if str(_named.get("{{ cond.column }}", "")).strip():
+                            _match = False
+{% elif cond.operator == 'is_not_empty' %}
+                        if not str(_named.get("{{ cond.column }}", "")).strip():
+                            _match = False
+{% else %}
+                        if str(_named.get("{{ cond.column }}", "")) != str(_cond_val_{{ loop.index }}):
+                            _match = False
+{% endif %}
+{% endfor %}
+                        if _match:
+                            _val = _named.get("{{ aggregateColumn }}", "")
+                            if _val:
+                                _unique_values.add(_val)
+                    user_data[user_id]["{{ saveResultTo }}"] = json.dumps(sorted(list(_unique_values)), ensure_ascii=False)
+                    logging.info(f"🗄️ bot_table [{{ nodeId }}]: distinct завершён, уникальных: {len(_unique_values)}")
+                else:
+                    user_data[user_id]["{{ saveResultTo }}"] = "[]"
+                    logging.warning(f"🗄️ bot_table [{{ nodeId }}]: таблица '{_table_name}' не найдена")
+{% elif operation == 'delete_all' %}
+        # === Операция DELETE_ALL ===
+        if db_pool:
+            async with db_pool.acquire() as conn:
+                _tbl = await conn.fetchrow("SELECT id FROM bot_tables WHERE project_id = $1 AND name = $2", PROJECT_ID, _table_name)
+                if _tbl:
+                    _del_result = await conn.execute("DELETE FROM bot_table_rows WHERE table_id = $1", _tbl["id"])
+                    _del_count = int(_del_result.split(" ")[-1]) if _del_result else 0
+                    user_data[user_id]["{{ saveResultTo }}"] = str(_del_count)
+                    logging.info(f"🗄️ bot_table [{{ nodeId }}]: delete_all завершён, удалено: {_del_count}")
+                else:
+                    user_data[user_id]["{{ saveResultTo }}"] = "0"
                     logging.warning(f"🗄️ bot_table [{{ nodeId }}]: таблица '{_table_name}' не найдена")
 {% elif operation == 'update' %}
         # === Операция UPDATE ===
@@ -222,6 +417,13 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                     "INSERT INTO bot_table_rows (table_id, row_index, data) VALUES ($1, $2, $3)",
                     _tbl["id"], _max_idx + 1, json.dumps(_new_data)
                 )
+{% if returnInsertedId %}
+                # Получаем ID вставленной строки (row_index)
+                _last_row = await conn.fetchrow("SELECT row_index FROM bot_table_rows WHERE table_id = $1 ORDER BY row_index DESC LIMIT 1", _tbl["id"])
+                if _last_row:
+                    user_data[user_id]["{{ saveResultTo }}_id"] = str(_last_row["row_index"])
+                    logging.info(f"🗄️ bot_table [{{ nodeId }}]: ID вставленной строки: {_last_row['row_index']}")
+{% endif %}
                 # Инвалидация кеша
                 global _bot_tables_cache
                 _bot_tables_cache = None
@@ -297,6 +499,13 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                         "INSERT INTO bot_table_rows (table_id, row_index, data) VALUES ($1, $2, $3)",
                         _tbl["id"], _max_idx + 1, json.dumps(_new_data)
                     )
+{% if returnInsertedId %}
+                    # Получаем ID вставленной строки (row_index)
+                    _last_row = await conn.fetchrow("SELECT row_index FROM bot_table_rows WHERE table_id = $1 ORDER BY row_index DESC LIMIT 1", _tbl["id"])
+                    if _last_row:
+                        user_data[user_id]["{{ saveResultTo }}_id"] = str(_last_row["row_index"])
+                        logging.info(f"🗄️ bot_table [{{ nodeId }}]: ID вставленной строки: {_last_row['row_index']}")
+{% endif %}
 {% if saveResultTo %}
                     _res_named = {}
                     for _cid, _cname in _col_map.items():

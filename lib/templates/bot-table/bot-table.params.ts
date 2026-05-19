@@ -29,7 +29,7 @@ export interface BotTableEntry {
   nodeId: string;
   /** Имя таблицы (поддерживает {переменные}) */
   tableName: string;
-  /** Операция: read, insert, update, upsert, delete */
+  /** Операция: read, insert, update, upsert, delete, count, sum, max, min, avg, distinct, delete_all */
   operation: string;
   /** Условия WHERE */
   where: BotTableWhereCondition[];
@@ -55,6 +55,12 @@ export interface BotTableEntry {
   limit: number;
   /** ID следующего узла */
   autoTransitionTo: string;
+  /** Колонка для агрегации (sum, max, min, avg, distinct) */
+  aggregateColumn: string;
+  /** Смещение строк (для пагинации) */
+  offset: number;
+  /** Вернуть ID вставленной строки (для insert/upsert) */
+  returnInsertedId: boolean;
 }
 
 /** Параметры шаблона (массив entries) */

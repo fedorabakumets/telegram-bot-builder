@@ -31,7 +31,7 @@ export const botTableEntrySchema = z.object({
   nodeId: z.string(),
   /** Имя таблицы (поддерживает {переменные}) */
   tableName: z.string(),
-  /** Операция: read, insert, update, upsert, delete */
+  /** Операция: read, insert, update, upsert, delete, count, sum, max, min, avg, distinct, delete_all */
   operation: z.string(),
   /** Условия WHERE */
   where: z.array(botTableWhereConditionSchema).optional().default([]),
@@ -57,6 +57,12 @@ export const botTableEntrySchema = z.object({
   limit: z.number().optional().default(0),
   /** ID следующего узла */
   autoTransitionTo: z.string().optional().default(''),
+  /** Колонка для агрегации (sum, max, min, avg, distinct) */
+  aggregateColumn: z.string().optional().default(''),
+  /** Смещение строк (для пагинации) */
+  offset: z.number().optional().default(0),
+  /** Вернуть ID вставленной строки (для insert/upsert) */
+  returnInsertedId: z.boolean().optional().default(false),
 });
 
 export type BotTableEntryValidated = z.infer<typeof botTableEntrySchema>;

@@ -32,6 +32,9 @@ export function collectBotTableEntries(nodes: Node[]): BotTableEntry[] {
       orderDirection: (node.data as any)?.orderDirection || 'desc',
       limit: (node.data as any)?.limit || 0,
       autoTransitionTo: (node.data as any)?.autoTransitionTo || '',
+      aggregateColumn: (node.data as any)?.aggregateColumn || '',
+      offset: (node.data as any)?.offset || 0,
+      returnInsertedId: (node.data as any)?.returnInsertedId || false,
     }));
 }
 
