@@ -39,6 +39,9 @@ const OPERATION_LABELS: Record<string, string> = {
   upsert: 'Создать или обновить',
   delete: 'Удалить',
   count: 'Подсчитать',
+  sum: 'Сумма',
+  max: 'Максимум',
+  min: 'Минимум',
 };
 
 /**
@@ -72,18 +75,20 @@ export function BotTableConfiguration({
   /** Загрузка списка таблиц проекта */
   const { data: tables = [] } = useTablesQuery(projectId);
 
-  /** Показывать WHERE: read, update, delete, count */
-  const showWhere = ['read', 'update', 'delete', 'count'].includes(operation);
+  /** Показывать WHERE: read, update, delete, count, sum, max, min */
+  const showWhere = ['read', 'update', 'delete', 'count', 'sum', 'max', 'min'].includes(operation);
   /** Показывать Updates: update */
   const showUpdates = operation === 'update';
   /** Показывать Row: insert, upsert */
   const showRow = ['insert', 'upsert'].includes(operation);
   /** Показывать ключ и onConflict: upsert */
   const showUpsert = operation === 'upsert';
-  /** Показывать сохранение результата: read, update, upsert, count */
-  const showSaveResult = ['read', 'update', 'upsert', 'count'].includes(operation);
+  /** Показывать сохранение результата: read, update, upsert, count, sum, max, min */
+  const showSaveResult = ['read', 'update', 'upsert', 'count', 'sum', 'max', 'min'].includes(operation);
   /** Показывать формат результата: read */
   const showResultFormat = operation === 'read';
+  /** Показывать поле колонки для агрегации: sum, max, min */
+  const showAggregateColumn = ['sum', 'max', 'min'].includes(operation);
 
   /** Доступные узлы для перехода */
   const availableTargets = getAllNodesFromAllSheets.filter(
@@ -181,6 +186,22 @@ export function BotTableConfiguration({
         />
       )}
 
+      {/* Колонка для агрегации (sum, max, min) */}
+      {showAggregateColumn && (
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Колонка для агрегации
+          </Label>
+          <Input
+            value={data?.aggregateColumn || ''}
+            onChange={(e) => onNodeUpdate(selectedNode.id, { aggregateColumn: e.target.value })}
+            placeholder="balance"
+            className="text-xs h-8 bg-white/60 dark:bg-slate-950/60"
+          />
+          <p className="text-[10px] text-muted-foreground/70">Числовая колонка для вычисления суммы/макс/мин</p>
+        </div>
+      )}
+
       {/* Updates секция */}
       {showUpdates && (
         <BotTableUpdatesSection
@@ -249,7 +270,8 @@ export function BotTableConfiguration({
               <SelectItem value="first_row">Первая строка (объект)</SelectItem>
               <SelectItem value="all_rows">Все строки (массив)</SelectItem>
               <SelectItem value="scalar">Одно значение</SelectItem>
-              <SelectItem value="count">Количество строк</SelectItem>
+              <SelectItem value="count">Количество (число)</SelectItem>
+              <SelectItem value="random_row">Случайная строка</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -301,6 +323,14 @@ export function BotTableConfiguration({
             placeholder="0"
             className="text-xs h-8 bg-white/60 dark:bg-slate-950/60"
           />
+          <Input
+            type="number"
+            value={data?.offset || ''}
+            onChange={(e) => onNodeUpdate(selectedNode.id, { offset: parseInt(e.target.value) || 0 })}
+            placeholder="0"
+            className="text-xs h-8 bg-white/60 dark:bg-slate-950/60"
+          />
+          <p className="text-[10px] text-muted-foreground/70">Пропустить N строк (для пагинации)</p>
         </div>
       )}
 

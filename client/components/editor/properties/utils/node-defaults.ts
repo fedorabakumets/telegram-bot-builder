@@ -446,7 +446,7 @@ export function getNodeDefaults(type: Node['type']): any {
     bot_table: {
       /** Имя таблицы */
       tableName: '',
-      /** Операция: read, insert, update, upsert, delete, count */
+      /** Операция: read, insert, update, upsert, delete, count, sum, max, min */
       operation: 'read',
       /** Условия WHERE */
       where: [],
@@ -470,6 +470,10 @@ export function getNodeDefaults(type: Node['type']): any {
       orderDirection: 'desc',
       /** Лимит строк */
       limit: 0,
+      /** Колонка для агрегации (sum, max, min) */
+      aggregateColumn: '',
+      /** Смещение строк (для пагинации) */
+      offset: 0,
       /** ID следующего узла */
       autoTransitionTo: '',
       /** Включить автопереход */

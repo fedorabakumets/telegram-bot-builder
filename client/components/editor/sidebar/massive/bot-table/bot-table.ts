@@ -16,7 +16,7 @@ export const botTableNode: ComponentDefinition = {
   defaultData: {
     /** Имя таблицы */
     tableName: '',
-    /** Операция: read, insert, update, upsert, delete, count */
+    /** Операция: read, insert, update, upsert, delete, count, sum, max, min */
     operation: 'read',
     /** Условия WHERE (массив: column + value) */
     where: [],
@@ -42,6 +42,10 @@ export const botTableNode: ComponentDefinition = {
     limit: 0,
     /** ID узла для автоперехода */
     autoTransitionTo: '',
+    /** Колонка для агрегации (sum, max, min) */
+    aggregateColumn: '',
+    /** Смещение строк (для пагинации) */
+    offset: 0,
     /** Включить автопереход */
     enableAutoTransition: false,
   },
