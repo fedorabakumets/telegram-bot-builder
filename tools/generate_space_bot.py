@@ -969,7 +969,8 @@ def build_map() -> dict:
     map_menu_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
         "📍 Вы здесь: <b>{pilot.current_planet_name}</b>\n"
-        "⛽ Топливо: <code>{pilot.fuel}</code>"
+        "⛽ Топливо: <code>{pilot.fuel}</code>\n"
+        "🚀 Курс: <b>{pilot.flight_target_name}</b>"
     )
     nodes.append(node("msg-map-menu", "message", 400, 0, {
         "messageText": map_menu_text,
