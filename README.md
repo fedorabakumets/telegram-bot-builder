@@ -821,6 +821,9 @@ if __name__ == "__main__":
 <p><strong>📄 <a href="docs/development/REQUIREMENTS_SPECIFICATION.md" style="color: #FFE4E1;">Спецификация</a></strong><br/>
 <small>Техническое описание</small></p>
 
+<p><strong>🧩 <a href="docs/development/adding-new-trigger.md" style="color: #FFE4E1;">Добавление нового узла</a></strong><br/>
+<small>Инструкция по созданию новой ноды</small></p>
+
 </div>
 </div>
 </td>
