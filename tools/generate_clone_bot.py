@@ -1208,7 +1208,7 @@ def build_earning() -> dict:
             "😀 <a href='tg://user?id={user_id}'>{user.nickname}</a>, смена завершена!\n\n"
             "💲 Зарплата: 700$\n"
             "⭐️ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +12 exp\n\n"
-            "🥱 Следующая смена через: 01:30"
+            "🥱 Следующая смена через: <code>01:30</code>"
         ),
         "editFormatMode": "html",
         "editMessageIdSource": "last_bot_message",
@@ -1267,7 +1267,7 @@ def build_earning() -> dict:
         "editMessageText": (
             "😢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, к сожалению, вы нажали на неверный смайлик.\n"
             "Рабочая смена завершена\n\n"
-            "🥱 Следующая смена через: 01:30"
+            "🥱 Следующая смена через: <code>01:30</code>"
         ),
         "editFormatMode": "html",
         "editMessageIdSource": "last_bot_message",
