@@ -1140,8 +1140,10 @@ def build_earning() -> dict:
     # Вычисляем разницу exp - exp_to_next для проверки level up
     nodes.append(node("set-check-lvl", "set_variable", 2500, 0, {
         "assignments": [
+            {"id": "a-exp-raw", "variable": "user_exp", "value": "{user.exp}", "mode": "text"},
+            {"id": "a-exp-next-raw", "variable": "user_exp_to_next", "value": "{user.exp_to_next}", "mode": "text"},
             {"id": "a-exp-diff", "variable": "exp_diff",
-             "value": "{user.exp} - {user.exp_to_next}", "mode": "expression"},
+             "value": "{user_exp} - {user_exp_to_next}", "mode": "expression"},
         ],
         "autoTransitionTo": "cond-level-up",
         "enableAutoTransition": True,
@@ -1160,7 +1162,7 @@ def build_earning() -> dict:
     nodes.append(node("set-calc-next-lvl", "set_variable", 2800, -200, {
         "assignments": [
             {"id": "a-new-exp-next", "variable": "new_exp_to_next",
-             "value": "{user.exp_to_next} * 2", "mode": "expression"},
+             "value": "{user_exp_to_next} * 2", "mode": "expression"},
         ],
         "autoTransitionTo": "tbl-level-up",
         "enableAutoTransition": True,
@@ -1173,7 +1175,7 @@ def build_earning() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "updates": [
             {"column": "level", "op": "increment", "value": "1"},
-            {"column": "exp", "op": "decrement", "value": "{user.exp_to_next}"},
+            {"column": "exp", "op": "decrement", "value": "{user_exp_to_next}"},
             {"column": "exp_to_next", "op": "set", "value": "{new_exp_to_next}"},
         ],
         "autoTransitionTo": "tbl-read-user-after-lvl",

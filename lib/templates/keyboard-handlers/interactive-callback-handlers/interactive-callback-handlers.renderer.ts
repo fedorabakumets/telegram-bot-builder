@@ -36,6 +36,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'answer_callback_query', // собственный обработчик генерируется шаблоном answer-callback-query.py.jinja2
   'bot_table', // собственный обработчик генерируется шаблоном bot-table.py.jinja2
   'delay', // собственный обработчик генерируется шаблоном delay.py.jinja2
+  'edit_message', // собственный обработчик генерируется шаблоном edit-message.py.jinja2
 ]);
 
 /**
