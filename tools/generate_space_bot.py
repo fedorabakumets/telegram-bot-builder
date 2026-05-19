@@ -589,6 +589,8 @@ def build_trade() -> dict:
             "row": {
                 "pilot_id": "{user_id}",
                 "ore_id": ore['id'],
+                "ore_name": ore['name'],
+                "ore_emoji": ore['emoji'],
                 "quantity": "1",
             },
             "autoTransitionTo": f"msg-buy-ok-{ore['id']}",
@@ -788,7 +790,7 @@ def build_trade() -> dict:
         }))
 
     # =============================================
-    # 📦 ТРЮМ — просмотр содержимого
+    # 📦 ТРЮМ — просмотр содержимого (через loop)
     # =============================================
     nodes.append(node("trig-cargo", "text_trigger", 100, 7000, {
         "textMatchType": "exact",
@@ -813,17 +815,26 @@ def build_trade() -> dict:
         "where": [{"column": "pilot_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "cargo_items",
         "resultFormat": "all_rows",
+        "autoTransitionTo": "cargo-set-text",
+        "enableAutoTransition": True,
+    }))
+
+    # Форматируем содержимое трюма через json_format
+    nodes.append(node("cargo-set-text", "set_variable", 1000, 7000, {
+        "assignments": [
+            {"id": "a-cargo-fmt", "variable": "cargo_items", "value": "{item.ore_emoji} {item.ore_name} — x{item.quantity}\n", "mode": "json_format"},
+        ],
         "autoTransitionTo": "msg-cargo-view",
         "enableAutoTransition": True,
     }))
 
-    cargo_text = (
+    cargo_msg = (
         f"📦 {MENTION}, содержимое трюма:\n\n"
-        "📦 Занято: <code>{{pilot.cargo_used}}/{{pilot.cargo_max}}</code>\n\n"
-        "Используйте «💰 Продать» для продажи руд."
+        "{cargo_items}\n"
+        "📦 Занято: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
     )
-    nodes.append(node("msg-cargo-view", "message", 1000, 7000, {
-        "messageText": cargo_text,
+    nodes.append(node("msg-cargo-view", "message", 1300, 7000, {
+        "messageText": cargo_msg,
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
