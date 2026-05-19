@@ -43,6 +43,8 @@ export const messageParamsSchema = z.object({
   oneTimeKeyboard: z.boolean().optional().default(false),
   /** Изменить размер клавиатуры под кнопки */
   resizeKeyboard: z.boolean().optional(),
+  /** Перемешивать порядок inline-кнопок при каждом показе */
+  shuffleButtons: z.boolean().optional().default(false),
 
   // --- Множественный выбор ---
   /** Разрешить множественный выбор */

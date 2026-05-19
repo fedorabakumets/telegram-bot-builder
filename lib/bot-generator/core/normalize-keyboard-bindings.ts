@@ -230,6 +230,9 @@ function buildMergedKeyboardData(
     resizeKeyboard: typeof keyboardData.resizeKeyboard === 'boolean'
       ? keyboardData.resizeKeyboard
       : (typeof hostData.resizeKeyboard === 'boolean' ? hostData.resizeKeyboard : true),
+    shuffleButtons: typeof keyboardData.shuffleButtons === 'boolean'
+      ? keyboardData.shuffleButtons
+      : (typeof hostData.shuffleButtons === 'boolean' ? hostData.shuffleButtons : false),
   };
 }
 
