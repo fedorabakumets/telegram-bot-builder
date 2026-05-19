@@ -118,13 +118,14 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         _sv_medals = ["🥇", "🥈", "🥉"]
         for _sv_item_{{ loop.index }} in _sv_arr_{{ loop.index }}:
             if isinstance(_sv_item_{{ loop.index }}, dict):
-                # Пропускаем элементы с нулевым rate
-                _sv_rate_val = _sv_item_{{ loop.index }}.get("rate", "0")
-                try:
-                    if float(_sv_rate_val) <= 0:
-                        continue
-                except (ValueError, TypeError):
-                    continue
+                # Пропускаем элементы с нулевым rate (только если поле rate явно задано)
+                _sv_rate_val = _sv_item_{{ loop.index }}.get("rate")
+                if _sv_rate_val is not None:
+                    try:
+                        if float(_sv_rate_val) <= 0:
+                            continue
+                    except (ValueError, TypeError):
+                        pass
                 # Форматируем числовые поля с разделителем тысяч
                 for _nk in ("raw_rate",):
                     _nv = _sv_item_{{ loop.index }}.get(_nk, "")
