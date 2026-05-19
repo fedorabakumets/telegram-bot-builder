@@ -179,6 +179,20 @@ def build_start_menu() -> dict:
         },
         "onConflict": "merge",
         "saveResultTo": "pilot",
+        "autoTransitionTo": "tbl-reset-flight",
+        "enableAutoTransition": True,
+    }))
+
+    # Принудительно сбрасываем flight-поля при /start (на случай если бот перезапустился во время полёта)
+    nodes.append(node("tbl-reset-flight", "bot_table", 800, 50, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "flight_expires_at", "op": "set", "value": ""},
+            {"column": "flight_target_planet", "op": "set", "value": ""},
+            {"column": "flight_target_name", "op": "set", "value": ""},
+        ],
         "autoTransitionTo": "tbl-init-planets",
         "enableAutoTransition": True,
     }))
