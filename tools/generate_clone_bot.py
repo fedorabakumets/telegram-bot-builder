@@ -1205,19 +1205,15 @@ def build_earning() -> dict:
     nodes.append(node("msg-work-success", "edit_message", 2800, 0, {
         "editMode": "both",
         "editMessageText": (
-            "🤩 <a href='tg://user?id={user_id}'>{user.nickname}</a>, смена завершена!\n\n"
+            "😀 <a href='tg://user?id={user_id}'>{user.nickname}</a>, смена завершена!\n\n"
             "💲 Зарплата: 700$\n"
-            "⭐ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +12 exp\n\n"
-            "😨 Следующая смена через: <code>01:30</code>"
+            "⭐️ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +12 exp\n\n"
+            "🥱 Следующая смена через: <code>01:30</code>"
         ),
         "editFormatMode": "html",
         "editMessageIdSource": "last_bot_message",
         "editMessageIdManual": "",
-        "editKeyboardMode": "custom",
-        "editButtons": [
-            btn("btn-success-work", "🏖 Работать", target="tbl-read-cd-work"),
-        ],
-        "editKeyboardType": "inline",
+        "editKeyboardMode": "remove",
         "autoTransitionTo": "delay-cd-notify",
         "enableAutoTransition": True,
     }))
@@ -1270,17 +1266,13 @@ def build_earning() -> dict:
         "editMode": "both",
         "editMessageText": (
             "😢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, к сожалению, вы нажали на неверный смайлик.\n"
-            "Рабочая смена завершена\n"
-            "😨 Начать новую смену можно через: <code>01:30</code>"
+            "Рабочая смена завершена\n\n"
+            "🥱 Следующая смена через: <code>01:30</code>"
         ),
         "editFormatMode": "html",
         "editMessageIdSource": "last_bot_message",
         "editMessageIdManual": "",
-        "editKeyboardMode": "custom",
-        "editButtons": [
-            btn("btn-fail-work", "🏖 Работать", target="tbl-read-cd-work"),
-        ],
-        "editKeyboardType": "inline",
+        "editKeyboardMode": "remove",
         "autoTransitionTo": "",
         "enableAutoTransition": False,
     }))
