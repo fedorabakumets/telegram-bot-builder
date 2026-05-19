@@ -2,6 +2,7 @@
 @fileoverview Генератор project.json для бота «Космический Торговец».
 Создаёт 4 листа: Старт/Меню, Торговля, Карта, Корабль.
 Фаза 1 — скелет с заглушками для будущей логики.
+8 руд, динамические цены, фрагменты Эфира.
 @module tools/generate_space_bot
 """
 
@@ -10,7 +11,7 @@ from pathlib import Path
 
 
 # ============================================================
-# Вспомогательные функции (аналогично generate_clone_bot.py)
+# Вспомогательные функции
 # ============================================================
 
 # Константа — HTML mention пилота
@@ -62,6 +63,22 @@ def branch(bid: str, label: str, op: str, value: str, target: str) -> dict:
 
 
 # ============================================================
+# Данные руд (8 штук)
+# ============================================================
+
+ORES = [
+    {"id": "iron", "name": "Железо", "emoji": "⚙️", "earth": "40", "mars": "25", "titan": "30", "nebula": "55"},
+    {"id": "copper", "name": "Медь", "emoji": "🟤", "earth": "60", "mars": "45", "titan": "70", "nebula": "50"},
+    {"id": "titanium", "name": "Титан", "emoji": "🔩", "earth": "90", "mars": "120", "titan": "50", "nebula": "100"},
+    {"id": "uranium", "name": "Уран", "emoji": "☢️", "earth": "150", "mars": "100", "titan": "180", "nebula": "130"},
+    {"id": "crystal", "name": "Кристалл", "emoji": "💎", "earth": "200", "mars": "300", "titan": "100", "nebula": "350"},
+    {"id": "etherite", "name": "Этерит", "emoji": "✨", "earth": "250", "mars": "180", "titan": "220", "nebula": "120"},
+    {"id": "mithril", "name": "Мифрил", "emoji": "🪙", "earth": "320", "mars": "280", "titan": "350", "nebula": "400"},
+    {"id": "nexar", "name": "Нексар", "emoji": "🔮", "earth": "500", "mars": "450", "titan": "600", "nebula": "380"},
+]
+
+
+# ============================================================
 # Главная reply-клавиатура (6 кнопок, 3x2)
 # ============================================================
 
@@ -110,7 +127,7 @@ def build_start_menu() -> dict:
     """
     nodes = []
 
-    # --- /start → count pilots → set game_id → upsert pilot → init planets → init goods → welcome ---
+    # --- /start → count pilots → set game_id → upsert pilot → init planets → init ores → welcome ---
     nodes.append(node("cmd-start", "command_trigger", 100, 0, {
         "command": "/start",
         "description": "Запустить бота",
@@ -154,6 +171,7 @@ def build_start_menu() -> dict:
             "planet_id": "",
             "game_id": "{new_game_id}",
             "registered_at": "{today} {time}",
+            "fragments": "0",
         },
         "onConflict": "ignore",
         "saveResultTo": "pilot",
@@ -166,12 +184,7 @@ def build_start_menu() -> dict:
         "tableName": "planets",
         "operation": "upsert",
         "key": "id",
-        "row": {
-            "id": "earth",
-            "name": "Земля",
-            "emoji": "🌍",
-            "description": "Родная планета",
-        },
+        "row": {"id": "earth", "name": "Земля", "emoji": "🌍", "description": "Родная планета"},
         "onConflict": "ignore",
         "autoTransitionTo": "tbl-init-planets-mars",
         "enableAutoTransition": True,
@@ -181,12 +194,7 @@ def build_start_menu() -> dict:
         "tableName": "planets",
         "operation": "upsert",
         "key": "id",
-        "row": {
-            "id": "mars",
-            "name": "Марс",
-            "emoji": "🔴",
-            "description": "Красная планета",
-        },
+        "row": {"id": "mars", "name": "Марс", "emoji": "🔴", "description": "Красная планета"},
         "onConflict": "ignore",
         "autoTransitionTo": "tbl-init-planets-titan",
         "enableAutoTransition": True,
@@ -196,12 +204,7 @@ def build_start_menu() -> dict:
         "tableName": "planets",
         "operation": "upsert",
         "key": "id",
-        "row": {
-            "id": "titan",
-            "name": "Титан",
-            "emoji": "🪐",
-            "description": "Спутник Сатурна",
-        },
+        "row": {"id": "titan", "name": "Титан", "emoji": "🪐", "description": "Спутник Сатурна"},
         "onConflict": "ignore",
         "autoTransitionTo": "tbl-init-planets-nebula",
         "enableAutoTransition": True,
@@ -211,107 +214,38 @@ def build_start_menu() -> dict:
         "tableName": "planets",
         "operation": "upsert",
         "key": "id",
-        "row": {
-            "id": "nebula",
-            "name": "Туманность",
-            "emoji": "🌌",
-            "description": "Загадочная туманность",
-        },
+        "row": {"id": "nebula", "name": "Туманность", "emoji": "🌌", "description": "Загадочная туманность"},
         "onConflict": "ignore",
-        "autoTransitionTo": "tbl-init-goods",
+        "autoTransitionTo": "tbl-init-ores",
         "enableAutoTransition": True,
     }))
 
-    # --- Инициализация товаров (5 товаров с ценами на 4 планетах) ---
-    nodes.append(node("tbl-init-goods", "bot_table", 1700, -150, {
-        "tableName": "goods",
-        "operation": "upsert",
-        "key": "id",
-        "row": {
-            "id": "ore",
-            "name": "Руда",
-            "emoji": "⛏",
-            "price_earth": "50",
-            "price_mars": "30",
-            "price_titan": "20",
-            "price_nebula": "80",
-        },
-        "onConflict": "ignore",
-        "autoTransitionTo": "tbl-init-goods-crystals",
-        "enableAutoTransition": True,
-    }))
+    # --- Инициализация руд (8 штук с базовыми ценами на 4 планетах) ---
+    for i, ore in enumerate(ORES):
+        ore_node_id = f"tbl-init-ores" if i == 0 else f"tbl-init-ores-{ore['id']}"
+        # Следующий узел в цепочке
+        if i < len(ORES) - 1:
+            next_id = f"tbl-init-ores-{ORES[i + 1]['id']}"
+        else:
+            next_id = "msg-welcome"
 
-    nodes.append(node("tbl-init-goods-crystals", "bot_table", 1900, -150, {
-        "tableName": "goods",
-        "operation": "upsert",
-        "key": "id",
-        "row": {
-            "id": "crystals",
-            "name": "Кристаллы",
-            "emoji": "💎",
-            "price_earth": "200",
-            "price_mars": "300",
-            "price_titan": "100",
-            "price_nebula": "350",
-        },
-        "onConflict": "ignore",
-        "autoTransitionTo": "tbl-init-goods-fuel",
-        "enableAutoTransition": True,
-    }))
-
-    nodes.append(node("tbl-init-goods-fuel", "bot_table", 2100, -150, {
-        "tableName": "goods",
-        "operation": "upsert",
-        "key": "id",
-        "row": {
-            "id": "fuel_good",
-            "name": "Топливо",
-            "emoji": "⛽",
-            "price_earth": "30",
-            "price_mars": "50",
-            "price_titan": "40",
-            "price_nebula": "60",
-        },
-        "onConflict": "ignore",
-        "autoTransitionTo": "tbl-init-goods-electronics",
-        "enableAutoTransition": True,
-    }))
-
-    nodes.append(node("tbl-init-goods-electronics", "bot_table", 2300, -150, {
-        "tableName": "goods",
-        "operation": "upsert",
-        "key": "id",
-        "row": {
-            "id": "electronics",
-            "name": "Электроника",
-            "emoji": "🔌",
-            "price_earth": "150",
-            "price_mars": "100",
-            "price_titan": "200",
-            "price_nebula": "120",
-        },
-        "onConflict": "ignore",
-        "autoTransitionTo": "tbl-init-goods-food",
-        "enableAutoTransition": True,
-    }))
-
-    nodes.append(node("tbl-init-goods-food", "bot_table", 2500, -150, {
-        "tableName": "goods",
-        "operation": "upsert",
-        "key": "id",
-        "row": {
-            "id": "food",
-            "name": "Еда",
-            "emoji": "🍖",
-            "price_earth": "20",
-            "price_mars": "40",
-            "price_titan": "60",
-            "price_nebula": "10",
-        },
-        "onConflict": "ignore",
-        "autoTransitionTo": "msg-welcome",
-        "enableAutoTransition": True,
-    }))
+        nodes.append(node(ore_node_id, "bot_table", 1700 + i * 200, -150, {
+            "tableName": "ores",
+            "operation": "upsert",
+            "key": "id",
+            "row": {
+                "id": ore["id"],
+                "name": ore["name"],
+                "emoji": ore["emoji"],
+                "base_price_earth": ore["earth"],
+                "base_price_mars": ore["mars"],
+                "base_price_titan": ore["titan"],
+                "base_price_nebula": ore["nebula"],
+            },
+            "onConflict": "ignore",
+            "autoTransitionTo": next_id,
+            "enableAutoTransition": True,
+        }))
 
     # --- Приветственное сообщение с главным меню ---
     welcome_text = (
@@ -321,7 +255,9 @@ def build_start_menu() -> dict:
         "⛽ Топливо: 50\n"
         "📦 Трюм: 0/10"
     )
-    nodes.append(main_menu_msg("msg-welcome", welcome_text, 2700, 0))
+    # Позиция X после всех руд
+    welcome_x = 1700 + len(ORES) * 200
+    nodes.append(main_menu_msg("msg-welcome", welcome_text, welcome_x, 0))
 
     # --- Триггеры главного меню ---
     nodes.append(node("trig-trade", "text_trigger", 100, 300, {
@@ -423,7 +359,8 @@ def build_start_menu() -> dict:
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "🌍 Планета: <code>{pilot.current_planet}</code>\n"
         "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}\n"
-        "⛽ Топливо: <code>{pilot.fuel}</code>\n\n"
+        "⛽ Топливо: <code>{pilot.fuel}</code>\n"
+        "🌀 Фрагменты Эфира: <code>{pilot.fragments}</code>\n\n"
         "🚀 Корабль:\n"
         "  📦 Трюм: ур. {pilot.hull_level}\n"
         "  🚀 Двигатель: ур. {pilot.engine_level}\n"
@@ -456,7 +393,7 @@ def build_trade() -> dict:
     """
     nodes = []
 
-    # --- Подменю торговли (переход из trig-trade на sheet-start-menu) ---
+    # --- Подменю торговли ---
     nodes.append(node("tbl-read-pilot-trade", "bot_table", 100, 0, {
         "tableName": "pilots",
         "operation": "read",
@@ -504,7 +441,7 @@ def build_trade() -> dict:
     }))
 
     nodes.append(node("msg-buy-wip", "message", 400, 250, {
-        "messageText": "🛒 Покупка товаров — в разработке.",
+        "messageText": "🛒 Покупка руд — в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
@@ -518,7 +455,7 @@ def build_trade() -> dict:
     }))
 
     nodes.append(node("msg-sell-wip", "message", 400, 400, {
-        "messageText": "💰 Продажа товаров — в разработке.",
+        "messageText": "💰 Продажа руд — в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
