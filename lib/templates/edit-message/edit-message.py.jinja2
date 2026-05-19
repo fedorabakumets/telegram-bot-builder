@@ -95,25 +95,16 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         {% endfor %}
         _edit_markup = _edit_builder.as_markup()
         {% elif entry.editKeyboardMode == 'keep' %}
-        _edit_markup = "__KEEP__"
+        _edit_markup = callback_query.message.reply_markup if hasattr(callback_query, 'message') and callback_query.message else None
         {% else %}
         _edit_markup = None
         {% endif %}
         {% if entry.editFormatMode == 'html' %}
-        if _edit_markup == "__KEEP__":
-            await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text, parse_mode="HTML")
-        else:
-            await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text, parse_mode="HTML", reply_markup=_edit_markup)
+        await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text, parse_mode="HTML", reply_markup=_edit_markup)
         {% elif entry.editFormatMode == 'markdown' %}
-        if _edit_markup == "__KEEP__":
-            await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text, parse_mode="Markdown")
-        else:
-            await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text, parse_mode="Markdown", reply_markup=_edit_markup)
+        await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text, parse_mode="Markdown", reply_markup=_edit_markup)
         {% else %}
-        if _edit_markup == "__KEEP__":
-            await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text)
-        else:
-            await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text, reply_markup=_edit_markup)
+        await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text, reply_markup=_edit_markup)
         {% endif %}
 
         {% elif entry.editMode == 'text' %}
