@@ -1,0 +1,61 @@
+{#
+  Шаблон обработчиков узлов задержки (delay)
+
+  @fileoverview Генерирует Python-код для паузы или фонового таймера
+  @param {array} delayEntries - Массив объектов DelayEntry
+
+  Режимы:
+  - blocking: await asyncio.sleep(N) → переход к следующему узлу
+  - background: asyncio.create_task() → переход через N секунд, текущая цепочка завершается
+#}
+
+{%- macro compute_seconds(entry) -%}
+{%- if entry.unit == 'minutes' -%}
+int(float(_delay_val) * 60)
+{%- elif entry.unit == 'hours' -%}
+int(float(_delay_val) * 3600)
+{%- elif entry.unit == 'days' -%}
+int(float(_delay_val) * 86400)
+{%- elif entry.unit == 'weeks' -%}
+int(float(_delay_val) * 604800)
+{%- else -%}
+int(float(_delay_val))
+{%- endif -%}
+{%- endmacro -%}
+
+# Обработчики узлов задержки (delay)
+{% for entry in delayEntries %}
+{%- set sanitized_node_id = entry.nodeId | safe_name %}
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Обработчик задержки {{ entry.nodeId }} ({{ entry.mode }}, {{ entry.seconds }} {{ entry.unit }})"""
+    user_id = callback_query.from_user.id
+    _all_vars = await init_all_user_vars(user_id)
+    _delay_val = replace_variables_in_text("{{ entry.seconds }}", _all_vars) or "0"
+    try:
+        _delay_seconds = {{ compute_seconds(entry) }}
+    except (ValueError, TypeError):
+        _delay_seconds = 0
+    logging.info(f"⏱ delay [{{ entry.nodeId }}]: {_delay_seconds}с ({{ entry.mode }}) для {user_id}")
+{% if entry.mode == 'background' %}
+    # Фоновый таймер — запускаем задачу и завершаем текущий обработчик
+    async def _delayed_task():
+        await asyncio.sleep(_delay_seconds)
+        try:
+{%- if entry.autoTransitionTo %}
+            await handle_callback_{{ entry.autoTransitionTo | safe_name }}(callback_query, state=state)
+{%- else %}
+            pass
+{%- endif %}
+        except Exception as e:
+            logging.error(f"❌ Ошибка в фоновой задержке {{ entry.nodeId }}: {e}")
+    asyncio.create_task(_delayed_task())
+{% else %}
+    # Пауза — ждём и переходим
+    await asyncio.sleep(_delay_seconds)
+{%- if entry.autoTransitionTo %}
+    await handle_callback_{{ entry.autoTransitionTo | safe_name }}(callback_query, state=state)
+{%- endif %}
+{% endif %}
+
+{% endfor %}

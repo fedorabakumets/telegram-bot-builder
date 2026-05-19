@@ -34,6 +34,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'loop', // собственный обработчик генерируется шаблоном loop.py.jinja2
   'schedule_trigger', // собственный обработчик генерируется шаблоном schedule-trigger.py.jinja2
   'bot_table', // собственный обработчик генерируется шаблоном bot-table.py.jinja2
+  'delay', // собственный обработчик генерируется шаблоном delay.py.jinja2
 ]);
 
 /**

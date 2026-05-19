@@ -307,3 +307,12 @@ export function hasScheduleTriggerNodes(nodes: Node[]): boolean {
 export function hasBotTableNodes(nodes: Node[]): boolean {
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'bot_table');
 }
+
+/**
+ * Проверяет наличие узлов delay в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа delay
+ */
+export function hasDelayNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'delay');
+}
