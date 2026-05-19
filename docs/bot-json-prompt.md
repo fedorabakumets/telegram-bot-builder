@@ -580,6 +580,23 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 
 Обновляет ВСЕ строки подходящие под WHERE (не только первую).
 
+`saveResultTo` (опционально): сохраняет количество обновлённых строк ("0" если ни одна не подошла под WHERE). Полезно для условных update'ов (optimistic locking):
+
+```json
+{
+  "operation": "update",
+  "where": [
+    { "column": "telegram_id", "operator": "equals", "value": "{user_id}" },
+    { "column": "in_flight", "operator": "is_empty", "value": "" }
+  ],
+  "updates": [
+    { "column": "in_flight", "op": "set", "value": "1" }
+  ],
+  "saveResultTo": "was_updated"
+}
+```
+Если `was_updated` = "0" — строка не обновилась (условие WHERE не выполнено). Используйте condition после для проверки.
+
 #### insert
 
 ```json
