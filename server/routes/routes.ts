@@ -2259,6 +2259,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         NULL AS "languageCode",
         NULL AS "deepLinkParam",
         NULL AS "referrerId",
+        NULL AS "userData",
         (ARRAY_AGG(bm.message_text ORDER BY bm.created_at DESC))[1] AS "lastMessageText",
         MAX(bm.created_at) AS "lastMessageAt",
         TRUE AS "isGroup",
