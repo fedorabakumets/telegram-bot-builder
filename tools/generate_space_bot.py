@@ -174,6 +174,8 @@ def build_start_menu() -> dict:
             "registered_at": "{today} {time}",
             "fragments": "0",
             "flight_expires_at": "",
+            "flight_target_planet": "",
+            "flight_target_name": "",
         },
         "onConflict": "merge",
         "saveResultTo": "pilot",
@@ -1028,9 +1030,25 @@ def build_map() -> dict:
             "variable": "pilot.flight_expires_at",
             "branches": [
                 branch(f"br-no-flight-{planet['id']}", "Нет полёта", "is_empty", "", f"fly-cond-same-{planet['id']}"),
-                branch(f"br-flight-expired-{planet['id']}", "Истёк", "less_than", "{now_ts}", f"fly-cond-same-{planet['id']}"),
+                branch(f"br-flight-expired-{planet['id']}", "Истёк", "less_than", "{now_ts}", f"fly-recover-{planet['id']}"),
                 branch(f"br-inflight-{planet['id']}", "В полёте", "else", "", f"msg-fly-inflight-{planet['id']}"),
             ],
+        }))
+
+        # Восстановление после потерянного delay — обновляем планету на target
+        nodes.append(node(f"fly-recover-{planet['id']}", "bot_table", 700, y_pos + 60, {
+            "tableName": "pilots",
+            "operation": "update",
+            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+            "updates": [
+                {"column": "current_planet", "op": "set", "value": "{pilot.flight_target_planet}"},
+                {"column": "current_planet_name", "op": "set", "value": "{pilot.flight_target_name}"},
+                {"column": "flight_expires_at", "op": "set", "value": ""},
+                {"column": "flight_target_planet", "op": "set", "value": ""},
+                {"column": "flight_target_name", "op": "set", "value": ""},
+            ],
+            "autoTransitionTo": f"fly-cond-same-{planet['id']}",
+            "enableAutoTransition": True,
         }))
 
         nodes.append(node(f"msg-fly-inflight-{planet['id']}", "message", 700, y_pos - 160, {
@@ -1088,7 +1106,7 @@ def build_map() -> dict:
             "variable": "pilot.fuel",
             "branches": [
                 branch(f"br-no-fuel-{planet['id']}", "Мало топлива", "less_than", "{flight_fuel}", f"msg-fly-no-fuel-{planet['id']}"),
-                branch(f"br-has-fuel-{planet['id']}", "Хватает", "else", "", f"fly-do-{planet['id']}"),
+                branch(f"br-has-fuel-{planet['id']}", "Хватает", "else", "", f"fly-set-expires-{planet['id']}"),
             ],
         }))
 
@@ -1108,7 +1126,7 @@ def build_map() -> dict:
             "enableAutoTransition": True,
         }))
 
-        # Списываем топливо и ставим timestamp полёта
+        # Списываем топливо и ставим timestamp полёта + целевую планету
         nodes.append(node(f"fly-do-{planet['id']}", "bot_table", 1800, y_pos, {
             "tableName": "pilots",
             "operation": "update",
@@ -1116,6 +1134,8 @@ def build_map() -> dict:
             "updates": [
                 {"column": "fuel", "op": "decrement", "value": "{flight_fuel}"},
                 {"column": "flight_expires_at", "op": "set", "value": "{flight_expires_at}"},
+                {"column": "flight_target_planet", "op": "set", "value": planet['id']},
+                {"column": "flight_target_name", "op": "set", "value": planet['full']},
             ],
             "autoTransitionTo": f"msg-fly-start-{planet['id']}",
             "enableAutoTransition": True,
@@ -1149,6 +1169,8 @@ def build_map() -> dict:
                 {"column": "current_planet", "op": "set", "value": planet['id']},
                 {"column": "current_planet_name", "op": "set", "value": planet['full']},
                 {"column": "flight_expires_at", "op": "set", "value": ""},
+                {"column": "flight_target_planet", "op": "set", "value": ""},
+                {"column": "flight_target_name", "op": "set", "value": ""},
             ],
             "autoTransitionTo": f"msg-fly-arrived-{planet['id']}",
             "enableAutoTransition": True,
