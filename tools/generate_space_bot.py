@@ -709,6 +709,14 @@ def build_trade() -> dict:
                 {"field": "ore_id", "value": ore['id']},
             ],
         })
+    # Заменяем пустые значения на "0"
+    for ore in ORES:
+        qty_assignments.append({
+            "id": f"a-qty-default-{ore['id']}",
+            "variable": f"qty_{ore['id']}",
+            "value": f"max({{qty_{ore['id']}}}, 0)",
+            "mode": "expression",
+        })
 
     nodes.append(node("sell-set-quantities", "set_variable", 1300, 4000, {
         "assignments": qty_assignments,
