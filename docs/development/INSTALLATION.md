@@ -30,7 +30,7 @@ docker compose logs -f     # Логи
 
 ### Требования
 - **Node.js** ≥ 18.0.0
-- **PostgreSQL** ≥ 15
+- **PostgreSQL** ≥ 17
 - **Redis** ≥ 7
 - **Python** ≥ 3.10 (рекомендуется 3.13, для сгенерированных ботов)
 - **Git**
