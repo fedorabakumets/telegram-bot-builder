@@ -3,9 +3,9 @@
   [🇷🇺 Русский](README.md) | **🇬🇧 English**
 
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=3">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=3">
-    <img alt="Telegram Bot Builder" src="https://raw.githubusercontent.com/fedorabakumets/telegram-bot-builder/main/assets/images/bot_added_ui_visible.png?v=3" width="200">
+    <source media="(prefers-color-scheme: dark)" srcset="assets/images/bot_added_ui_visible.png">
+    <source media="(prefers-color-scheme: light)" srcset="assets/images/bot_added_ui_visible.png">
+    <img alt="Telegram Bot Builder" src="assets/images/bot_added_ui_visible.png" width="600">
   </picture>
 
   <h1>🤖 Telegram Bot Builder</h1>
