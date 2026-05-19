@@ -249,11 +249,11 @@ def build_start_menu() -> dict:
 
     # --- Приветственное сообщение с главным меню ---
     welcome_text = (
-        "🚀 Добро пожаловать на борт, пилот!\n\n"
-        "Вы на планете: 🌍 Земля\n"
-        "💰 Кредиты: 500\n"
-        "⛽ Топливо: 50\n"
-        "📦 Трюм: 0/10"
+        f"🚀 Добро пожаловать на борт, {MENTION}!\n\n"
+        "Вы на планете: 🌍 {pilot.current_planet}\n"
+        "💰 Кредиты: {pilot.credits}\n"
+        "⛽ Топливо: {pilot.fuel}\n"
+        "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}"
     )
     # Позиция X после всех руд
     welcome_x = 1700 + len(ORES) * 200
