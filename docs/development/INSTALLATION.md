@@ -384,12 +384,12 @@ sudo -u postgres psql
 ```
 
 ```sql
-CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
-CREATE DATABASE telegram_bot_builder OWNER tbb;
-GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
-GRANT ALL ON SCHEMA public TO tbb;
+CREATE DATABASE telegram_bot_builder;
+GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO postgres;
 \q
 ```
+
+> По умолчанию используется встроенный пользователь `postgres`. Пароль задаётся при установке PostgreSQL.
 
 </td>
 <td valign="top">
@@ -399,12 +399,12 @@ psql -U postgres
 ```
 
 ```sql
-CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
-CREATE DATABASE telegram_bot_builder OWNER tbb;
-GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
-GRANT ALL ON SCHEMA public TO tbb;
+CREATE DATABASE telegram_bot_builder;
+GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO postgres;
 \q
 ```
+
+> Пароль `postgres` задаётся при установке. Если забыли — переустановите или измените через `ALTER USER postgres PASSWORD 'новый_пароль';`
 
 </td>
 <td valign="top">
@@ -414,12 +414,12 @@ psql postgres
 ```
 
 ```sql
-CREATE USER tbb WITH PASSWORD 'builder2025!' LOGIN;
-CREATE DATABASE telegram_bot_builder OWNER tbb;
-GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO tbb;
-GRANT ALL ON SCHEMA public TO tbb;
+CREATE DATABASE telegram_bot_builder;
+GRANT ALL PRIVILEGES ON DATABASE telegram_bot_builder TO postgres;
 \q
 ```
+
+> На macOS пользователь `postgres` обычно создаётся без пароля при установке через Homebrew.
 
 </td>
 </tr>
