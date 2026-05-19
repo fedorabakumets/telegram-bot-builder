@@ -227,7 +227,7 @@
 <div align="center">
   <img src="https://img.shields.io/badge/API-RESTful-blue?style=for-the-badge&logo=api" alt="API"/>
   <img src="https://img.shields.io/badge/Формат-JSON-green?style=for-the-badge&logo=json" alt="JSON"/>
-  <img src="https://img.shields.io/badge/Аутентификация-JWT-orange?style=for-the-badge&logo=auth" alt="Auth"/>
+  <img src="https://img.shields.io/badge/Аутентификация-Session-orange?style=for-the-badge&logo=auth" alt="Auth"/>
 </div>
 
 <details>
@@ -282,8 +282,8 @@
 <td>Сгенерировать Python код</td>
 </tr>
 <tr>
-<td><code>POST /api/bots/{id}/deploy</code></td>
-<td>Задеплоить бота</td>
+<td><code>POST /api/bots/{id}/start</code></td>
+<td>Запустить бота</td>
 </tr>
 <tr>
 <td><code>GET /api/bots/{id}/status</code></td>
