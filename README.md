@@ -60,8 +60,8 @@
 ### 🏗️ Архитектура системы
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Архитектура-Микросервисы-blue?style=for-the-badge&logo=architecture" alt="Architecture"/>
-  <img src="https://img.shields.io/badge/Паттерн-MVC-green?style=for-the-badge&logo=pattern" alt="Pattern"/>
+  <img src="https://img.shields.io/badge/Архитектура-Монолит-blue?style=for-the-badge&logo=architecture" alt="Architecture"/>
+  <img src="https://img.shields.io/badge/Паттерн-Модульный-green?style=for-the-badge&logo=pattern" alt="Pattern"/>
   <img src="https://img.shields.io/badge/API-REST-orange?style=for-the-badge&logo=api" alt="API"/>
 </div>
 
