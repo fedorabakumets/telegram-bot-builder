@@ -525,7 +525,7 @@ def build_start_menu() -> dict:
     nodes.append(node("cond-has-clan", "condition", 700, 1100, {
         "variable": "user.clan_id",
         "branches": [
-            branch("br-has-clan", "Есть клан", "filled", "", "msg-clan-info"),
+            branch("br-has-clan", "Есть клан", "filled", "", "tbl-read-clan-info"),
             branch("br-no-clan", "Нет клана", "else", "", "msg-no-clan"),
         ],
     }))
@@ -668,6 +668,16 @@ def build_start_menu() -> dict:
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
+    }))
+    # Читаем данные клана по user.clan_id
+    nodes.append(node("tbl-read-clan-info", "bot_table", 1100, 1050, {
+        "tableName": "clans",
+        "operation": "read",
+        "where": [{"column": "id", "operator": "equals", "value": "{user.clan_id}"}],
+        "saveResultTo": "clan",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "msg-clan-info",
+        "enableAutoTransition": True,
     }))
     nodes.append(node("msg-clan-info", "message", 1300, 1050, {
         "messageText": (
