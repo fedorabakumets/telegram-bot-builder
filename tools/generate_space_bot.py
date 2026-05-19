@@ -554,29 +554,28 @@ def build_trade() -> dict:
                 {"column": "credits", "op": "decrement", "value": "{ore_price}"},
                 {"column": "cargo_used", "op": "increment", "value": "1"},
             ],
-            "autoTransitionTo": f"buy-cargo-check-{ore['id']}",
+            "autoTransitionTo": f"buy-cargo-count-{ore['id']}",
             "enableAutoTransition": True,
         }))
 
-        # Проверяем есть ли уже эта руда в трюме
-        nodes.append(node(f"buy-cargo-check-{ore['id']}", "bot_table", 1600, y_pos, {
+        # Считаем сколько этой руды уже в трюме
+        nodes.append(node(f"buy-cargo-count-{ore['id']}", "bot_table", 1600, y_pos, {
             "tableName": "pilot_cargo",
-            "operation": "read",
+            "operation": "count",
             "where": [
                 {"column": "pilot_id", "operator": "equals", "value": "{user_id}"},
                 {"column": "ore_id", "operator": "equals", "value": ore['id']},
             ],
-            "saveResultTo": "buy_cargo_item",
-            "resultFormat": "first_row",
+            "saveResultTo": "cargo_exists",
             "autoTransitionTo": f"buy-cargo-cond-{ore['id']}",
             "enableAutoTransition": True,
         }))
 
-        # Условие: уже есть в трюме или нет
+        # Условие: уже есть в трюме или нет (count == 0 → insert, иначе → increment)
         nodes.append(node(f"buy-cargo-cond-{ore['id']}", "condition", 1900, y_pos, {
-            "variable": "buy_cargo_item.quantity",
+            "variable": "cargo_exists",
             "branches": [
-                branch(f"br-cargo-new-{ore['id']}", "Новая", "is_empty", "", f"buy-cargo-insert-{ore['id']}"),
+                branch(f"br-cargo-new-{ore['id']}", "Новая", "equals", "0", f"buy-cargo-insert-{ore['id']}"),
                 branch(f"br-cargo-exists-{ore['id']}", "Уже есть", "else", "", f"buy-cargo-inc-{ore['id']}"),
             ],
         }))
@@ -688,8 +687,36 @@ def build_trade() -> dict:
     for i, ore in enumerate(ORES):
         y_pos = 4400 + i * 300
 
-        # Читаем количество этой руды в трюме
+        # Считаем количество этой руды в трюме (count вернёт "0" если нет)
         nodes.append(node(f"sell-check-{ore['id']}", "bot_table", 100, y_pos, {
+            "tableName": "pilot_cargo",
+            "operation": "count",
+            "where": [
+                {"column": "pilot_id", "operator": "equals", "value": "{user_id}"},
+                {"column": "ore_id", "operator": "equals", "value": ore['id']},
+            ],
+            "saveResultTo": "sell_ore_exists",
+            "autoTransitionTo": f"sell-cond-has-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Проверка: есть ли эта руда (count == 0 → нет)
+        nodes.append(node(f"sell-cond-has-{ore['id']}", "condition", 400, y_pos, {
+            "variable": "sell_ore_exists",
+            "branches": [
+                branch(f"br-sell-none-{ore['id']}", "Нет руды", "equals", "0", f"msg-sell-none-{ore['id']}"),
+                branch(f"br-sell-ok-{ore['id']}", "Есть", "else", "", f"sell-read-qty-{ore['id']}"),
+            ],
+        }))
+
+        nodes.append(node(f"msg-sell-none-{ore['id']}", "message", 700, y_pos - 80, {
+            "messageText": f"❌ У вас нет {ore['emoji']} {ore['name']} в трюме.",
+            "keyboardType": "none",
+            "buttons": [],
+        }))
+
+        # Читаем количество для расчёта дохода
+        nodes.append(node(f"sell-read-qty-{ore['id']}", "bot_table", 700, y_pos, {
             "tableName": "pilot_cargo",
             "operation": "read",
             "where": [
@@ -698,24 +725,8 @@ def build_trade() -> dict:
             ],
             "saveResultTo": "sell_item",
             "resultFormat": "first_row",
-            "autoTransitionTo": f"sell-cond-has-{ore['id']}",
+            "autoTransitionTo": f"sell-calc-{ore['id']}",
             "enableAutoTransition": True,
-        }))
-
-        # Проверка: есть ли эта руда (если read вернул 0 строк — quantity будет пустым)
-        nodes.append(node(f"sell-cond-has-{ore['id']}", "condition", 400, y_pos, {
-            "variable": "sell_item.quantity",
-            "branches": [
-                branch(f"br-sell-none-{ore['id']}", "Нет руды", "is_empty", "", f"msg-sell-none-{ore['id']}"),
-                branch(f"br-sell-zero-{ore['id']}", "Ноль", "equals", "0", f"msg-sell-none-{ore['id']}"),
-                branch(f"br-sell-ok-{ore['id']}", "Есть", "else", "", f"sell-calc-{ore['id']}"),
-            ],
-        }))
-
-        nodes.append(node(f"msg-sell-none-{ore['id']}", "message", 700, y_pos - 80, {
-            "messageText": f"❌ У вас нет {ore['emoji']} {ore['name']} в трюме.",
-            "keyboardType": "none",
-            "buttons": [],
         }))
 
         # Вычисляем доход: сначала цену, потом income отдельным узлом
@@ -741,6 +752,7 @@ def build_trade() -> dict:
         # Вычисляем доход (отдельный узел чтобы sell_price уже был установлен)
         nodes.append(node(f"sell-set-income-{ore['id']}", "set_variable", 1300, y_pos, {
             "assignments": [
+                {"id": f"a-sell-qty-{ore['id']}", "variable": "sell_qty", "value": "{sell_item.quantity}", "mode": "text"},
                 {"id": f"a-sell-income-{ore['id']}", "variable": "sell_income", "value": "{sell_item.quantity} * {sell_price}", "mode": "expression"},
             ],
             "autoTransitionTo": f"sell-do-credits-{ore['id']}",
@@ -754,7 +766,7 @@ def build_trade() -> dict:
             "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
             "updates": [
                 {"column": "credits", "op": "increment", "value": "{sell_income}"},
-                {"column": "cargo_used", "op": "decrement", "value": "{sell_item.quantity}"},
+                {"column": "cargo_used", "op": "decrement", "value": "{sell_qty}"},
             ],
             "autoTransitionTo": f"sell-do-delete-{ore['id']}",
             "enableAutoTransition": True,
