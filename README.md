@@ -809,7 +809,7 @@ if __name__ == "__main__":
 <hr style="border: 1px solid rgba(255,255,255,0.3); margin: 15px 0;">
 <div style="text-align: left; font-size: 14px;">
 
-<p><strong>📋 <a href="docs/development/SETUP.md" style="color: #FFE4E1;">Настройка проекта</a></strong><br/>
+<p><strong>📋 <a href="docs/development/INSTALLATION.md" style="color: #FFE4E1;">Настройка проекта</a></strong><br/>
 <small>Пошаговое руководство по установке</small></p>
 
 <p><strong>🔧 <a href="docs/development/TROUBLESHOOTING_RU.md" style="color: #FFE4E1;">Устранение неполадок</a></strong><br/>
@@ -898,7 +898,7 @@ if __name__ == "__main__":
     <a href="docs/README.md">
       <img src="https://img.shields.io/badge/📚_Полный_индекс-Все_документы-4285f4?style=for-the-badge&logo=gitbook" alt="Full Index"/>
     </a>
-    <a href="docs/development/SETUP.md">
+    <a href="docs/development/INSTALLATION.md">
       <img src="https://img.shields.io/badge/🚀_Быстрый_старт-Установка-ea4335?style=for-the-badge&logo=rocket" alt="Quick Start"/>
     </a>
     <a href="docs/development/TROUBLESHOOTING_RU.md">
@@ -916,7 +916,7 @@ if __name__ == "__main__":
   ```
   📂 docs/
   ├── 📁 development/              # 🛠️ Документация для разработчиков
-  │   ├── 📄 SETUP.md             # Настройка окружения разработки
+  │   ├── 📄 INSTALLATION.md       # Настройка окружения разработки
   │   ├── 📄 TROUBLESHOOTING_RU.md # Устранение неполадок
   │   ├── 📄 CONTRIBUTING.md       # Руководство для контрибьюторов
   │   ├── 📄 REQUIREMENTS_SPECIFICATION.md # Техническая спецификация

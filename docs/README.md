@@ -9,8 +9,7 @@
 - [Replit Setup](deployment/replit.md) - Настройка в Replit
 
 ## 🛠️ Разработка
-- [Setup Guide](development/SETUP.md) - Руководство по настройке
-- [Instructions RU](development/INSTRUCTIONS_RU.md) - Инструкции на русском
+- [Installation Guide](development/INSTALLATION.md) - Руководство по установке и настройке
 - [Troubleshooting](development/TROUBLESHOOTING_RU.md) - Устранение неполадок
 - [Implementation Guide](development/REAL_IMPLEMENTATION_GUIDE.md) - Руководство по реализации
 - [Requirements](development/REQUIREMENTS_SPECIFICATION.md) - Спецификация требований
