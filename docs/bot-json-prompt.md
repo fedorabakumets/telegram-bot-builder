@@ -1265,3 +1265,84 @@ GIN-индекс на `bot_table_rows.data` для быстрого поиска
 | Маппинг ключей | `server/services/content-table/content-key-parser.ts` |
 | Шаблон Python (get_content) | `lib/templates/content/content.py.jinja2` |
 | Документация фичи | `docs/futures/content-table.md` |
+
+---
+
+## ⚠️ Частые ошибки и подводные камни
+
+### 1. set_variable: нельзя использовать переменную в том же узле где она устанавливается
+
+**НЕПРАВИЛЬНО** — `sell_income` использует `{sell_price}`, который устанавливается в том же `set_variable`:
+```json
+{
+  "type": "set_variable",
+  "data": {
+    "assignments": [
+      { "id": "a1", "variable": "sell_price", "value": "50", "mode": "text" },
+      { "id": "a2", "variable": "sell_income", "value": "{quantity} * {sell_price}", "mode": "expression" }
+    ]
+  }
+}
+```
+Результат: `sell_income = 0`, потому что `{sell_price}` ещё не существует на момент вычисления.
+
+**ПРАВИЛЬНО** — разделить на 2 узла:
+```json
+// Узел 1: установить цену
+{ "assignments": [{ "variable": "sell_price", "value": "50", "mode": "text" }], "autoTransitionTo": "node-2" }
+
+// Узел 2: вычислить доход (sell_price уже существует)
+{ "assignments": [{ "variable": "sell_income", "value": "{quantity} * {sell_price}", "mode": "expression" }] }
+```
+
+### 2. bot_table upsert: ключ должен быть уникальным идентификатором записи
+
+**НЕПРАВИЛЬНО** — `key: "pilot_id"` при составном ключе (pilot_id + ore_id):
+```json
+{
+  "operation": "upsert",
+  "key": "pilot_id",
+  "row": { "pilot_id": "{user_id}", "ore_id": "iron", "quantity": "1" }
+}
+```
+Результат: если у пилота уже есть ЛЮБАЯ руда, upsert найдёт первую запись по `pilot_id` и перезапишет её (потеря данных).
+
+**ПРАВИЛЬНО** — использовать read + condition + insert/update:
+```
+read (where: pilot_id + ore_id) → condition (is_empty?) 
+  → insert (новая запись)
+  → update (increment quantity)
+```
+
+### 3. Переменные не сбрасываются между вызовами
+
+Если пользователь нажал кнопку "Продать Железо" → `sell_item.quantity = 5`.
+Потом нажал "Продать Уран" → read вернул 0 строк, но `sell_item.quantity` **всё ещё = 5** от предыдущего вызова!
+
+**Решение**: всегда проверять через `is_empty` (если read вернул 0 строк, поля объекта будут пустыми) И через `equals "0"`:
+```json
+{
+  "branches": [
+    { "operator": "is_empty", "value": "", "target": "no-item" },
+    { "operator": "equals", "value": "0", "target": "no-item" },
+    { "operator": "else", "value": "", "target": "has-item" }
+  ]
+}
+```
+
+### 4. bot_table update decrement: может уйти в минус
+
+`decrement` не проверяет что значение >= 0. Если `cargo_used = 0` и вы делаете `decrement 1`, получите `-1`.
+
+**Решение**: всегда ставить condition перед decrement:
+```
+condition (cargo_used > 0?) → update (decrement) 
+```
+
+### 5. Inline кнопки: callback_data = target узла
+
+При `keyboardType: "inline"` и `action: "goto"`, callback_data автоматически равен `target` кнопки. Убедитесь что целевой узел существует на том же листе или доступен глобально.
+
+### 6. bot_table read с all_rows: переменная — массив
+
+После `read` с `resultFormat: "all_rows"` переменная содержит JSON-массив. Для доступа к элементам используйте `loop` или `array_item` в set_variable. Нельзя обращаться как `{list.field}` — это работает только с `first_row`.
