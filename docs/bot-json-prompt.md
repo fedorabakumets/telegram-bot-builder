@@ -267,6 +267,7 @@
 | `expression` | Арифметическое выражение (поддерживает +, -, *, /) | `"{balance} - 50"` |
 | `random` | Случайное целое число в диапазоне | `value: "500"`, `maxValue: "900"` |
 | `random_item` | Случайный элемент из списка (через запятую) | `"🔧,💥,💡,⚡,🔨"` |
+| `array_item` | Элемент массива/объекта по индексу или ключу | `value: "{items}"`, `maxValue: "0"` или `"data.user.name"` |
 | `timestamp` | Unix timestamp (текущее время + смещение в секундах) | `"90"` (= сейчас + 90 сек) |
 | `lookup` | Поиск значения в таблице-переменной | — |
 | `str_replace` | Замена подстроки | `"старый_текст"` + `replaceWith: "новый"` |
@@ -313,6 +314,16 @@
 Замена подстроки:
 ```json
 { "id": "a4", "variable": "bio", "value": "плохое_слово", "mode": "str_replace", "replaceWith": "***" }
+```
+
+Элемент массива по индексу:
+```json
+{ "id": "a0", "variable": "first_item", "value": "{items_list}", "maxValue": "0", "mode": "array_item" }
+```
+
+Вложенный доступ через dot-notation:
+```json
+{ "id": "a0", "variable": "user_name", "value": "{api_response}", "maxValue": "data.users.0.name", "mode": "array_item" }
 ```
 
 #### Lookup (поиск в таблице)

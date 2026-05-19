@@ -159,6 +159,34 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         else:
             user_data[user_id]["{{ safe_var }}"] = ""
         logging.info(f"📝 set_variable [{{ nodeId }}]: random_item «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']} (из {len(_sv_items_{{ loop.index }})} элементов)")
+        {%- elif assignment.mode == 'array_item' %}
+        import json as _json_ai
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_source_raw_{{ loop.index }} = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        _sv_index_raw_{{ loop.index }} = replace_variables_in_text({{ assignment.maxValue | tojson }}, _sv_vars_{{ loop.index }})
+        # Парсим источник (массив или объект)
+        _sv_source_{{ loop.index }} = _sv_source_raw_{{ loop.index }}
+        if isinstance(_sv_source_{{ loop.index }}, str):
+            try:
+                _sv_source_{{ loop.index }} = _json_ai.loads(_sv_source_{{ loop.index }})
+            except Exception:
+                pass
+        # Извлекаем элемент по индексу/ключу (поддерживает dot-notation: "data.users.0.name")
+        _sv_result_{{ loop.index }} = _sv_source_{{ loop.index }}
+        for _seg in str(_sv_index_raw_{{ loop.index }}).split("."):
+            if _sv_result_{{ loop.index }} is None:
+                break
+            if isinstance(_sv_result_{{ loop.index }}, (list, tuple)):
+                try:
+                    _sv_result_{{ loop.index }} = _sv_result_{{ loop.index }}[int(_seg)]
+                except (IndexError, ValueError):
+                    _sv_result_{{ loop.index }} = None
+            elif isinstance(_sv_result_{{ loop.index }}, dict):
+                _sv_result_{{ loop.index }} = _sv_result_{{ loop.index }}.get(_seg)
+            else:
+                _sv_result_{{ loop.index }} = None
+        user_data[user_id]["{{ safe_var }}"] = str(_sv_result_{{ loop.index }}) if _sv_result_{{ loop.index }} is not None else ""
+        logging.info(f"📝 set_variable [{{ nodeId }}]: array_item «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']} (индекс/ключ: {_sv_index_raw_{{ loop.index }}})")
         {%- elif assignment.mode == 'timestamp' %}
         import time as _time_mod_sv
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)

@@ -268,3 +268,41 @@ describe('Режим random_item', () => {
     expect(r).toContain('logging.info');
   });
 });
+
+// ─── Режим array_item ────────────────────────────────────────────────────────
+
+describe('Режим array_item', () => {
+  it('содержит json.loads для парсинга массива', () => {
+    const nodes = [
+      { id: 'sv_ai', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'item', value: '{items}', maxValue: '0', mode: 'array_item' }],
+        autoTransitionTo: '',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('json');
+  });
+
+  it('поддерживает dot-notation в индексе', () => {
+    const nodes = [
+      { id: 'sv_ai2', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'name', value: '{response}', maxValue: 'data.user.name', mode: 'array_item' }],
+        autoTransitionTo: '',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('split');
+    expect(r).toContain('array_item');
+  });
+
+  it('содержит logging.info', () => {
+    const nodes = [
+      { id: 'sv_ai3', type: 'set_variable', data: {
+        assignments: [{ id: 'a1', variable: 'val', value: '{arr}', maxValue: '1', mode: 'array_item' }],
+        autoTransitionTo: '',
+      }, position: { x: 0, y: 0 } } as any,
+    ];
+    const r = generateSetVariableHandlers(nodes);
+    expect(r).toContain('logging.info');
+  });
+});

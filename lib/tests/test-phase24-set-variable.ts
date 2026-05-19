@@ -221,6 +221,27 @@ test('E2_03', 'random_item синтаксис Python OK', () => {
   ]), 'E2_03'), 'E2_03');
 });
 
+// ─── Блок E3: Режим array_item ──────────────────────────────────────────────
+console.log('\n─── Блок E3: Режим array_item ───');
+
+test('E3_01', 'array_item содержит json', () => {
+  const code = gen(makeCleanProject([makeSV('sv_ai', [{ id: 'a1', variable: 'item', value: '{items}', maxValue: '0', mode: 'array_item' }])]), 'E3_01');
+  ok(code.includes('json'), 'Нет json');
+});
+
+test('E3_02', 'array_item поддерживает dot-notation', () => {
+  const code = gen(makeCleanProject([makeSV('sv_ai2', [{ id: 'a1', variable: 'name', value: '{resp}', maxValue: 'data.0.name', mode: 'array_item' }])]), 'E3_02');
+  ok(code.includes('split'), 'Нет split для dot-notation');
+});
+
+test('E3_03', 'array_item синтаксис Python OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCmd('cmd1', '/get', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'first_user', value: '{users_list}', maxValue: '0', mode: 'array_item' }], 'msg1'),
+    makeMsg('msg1', 'Первый: {first_user}'),
+  ]), 'E3_03'), 'E3_03');
+});
+
 // ─── Блок F: Автопереход ─────────────────────────────────────────────────────
 console.log('\n─── Блок F: Автопереход ───');
 

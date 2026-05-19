@@ -11,8 +11,8 @@ export interface SetVariableAssignment {
   variable: string;
   /** Значение или шаблон с {переменными} */
   value: string;
-  /** Режим: "text" — шаблон, "expression" — арифметическое выражение, "random" — случайное число, "random_item" — случайный элемент из списка, "timestamp" — временная метка */
-  mode: 'text' | 'expression' | 'random' | 'random_item' | 'timestamp';
+  /** Режим: "text" — шаблон, "expression" — арифметическое выражение, "random" — случайное число, "random_item" — случайный элемент из списка, "array_item" — элемент массива/объекта по индексу/ключу, "timestamp" — временная метка */
+  mode: 'text' | 'expression' | 'random' | 'random_item' | 'array_item' | 'timestamp';
   /** Максимальное значение для mode=random */
   maxValue?: string;
 }
