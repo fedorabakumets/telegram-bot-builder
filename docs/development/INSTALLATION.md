@@ -2,6 +2,7 @@
 ### Требования
 - **Node.js** ≥ 18.0.0
 - **PostgreSQL** ≥ 15
+- **Redis** ≥ 7
 - **Python** ≥ 3.10 (для сгенерированных ботов)
 - **Git**
 <details>
@@ -283,7 +284,81 @@ python3 --version
 ---
 
 <details>
-<summary><strong>Шаг 5: Настройка базы данных</strong></summary>
+<summary><strong>Шаг 5: Установка Redis</strong></summary>
+
+<table>
+<tr>
+<th width="33%">🐧 Linux (Ubuntu/Debian)</th>
+<th width="33%">🏁 Windows</th>
+<th width="33%">🍎 macOS</th>
+</tr>
+<tr>
+<td valign="top">
+
+**Способ 1: Через терминал:**
+```bash
+sudo apt install -y redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+```
+
+**Проверка установки:**
+```bash
+redis-cli ping
+```
+> Должен ответить `PONG`
+
+</td>
+<td valign="top">
+
+**Способ 1: Через WSL2 (рекомендуется):**
+
+Установите Redis внутри WSL:
+```bash
+sudo apt install -y redis-server
+sudo service redis-server start
+```
+
+**Способ 2: Memurai (нативный Windows-порт Redis):**
+- Скачайте с [memurai.com](https://www.memurai.com/)
+- Установите и запустите
+
+**Способ 3: Docker:**
+```powershell
+docker run -d --name redis -p 6379:6379 redis:alpine
+```
+
+**Проверка установки:**
+```bash
+redis-cli ping
+```
+> Должен ответить `PONG`
+
+</td>
+<td valign="top">
+
+**Способ 1: Через Homebrew:**
+```bash
+brew install redis
+brew services start redis
+```
+
+**Проверка установки:**
+```bash
+redis-cli ping
+```
+> Должен ответить `PONG`
+
+</td>
+</tr>
+</table>
+
+</details>
+
+---
+
+<details>
+<summary><strong>Шаг 6: Настройка базы данных</strong></summary>
 
 <table>
 <tr>
@@ -345,7 +420,7 @@ GRANT ALL ON SCHEMA public TO tbb;
 ---
 
 <details>
-<summary><strong>Шаг 6: Клонирование проекта</strong></summary>
+<summary><strong>Шаг 7: Клонирование проекта</strong></summary>
 
 <table>
 <tr>
@@ -392,7 +467,7 @@ cd telegram-bot-builder
 ---
 
 <details>
-<summary><strong>Шаг 7: Настройка окружения</strong></summary>
+<summary><strong>Шаг 8: Настройка окружения</strong></summary>
 
 **Пример `.env` для всех систем:**
 ```env
@@ -440,7 +515,7 @@ nano .env
 ---
 
 <details>
-<summary><strong>Шаг 8: Установка зависимостей и запуск</strong></summary>
+<summary><strong>Шаг 9: Установка зависимостей и запуск</strong></summary>
 
 **1. Установка зависимостей:**
 ```bash
