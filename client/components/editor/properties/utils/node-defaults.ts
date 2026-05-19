@@ -446,7 +446,7 @@ export function getNodeDefaults(type: Node['type']): any {
     bot_table: {
       /** Имя таблицы */
       tableName: '',
-      /** Операция: read, insert, update, upsert, delete, count, sum, max, min */
+      /** Операция: read, insert, update, upsert, delete, count, sum, max, min, avg, distinct, delete_all */
       operation: 'read',
       /** Условия WHERE */
       where: [],
@@ -470,7 +470,7 @@ export function getNodeDefaults(type: Node['type']): any {
       orderDirection: 'desc',
       /** Лимит строк */
       limit: 0,
-      /** Колонка для агрегации (sum, max, min) */
+      /** Колонка для агрегации (sum, max, min, avg, distinct) */
       aggregateColumn: '',
       /** Смещение строк (для пагинации) */
       offset: 0,
@@ -478,6 +478,8 @@ export function getNodeDefaults(type: Node['type']): any {
       autoTransitionTo: '',
       /** Включить автопереход */
       enableAutoTransition: false,
+      /** Вернуть ID вставленной строки (для insert/upsert) */
+      returnInsertedId: false,
     },
     delay: {
       /** Задержка в секундах (поддерживает {переменные}) */

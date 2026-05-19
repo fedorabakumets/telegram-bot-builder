@@ -42,6 +42,9 @@ const OPERATION_LABELS: Record<string, string> = {
   sum: 'Сумма',
   max: 'Максимум',
   min: 'Минимум',
+  avg: 'Среднее',
+  distinct: 'Уникальные значения',
+  delete_all: 'Очистить таблицу',
 };
 
 /**
@@ -75,20 +78,22 @@ export function BotTableConfiguration({
   /** Загрузка списка таблиц проекта */
   const { data: tables = [] } = useTablesQuery(projectId);
 
-  /** Показывать WHERE: read, update, delete, count, sum, max, min */
-  const showWhere = ['read', 'update', 'delete', 'count', 'sum', 'max', 'min'].includes(operation);
+  /** Показывать WHERE: read, update, delete, count, sum, max, min, avg, distinct */
+  const showWhere = ['read', 'update', 'delete', 'count', 'sum', 'max', 'min', 'avg', 'distinct'].includes(operation);
   /** Показывать Updates: update */
   const showUpdates = operation === 'update';
   /** Показывать Row: insert, upsert */
   const showRow = ['insert', 'upsert'].includes(operation);
   /** Показывать ключ и onConflict: upsert */
   const showUpsert = operation === 'upsert';
-  /** Показывать сохранение результата: read, update, upsert, count, sum, max, min */
-  const showSaveResult = ['read', 'update', 'upsert', 'count', 'sum', 'max', 'min'].includes(operation);
+  /** Показывать сохранение результата: read, update, upsert, count, sum, max, min, avg, distinct, delete_all */
+  const showSaveResult = ['read', 'update', 'upsert', 'count', 'sum', 'max', 'min', 'avg', 'distinct', 'delete_all'].includes(operation);
   /** Показывать формат результата: read */
   const showResultFormat = operation === 'read';
-  /** Показывать поле колонки для агрегации: sum, max, min */
-  const showAggregateColumn = ['sum', 'max', 'min'].includes(operation);
+  /** Показывать поле колонки для агрегации: sum, max, min, avg, distinct */
+  const showAggregateColumn = ['sum', 'max', 'min', 'avg', 'distinct'].includes(operation);
+  /** Для delete_all не нужны WHERE/Row/Updates — только предупреждение */
+  const showNoConfig = operation === 'delete_all';
 
   /** Доступные узлы для перехода */
   const availableTargets = getAllNodesFromAllSheets.filter(
@@ -178,6 +183,13 @@ export function BotTableConfiguration({
         </Select>
       </div>
 
+      {/* Предупреждение для delete_all */}
+      {showNoConfig && (
+        <div className="p-2 rounded bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium">⚠️ Удалит ВСЕ строки из таблицы!</p>
+        </div>
+      )}
+
       {/* WHERE секция */}
       {showWhere && (
         <BotTableWhereSection
@@ -198,7 +210,7 @@ export function BotTableConfiguration({
             placeholder="balance"
             className="text-xs h-8 bg-white/60 dark:bg-slate-950/60"
           />
-          <p className="text-[10px] text-muted-foreground/70">Числовая колонка для вычисления суммы/макс/мин</p>
+          <p className="text-[10px] text-muted-foreground/70">Числовая колонка для вычисления суммы/макс/мин/среднего или колонка для уникальных значений</p>
         </div>
       )}
 
@@ -251,6 +263,19 @@ export function BotTableConfiguration({
             </Select>
           </div>
         </>
+      )}
+
+      {/* Вернуть ID вставленной строки (insert/upsert) */}
+      {['insert', 'upsert'].includes(operation) && (
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={data?.returnInsertedId || false}
+            onChange={(e) => onNodeUpdate(selectedNode.id, { returnInsertedId: e.target.checked })}
+            className="h-3.5 w-3.5 rounded border-gray-300"
+          />
+          <Label className="text-xs text-muted-foreground">Сохранить ID вставленной строки в переменную</Label>
+        </div>
       )}
 
       {/* Формат результата (только read) */}
