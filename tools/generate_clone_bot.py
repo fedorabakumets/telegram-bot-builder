@@ -810,20 +810,28 @@ def build_earning() -> dict:
     nodes.append(node("cond-work-cd", "condition", 900, 0, {
         "variable": "cd.expires_at",
         "branches": [
-            branch("br-cd-active", "Кулдаун активен", "greater_than", "{now_ts}", "msg-work-cd"),
+            branch("br-cd-active", "Кулдаун активен", "greater_than", "{now_ts}", "set-cd-remaining"),
             branch("br-cd-expired", "Можно работать", "else", "", "tbl-read-user-work"),
         ],
     }))
 
-    # Сообщение о кулдауне
+    # Вычисляем оставшееся время кулдауна в формате MM:SS
+    nodes.append(node("set-cd-remaining", "set_variable", 1000, -300, {
+        "assignments": [
+            {"id": "a-cd-fmt", "variable": "cd_text", "value": "{cd.expires_at} - {now_ts}", "mode": "format_duration"},
+        ],
+        "autoTransitionTo": "msg-work-cd",
+        "enableAutoTransition": True,
+    }))
+
+    # Сообщение о кулдауне с оставшимся временем и кнопкой «Работать»
     nodes.append(node("msg-work-cd", "message", 1000, -200, {
-        "messageText": (
-            "😨 <a href='tg://user?id={user_id}'>{user.nickname}</a>, следующая смена через: ...\n\n"
-            "⏳ Подождите окончания кулдауна."
-        ),
+        "messageText": "😨 <a href='tg://user?id={user_id}'>{user.nickname}</a>, начать новую смену можно через: <code>{cd_text}</code>",
         "formatMode": "html",
-        "keyboardType": "none",
-        "buttons": [],
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-cd-work", "🏖 Работать", target="trig-work"),
+        ],
     }))
 
     # Читаем пользователя для мини-игры
@@ -1019,11 +1027,13 @@ def build_earning() -> dict:
             "🤩 <a href='tg://user?id={user_id}'>{user.nickname}</a>, смена завершена!\n\n"
             "💲 Зарплата: 700$\n"
             "⭐ Уровень: {user.level} ({user.exp}/{user.exp_to_next}) +12 exp\n\n"
-            "😨 Следующая смена через: 01:30"
+            "😨 Следующая смена через: <code>01:30</code>"
         ),
         "formatMode": "html",
-        "keyboardType": "none",
-        "buttons": [],
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-success-work", "🏖 Работать", target="trig-work"),
+        ],
         "autoTransitionTo": "delay-cd-notify",
         "enableAutoTransition": True,
     }))
@@ -1076,11 +1086,13 @@ def build_earning() -> dict:
         "messageText": (
             "😢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, к сожалению, вы нажали на неверный смайлик.\n"
             "Рабочая смена завершена\n"
-            "😨 Начать новую смену можно через: 01:30"
+            "😨 Начать новую смену можно через: <code>01:30</code>"
         ),
         "formatMode": "html",
-        "keyboardType": "none",
-        "buttons": [],
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-fail-work", "🏖 Работать", target="trig-work"),
+        ],
     }))
 
     # === 🌋 Шахта (lvl 3) ===
