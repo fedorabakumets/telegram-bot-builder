@@ -538,7 +538,7 @@ def build_start_menu() -> dict:
         "keyboardType": "inline",
         "buttons": [
             btn("btn-clan-find", "🔎 Найти клан", target="msg-clan-find-wip"),
-            btn("btn-clan-create", "➕ Создать клан [100,000,000$]", target="msg-clan-create-wip"),
+            btn("btn-clan-create", "➕ Создать клан [100,000,000$]", target="tbl-read-user-create-clan"),
         ],
         "keyboardLayout": {
             "autoLayout": False,
@@ -554,8 +554,115 @@ def build_start_menu() -> dict:
         "keyboardType": "none",
         "buttons": [],
     }))
-    nodes.append(node("msg-clan-create-wip", "message", 1300, 1400, {
-        "messageText": "➕ Создание клана — раздел в разработке.",
+    # === Цепочка создания клана ===
+    # Кнопка "Создать клан" → проверка баланса → запрос названия → создание
+
+    # 1. Читаем пользователя для проверки баланса
+    nodes.append(node("tbl-read-user-create-clan", "bot_table", 1300, 1400, {
+        "tableName": "users",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "user",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "cond-clan-balance",
+        "enableAutoTransition": True,
+    }))
+
+    # 2. Проверяем баланс >= 100000000
+    nodes.append(node("cond-clan-balance", "condition", 1600, 1400, {
+        "variable": "user.balance",
+        "branches": [
+            branch("br-clan-afford", "Хватает", "greater_than", "99999999", "msg-clan-ask-name"),
+            branch("br-clan-poor", "Не хватает", "else", "", "msg-clan-no-money"),
+        ],
+    }))
+
+    # 3. Не хватает денег — сообщение
+    nodes.append(node("msg-clan-no-money", "message", 1900, 1500, {
+        "messageText": "😔 <a href='tg://user?id={user_id}'>{user.nickname}</a>, у вас недостаточно средств для создания клана.\n\n💰 Нужно: <code>100,000,000$</code>\n💰 Ваш баланс: <code>{user.balance}$</code>",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # 4. Хватает — запрашиваем название клана
+    nodes.append(node("msg-clan-ask-name", "message", 1900, 1300, {
+        "messageText": "✏️ <a href='tg://user?id={user_id}'>{user.nickname}</a>, введите название для вашего клана (до 20 символов):",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # 5. Input нода — ожидание ввода названия
+    nodes.append(node("input-clan-name", "input", 2200, 1300, {
+        "inputType": "any",
+        "inputVariable": "clan_name",
+        "inputTargetNodeId": "tbl-count-clans",
+        "inputPrompt": "",
+        "inputRequired": True,
+    }))
+
+    # 6. Считаем кланы для генерации clan_id
+    nodes.append(node("tbl-count-clans", "bot_table", 2500, 1300, {
+        "tableName": "clans",
+        "operation": "count",
+        "where": [],
+        "saveResultTo": "clans_count",
+        "autoTransitionTo": "set-new-clan-id",
+        "enableAutoTransition": True,
+    }))
+
+    # 7. Вычисляем clan_id = clans_count + 1
+    nodes.append(node("set-new-clan-id", "set_variable", 2800, 1300, {
+        "assignments": [
+            {"id": "a-cid", "variable": "new_clan_id", "value": "{clans_count} + 1", "mode": "expression"},
+        ],
+        "autoTransitionTo": "tbl-create-clan",
+        "enableAutoTransition": True,
+    }))
+
+    # 8. Создаём клан в таблице clans
+    nodes.append(node("tbl-create-clan", "bot_table", 3100, 1300, {
+        "tableName": "clans",
+        "operation": "insert",
+        "row": {
+            "id": "{new_clan_id}",
+            "name": "{clan_name}",
+            "level": "1",
+            "exp": "0",
+            "exp_to_next": "100",
+            "treasury": "0",
+            "rating": "0",
+            "members_count": "1",
+            "max_members": "10",
+            "entry_type": "Открыт",
+            "leader_name": "{user.nickname}",
+            "harbor_level": "1",
+            "harbor_storage": "0",
+            "harbor_max": "1000",
+            "harbor_rate": "10",
+        },
+        "autoTransitionTo": "tbl-update-user-clan",
+        "enableAutoTransition": True,
+    }))
+
+    # 9. Обновляем clan_id пользователя
+    nodes.append(node("tbl-update-user-clan", "bot_table", 3400, 1300, {
+        "tableName": "users",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "clan_id", "op": "set", "value": "{new_clan_id}"},
+            {"column": "balance", "op": "decrement", "value": "100000000"},
+        ],
+        "autoTransitionTo": "msg-clan-created",
+        "enableAutoTransition": True,
+    }))
+
+    # 10. Сообщение об успешном создании
+    nodes.append(node("msg-clan-created", "message", 3700, 1300, {
+        "messageText": "🎉 <a href='tg://user?id={user_id}'>{user.nickname}</a>, клан <b>{clan_name}</b> успешно создан!\n\n🆔 ID клана: <code>{new_clan_id}</code>\n💰 Списано: <code>100,000,000$</code>",
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
