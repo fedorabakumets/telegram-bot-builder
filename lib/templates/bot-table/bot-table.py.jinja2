@@ -387,26 +387,6 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
                             )
 {% endif %}
 {% endfor %}
-                    # Синхронизация user_data после update
-                    # Обновляем все переменные вида "X.column" в user_data для этого пользователя
-                    if user_id in user_data:
-{% for upd in updates %}
-                        for _ud_key in list(user_data[user_id].keys()):
-                            if _ud_key.endswith(".{{ upd.column }}"):
-{% if upd.op == 'set' %}
-                                user_data[user_id][_ud_key] = _upd_val_{{ loop.index }}
-{% elif upd.op == 'increment' %}
-                                try:
-                                    user_data[user_id][_ud_key] = str(int(float(user_data[user_id][_ud_key] or "0")) + int(float(_upd_val_{{ loop.index }})))
-                                except (ValueError, TypeError):
-                                    pass
-{% elif upd.op == 'decrement' %}
-                                try:
-                                    user_data[user_id][_ud_key] = str(int(float(user_data[user_id][_ud_key] or "0")) - int(float(_upd_val_{{ loop.index }})))
-                                except (ValueError, TypeError):
-                                    pass
-{% endif %}
-{% endfor %}
                     # Инвалидация кеша
                     global _bot_tables_cache
                     _bot_tables_cache = None
