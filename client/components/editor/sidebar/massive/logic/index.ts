@@ -6,3 +6,4 @@
 export { conditionNode } from './condition-node';
 export { setVariableNode } from './set-variable-node';
 export { loopNode } from './loop-node';
+export { delayNode } from './delay-node';

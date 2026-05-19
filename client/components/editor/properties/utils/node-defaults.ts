@@ -475,6 +475,16 @@ export function getNodeDefaults(type: Node['type']): any {
       /** Включить автопереход */
       enableAutoTransition: false,
     },
+    delay: {
+      /** Задержка в секундах (поддерживает {переменные}) */
+      seconds: '3',
+      /** Режим: blocking — пауза, background — фоновый таймер */
+      mode: 'blocking',
+      /** ID следующего узла */
+      autoTransitionTo: '',
+      /** Включить автопереход */
+      enableAutoTransition: false,
+    },
   };
   return defaults[type] || {};
 }

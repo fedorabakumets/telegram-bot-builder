@@ -158,6 +158,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             {getNodeName('bot_table')}
           </span>
         );
+      /** Заголовок узла задержки */
+      case 'delay' as any:
+        return (
+          <span className="font-semibold text-amber-700 dark:text-amber-300">
+            {getNodeName('delay')}
+          </span>
+        );
       default:
         return null;
     }

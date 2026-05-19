@@ -44,6 +44,7 @@ export const MANAGEMENT_NODE_TYPES = [
   'convert_file' as any,
   'loop' as any,
   'bot_table' as any,
+  'delay' as any,
 ] as const;
 
 /**
