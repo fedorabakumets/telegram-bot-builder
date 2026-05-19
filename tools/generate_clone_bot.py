@@ -977,6 +977,26 @@ def build_earning() -> dict:
         ),
         "keyboardType": "none",
         "buttons": [],
+        "autoTransitionTo": "delay-cd-notify",
+        "enableAutoTransition": True,
+    }))
+
+    # Фоновый таймер — уведомление через 90 секунд
+    nodes.append(node("delay-cd-notify", "delay", 3100, 0, {
+        "seconds": "90",
+        "unit": "seconds",
+        "mode": "background",
+        "autoTransitionTo": "msg-cd-notify",
+        "enableAutoTransition": True,
+    }))
+
+    # Уведомление после кулдауна
+    nodes.append(node("msg-cd-notify", "message", 3400, 0, {
+        "messageText": "🔔 {user.nickname}, вы можете начать новую рабочую смену.",
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-work-again", "🏖 Работать", target="trig-work"),
+        ],
     }))
 
     # === Неправильная кнопка: кулдаун через timestamp + сообщение об ошибке ===
@@ -1982,7 +2002,6 @@ def build_project() -> dict:
             build_clan(),
             build_help(),
             build_basic(),
-            build_notifications(),
         ],
     }
 
