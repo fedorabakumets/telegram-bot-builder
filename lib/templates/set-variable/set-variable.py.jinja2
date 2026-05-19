@@ -226,17 +226,20 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         {% if autoTransitionTo %}
         {%- set safe_target = autoTransitionTo | safe_name %}
         logging.info(f"⚡ set_variable [{{ nodeId }}]: автопереход → {{ autoTransitionTo }} для {user_id}")
-        # Автопереход к следующему узлу
-        class FakeCallback:
-            def __init__(self, data, user, msg):
-                self.data = data
-                self.from_user = user
-                self.message = msg
-                self._is_fake = True
-            async def answer(self, *args, **kwargs):
-                pass
-        fake_cb = FakeCallback("{{ autoTransitionTo }}", callback_query.from_user, callback_query.message)
-        await handle_callback_{{ safe_target }}(fake_cb, state=state)
+        # Автопереход к следующему узлу (передаём оригинальный callback_query если доступен)
+        if not getattr(callback_query, '_is_fake', False):
+            _sv_next_cb = callback_query
+        else:
+            class FakeCallback:
+                def __init__(self, data, user, msg):
+                    self.data = data
+                    self.from_user = user
+                    self.message = msg
+                    self._is_fake = True
+                async def answer(self, *args, **kwargs):
+                    pass
+            _sv_next_cb = FakeCallback("{{ autoTransitionTo }}", callback_query.from_user, callback_query.message)
+        await handle_callback_{{ safe_target }}(_sv_next_cb, state=state)
         {% endif %}
     except Exception as e:
         logging.error(f"❌ Ошибка в set_variable [{{ nodeId }}]: {e}")
