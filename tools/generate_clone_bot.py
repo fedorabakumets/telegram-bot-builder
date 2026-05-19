@@ -485,7 +485,8 @@ def build_start_menu() -> dict:
     # Форматирование данных профиля
     nodes.append(node("set-profile-fmt", "set_variable", 550, 900, {
         "assignments": [
-            {"id": "a-bal-fmt", "variable": "balance_fmt", "value": "thousands({user.balance})", "mode": "expression"},
+            {"id": "a-bal-raw", "variable": "balance_raw", "value": "{user.balance}", "mode": "text"},
+            {"id": "a-bal-fmt", "variable": "balance_fmt", "value": "thousands({balance_raw})", "mode": "expression"},
         ],
         "autoTransitionTo": "msg-profile",
         "enableAutoTransition": True,
