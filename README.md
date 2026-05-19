@@ -418,9 +418,11 @@ docker compose up -d
 
 ## 📜 Пошаговая инструкция
 
-Подробное руководство по установке для Windows, macOS и Linux (Git, Node.js, PostgreSQL, Python, настройка БД, клонирование, запуск):
+Подробное руководство по установке для Windows, macOS и Linux (Git, Node.js, PostgreSQL, Redis, Python, настройка БД, клонирование, запуск):
 
 👉 **[docs/development/INSTALLATION.md](docs/development/INSTALLATION.md)**
+
+> 🐳 **Быстрый старт:** `docker compose up -d` — и всё работает без ручной настройки.
 
 > 💡 **Нужно обновить проект?** См. [🔄 Как обновить проект с GitHub](docs/development/HOW_TO_UPDATE.md)
 
