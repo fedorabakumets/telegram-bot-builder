@@ -1018,6 +1018,11 @@ if __name__ == "__main__":
 
 Из вкладки «Код бота» можно скачать сгенерированный `.py` файл и запустить независимо от конструктора:
 
+<div align="center">
+  <img src="assets/images/code-tab-preview.png" alt="Вкладка Код проекта" width="800">
+  <p><em>Вкладка «Код проекта» — просмотр, копирование и скачивание сгенерированного Python-кода</em></p>
+</div>
+
 ```bash
 pip install -r requirements.txt   # один раз
 python bot.py                     # запуск бота
