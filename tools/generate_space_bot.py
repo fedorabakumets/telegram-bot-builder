@@ -558,23 +558,59 @@ def build_trade() -> dict:
             "enableAutoTransition": True,
         }))
 
-        # Добавляем руду в трюм (pilot_cargo)
-        nodes.append(node(f"buy-cargo-upsert-{ore['id']}", "bot_table", 1600, y_pos, {
+        # Проверяем есть ли уже эта руда в трюме
+        nodes.append(node(f"buy-cargo-check-{ore['id']}", "bot_table", 1600, y_pos, {
             "tableName": "pilot_cargo",
-            "operation": "upsert",
-            "key": "pilot_id",
+            "operation": "read",
+            "where": [
+                {"column": "pilot_id", "operator": "equals", "value": "{user_id}"},
+                {"column": "ore_id", "operator": "equals", "value": ore['id']},
+            ],
+            "saveResultTo": "buy_cargo_item",
+            "resultFormat": "first_row",
+            "autoTransitionTo": f"buy-cargo-cond-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Условие: уже есть в трюме или нет
+        nodes.append(node(f"buy-cargo-cond-{ore['id']}", "condition", 1900, y_pos, {
+            "variable": "buy_cargo_item.quantity",
+            "branches": [
+                branch(f"br-cargo-new-{ore['id']}", "Новая", "is_empty", "", f"buy-cargo-insert-{ore['id']}"),
+                branch(f"br-cargo-exists-{ore['id']}", "Уже есть", "else", "", f"buy-cargo-inc-{ore['id']}"),
+            ],
+        }))
+
+        # Вставляем новую запись
+        nodes.append(node(f"buy-cargo-insert-{ore['id']}", "bot_table", 2200, y_pos - 80, {
+            "tableName": "pilot_cargo",
+            "operation": "insert",
             "row": {
                 "pilot_id": "{user_id}",
                 "ore_id": ore['id'],
                 "quantity": "1",
             },
-            "onConflict": "update",
+            "autoTransitionTo": f"msg-buy-ok-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Инкрементим quantity если запись уже существует
+        nodes.append(node(f"buy-cargo-inc-{ore['id']}", "bot_table", 2200, y_pos + 80, {
+            "tableName": "pilot_cargo",
+            "operation": "update",
+            "where": [
+                {"column": "pilot_id", "operator": "equals", "value": "{user_id}"},
+                {"column": "ore_id", "operator": "equals", "value": ore['id']},
+            ],
+            "updates": [
+                {"column": "quantity", "op": "increment", "value": "1"},
+            ],
             "autoTransitionTo": f"msg-buy-ok-{ore['id']}",
             "enableAutoTransition": True,
         }))
 
         # Успешная покупка
-        nodes.append(node(f"msg-buy-ok-{ore['id']}", "message", 1900, y_pos, {
+        nodes.append(node(f"msg-buy-ok-{ore['id']}", "message", 2500, y_pos, {
             "messageText": f"✅ Куплено: {ore['emoji']} {ore['name']} (1 шт.)\n\n💰 Списано: {{ore_price}} кр.\n📦 Трюм: {{pilot.cargo_used}}/{{pilot.cargo_max}}",
             "keyboardType": "none",
             "buttons": [],
@@ -666,11 +702,12 @@ def build_trade() -> dict:
             "enableAutoTransition": True,
         }))
 
-        # Проверка: есть ли эта руда
+        # Проверка: есть ли эта руда (если read вернул 0 строк — quantity будет пустым)
         nodes.append(node(f"sell-cond-has-{ore['id']}", "condition", 400, y_pos, {
             "variable": "sell_item.quantity",
             "branches": [
                 branch(f"br-sell-none-{ore['id']}", "Нет руды", "is_empty", "", f"msg-sell-none-{ore['id']}"),
+                branch(f"br-sell-zero-{ore['id']}", "Ноль", "equals", "0", f"msg-sell-none-{ore['id']}"),
                 branch(f"br-sell-ok-{ore['id']}", "Есть", "else", "", f"sell-calc-{ore['id']}"),
             ],
         }))
@@ -681,20 +718,29 @@ def build_trade() -> dict:
             "buttons": [],
         }))
 
-        # Вычисляем доход: quantity * base_price
+        # Вычисляем доход: сначала цену, потом income отдельным узлом
         nodes.append(node(f"sell-calc-{ore['id']}", "bot_table", 700, y_pos, {
             "tableName": "ores",
             "operation": "read",
             "where": [{"column": "id", "operator": "equals", "value": ore['id']}],
             "saveResultTo": "sell_ore",
             "resultFormat": "first_row",
+            "autoTransitionTo": f"sell-set-price-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Устанавливаем цену продажи
+        nodes.append(node(f"sell-set-price-{ore['id']}", "set_variable", 1000, y_pos, {
+            "assignments": [
+                {"id": f"a-sell-price-{ore['id']}", "variable": "sell_price", "value": "{sell_ore.base_price_{pilot.current_planet}}", "mode": "text"},
+            ],
             "autoTransitionTo": f"sell-set-income-{ore['id']}",
             "enableAutoTransition": True,
         }))
 
-        nodes.append(node(f"sell-set-income-{ore['id']}", "set_variable", 1000, y_pos, {
+        # Вычисляем доход (отдельный узел чтобы sell_price уже был установлен)
+        nodes.append(node(f"sell-set-income-{ore['id']}", "set_variable", 1300, y_pos, {
             "assignments": [
-                {"id": f"a-sell-price-{ore['id']}", "variable": "sell_price", "value": "{sell_ore.base_price_{pilot.current_planet}}", "mode": "text"},
                 {"id": f"a-sell-income-{ore['id']}", "variable": "sell_income", "value": "{sell_item.quantity} * {sell_price}", "mode": "expression"},
             ],
             "autoTransitionTo": f"sell-do-credits-{ore['id']}",
@@ -702,7 +748,7 @@ def build_trade() -> dict:
         }))
 
         # Начисляем кредиты
-        nodes.append(node(f"sell-do-credits-{ore['id']}", "bot_table", 1300, y_pos, {
+        nodes.append(node(f"sell-do-credits-{ore['id']}", "bot_table", 1600, y_pos, {
             "tableName": "pilots",
             "operation": "update",
             "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
@@ -715,7 +761,7 @@ def build_trade() -> dict:
         }))
 
         # Удаляем руду из трюма
-        nodes.append(node(f"sell-do-delete-{ore['id']}", "bot_table", 1600, y_pos, {
+        nodes.append(node(f"sell-do-delete-{ore['id']}", "bot_table", 1900, y_pos, {
             "tableName": "pilot_cargo",
             "operation": "delete",
             "where": [
@@ -727,7 +773,7 @@ def build_trade() -> dict:
         }))
 
         # Успешная продажа
-        nodes.append(node(f"msg-sell-ok-{ore['id']}", "message", 1900, y_pos, {
+        nodes.append(node(f"msg-sell-ok-{ore['id']}", "message", 2200, y_pos, {
             "messageText": f"✅ Продано: {ore['emoji']} {ore['name']} x{{sell_item.quantity}}\n\n💰 Получено: {{sell_income}} кр.\n💰 Баланс: {{pilot.credits}} кр.",
             "keyboardType": "none",
             "buttons": [],
