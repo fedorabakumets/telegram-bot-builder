@@ -174,7 +174,7 @@ def build_start_menu() -> dict:
             "profession": "Безработный",
             "clan_id": "",
             "game_id": "{user_id}",
-            "registered_at": "{__now}",
+            "registered_at": "{today} {time}",
         },
         "onConflict": "ignore",
         "saveResultTo": "user",
@@ -460,6 +460,14 @@ def build_start_menu() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "user",
         "resultFormat": "first_row",
+        "autoTransitionTo": "set-profile-fmt",
+        "enableAutoTransition": True,
+    }))
+    # Форматирование данных профиля
+    nodes.append(node("set-profile-fmt", "set_variable", 550, 900, {
+        "assignments": [
+            {"id": "a-bal-fmt", "variable": "balance_fmt", "value": "thousands({user.balance})", "mode": "expression"},
+        ],
         "autoTransitionTo": "msg-profile",
         "enableAutoTransition": True,
     }))
@@ -467,7 +475,7 @@ def build_start_menu() -> dict:
         "messageText": (
             "🧢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, ваш профиль:\n\n"
             "🌟 Уровень: <code>{user.level}</code> ({user.exp}/{user.exp_to_next})\n"
-            "💰 Баланс: <code>{user.balance}$</code>\n\n"
+            "💰 Баланс: <code>{balance_fmt}$</code>\n\n"
             "👨\u200d🏭 Профессия: <code>{user.profession}</code>\n\n"
             "🎭 Клан: <code>{user.clan_id}</code> (👤)\n"
             "🆔 Игровой ид: <code>{user.game_id}</code>\n"
