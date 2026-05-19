@@ -50,6 +50,8 @@ export interface MessageTemplateParams {
   oneTimeKeyboard?: boolean;
   /** Изменить размер клавиатуры под кнопки */
   resizeKeyboard?: boolean;
+  /** Перемешивать порядок inline-кнопок при каждом показе */
+  shuffleButtons?: boolean;
 
   // --- Множественный выбор ---
   /** Разрешить множественный выбор */

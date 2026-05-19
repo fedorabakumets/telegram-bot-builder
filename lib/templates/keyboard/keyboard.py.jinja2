@@ -182,6 +182,7 @@
 {%- set effectiveNodeId = shortNodeId or nodeId or 'unknown' -%}
 {%- set multiSelectVariable = multiSelectVariable or ('multi_select_' ~ effectiveNodeId) -%}
 {%- set hasMedia = (imageUrl is defined and imageUrl and (imageUrl|trim)|length > 0) or documentUrl or videoUrl or audioUrl -%}
+{%- set shuffleButtons = shuffleButtons or false -%}
 
 {# ===== ГЕНЕРАЦИЯ КЛАВИАТУРЫ ===== #}
 {%- if enableDynamicButtons and dynamicButtons and keyboardType == 'inline' %}
@@ -231,6 +232,15 @@
 {%- endif %}
 {%- endfor %}
 {# Применяем раскладку для статических кнопок #}
+{%- if shuffleButtons %}
+{{ indent }}# Перемешиваем кнопки
+{{ indent }}import random as _rnd
+{{ indent }}_btns_flat = [btn for row in builder._markup for btn in row]
+{{ indent }}_rnd.shuffle(_btns_flat)
+{{ indent }}builder = InlineKeyboardBuilder()
+{{ indent }}for _btn in _btns_flat:
+{{ indent }}    builder.add(_btn)
+{%- endif %}
 {{ generateAdjustCode(keyboardLayout, buttons, allowMultipleSelection, indent) }}
 {{ indent }}keyboard = builder.as_markup()
 {%- endif %}
@@ -288,6 +298,15 @@
 {{ indent }}builder.add(InlineKeyboardButton(text=replace_variables_in_text({% if projectId %}get_content("{{ nodeId }}.btn.{{ btn.id }}", {{ btn.text|format_python_text }}){% else %}{{ btn.text|format_python_text }}{% endif %}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {})), callback_data="{{ btn.id or btn.target or 'btn' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
 {%- endif %}
 {%- endfor %}
+{%- if shuffleButtons %}
+{{ indent }}# Перемешиваем кнопки
+{{ indent }}import random as _rnd
+{{ indent }}_btns_flat = [btn for row in builder._markup for btn in row]
+{{ indent }}_rnd.shuffle(_btns_flat)
+{{ indent }}builder = InlineKeyboardBuilder()
+{{ indent }}for _btn in _btns_flat:
+{{ indent }}    builder.add(_btn)
+{%- endif %}
 {%- if adjustStr %}
 {{ indent }}builder.adjust({{ adjustStr }})
 {%- elif keyboardLayout and keyboardLayout.autoLayout and keyboardLayout.columns %}

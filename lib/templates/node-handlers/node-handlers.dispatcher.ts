@@ -174,6 +174,15 @@ function generateKeyboardHandler(node: Node, nodes?: Node[]): string {
 
   // Раскладка кнопок
   const layout = node.data?.keyboardLayout;
+  if (node.data?.shuffleButtons) {
+    lines.push(`        # Перемешиваем кнопки`);
+    lines.push(`        import random as _rnd`);
+    lines.push(`        _btns_flat = [btn for row in builder._markup for btn in row]`);
+    lines.push(`        _rnd.shuffle(_btns_flat)`);
+    lines.push(`        builder = InlineKeyboardBuilder()`);
+    lines.push(`        for _btn in _btns_flat:`);
+    lines.push(`            builder.add(_btn)`);
+  }
   if (layout && !layout.autoLayout && layout.rows?.length > 0) {
     const counts = layout.rows.map((r: any) => (r.buttonIds || []).length).filter((n: number) => n > 0);
     if (counts.length > 0) {
@@ -274,6 +283,7 @@ export function generateNodeHandlers(
         keyboardLayout: node.data?.keyboardLayout as KeyboardLayout | undefined,
         oneTimeKeyboard: node.data?.oneTimeKeyboard ?? false,
         resizeKeyboard: node.data?.resizeKeyboard ?? true,
+        shuffleButtons: node.data?.shuffleButtons || false,
         enableAutoTransition: autoTransition.enableAutoTransition,
         autoTransitionTo: autoTransition.autoTransitionTo,
         collectUserInput: node.data?.collectUserInput || false,
