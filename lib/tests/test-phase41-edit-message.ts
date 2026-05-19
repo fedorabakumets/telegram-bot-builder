@@ -458,11 +458,11 @@ test('B02', 'editMode=markup → вызывает edit_message_reply_markup', ()
   syntax(code, 'b02');
 });
 
-test('B03', 'editMode=both → вызывает оба метода', () => {
+test('B03', 'editMode=both → обновляет текст и кнопки одним вызовом', () => {
   const p = makeCleanProject([makeEditMessageNode('em_1', 'msg1', { editMode: 'both' }), makeMessageNode('msg1')]);
   const code = gen(p, 'b03');
   ok(code.includes('edit_message_text'), 'edit_message_text должен быть в коде');
-  ok(code.includes('edit_message_reply_markup'), 'edit_message_reply_markup должен быть в коде');
+  ok(code.includes('reply_markup=') || code.includes('_edit_markup'), 'reply_markup должен быть в коде');
   syntax(code, 'b03');
 });
 
@@ -1310,7 +1310,7 @@ test('K03', 'editKeyboardMode=node + keyboard-нода с enableDynamicButtons=t
   const p = makeCleanProject([
     makeCallbackTriggerNode('cb1', 'em_dyn'),
     makeEditMessageNode('em_dyn', 'msg1', {
-      editMode: 'markup',
+      editMode: 'both',
       editKeyboardMode: 'node',
       editKeyboardNodeId: 'kb_dyn',
     }),
