@@ -958,37 +958,36 @@ if __name__ == "__main__":
 <th>💻 Компонент</th>
 <th>⚡ Минимум</th>
 <th>🚀 Рекомендуемо</th>
-<th>🎯 Оптимально</th>
 </tr>
 <tr>
 <td><strong>Node.js</strong></td>
 <td>18.0</td>
-<td>20.0+</td>
 <td>22.0+ LTS</td>
 </tr>
 <tr>
 <td><strong>PostgreSQL</strong></td>
-<td>13</td>
-<td>15+</td>
-<td>16+ Latest</td>
+<td>17</td>
+<td>17.10+</td>
+</tr>
+<tr>
+<td><strong>Redis</strong></td>
+<td>7.0</td>
+<td>7.2+ (Memurai на Windows)</td>
 </tr>
 <tr>
 <td><strong>Python</strong></td>
-<td>3.11</td>
-<td>3.12+</td>
-<td>3.13+ Latest</td>
+<td>3.10</td>
+<td>3.13+</td>
 </tr>
 <tr>
 <td><strong>RAM</strong></td>
 <td>1 GB</td>
 <td>2+ GB</td>
-<td>4+ GB</td>
 </tr>
 <tr>
 <td><strong>Диск</strong></td>
 <td>500 MB</td>
-<td>1+ GB</td>
-<td>2+ GB SSD</td>
+<td>1+ GB SSD</td>
 </tr>
 </table>
 
