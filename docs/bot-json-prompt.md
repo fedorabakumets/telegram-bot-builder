@@ -682,6 +682,8 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 - `"reply"` — reply-клавиатура (под полем ввода)
 - `"inline"` — inline-кнопки (под сообщением)
 
+Дополнительное поле `"shuffleButtons": true` — перемешивает порядок inline-кнопок при каждом показе (для мини-игр, капч, квизов).
+
 ```json
 {
   "id": "btn_1",

@@ -289,6 +289,10 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
 Без этого `interactive-callback-handlers.renderer.ts` создаст дублирующий пустой обработчик
 для узлов, на которые ведут кнопки или автопереходы.
 
+### `lib/bot-generator/core/normalize-keyboard-bindings.ts`
+
+Если новый узел добавляет поля в keyboard-ноду (например `shuffleButtons`, `customField`), нужно обновить функцию `buildMergedKeyboardData()` чтобы эти поля пробрасывались из keyboard-ноды в host-message при привязке через `keyboardNodeId`.
+
 ---
 
 ## 4. Особенности для разных типов триггеров
