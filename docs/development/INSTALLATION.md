@@ -311,7 +311,21 @@ redis-cli ping
 </td>
 <td valign="top">
 
-**Способ 1: Через WSL2 (рекомендуется):**
+**Способ 1: Memurai (рекомендуется для Windows):**
+
+Memurai — нативный Windows-порт, полностью совместимый с Redis 7.2+. Устанавливается как Windows-служба и работает без WSL.
+
+```powershell
+winget install Memurai.MemuraiDeveloper
+```
+
+После установки служба запускается автоматически. Управление:
+```powershell
+net start Memurai   # Запустить
+net stop Memurai    # Остановить
+```
+
+**Способ 2: Через WSL2:**
 
 Установите Redis внутри WSL:
 ```bash
@@ -319,17 +333,13 @@ sudo apt install -y redis-server
 sudo service redis-server start
 ```
 
-**Способ 2: Memurai (нативный Windows-порт Redis):**
-- Скачайте с [memurai.com](https://www.memurai.com/)
-- Установите и запустите
-
 **Способ 3: Docker:**
 ```powershell
 docker run -d --name redis -p 6379:6379 redis:alpine
 ```
 
 **Проверка установки:**
-```bash
+```powershell
 redis-cli ping
 ```
 > Должен ответить `PONG`
