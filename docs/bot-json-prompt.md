@@ -442,6 +442,13 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 | `update` | Обновить поля по условию (атомарный increment/decrement) |
 | `upsert` | Вставить или обновить если существует |
 | `delete` | Удалить строку по условию |
+| `count` | Подсчитать количество строк (с опциональным WHERE) |
+| `sum` | Сумма значений колонки |
+| `max` | Максимальное значение колонки |
+| `min` | Минимальное значение колонки |
+| `avg` | Среднее значение колонки |
+| `distinct` | Уникальные значения колонки (возвращает JSON-массив) |
+| `delete_all` | Удалить ВСЕ строки из таблицы |
 
 #### read
 
@@ -456,17 +463,97 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
     ],
     "saveResultTo": "profile",
     "resultFormat": "first_row",
+    "orderBy": "balance",
+    "orderDirection": "desc",
+    "limit": 10,
+    "offset": 0,
     "autoTransitionTo": "next_node",
     "enableAutoTransition": true
   }
 }
 ```
 
-`resultFormat`: `"first_row"` (объект), `"all_rows"` (массив), `"scalar"` (одно значение), `"count"` (количество).
+`resultFormat`: `"first_row"` (объект), `"all_rows"` (массив), `"scalar"` (одно значение), `"count"` (количество), `"random_row"` (случайная строка).
 
 Операторы WHERE: `equals` (по умолчанию), `not_equals`, `greater_than`, `less_than`, `contains`, `is_empty`, `is_not_empty`.
 
 После read доступно: `{profile.balance}`, `{profile.reputation}` и т.д.
+
+`offset` применяется перед `limit` — для пагинации: `offset: 10, limit: 5` = строки 11–15.
+
+#### count
+
+```json
+{
+  "type": "bot_table",
+  "data": {
+    "tableName": "users",
+    "operation": "count",
+    "where": [
+      { "column": "level", "operator": "greater_than", "value": "10" }
+    ],
+    "saveResultTo": "high_level_count",
+    "autoTransitionTo": "next_node",
+    "enableAutoTransition": true
+  }
+}
+```
+
+Результат: `{high_level_count}` = `"42"` (строка с числом). WHERE опционален — без него считает все строки.
+
+#### sum / max / min / avg
+
+```json
+{
+  "type": "bot_table",
+  "data": {
+    "tableName": "users",
+    "operation": "sum",
+    "aggregateColumn": "balance",
+    "where": [],
+    "saveResultTo": "total_balance",
+    "autoTransitionTo": "next_node",
+    "enableAutoTransition": true
+  }
+}
+```
+
+`aggregateColumn` — числовая колонка для вычисления. Результат: строка с числом.
+
+#### distinct
+
+```json
+{
+  "type": "bot_table",
+  "data": {
+    "tableName": "users",
+    "operation": "distinct",
+    "aggregateColumn": "profession",
+    "saveResultTo": "professions",
+    "autoTransitionTo": "next_node",
+    "enableAutoTransition": true
+  }
+}
+```
+
+Результат: JSON-массив уникальных значений `["Сварщик", "Программист", "Врач"]`.
+
+#### delete_all
+
+```json
+{
+  "type": "bot_table",
+  "data": {
+    "tableName": "logs",
+    "operation": "delete_all",
+    "saveResultTo": "deleted_count",
+    "autoTransitionTo": "next_node",
+    "enableAutoTransition": true
+  }
+}
+```
+
+⚠️ Удаляет ВСЕ строки. Результат: количество удалённых строк.
 
 #### update
 
@@ -506,6 +593,8 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
       "balance": "100",
       "reputation": "100"
     },
+    "returnInsertedId": true,
+    "saveResultTo": "profile",
     "autoTransitionTo": "next_node",
     "enableAutoTransition": true
   }
@@ -513,6 +602,8 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 ```
 
 Если таблица не существует — создаётся автоматически с колонками из `row`.
+
+`returnInsertedId: true` — сохраняет порядковый номер строки в `{profile_id}` (saveResultTo + "_id").
 
 #### upsert
 
@@ -529,6 +620,7 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
       "reputation": "100"
     },
     "onConflict": "ignore",
+    "returnInsertedId": true,
     "saveResultTo": "profile",
     "autoTransitionTo": "next_node",
     "enableAutoTransition": true
@@ -537,6 +629,8 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 ```
 
 `onConflict`: `"ignore"` (не трогать), `"update"` (перезаписать), `"merge"` (только пустые поля).
+
+`returnInsertedId` работает только при вставке новой строки (не при обновлении существующей).
 
 #### delete
 
