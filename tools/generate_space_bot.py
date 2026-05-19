@@ -718,7 +718,7 @@ def build_trade() -> dict:
     # Меню продажи — inline кнопки с количеством
     sell_text = (
         f"💰 {MENTION}, продажа руд:\n\n"
-        "📍 Планета: <b>{{pilot.current_planet}}</b>\n"
+        "📍 Планета: <b>{pilot.current_planet}</b>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\n"
         "Выберите руду для продажи:"
     )
@@ -922,7 +922,7 @@ def build_map() -> dict:
 
     map_menu_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
-        "📍 Вы здесь: <b>{{pilot.current_planet}}</b>"
+        "📍 Вы здесь: <b>{pilot.current_planet}</b>"
     )
     nodes.append(node("msg-map-menu", "message", 400, 0, {
         "messageText": map_menu_text,
@@ -1014,9 +1014,9 @@ def build_ship() -> dict:
 
     ship_menu_text = (
         f"🔧 {MENTION}, ваш корабль:\n\n"
-        "📦 Трюм: ур. <code>{{pilot.hull_level}}</code>\n"
-        "🚀 Двигатель: ур. <code>{{pilot.engine_level}}</code>\n"
-        "🛡 Броня: ур. <code>{{pilot.armor_level}}</code>"
+        "📦 Трюм: ур. <code>{pilot.hull_level}</code>\n"
+        "🚀 Двигатель: ур. <code>{pilot.engine_level}</code>\n"
+        "🛡 Броня: ур. <code>{pilot.armor_level}</code>"
     )
     nodes.append(node("msg-ship-menu", "message", 400, 0, {
         "messageText": ship_menu_text,
