@@ -818,7 +818,8 @@ def build_earning() -> dict:
     # Вычисляем оставшееся время кулдауна в формате MM:SS
     nodes.append(node("set-cd-remaining", "set_variable", 1000, -300, {
         "assignments": [
-            {"id": "a-cd-fmt", "variable": "cd_text", "value": "{cd.expires_at} - {now_ts}", "mode": "format_duration"},
+            {"id": "a-cd-exp", "variable": "cd_expires", "value": "{cd.expires_at}", "mode": "text"},
+            {"id": "a-cd-fmt", "variable": "cd_text", "value": "{cd_expires} - {now_ts}", "mode": "format_duration"},
         ],
         "autoTransitionTo": "alert-work-cd",
         "enableAutoTransition": True,
