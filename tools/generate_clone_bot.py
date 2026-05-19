@@ -831,12 +831,32 @@ def build_earning() -> dict:
         "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
-            btn("btn-cd-work", "🏖 Работать", target="tbl-read-cd-work"),
+            btn("btn-cd-work", "🏖 Работать", target="set-cd-remaining-btn"),
         ],
     }))
 
-    # Popup alert при нажатии inline кнопки «Работать» во время кулдауна
-    nodes.append(node("alert-work-cd", "answer_callback_query", 1200, -300, {
+    # Цепочка для inline кнопки: пересчёт времени → alert popup
+    nodes.append(node("set-cd-remaining-btn", "set_variable", 1200, -300, {
+        "assignments": [
+            {"id": "a-now-btn", "variable": "now_ts", "value": "0", "mode": "timestamp"},
+            {"id": "a-cd-exp-btn", "variable": "cd_expires", "value": "{cd.expires_at}", "mode": "text"},
+            {"id": "a-cd-fmt-btn", "variable": "cd_text", "value": "{cd_expires} - {now_ts}", "mode": "format_duration"},
+        ],
+        "autoTransitionTo": "cond-work-cd-btn",
+        "enableAutoTransition": True,
+    }))
+
+    # Проверяем: кулдаун ещё активен или уже можно работать?
+    nodes.append(node("cond-work-cd-btn", "condition", 1500, -300, {
+        "variable": "cd.expires_at",
+        "branches": [
+            branch("br-cd-btn-active", "Ещё кулдаун", "greater_than", "{now_ts}", "alert-work-cd"),
+            branch("br-cd-btn-expired", "Можно работать", "else", "", "tbl-read-user-work"),
+        ],
+    }))
+
+    # Popup alert при нажатии inline кнопки во время кулдауна
+    nodes.append(node("alert-work-cd", "answer_callback_query", 1800, -300, {
         "callbackNotificationText": "😨 Начать новую смену можно через: {cd_text}",
         "callbackShowAlert": True,
         "callbackCacheTime": 0,
