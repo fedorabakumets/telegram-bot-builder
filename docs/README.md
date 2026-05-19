@@ -33,3 +33,7 @@
 ## 📋 Компоненты
 - [Components Guide](COMPONENTS.md) - Руководство по компонентам
 - [JSDoc Standards](JSDOC_STANDARDS.md) - Стандарты документации JSDoc
+
+## 🤖 ИИ и автоматизация
+- [Bot JSON Prompt](bot-json-prompt.md) - Промт для генерации ботов через ИИ
+- [AGENTS.md](../AGENTS.md) - Правила и инструкции для ИИ-агентов
