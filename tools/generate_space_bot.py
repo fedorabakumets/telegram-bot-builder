@@ -621,7 +621,7 @@ def build_trade() -> dict:
                 "ore_emoji": ore['emoji'],
                 "quantity": "1",
             },
-            "autoTransitionTo": f"msg-buy-ok-{ore['id']}",
+            "autoTransitionTo": f"buy-reread-{ore['id']}",
             "enableAutoTransition": True,
         }))
 
@@ -636,13 +636,24 @@ def build_trade() -> dict:
             "updates": [
                 {"column": "quantity", "op": "increment", "value": "1"},
             ],
+            "autoTransitionTo": f"buy-reread-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Перечитываем пилота для актуальных данных
+        nodes.append(node(f"buy-reread-{ore['id']}", "bot_table", 2500, y_pos, {
+            "tableName": "pilots",
+            "operation": "read",
+            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+            "saveResultTo": "pilot",
+            "resultFormat": "first_row",
             "autoTransitionTo": f"msg-buy-ok-{ore['id']}",
             "enableAutoTransition": True,
         }))
 
         # Успешная покупка
-        nodes.append(node(f"msg-buy-ok-{ore['id']}", "message", 2500, y_pos, {
-            "messageText": f"✅ Куплено: {ore['emoji']} <b>{ore['name']}</b> (1 шт.)\n\n💰 Списано: <code>{{ore_price}}</code> кр.\n📦 Трюм: <code>{{pilot.cargo_used}}/{{pilot.cargo_max}}</code>",
+        nodes.append(node(f"msg-buy-ok-{ore['id']}", "message", 2800, y_pos, {
+            "messageText": f"✅ Куплено: {ore['emoji']} <b>{ore['name']}</b> (1 шт.)\n\n💰 Баланс: <code>{{pilot.credits}}</code> кр.\n📦 Трюм: <code>{{pilot.cargo_used}}/{{pilot.cargo_max}}</code>",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -913,10 +924,33 @@ def build_trade() -> dict:
 def build_map() -> dict:
     """
     Строит лист «🗺 Карта».
-    Содержит подменю карты, заглушки перелётов на планеты.
+    Содержит подменю карты, перелёты между планетами с delay.
     @returns словарь листа
     """
     nodes = []
+
+    # Данные планет для перелётов
+    PLANETS = [
+        {"id": "earth", "name": "Земля", "emoji": "🌍", "full": "🌍 Земля"},
+        {"id": "mars", "name": "Марс", "emoji": "🔴", "full": "🔴 Марс"},
+        {"id": "titan", "name": "Титан", "emoji": "🪐", "full": "🪐 Титан"},
+        {"id": "nebula", "name": "Туманность", "emoji": "🌌", "full": "🌌 Туманность"},
+    ]
+
+    # Стоимость перелётов (топливо) и время (секунды)
+    FLIGHT_COSTS = {
+        ("earth", "mars"): (10, 120),
+        ("earth", "titan"): (20, 300),
+        ("earth", "nebula"): (15, 180),
+        ("mars", "titan"): (15, 180),
+        ("mars", "nebula"): (25, 360),
+        ("titan", "nebula"): (30, 480),
+    }
+
+    def get_flight_cost(from_id: str, to_id: str) -> tuple:
+        """Возвращает (топливо, секунды) для маршрута."""
+        key = (from_id, to_id) if (from_id, to_id) in FLIGHT_COSTS else (to_id, from_id)
+        return FLIGHT_COSTS.get(key, (10, 120))
 
     # --- Подменю карты ---
     nodes.append(node("tbl-read-pilot-map", "bot_table", 100, 0, {
@@ -931,7 +965,8 @@ def build_map() -> dict:
 
     map_menu_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
-        "📍 Вы здесь: <b>{pilot.current_planet_name}</b>"
+        "📍 Вы здесь: <b>{pilot.current_planet_name}</b>\n"
+        "⛽ Топливо: <code>{pilot.fuel}</code>"
     )
     nodes.append(node("msg-map-menu", "message", 400, 0, {
         "messageText": map_menu_text,
@@ -956,40 +991,123 @@ def build_map() -> dict:
         "resizeKeyboard": True,
     }))
 
-    # --- Триггеры планет (заглушки) ---
-    nodes.append(node("trig-earth", "text_trigger", 100, 250, {
-        "textMatchType": "exact",
-        "textSynonyms": ["🌍 Земля"],
-        "autoTransitionTo": "msg-fly-wip",
-        "enableAutoTransition": True,
-    }))
+    # --- Для каждой планеты: триггер → проверки → перелёт ---
+    for i, planet in enumerate(PLANETS):
+        y_pos = 250 + i * 400
 
-    nodes.append(node("trig-mars", "text_trigger", 100, 400, {
-        "textMatchType": "exact",
-        "textSynonyms": ["🔴 Марс"],
-        "autoTransitionTo": "msg-fly-wip",
-        "enableAutoTransition": True,
-    }))
+        # Триггер нажатия на планету
+        nodes.append(node(f"trig-{planet['id']}", "text_trigger", 100, y_pos, {
+            "textMatchType": "exact",
+            "textSynonyms": [planet['full']],
+            "autoTransitionTo": f"fly-read-pilot-{planet['id']}",
+            "enableAutoTransition": True,
+        }))
 
-    nodes.append(node("trig-titan", "text_trigger", 100, 550, {
-        "textMatchType": "exact",
-        "textSynonyms": ["🪐 Титан"],
-        "autoTransitionTo": "msg-fly-wip",
-        "enableAutoTransition": True,
-    }))
+        # Читаем пилота
+        nodes.append(node(f"fly-read-pilot-{planet['id']}", "bot_table", 400, y_pos, {
+            "tableName": "pilots",
+            "operation": "read",
+            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+            "saveResultTo": "pilot",
+            "resultFormat": "first_row",
+            "autoTransitionTo": f"fly-cond-same-{planet['id']}",
+            "enableAutoTransition": True,
+        }))
 
-    nodes.append(node("trig-nebula", "text_trigger", 100, 700, {
-        "textMatchType": "exact",
-        "textSynonyms": ["🌌 Туманность"],
-        "autoTransitionTo": "msg-fly-wip",
-        "enableAutoTransition": True,
-    }))
+        # Проверка: уже на этой планете?
+        nodes.append(node(f"fly-cond-same-{planet['id']}", "condition", 700, y_pos, {
+            "variable": "pilot.current_planet",
+            "branches": [
+                branch(f"br-same-{planet['id']}", "Уже здесь", "equals", planet['id'], f"msg-fly-same-{planet['id']}"),
+                branch(f"br-can-fly-{planet['id']}", "Можно лететь", "else", "", f"fly-set-cost-{planet['id']}"),
+            ],
+        }))
 
-    nodes.append(node("msg-fly-wip", "message", 400, 400, {
-        "messageText": "🚀 Перелёты — в разработке.",
-        "keyboardType": "none",
-        "buttons": [],
-    }))
+        nodes.append(node(f"msg-fly-same-{planet['id']}", "message", 1000, y_pos - 80, {
+            "messageText": f"📍 Вы уже на планете {planet['emoji']} <b>{planet['name']}</b>!",
+            "formatMode": "html",
+            "keyboardType": "none",
+            "buttons": [],
+        }))
+
+        # Вычисляем стоимость перелёта (фиксированная для простоты — берём макс из всех маршрутов к этой планете)
+        # Для корректности нужно знать откуда летим — используем lookup
+        nodes.append(node(f"fly-set-cost-{planet['id']}", "set_variable", 1000, y_pos, {
+            "assignments": [
+                {"id": f"a-fuel-{planet['id']}", "variable": "flight_fuel", "value": "10", "mode": "text"},
+                {"id": f"a-time-{planet['id']}", "variable": "flight_time", "value": "120", "mode": "text"},
+            ],
+            "autoTransitionTo": f"fly-cond-fuel-{planet['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Проверка топлива
+        nodes.append(node(f"fly-cond-fuel-{planet['id']}", "condition", 1300, y_pos, {
+            "variable": "pilot.fuel",
+            "branches": [
+                branch(f"br-no-fuel-{planet['id']}", "Мало топлива", "less_than", "{flight_fuel}", f"msg-fly-no-fuel-{planet['id']}"),
+                branch(f"br-has-fuel-{planet['id']}", "Хватает", "else", "", f"fly-do-{planet['id']}"),
+            ],
+        }))
+
+        nodes.append(node(f"msg-fly-no-fuel-{planet['id']}", "message", 1600, y_pos - 80, {
+            "messageText": f"⛽ Недостаточно топлива для перелёта на {planet['emoji']} <b>{planet['name']}</b>!\n\nНужно: <code>{{flight_fuel}}</code>\nУ вас: <code>{{pilot.fuel}}</code>",
+            "formatMode": "html",
+            "keyboardType": "none",
+            "buttons": [],
+        }))
+
+        # Списываем топливо
+        nodes.append(node(f"fly-do-{planet['id']}", "bot_table", 1600, y_pos, {
+            "tableName": "pilots",
+            "operation": "update",
+            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+            "updates": [
+                {"column": "fuel", "op": "decrement", "value": "{flight_fuel}"},
+            ],
+            "autoTransitionTo": f"msg-fly-start-{planet['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Сообщение "Летим..."
+        nodes.append(node(f"msg-fly-start-{planet['id']}", "message", 1900, y_pos, {
+            "messageText": f"🚀 Летим на {planet['emoji']} <b>{planet['name']}</b>!\n\n⛽ Топливо: -{{flight_fuel}}\n🕐 Время в пути: {{flight_time}} сек.",
+            "formatMode": "html",
+            "keyboardType": "none",
+            "buttons": [],
+            "autoTransitionTo": f"fly-delay-{planet['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Delay (background) — ждём время перелёта
+        nodes.append(node(f"fly-delay-{planet['id']}", "delay", 2200, y_pos, {
+            "seconds": "{flight_time}",
+            "unit": "seconds",
+            "mode": "background",
+            "autoTransitionTo": f"fly-arrive-{planet['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Обновляем планету после прибытия
+        nodes.append(node(f"fly-arrive-{planet['id']}", "bot_table", 2500, y_pos, {
+            "tableName": "pilots",
+            "operation": "update",
+            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+            "updates": [
+                {"column": "current_planet", "op": "set", "value": planet['id']},
+                {"column": "current_planet_name", "op": "set", "value": planet['full']},
+            ],
+            "autoTransitionTo": f"msg-fly-arrived-{planet['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Сообщение "Прибыли!"
+        nodes.append(node(f"msg-fly-arrived-{planet['id']}", "message", 2800, y_pos, {
+            "messageText": f"✅ Вы прибыли на {planet['emoji']} <b>{planet['name']}</b>!\n\nТеперь вы можете торговать здесь.",
+            "formatMode": "html",
+            "keyboardType": "none",
+            "buttons": [],
+        }))
 
     return {
         "id": "sheet-map",
