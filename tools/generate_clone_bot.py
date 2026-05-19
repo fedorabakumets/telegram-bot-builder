@@ -591,6 +591,8 @@ def build_start_menu() -> dict:
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
+        "autoTransitionTo": "input-clan-name",
+        "enableAutoTransition": True,
     }))
 
     # 5. Input нода — ожидание ввода названия
@@ -602,11 +604,11 @@ def build_start_menu() -> dict:
         "inputRequired": True,
     }))
 
-    # 6. Считаем кланы для генерации clan_id
+    # 6. Считаем кланы для генерации clan_id (исключаем init-строку id=0)
     nodes.append(node("tbl-count-clans", "bot_table", 2500, 1300, {
         "tableName": "clans",
         "operation": "count",
-        "where": [],
+        "where": [{"column": "id", "operator": "not_equals", "value": "0"}],
         "saveResultTo": "clans_count",
         "autoTransitionTo": "set-new-clan-id",
         "enableAutoTransition": True,
