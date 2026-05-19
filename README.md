@@ -222,7 +222,7 @@
 
 ---
 
-## 📡 API Endpoints
+## 📡 API
 
 <div align="center">
   <img src="https://img.shields.io/badge/API-RESTful-blue?style=for-the-badge&logo=api" alt="API"/>
@@ -230,102 +230,18 @@
   <img src="https://img.shields.io/badge/Аутентификация-Session-orange?style=for-the-badge&logo=auth" alt="Auth"/>
 </div>
 
-<details>
-<summary><strong>🔗 Основные API маршруты</strong> (нажми для раскрытия)</summary>
-
 > ⚠️ **Безопасность:** На данный момент многие эндпоинты открыты и не требуют аутентификации. Проект находится в стадии активной разработки — авторизация и изоляция данных между пользователями планируются в будущих релизах. Следите за обновлениями в нашем [Telegram-канале](https://t.me/botcraft_studio) и [чате](https://t.me/bot_builder_chat).
 
-<table>
-<tr>
-<th>🎯 Категория</th>
-<th>📡 Endpoint</th>
-<th>📝 Описание</th>
-</tr>
+API маршруты находятся в директории `server/routes/`:
 
-<tr>
-<td rowspan="4"><strong>📋 Проекты</strong></td>
-<td><code>GET /api/projects</code></td>
-<td>Список проектов пользователя</td>
-</tr>
-<tr>
-<td><code>POST /api/projects</code></td>
-<td>Создать новый проект</td>
-</tr>
-<tr>
-<td><code>PUT /api/projects/{id}</code></td>
-<td>Обновить проект</td>
-</tr>
-<tr>
-<td><code>DELETE /api/projects/{id}</code></td>
-<td>Удалить проект</td>
-</tr>
-
-<tr>
-<td rowspan="4"><strong>🧩 Узлы</strong></td>
-<td><code>GET /api/projects/{id}/nodes</code></td>
-<td>Получить схему бота</td>
-</tr>
-<tr>
-<td><code>POST /api/projects/{id}/nodes</code></td>
-<td>Добавить узел</td>
-</tr>
-<tr>
-<td><code>PUT /api/projects/{id}/nodes/{nodeId}</code></td>
-<td>Обновить узел</td>
-</tr>
-<tr>
-<td><code>DELETE /api/projects/{id}/nodes/{nodeId}</code></td>
-<td>Удалить узел</td>
-</tr>
-
-<tr>
-<td rowspan="4"><strong>🤖 Боты</strong></td>
-<td><code>POST /api/bots/{id}/generate</code></td>
-<td>Сгенерировать Python код</td>
-</tr>
-<tr>
-<td><code>POST /api/bots/{id}/start</code></td>
-<td>Запустить бота</td>
-</tr>
-<tr>
-<td><code>GET /api/bots/{id}/status</code></td>
-<td>Статус бота</td>
-</tr>
-<tr>
-<td><code>POST /api/bots/{id}/stop</code></td>
-<td>Остановить бота</td>
-</tr>
-
-<tr>
-<td rowspan="3"><strong>📁 Медиа</strong></td>
-<td><code>POST /api/media/upload</code></td>
-<td>Загрузить файл</td>
-</tr>
-<tr>
-<td><code>GET /api/media/{id}</code></td>
-<td>Скачать файл</td>
-</tr>
-<tr>
-<td><code>DELETE /api/media/{id}</code></td>
-<td>Удалить файл</td>
-</tr>
-
-<tr>
-<td rowspan="3"><strong>📊 Статистика</strong></td>
-<td><code>GET /api/bots/{id}/stats</code></td>
-<td>Статистика использования</td>
-</tr>
-<tr>
-<td><code>GET /api/bots/{id}/users</code></td>
-<td>Пользователи бота</td>
-</tr>
-<tr>
-<td><code>GET /api/bots/{id}/messages</code></td>
-<td>История сообщений</td>
-</tr>
-</table>
-
-</details>
+| Директория | Что содержит |
+|-----------|-------------|
+| `server/routes/projectRoutes/` | CRUD проектов, обновление схемы |
+| `server/routes/botManagement/` | Запуск, остановка, перезапуск ботов |
+| `server/routes/tables/` | Работа с таблицами данных |
+| `server/routes/setup/` | Setup Wizard (первоначальная настройка) |
+| `server/routes/setupWebhookRoutes.ts` | Приём webhook-апдейтов от Telegram |
+| `server/routes/routes.ts` | Главный файл регистрации всех маршрутов |
 
 ---
 ## 🎯 Основные возможности
