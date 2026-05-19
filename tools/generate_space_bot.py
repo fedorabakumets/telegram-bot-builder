@@ -1176,31 +1176,33 @@ def build_map() -> dict:
             "enableAutoTransition": True,
         }))
 
-        # Списываем топливо и ставим timestamp полёта + целевую планету
-        # WHERE включает проверку flight_expires_at — атомарная защита от race condition
-        nodes.append(node(f"fly-do-{planet['id']}", "bot_table", 1800, y_pos, {
-            "tableName": "pilots",
-            "operation": "update",
-            "where": [
-                {"column": "telegram_id", "operator": "equals", "value": "{user_id}"},
-                {"column": "flight_expires_at", "operator": "is_empty", "value": ""},
-            ],
-            "updates": [
-                {"column": "fuel", "op": "decrement", "value": "{flight_fuel}"},
-                {"column": "flight_expires_at", "op": "set", "value": "{flight_expires_at}"},
-                {"column": "flight_target_planet", "op": "set", "value": planet['id']},
-                {"column": "flight_target_name", "op": "set", "value": planet['full']},
-            ],
-            "saveResultTo": "fly_updated",
+        # Атомарный UPDATE через psql_query — защита от race condition
+        # Обновляет ТОЛЬКО если flight_expires_at пустое (никто ещё не летит)
+        # RETURNING id — если вернул строку, значит update сработал
+        nodes.append(node(f"fly-do-{planet['id']}", "psql_query", 1800, y_pos, {
+            "query": (
+                "UPDATE bot_table_rows SET data = data "
+                "|| jsonb_build_object('231', (COALESCE((data->>'231')::int, 0) - {flight_fuel})::text) "
+                "|| jsonb_build_object('267', '{flight_expires_at}') "
+                f"|| jsonb_build_object('268', '{planet['id']}') "
+                f"|| jsonb_build_object('269', '{planet['full']}') "
+                "WHERE table_id = 31 "
+                "AND data->>'240' = '{user_id}' "
+                "AND (data->>'267' IS NULL OR data->>'267' = '') "
+                "RETURNING id"
+            ),
+            "saveResultTo": "fly_result",
+            "resultFormat": "first_row",
+            "connectionSource": "builtin",
             "autoTransitionTo": f"fly-cond-updated-{planet['id']}",
             "enableAutoTransition": True,
         }))
 
-        # Проверяем сработал ли update (0 = уже в полёте, кто-то успел раньше)
+        # Проверяем сработал ли update (fly_result.id пустое = не обновлено)
         nodes.append(node(f"fly-cond-updated-{planet['id']}", "condition", 2100, y_pos, {
-            "variable": "fly_updated",
+            "variable": "fly_result.id",
             "branches": [
-                branch(f"br-not-updated-{planet['id']}", "Не обновлено", "equals", "0", f"msg-fly-inflight-{planet['id']}"),
+                branch(f"br-not-updated-{planet['id']}", "Не обновлено", "is_empty", "", f"msg-fly-inflight-{planet['id']}"),
                 branch(f"br-updated-{planet['id']}", "Обновлено", "else", "", f"msg-fly-start-{planet['id']}"),
             ],
         }))
