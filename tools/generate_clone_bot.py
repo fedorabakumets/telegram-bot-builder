@@ -466,12 +466,12 @@ def build_start_menu() -> dict:
     nodes.append(node("msg-profile", "message", 700, 900, {
         "messageText": (
             "🧢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, ваш профиль:\n\n"
-            "🌟 Уровень: {user.level} ({user.exp}/{user.exp_to_next})\n"
-            "💰 Баланс: {user.balance}$\n\n"
-            "👨\u200d🏭 Профессия: {user.profession}\n\n"
-            "🎭 Клан: {user.clan_id} (👤)\n"
-            "🆔 Игровой ид: {user.game_id}\n"
-            "📚 Дата регистрации: {user.registered_at}"
+            "🌟 Уровень: <code>{user.level}</code> ({user.exp}/{user.exp_to_next})\n"
+            "💰 Баланс: <code>{user.balance}$</code>\n\n"
+            "👨\u200d🏭 Профессия: <code>{user.profession}</code>\n\n"
+            "🎭 Клан: <code>{user.clan_id}</code> (👤)\n"
+            "🆔 Игровой ид: <code>{user.game_id}</code>\n"
+            "📚 Дата регистрации: <code>{user.registered_at}</code>"
         ),
         "formatMode": "html",
         "keyboardType": "none",
