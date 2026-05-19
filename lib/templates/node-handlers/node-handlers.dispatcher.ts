@@ -34,7 +34,7 @@ import { generateIncomingCallbackTriggerHandlers } from '../incoming-callback-tr
 import { generateOutgoingMessageTriggerHandlers } from '../outgoing-message-trigger/outgoing-message-trigger.renderer';
 import { generateManagedBotUpdatedTriggerHandlers } from '../managed-bot-updated-trigger/managed-bot-updated-trigger.renderer';
 import { generateScheduleTriggerHandlers } from '../schedule-trigger/schedule-trigger.renderer';
-import { generateAnswerCallbackQuery } from '../answer-callback-query/answer-callback-query.renderer';
+import { generateAnswerCallbackQuery, generateAnswerCallbackQueryHandlers } from '../answer-callback-query/answer-callback-query.renderer';
 import { generateEditMessageHandlers } from '../edit-message';
 import { generateSetVariableHandlers } from '../set-variable/set-variable.renderer';
 import { generatePsqlQueryHandlers } from '../psql-query/psql-query.renderer';
@@ -522,6 +522,13 @@ export function generateNodeHandlers(
     delayCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Обработчики узлов answer_callback_query ---
+  const answerCallbackQueryCode = generateAnswerCallbackQueryHandlers(nodes);
+  if (answerCallbackQueryCode) {
+    codeLines.push('\n# Обработчики узлов answer_callback_query');
+    answerCallbackQueryCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   // --- Фоновые задачи (Schedule Trigger) ---
   const scheduleTriggerCode = generateScheduleTriggerHandlers(nodes);
   if (scheduleTriggerCode) {
@@ -531,7 +538,7 @@ export function generateNodeHandlers(
 
   nodes.forEach((node: Node) => {
     // Пропускаем триггеры — они уже обработаны выше
-    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message' || (node.type as any) === 'set_variable' || (node.type as any) === 'psql_query' || (node.type as any) === 'bot_table' || (node.type as any) === 'convert_file' || (node.type as any) === 'loop' || (node.type as any) === 'delay' || (node.type as any) === 'schedule_trigger') {
+    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message' || (node.type as any) === 'set_variable' || (node.type as any) === 'psql_query' || (node.type as any) === 'bot_table' || (node.type as any) === 'convert_file' || (node.type as any) === 'loop' || (node.type as any) === 'delay' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'answer_callback_query') {
       return;
     }
 
