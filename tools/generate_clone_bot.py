@@ -479,6 +479,16 @@ def build_start_menu() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "user",
         "resultFormat": "first_row",
+        "autoTransitionTo": "tbl-read-profile-clan",
+        "enableAutoTransition": True,
+    }))
+    # Читаем клан пользователя для отображения названия
+    nodes.append(node("tbl-read-profile-clan", "bot_table", 475, 900, {
+        "tableName": "clans",
+        "operation": "read",
+        "where": [{"column": "id", "operator": "equals", "value": "{user.clan_id}"}],
+        "saveResultTo": "clan",
+        "resultFormat": "first_row",
         "autoTransitionTo": "set-profile-fmt",
         "enableAutoTransition": True,
     }))
@@ -497,7 +507,7 @@ def build_start_menu() -> dict:
             "🌟 Уровень: <code>{user.level}</code> ({user.exp}/{user.exp_to_next})\n"
             "💰 Баланс: <code>{balance_fmt}$</code>\n\n"
             "👨\u200d🏭 Профессия: <code>{user.profession}</code>\n\n"
-            "🎭 Клан: <code>{user.clan_id}</code> (👤)\n"
+            "🎭 Клан: <code>{clan.name}</code> (👤)\n"
             "🆔 Игровой ид: <code>{user.game_id}</code>\n"
             "📚 Дата регистрации: <code>{user.registered_at}</code>"
         ),
