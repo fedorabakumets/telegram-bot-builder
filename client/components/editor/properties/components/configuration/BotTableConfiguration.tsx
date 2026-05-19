@@ -23,7 +23,7 @@ interface BotTableConfigurationProps {
   /** ID проекта для загрузки списка таблиц */
   projectId: number;
   /** Функция обновления данных узла */
-  onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
+  onNodeUpdate: (nodeId: string, updates: Partial<Node['data']> & Record<string, any>) => void;
   /** Все узлы всех листов для выбора следующего узла */
   getAllNodesFromAllSheets: Array<{ node: Node; sheetName: string }>;
   /** Функция форматирования отображения узла */
