@@ -498,10 +498,36 @@ def build_start_menu() -> dict:
             {"id": "a-bal-raw", "variable": "balance_raw", "value": "{user.balance}", "mode": "text"},
             {"id": "a-bal-fmt", "variable": "balance_fmt", "value": "thousands({balance_raw})", "mode": "expression"},
         ],
-        "autoTransitionTo": "msg-profile",
+        "autoTransitionTo": "cond-profile-clan",
         "enableAutoTransition": True,
     }))
-    nodes.append(node("msg-profile", "message", 700, 900, {
+
+    # Condition: есть ли клан у пользователя?
+    nodes.append(node("cond-profile-clan", "condition", 600, 900, {
+        "variable": "user.clan_id",
+        "branches": [
+            branch("br-prof-has-clan", "Есть клан", "filled", "", "msg-profile-with-clan"),
+            branch("br-prof-no-clan", "Нет клана", "else", "", "msg-profile-no-clan"),
+        ],
+    }))
+
+    # Профиль БЕЗ клана
+    nodes.append(node("msg-profile-no-clan", "message", 700, 1000, {
+        "messageText": (
+            "🧢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, ваш профиль:\n\n"
+            "🌟 Уровень: <code>{user.level}</code> ({user.exp}/{user.exp_to_next})\n"
+            "💰 Баланс: <code>{balance_fmt}$</code>\n\n"
+            "👨\u200d🏭 Профессия: <code>{user.profession}</code>\n\n"
+            "🆔 Игровой ид: <code>{user.game_id}</code>\n"
+            "📚 Дата регистрации: <code>{user.registered_at}</code>"
+        ),
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # Профиль С кланом
+    nodes.append(node("msg-profile-with-clan", "message", 700, 800, {
         "messageText": (
             "🧢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, ваш профиль:\n\n"
             "🌟 Уровень: <code>{user.level}</code> ({user.exp}/{user.exp_to_next})\n"
