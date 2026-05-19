@@ -32,7 +32,7 @@ export function SidebarBrand({ isCollapsed }: SidebarBrandProps) {
             BotCraft Studio
           </span>
           <span className="text-[10px] text-muted-foreground/70 font-medium">
-            v2.1.9.6
+            v2.1.9.7
           </span>
         </div>
       )}
