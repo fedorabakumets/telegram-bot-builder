@@ -173,6 +173,7 @@ def build_start_menu() -> dict:
             "game_id": "{new_game_id}",
             "registered_at": "{today} {time}",
             "fragments": "0",
+            "in_flight": "",
         },
         "onConflict": "merge",
         "saveResultTo": "pilot",
@@ -1010,8 +1011,23 @@ def build_map() -> dict:
             "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
             "saveResultTo": "pilot",
             "resultFormat": "first_row",
-            "autoTransitionTo": f"fly-cond-same-{planet['id']}",
+            "autoTransitionTo": f"fly-cond-inflight-{planet['id']}",
             "enableAutoTransition": True,
+        }))
+
+        # Проверка: уже в полёте?
+        nodes.append(node(f"fly-cond-inflight-{planet['id']}", "condition", 550, y_pos, {
+            "variable": "pilot.in_flight",
+            "branches": [
+                branch(f"br-inflight-{planet['id']}", "В полёте", "equals", "1", f"msg-fly-inflight-{planet['id']}"),
+                branch(f"br-not-inflight-{planet['id']}", "Свободен", "else", "", f"fly-cond-same-{planet['id']}"),
+            ],
+        }))
+
+        nodes.append(node(f"msg-fly-inflight-{planet['id']}", "message", 550, y_pos - 120, {
+            "messageText": "🚀 Вы уже в полёте! Дождитесь прибытия.",
+            "keyboardType": "none",
+            "buttons": [],
         }))
 
         # Проверка: уже на этой планете?
@@ -1074,13 +1090,14 @@ def build_map() -> dict:
             "buttons": [],
         }))
 
-        # Списываем топливо
+        # Списываем топливо и ставим флаг полёта
         nodes.append(node(f"fly-do-{planet['id']}", "bot_table", 1600, y_pos, {
             "tableName": "pilots",
             "operation": "update",
             "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
             "updates": [
                 {"column": "fuel", "op": "decrement", "value": "{flight_fuel}"},
+                {"column": "in_flight", "op": "set", "value": "1"},
             ],
             "autoTransitionTo": f"msg-fly-start-{planet['id']}",
             "enableAutoTransition": True,
@@ -1113,6 +1130,7 @@ def build_map() -> dict:
             "updates": [
                 {"column": "current_planet", "op": "set", "value": planet['id']},
                 {"column": "current_planet_name", "op": "set", "value": planet['full']},
+                {"column": "in_flight", "op": "set", "value": ""},
             ],
             "autoTransitionTo": f"msg-fly-arrived-{planet['id']}",
             "enableAutoTransition": True,
