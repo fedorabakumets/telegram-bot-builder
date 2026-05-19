@@ -811,39 +811,60 @@ def build_earning() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "user",
         "resultFormat": "first_row",
+        "autoTransitionTo": "set-work-emojis",
+        "enableAutoTransition": True,
+    }))
+
+    # Выбираем случайный целевой эмодзи и формируем массив кнопок
+    emojis_json = '[{"emoji":"🔧"},{"emoji":"💥"},{"emoji":"💡"},{"emoji":"⚡"},{"emoji":"🔨"},{"emoji":"🌋"},{"emoji":"🪛"},{"emoji":"🧯"},{"emoji":"⛓️"},{"emoji":"🚧"},{"emoji":"💎"},{"emoji":"🪤"},{"emoji":"⚙️"},{"emoji":"🔥"},{"emoji":"🛠"},{"emoji":"🔧"}]'
+    nodes.append(node("set-work-emojis", "set_variable", 1150, 0, {
+        "assignments": [
+            {"id": "a-target", "variable": "target_emoji", "value": "🔧,💥,💡,⚡,🔨,🌋,🪛,🧯,⛓️,🚧,💎,🪤,⚙️,🔥,🛠,🔧", "mode": "random_item"},
+            {"id": "a-emojis", "variable": "emojis_json", "value": emojis_json, "mode": "text"},
+        ],
         "autoTransitionTo": "msg-work-game",
         "enableAutoTransition": True,
     }))
 
-    # Мини-игра работы: сетка 4x4 с одной правильной кнопкой
-    work_emojis = ["🔨", "🚧", "💡", "💎", "🔧", "🌋", "⚡️", "💡",
-                   "⛓️", "🪛", "🪤", "🔥", "🧯", "🚧", "⛓️", "🧯"]
-    work_buttons = []
-    work_btn_ids = []
-    for i, emoji in enumerate(work_emojis):
-        bid = f"btn-work-{i}"
-        work_btn_ids.append(bid)
-        # Кнопка с индексом 4 (🔧) — правильная
-        if i == 4:
-            work_buttons.append(btn(bid, emoji, target="set-work-reward"))
-        else:
-            work_buttons.append(btn(bid, emoji, target="set-work-cd-fail"))
-
+    # Мини-игра: сообщение с динамическими кнопками (shuffle + 4 колонки)
     nodes.append(node("msg-work-game", "message", 1300, 0, {
-        "messageText": "🏖 {user.nickname}, рабочая смена началась!\n\n❔ Нажмите на смайлик «🔧»:",
+        "messageText": "🏖 {user.nickname}, рабочая смена началась!\n\n❔ Нажмите на смайлик «{target_emoji}»:",
         "keyboardType": "inline",
         "shuffleButtons": True,
-        "buttons": work_buttons,
-        "keyboardLayout": {
-            "autoLayout": False,
+        "enableDynamicButtons": True,
+        "dynamicButtons": {
+            "sourceVariable": "emojis_json",
+            "arrayPath": "",
+            "textTemplate": "{emoji}",
+            "callbackTemplate": "work_{emoji}",
             "columns": 4,
-            "rows": [
-                {"buttonIds": work_btn_ids[0:4]},
-                {"buttonIds": work_btn_ids[4:8]},
-                {"buttonIds": work_btn_ids[8:12]},
-                {"buttonIds": work_btn_ids[12:16]},
-            ],
         },
+    }))
+
+    # Триггер нажатия кнопки мини-игры (перехватывает все work_*)
+    nodes.append(node("trig-work-callback", "incoming_callback_trigger", 1600, -200, {
+        "callbackData": "work_",
+        "matchType": "startswith",
+        "autoTransitionTo": "set-check-work-answer",
+        "enableAutoTransition": True,
+    }))
+
+    # Извлекаем нажатый эмодзи из callback_data
+    nodes.append(node("set-check-work-answer", "set_variable", 1800, -200, {
+        "assignments": [
+            {"id": "a-pressed", "variable": "pressed_emoji", "value": "{callback_data}", "mode": "text"},
+        ],
+        "autoTransitionTo": "cond-work-answer",
+        "enableAutoTransition": True,
+    }))
+
+    # Проверяем: нажатый эмодзи == целевой?
+    nodes.append(node("cond-work-answer", "condition", 2000, -200, {
+        "variable": "pressed_emoji",
+        "branches": [
+            branch("br-correct", "Правильно", "equals", "work_{target_emoji}", "set-work-reward"),
+            branch("br-wrong", "Неправильно", "else", "", "set-work-cd-fail"),
+        ],
     }))
 
     # === Правильная кнопка: начисление награды ===
@@ -856,7 +877,7 @@ def build_earning() -> dict:
         "enableAutoTransition": True,
     }))
 
-    # Начисление награды (фиксированные значения для increment, рандом только для отображения)
+    # Начисление награды (фиксированные значения для increment)
     nodes.append(node("tbl-work-update", "bot_table", 1600, 0, {
         "tableName": "users",
         "operation": "update",
@@ -924,11 +945,11 @@ def build_earning() -> dict:
         ],
     }))
 
-    # Вычисляем новый exp_to_next через set_variable (exp_to_next * 1.5)
+    # Вычисляем новый exp_to_next через set_variable (exp_to_next * 2)
     nodes.append(node("set-calc-next-lvl", "set_variable", 2800, -200, {
         "assignments": [
             {"id": "a-new-exp-next", "variable": "new_exp_to_next",
-             "value": "{user.exp_to_next} * 1.5", "mode": "expression"},
+             "value": "{user.exp_to_next} * 2", "mode": "expression"},
         ],
         "autoTransitionTo": "tbl-level-up",
         "enableAutoTransition": True,
