@@ -18,8 +18,8 @@ export interface Assignment {
   variable: string;
   /** Значение или шаблон */
   value: string;
-  /** Режим: "text" — шаблон, "expression" — выражение, "lookup" — поиск в таблице, "str_replace" — замена подстроки, "random" — случайное число, "random_item" — случайный элемент из списка, "array_item" — элемент массива/объекта по индексу/ключу, "timestamp" — временная метка */
-  mode: 'text' | 'expression' | 'lookup' | 'str_replace' | 'random' | 'random_item' | 'array_item' | 'timestamp';
+  /** Режим: "text" — шаблон, "expression" — выражение, "lookup" — поиск в таблице, "str_replace" — замена подстроки, "random" — случайное число, "random_item" — случайный элемент из списка, "array_item" — элемент массива/объекта по индексу/ключу, "timestamp" — временная метка, "format_duration" — форматирование секунд в MM:SS / HH:MM:SS */
+  mode: 'text' | 'expression' | 'lookup' | 'str_replace' | 'random' | 'random_item' | 'array_item' | 'timestamp' | 'format_duration';
   /** Имя таблицы для поиска (только lookup) */
   lookupTable?: string;
   /** Поле таблицы для извлечения (только lookup) */
@@ -66,9 +66,9 @@ export function AssignmentRow({
     onChange(assignment.id, 'value', assignment.value + `{${varName}}`);
   };
 
-  /** Переключает режим между text, expression, lookup, str_replace, random, random_item, array_item и timestamp */
+  /** Переключает режим между text, expression, lookup, str_replace, random, random_item, array_item, timestamp и format_duration */
   const handleModeToggle = () => {
-    const modes: Array<'text' | 'expression' | 'lookup' | 'str_replace' | 'random' | 'random_item' | 'array_item' | 'timestamp'> = ['text', 'expression', 'lookup', 'str_replace', 'random', 'random_item', 'array_item', 'timestamp'];
+    const modes: Array<Assignment['mode']> = ['text', 'expression', 'lookup', 'str_replace', 'random', 'random_item', 'array_item', 'timestamp', 'format_duration'];
     const currentIdx = modes.indexOf(assignment.mode);
     const nextMode = modes[(currentIdx + 1) % modes.length];
     onChange(assignment.id, 'mode', nextMode);
@@ -81,13 +81,14 @@ export function AssignmentRow({
   const isRandomItem = assignment.mode === 'random_item';
   const isArrayItem = assignment.mode === 'array_item';
   const isTimestamp = assignment.mode === 'timestamp';
+  const isFormatDuration = assignment.mode === 'format_duration';
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5">
-        {/* Переключатель режима T / = / 🔍 / ✂️ / 🎲 / 🎯 / 📋 / ⏱ */}
+        {/* Переключатель режима T / = / 🔍 / ✂️ / 🎲 / 🎯 / 📋 / ⏱ / ⏳ */}
         <Button
-          variant={isExpression ? 'default' : isLookup ? 'secondary' : isStrReplace ? 'secondary' : isRandom ? 'secondary' : isRandomItem ? 'secondary' : isArrayItem ? 'secondary' : isTimestamp ? 'secondary' : 'outline'}
+          variant={isExpression ? 'default' : isLookup ? 'secondary' : isStrReplace ? 'secondary' : isRandom ? 'secondary' : isRandomItem ? 'secondary' : isArrayItem ? 'secondary' : isTimestamp ? 'secondary' : isFormatDuration ? 'secondary' : 'outline'}
           size="icon"
           className="h-8 w-8 flex-shrink-0 text-xs font-mono"
           title={isExpression
@@ -103,19 +104,21 @@ export function AssignmentRow({
             : isArrayItem
             ? 'Режим: элемент массива/объекта. Нажмите для временной метки'
             : isTimestamp
-            ? 'Режим: временная метка. Нажмите для текста'
+            ? 'Режим: временная метка. Нажмите для длительности'
+            : isFormatDuration
+            ? 'Режим: ⏱ Длительность (сек → MM:SS). Нажмите для текста'
             : 'Режим: текст/шаблон. Нажмите для выражения'}
           onClick={handleModeToggle}
         >
-          {isExpression ? '=' : isLookup ? '🔍' : isStrReplace ? '✂️' : isRandom ? '🎲' : isRandomItem ? '🎯' : isArrayItem ? '📋' : isTimestamp ? '⏱' : 'T'}
+          {isExpression ? '=' : isLookup ? '🔍' : isStrReplace ? '✂️' : isRandom ? '🎲' : isRandomItem ? '🎯' : isArrayItem ? '📋' : isTimestamp ? '⏱' : isFormatDuration ? '⏳' : 'T'}
         </Button>
 
-        {!isLookup && !isStrReplace && !isRandom && !isRandomItem && !isArrayItem && !isTimestamp && (
+        {!isLookup && !isStrReplace && !isRandom && !isRandomItem && !isArrayItem && !isTimestamp && !isFormatDuration && (
           <>
             {/* Поле значения с кнопкой вставки переменной */}
             <div className="flex-1 flex items-center gap-1">
               <Input
-                placeholder={isExpression ? '{step} + 1' : 'значение или {переменная}'}
+                placeholder={isExpression ? '{step} + 1 (поддержка: +, -, *, /, //, %)' : 'значение или {переменная}'}
                 value={assignment.value}
                 onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
                 className={`flex-1 text-xs h-8 ${isExpression
@@ -193,6 +196,23 @@ export function AssignmentRow({
               value={assignment.value || ''}
               onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
               className="flex-1 text-xs h-8 border-cyan-400 dark:border-cyan-600 bg-cyan-50/30 dark:bg-cyan-950/20"
+            />
+            <span className="text-muted-foreground text-xs flex-shrink-0">→</span>
+          </div>
+        )}
+
+        {/* Режим format_duration: форматирование секунд → MM:SS / HH:MM:SS */}
+        {isFormatDuration && (
+          <div className="flex-1 flex items-center gap-1">
+            <Input
+              placeholder="выражение в секундах, напр: {cd.expires_at} - {now_ts}"
+              value={assignment.value || ''}
+              onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
+              className="flex-1 text-xs h-8 border-orange-400 dark:border-orange-600 bg-orange-50/30 dark:bg-orange-950/20"
+            />
+            <VariableSelector
+              availableVariables={textVariables}
+              onSelect={handleInsertVariable}
             />
             <span className="text-muted-foreground text-xs flex-shrink-0">→</span>
           </div>
