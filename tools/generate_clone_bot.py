@@ -151,11 +151,30 @@ def build_start_menu() -> dict:
     """
     nodes = []
 
-    # --- /start → upsert user → приветствие с главным меню ---
+    # --- /start → count users → set game_id → upsert user → приветствие ---
     nodes.append(node("cmd-start", "command_trigger", 100, 0, {
         "command": "/start",
         "description": "Запустить бота",
         "showInMenu": True,
+        "autoTransitionTo": "tbl-count-users",
+        "enableAutoTransition": True,
+    }))
+
+    # Считаем количество пользователей для game_id
+    nodes.append(node("tbl-count-users", "bot_table", 250, 0, {
+        "tableName": "users",
+        "operation": "count",
+        "where": [],
+        "saveResultTo": "users_count",
+        "autoTransitionTo": "set-game-id",
+        "enableAutoTransition": True,
+    }))
+
+    # Вычисляем game_id = users_count + 1
+    nodes.append(node("set-game-id", "set_variable", 350, 0, {
+        "assignments": [
+            {"id": "a-gid", "variable": "new_game_id", "value": "{users_count} + 1", "mode": "expression"},
+        ],
         "autoTransitionTo": "tbl-upsert-user",
         "enableAutoTransition": True,
     }))
@@ -173,7 +192,7 @@ def build_start_menu() -> dict:
             "exp_to_next": "64",
             "profession": "Безработный",
             "clan_id": "",
-            "game_id": "{user_id}",
+            "game_id": "{new_game_id}",
             "registered_at": "{today} {time}",
         },
         "onConflict": "ignore",
