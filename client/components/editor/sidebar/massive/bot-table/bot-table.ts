@@ -16,7 +16,7 @@ export const botTableNode: ComponentDefinition = {
   defaultData: {
     /** Имя таблицы */
     tableName: '',
-    /** Операция: read, insert, update, upsert, delete */
+    /** Операция: read, insert, update, upsert, delete, count */
     operation: 'read',
     /** Условия WHERE (массив: column + value) */
     where: [],

@@ -446,7 +446,7 @@ export function getNodeDefaults(type: Node['type']): any {
     bot_table: {
       /** Имя таблицы */
       tableName: '',
-      /** Операция: read, insert, update, upsert, delete */
+      /** Операция: read, insert, update, upsert, delete, count */
       operation: 'read',
       /** Условия WHERE */
       where: [],

@@ -39,6 +39,7 @@ const OPERATION_LABELS: Record<string, string> = {
   update: 'Обновить',
   upsert: 'Создать или обновить',
   delete: 'Удалить',
+  count: 'Подсчитать',
 };
 
 /**
@@ -72,16 +73,16 @@ export function BotTableConfiguration({
   /** Загрузка списка таблиц проекта */
   const { data: tables = [] } = useTablesQuery(projectId);
 
-  /** Показывать WHERE: read, update, delete */
-  const showWhere = ['read', 'update', 'delete'].includes(operation);
+  /** Показывать WHERE: read, update, delete, count */
+  const showWhere = ['read', 'update', 'delete', 'count'].includes(operation);
   /** Показывать Updates: update */
   const showUpdates = operation === 'update';
   /** Показывать Row: insert, upsert */
   const showRow = ['insert', 'upsert'].includes(operation);
   /** Показывать ключ и onConflict: upsert */
   const showUpsert = operation === 'upsert';
-  /** Показывать сохранение результата: read, update, upsert */
-  const showSaveResult = ['read', 'update', 'upsert'].includes(operation);
+  /** Показывать сохранение результата: read, update, upsert, count */
+  const showSaveResult = ['read', 'update', 'upsert', 'count'].includes(operation);
   /** Показывать формат результата: read */
   const showResultFormat = operation === 'read';
 
