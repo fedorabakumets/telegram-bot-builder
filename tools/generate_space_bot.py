@@ -388,12 +388,13 @@ def build_start_menu() -> dict:
 def build_trade() -> dict:
     """
     Строит лист «🛒 Торговля».
-    Содержит подменю торговли, заглушки купить/продать/трюм.
+    Содержит подменю торговли, покупку руд (inline), продажу, просмотр трюма.
+    Цены берутся из ore_prices (генерируются on-demand через set_variable random).
     @returns словарь листа
     """
     nodes = []
 
-    # --- Подменю торговли ---
+    # --- Подменю торговли (reply) ---
     nodes.append(node("tbl-read-pilot-trade", "bot_table", 100, 0, {
         "tableName": "pilots",
         "operation": "read",
@@ -432,44 +433,344 @@ def build_trade() -> dict:
         "resizeKeyboard": True,
     }))
 
-    # --- Триггер «Купить» (заглушка) ---
-    nodes.append(node("trig-buy", "text_trigger", 100, 250, {
+    # =============================================
+    # 🛒 КУПИТЬ — показ руд с ценами (inline)
+    # =============================================
+    # Цепочка: trig-buy → read pilot → read ores → msg-buy-menu (inline 8 руд)
+    nodes.append(node("trig-buy", "text_trigger", 100, 300, {
         "textMatchType": "exact",
         "textSynonyms": ["🛒 Купить"],
-        "autoTransitionTo": "msg-buy-wip",
+        "autoTransitionTo": "tbl-buy-read-pilot",
         "enableAutoTransition": True,
     }))
 
-    nodes.append(node("msg-buy-wip", "message", 400, 250, {
-        "messageText": "🛒 Покупка руд — в разработке.",
-        "keyboardType": "none",
-        "buttons": [],
+    nodes.append(node("tbl-buy-read-pilot", "bot_table", 400, 300, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "tbl-buy-read-ores",
+        "enableAutoTransition": True,
     }))
 
-    # --- Триггер «Продать» (заглушка) ---
-    nodes.append(node("trig-sell", "text_trigger", 100, 400, {
+    nodes.append(node("tbl-buy-read-ores", "bot_table", 700, 300, {
+        "tableName": "ores",
+        "operation": "read",
+        "where": [],
+        "saveResultTo": "ores_list",
+        "resultFormat": "all_rows",
+        "autoTransitionTo": "msg-buy-menu",
+        "enableAutoTransition": True,
+    }))
+
+    # Сообщение с inline-кнопками для покупки (8 руд)
+    # Цены показываются из base_price_{planet} — в будущем заменим на ore_prices
+    buy_text = (
+        f"🛒 {MENTION}, руды на планете {{pilot.current_planet}}:\n\n"
+        "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}\n"
+        "💰 Кредиты: {pilot.credits}\n\n"
+        "Выберите руду для покупки (1 шт):"
+    )
+    buy_buttons = []
+    for ore in ORES:
+        buy_buttons.append({
+            "id": f"btn-buy-{ore['id']}",
+            "text": f"{ore['emoji']} {ore['name']}",
+            "action": "goto",
+            "target": f"buy-check-{ore['id']}",
+        })
+
+    nodes.append(node("msg-buy-menu", "message", 1000, 300, {
+        "messageText": buy_text,
+        "formatMode": "html",
+        "keyboardType": "inline",
+        "buttons": buy_buttons,
+    }))
+
+    # --- Для каждой руды: проверка кредитов → проверка трюма → покупка ---
+    for i, ore in enumerate(ORES):
+        y_pos = 600 + i * 350
+
+        # Читаем цену руды на текущей планете
+        nodes.append(node(f"buy-check-{ore['id']}", "bot_table", 100, y_pos, {
+            "tableName": "ores",
+            "operation": "read",
+            "where": [{"column": "id", "operator": "equals", "value": ore['id']}],
+            "saveResultTo": "buy_ore",
+            "resultFormat": "first_row",
+            "autoTransitionTo": f"buy-set-price-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Вычисляем цену на текущей планете через выражение
+        # base_price_{planet} — берём из buy_ore
+        nodes.append(node(f"buy-set-price-{ore['id']}", "set_variable", 400, y_pos, {
+            "assignments": [
+                {"id": f"a-price-{ore['id']}", "variable": "ore_price", "value": "{buy_ore.base_price_{pilot.current_planet}}", "mode": "text"},
+            ],
+            "autoTransitionTo": f"buy-cond-credits-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Проверка: хватает ли кредитов
+        nodes.append(node(f"buy-cond-credits-{ore['id']}", "condition", 700, y_pos, {
+            "variable": "pilot.credits",
+            "branches": [
+                branch(f"br-no-money-{ore['id']}", "Не хватает", "less_than", "{ore_price}", f"msg-buy-no-money-{ore['id']}"),
+                branch(f"br-has-money-{ore['id']}", "Хватает", "else", "", f"buy-cond-cargo-{ore['id']}"),
+            ],
+        }))
+
+        # Не хватает кредитов
+        nodes.append(node(f"msg-buy-no-money-{ore['id']}", "message", 1000, y_pos - 100, {
+            "messageText": f"❌ Недостаточно кредитов для покупки {ore['emoji']} {ore['name']}!\n\n💰 Нужно: {{ore_price}} кр.\n💰 У вас: {{pilot.credits}} кр.",
+            "keyboardType": "none",
+            "buttons": [],
+        }))
+
+        # Проверка: есть ли место в трюме
+        nodes.append(node(f"buy-cond-cargo-{ore['id']}", "condition", 1000, y_pos, {
+            "variable": "pilot.cargo_used",
+            "branches": [
+                branch(f"br-full-{ore['id']}", "Трюм полон", "equals", "{pilot.cargo_max}", f"msg-buy-full-{ore['id']}"),
+                branch(f"br-space-{ore['id']}", "Есть место", "else", "", f"buy-do-{ore['id']}"),
+            ],
+        }))
+
+        # Трюм полон
+        nodes.append(node(f"msg-buy-full-{ore['id']}", "message", 1300, y_pos - 100, {
+            "messageText": "❌ Трюм полон! 📦 {pilot.cargo_used}/{pilot.cargo_max}\n\nПродайте руду или улучшите трюм.",
+            "keyboardType": "none",
+            "buttons": [],
+        }))
+
+        # Покупка: списание кредитов + увеличение cargo_used
+        nodes.append(node(f"buy-do-{ore['id']}", "bot_table", 1300, y_pos, {
+            "tableName": "pilots",
+            "operation": "update",
+            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+            "updates": [
+                {"column": "credits", "op": "decrement", "value": "{ore_price}"},
+                {"column": "cargo_used", "op": "increment", "value": "1"},
+            ],
+            "autoTransitionTo": f"buy-cargo-upsert-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Добавляем руду в трюм (pilot_cargo)
+        nodes.append(node(f"buy-cargo-upsert-{ore['id']}", "bot_table", 1600, y_pos, {
+            "tableName": "pilot_cargo",
+            "operation": "upsert",
+            "key": "pilot_id",
+            "row": {
+                "pilot_id": "{user_id}",
+                "ore_id": ore['id'],
+                "quantity": "1",
+            },
+            "onConflict": "update",
+            "autoTransitionTo": f"msg-buy-ok-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Успешная покупка
+        nodes.append(node(f"msg-buy-ok-{ore['id']}", "message", 1900, y_pos, {
+            "messageText": f"✅ Куплено: {ore['emoji']} {ore['name']} (1 шт.)\n\n💰 Списано: {{ore_price}} кр.\n📦 Трюм: {{pilot.cargo_used}}/{{pilot.cargo_max}}",
+            "keyboardType": "none",
+            "buttons": [],
+        }))
+
+    # =============================================
+    # 💰 ПРОДАТЬ — показ трюма (inline)
+    # =============================================
+    nodes.append(node("trig-sell", "text_trigger", 100, 4000, {
         "textMatchType": "exact",
         "textSynonyms": ["💰 Продать"],
-        "autoTransitionTo": "msg-sell-wip",
+        "autoTransitionTo": "tbl-sell-read-pilot",
         "enableAutoTransition": True,
     }))
 
-    nodes.append(node("msg-sell-wip", "message", 400, 400, {
-        "messageText": "💰 Продажа руд — в разработке.",
+    nodes.append(node("tbl-sell-read-pilot", "bot_table", 400, 4000, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "tbl-sell-read-cargo",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("tbl-sell-read-cargo", "bot_table", 700, 4000, {
+        "tableName": "pilot_cargo",
+        "operation": "read",
+        "where": [{"column": "pilot_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "cargo_list",
+        "resultFormat": "all_rows",
+        "autoTransitionTo": "cond-sell-empty",
+        "enableAutoTransition": True,
+    }))
+
+    # Проверка: трюм пуст?
+    nodes.append(node("cond-sell-empty", "condition", 1000, 4000, {
+        "variable": "pilot.cargo_used",
+        "branches": [
+            branch("br-sell-empty", "Пусто", "equals", "0", "msg-sell-empty"),
+            branch("br-sell-has", "Есть руда", "else", "", "msg-sell-menu"),
+        ],
+    }))
+
+    nodes.append(node("msg-sell-empty", "message", 1300, 3850, {
+        "messageText": "📦 Ваш трюм пуст! Нечего продавать.\n\nКупите руду на текущей планете.",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    # --- Триггер «Трюм» (заглушка) ---
-    nodes.append(node("trig-cargo", "text_trigger", 100, 550, {
+    # Меню продажи — inline кнопки для каждой руды
+    sell_text = (
+        f"💰 {MENTION}, продажа руд:\n\n"
+        "🌍 Планета: {pilot.current_planet}\n"
+        "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}\n\n"
+        "Выберите руду для продажи (всё количество):"
+    )
+    sell_buttons = []
+    for ore in ORES:
+        sell_buttons.append({
+            "id": f"btn-sell-{ore['id']}",
+            "text": f"{ore['emoji']} {ore['name']}",
+            "action": "goto",
+            "target": f"sell-check-{ore['id']}",
+        })
+
+    nodes.append(node("msg-sell-menu", "message", 1300, 4000, {
+        "messageText": sell_text,
+        "formatMode": "html",
+        "keyboardType": "inline",
+        "buttons": sell_buttons,
+    }))
+
+    # --- Для каждой руды: проверка наличия → продажа ---
+    for i, ore in enumerate(ORES):
+        y_pos = 4400 + i * 300
+
+        # Читаем количество этой руды в трюме
+        nodes.append(node(f"sell-check-{ore['id']}", "bot_table", 100, y_pos, {
+            "tableName": "pilot_cargo",
+            "operation": "read",
+            "where": [
+                {"column": "pilot_id", "operator": "equals", "value": "{user_id}"},
+                {"column": "ore_id", "operator": "equals", "value": ore['id']},
+            ],
+            "saveResultTo": "sell_item",
+            "resultFormat": "first_row",
+            "autoTransitionTo": f"sell-cond-has-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Проверка: есть ли эта руда
+        nodes.append(node(f"sell-cond-has-{ore['id']}", "condition", 400, y_pos, {
+            "variable": "sell_item.quantity",
+            "branches": [
+                branch(f"br-sell-none-{ore['id']}", "Нет руды", "is_empty", "", f"msg-sell-none-{ore['id']}"),
+                branch(f"br-sell-ok-{ore['id']}", "Есть", "else", "", f"sell-calc-{ore['id']}"),
+            ],
+        }))
+
+        nodes.append(node(f"msg-sell-none-{ore['id']}", "message", 700, y_pos - 80, {
+            "messageText": f"❌ У вас нет {ore['emoji']} {ore['name']} в трюме.",
+            "keyboardType": "none",
+            "buttons": [],
+        }))
+
+        # Вычисляем доход: quantity * base_price
+        nodes.append(node(f"sell-calc-{ore['id']}", "bot_table", 700, y_pos, {
+            "tableName": "ores",
+            "operation": "read",
+            "where": [{"column": "id", "operator": "equals", "value": ore['id']}],
+            "saveResultTo": "sell_ore",
+            "resultFormat": "first_row",
+            "autoTransitionTo": f"sell-set-income-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        nodes.append(node(f"sell-set-income-{ore['id']}", "set_variable", 1000, y_pos, {
+            "assignments": [
+                {"id": f"a-sell-price-{ore['id']}", "variable": "sell_price", "value": "{sell_ore.base_price_{pilot.current_planet}}", "mode": "text"},
+                {"id": f"a-sell-income-{ore['id']}", "variable": "sell_income", "value": "{sell_item.quantity} * {sell_price}", "mode": "expression"},
+            ],
+            "autoTransitionTo": f"sell-do-credits-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Начисляем кредиты
+        nodes.append(node(f"sell-do-credits-{ore['id']}", "bot_table", 1300, y_pos, {
+            "tableName": "pilots",
+            "operation": "update",
+            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+            "updates": [
+                {"column": "credits", "op": "increment", "value": "{sell_income}"},
+                {"column": "cargo_used", "op": "decrement", "value": "{sell_item.quantity}"},
+            ],
+            "autoTransitionTo": f"sell-do-delete-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Удаляем руду из трюма
+        nodes.append(node(f"sell-do-delete-{ore['id']}", "bot_table", 1600, y_pos, {
+            "tableName": "pilot_cargo",
+            "operation": "delete",
+            "where": [
+                {"column": "pilot_id", "operator": "equals", "value": "{user_id}"},
+                {"column": "ore_id", "operator": "equals", "value": ore['id']},
+            ],
+            "autoTransitionTo": f"msg-sell-ok-{ore['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Успешная продажа
+        nodes.append(node(f"msg-sell-ok-{ore['id']}", "message", 1900, y_pos, {
+            "messageText": f"✅ Продано: {ore['emoji']} {ore['name']} x{{sell_item.quantity}}\n\n💰 Получено: {{sell_income}} кр.\n💰 Баланс: {{pilot.credits}} кр.",
+            "keyboardType": "none",
+            "buttons": [],
+        }))
+
+    # =============================================
+    # 📦 ТРЮМ — просмотр содержимого
+    # =============================================
+    nodes.append(node("trig-cargo", "text_trigger", 100, 7000, {
         "textMatchType": "exact",
         "textSynonyms": ["📦 Трюм"],
-        "autoTransitionTo": "msg-cargo-wip",
+        "autoTransitionTo": "tbl-cargo-read-pilot",
         "enableAutoTransition": True,
     }))
 
-    nodes.append(node("msg-cargo-wip", "message", 400, 550, {
-        "messageText": "📦 Содержимое трюма — в разработке.",
+    nodes.append(node("tbl-cargo-read-pilot", "bot_table", 400, 7000, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "tbl-cargo-read-items",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("tbl-cargo-read-items", "bot_table", 700, 7000, {
+        "tableName": "pilot_cargo",
+        "operation": "read",
+        "where": [{"column": "pilot_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "cargo_items",
+        "resultFormat": "all_rows",
+        "autoTransitionTo": "msg-cargo-view",
+        "enableAutoTransition": True,
+    }))
+
+    cargo_text = (
+        f"📦 {MENTION}, содержимое трюма:\n\n"
+        "📦 Занято: {pilot.cargo_used}/{pilot.cargo_max}\n\n"
+        "Используйте «💰 Продать» для продажи руд."
+    )
+    nodes.append(node("msg-cargo-view", "message", 1000, 7000, {
+        "messageText": cargo_text,
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
