@@ -371,17 +371,6 @@ export function generateNodeHandlers(
     broadcast: (node) => generateBroadcastHandler(node, nodes, enableComments),
     keyboard: (node) => generateKeyboardHandler(node, nodes),
     input: generateUserInputNodeHandler,
-    answer_callback_query: (node) => {
-      const entry = {
-        nodeId: node.id,
-        targetNodeId: (node.data as any)?.autoTransitionTo || '',
-        targetNodeType: nodes.find(n => n.id === (node.data as any)?.autoTransitionTo)?.type || 'message',
-        notificationText: (node.data as any)?.callbackNotificationText || '',
-        showAlert: (node.data as any)?.callbackShowAlert ?? false,
-        cacheTime: (node.data as any)?.callbackCacheTime ?? 0,
-      };
-      return generateAnswerCallbackQuery({ entries: [entry] });
-    },
     get_managed_bot_token: (node) => {
       const entry = {
         nodeId: node.id,
