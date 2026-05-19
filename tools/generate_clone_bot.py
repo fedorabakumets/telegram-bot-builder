@@ -530,10 +530,32 @@ def build_start_menu() -> dict:
     }))
     nodes.append(node("msg-no-clan", "message", 1000, 1200, {
         "messageText": (
-            "😢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, вы не состоите в клане.\n\n"
-            "Используйте команду: 🛡 Клан вступить [ид клана]"
+            "😢 <a href='tg://user?id={user_id}'>{user.nickname}</a>, вы не состоите в клане. "
+            "Найдите или создайте собственный клан.\n\n"
+            "⭐️ Клан даёт различные бонусы своим участникам."
         ),
         "formatMode": "html",
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-clan-find", "🔎 Найти клан", target="msg-clan-find-wip"),
+            btn("btn-clan-create", "➕ Создать клан [100,000,000$]", target="msg-clan-create-wip"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 1,
+            "rows": [
+                {"buttonIds": ["btn-clan-find"]},
+                {"buttonIds": ["btn-clan-create"]},
+            ],
+        },
+    }))
+    nodes.append(node("msg-clan-find-wip", "message", 1300, 1300, {
+        "messageText": "🔎 Поиск кланов — раздел в разработке.",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+    nodes.append(node("msg-clan-create-wip", "message", 1300, 1400, {
+        "messageText": "➕ Создание клана — раздел в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
