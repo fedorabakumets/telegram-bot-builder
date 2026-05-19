@@ -832,6 +832,7 @@ def build_earning() -> dict:
     nodes.append(node("msg-work-game", "message", 1300, 0, {
         "messageText": "🏖 {user.nickname}, рабочая смена началась!\n\n❔ Нажмите на смайлик «🔧»:",
         "keyboardType": "inline",
+        "shuffleButtons": True,
         "buttons": work_buttons,
         "keyboardLayout": {
             "autoLayout": False,
