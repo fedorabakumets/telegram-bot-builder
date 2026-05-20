@@ -640,7 +640,7 @@ def build_bot_compare_sheet():
         "bot-cond-validate",
         [
             {
-                "id": "cv1", "field": "{user_amount}",
+                "id": "cv1", "field": "user_amount",
                 "operator": "greater_than", "value": "0",
                 "targetNodeId": "bot-setv-init"
             }
@@ -686,17 +686,17 @@ def build_bot_compare_sheet():
         "bot-cond-mode",
         [
             {
-                "id": "cm1", "field": "{bot.mode}",
+                "id": "cm1", "field": "bot.mode",
                 "operator": "equals", "value": "message",
                 "targetNodeId": "bot-ub-send-msg"
             },
             {
-                "id": "cm2", "field": "{bot.mode}",
+                "id": "cm2", "field": "bot.mode",
                 "operator": "equals", "value": "click",
                 "targetNodeId": "bot-ub-send-start"
             },
             {
-                "id": "cm3", "field": "{bot.mode}",
+                "id": "cm3", "field": "bot.mode",
                 "operator": "equals", "value": "inline",
                 "targetNodeId": "bot-ub-inline"
             },
@@ -755,7 +755,7 @@ def build_bot_compare_sheet():
         "bot-cond-click-step2",
         [
             {
-                "id": "cs1", "field": "{bot.step2_text}",
+                "id": "cs1", "field": "bot.step2_text",
                 "operator": "not_empty", "value": "",
                 "targetNodeId": "bot-ub-send-step2"
             }
