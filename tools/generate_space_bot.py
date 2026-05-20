@@ -1029,6 +1029,7 @@ def build_trade() -> dict:
                 {"id": f"a-sell-price-{ore['id']}", "variable": "sell_price", "value": "{sell_ore.base_price_{pilot.current_planet}}", "mode": "text"},
                 {"id": f"a-sell-qty-{ore['id']}", "variable": "sell_qty", "value": "{sell_item.quantity}", "mode": "text"},
                 {"id": f"a-sell-income-{ore['id']}", "variable": "sell_income", "value": "{sell_item.quantity} * {sell_price}", "mode": "expression"},
+                {"id": f"a-sell-balance-{ore['id']}", "variable": "new_balance", "value": "{pilot.credits} + {sell_income}", "mode": "expression"},
             ],
             "autoTransitionTo": f"sell-do-credits-{ore['id']}",
             "enableAutoTransition": True,
@@ -1061,7 +1062,7 @@ def build_trade() -> dict:
 
         # Успешная продажа
         nodes.append(node(f"msg-sell-ok-{ore['id']}", "message", 2200, y_pos, {
-            "messageText": f"✅ Продано: {ore['emoji']} <b>{ore['name']}</b> x{{sell_item.quantity}}\n\n💰 Получено: <code>{{sell_income}}</code> кредитов\n💰 Баланс: <code>{{pilot.credits}}</code> кредитов",
+            "messageText": f"✅ Продано: {ore['emoji']} <b>{ore['name']}</b> x{{sell_item.quantity}}\n\n💰 Получено: <code>{{sell_income}}</code> кредитов\n💰 Баланс: <code>{{new_balance}}</code> кредитов",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
