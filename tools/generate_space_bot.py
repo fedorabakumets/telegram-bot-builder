@@ -405,6 +405,7 @@ def build_start_menu() -> dict:
             btn("btn-mf-profile", "👤 Профиль"),
             btn("btn-mf-ship", "🔧 Корабль"),
             btn("btn-mf-flights", "🚀 Полёты"),
+            btn("btn-mf-top", "🏆 Топ"),
             btn("btn-mf-turn", "🔄 Развернуться"),
         ],
         "keyboardLayout": {
@@ -412,7 +413,8 @@ def build_start_menu() -> dict:
             "columns": 2,
             "rows": [
                 {"buttonIds": ["btn-mf-profile", "btn-mf-ship"]},
-                {"buttonIds": ["btn-mf-flights", "btn-mf-turn"]},
+                {"buttonIds": ["btn-mf-flights", "btn-mf-top"]},
+                {"buttonIds": ["btn-mf-turn"]},
             ],
         },
         "resizeKeyboard": True,
