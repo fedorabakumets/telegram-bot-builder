@@ -632,6 +632,20 @@ def build_bot_compare_sheet():
         "inline", 1200, 400,
         auto_to="bot-input-amount"
     ))
+    # Патчим layout кнопок (3 + 2 + 1)
+    nodes[-1]["data"]["keyboardLayout"] = {
+        "rows": [
+            {"buttonIds": ["bot-amt-5000", "bot-amt-10000", "bot-amt-50000"]},
+            {"buttonIds": ["bot-amt-100000", "bot-amt-500000"]},
+            {"buttonIds": ["bot-btn-cancel"]},
+        ],
+        "columns": 3,
+        "autoLayout": False
+    }
+    # Выделяем 10000 primary
+    for b in nodes[-1]["data"]["buttons"]:
+        if b["id"] == "bot-amt-10000":
+            b["style"] = "primary"
 
     # Быстрые кнопки сумм — каждая устанавливает user_amount и переходит к init
     for amount in [5000, 10000, 50000, 100000, 500000]:
