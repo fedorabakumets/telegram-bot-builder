@@ -2399,10 +2399,28 @@ def build_planet() -> dict:
     nodes.append(node("msg-no-planet", "message", 700, 200, {
         "messageText": no_planet_text,
         "formatMode": "html",
-        "keyboardType": "inline",
+        "keyboardType": "reply",
         "buttons": [
-            {"id": "btn-found-planet", "text": "🌍 Основать планету", "action": "goto", "target": "cond-found-credits"},
+            btn("btn-found-planet", "🌍 Основать планету"),
+            btn("btn-planet-back", "⬅️ Меню"),
         ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 1,
+            "rows": [
+                {"buttonIds": ["btn-found-planet"]},
+                {"buttonIds": ["btn-planet-back"]},
+            ],
+        },
+        "resizeKeyboard": True,
+    }))
+
+    # Триггер для основания планеты
+    nodes.append(node("trig-found-planet", "text_trigger", 100, 300, {
+        "textMatchType": "exact",
+        "textSynonyms": ["🌍 Основать планету"],
+        "autoTransitionTo": "cond-found-credits",
+        "enableAutoTransition": True,
     }))
 
     # --- Основание планеты ---
