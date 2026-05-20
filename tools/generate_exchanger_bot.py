@@ -988,7 +988,79 @@ def build_bot_compare_sheet():
                 "mode": "expression"
             },
         ],
-        "bot-setv-calc", 9200, 400
+        "bot-ub-sanchez-start", 9200, 400
+    ))
+
+    # ─── 20. Sanchez — /start → Купить → СБП/Карта → Я изучил → парсить ─────
+    nodes.append(userbot_message_node(
+        "bot-ub-sanchez-start",
+        "/start",
+        "@Sanchez_exchange_bot",
+        "sanchez_resp1",
+        "bot-ub-sanchez-buy",
+        9400, 400
+    ))
+
+    # Отправляем текст "💰 Купить" (reply keyboard)
+    nodes.append(userbot_message_node(
+        "bot-ub-sanchez-buy",
+        "💰 Купить",
+        "@Sanchez_exchange_bot",
+        "sanchez_resp2",
+        "bot-ub-sanchez-sbp",
+        9600, 400
+    ))
+
+    # Нажимаем inline кнопку "СБП/Карта"
+    nodes.append(userbot_click_button_node(
+        "bot-ub-sanchez-sbp",
+        "@Sanchez_exchange_bot",
+        "{sanchez_resp2}",
+        "СБП",
+        "sanchez_sbp_text",
+        "bot-ub-sanchez-ready",
+        9800, 400
+    ))
+
+    # Нажимаем inline кнопку "Я изучил и готов к оплате"
+    nodes.append(userbot_click_button_node(
+        "bot-ub-sanchez-ready",
+        "@Sanchez_exchange_bot",
+        "{sanchez_resp2}",
+        "изучил",
+        "sanchez_text",
+        "bot-setv-parse-sanchez",
+        10000, 400
+    ))
+
+    # Парсинг: "Курс в рублях 6,726,121₽"
+    nodes.append(set_var_node(
+        "bot-setv-parse-sanchez",
+        [
+            {
+                "id": "psz_1", "variable": "sanchez_rate_raw",
+                "value": "{sanchez_text}",
+                "mode": "regex_extract",
+                "pattern": "Курс.*?([\\d,]+)₽",
+                "regexGroup": "1"
+            },
+            {
+                "id": "psz_2", "variable": "sanchez_rate",
+                "value": "float('{sanchez_rate_raw}'.replace(',', ''))",
+                "mode": "expression"
+            },
+        ],
+        "bot-setv-sanchez-cancel", 10400, 400
+    ))
+
+    # Отмена покупки чтобы не оставлять бота в состоянии ожидания
+    nodes.append(userbot_message_node(
+        "bot-setv-sanchez-cancel",
+        "/cancel",
+        "@Sanchez_exchange_bot",
+        "",
+        "bot-setv-calc",
+        10600, 400
     ))
 
     # ─── 17. Вычисление BTC для всех ботов ───────────────────────────────────
@@ -1022,6 +1094,10 @@ def build_bot_compare_sheet():
             {"id": "fmt5", "variable": "shaxta_rate_fmt", "value": "{shaxta_rate}", "mode": "format_number"},
             {"id": "fmt6", "variable": "bitmixer_rate_fmt", "value": "{bitmixer_rate}", "mode": "format_number"},
             {"id": "fmt7", "variable": "litebit_rate_fmt", "value": "{litebit_rate}", "mode": "format_number"},
+            {"id": "calc5", "variable": "sanchez_btc",
+             "value": "round({user_amount} / float({sanchez_rate}), 8) if float({sanchez_rate}) > 0 else 0",
+             "mode": "expression"},
+            {"id": "fmt8", "variable": "sanchez_rate_fmt", "value": "{sanchez_rate}", "mode": "format_number"},
         ],
         "bot-msg-result", 6400, 400
     ))
@@ -1042,7 +1118,9 @@ def build_bot_compare_sheet():
         "🔸 <a href='http://t.me/Exchange24Crypto_bot?start=r-7733607050'>24Crypto</a>: "
         "<b>{crypto24_btc}</b> BTC ({crypto24_rate_fmt} ₽)\n"
         "🔸 <a href='https://telegram.me/litebitbit_bot?start=7733607050'>LiteBit</a>: "
-        "<b>{litebit_btc}</b> BTC ({litebit_rate_fmt} ₽)\n\n"
+        "<b>{litebit_btc}</b> BTC ({litebit_rate_fmt} ₽)\n"
+        "🔸 <a href='https://t.me/Sanchez_exchange_bot?start=REF_IED1WL'>Sanchez</a>: "
+        "<b>{sanchez_btc}</b> BTC ({sanchez_rate_fmt} ₽)\n\n"
         "👆 <i>Нажми на название для перехода</i>"
     )
     nodes.append(message_node(
