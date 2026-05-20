@@ -223,6 +223,24 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         _sv_offset_{{ loop.index }} = int(float(replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }}))) if {{ assignment.value | tojson }}.strip() else 0
         user_data[user_id]["{{ safe_var }}"] = str(int(_time_mod_sv.time()) + _sv_offset_{{ loop.index }})
         logging.info(f"📝 set_variable [{{ nodeId }}]: timestamp «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']} (offset={_sv_offset_{{ loop.index }}}s)")
+        {%- elif assignment.mode == 'regex_extract' %}
+        # Извлечение по регулярному выражению
+        import re as _re_sv_{{ loop.index }}
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_source_{{ loop.index }} = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        _sv_pattern_{{ loop.index }} = {{ assignment.pattern | default('') | tojson }}
+        _sv_group_{{ loop.index }} = {{ assignment.regexGroup | default('0') | tojson }}
+        try:
+            _sv_match_{{ loop.index }} = _re_sv_{{ loop.index }}.search(_sv_pattern_{{ loop.index }}, _sv_source_{{ loop.index }})
+            if _sv_match_{{ loop.index }}:
+                _sv_grp_idx_{{ loop.index }} = int(_sv_group_{{ loop.index }}) if _sv_group_{{ loop.index }}.isdigit() else 0
+                user_data[user_id]["{{ safe_var }}"] = _sv_match_{{ loop.index }}.group(_sv_grp_idx_{{ loop.index }})
+            else:
+                user_data[user_id]["{{ safe_var }}"] = ""
+        except Exception as _re_err_{{ loop.index }}:
+            logging.warning(f"⚠️ regex_extract ошибка: {_re_err_{{ loop.index }}}")
+            user_data[user_id]["{{ safe_var }}"] = ""
+        logging.info(f"📝 set_variable [{{ nodeId }}]: regex_extract «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (pattern: {_sv_pattern_{{ loop.index }}!r})")
         {%- else %}
         # Устанавливаем переменную через шаблон
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)

@@ -50,7 +50,8 @@ type AssignmentMode =
   | 'array_item'
   | 'timestamp'
   | 'format_duration'
-  | 'format_number';
+  | 'format_number'
+  | 'regex_extract';
 
 /** Конфигурация режима для отображения в dropdown */
 interface ModeConfig {
@@ -125,6 +126,12 @@ const MODE_CONFIGS: Record<AssignmentMode, ModeConfig> = {
     label: 'Замена подстроки',
     hint: 'Найти и заменить в строке',
     borderClass: 'border-purple-400 dark:border-purple-600',
+  },
+  regex_extract: {
+    icon: '🔎',
+    label: 'Regex извлечение',
+    hint: 'Извлечь по регулярному выражению',
+    borderClass: 'border-rose-400 dark:border-rose-600',
   },
 };
 
@@ -302,6 +309,38 @@ function renderValueInput(
             onChange={(e) => onChange(assignment.id, 'replaceWith', e.target.value)}
             className={`flex-1 ${inputClass}`}
           />
+        </div>
+      );
+
+    case 'regex_extract':
+      return (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <Input
+              placeholder="{переменная} — источник"
+              value={assignment.value || ''}
+              onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
+              className={`flex-1 ${inputClass}`}
+            />
+            <VariableSelector
+              availableVariables={textVariables}
+              onSelect={handleInsertVariable}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <Input
+              placeholder="паттерн: (\d+)\s*рублей"
+              value={(assignment as any).pattern || ''}
+              onChange={(e) => onChange(assignment.id, 'pattern', e.target.value)}
+              className={`flex-1 ${inputClass} font-mono`}
+            />
+            <Input
+              placeholder="группа"
+              value={(assignment as any).regexGroup || '0'}
+              onChange={(e) => onChange(assignment.id, 'regexGroup', e.target.value)}
+              className={`w-16 ${inputClass}`}
+            />
+          </div>
         </div>
       );
 

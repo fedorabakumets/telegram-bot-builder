@@ -14,7 +14,7 @@ const setVariableAssignmentSchema = z.object({
   /** Значение или шаблон с {переменными} */
   value: z.string(),
   /** Режим: "text" — шаблон, "expression" — выражение, "lookup" — поиск, "str_replace" — замена подстроки, "json_push" — добавить объект в массив, "json_format" — форматировать массив в строку, "random" — случайное число, "random_item" — случайный элемент из списка, "array_item" — элемент массива/объекта по индексу/ключу, "timestamp" — временная метка, "format_duration" — форматирование секунд в MM:SS */
-  mode: z.enum(['text', 'expression', 'lookup', 'str_replace', 'json_push', 'json_format', 'random', 'random_item', 'array_item', 'timestamp', 'format_duration', 'format_number']),
+  mode: z.enum(['text', 'expression', 'lookup', 'str_replace', 'json_push', 'json_format', 'random', 'random_item', 'array_item', 'timestamp', 'format_duration', 'format_number', 'regex_extract']),
   /** Имя таблицы для поиска (только для mode=lookup) */
   lookupTable: z.string().optional().default(''),
   /** Поле таблицы, значение которого сохранить (только для mode=lookup) */
@@ -28,6 +28,10 @@ const setVariableAssignmentSchema = z.object({
   })).optional().default([]),
   /** На что заменить (только для mode=str_replace, поддерживает {переменные}) */
   replaceWith: z.string().optional().default(''),
+  /** Регулярное выражение (только для mode=regex_extract) */
+  pattern: z.string().optional().default(''),
+  /** Номер группы захвата (только для mode=regex_extract, по умолчанию "0") */
+  regexGroup: z.string().optional().default('0'),
   /** Максимальное значение для mode=random */
   maxValue: z.string().optional().default(''),
   /** Условие пропуска: имя переменной — если пустая/0, assignment не выполняется */
