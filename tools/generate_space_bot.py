@@ -176,6 +176,7 @@ def build_start_menu() -> dict:
             "flight_expires_at": "",
             "flight_target_planet": "",
             "flight_target_name": "",
+            "status_text": "📍 🌍 Земля",
         },
         "onConflict": "merge",
         "saveResultTo": "pilot",
@@ -192,6 +193,7 @@ def build_start_menu() -> dict:
             {"column": "flight_expires_at", "op": "set", "value": ""},
             {"column": "flight_target_planet", "op": "set", "value": ""},
             {"column": "flight_target_name", "op": "set", "value": ""},
+            {"column": "status_text", "op": "set", "value": "📍 {pilot.current_planet_name}"},
         ],
         "autoTransitionTo": "tbl-init-planets",
         "enableAutoTransition": True,
@@ -268,7 +270,7 @@ def build_start_menu() -> dict:
     # --- Приветственное сообщение с главным меню ---
     welcome_text = (
         f"🚀 Добро пожаловать на борт, {MENTION}!\n\n"
-        "📍 Планета: <b>{pilot.current_planet_name}</b>\n"
+        "📍 Планета: <b>{pilot.status_text}</b>\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
@@ -340,7 +342,7 @@ def build_start_menu() -> dict:
 
     main_menu_text = (
         f"🚀 {MENTION}, главное меню:\n\n"
-        "📍 Планета: <b>{pilot.current_planet_name}</b>\n"
+        "📍 Планета: <b>{pilot.status_text}</b>\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
@@ -375,7 +377,7 @@ def build_start_menu() -> dict:
         f"👤 {MENTION}, ваш профиль:\n\n"
         "🆔 ID: <code>{pilot.game_id}</code>\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
-        "🌍 Планета: <code>{pilot.current_planet_name}</code>\n"
+        "🌍 Планета: <code>{pilot.status_text}</code>\n"
         "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>\n"
         "🌀 Фрагменты Эфира: <code>{pilot.fragments}</code>\n\n"
@@ -425,7 +427,7 @@ def build_trade() -> dict:
 
     trade_menu_text = (
         f"🛒 {MENTION}, меню торговли:\n\n"
-        "📍 Планета: <b>{pilot.current_planet_name}</b>\n"
+        "📍 Планета: <b>{pilot.status_text}</b>\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
     )
@@ -512,7 +514,7 @@ def build_trade() -> dict:
 
     # Сообщение с inline-кнопками для покупки (8 руд с ценами)
     buy_text = (
-        f"🛒 {MENTION}, руды на планете <b>{{pilot.current_planet_name}}</b>:\n\n"
+        f"🛒 {MENTION}, руды на планете <b>{{pilot.status_text}}</b>:\n\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\n"
         "Выберите руду для покупки (1 шт):"
@@ -755,7 +757,7 @@ def build_trade() -> dict:
     # Меню продажи — inline кнопки с количеством
     sell_text = (
         f"💰 {MENTION}, продажа руд:\n\n"
-        "📍 Планета: <b>{pilot.current_planet_name}</b>\n"
+        "📍 Планета: <b>{pilot.status_text}</b>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\n"
         "Выберите руду для продажи:"
     )
@@ -1023,7 +1025,7 @@ def build_map() -> dict:
     # Сообщение карты когда НА ПЛАНЕТЕ
     map_menu_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
-        "📍 Вы здесь: <b>{pilot.current_planet_name}</b>\n"
+        "📍 Вы здесь: <b>{pilot.status_text}</b>\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>"
     )
     nodes.append(node("msg-map-menu", "message", 700, 100, {
@@ -1106,6 +1108,7 @@ def build_map() -> dict:
             "updates": [
                 {"column": "current_planet", "op": "set", "value": "{pilot.flight_target_planet}"},
                 {"column": "current_planet_name", "op": "set", "value": "{pilot.flight_target_name}"},
+                {"column": "status_text", "op": "set", "value": "📍 {pilot.flight_target_name}"},
                 {"column": "flight_expires_at", "op": "set", "value": ""},
                 {"column": "flight_target_planet", "op": "set", "value": ""},
                 {"column": "flight_target_name", "op": "set", "value": ""},
@@ -1236,9 +1239,21 @@ def build_map() -> dict:
         nodes.append(node(f"fly-cond-updated-{planet['id']}", "condition", 2100, y_pos, {
             "variable": "fly_result.id",
             "branches": [
-                branch(f"br-updated-{planet['id']}", "Обновлено", "greater_than", "0", f"msg-fly-start-{planet['id']}"),
+                branch(f"br-updated-{planet['id']}", "Обновлено", "greater_than", "0", f"fly-set-status-{planet['id']}"),
                 branch(f"br-not-updated-{planet['id']}", "Не обновлено", "else", "", f"fly-reread-inflight-{planet['id']}"),
             ],
+        }))
+
+        # Обновляем status_text на "в полёте"
+        nodes.append(node(f"fly-set-status-{planet['id']}", "bot_table", 2300, y_pos, {
+            "tableName": "pilots",
+            "operation": "update",
+            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+            "updates": [
+                {"column": "status_text", "op": "set", "value": f"🚀 В полёте на {planet['full']}"},
+            ],
+            "autoTransitionTo": f"msg-fly-start-{planet['id']}",
+            "enableAutoTransition": True,
         }))
 
         # Сообщение "Летим..."
@@ -1271,6 +1286,7 @@ def build_map() -> dict:
                 {"column": "flight_expires_at", "op": "set", "value": ""},
                 {"column": "flight_target_planet", "op": "set", "value": ""},
                 {"column": "flight_target_name", "op": "set", "value": ""},
+                {"column": "status_text", "op": "set", "value": f"📍 {planet['full']}"},
             ],
             "autoTransitionTo": f"msg-fly-arrived-{planet['id']}",
             "enableAutoTransition": True,
