@@ -1224,13 +1224,14 @@ def build_map() -> dict:
         "formatMode": "html",
         "keyboardType": "reply",
         "buttons": [
+            btn("btn-m-turn-inflight", "🔄 Развернуться"),
             btn("btn-m-back-inflight", "⬅️ Меню"),
         ],
         "keyboardLayout": {
             "autoLayout": False,
-            "columns": 1,
+            "columns": 2,
             "rows": [
-                {"buttonIds": ["btn-m-back-inflight"]},
+                {"buttonIds": ["btn-m-turn-inflight", "btn-m-back-inflight"]},
             ],
         },
         "resizeKeyboard": True,
