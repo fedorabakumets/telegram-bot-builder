@@ -183,21 +183,6 @@ def build_start_menu() -> dict:
         },
         "onConflict": "merge",
         "saveResultTo": "pilot",
-        "autoTransitionTo": "tbl-reset-flight",
-        "enableAutoTransition": True,
-    }))
-
-    # Принудительно сбрасываем flight-поля при /start (на случай если бот перезапустился во время полёта)
-    nodes.append(node("tbl-reset-flight", "bot_table", 800, 50, {
-        "tableName": "pilots",
-        "operation": "update",
-        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
-        "updates": [
-            {"column": "flight_expires_at", "op": "set", "value": ""},
-            {"column": "flight_target_planet", "op": "set", "value": ""},
-            {"column": "flight_target_name", "op": "set", "value": ""},
-            {"column": "status_text", "op": "set", "value": "📍 Планета: <b>{pilot.current_planet_name}</b>"},
-        ],
         "autoTransitionTo": "tbl-init-planets",
         "enableAutoTransition": True,
     }))
@@ -315,7 +300,7 @@ def build_start_menu() -> dict:
     names_base_x = upgrades_base_x + len(UPGRADES) * 200
     for i, pn in enumerate(PLANET_NAMES):
         pn_node_id = f"tbl-init-names-{i + 1}"
-        next_id = f"tbl-init-names-{i + 2}" if i < len(PLANET_NAMES) - 1 else "msg-welcome"
+        next_id = f"tbl-init-names-{i + 2}" if i < len(PLANET_NAMES) - 1 else "tbl-read-pilot-menu"
 
         nodes.append(node(pn_node_id, "bot_table", names_base_x + i * 200, -150, {
             "tableName": "planet_names",
