@@ -950,10 +950,10 @@ def build_map() -> dict:
 
     # Данные планет для перелётов
     PLANETS = [
-        {"id": "earth", "name": "Земля", "emoji": "🌍", "full": "🌍 Земля", "where": "на Земле", "to": "на Землю"},
-        {"id": "mars", "name": "Марс", "emoji": "🔴", "full": "🔴 Марс", "where": "на Марсе", "to": "на Марс"},
-        {"id": "titan", "name": "Титан", "emoji": "🪐", "full": "🪐 Титан", "where": "на Титане", "to": "на Титан"},
-        {"id": "nebula", "name": "Туманность", "emoji": "🌌", "full": "🌌 Туманность", "where": "в Туманности", "to": "в Туманность"},
+        {"id": "earth", "name": "Земля", "emoji": "🌍", "full": "🌍 Земля"},
+        {"id": "mars", "name": "Марс", "emoji": "🔴", "full": "🔴 Марс"},
+        {"id": "titan", "name": "Титан", "emoji": "🪐", "full": "🪐 Титан"},
+        {"id": "nebula", "name": "Туманность", "emoji": "🌌", "full": "🌌 Туманность"},
     ]
 
     # Стоимость перелётов (топливо) и время (секунды)
@@ -1002,7 +1002,7 @@ def build_map() -> dict:
     # Сообщение карты когда В ПОЛЁТЕ
     map_inflight_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
-        "🚀 <b>В полёте на {pilot.flight_target_name}</b>\n"
+        "<b>{pilot.status_text}</b>\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>"
     )
     nodes.append(node("msg-map-inflight", "message", 700, -100, {
@@ -1138,7 +1138,7 @@ def build_map() -> dict:
         }))
 
         nodes.append(node(f"msg-fly-inflight-{planet['id']}", "message", 700, y_pos - 160, {
-            "messageText": "🚀 Вы в полёте на <b>{pilot.flight_target_name}</b>!\n\n🕐 Осталось: <code>{flight_remaining}</code>\n\nДождитесь прибытия.",
+            "messageText": "🚀 Вы в полёте!\n\n{pilot.status_text}\n🕐 Осталось: <code>{flight_remaining}</code>\n\nДождитесь прибытия.",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -1154,7 +1154,7 @@ def build_map() -> dict:
         }))
 
         nodes.append(node(f"msg-fly-same-{planet['id']}", "message", 1000, y_pos - 80, {
-            "messageText": f"📍 Вы уже на планете {planet['emoji']} <b>{planet['name']}</b>!",
+            "messageText": f"📍 Вы уже на планете {planet['full']}!",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -1198,7 +1198,7 @@ def build_map() -> dict:
         }))
 
         nodes.append(node(f"msg-fly-no-fuel-{planet['id']}", "message", 1600, y_pos - 80, {
-            "messageText": f"⛽ Недостаточно топлива для перелёта на {planet['emoji']} <b>{planet['name']}</b>!\n\nНужно: <code>{{flight_fuel}}</code> ⛽\nУ вас: <code>{{pilot.fuel}}</code> ⛽",
+            "messageText": f"⛽ Недостаточно топлива для перелёта на планету {planet['full']}!\n\nНужно: <code>{{flight_fuel}}</code> ⛽\nУ вас: <code>{{pilot.fuel}}</code> ⛽",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -1250,7 +1250,7 @@ def build_map() -> dict:
             "operation": "update",
             "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
             "updates": [
-                {"column": "status_text", "op": "set", "value": f"🚀 В полёте на {planet['full']}"},
+                {"column": "status_text", "op": "set", "value": f"🚀 В полёте на планету {planet['full']}"},
             ],
             "autoTransitionTo": f"msg-fly-start-{planet['id']}",
             "enableAutoTransition": True,
@@ -1258,7 +1258,7 @@ def build_map() -> dict:
 
         # Сообщение "Летим..."
         nodes.append(node(f"msg-fly-start-{planet['id']}", "message", 1900, y_pos, {
-            "messageText": f"🚀 Летим на {planet['emoji']} <b>{planet['name']}</b>!\n\n⛽ Топливо: -{{flight_fuel}}\n🕐 Время в пути: {{flight_time_fmt}}",
+            "messageText": f"🚀 Летим на планету {planet['full']}!\n\n⛽ Топливо: -{{flight_fuel}}\n🕐 Время в пути: {{flight_time_fmt}}",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -1294,7 +1294,7 @@ def build_map() -> dict:
 
         # Сообщение "Прибыли!"
         nodes.append(node(f"msg-fly-arrived-{planet['id']}", "message", 2800, y_pos, {
-            "messageText": f"✅ Вы прибыли на {planet['emoji']} <b>{planet['name']}</b>!\n\nТеперь вы можете торговать здесь.",
+            "messageText": f"✅ Вы прибыли на планету {planet['full']}!\n\nТеперь вы можете торговать здесь.",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
