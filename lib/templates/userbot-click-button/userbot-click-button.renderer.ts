@@ -34,6 +34,7 @@ export function generateUserbotClickButtonHandlers(nodes: Node[], projectId: num
       nodeId: node.id,
       userbotEntity: data.userbotEntity || '',
       messageId: data.messageId || '',
+      messageIdSource: data.messageIdSource || 'manual',
       clickMode: data.clickMode || 'text',
       clickValue: data.clickValue || '',
       saveAlertTo: data.saveAlertTo || undefined,

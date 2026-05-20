@@ -68,12 +68,27 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- endif %}
     _click_val = replace_variables_in_text(_click_val_raw, all_user_vars, {})
 
+{%- if messageIdSource != 'last' %}
     if not _entity or not _msg_id_str:
         logging.error(f"❌ Узел {{ nodeId }}: entity или message_id пустой")
         return
+{%- else %}
+    if not _entity:
+        logging.error(f"❌ Узел {{ nodeId }}: entity пустой")
+        return
+{%- endif %}
 
     try:
         _target = int(_entity) if _entity.lstrip('-').isdigit() else _entity
+{%- if messageIdSource == 'last' %}
+        # Режим: последнее сообщение в чате
+        _msgs = await userbot_client.get_messages(_target, limit=1)
+        _msg = _msgs[0] if _msgs else None
+        if not _msg:
+            logging.error(f"❌ Узел {{ nodeId }}: нет сообщений в {_entity}")
+            return
+        _msg_id = _msg.id
+{%- else %}
         _msg_id = int(_msg_id_str)
 
         # Получаем сообщение с кнопками
@@ -81,6 +96,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         if not _msg:
             logging.error(f"❌ Узел {{ nodeId }}: сообщение {_msg_id} не найдено в {_entity}")
             return
+{%- endif %}
 
         # Нажимаем кнопку
         _click_result = None

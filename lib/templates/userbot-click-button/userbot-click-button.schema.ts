@@ -13,6 +13,8 @@ export const userbotClickButtonParamsSchema = z.object({
   userbotEntity: z.string().optional().default(''),
   /** ID сообщения */
   messageId: z.string().optional().default(''),
+  /** Источник сообщения */
+  messageIdSource: z.enum(['manual', 'last']).optional().default('manual'),
   /** Способ поиска кнопки */
   clickMode: z.enum(['text', 'data', 'index']).optional().default('text'),
   /** Значение для поиска */

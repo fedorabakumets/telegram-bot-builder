@@ -11,6 +11,8 @@ export interface UserbotClickButtonTemplateParams {
   userbotEntity?: string;
   /** ID сообщения с кнопками ({переменная} или число) */
   messageId?: string;
+  /** Источник сообщения: 'manual' — конкретный ID, 'last' — последнее в чате */
+  messageIdSource?: 'manual' | 'last';
   /** Способ поиска кнопки: 'text', 'data', 'index' */
   clickMode?: 'text' | 'data' | 'index';
   /** Значение для поиска (текст кнопки / callback_data / "row,col") */

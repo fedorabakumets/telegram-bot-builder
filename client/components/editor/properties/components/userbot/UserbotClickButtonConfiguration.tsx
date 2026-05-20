@@ -75,19 +75,33 @@ export function UserbotClickButtonConfiguration({
 
             {/* Message ID */}
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">ID сообщения с кнопками</Label>
-              <div className="flex gap-1">
-                <Input
-                  value={data.messageId ?? ''}
-                  onChange={(e) => onNodeUpdate(selectedNode.id, { messageId: e.target.value })}
-                  placeholder="{response_message_id} или число"
-                  className="h-8 text-sm font-mono flex-1"
-                />
-                <VariableSelector
-                  availableVariables={availableVariables as Variable[]}
-                  onSelect={(v) => onNodeUpdate(selectedNode.id, { messageId: `{${v}}` })}
-                />
-              </div>
+              <Label className="text-xs text-muted-foreground">Источник сообщения</Label>
+              <Select
+                value={data.messageIdSource ?? 'manual'}
+                onValueChange={(v) => onNodeUpdate(selectedNode.id, { messageIdSource: v })}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="last">Последнее сообщение в чате</SelectItem>
+                  <SelectItem value="manual">Конкретный ID</SelectItem>
+                </SelectContent>
+              </Select>
+              {(data.messageIdSource ?? 'manual') === 'manual' && (
+                <div className="flex gap-1 mt-1">
+                  <Input
+                    value={data.messageId ?? ''}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { messageId: e.target.value })}
+                    placeholder="{response_msg_id} или число"
+                    className="h-8 text-sm font-mono flex-1"
+                  />
+                  <VariableSelector
+                    availableVariables={availableVariables as Variable[]}
+                    onSelect={(v) => onNodeUpdate(selectedNode.id, { messageId: `{${v}}` })}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Способ поиска */}

@@ -14,6 +14,7 @@ export const userbotClickButton: ComponentDefinition = {
   defaultData: {
     userbotEntity: '',
     messageId: '',
+    messageIdSource: 'last',
     clickMode: 'text',
     clickValue: '',
     saveAlertTo: '',
