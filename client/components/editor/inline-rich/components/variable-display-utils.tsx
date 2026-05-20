@@ -60,6 +60,7 @@ export function getBadgeText(variable: Variable): string {
     bot_table: '🗄️ Таблица',
     table: '📊 Таблица',
     userbot_click_button: '🟣 Юзербот',
+    userbot_message: '🟣 Юзербот',
   };
   return labels[variable.nodeType] || '📌';
 }
@@ -211,6 +212,14 @@ export function getNodeInfo(variable: Variable) {
   }
   // Для userbot_click_button показываем описание
   if ((variable.nodeType as string) === 'userbot_click_button') {
+    return (
+      <div className="text-[10px] text-violet-500 dark:text-violet-400 mt-0.5 truncate">
+        🟣 {variable.description}
+      </div>
+    );
+  }
+  // Для userbot_message показываем описание
+  if ((variable.nodeType as string) === 'userbot_message') {
     return (
       <div className="text-[10px] text-violet-500 dark:text-violet-400 mt-0.5 truncate">
         🟣 {variable.description}

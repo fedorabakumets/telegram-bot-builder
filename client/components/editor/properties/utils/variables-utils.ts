@@ -508,6 +508,22 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
+  // Добавляем переменные от userbot_message-узлов (saveMessageIdTo)
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'userbot_message') return;
+    const data = node.data as any;
+    if (!data.saveMessageIdTo?.trim()) return;
+    const key = `ub_msg_id__${node.id}`;
+    if (!variablesMap.has(key)) {
+      variablesMap.set(key, {
+        name: data.saveMessageIdTo,
+        nodeId: node.id,
+        nodeType: 'userbot_message' as any,
+        description: 'ID сообщения от юзербота',
+      });
+    }
+  });
+
   // Разделяем на текстовые и медиа
   const all = Array.from(variablesMap.values());
   return { textVariables: all.filter(v => !v.mediaType), mediaVariables: all.filter(v => v.mediaType) };
