@@ -1150,7 +1150,7 @@ def build_map() -> dict:
     route_assignments = []
     for rid, base_time in route_times:
         route_assignments.append(
-            {"id": f"a-{rid}-time", "variable": f"{rid}_time", "value": f"{base_time} * (110 - {{pilot.engine_level}} * 15) // 100", "mode": "expression"}
+            {"id": f"a-{rid}-time", "variable": f"{rid}_time", "value": f"{base_time} * (115 - {{pilot.engine_level}} * 15) // 100", "mode": "expression"}
         )
         route_assignments.append(
             {"id": f"a-{rid}-fmt", "variable": f"{rid}_fmt", "value": f"{{{rid}_time}}", "mode": "format_duration"}
@@ -1366,7 +1366,7 @@ def build_map() -> dict:
         # Применяем модификатор двигателя: каждый уровень -15% времени
         nodes.append(node(f"fly-set-expires-{planet['id']}", "set_variable", 1500, y_pos, {
             "assignments": [
-                {"id": f"a-engine-mod-{planet['id']}", "variable": "flight_time", "value": "{flight_time} * (110 - {pilot.engine_level} * 15) // 100", "mode": "expression"},
+                {"id": f"a-engine-mod-{planet['id']}", "variable": "flight_time", "value": "{flight_time} * (115 - {pilot.engine_level} * 15) // 100", "mode": "expression"},
                 {"id": f"a-fmt-actual-{planet['id']}", "variable": "flight_time_fmt", "value": "{flight_time}", "mode": "format_duration"},
                 {"id": f"a-expires-{planet['id']}", "variable": "flight_expires_at", "value": "{flight_time}", "mode": "timestamp"},
             ],
