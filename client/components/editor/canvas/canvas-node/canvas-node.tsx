@@ -51,6 +51,7 @@ import { LoopPreview } from './loop-preview';
 import { BotTablePreview } from './bot-table-preview';
 import { DelayPreview } from './delay-preview';
 import { UserbotMessagePreview } from './userbot-message-preview';
+import { UserbotClickButtonPreview } from './userbot-click-button-preview';
 import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
 
 /**
@@ -540,7 +541,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         }}
       >
         {/* Заголовок узла — скрыт для триггеров, узла сообщения и узла условия */}
-        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'schedule_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && (node.type as any) !== 'edit_message' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (node.type as any) !== 'loop' && (node.type as any) !== 'delay' && (node.type as any) !== 'userbot_message' && (
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'schedule_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && (node.type as any) !== 'edit_message' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (node.type as any) !== 'loop' && (node.type as any) !== 'delay' && (node.type as any) !== 'userbot_message' && (node.type as any) !== 'userbot_click_button' && (
           <NodeHeader node={node} onMove={!!onMove} />
         )}
 
@@ -630,6 +631,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Userbot Message Preview */}
         {(node.type as any) === 'userbot_message' && <UserbotMessagePreview node={node} />}
+
+        {/* Userbot Click Button Preview */}
+        {(node.type as any) === 'userbot_click_button' && <UserbotClickButtonPreview node={node} />}
 
         {/* SQL Query Preview */}
         {(node.type as any) === 'psql_query' && <PsqlQueryPreview node={node} />}
