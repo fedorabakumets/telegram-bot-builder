@@ -756,10 +756,52 @@ def build_bot_compare_sheet():
                 "regexGroup": "1"
             }
         ],
-        "bot-setv-calc", 4800, 400
+        "bot-ub-24crypto-start", 4800, 400
     ))
 
-    # ─── 14. Вычисление BTC для обоих ботов ──────────────────────────────────
+    # ─── 14. 24Crypto — /start → нажать «Актуальные курсы» → парсить ─────────
+    nodes.append(userbot_message_node(
+        "bot-ub-24crypto-start",
+        "/start",
+        "@Exchange24Crypto_bot",
+        "crypto24_resp_id",
+        "bot-ub-24crypto-click",
+        5200, 400
+    ))
+
+    # Нажимаем «Актуальные курсы» — бот редактирует сообщение (saveResultTo)
+    nodes.append(userbot_click_button_node(
+        "bot-ub-24crypto-click",
+        "@Exchange24Crypto_bot",
+        "{crypto24_resp_id}",
+        "Актуальные курсы",
+        "crypto24_text",
+        "bot-setv-parse-24crypto",
+        5600, 400
+    ))
+
+    # Парсинг курса (пробелы в числе — убираем через str_replace после)
+    nodes.append(set_var_node(
+        "bot-setv-parse-24crypto",
+        [
+            {
+                "id": "p24_1", "variable": "crypto24_rate_raw",
+                "value": "{crypto24_text}",
+                "mode": "regex_extract",
+                "pattern": "Покупка BTC:\\s*([\\d\\s.]+)\\s*RUB",
+                "regexGroup": "1"
+            },
+            {
+                "id": "p24_2", "variable": "crypto24_rate",
+                "value": " ", "mode": "str_replace",
+                "replaceWith": "",
+                "replaceSource": "{crypto24_rate_raw}"
+            },
+        ],
+        "bot-setv-calc", 6000, 400
+    ))
+
+    # ─── 15. Вычисление BTC для всех ботов ───────────────────────────────────
     nodes.append(set_var_node(
         "bot-setv-calc",
         [
@@ -773,18 +815,24 @@ def build_bot_compare_sheet():
                 "value": "round({user_amount} / float({capitalist_rate}), 8) if float({capitalist_rate}) > 0 else 0",
                 "mode": "expression"
             },
+            {
+                "id": "calc3", "variable": "crypto24_btc",
+                "value": "round({user_amount} / float({crypto24_rate}), 8) if float({crypto24_rate}) > 0 else 0",
+                "mode": "expression"
+            },
         ],
-        "bot-msg-result", 5200, 400
+        "bot-msg-result", 6400, 400
     ))
 
-    # ─── 15. Показ результатов ────────────────────────────────────────────────
+    # ─── 16. Показ результатов ────────────────────────────────────────────────
     result_text = (
         "💱 <b>Сравнение через ботов</b>\n"
         "Пара: <b>{selected_from_name} → {selected_to_name}</b>\n"
         "Сумма: <b>{user_amount}</b> ₽\n\n"
         "📊 <b>Результаты:</b>\n"
         "🤖 ScoobyChange: <b>{scooby_btc}</b> BTC ({scooby_rate} ₽)\n"
-        "🤖 Capitalist: <b>{capitalist_btc}</b> BTC ({capitalist_rate} ₽)\n\n"
+        "🤖 Capitalist: <b>{capitalist_btc}</b> BTC ({capitalist_rate} ₽)\n"
+        "🤖 24Crypto: <b>{crypto24_btc}</b> BTC ({crypto24_rate} ₽)\n\n"
         "<i>Данные получены через Telegram-ботов</i>"
     )
     nodes.append(message_node(
