@@ -1202,7 +1202,7 @@ def build_map() -> dict:
         f"🚀 {MENTION}, карта галактики:\n\n"
         "{pilot.status_text}\n"
         "🕐 Оставшееся время: <code>{map_remaining}</code>\n"
-        "⛽ Топливо: <code>{pilot.fuel}</code>"
+        "⛽ Осталось топлива: <code>{pilot.fuel}</code>"
     )
     nodes.append(node("msg-map-inflight", "message", 700, -100, {
         "messageText": map_inflight_text,
