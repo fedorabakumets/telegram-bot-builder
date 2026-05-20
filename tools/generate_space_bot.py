@@ -488,6 +488,15 @@ def build_start_menu() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "pilot",
         "resultFormat": "first_row",
+        "autoTransitionTo": "set-profile-fmt",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("set-profile-fmt", "set_variable", 550, 750, {
+        "assignments": [
+            {"id": "a-prof-credits", "variable": "credits_fmt", "value": "{pilot.credits}", "mode": "format_number"},
+            {"id": "a-prof-fuel", "variable": "fuel_fmt", "value": "{pilot.fuel}", "mode": "format_number"},
+        ],
         "autoTransitionTo": "msg-profile",
         "enableAutoTransition": True,
     }))
@@ -495,10 +504,10 @@ def build_start_menu() -> dict:
     profile_text = (
         f"👤 {MENTION}, ваш профиль:\n\n"
         "🆔 ID: <code>{pilot.game_id}</code>\n"
-        "💰 Кредиты: <code>{pilot.credits}</code>\n"
+        "💰 Кредиты: <code>{credits_fmt}</code>\n"
         "{pilot.status_text}\n"
         "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}\n"
-        "⛽ Топливо: <code>{pilot.fuel}</code>\n"
+        "⛽ Топливо: <code>{fuel_fmt}</code>\n"
         "🌀 Фрагменты Эфира: <code>{pilot.fragments}</code>\n\n"
         "🚀 Корабль:\n"
         "  📦 Трюм: ур. {pilot.hull_level}\n"
@@ -623,6 +632,14 @@ def build_trade() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "pilot",
         "resultFormat": "first_row",
+        "autoTransitionTo": "set-trade-fmt",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("set-trade-fmt", "set_variable", 250, 0, {
+        "assignments": [
+            {"id": "a-trade-credits", "variable": "credits_fmt", "value": "{pilot.credits}", "mode": "format_number"},
+        ],
         "autoTransitionTo": "msg-trade-menu",
         "enableAutoTransition": True,
     }))
@@ -630,7 +647,7 @@ def build_trade() -> dict:
     trade_menu_text = (
         f"🛒 {MENTION}, меню торговли:\n\n"
         "{pilot.status_text}\n"
-        "💰 Кредиты: <code>{pilot.credits}</code>\n"
+        "💰 Кредиты: <code>{credits_fmt}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
     )
     nodes.append(node("msg-trade-menu", "message", 400, 0, {
@@ -1975,6 +1992,8 @@ def build_ship() -> dict:
             {"id": "a-ship-engine-price", "variable": "engine_price", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "{engine_next}"}]},
             {"id": "a-ship-armor-price", "variable": "armor_price", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "{armor_next}"}]},
             {"id": "a-ship-armor-next-pct", "variable": "armor_next_pct", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "armor_pct", "lookupWhere": [{"field": "level", "value": "{armor_next}"}]},
+            {"id": "a-ship-credits-fmt", "variable": "credits_fmt", "value": "{pilot.credits}", "mode": "format_number"},
+            {"id": "a-ship-fuel-fmt", "variable": "fuel_fmt", "value": "{pilot.fuel}", "mode": "format_number"},
         ],
         "autoTransitionTo": "msg-ship-menu",
         "enableAutoTransition": True,
@@ -1993,7 +2012,7 @@ def build_ship() -> dict:
         "   Шанс победы: <code>{current_armor_pct}</code>%\n"
         "   ⬆️ Следующий: <code>{armor_next_pct}</code>% за <code>{armor_price}</code> 💰\n\n"
         "━━━━━━━━━━━━━━━━\n"
-        "💰 <code>{pilot.credits}</code> | ⛽ <code>{pilot.fuel}</code>"
+        "💰 <code>{credits_fmt}</code> | ⛽ <code>{fuel_fmt}</code>"
     )
     nodes.append(node("msg-ship-menu", "message", 600, 0, {
         "messageText": ship_menu_text,
@@ -2566,6 +2585,8 @@ def build_planet() -> dict:
             {"id": "a-pc-mined", "variable": "ore_mined", "value": "{hours_passed} * {planet.mine_level}", "mode": "expression"},
             {"id": "a-pc-max", "variable": "storage_max", "value": "{planet.storage_level} * 50", "mode": "expression"},
             {"id": "a-pc-avail", "variable": "ore_available", "value": "min({planet.ore_stored} + {ore_mined}, {storage_max})", "mode": "expression"},
+            {"id": "a-pc-credits-fmt", "variable": "credits_fmt", "value": "{pilot.credits}", "mode": "format_number"},
+            {"id": "a-pc-fuel-fmt", "variable": "fuel_fmt", "value": "{pilot.fuel}", "mode": "format_number"},
         ],
         "autoTransitionTo": "msg-my-planet",
         "enableAutoTransition": True,
@@ -2580,7 +2601,7 @@ def build_planet() -> dict:
         "🎯 Бафф: +<code>{planet.buff_percent}</code>% к продаже <b>{planet.buff_ore_name}</b>\n"
         "🌀 Фрагменты Эфира: <code>{pilot.fragments}</code>\n\n"
         "━━━━━━━━━━━━━━━━\n"
-        "💰 <code>{pilot.credits}</code> | ⛽ <code>{pilot.fuel}</code>"
+        "💰 <code>{credits_fmt}</code> | ⛽ <code>{fuel_fmt}</code>"
     )
     nodes.append(node("msg-my-planet", "message", 1000, -200, {
         "messageText": my_planet_text,
