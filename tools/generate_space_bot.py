@@ -99,16 +99,17 @@ def main_menu_msg(msg_id: str, text: str, x: int, y: int) -> dict:
             btn(f"{msg_id}-trade", "🛒 Торговля"),
             btn(f"{msg_id}-map", "🚀 Полёты"),
             btn(f"{msg_id}-ship", "🔧 Корабль"),
+            btn(f"{msg_id}-refuel", "⛽ Заправка"),
             btn(f"{msg_id}-profile", "👤 Профиль"),
-            btn(f"{msg_id}-top", "🏆 Топ"),
             btn(f"{msg_id}-planet", "🌍 Планета"),
+            btn(f"{msg_id}-top", "🏆 Топ"),
         ],
         "keyboardLayout": {
             "autoLayout": False,
-            "columns": 3,
+            "columns": 4,
             "rows": [
-                {"buttonIds": [f"{msg_id}-trade", f"{msg_id}-map", f"{msg_id}-ship"]},
-                {"buttonIds": [f"{msg_id}-profile", f"{msg_id}-top", f"{msg_id}-planet"]},
+                {"buttonIds": [f"{msg_id}-trade", f"{msg_id}-map", f"{msg_id}-ship", f"{msg_id}-refuel"]},
+                {"buttonIds": [f"{msg_id}-profile", f"{msg_id}-planet", f"{msg_id}-top"]},
             ],
         },
         "resizeKeyboard": True,
@@ -401,12 +402,110 @@ def build_start_menu() -> dict:
         "enableAutoTransition": True,
     }))
 
+    nodes.append(node("trig-refuel", "text_trigger", 100, 1100, {
+        "textMatchType": "exact",
+        "textSynonyms": ["⛽ Заправка"],
+        "autoTransitionTo": "tbl-read-pilot-refuel",
+        "enableAutoTransition": True,
+    }))
+
     nodes.append(node("trig-back-menu", "text_trigger", 100, 1200, {
         "textMatchType": "exact",
         "textSynonyms": ["⬅️ Меню"],
         "autoTransitionTo": "tbl-read-pilot-menu",
         "enableAutoTransition": True,
     }))
+
+    # --- Заправка (⛽) ---
+    nodes.append(node("tbl-read-pilot-refuel", "bot_table", 400, 1100, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "cond-refuel-inflight",
+        "enableAutoTransition": True,
+    }))
+
+    # Проверка: не в полёте?
+    nodes.append(node("cond-refuel-inflight", "condition", 700, 1100, {
+        "variable": "pilot.flight_target_planet",
+        "branches": [
+            branch("br-refuel-free", "На планете", "equals", "", "set-refuel-fmt"),
+            branch("br-refuel-inflight", "В полёте", "else", "", "msg-refuel-inflight"),
+        ],
+    }))
+
+    nodes.append(node("msg-refuel-inflight", "message", 1000, 1000, {
+        "messageText": "❌ Заправка доступна только на планете!\n\nДождитесь прибытия.",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("set-refuel-fmt", "set_variable", 1000, 1100, {
+        "assignments": [
+            {"id": "a-refuel-credits", "variable": "credits_fmt", "value": "{pilot.credits}", "mode": "format_number"},
+            {"id": "a-refuel-fuel", "variable": "fuel_fmt", "value": "{pilot.fuel}", "mode": "format_number"},
+        ],
+        "autoTransitionTo": "msg-refuel-menu",
+        "enableAutoTransition": True,
+    }))
+
+    refuel_text = (
+        f"⛽ {MENTION}, космическая заправка:\n\n"
+        "📍 Планета: {pilot.current_planet_name}\n"
+        "⛽ Топливо: <code>{fuel_fmt}</code>\n"
+        "💰 Кредиты: <code>{credits_fmt}</code>\n\n"
+        "📊 Цена: <code>5</code> кредитов = 1 ⛽\n\n"
+        "Выберите количество:"
+    )
+    nodes.append(node("msg-refuel-menu", "message", 1300, 1100, {
+        "messageText": refuel_text,
+        "formatMode": "html",
+        "keyboardType": "inline",
+        "buttons": [
+            {"id": "btn-refuel-10", "text": "⛽ +10 (50 💰)", "action": "goto", "target": "do-refuel-10"},
+            {"id": "btn-refuel-50", "text": "⛽ +50 (250 💰)", "action": "goto", "target": "do-refuel-50"},
+            {"id": "btn-refuel-100", "text": "⛽ +100 (500 💰)", "action": "goto", "target": "do-refuel-100"},
+        ],
+    }))
+
+    # Для каждого варианта: проверка кредитов → заправка
+    for amount, cost in [(10, 50), (50, 250), (100, 500)]:
+        nodes.append(node(f"do-refuel-{amount}", "condition", 400, 1100 + amount * 3, {
+            "variable": "pilot.credits",
+            "branches": [
+                branch(f"br-refuel-no-money-{amount}", "Не хватает", "less_than", str(cost), f"msg-refuel-no-money-{amount}"),
+                branch(f"br-refuel-ok-{amount}", "Хватает", "else", "", f"do-refuel-update-{amount}"),
+            ],
+        }))
+
+        nodes.append(node(f"msg-refuel-no-money-{amount}", "message", 700, 1100 + amount * 3 - 50, {
+            "messageText": f"❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{cost}</code> кредитов",
+            "formatMode": "html",
+            "keyboardType": "none",
+            "buttons": [],
+        }))
+
+        nodes.append(node(f"do-refuel-update-{amount}", "bot_table", 700, 1100 + amount * 3, {
+            "tableName": "pilots",
+            "operation": "update",
+            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+            "updates": [
+                {"column": "credits", "op": "decrement", "value": str(cost)},
+                {"column": "fuel", "op": "increment", "value": str(amount)},
+            ],
+            "autoTransitionTo": f"msg-refuel-ok-{amount}",
+            "enableAutoTransition": True,
+        }))
+
+        nodes.append(node(f"msg-refuel-ok-{amount}", "message", 1000, 1100 + amount * 3, {
+            "messageText": f"✅ Заправлено!\n\n⛽ +<code>{amount}</code> топлива\n💰 Списано: <code>{cost}</code> кредитов",
+            "formatMode": "html",
+            "keyboardType": "none",
+            "buttons": [],
+        }))
 
     # --- Возврат в меню ---
     nodes.append(node("tbl-read-pilot-menu", "bot_table", 400, 1200, {
