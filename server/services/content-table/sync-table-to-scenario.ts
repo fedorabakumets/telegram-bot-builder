@@ -86,6 +86,15 @@ export async function syncTableToScenario(
     case "clickValue":
       data.clickValue = value;
       break;
+    case "botUsername":
+      data.botUsername = value;
+      break;
+    case "query":
+      data.query = value;
+      break;
+    case "targetChat":
+      data.targetChat = value;
+      break;
   }
 
   node.data = data;

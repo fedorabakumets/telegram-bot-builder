@@ -143,7 +143,7 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
            (n.data as any)?.command === '/start'
     ),
     hasUserbotNodesResult: nodes.some(
-      n => (n.type as string) === 'userbot_message' || (n.type as string) === 'userbot_click_button'
+      n => (n.type as string) === 'userbot_message' || (n.type as string) === 'userbot_click_button' || (n.type as string) === 'userbot_inline_query'
     ),
   };
 }

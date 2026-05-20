@@ -1,0 +1,144 @@
+{#
+  Шаблон обработчика узла userbot_inline_query
+
+  @fileoverview Генерирует Python код для inline-запроса через Telethon userbot.
+  Делает inline_query к боту, выбирает результат по индексу, отправляет в чат.
+
+  @param {string} nodeId - ID узла
+  @param {string} botUsername - Username бота для inline-запроса
+  @param {string} query - Текст запроса
+  @param {string} targetChat - Целевой чат для отправки результата
+  @param {boolean} sendToSameChat - Отправить в тот же чат (botUsername)
+  @param {string} resultIndex - Индекс результата (0 = первый)
+  @param {string} saveResultTitleTo - Переменная для title результата
+  @param {string} saveResultDescTo - Переменная для description результата
+  @param {string} saveResponseIdTo - Переменная для ID отправленного сообщения
+  @param {string} autoTransitionTo - ID узла для автоперехода
+  @param {number|null} projectId - ID проекта (для get_content)
+#}
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Обработчик узла {{ nodeId }} — inline-запрос через userbot"""
+    user_id = callback_query.from_user.id
+    logging.info(f"🟣 Userbot inline_query: узел {{ nodeId }} для пользователя {user_id}")
+
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    if user_id not in user_data:
+        user_data[user_id] = {}
+
+    all_user_vars = await init_all_user_vars(user_id)
+    if state is not None:
+        try:
+            _fsm_d = await state.get_data()
+            if _fsm_d:
+                all_user_vars.update(_fsm_d)
+        except Exception:
+            pass
+
+    # Резолвим bot username
+{%- if projectId %}
+    _bot_raw = get_content("{{ nodeId }}.bot", {{ botUsername|format_python_text }})
+{%- else %}
+    _bot_raw = {{ botUsername|format_python_text }}
+{%- endif %}
+    _bot = replace_variables_in_text(_bot_raw, all_user_vars, {})
+
+    # Резолвим query
+{%- if projectId %}
+    _query_raw = get_content("{{ nodeId }}.query", {{ query|format_python_text }})
+{%- else %}
+    _query_raw = {{ query|format_python_text }}
+{%- endif %}
+    _query = replace_variables_in_text(_query_raw, all_user_vars, {})
+
+    # Резолвим target chat
+{%- if sendToSameChat %}
+    _target_chat = _bot
+{%- else %}
+{%- if projectId %}
+    _target_raw = get_content("{{ nodeId }}.target", {{ targetChat|format_python_text }})
+{%- else %}
+    _target_raw = {{ targetChat|format_python_text }}
+{%- endif %}
+    _target_chat = replace_variables_in_text(_target_raw, all_user_vars, {})
+{%- endif %}
+
+    # Резолвим индекс результата
+    _idx_raw = replace_variables_in_text("{{ resultIndex }}", all_user_vars, {})
+    _idx = int(_idx_raw) if _idx_raw.isdigit() else 0
+
+    if not _bot:
+        logging.error(f"❌ Узел {{ nodeId }}: bot username пустой")
+        return
+
+    try:
+        # Выполняем inline-запрос
+        _results = await userbot_client.inline_query(_bot, _query)
+
+        if not _results or len(_results) == 0:
+            logging.warning(f"⚠️ Узел {{ nodeId }}: inline-запрос к {_bot} вернул 0 результатов")
+            return
+
+        if _idx >= len(_results):
+            logging.warning(f"⚠️ Узел {{ nodeId }}: индекс {_idx} >= количество результатов {len(_results)}")
+            _idx = 0
+
+        _result = _results[_idx]
+        logging.info(f"✅ Inline-запрос к {_bot}: получено {len(_results)} результатов, выбран [{_idx}]")
+
+{%- if saveResultTitleTo %}
+        # Сохраняем title результата
+        _title = getattr(_result, 'title', '') or ''
+        user_data[user_id]["{{ saveResultTitleTo }}"] = _title
+        await set_user_var(user_id, "{{ saveResultTitleTo }}", _title)
+{%- endif %}
+
+{%- if saveResultDescTo %}
+        # Сохраняем description результата
+        _desc = getattr(_result, 'description', '') or ''
+        user_data[user_id]["{{ saveResultDescTo }}"] = _desc
+        await set_user_var(user_id, "{{ saveResultDescTo }}", _desc)
+{%- endif %}
+
+        # Отправляем результат в целевой чат
+        _target = int(_target_chat) if _target_chat.lstrip('-').isdigit() else _target_chat
+        _sent = await _result.click(_target)
+
+{%- if saveResponseIdTo %}
+        # Сохраняем ID отправленного сообщения
+        if _sent and hasattr(_sent, 'id'):
+            user_data[user_id]["{{ saveResponseIdTo }}"] = _sent.id
+            await set_user_var(user_id, "{{ saveResponseIdTo }}", _sent.id)
+            logging.info(f"💾 ID сообщения: {{ saveResponseIdTo }} = {_sent.id}")
+{%- endif %}
+
+    except Exception as _ub_err:
+        logging.error(f"❌ Ошибка inline-запроса через userbot (узел {{ nodeId }}): {_ub_err}")
+        if "FloodWaitError" in type(_ub_err).__name__ or "flood" in str(_ub_err).lower():
+            _wait = getattr(_ub_err, 'seconds', 30)
+            logging.warning(f"⏳ FloodWait: ждём {_wait} секунд")
+            await asyncio.sleep(_wait)
+
+{%- if autoTransitionTo %}
+    # Автопереход к узлу {{ autoTransitionTo }}
+    logging.info(f"⚡ Автопереход: {{ nodeId }} → {{ autoTransitionTo }}")
+    class FakeCallbackQuery:
+        def __init__(self, from_user, message, target_node_id):
+            self.from_user = from_user
+            self.message = message
+            self.data = target_node_id
+            self._is_fake = True
+        async def answer(self, *args, **kwargs):
+            pass
+
+    _fake_cb = FakeCallbackQuery(callback_query.from_user, callback_query.message, "{{ autoTransitionTo }}")
+    try:
+        await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(_fake_cb, state=state)
+    except Exception as _at_err:
+        logging.error(f"❌ Ошибка автоперехода {{ nodeId }} → {{ autoTransitionTo }}: {_at_err}")
+{%- endif %}
