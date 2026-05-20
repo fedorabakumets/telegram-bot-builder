@@ -1,6 +1,6 @@
 /**
  * @fileoverview Превью ноды userbot_message на канвасе
- * Показывает текст сообщения и получателя
+ * Компактная метка «userbot» + текст сообщения + получатель
  */
 
 import { Node } from '@/types/bot';
@@ -24,15 +24,17 @@ export function UserbotMessagePreview({ node }: UserbotMessagePreviewProps) {
 
   return (
     <div className="mb-3">
-      {/* Получатель */}
-      {entity && (
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className="text-[10px] text-violet-500 dark:text-violet-400">→</span>
-          <span className="text-xs px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 font-mono truncate max-w-[160px]">
-            {entity}
+      {/* Компактная метка userbot */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 border border-violet-500/30">
+          userbot
+        </span>
+        {entity && (
+          <span className="text-xs text-violet-400/70 font-mono truncate max-w-[140px]">
+            → {entity}
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Текст сообщения */}
       {messageText && (
