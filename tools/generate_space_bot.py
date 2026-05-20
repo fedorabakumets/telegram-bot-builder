@@ -527,6 +527,8 @@ def build_start_menu() -> dict:
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
+        "autoTransitionTo": "tbl-read-pilot-refuel",
+        "enableAutoTransition": True,
     }))
 
     # Для каждого варианта: проверка кредитов → заправка
@@ -563,6 +565,8 @@ def build_start_menu() -> dict:
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
+            "autoTransitionTo": "tbl-read-pilot-refuel",
+            "enableAutoTransition": True,
         }))
 
     # --- Возврат в меню ---
