@@ -1,0 +1,232 @@
+/**
+ * @fileoverview Unit-тесты для шаблона userbot-message
+ * @module templates/userbot-message/userbot-message.test
+ */
+
+import { describe, it, expect } from 'vitest';
+import { generateUserbotMessage, generateUserbotMessageHandlers } from './userbot-message.renderer';
+import { userbotMessageParamsSchema } from './userbot-message.schema';
+import type { Node } from '@shared/schema';
+
+describe('generateUserbotMessage()', () => {
+  it('генерирует обработчик с текстом', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-1',
+      messageText: 'Привет!',
+      userbotEntity: '@test',
+    });
+    expect(code).toContain('handle_callback_ub_1');
+    expect(code).toContain('userbot_client.send_message');
+    expect(code).toContain('@test');
+  });
+
+  it('использует get_content при наличии projectId', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-2',
+      messageText: 'Текст',
+      userbotEntity: '@ch',
+      projectId: 42,
+    });
+    expect(code).toContain('get_content("ub-2"');
+    expect(code).toContain('get_content("ub-2.entity"');
+  });
+
+  it('не использует get_content без projectId', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-3',
+      messageText: 'Текст',
+      userbotEntity: '@ch',
+      projectId: null,
+    });
+    expect(code).not.toContain('get_content');
+  });
+
+  it('генерирует отправку локального файла', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-4',
+      messageText: 'Фото',
+      userbotEntity: 'me',
+      attachedMedia: ['/uploads/1/photo.jpg'],
+    });
+    expect(code).toContain('send_file');
+    expect(code).toContain('get_upload_file_path');
+    expect(code).toContain('/uploads/1/photo.jpg');
+  });
+
+  it('генерирует отправку по URL', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-5',
+      messageText: 'Видео',
+      userbotEntity: '-1001234',
+      attachedMedia: ['https://example.com/video.mp4'],
+    });
+    expect(code).toContain('send_file');
+    expect(code).toContain('https://example.com/video.mp4');
+  });
+
+  it('генерирует альбом из нескольких файлов', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-6',
+      messageText: 'Альбом',
+      userbotEntity: '@group',
+      attachedMedia: ['/uploads/1/a.jpg', '/uploads/1/b.jpg'],
+    });
+    expect(code).toContain('_album_files');
+    expect(code).toContain('send_file(_target, _album_files');
+  });
+
+  it('генерирует saveMessageIdTo', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-7',
+      messageText: 'Тест',
+      userbotEntity: 'me',
+      saveMessageIdTo: 'msg_id',
+    });
+    expect(code).toContain('msg_id');
+    expect(code).toContain('set_user_var');
+  });
+
+  it('генерирует автопереход', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-8',
+      messageText: 'Тест',
+      userbotEntity: 'me',
+      autoTransitionTo: 'next-node',
+    });
+    expect(code).toContain('handle_callback_next_node');
+    expect(code).toContain('FakeCallbackQuery');
+  });
+
+  it('устанавливает parse_mode html', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-9',
+      messageText: '<b>Bold</b>',
+      userbotEntity: 'me',
+      formatMode: 'html',
+    });
+    expect(code).toContain("_parse_mode = 'html'");
+  });
+
+  it('устанавливает parse_mode markdown', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-10',
+      messageText: '**Bold**',
+      userbotEntity: 'me',
+      formatMode: 'markdown',
+    });
+    expect(code).toContain("_parse_mode = 'md'");
+  });
+
+  it('отключает link_preview', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-11',
+      messageText: 'https://example.com',
+      userbotEntity: 'me',
+      disableLinkPreview: true,
+    });
+    expect(code).toContain('link_preview=False');
+  });
+
+  it('обрабатывает FloodWait', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-12',
+      messageText: 'Тест',
+      userbotEntity: 'me',
+    });
+    expect(code).toContain('FloodWaitError');
+    expect(code).toContain('asyncio.sleep');
+  });
+});
+
+describe('userbotMessageParamsSchema', () => {
+  it('валидирует минимальные параметры', () => {
+    const result = userbotMessageParamsSchema.parse({ nodeId: 'test' });
+    expect(result.nodeId).toBe('test');
+    expect(result.messageText).toBe('');
+    expect(result.formatMode).toBe('html');
+  });
+
+  it('валидирует полные параметры', () => {
+    const result = userbotMessageParamsSchema.parse({
+      nodeId: 'ub-1',
+      messageText: 'Привет',
+      formatMode: 'markdown',
+      userbotEntity: '@test',
+      attachedMedia: ['/uploads/1/f.jpg'],
+      saveMessageIdTo: 'id',
+      autoTransitionTo: 'next',
+      projectId: 5,
+    });
+    expect(result.formatMode).toBe('markdown');
+    expect(result.attachedMedia).toHaveLength(1);
+    expect(result.projectId).toBe(5);
+  });
+
+  it('применяет дефолты', () => {
+    const result = userbotMessageParamsSchema.parse({ nodeId: 'x' });
+    expect(result.disableLinkPreview).toBe(false);
+    expect(result.attachedMedia).toEqual([]);
+    expect(result.projectId).toBeNull();
+  });
+
+  it('отклоняет невалидный formatMode', () => {
+    expect(() => userbotMessageParamsSchema.parse({
+      nodeId: 'x',
+      formatMode: 'invalid',
+    })).toThrow();
+  });
+});
+
+describe('generateUserbotMessageHandlers()', () => {
+  it('возвращает пустую строку если нет userbot_message нод', () => {
+    const nodes = [
+      { id: 'msg-1', type: 'message', position: { x: 0, y: 0 }, data: { messageText: 'Hi' } },
+    ] as Node[];
+    expect(generateUserbotMessageHandlers(nodes)).toBe('');
+  });
+
+  it('генерирует код для userbot_message нод', () => {
+    const nodes = [
+      {
+        id: 'ub-1',
+        type: 'userbot_message' as any,
+        position: { x: 0, y: 0 },
+        data: { messageText: 'Test', userbotEntity: '@ch' },
+      },
+    ] as Node[];
+    const code = generateUserbotMessageHandlers(nodes, 1);
+    expect(code).toContain('handle_callback_ub_1');
+    expect(code).toContain('get_content');
+  });
+
+  it('фильтрует file_id из attachedMedia', () => {
+    const nodes = [
+      {
+        id: 'ub-2',
+        type: 'userbot_message' as any,
+        position: { x: 0, y: 0 },
+        data: {
+          messageText: 'Test',
+          userbotEntity: 'me',
+          attachedMedia: [
+            '/uploads/1/photo.jpg',
+            '{"__type":"file_id","fileIdsByToken":{"1":"AgAC..."}}',
+          ],
+        },
+      },
+    ] as Node[];
+    const code = generateUserbotMessageHandlers(nodes);
+    expect(code).toContain('/uploads/1/photo.jpg');
+    expect(code).not.toContain('AgAC');
+  });
+
+  it('генерирует несколько обработчиков', () => {
+    const nodes = [
+      { id: 'ub-a', type: 'userbot_message' as any, position: { x: 0, y: 0 }, data: { messageText: 'A', userbotEntity: '@a' } },
+      { id: 'ub-b', type: 'userbot_message' as any, position: { x: 0, y: 0 }, data: { messageText: 'B', userbotEntity: '@b' } },
+    ] as Node[];
+    const code = generateUserbotMessageHandlers(nodes);
+    expect(code).toContain('handle_callback_ub_a');
+    expect(code).toContain('handle_callback_ub_b');
+  });
+});
