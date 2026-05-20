@@ -60,7 +60,7 @@ EXCHANGERS = [
 BOT_EXCHANGERS = [
     ("ScoobyChange", "@scdoo_bot", "https://t.me/scdoo_bot?start=7733607050",
      "inline", "", "", "",
-     "buy_{selected_to_key} 1", r"К оплате будет:\s*([\d]+)", 3),
+     "buy_btc 1", r"К оплате будет:\s*([\d]+)", 3),
     ("Shaxta", "@ShaxtaBot", "https://t.me/ShaxtaBot?start=ref456",
      "click", "/start", "Карта → {selected_to_name}", "",
      "", r"Итого:\s*([\d.]+)", 4),
