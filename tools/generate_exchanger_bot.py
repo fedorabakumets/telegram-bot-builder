@@ -714,16 +714,15 @@ def build_bot_compare_sheet():
         3200, 200
     ))
 
-    # Парсинг ответа regex (mode=message)
+    # Парсинг ответа regex_extract (mode=message)
     nodes.append(set_var_node(
         "bot-setv-parse-msg",
         [
             {
                 "id": "pm1", "variable": "parsed_rate",
-                "value": "", "mode": "regex",
-                "regexPattern": "{bot.rate_regex}",
-                "regexSource": "{ub_bot_resp_text}",
-                "regexGroup": 1
+                "value": "{ub_bot_resp_text}", "mode": "regex_extract",
+                "pattern": "{bot.rate_regex}",
+                "regexGroup": "1"
             }
         ],
         "bot-setv-push-result", 3600, 200
@@ -774,16 +773,15 @@ def build_bot_compare_sheet():
         4400, 500
     ))
 
-    # Парсинг ответа regex (mode=click)
+    # Парсинг ответа regex_extract (mode=click)
     nodes.append(set_var_node(
         "bot-setv-parse-click",
         [
             {
                 "id": "pc1", "variable": "parsed_rate",
-                "value": "", "mode": "regex",
-                "regexPattern": "{bot.rate_regex}",
-                "regexSource": "{ub_click_result_text}",
-                "regexGroup": 1
+                "value": "{ub_click_result_text}", "mode": "regex_extract",
+                "pattern": "{bot.rate_regex}",
+                "regexGroup": "1"
             }
         ],
         "bot-setv-push-result", 4800, 500
@@ -800,16 +798,15 @@ def build_bot_compare_sheet():
         3200, 800
     ))
 
-    # Парсинг инлайн-результата regex
+    # Парсинг инлайн-результата regex_extract
     nodes.append(set_var_node(
         "bot-setv-parse-inline",
         [
             {
                 "id": "pi1", "variable": "parsed_rate",
-                "value": "", "mode": "regex",
-                "regexPattern": "{bot.rate_regex}",
-                "regexSource": "{ub_inline_title} {ub_inline_desc}",
-                "regexGroup": 1
+                "value": "{ub_inline_title} {ub_inline_desc}", "mode": "regex_extract",
+                "pattern": "{bot.rate_regex}",
+                "regexGroup": "1"
             }
         ],
         "bot-setv-push-result", 3600, 800
