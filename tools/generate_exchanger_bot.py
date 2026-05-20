@@ -827,6 +827,10 @@ def build_bot_compare_sheet():
                 "value": "round({user_amount} / float({crypto24_rate}), 8) if float({crypto24_rate}) > 0 else 0",
                 "mode": "expression"
             },
+            {"id": "fmt1", "variable": "scooby_rate_fmt", "value": "{scooby_rate}", "mode": "format_number"},
+            {"id": "fmt2", "variable": "capitalist_rate_fmt", "value": "{capitalist_rate}", "mode": "format_number"},
+            {"id": "fmt3", "variable": "crypto24_rate_fmt", "value": "{crypto24_rate}", "mode": "format_number"},
+            {"id": "fmt4", "variable": "user_amount_fmt", "value": "{user_amount}", "mode": "format_number"},
         ],
         "bot-msg-result", 6400, 400
     ))
@@ -834,13 +838,15 @@ def build_bot_compare_sheet():
     # ─── 16. Показ результатов ────────────────────────────────────────────────
     result_text = (
         "💱 <b>Сравнение через ботов</b>\n"
-        "Пара: <b>{selected_from_name} → {selected_to_name}</b>\n"
-        "Сумма: <b>{user_amount}</b> ₽\n\n"
-        "📊 <b>Результаты:</b>\n"
-        "🤖 ScoobyChange: <b>{scooby_btc}</b> BTC ({scooby_rate} ₽)\n"
-        "🤖 Capitalist: <b>{capitalist_btc}</b> BTC ({capitalist_rate} ₽)\n"
-        "🤖 24Crypto: <b>{crypto24_btc}</b> BTC ({crypto24_rate} ₽)\n\n"
-        "<i>Данные получены через Telegram-ботов</i>"
+        "📊 Пара: <b>{selected_from_name} → {selected_to_name}</b>\n"
+        "💰 Сумма: <b>{user_amount_fmt}</b> ₽\n\n"
+        "🥇 <a href='https://t.me/scdoo_bot?start=7733607050'>ScoobyChange</a>: "
+        "<b>{scooby_btc}</b> BTC ({scooby_rate_fmt} ₽)\n"
+        "🥈 <a href='https://t.me/btccapital_bot?start=7733607050'>Capitalist</a>: "
+        "<b>{capitalist_btc}</b> BTC ({capitalist_rate_fmt} ₽)\n"
+        "🥉 <a href='http://t.me/Exchange24Crypto_bot?start=r-7733607050'>24Crypto</a>: "
+        "<b>{crypto24_btc}</b> BTC ({crypto24_rate_fmt} ₽)\n\n"
+        "👆 <i>Нажми на название для перехода</i>"
     )
     nodes.append(message_node(
         "bot-msg-result",
