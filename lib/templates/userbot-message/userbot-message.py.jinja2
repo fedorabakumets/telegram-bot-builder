@@ -172,6 +172,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 
 {%- if saveResponseIdTo %}
     # Ждём ответ от получателя (sleep + get_messages с фильтрацией)
+    logging.info(f"⏳ [{{ nodeId }}] Ожидание ответа: {{ responseWaitSeconds | default(3) }} сек, стратегия: {{ responseStrategy | default('longest') }}")
     await asyncio.sleep({{ responseWaitSeconds | default(3) }})
     _resp_target = _recipients[0] if _recipients else _target
     _resp_entity = int(_resp_target) if str(_resp_target).lstrip('-').isdigit() else _resp_target
