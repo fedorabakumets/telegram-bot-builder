@@ -813,15 +813,21 @@ def build_bot_compare_sheet():
         "bot-setv-push-result", 3600, 800
     ))
 
-    # ─── 10. Добавление результата в массив (json_push) ───────────────────────
+    # ─── 10. Вычисление BTC и добавление результата в массив ─────────────────
     nodes.append(set_var_node(
         "bot-setv-push-result",
         [
+            {
+                "id": "pr0", "variable": "user_btc",
+                "value": "round({user_amount} / float({parsed_rate}), 8) if float({parsed_rate}) > 0 else 0",
+                "mode": "expression"
+            },
             {
                 "id": "pr1", "variable": "compare_bot_results",
                 "value": "", "mode": "json_push",
                 "jsonPushTarget": "compare_bot_results",
                 "jsonPushValue": '{"name": "{bot.name}", "rate": "{parsed_rate}", '
+                                 '"btc": "{user_btc}", '
                                  '"ref_url": "{bot.ref_url}", "username": "{bot.username}"}'
             }
         ],
@@ -834,8 +840,13 @@ def build_bot_compare_sheet():
         "bot-setv-best",
         [
             {
-                "id": "bb1", "variable": "bot_results_count",
-                "value": "{compare_bot_results.length}", "mode": "expression"
+                "id": "bb1", "variable": "bot_rates_text",
+                "value": "", "mode": "json_format",
+                "jsonFormatSource": "compare_bot_results",
+                "jsonFormatTemplate": "🤖 <a href=\"{ref_url}\">{name}</a>: <b>{btc} BTC</b> ({rate} ₽)",
+                "jsonFormatSeparator": "\n",
+                "jsonFormatSortField": "rate",
+                "jsonFormatSortOrder": "asc"
             }
         ],
         "bot-msg-result", 5600, 400
@@ -845,11 +856,9 @@ def build_bot_compare_sheet():
     result_text = (
         "💱 <b>Сравнение через ботов</b>\n"
         "Пара: <b>{selected_from_name} → {selected_to_name}</b>\n"
-        "Сумма: <b>{user_amount}</b>\n\n"
+        "Сумма: <b>{user_amount}</b> ₽\n\n"
         "📊 <b>Результаты:</b>\n\n"
-        "{{#each compare_bot_results}}\n"
-        "🤖 <a href=\"{ref_url}\">{name}</a>: <b>{rate}</b>\n"
-        "{{/each}}\n\n"
+        "{bot_rates_text}\n\n"
         "<i>Данные получены через Telegram-ботов обменников</i>"
     )
     nodes.append(message_node(
