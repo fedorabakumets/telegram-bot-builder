@@ -576,10 +576,10 @@ def build_bot_compare_sheet():
         "arrayPath": "",
         "styleMode": "none",
         "styleField": "",
-        "textTemplate": "{item.emoji_from} {item.from_name} → {item.emoji_to} {item.to_name}",
+        "textTemplate": "{emoji_from} {from_name} → {emoji_to} {to_name}",
         "styleTemplate": "",
         "sourceVariable": "table.pairs",
-        "callbackTemplate": "{item.id}"
+        "callbackTemplate": "cmp_{from_id}_{to_id}_{from_name}_{to_name}"
     }
     nodes.append(message_node(
         "bot-msg-menu",
@@ -588,37 +588,30 @@ def build_bot_compare_sheet():
         dynamic_btns=dynamic_btns
     ))
 
-    # ─── 3. Сохранение выбранной пары (set_variable с lookup) ─────────────────
+    # ─── 3. Сохранение выбранной пары (парсинг callback_data) ────────────────
+    # callback_data формат: cmp_{from_id}_{to_id}_{from_name}_{to_name}
     nodes.append(set_var_node(
         "bot-setv-pair",
         [
             {
-                "id": "bp1", "variable": "selected_pair_id",
-                "value": "{callback_data}", "mode": "text"
+                "id": "bp1", "variable": "selected_from_id",
+                "value": "{callback_data}", "mode": "split_get",
+                "separator": "_", "splitIndex": "1"
             },
             {
-                "id": "bp2", "variable": "selected_from_name",
-                "value": "", "mode": "lookup",
-                "lookupTable": "pairs", "lookupKeyColumn": "id",
-                "lookupKeyValue": "{callback_data}", "lookupResultColumn": "from_name"
+                "id": "bp2", "variable": "selected_to_id",
+                "value": "{callback_data}", "mode": "split_get",
+                "separator": "_", "splitIndex": "2"
             },
             {
-                "id": "bp3", "variable": "selected_to_name",
-                "value": "", "mode": "lookup",
-                "lookupTable": "pairs", "lookupKeyColumn": "id",
-                "lookupKeyValue": "{callback_data}", "lookupResultColumn": "to_name"
+                "id": "bp3", "variable": "selected_from_name",
+                "value": "{callback_data}", "mode": "split_get",
+                "separator": "_", "splitIndex": "3"
             },
             {
-                "id": "bp4", "variable": "selected_from_id",
-                "value": "", "mode": "lookup",
-                "lookupTable": "pairs", "lookupKeyColumn": "id",
-                "lookupKeyValue": "{callback_data}", "lookupResultColumn": "from_id"
-            },
-            {
-                "id": "bp5", "variable": "selected_to_id",
-                "value": "", "mode": "lookup",
-                "lookupTable": "pairs", "lookupKeyColumn": "id",
-                "lookupKeyValue": "{callback_data}", "lookupResultColumn": "to_id"
+                "id": "bp4", "variable": "selected_to_name",
+                "value": "{callback_data}", "mode": "split_get",
+                "separator": "_", "splitIndex": "4"
             },
         ],
         "bot-msg-ask-amount", 800, 400
