@@ -407,6 +407,8 @@ def build_start_menu() -> dict:
     nodes.append(node("menu-set-now", "set_variable", 500, 1200, {
         "assignments": [
             {"id": "a-menu-now", "variable": "now_ts", "value": "0", "mode": "timestamp"},
+            {"id": "a-menu-credits-fmt", "variable": "credits_fmt", "value": "{pilot.credits}", "mode": "format_number"},
+            {"id": "a-menu-fuel-fmt", "variable": "fuel_fmt", "value": "{pilot.fuel}", "mode": "format_number"},
         ],
         "autoTransitionTo": "menu-cond-inflight",
         "enableAutoTransition": True,
@@ -424,8 +426,8 @@ def build_start_menu() -> dict:
     flight_menu_text = (
         f"🚀 {MENTION}, главное меню:\n\n"
         "{pilot.status_text}\n"
-        "💰 Кредиты: <code>{pilot.credits}</code>\n"
-        "⛽ Топливо: <code>{pilot.fuel}</code>\n"
+        "💰 Кредиты: <code>{credits_fmt}</code>\n"
+        "⛽ Топливо: <code>{fuel_fmt}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
     )
     nodes.append(node("msg-main-menu-flight", "message", 700, 1350, {
@@ -453,8 +455,8 @@ def build_start_menu() -> dict:
     main_menu_text = (
         f"🚀 {MENTION}, главное меню:\n\n"
         "{pilot.status_text}\n"
-        "💰 Кредиты: <code>{pilot.credits}</code>\n"
-        "⛽ Топливо: <code>{pilot.fuel}</code>\n"
+        "💰 Кредиты: <code>{credits_fmt}</code>\n"
+        "⛽ Топливо: <code>{fuel_fmt}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
     )
     nodes.append(main_menu_msg("msg-main-menu", main_menu_text, 700, 1200))
@@ -2391,7 +2393,7 @@ def build_planet() -> dict:
         "⛏ Шахта — пассивная добыча руды\n"
         "🎯 Бафф — бонус к продаже одной руды\n"
         "📦 Склад — хранение добытой руды\n\n"
-        "💰 Стоимость: <code>1000000</code> кредитов\n"
+        "💰 Стоимость: <code>1 000 000</code> кредитов\n"
         "💰 Ваш баланс: <code>{pilot.credits}</code>"
     )
     nodes.append(node("msg-no-planet", "message", 700, 200, {
@@ -2431,7 +2433,7 @@ def build_planet() -> dict:
     }))
 
     nodes.append(node("msg-found-no-money", "message", 1300, 100, {
-        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>1000000</code> кредитов\n💰 У вас: <code>{pilot.credits}</code>",
+        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>1 000 000</code> кредитов\n💰 У вас: <code>{pilot.credits}</code>",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
@@ -2505,7 +2507,7 @@ def build_planet() -> dict:
         "🎯 Бафф: +<code>{buff_pct}</code>% к продаже <b>{buff_ore_emoji} {buff_ore_name}</b>\n"
         "⛏ Шахта: ур. 1\n"
         "📦 Склад: ур. 1 (0/50)\n\n"
-        "💰 Списано: <code>1000000</code> кредитов"
+        "💰 Списано: <code>1 000 000</code> кредитов"
     )
     nodes.append(node("msg-planet-founded", "message", 2800, 200, {
         "messageText": founded_text,
