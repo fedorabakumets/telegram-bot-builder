@@ -452,7 +452,65 @@ def build_start_menu() -> dict:
             {"id": "btn-refuel-10", "text": "⛽ +10 (50 💰)", "action": "goto", "target": "do-refuel-10"},
             {"id": "btn-refuel-50", "text": "⛽ +50 (250 💰)", "action": "goto", "target": "do-refuel-50"},
             {"id": "btn-refuel-100", "text": "⛽ +100 (500 💰)", "action": "goto", "target": "do-refuel-100"},
+            {"id": "btn-refuel-custom", "text": "✏️ Своя сумма", "action": "goto", "target": "msg-refuel-input"},
         ],
+    }))
+
+    # Ввод своей суммы
+    nodes.append(node("msg-refuel-input", "message", 1600, 1100, {
+        "messageText": "✏️ Введите количество топлива для покупки:\n\n📊 Цена: <code>5</code> кредитов = 1 ⛽",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+        "collectUserInput": True,
+        "inputVariable": "refuel_amount",
+        "enableTextInput": True,
+        "autoTransitionTo": "set-refuel-custom-calc",
+        "enableAutoTransition": True,
+    }))
+
+    # Вычисляем стоимость
+    nodes.append(node("set-refuel-custom-calc", "set_variable", 1900, 1100, {
+        "assignments": [
+            {"id": "a-refuel-custom-cost", "variable": "refuel_cost", "value": "{refuel_amount} * 5", "mode": "expression"},
+        ],
+        "autoTransitionTo": "do-refuel-custom-check",
+        "enableAutoTransition": True,
+    }))
+
+    # Проверка кредитов
+    nodes.append(node("do-refuel-custom-check", "condition", 2200, 1100, {
+        "variable": "pilot.credits",
+        "branches": [
+            branch("br-refuel-custom-no", "Не хватает", "less_than", "{refuel_cost}", "msg-refuel-custom-no-money"),
+            branch("br-refuel-custom-ok", "Хватает", "else", "", "do-refuel-custom-update"),
+        ],
+    }))
+
+    nodes.append(node("msg-refuel-custom-no-money", "message", 2500, 1000, {
+        "messageText": "❌ Недостаточно кредитов!\n\n⛽ Запрошено: <code>{refuel_amount}</code> топлива\n💰 Стоимость: <code>{refuel_cost}</code> кредитов\n💰 У вас: <code>{pilot.credits}</code>",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("do-refuel-custom-update", "bot_table", 2500, 1100, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "credits", "op": "decrement", "value": "{refuel_cost}"},
+            {"column": "fuel", "op": "increment", "value": "{refuel_amount}"},
+        ],
+        "autoTransitionTo": "msg-refuel-custom-ok",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("msg-refuel-custom-ok", "message", 2800, 1100, {
+        "messageText": "✅ Заправлено!\n\n⛽ +<code>{refuel_amount}</code> топлива\n💰 Списано: <code>{refuel_cost}</code> кредитов",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
     }))
 
     # Для каждого варианта: проверка кредитов → заправка
