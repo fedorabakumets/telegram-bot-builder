@@ -1192,6 +1192,7 @@ def build_map() -> dict:
     nodes.append(node("set-map-remaining", "set_variable", 550, -100, {
         "assignments": [
             {"id": "a-map-rem", "variable": "map_remaining", "value": "{pilot.flight_expires_at} - {now_ts}", "mode": "format_duration"},
+            {"id": "a-map-fuel-fmt", "variable": "fuel_fmt", "value": "{pilot.fuel}", "mode": "format_number"},
         ],
         "autoTransitionTo": "msg-map-inflight",
         "enableAutoTransition": True,
@@ -1202,7 +1203,7 @@ def build_map() -> dict:
         f"🚀 {MENTION}, карта галактики:\n\n"
         "{pilot.status_text}\n"
         "🕐 Оставшееся время: <code>{map_remaining}</code>\n"
-        "⛽ Осталось топлива: <code>{pilot.fuel}</code>"
+        "⛽ Осталось топлива: <code>{fuel_fmt}</code>"
     )
     nodes.append(node("msg-map-inflight", "message", 700, -100, {
         "messageText": map_inflight_text,
