@@ -274,21 +274,35 @@ def loop_node(node_id, source_variable, item_variable, loop_body_to, after_loop_
 
 def conditional_branch_node(node_id, conditions, default_target, x, y):
     """
-    Создаёт ноду conditional_branch с несколькими ветками.
+    Создаёт ноду condition с ветками (формат проекта 159).
     @param node_id - ID ноды
     @param conditions - Список условий [{id, field, operator, value, targetNodeId}]
-    @param default_target - ID ноды по умолчанию
+    @param default_target - ID ноды по умолчанию (else)
     @param x - Позиция по X
     @param y - Позиция по Y
-    @returns Словарь ноды conditional_branch
+    @returns Словарь ноды condition
     """
+    branches = []
+    for c in conditions:
+        branches.append({
+            "id": c["id"],
+            "value": c["value"],
+            "target": c["targetNodeId"],
+            "operator": c["operator"]
+        })
+    # Добавляем ветку else
+    branches.append({
+        "id": f"{node_id}-else",
+        "value": "",
+        "target": default_target,
+        "operator": "else"
+    })
     return {
-        "id": node_id, "type": "conditional_branch",
+        "id": node_id, "type": "condition",
         "position": {"x": x, "y": y},
         "data": base_data(
-            conditions=conditions,
-            defaultTargetNodeId=default_target,
-            enableAutoTransition=False, autoTransitionTo=""
+            variable=conditions[0]["field"] if conditions else "",
+            branches=branches
         )
     }
 
