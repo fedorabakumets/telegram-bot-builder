@@ -129,7 +129,15 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         # Ждём обновления сообщения и перечитываем
         await asyncio.sleep(1.5)
         _updated = await userbot_client.get_messages(_target, ids=_msg_id)
-        logging.info(f"📖 [{{ nodeId }}] Перечитано msg={_msg_id}: text={(_updated.text or '')[:80]!r} has_media={bool(_updated.media) if _updated else False}")
+        # Если сообщение удалено — читаем последнее сообщение бота
+        if not _updated or not hasattr(_updated, 'text') or _updated.text is None:
+            logging.info(f"📖 [{{ nodeId }}] msg={_msg_id} удалено, читаем последние сообщения")
+            _fallback_msgs = await userbot_client.get_messages(_target, limit=3)
+            _fallback_list = _fallback_msgs if isinstance(_fallback_msgs, list) else [_fallback_msgs]
+            _my_id_cb = (await userbot_client.get_me()).id
+            _bot_fallback = [m for m in _fallback_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb]
+            _updated = _bot_fallback[0] if _bot_fallback else None
+        logging.info(f"📖 [{{ nodeId }}] Результат: text={(_updated.text or '')[:80]!r if _updated else 'None'}")
 
 {%- if saveResultTo %}
         # Сохраняем текст обновлённого сообщения
