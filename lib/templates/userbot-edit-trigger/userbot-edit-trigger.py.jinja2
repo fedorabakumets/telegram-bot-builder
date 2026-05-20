@@ -1,0 +1,69 @@
+{# Триггер редактирования сообщения через Telethon userbot #}
+{# Срабатывает когда сообщение отредактировано в указанном чате #}
+
+# ─── Триггер редактирования: {{ nodeId }} ─────────────────────────────────
+{%- if userbotEntity %}
+@userbot_client.on(events.MessageEdited(chats={{ userbotEntity | tojson }}))
+{%- else %}
+@userbot_client.on(events.MessageEdited())
+{%- endif %}
+async def handle_userbot_edit_{{ nodeId | replace('-', '_') }}(event):
+    """Триггер редактирования сообщения (узел {{ nodeId }})"""
+    user_id = event.sender_id or 0
+    _edit_text = event.message.text or ''
+    _edit_msg_id = event.message.id
+    _edit_chat_id = event.chat_id or 0
+
+    logging.info(f"✏️ Userbot edit trigger [{{ nodeId }}]: msg={_edit_msg_id} chat={_edit_chat_id} text={_edit_text[:60]!r}")
+
+{%- if filterType == 'contains' and filterValue %}
+    # Фильтр: текст содержит "{{ filterValue }}"
+    if {{ filterValue | tojson }} not in _edit_text:
+        return
+{%- elif filterType == 'regex' and filterValue %}
+    # Фильтр: regex "{{ filterValue }}"
+    import re as _re_edit
+    if not _re_edit.search({{ filterValue | tojson }}, _edit_text):
+        return
+{%- endif %}
+
+    logging.info(f"✅ Триггер [{{ nodeId }}] сработал: msg={_edit_msg_id}")
+
+    if user_id not in user_data:
+        user_data[user_id] = {}
+
+{%- if saveTextTo %}
+    user_data[user_id]["{{ saveTextTo }}"] = _edit_text
+    await set_user_var(user_id, "{{ saveTextTo }}", _edit_text)
+{%- endif %}
+{%- if saveMessageIdTo %}
+    user_data[user_id]["{{ saveMessageIdTo }}"] = _edit_msg_id
+    await set_user_var(user_id, "{{ saveMessageIdTo }}", _edit_msg_id)
+{%- endif %}
+{%- if saveChatIdTo %}
+    user_data[user_id]["{{ saveChatIdTo }}"] = _edit_chat_id
+    await set_user_var(user_id, "{{ saveChatIdTo }}", _edit_chat_id)
+{%- endif %}
+{%- if saveSenderIdTo %}
+    user_data[user_id]["{{ saveSenderIdTo }}"] = user_id
+    await set_user_var(user_id, "{{ saveSenderIdTo }}", user_id)
+{%- endif %}
+
+{%- if autoTransitionTo %}
+    # Автопереход к узлу {{ autoTransitionTo }}
+    logging.info(f"⚡ Автопереход: {{ nodeId }} → {{ autoTransitionTo }}")
+    class FakeCallbackQuery:
+        def __init__(self, from_user_id, target_node_id):
+            self.from_user = type('User', (), {'id': from_user_id})()
+            self.message = None
+            self.data = target_node_id
+            self._is_fake = True
+        async def answer(self, *args, **kwargs):
+            pass
+
+    _fake_cb = FakeCallbackQuery(user_id, "{{ autoTransitionTo }}")
+    try:
+        await handle_callback_{{ autoTransitionTo | replace('-', '_') }}(_fake_cb, state=None)
+    except Exception as _at_err:
+        logging.error(f"❌ Ошибка автоперехода {{ nodeId }} → {{ autoTransitionTo }}: {_at_err}")
+{%- endif %}
