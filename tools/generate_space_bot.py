@@ -1975,11 +1975,9 @@ def build_ship() -> dict:
         ],
         "keyboardLayout": {
             "autoLayout": False,
-            "columns": 1,
+            "columns": 3,
             "rows": [
-                {"buttonIds": ["btn-s-hull"]},
-                {"buttonIds": ["btn-s-engine"]},
-                {"buttonIds": ["btn-s-armor"]},
+                {"buttonIds": ["btn-s-hull", "btn-s-engine", "btn-s-armor"]},
                 {"buttonIds": ["btn-s-back"]},
             ],
         },
