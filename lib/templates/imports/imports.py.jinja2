@@ -83,3 +83,9 @@ from aiogram.fsm.state import State, StatesGroup
 
 import re
 from types import SimpleNamespace
+
+{%- if hasUserbotNodes %}
+from telethon import TelegramClient
+from telethon.sessions import StringSession
+from telethon.errors import FloodWaitError as TelethonFloodWaitError
+{%- endif %}

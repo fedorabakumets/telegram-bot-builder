@@ -127,6 +127,11 @@ export function extractContentFromNodes(sheets: any[]): ContentEntry[] {
       if (data.collectUserInput && isNotEmpty(data.inputPrompt)) {
         entries.push({ key: `${contentId}.prompt`, type: "prompt", sheet: sheetName, value: data.inputPrompt });
       }
+
+      // userbotEntity (для userbot_message)
+      if (nodeType === 'userbot_message' && isNotEmpty(data.userbotEntity)) {
+        entries.push({ key: `${contentId}.entity`, type: "entity", sheet: sheetName, value: data.userbotEntity });
+      }
     }
   }
 
@@ -185,6 +190,10 @@ export function parseContentKey(key: string, type: string): ParsedContentKey {
     return { nodeId, field: "inputPrompt" };
   }
 
+  if (suffix === "entity") {
+    return { nodeId, field: "userbotEntity" };
+  }
+
   // btn.{btnId}[.url|.webapp]
   if (suffix.startsWith("btn.")) {
     const btnParts = suffix.split(".");
@@ -206,7 +215,7 @@ export function parseContentKey(key: string, type: string): ParsedContentKey {
 }
 
 /** Известные суффиксы-маркеры */
-const KNOWN_SUFFIXES = ["caption", "btn", "media", "api", "body", "headers", "sql", "desc", "prompt"];
+const KNOWN_SUFFIXES = ["caption", "btn", "media", "api", "body", "headers", "sql", "desc", "prompt", "entity"];
 
 /**
  * Находит индекс начала суффикса в массиве частей ключа

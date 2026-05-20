@@ -316,3 +316,12 @@ export function hasBotTableNodes(nodes: Node[]): boolean {
 export function hasDelayNodes(nodes: Node[]): boolean {
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'delay');
 }
+
+/**
+ * Проверяет наличие узлов userbot_message
+ * @param nodes - Массив узлов
+ * @returns true если есть хотя бы один userbot_message
+ */
+export function hasUserbotMessageNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'userbot_message');
+}

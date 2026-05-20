@@ -77,6 +77,9 @@ export async function syncTableToScenario(
     case "inputPrompt":
       data.inputPrompt = value;
       break;
+    case "userbotEntity":
+      data.userbotEntity = value;
+      break;
   }
 
   node.data = data;

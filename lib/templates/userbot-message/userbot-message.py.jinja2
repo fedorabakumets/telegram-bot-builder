@@ -1,0 +1,175 @@
+{#
+  Шаблон обработчика узла userbot_message
+
+  @fileoverview Генерирует Python код для отправки сообщения через Telethon userbot.
+  Использует get_content для горячей перезагрузки текста из таблицы _content.
+  Поддерживает: текст, медиа (локальные файлы и URL), переменные, автопереход.
+
+  @param {string} nodeId - ID узла
+  @param {string} messageText - Текст сообщения
+  @param {string} formatMode - Режим форматирования: 'html', 'markdown', 'none'
+  @param {boolean} disableLinkPreview - Отключить превью ссылок
+  @param {string} userbotEntity - Entity получателя
+  @param {array} attachedMedia - Прикреплённые медиафайлы
+  @param {string} saveMessageIdTo - Переменная для сохранения ID сообщения
+  @param {string} autoTransitionTo - ID узла для автоперехода
+  @param {number|null} projectId - ID проекта (для get_content)
+#}
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Обработчик узла {{ nodeId }} — отправка через userbot"""
+    user_id = callback_query.from_user.id
+    logging.info(f"🟣 Userbot-сообщение: узел {{ nodeId }} для пользователя {user_id}")
+
+    # Отвечаем на callback
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    # Инициализируем переменные пользователя
+    if user_id not in user_data:
+        user_data[user_id] = {}
+
+    # Текст сообщения с поддержкой get_content
+{%- if projectId %}
+    text = get_content("{{ nodeId }}", {{ messageText|format_python_text }})
+{%- else %}
+    text = {{ messageText|format_python_text }}
+{%- endif %}
+
+    # Подстановка переменных
+    all_user_vars = await init_all_user_vars(user_id)
+    if state is not None:
+        try:
+            _fsm_d = await state.get_data()
+            if _fsm_d:
+                all_user_vars.update(_fsm_d)
+        except Exception:
+            pass
+    text = replace_variables_in_text(text, all_user_vars, {})
+
+    # Резолвим entity получателя
+{%- if projectId %}
+    _entity_raw = get_content("{{ nodeId }}.entity", {{ userbotEntity|format_python_text }})
+{%- else %}
+    _entity_raw = {{ userbotEntity|format_python_text }}
+{%- endif %}
+    _entity = replace_variables_in_text(_entity_raw, all_user_vars, {})
+
+    if not _entity:
+        logging.error(f"❌ Узел {{ nodeId }}: entity получателя пустой")
+        return
+
+    # Определяем parse_mode
+{%- if formatMode == 'html' %}
+    _parse_mode = 'html'
+{%- elif formatMode == 'markdown' %}
+    _parse_mode = 'md'
+{%- else %}
+    _parse_mode = None
+{%- endif %}
+
+    # Отправка сообщения через userbot
+    sent = None
+    try:
+        # Резолвим entity (число или строка)
+        _target = int(_entity) if _entity.lstrip('-').isdigit() else _entity
+
+{%- if attachedMedia and attachedMedia|length > 0 %}
+{%- if attachedMedia|length == 1 %}
+{%- set mediaItem = attachedMedia[0] %}
+{%- if '{' in mediaItem and '}' in mediaItem %}
+        # Медиа из переменной
+        _media_val = replace_variables_in_text("{{ mediaItem }}", all_user_vars, {})
+        if _media_val and _media_val != "{{ mediaItem }}":
+{%- if '/uploads/' in mediaItem %}
+            _media_path = get_upload_file_path(_media_val)
+            if os.path.exists(_media_path):
+                sent = await userbot_client.send_file(_target, _media_path, caption=text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
+            else:
+                logging.error(f"❌ Файл не найден: {_media_path}")
+                sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
+{%- else %}
+            sent = await userbot_client.send_file(_target, _media_val, caption=text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
+{%- endif %}
+        else:
+            sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
+{%- elif '/uploads/' in mediaItem %}
+        # Локальный файл
+        _media_path = get_upload_file_path("{{ mediaItem }}")
+        if os.path.exists(_media_path):
+            sent = await userbot_client.send_file(_target, _media_path, caption=text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
+        else:
+            logging.error(f"❌ Файл не найден: {_media_path}")
+            sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
+{%- elif 'http' in mediaItem %}
+        # URL медиа
+        sent = await userbot_client.send_file(_target, "{{ mediaItem }}", caption=text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
+{%- else %}
+        sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
+{%- endif %}
+{%- else %}
+        # Альбом (несколько файлов)
+        _album_files = []
+{%- for mediaItem in attachedMedia %}
+{%- if '/uploads/' in mediaItem %}
+        _fp_{{ loop.index }} = get_upload_file_path("{{ mediaItem }}")
+        if os.path.exists(_fp_{{ loop.index }}):
+            _album_files.append(_fp_{{ loop.index }})
+{%- elif 'http' in mediaItem %}
+        _album_files.append("{{ mediaItem }}")
+{%- endif %}
+{%- endfor %}
+        if _album_files:
+            sent_list = await userbot_client.send_file(_target, _album_files, caption=text, parse_mode=_parse_mode)
+            sent = sent_list[0] if isinstance(sent_list, list) and sent_list else sent_list
+        else:
+            sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
+{%- endif %}
+{%- else %}
+        # Только текст
+        sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode, link_preview={{ 'False' if disableLinkPreview else 'True' }})
+{%- endif %}
+
+        logging.info(f"✅ Userbot отправил сообщение в {_entity} (узел {{ nodeId }})")
+
+    except Exception as _ub_err:
+        logging.error(f"❌ Ошибка отправки через userbot (узел {{ nodeId }}): {_ub_err}")
+        # FloodWait — ждём и пробуем снова
+        if "FloodWaitError" in type(_ub_err).__name__ or "flood" in str(_ub_err).lower():
+            _wait = getattr(_ub_err, 'seconds', 30)
+            logging.warning(f"⏳ FloodWait: ждём {_wait} секунд")
+            await asyncio.sleep(_wait)
+            try:
+                sent = await userbot_client.send_message(_target, text, parse_mode=_parse_mode)
+            except Exception as _retry_err:
+                logging.error(f"❌ Повторная ошибка: {_retry_err}")
+
+{%- if saveMessageIdTo %}
+    # Сохраняем ID отправленного сообщения
+    if sent and hasattr(sent, 'id'):
+        user_data[user_id]["{{ saveMessageIdTo }}"] = sent.id
+        await set_user_var(user_id, "{{ saveMessageIdTo }}", sent.id)
+        logging.info(f"💾 ID сообщения сохранён: {{ saveMessageIdTo }} = {sent.id}")
+{%- endif %}
+
+{%- if autoTransitionTo %}
+    # Автопереход к узлу {{ autoTransitionTo }}
+    logging.info(f"⚡ Автопереход: {{ nodeId }} → {{ autoTransitionTo }}")
+    class FakeCallbackQuery:
+        def __init__(self, from_user, message, target_node_id):
+            self.from_user = from_user
+            self.message = message
+            self.data = target_node_id
+            self._is_fake = True
+        async def answer(self, *args, **kwargs):
+            pass
+
+    _fake_cb = FakeCallbackQuery(callback_query.from_user, callback_query.message, "{{ autoTransitionTo }}")
+    try:
+        await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(_fake_cb, state=state)
+    except Exception as _at_err:
+        logging.error(f"❌ Ошибка автоперехода {{ nodeId }} → {{ autoTransitionTo }}: {_at_err}")
+{%- endif %}
