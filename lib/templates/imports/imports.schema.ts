@@ -35,6 +35,8 @@ export const importsParamsSchema = z.object({
   hasBotCommands: z.boolean().default(false),
   /** Есть ли deep link триггеры (нужен CommandObject) */
   hasDeepLinkTriggers: z.boolean().default(false),
+  /** Есть ли узлы userbot_message (нужен Telethon) */
+  hasUserbotNodes: z.boolean().default(false),
 });
 
 /** Тип параметров импортов (выведен из схемы) */

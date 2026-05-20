@@ -204,3 +204,18 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # └─────────────────────────────────────────┘
 db_pool = None
 {%- endif %}
+
+{%- if hasUserbotNodes %}
+# ┌─────────────────────────────────────────┐
+# │        Telethon Userbot клиент          │
+# └─────────────────────────────────────────┘
+_USERBOT_API_ID = int(os.getenv("USERBOT_API_ID", "0"))
+_USERBOT_API_HASH = os.getenv("USERBOT_API_HASH", "")
+_USERBOT_SESSION = os.getenv("USERBOT_SESSION_STRING", "")
+
+userbot_client = TelegramClient(
+    StringSession(_USERBOT_SESSION),
+    _USERBOT_API_ID,
+    _USERBOT_API_HASH
+) if _USERBOT_API_ID and _USERBOT_API_HASH and _USERBOT_SESSION else None
+{%- endif %}

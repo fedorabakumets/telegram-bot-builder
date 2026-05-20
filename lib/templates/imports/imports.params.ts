@@ -33,4 +33,6 @@ export interface ImportsTemplateParams {
   hasBotCommands?: boolean;
   /** Есть ли deep link триггеры (нужен CommandObject) */
   hasDeepLinkTriggers?: boolean;
+  /** Есть ли узлы userbot_message (нужен Telethon) */
+  hasUserbotNodes?: boolean;
 }

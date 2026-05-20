@@ -235,6 +235,7 @@ function generateCodeSections(
       hasLocalMediaFiles: flags.hasLocalMediaFilesResult,
       hasBotCommands: flags.hasBotCommandsResult,
       hasDeepLinkTriggers: flags.hasDeepLinkTriggersResult,
+      hasUserbotNodes: flags.hasUserbotNodesResult,
     })
   );
 
@@ -256,6 +257,7 @@ function generateCodeSections(
       projectId: context.projectId,
       webhookUrl: context.options.webhookUrl ?? null,
       webhookPort: context.options.webhookPort ?? null,
+      hasUserbotNodes: flags.hasUserbotNodesResult,
     })
   );
 
@@ -500,6 +502,7 @@ function generateCodeSections(
       webhookUrl: context.options.webhookUrl ?? null,
       webhookPort: context.options.webhookPort ?? null,
       projectId: context.projectId ?? null,
+      hasUserbotNodes: flags.hasUserbotNodesResult,
     })
   );
 

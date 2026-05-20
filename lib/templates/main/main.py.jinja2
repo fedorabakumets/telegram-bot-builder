@@ -144,6 +144,16 @@ async def main():
         # Запускаем фоновую задачу TTL-очистки user_data
         asyncio.create_task(cleanup_user_data())
 
+{%- if hasUserbotNodes %}
+        # Подключаем Telethon userbot клиент
+        if userbot_client:
+            await userbot_client.connect()
+            if not await userbot_client.is_user_authorized():
+                logging.error("❌ Userbot не авторизован — проверьте USERBOT_SESSION_STRING")
+            else:
+                logging.info("🟣 Telethon userbot подключён")
+{%- endif %}
+
 {%- if projectId %}
         # Фоновая перезагрузка контента из _content каждые 60 сек (fallback)
         if db_pool:
@@ -231,6 +241,13 @@ async def main():
                 pass
 
         await bot.session.close()
+
+{%- if hasUserbotNodes %}
+        # Отключаем Telethon userbot
+        if userbot_client and userbot_client.is_connected():
+            await userbot_client.disconnect()
+            logging.info("🟣 Telethon userbot отключён")
+{%- endif %}
 
 
 if __name__ == "__main__":

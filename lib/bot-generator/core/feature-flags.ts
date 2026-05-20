@@ -32,6 +32,8 @@ export interface FeatureFlags {
   hasBotCommandsResult: boolean;
   /** Есть ли deep link триггеры (нужен CommandObject) */
   hasDeepLinkTriggersResult: boolean;
+  /** Есть ли узлы userbot_message (нужен Telethon) */
+  hasUserbotNodesResult: boolean;
 }
 
 /**
@@ -139,6 +141,9 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
     hasDeepLinkTriggersResult: nodes.some(
       n => n.type === 'command_trigger' &&
            (n.data as any)?.command === '/start'
+    ),
+    hasUserbotNodesResult: nodes.some(
+      n => (n.type as string) === 'userbot_message'
     ),
   };
 }
