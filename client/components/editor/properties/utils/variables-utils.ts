@@ -560,6 +560,30 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
+  // Добавляем переменные от userbot_edit_trigger-узлов
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'userbot_edit_trigger') return;
+    const data = node.data as any;
+    const fields = [
+      { field: 'saveTextTo', desc: 'Текст отредактированного сообщения' },
+      { field: 'saveMessageIdTo', desc: 'ID отредактированного сообщения' },
+      { field: 'saveChatIdTo', desc: 'ID чата (редактирование)' },
+      { field: 'saveSenderIdTo', desc: 'ID отправителя (редактирование)' },
+    ];
+    for (const { field, desc } of fields) {
+      if (!data[field]?.trim()) continue;
+      const key = `ub_edit_${field}__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data[field],
+          nodeId: node.id,
+          nodeType: 'userbot_edit_trigger' as any,
+          description: desc,
+        });
+      }
+    }
+  });
+
   // Разделяем на текстовые и медиа
   const all = Array.from(variablesMap.values());
   return { textVariables: all.filter(v => !v.mediaType), mediaVariables: all.filter(v => v.mediaType) };

@@ -493,6 +493,24 @@ export function getNodeDefaults(type: Node['type']): any {
       /** Включить автопереход */
       enableAutoTransition: false,
     },
+    userbot_edit_trigger: {
+      /** Сущность (чат/канал) для отслеживания */
+      userbotEntity: '',
+      /** Тип фильтра: any, contains, regex */
+      filterType: 'any',
+      /** Значение фильтра */
+      filterValue: '',
+      /** Переменная для текста отредактированного сообщения */
+      saveTextTo: 'edit_text',
+      /** Переменная для ID сообщения */
+      saveMessageIdTo: 'edit_msg_id',
+      /** Переменная для ID чата (опционально) */
+      saveChatIdTo: '',
+      /** Переменная для ID отправителя (опционально) */
+      saveSenderIdTo: '',
+      /** ID следующего узла */
+      autoTransitionTo: '',
+    },
   };
   return defaults[type] || {};
 }

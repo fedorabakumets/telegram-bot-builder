@@ -325,3 +325,12 @@ export function hasDelayNodes(nodes: Node[]): boolean {
 export function hasUserbotMessageNodes(nodes: Node[]): boolean {
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'userbot_message');
 }
+
+/**
+ * Проверяет наличие узлов userbot_edit_trigger
+ * @param nodes - Массив узлов
+ * @returns true если есть хотя бы один userbot_edit_trigger
+ */
+export function hasUserbotEditTriggerNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'userbot_edit_trigger');
+}

@@ -74,6 +74,7 @@ import { DelayConfiguration } from '../configuration/delay-configuration';
 import { UserbotMessageConfiguration } from '../userbot/UserbotMessageConfiguration';
 import { UserbotClickButtonConfiguration } from '../userbot/UserbotClickButtonConfiguration';
 import { UserbotInlineQueryConfiguration } from '../userbot/UserbotInlineQueryConfiguration';
+import { UserbotEditTriggerConfiguration } from '../trigger/UserbotEditTriggerConfiguration';
 import type { Variable } from '../../../inline-rich/types';
 import { useEnvVariablesForNode } from '../../hooks/use-env-variables-for-node';
 
@@ -730,6 +731,14 @@ export function PropertiesPanel({
             <ScheduleTriggerConfiguration
               selectedNode={selectedNode}
               onUpdateNode={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
+            />
+          )}
+          {isTriggerNode(selectedNode.type) && (selectedNode.type as any) === 'userbot_edit_trigger' && (
+            <UserbotEditTriggerConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
               formatNodeDisplay={formatNodeDisplay}
             />

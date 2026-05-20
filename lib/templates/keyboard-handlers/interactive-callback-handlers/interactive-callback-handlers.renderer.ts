@@ -40,6 +40,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'userbot_message', // собственный обработчик генерируется шаблоном userbot-message.py.jinja2
   'userbot_click_button', // собственный обработчик генерируется шаблоном userbot-click-button.py.jinja2
   'userbot_inline_query', // собственный обработчик генерируется шаблоном userbot-inline-query.py.jinja2
+  'userbot_edit_trigger', // собственный обработчик генерируется шаблоном userbot-edit-trigger.py.jinja2
 ]);
 
 /**
