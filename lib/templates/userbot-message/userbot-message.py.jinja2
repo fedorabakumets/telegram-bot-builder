@@ -174,17 +174,27 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     # Ждём ответ от получателя и сохраняем его ID и текст
     await asyncio.sleep(2)
     try:
-        _resp_msgs = await userbot_client.get_messages(_recipients[0] if _recipients else _target, limit=1)
-        if _resp_msgs and hasattr(_resp_msgs[0] if isinstance(_resp_msgs, list) else _resp_msgs, 'id'):
-            _resp_msg = _resp_msgs[0] if isinstance(_resp_msgs, list) else _resp_msgs
-            user_data[user_id]["{{ saveResponseIdTo }}"] = _resp_msg.id
-            await set_user_var(user_id, "{{ saveResponseIdTo }}", _resp_msg.id)
-            logging.info(f"💾 ID ответа сохранён: {{ saveResponseIdTo }} = {_resp_msg.id}")
+        _resp_msgs = await userbot_client.get_messages(_recipients[0] if _recipients else _target, limit=5)
+        if _resp_msgs:
+            _resp_list = _resp_msgs if isinstance(_resp_msgs, list) else [_resp_msgs]
+            # Берём первое сообщение не от нас (ответ бота)
+            _resp_msg = _resp_list[0] if _resp_list else None
+            if _resp_msg and hasattr(_resp_msg, 'id'):
+                user_data[user_id]["{{ saveResponseIdTo }}"] = _resp_msg.id
+                await set_user_var(user_id, "{{ saveResponseIdTo }}", _resp_msg.id)
+                logging.info(f"💾 ID ответа сохранён: {{ saveResponseIdTo }} = {_resp_msg.id}")
 {%- if saveResponseTextTo %}
-            _resp_text = _resp_msg.text or ''
-            user_data[user_id]["{{ saveResponseTextTo }}"] = _resp_text
-            await set_user_var(user_id, "{{ saveResponseTextTo }}", _resp_text)
-            logging.info(f"💾 Текст ответа сохранён: {{ saveResponseTextTo }} = {_resp_text[:50]!r}")
+                # Ищем сообщение с непустым текстом (пропускаем "Выберите способ оплаты" и подобные)
+                _resp_text = ''
+                for _rm in _resp_list:
+                    if _rm and _rm.text and len(_rm.text) > 30:
+                        _resp_text = _rm.text
+                        break
+                if not _resp_text and _resp_msg:
+                    _resp_text = _resp_msg.text or ''
+                user_data[user_id]["{{ saveResponseTextTo }}"] = _resp_text
+                await set_user_var(user_id, "{{ saveResponseTextTo }}", _resp_text)
+                logging.info(f"💾 Текст ответа сохранён: {{ saveResponseTextTo }} = {_resp_text[:80]!r}")
 {%- endif %}
     except Exception as _resp_err:
         logging.warning(f"⚠️ Не удалось получить ответ: {_resp_err}")
