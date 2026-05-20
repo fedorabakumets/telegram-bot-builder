@@ -1895,16 +1895,18 @@ def build_ship() -> dict:
         "formatMode": "html",
         "keyboardType": "reply",
         "buttons": [
-            btn("btn-s-hull", "⬆️ Трюм"),
-            btn("btn-s-engine", "⬆️ Двигатель"),
-            btn("btn-s-armor", "⬆️ Броня"),
+            btn("btn-s-hull", "⬆️ Трюм — {hull_price} 💰"),
+            btn("btn-s-engine", "⬆️ Двигатель — {engine_price} 💰"),
+            btn("btn-s-armor", "⬆️ Броня — {armor_price} 💰"),
             btn("btn-s-back", "⬅️ Меню"),
         ],
         "keyboardLayout": {
             "autoLayout": False,
-            "columns": 3,
+            "columns": 1,
             "rows": [
-                {"buttonIds": ["btn-s-hull", "btn-s-engine", "btn-s-armor"]},
+                {"buttonIds": ["btn-s-hull"]},
+                {"buttonIds": ["btn-s-engine"]},
+                {"buttonIds": ["btn-s-armor"]},
                 {"buttonIds": ["btn-s-back"]},
             ],
         },
@@ -1915,7 +1917,7 @@ def build_ship() -> dict:
     # 📦 ТРЮМ (hull) — улучшение
     # =============================================
     nodes.append(node("trig-hull", "text_trigger", 100, 250, {
-        "textMatchType": "exact",
+        "textMatchType": "contains",
         "textSynonyms": ["⬆️ Трюм"],
         "autoTransitionTo": "do-upgrade-hull-check",
         "enableAutoTransition": True,
@@ -2035,7 +2037,7 @@ def build_ship() -> dict:
     # 🚀 ДВИГАТЕЛЬ (engine) — улучшение
     # =============================================
     nodes.append(node("trig-engine", "text_trigger", 100, 600, {
-        "textMatchType": "exact",
+        "textMatchType": "contains",
         "textSynonyms": ["⬆️ Двигатель"],
         "autoTransitionTo": "do-upgrade-engine-check",
         "enableAutoTransition": True,
@@ -2153,7 +2155,7 @@ def build_ship() -> dict:
     # 🛡 БРОНЯ (armor) — улучшение
     # =============================================
     nodes.append(node("trig-armor", "text_trigger", 100, 950, {
-        "textMatchType": "exact",
+        "textMatchType": "contains",
         "textSynonyms": ["⬆️ Броня"],
         "autoTransitionTo": "do-upgrade-armor-check",
         "enableAutoTransition": True,
