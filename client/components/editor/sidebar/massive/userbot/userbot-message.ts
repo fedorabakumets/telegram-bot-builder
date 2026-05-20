@@ -19,5 +19,8 @@ export const userbotMessage: ComponentDefinition = {
     userbotEntityVariable: '',
     attachedMedia: [],
     autoTransitionTo: '',
+    responseWaitSeconds: 3,
+    responseStrategy: 'longest',
+    responseFilterRegex: '',
   }
 };

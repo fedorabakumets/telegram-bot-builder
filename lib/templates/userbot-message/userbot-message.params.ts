@@ -25,6 +25,12 @@ export interface UserbotMessageTemplateParams {
   saveResponseIdTo?: string;
   /** Имя переменной для сохранения текста ответа от получателя */
   saveResponseTextTo?: string;
+  /** Время ожидания ответа в секундах (по умолчанию 3) */
+  responseWaitSeconds?: number;
+  /** Стратегия выбора ответа: 'first' | 'longest' | 'regex_match' */
+  responseStrategy?: 'first' | 'longest' | 'regex_match';
+  /** Regex для фильтрации ответа (только при strategy=regex_match) */
+  responseFilterRegex?: string;
   /** ID узла для автоперехода */
   autoTransitionTo?: string;
   /** ID проекта (для get_content) */

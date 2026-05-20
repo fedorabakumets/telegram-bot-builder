@@ -27,6 +27,12 @@ export const userbotMessageParamsSchema = z.object({
   saveResponseIdTo: z.string().optional(),
   /** Переменная для сохранения текста ответа от получателя */
   saveResponseTextTo: z.string().optional(),
+  /** Время ожидания ответа в секундах */
+  responseWaitSeconds: z.number().optional().default(3),
+  /** Стратегия выбора ответа */
+  responseStrategy: z.enum(['first', 'longest', 'regex_match']).optional().default('longest'),
+  /** Regex для фильтрации ответа */
+  responseFilterRegex: z.string().optional().default(''),
   /** ID узла для автоперехода */
   autoTransitionTo: z.string().optional(),
   /** ID проекта */

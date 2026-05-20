@@ -172,7 +172,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 
 {%- if saveResponseIdTo %}
     # Ждём ответ от получателя (sleep + get_messages с фильтрацией)
-    await asyncio.sleep(3)
+    await asyncio.sleep({{ responseWaitSeconds | default(3) }})
     _resp_target = _recipients[0] if _recipients else _target
     _resp_entity = int(_resp_target) if str(_resp_target).lstrip('-').isdigit() else _resp_target
     _resp_msg = None
@@ -197,13 +197,25 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         await set_user_var(user_id, "{{ saveResponseIdTo }}", _resp_msg.id)
         logging.info(f"💾 ID ответа сохранён: {{ saveResponseIdTo }} = {_resp_msg.id}")
 {%- if saveResponseTextTo %}
-        # Ищем сообщение бота с содержательным текстом (самое длинное)
+        # Выбор текста ответа по стратегии: {{ responseStrategy | default('longest') }}
         _resp_text = ''
+{%- if responseStrategy == 'regex_match' and responseFilterRegex %}
+        import re as _re_resp
+        for _bm in _bot_msgs:
+            if _bm and _bm.text and _re_resp.search({{ responseFilterRegex | tojson }}, _bm.text):
+                _resp_text = _bm.text
+                break
+{%- elif responseStrategy == 'first' %}
+        if _bot_msgs and _bot_msgs[0] and _bot_msgs[0].text:
+            _resp_text = _bot_msgs[0].text
+{%- else %}
+        # longest (по умолчанию)
         _max_len = 0
         for _bm in _bot_msgs:
             if _bm and _bm.text and len(_bm.text) > _max_len:
                 _max_len = len(_bm.text)
                 _resp_text = _bm.text
+{%- endif %}
         if not _resp_text:
             _resp_text = _resp_msg.text or ''
         user_data[user_id]["{{ saveResponseTextTo }}"] = _resp_text

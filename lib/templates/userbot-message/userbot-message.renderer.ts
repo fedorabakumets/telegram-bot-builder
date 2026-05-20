@@ -44,6 +44,9 @@ export function generateUserbotMessageHandlers(nodes: Node[], projectId: number 
       saveMessageIdTo: data.saveMessageIdTo || undefined,
       saveResponseIdTo: data.saveResponseIdTo || undefined,
       saveResponseTextTo: data.saveResponseTextTo || undefined,
+      responseWaitSeconds: data.responseWaitSeconds || 3,
+      responseStrategy: data.responseStrategy || 'longest',
+      responseFilterRegex: data.responseFilterRegex || '',
       autoTransitionTo: data.autoTransitionTo || undefined,
       projectId,
     });

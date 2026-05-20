@@ -200,6 +200,69 @@ export function UserbotMessageConfiguration({
         <p className="text-[10px] text-muted-foreground/60">
           После отправки ждёт 2 сек и сохраняет ID последнего сообщения от получателя. Используй в «Нажать кнопку».
         </p>
+
+        {/* Сохранить текст ответа */}
+        {data.saveResponseIdTo && (
+          <div className="space-y-2 pt-2 border-t border-violet-200/20 dark:border-violet-800/20">
+            <Label className="text-xs text-muted-foreground">Сохранить текст ответа в</Label>
+            <div className="flex gap-1">
+              <Input
+                value={data.saveResponseTextTo ?? ''}
+                onChange={(e) => onNodeUpdate(selectedNode.id, { saveResponseTextTo: e.target.value })}
+                placeholder="response_text (необязательно)"
+                className="h-8 text-sm flex-1"
+              />
+              <VariableSelector
+                availableVariables={availableVariables as Variable[]}
+                onSelect={(v) => onNodeUpdate(selectedNode.id, { saveResponseTextTo: v })}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Время ожидания ответа */}
+        {data.saveResponseIdTo && (
+          <div className="space-y-1 pt-2 border-t border-violet-200/20 dark:border-violet-800/20">
+            <Label className="text-xs text-muted-foreground">Время ожидания ответа (сек)</Label>
+            <Input
+              type="number"
+              min={1}
+              max={60}
+              value={data.responseWaitSeconds ?? 3}
+              onChange={(e) => onNodeUpdate(selectedNode.id, { responseWaitSeconds: parseInt(e.target.value) || 3 })}
+              className="h-8 text-sm w-24"
+            />
+          </div>
+        )}
+
+        {/* Стратегия выбора ответа */}
+        {data.saveResponseTextTo && (
+          <div className="space-y-1 pt-2 border-t border-violet-200/20 dark:border-violet-800/20">
+            <Label className="text-xs text-muted-foreground">Стратегия выбора ответа</Label>
+            <select
+              value={data.responseStrategy ?? 'longest'}
+              onChange={(e) => onNodeUpdate(selectedNode.id, { responseStrategy: e.target.value })}
+              className="h-8 text-sm w-full rounded-md border border-input bg-background px-3"
+            >
+              <option value="first">Первое сообщение</option>
+              <option value="longest">Самое длинное</option>
+              <option value="regex_match">По regex</option>
+            </select>
+          </div>
+        )}
+
+        {/* Фильтр ответа (regex) */}
+        {data.responseStrategy === 'regex_match' && (
+          <div className="space-y-1 pt-2 border-t border-violet-200/20 dark:border-violet-800/20">
+            <Label className="text-xs text-muted-foreground">Фильтр ответа (regex)</Label>
+            <Input
+              value={data.responseFilterRegex ?? ''}
+              onChange={(e) => onNodeUpdate(selectedNode.id, { responseFilterRegex: e.target.value })}
+              placeholder="Курс покупки.*"
+              className="h-8 text-sm font-mono"
+            />
+          </div>
+        )}
       </div>
 
       {/* Информация о режиме */}
