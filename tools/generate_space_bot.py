@@ -2627,6 +2627,12 @@ def build_planet() -> dict:
             {"id": "a-pc-avail", "variable": "ore_available", "value": "min({planet.ore_stored} + {ore_mined}, {storage_max})", "mode": "expression"},
             {"id": "a-pc-credits-fmt", "variable": "credits_fmt", "value": "{pilot.credits}", "mode": "format_number"},
             {"id": "a-pc-fuel-fmt", "variable": "fuel_fmt", "value": "{pilot.fuel}", "mode": "format_number"},
+            {"id": "a-pc-mine-next", "variable": "mine_next", "value": "{planet.mine_level} + 1", "mode": "expression"},
+            {"id": "a-pc-storage-next", "variable": "storage_next", "value": "{planet.storage_level} + 1", "mode": "expression"},
+            {"id": "a-pc-mine-price", "variable": "mine_price", "value": "", "mode": "lookup", "lookupTable": "planet_upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "{mine_next}"}]},
+            {"id": "a-pc-storage-price", "variable": "storage_price", "value": "", "mode": "lookup", "lookupTable": "planet_upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "{storage_next}"}]},
+            {"id": "a-pc-mine-price-fmt", "variable": "mine_price_fmt", "value": "{mine_price}", "mode": "format_number"},
+            {"id": "a-pc-storage-price-fmt", "variable": "storage_price_fmt", "value": "{storage_price}", "mode": "format_number"},
         ],
         "autoTransitionTo": "msg-my-planet",
         "enableAutoTransition": True,
@@ -2649,6 +2655,8 @@ def build_planet() -> dict:
         "keyboardType": "reply",
         "buttons": [
             btn("btn-p-harvest", "⛏ Собрать руду"),
+            btn("btn-p-mine", "⬆️ Шахта — {mine_price_fmt} 💰"),
+            btn("btn-p-storage", "⬆️ Склад — {storage_price_fmt} 💰"),
             btn("btn-p-buff", "🌀 Сменить бафф"),
             btn("btn-p-back", "⬅️ Меню"),
         ],
@@ -2657,6 +2665,7 @@ def build_planet() -> dict:
             "columns": 2,
             "rows": [
                 {"buttonIds": ["btn-p-harvest", "btn-p-buff"]},
+                {"buttonIds": ["btn-p-mine", "btn-p-storage"]},
                 {"buttonIds": ["btn-p-back"]},
             ],
         },
@@ -2920,6 +2929,100 @@ def build_planet() -> dict:
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
+    }))
+
+    # =============================================
+    # ⬆️ ШАХТА — улучшение
+    # =============================================
+    nodes.append(node("trig-mine-upgrade", "text_trigger", 100, 1200, {
+        "textMatchType": "contains",
+        "textSynonyms": ["⬆️ Шахта"],
+        "autoTransitionTo": "do-mine-upgrade-check",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("do-mine-upgrade-check", "condition", 400, 1200, {
+        "variable": "pilot.credits",
+        "branches": [
+            branch("br-mine-no-money", "Не хватает", "less_than", "{mine_price}", "msg-mine-no-money"),
+            branch("br-mine-ok", "Хватает", "else", "", "do-mine-upgrade"),
+        ],
+    }))
+
+    nodes.append(node("msg-mine-no-money", "message", 700, 1100, {
+        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{mine_price_fmt}</code> кредитов\n💰 У вас: <code>{credits_fmt}</code>",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("do-mine-upgrade", "bot_table", 700, 1200, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "credits", "op": "decrement", "value": "{mine_price}"},
+        ],
+        "autoTransitionTo": "do-mine-planet-update",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("do-mine-planet-update", "bot_table", 1000, 1200, {
+        "tableName": "player_planets",
+        "operation": "update",
+        "where": [{"column": "owner_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "mine_level", "op": "increment", "value": "1"},
+        ],
+        "autoTransitionTo": "tbl-read-pilot-planet",
+        "enableAutoTransition": True,
+    }))
+
+    # =============================================
+    # ⬆️ СКЛАД — улучшение
+    # =============================================
+    nodes.append(node("trig-storage-upgrade", "text_trigger", 100, 1500, {
+        "textMatchType": "contains",
+        "textSynonyms": ["⬆️ Склад"],
+        "autoTransitionTo": "do-storage-upgrade-check",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("do-storage-upgrade-check", "condition", 400, 1500, {
+        "variable": "pilot.credits",
+        "branches": [
+            branch("br-storage-no-money", "Не хватает", "less_than", "{storage_price}", "msg-storage-no-money"),
+            branch("br-storage-ok", "Хватает", "else", "", "do-storage-upgrade"),
+        ],
+    }))
+
+    nodes.append(node("msg-storage-no-money", "message", 700, 1400, {
+        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{storage_price_fmt}</code> кредитов\n💰 У вас: <code>{credits_fmt}</code>",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("do-storage-upgrade", "bot_table", 700, 1500, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "credits", "op": "decrement", "value": "{storage_price}"},
+        ],
+        "autoTransitionTo": "do-storage-planet-update",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("do-storage-planet-update", "bot_table", 1000, 1500, {
+        "tableName": "player_planets",
+        "operation": "update",
+        "where": [{"column": "owner_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "storage_level", "op": "increment", "value": "1"},
+        ],
+        "autoTransitionTo": "tbl-read-pilot-planet",
+        "enableAutoTransition": True,
     }))
 
     return {
