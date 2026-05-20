@@ -1366,7 +1366,7 @@ def build_map() -> dict:
         }))
 
         nodes.append(node(f"msg-fly-inflight-{planet['id']}", "message", 700, y_pos - 160, {
-            "messageText": "🚀 В полёте на планету <b>{pilot.flight_target_name}</b>!\n\n🕐 Осталось: <code>{flight_remaining}</code>\n\nДождитесь прибытия.",
+            "messageText": "🚀 В полёте на планету <b>{pilot.flight_target_name}</b>!\n\n🕐 Осталось: <code>{flight_remaining}</code>\n⛽ Потрачено: <code>{pilot.flight_fuel_cost}</code> топлива\n\nДождитесь прибытия.",
             "formatMode": "html",
             "keyboardType": "reply",
             "buttons": [
