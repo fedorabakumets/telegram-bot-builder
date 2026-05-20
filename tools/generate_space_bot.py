@@ -2379,8 +2379,8 @@ def build_planet() -> dict:
     nodes.append(node("cond-has-planet", "condition", 400, 0, {
         "variable": "pilot.planet_id",
         "branches": [
-            branch("br-has-planet", "Есть планета", "is_not_empty", "", "tbl-read-my-planet"),
-            branch("br-no-planet", "Нет планеты", "else", "", "msg-no-planet"),
+            branch("br-no-planet", "Нет планеты", "equals", "", "msg-no-planet"),
+            branch("br-has-planet", "Есть планета", "else", "", "tbl-read-my-planet"),
         ],
     }))
 
