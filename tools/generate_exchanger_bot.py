@@ -1,7 +1,15 @@
 """
-@fileoverview Генератор project.json для бота мониторинга 4 обменников валют.
-Архитектура: для каждой пары — цепочка из 4 http_request нод (swop→sova→pocket→ferma),
-затем set_variable с 4 присваиваниями и message с таблицей курсов.
+@fileoverview Генератор project.json для бота мониторинга обменников валют.
+Содержит два листа:
+  1. "💱 Сравнение курсов" — сравнение через HTTP API сайтов (swop, sova, pocket, ferma)
+  2. "💱 Сравнение через ботов" — сравнение через Telegram userbot-ноды
+
+Архитектура листа 1: для каждой пары — цепочка из 4 http_request нод,
+затем set_variable с присваиваниями и message с таблицей курсов.
+
+Архитектура листа 2: пользователь выбирает пару → вводит сумму →
+бот в цикле опрашивает bot_exchangers (userbot_message / userbot_click_button /
+userbot_inline_query) → собирает результаты → показывает таблицу.
 """
 
 import json
@@ -39,12 +47,32 @@ PAIRS = [
     ("YAMRUB",  "ЮMoney",   "yam",  "TON",       "TON",        "ton",  "🟡", "💎"),
 ]
 
-# Обменники: (ключ, отображаемое имя, URL, индекс в CURRENCY_IDS)
+# Обменники-сайты: (ключ, отображаемое имя, URL, индекс в CURRENCY_IDS)
 EXCHANGERS = [
     ("swop",   "swop.is",             "https://swop.is/valuta.json",             0),
     ("sova",   "sova.is",             "https://sova.is/valuta.json",             1),
     ("pocket", "pocket-exchange.com", "https://pocket-exchange.com/valuta.json", 2),
     ("ferma",  "ferma.cc",            "https://ferma.cc/valuta.json",            3),
+]
+
+# Обменники-боты: (name, username, ref_url, mode, step1_text, click_button,
+#                   step2_text, inline_query, rate_regex, wait_seconds)
+BOT_EXCHANGERS = [
+    ("ScoobyChange", "@ScoobyChangeBot", "https://t.me/ScoobyChangeBot?start=ref123",
+     "message", "{user_amount} {selected_from_name}", "", "",
+     "", r"Получите:\s*([\d.]+)", 3),
+    ("Shaxta", "@ShaxtaBot", "https://t.me/ShaxtaBot?start=ref456",
+     "click", "/start", "Карта → {selected_to_name}", "",
+     "", r"Итого:\s*([\d.]+)", 4),
+    ("Vortex", "@VortexExchangeBot", "https://t.me/VortexExchangeBot?start=ref789",
+     "click", "/exchange", "{selected_from_name} → {selected_to_name}", "{user_amount}",
+     "", r"Вы получите:\s*([\d.]+)", 5),
+    ("CryptoFlow", "@CryptoFlowBot", "https://t.me/CryptoFlowBot?start=ref000",
+     "inline", "", "", "",
+     "{selected_from_name} {user_amount} {selected_to_name}", r"([\d.]+)", 3),
+    ("Hustle", "@HustleExBot", "https://t.me/HustleExBot?start=refabc",
+     "message", "/rate {selected_from_name} {selected_to_name} {user_amount}", "", "",
+     "", r"Результат:\s*([\d.]+)", 3),
 ]
 
 
@@ -125,7 +153,8 @@ def cmd_trigger(node_id, command, description, next_id, x, y):
     }
 
 
-def message_node(node_id, text, buttons, keyboard_type, x, y, auto_to=""):
+def message_node(node_id, text, buttons, keyboard_type, x, y, auto_to="",
+                 collect_input=False, input_var="", dynamic_btns=None):
     """
     Создаёт ноду message.
     @param node_id - ID ноды
@@ -135,24 +164,31 @@ def message_node(node_id, text, buttons, keyboard_type, x, y, auto_to=""):
     @param x - Позиция по X
     @param y - Позиция по Y
     @param auto_to - ID ноды для авто-перехода (опционально)
+    @param collect_input - Ожидать ли ввод от пользователя
+    @param input_var - Переменная для сохранения ввода
+    @param dynamic_btns - Настройки динамических кнопок (опционально)
     @returns Словарь ноды message
     """
+    extra = {
+        "messageText": text, "formatMode": "html",
+        "keyboardType": keyboard_type, "buttons": buttons,
+        "showInMenu": False, "enableStatistics": True,
+        "variableFilters": {},
+        "enableAutoTransition": bool(auto_to), "autoTransitionTo": auto_to,
+        "collectUserInput": collect_input, "enableTextInput": collect_input,
+        "enablePhotoInput": False, "enableVideoInput": False,
+        "enableAudioInput": False, "enableDocumentInput": False,
+        "inputVariable": input_var, "photoInputVariable": "",
+        "videoInputVariable": "", "audioInputVariable": "",
+        "documentInputVariable": ""
+    }
+    if dynamic_btns:
+        extra["enableDynamicButtons"] = True
+        extra["dynamicButtons"] = dynamic_btns
     return {
         "id": node_id, "type": "message",
         "position": {"x": x, "y": y},
-        "data": base_data(
-            messageText=text, formatMode="html",
-            keyboardType=keyboard_type, buttons=buttons,
-            showInMenu=False, enableStatistics=True,
-            variableFilters={},
-            enableAutoTransition=bool(auto_to), autoTransitionTo=auto_to,
-            collectUserInput=False, enableTextInput=False,
-            enablePhotoInput=False, enableVideoInput=False,
-            enableAudioInput=False, enableDocumentInput=False,
-            inputVariable="", photoInputVariable="",
-            videoInputVariable="", audioInputVariable="",
-            documentInputVariable=""
-        )
+        "data": base_data(**extra)
     }
 
 
@@ -211,7 +247,147 @@ def set_var_node(node_id, assignments, next_id, x, y):
     }
 
 
-# ─── Построение цепочки нод для одной пары ───────────────────────────────────
+def loop_node(node_id, source_variable, item_variable, loop_body_to, after_loop_to, x, y):
+    """
+    Создаёт ноду loop для итерации по таблице/массиву.
+    @param node_id - ID ноды
+    @param source_variable - Источник данных (table.xxx или переменная-массив)
+    @param item_variable - Имя переменной текущего элемента
+    @param loop_body_to - ID первой ноды тела цикла
+    @param after_loop_to - ID ноды после завершения цикла
+    @param x - Позиция по X
+    @param y - Позиция по Y
+    @returns Словарь ноды loop
+    """
+    return {
+        "id": node_id, "type": "loop",
+        "position": {"x": x, "y": y},
+        "data": base_data(
+            sourceVariable=source_variable,
+            itemVariable=item_variable,
+            loopBodyTo=loop_body_to,
+            afterLoopTo=after_loop_to,
+            enableAutoTransition=False, autoTransitionTo=""
+        )
+    }
+
+
+def conditional_branch_node(node_id, conditions, default_target, x, y):
+    """
+    Создаёт ноду conditional_branch с несколькими ветками.
+    @param node_id - ID ноды
+    @param conditions - Список условий [{id, field, operator, value, targetNodeId}]
+    @param default_target - ID ноды по умолчанию
+    @param x - Позиция по X
+    @param y - Позиция по Y
+    @returns Словарь ноды conditional_branch
+    """
+    return {
+        "id": node_id, "type": "conditional_branch",
+        "position": {"x": x, "y": y},
+        "data": base_data(
+            conditions=conditions,
+            defaultTargetNodeId=default_target,
+            enableAutoTransition=False, autoTransitionTo=""
+        )
+    }
+
+
+def userbot_message_node(node_id, message_text, entity, save_resp_id, next_id, x, y):
+    """
+    Создаёт ноду userbot_message — отправка сообщения боту через юзербот.
+    @param node_id - ID ноды
+    @param message_text - Текст сообщения для отправки
+    @param entity - @username бота-получателя
+    @param save_resp_id - Переменная для ID ответного сообщения
+    @param next_id - ID следующей ноды
+    @param x - Позиция по X
+    @param y - Позиция по Y
+    @returns Словарь ноды userbot_message
+    """
+    return {
+        "id": node_id, "type": "userbot_message",
+        "position": {"x": x, "y": y},
+        "data": {
+            "messageText": message_text,
+            "formatMode": "html",
+            "userbotEntity": entity,
+            "attachedMedia": [],
+            "disableLinkPreview": False,
+            "saveMessageIdTo": "ub_sent_msg_id",
+            "saveResponseIdTo": save_resp_id,
+            "autoTransitionTo": next_id,
+            "enableAutoTransition": True
+        }
+    }
+
+
+def userbot_click_button_node(node_id, entity, message_id, click_value,
+                               save_result_to, next_id, x, y):
+    """
+    Создаёт ноду userbot_click_button — нажатие кнопки в сообщении бота.
+    @param node_id - ID ноды
+    @param entity - @username бота
+    @param message_id - ID сообщения с кнопками (шаблон переменной)
+    @param click_value - Текст кнопки для нажатия
+    @param save_result_to - Переменная для текста результата
+    @param next_id - ID следующей ноды
+    @param x - Позиция по X
+    @param y - Позиция по Y
+    @returns Словарь ноды userbot_click_button
+    """
+    return {
+        "id": node_id, "type": "userbot_click_button",
+        "position": {"x": x, "y": y},
+        "data": {
+            "userbotEntity": entity,
+            "messageId": message_id,
+            "clickMode": "text",
+            "clickValue": click_value,
+            "saveAlertTo": "",
+            "saveResultTo": save_result_to,
+            "saveButtonsTo": "",
+            "saveHasMediaTo": "",
+            "saveMediaTo": "",
+            "autoTransitionTo": next_id,
+            "enableAutoTransition": True
+        }
+    }
+
+
+def userbot_inline_query_node(node_id, bot_username, query, save_title,
+                               save_desc, next_id, x, y):
+    """
+    Создаёт ноду userbot_inline_query — инлайн-запрос к боту.
+    @param node_id - ID ноды
+    @param bot_username - @username инлайн-бота
+    @param query - Текст инлайн-запроса
+    @param save_title - Переменная для заголовка результата
+    @param save_desc - Переменная для описания результата
+    @param next_id - ID следующей ноды
+    @param x - Позиция по X
+    @param y - Позиция по Y
+    @returns Словарь ноды userbot_inline_query
+    """
+    return {
+        "id": node_id, "type": "userbot_inline_query",
+        "position": {"x": x, "y": y},
+        "data": {
+            "botUsername": bot_username,
+            "query": query,
+            "targetChat": "me",
+            "sendToSameChat": True,
+            "resultIndex": "0",
+            "saveResultTitleTo": save_title,
+            "saveResultDescTo": save_desc,
+            "saveResponseIdTo": "ub_inline_resp_id",
+            "autoTransitionTo": next_id,
+            "enableAutoTransition": True
+        }
+    }
+
+
+# ─── Построение цепочки нод для одной пары (HTTP-лист) ────────────────────────
 
 def build_pair_chain(from_cur, from_name, from_key, to_cur, to_name, to_key,
                      emoji_from, emoji_to, y_row):
@@ -287,17 +463,17 @@ def build_pair_chain(from_cur, from_name, from_key, to_cur, to_name, to_key,
     return nodes, first_fetch_id, label
 
 
-# ─── Главная функция сборки проекта ──────────────────────────────────────────
+# ─── Построение HTTP-листа (сайты) ───────────────────────────────────────────
 
-def build_project():
+def build_http_compare_sheet():
     """
-    Строит полный project.json для бота мониторинга обменников.
-    @returns Словарь с полной структурой проекта
+    Строит лист "💱 Сравнение курсов" — сравнение через HTTP API сайтов.
+    @returns Словарь листа с нодами
     """
     nodes = []
     pair_buttons = []
 
-    # Нода ошибки (x=3200, y=200 по ТЗ)
+    # Нода ошибки
     error_node = message_node(
         "msg-error",
         "❌ Ошибка загрузки курсов. Попробуйте позже.",
@@ -349,23 +525,407 @@ def build_project():
     all_nodes = [start_trigger, rates_trigger, menu_node, about_node, error_node] + nodes
 
     return {
+        "id": "sheet-main",
+        "name": "💱 Сравнение курсов",
+        "nodes": all_nodes,
+        "createdAt": NOW,
+        "updatedAt": NOW,
+        "viewState": {"pan": {"x": 0, "y": 0}, "zoom": 100}
+    }
+
+
+# ─── Построение листа сравнения через ботов ───────────────────────────────────
+
+def build_bot_compare_sheet():
+    """
+    Строит лист "💱 Сравнение через ботов" — сравнение курсов через Telegram-ботов.
+    Поток: /compare_bots → выбор пары → ввод суммы → цикл по bot_exchangers →
+    условное ветвление по mode (message/click/inline) → сбор результатов → таблица.
+    @returns Словарь листа с нодами
+    """
+    nodes = []
+
+    # ─── 1. Триггер /compare_bots ────────────────────────────────────────────
+    nodes.append(cmd_trigger(
+        "bot-cmd-compare", "/compare_bots",
+        "Сравнить курсы через ботов",
+        "bot-msg-menu", 0, 400
+    ))
+
+    # ─── 2. Меню выбора пары (динамические кнопки из table.pairs) ─────────────
+    dynamic_btns = {
+        "columns": 2,
+        "arrayPath": "",
+        "styleMode": "none",
+        "styleField": "",
+        "textTemplate": "{item.emoji_from} {item.from_name} → {item.emoji_to} {item.to_name}",
+        "styleTemplate": "",
+        "sourceVariable": "table.pairs",
+        "callbackTemplate": "{item.id}"
+    }
+    nodes.append(message_node(
+        "bot-msg-menu",
+        "💱 <b>Сравнение через ботов</b>\n\nВыбери пару для сравнения:",
+        [], "inline", 400, 400,
+        dynamic_btns=dynamic_btns
+    ))
+
+    # ─── 3. Сохранение выбранной пары (set_variable с lookup) ─────────────────
+    nodes.append(set_var_node(
+        "bot-setv-pair",
+        [
+            {
+                "id": "bp1", "variable": "selected_pair_id",
+                "value": "{callback_data}", "mode": "text"
+            },
+            {
+                "id": "bp2", "variable": "selected_from_name",
+                "value": "", "mode": "lookup",
+                "lookupTable": "pairs", "lookupKeyColumn": "id",
+                "lookupKeyValue": "{callback_data}", "lookupResultColumn": "from_name"
+            },
+            {
+                "id": "bp3", "variable": "selected_to_name",
+                "value": "", "mode": "lookup",
+                "lookupTable": "pairs", "lookupKeyColumn": "id",
+                "lookupKeyValue": "{callback_data}", "lookupResultColumn": "to_name"
+            },
+            {
+                "id": "bp4", "variable": "selected_from_id",
+                "value": "", "mode": "lookup",
+                "lookupTable": "pairs", "lookupKeyColumn": "id",
+                "lookupKeyValue": "{callback_data}", "lookupResultColumn": "from_id"
+            },
+            {
+                "id": "bp5", "variable": "selected_to_id",
+                "value": "", "mode": "lookup",
+                "lookupTable": "pairs", "lookupKeyColumn": "id",
+                "lookupKeyValue": "{callback_data}", "lookupResultColumn": "to_id"
+            },
+        ],
+        "bot-msg-ask-amount", 800, 400
+    ))
+
+    # ─── 4. Запрос суммы ──────────────────────────────────────────────────────
+    nodes.append(message_node(
+        "bot-msg-ask-amount",
+        "💰 <b>Введи сумму для обмена:</b>\n\n"
+        "Пара: {selected_from_name} → {selected_to_name}",
+        [btn("bot-btn-cancel", "❌ Отмена", "bot-msg-menu")],
+        "inline", 1200, 400,
+        collect_input=True, input_var="user_amount"
+    ))
+
+    # ─── 5. Валидация ввода (условие: сумма — число) ──────────────────────────
+    nodes.append(conditional_branch_node(
+        "bot-cond-validate",
+        [
+            {
+                "id": "cv1", "field": "{user_amount}",
+                "operator": "matches_regex", "value": "^\\d+(\\.\\d+)?$",
+                "targetNodeId": "bot-setv-init"
+            }
+        ],
+        "bot-msg-invalid-amount", 1600, 400
+    ))
+
+    # Сообщение об ошибке ввода
+    nodes.append(message_node(
+        "bot-msg-invalid-amount",
+        "⚠️ Введи корректную сумму (только число).",
+        [], "none", 1600, 600,
+        auto_to="bot-msg-ask-amount"
+    ))
+
+    # ─── 6. Инициализация переменных перед циклом ─────────────────────────────
+    nodes.append(set_var_node(
+        "bot-setv-init",
+        [
+            {
+                "id": "bi1", "variable": "compare_bot_results",
+                "value": "[]", "mode": "expression"
+            },
+            {
+                "id": "bi2", "variable": "bot_idx",
+                "value": "0", "mode": "text"
+            },
+        ],
+        "bot-loop-exchangers", 2000, 400
+    ))
+
+    # ─── 7. Цикл по bot_exchangers ───────────────────────────────────────────
+    nodes.append(loop_node(
+        "bot-loop-exchangers",
+        "table.bot_exchangers", "bot",
+        "bot-cond-mode",       # тело цикла начинается с ветвления по mode
+        "bot-setv-best",       # после цикла — формирование результата
+        2400, 400
+    ))
+
+    # ─── 8. Ветвление по mode бота ───────────────────────────────────────────
+    nodes.append(conditional_branch_node(
+        "bot-cond-mode",
+        [
+            {
+                "id": "cm1", "field": "{bot.mode}",
+                "operator": "equals", "value": "message",
+                "targetNodeId": "bot-ub-send-msg"
+            },
+            {
+                "id": "cm2", "field": "{bot.mode}",
+                "operator": "equals", "value": "click",
+                "targetNodeId": "bot-ub-send-start"
+            },
+            {
+                "id": "cm3", "field": "{bot.mode}",
+                "operator": "equals", "value": "inline",
+                "targetNodeId": "bot-ub-inline"
+            },
+        ],
+        "bot-setv-push-result",  # по умолчанию — пропускаем
+        2800, 400
+    ))
+
+    # ─── 9a. Ветка MESSAGE: отправить сообщение → дождаться ответа → парсить ─
+    nodes.append(userbot_message_node(
+        "bot-ub-send-msg",
+        "{bot.step1_text}",
+        "{bot.username}",
+        "ub_bot_resp_id",
+        "bot-setv-parse-msg",
+        3200, 200
+    ))
+
+    # Парсинг ответа regex (mode=message)
+    nodes.append(set_var_node(
+        "bot-setv-parse-msg",
+        [
+            {
+                "id": "pm1", "variable": "parsed_rate",
+                "value": "", "mode": "regex",
+                "regexPattern": "{bot.rate_regex}",
+                "regexSource": "{ub_bot_resp_text}",
+                "regexGroup": 1
+            }
+        ],
+        "bot-setv-push-result", 3600, 200
+    ))
+
+    # ─── 9b. Ветка CLICK: /start → нажать кнопку → парсить ───────────────────
+    nodes.append(userbot_message_node(
+        "bot-ub-send-start",
+        "{bot.step1_text}",
+        "{bot.username}",
+        "ub_click_resp_id",
+        "bot-ub-click-pair",
+        3200, 500
+    ))
+
+    # Нажатие кнопки с текстом пары
+    nodes.append(userbot_click_button_node(
+        "bot-ub-click-pair",
+        "{bot.username}",
+        "{ub_click_resp_id}",
+        "{bot.click_button}",
+        "ub_click_result_text",
+        "bot-cond-click-step2",
+        3600, 500
+    ))
+
+    # Проверка: нужен ли step2 (отправка суммы после нажатия кнопки)
+    nodes.append(conditional_branch_node(
+        "bot-cond-click-step2",
+        [
+            {
+                "id": "cs1", "field": "{bot.step2_text}",
+                "operator": "not_empty", "value": "",
+                "targetNodeId": "bot-ub-send-step2"
+            }
+        ],
+        "bot-setv-parse-click",  # если step2 пуст — сразу парсим
+        4000, 500
+    ))
+
+    # Отправка суммы (step2) для click-ботов, которые требуют ввод суммы
+    nodes.append(userbot_message_node(
+        "bot-ub-send-step2",
+        "{bot.step2_text}",
+        "{bot.username}",
+        "ub_step2_resp_id",
+        "bot-setv-parse-click",
+        4400, 500
+    ))
+
+    # Парсинг ответа regex (mode=click)
+    nodes.append(set_var_node(
+        "bot-setv-parse-click",
+        [
+            {
+                "id": "pc1", "variable": "parsed_rate",
+                "value": "", "mode": "regex",
+                "regexPattern": "{bot.rate_regex}",
+                "regexSource": "{ub_click_result_text}",
+                "regexGroup": 1
+            }
+        ],
+        "bot-setv-push-result", 4800, 500
+    ))
+
+    # ─── 9c. Ветка INLINE: инлайн-запрос → парсить title/desc ────────────────
+    nodes.append(userbot_inline_query_node(
+        "bot-ub-inline",
+        "{bot.username}",
+        "{bot.inline_query}",
+        "ub_inline_title",
+        "ub_inline_desc",
+        "bot-setv-parse-inline",
+        3200, 800
+    ))
+
+    # Парсинг инлайн-результата regex
+    nodes.append(set_var_node(
+        "bot-setv-parse-inline",
+        [
+            {
+                "id": "pi1", "variable": "parsed_rate",
+                "value": "", "mode": "regex",
+                "regexPattern": "{bot.rate_regex}",
+                "regexSource": "{ub_inline_title} {ub_inline_desc}",
+                "regexGroup": 1
+            }
+        ],
+        "bot-setv-push-result", 3600, 800
+    ))
+
+    # ─── 10. Добавление результата в массив (json_push) ───────────────────────
+    nodes.append(set_var_node(
+        "bot-setv-push-result",
+        [
+            {
+                "id": "pr1", "variable": "compare_bot_results",
+                "value": "", "mode": "json_push",
+                "jsonPushTarget": "compare_bot_results",
+                "jsonPushValue": '{"name": "{bot.name}", "rate": "{parsed_rate}", '
+                                 '"ref_url": "{bot.ref_url}", "username": "{bot.username}"}'
+            }
+        ],
+        "bot-loop-exchangers",  # возврат в цикл (следующая итерация)
+        5200, 400
+    ))
+
+    # ─── 11. После цикла: формирование таблицы результатов ────────────────────
+    nodes.append(set_var_node(
+        "bot-setv-best",
+        [
+            {
+                "id": "bb1", "variable": "bot_results_count",
+                "value": "{compare_bot_results.length}", "mode": "expression"
+            }
+        ],
+        "bot-msg-result", 5600, 400
+    ))
+
+    # ─── 12. Показ результатов ────────────────────────────────────────────────
+    result_text = (
+        "💱 <b>Сравнение через ботов</b>\n"
+        "Пара: <b>{selected_from_name} → {selected_to_name}</b>\n"
+        "Сумма: <b>{user_amount}</b>\n\n"
+        "📊 <b>Результаты:</b>\n\n"
+        "{{#each compare_bot_results}}\n"
+        "🤖 <a href=\"{ref_url}\">{name}</a>: <b>{rate}</b>\n"
+        "{{/each}}\n\n"
+        "<i>Данные получены через Telegram-ботов обменников</i>"
+    )
+    nodes.append(message_node(
+        "bot-msg-result",
+        result_text,
+        [
+            btn("bot-btn-back-menu", "◀️ Назад", "bot-msg-menu"),
+            btn("bot-btn-retry", "🔄 Обновить", "bot-setv-init"),
+        ],
+        "inline", 6000, 400
+    ))
+
+    return {
+        "id": "sheet-bots",
+        "name": "💱 Сравнение через ботов",
+        "nodes": nodes,
+        "createdAt": NOW,
+        "updatedAt": NOW,
+        "viewState": {"pan": {"x": 0, "y": 0}, "zoom": 100}
+    }
+
+
+# ─── Генерация SQL для таблицы bot_exchangers ─────────────────────────────────
+
+def generate_bot_exchangers_sql():
+    """
+    Генерирует SQL-запросы для создания таблицы bot_exchangers и вставки данных.
+    Выводит в консоль (не выполняет).
+    @returns Строка с SQL-запросами
+    """
+    create_table = """
+-- Создание таблицы bot_exchangers для хранения Telegram-ботов обменников
+CREATE TABLE IF NOT EXISTS bot_exchangers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    username VARCHAR(100) NOT NULL,
+    ref_url TEXT DEFAULT '',
+    mode VARCHAR(20) NOT NULL CHECK (mode IN ('message', 'click', 'inline')),
+    step1_text TEXT DEFAULT '/start',
+    click_button TEXT DEFAULT '',
+    step2_text TEXT DEFAULT '',
+    inline_query TEXT DEFAULT '',
+    rate_regex TEXT NOT NULL DEFAULT '([\\d.]+)',
+    wait_seconds INTEGER DEFAULT 3,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Индекс для быстрого поиска активных ботов
+CREATE INDEX IF NOT EXISTS idx_bot_exchangers_active ON bot_exchangers(is_active);
+""".strip()
+
+    inserts = []
+    for (name, username, ref_url, mode, step1, click_btn,
+         step2, inline_q, regex, wait) in BOT_EXCHANGERS:
+        # Экранируем одинарные кавычки в значениях
+        esc = lambda s: s.replace("'", "''")
+        inserts.append(
+            f"INSERT INTO bot_exchangers (name, username, ref_url, mode, "
+            f"step1_text, click_button, step2_text, inline_query, rate_regex, wait_seconds) "
+            f"VALUES ('{esc(name)}', '{esc(username)}', '{esc(ref_url)}', '{esc(mode)}', "
+            f"'{esc(step1)}', '{esc(click_btn)}', '{esc(step2)}', '{esc(inline_q)}', "
+            f"'{esc(regex)}', {wait});"
+        )
+
+    insert_block = "\n".join(inserts)
+    return f"{create_table}\n\n-- Вставка данных обменников-ботов\n{insert_block}"
+
+
+# ─── Главная функция сборки проекта ──────────────────────────────────────────
+
+def build_project():
+    """
+    Строит полный project.json для бота мониторинга обменников.
+    Включает два листа: HTTP-сравнение (сайты) и userbot-сравнение (боты).
+    @returns Словарь с полной структурой проекта
+    """
+    sheet_http = build_http_compare_sheet()
+    sheet_bots = build_bot_compare_sheet()
+
+    return {
         "version": 2,
         "activeSheetId": "sheet-main",
-        "sheets": [{
-            "id": "sheet-main",
-            "name": "Мониторинг обменников",
-            "nodes": all_nodes,
-            "createdAt": NOW,
-            "updatedAt": NOW,
-            "viewState": {"pan": {"x": 0, "y": 0}, "zoom": 100}
-        }]
+        "sheets": [sheet_http, sheet_bots]
     }
 
 
 # ─── Точка входа ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print("🔨 Строим project.json (4 обменника, 8 пар)...")
+    print("🔨 Строим project.json (4 обменника-сайта, 8 пар + 5 ботов)...")
     project = build_project()
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -376,9 +936,20 @@ if __name__ == "__main__":
     with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
         loaded = json.load(f)
 
-    node_count  = len(loaded["sheets"][0]["nodes"])
+    total_nodes = sum(len(s["nodes"]) for s in loaded["sheets"])
     sheet_count = len(loaded["sheets"])
-    print(f"✅ Сохранено: {OUTPUT_FILE}")
-    print(f"📊 Нод в проекте: {node_count}")
+    for s in loaded["sheets"]:
+        print(f"  📋 Лист \"{s['name']}\": {len(s['nodes'])} нод")
+
+    print(f"\n✅ Сохранено: {OUTPUT_FILE}")
+    print(f"📊 Всего нод: {total_nodes}")
     print(f"📋 Листов: {sheet_count}")
-    print("🎉 JSON валидный!")
+    print("🎉 JSON валидный!\n")
+
+    # Вывод SQL для таблицы bot_exchangers
+    print("=" * 60)
+    print("📦 SQL для создания таблицы bot_exchangers:")
+    print("=" * 60)
+    sql = generate_bot_exchangers_sql()
+    print(sql)
+    print("=" * 60)
