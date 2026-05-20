@@ -253,7 +253,7 @@ def loop_node(node_id, source_variable, item_variable, loop_body_to, after_loop_
     @param node_id - ID ноды
     @param source_variable - Источник данных (table.xxx или переменная-массив)
     @param item_variable - Имя переменной текущего элемента
-    @param loop_body_to - ID первой ноды тела цикла
+    @param loop_body_to - ID первой ноды тела цикла (autoTransitionTo)
     @param after_loop_to - ID ноды после завершения цикла
     @param x - Позиция по X
     @param y - Позиция по Y
@@ -265,9 +265,13 @@ def loop_node(node_id, source_variable, item_variable, loop_body_to, after_loop_
         "data": base_data(
             sourceVariable=source_variable,
             itemVariable=item_variable,
-            loopBodyTo=loop_body_to,
+            indexVariable="loop_index",
             afterLoopTo=after_loop_to,
-            enableAutoTransition=False, autoTransitionTo=""
+            autoTransitionTo=loop_body_to,
+            enableAutoTransition=True,
+            parallel=False,
+            delaySeconds=0,
+            maxIterations=0
         )
     }
 
