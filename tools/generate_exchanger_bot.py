@@ -730,16 +730,25 @@ def build_bot_compare_sheet():
         4000, 400
     ))
 
-    # ─── 12. Capitalist — чтение ответа (click last message для текста) ──────
-    nodes.append(userbot_click_button_node(
-        "bot-ub-capitalist-read",
-        "@btccapital_bot",
-        "last",
-        "",
-        "cap_result_text",
-        "bot-setv-parse-capitalist",
-        4400, 400
-    ))
+    # ─── 12. Capitalist — чтение ответа (последнее сообщение) ────────────────
+    nodes.append({
+        "id": "bot-ub-capitalist-read", "type": "userbot_click_button",
+        "position": {"x": 4400, "y": 400},
+        "data": {
+            "userbotEntity": "@btccapital_bot",
+            "messageId": "",
+            "messageIdSource": "last",
+            "clickMode": "text",
+            "clickValue": "",
+            "saveAlertTo": "",
+            "saveResultTo": "cap_result_text",
+            "saveButtonsTo": "",
+            "saveHasMediaTo": "",
+            "saveMediaTo": "",
+            "autoTransitionTo": "bot-setv-parse-capitalist",
+            "enableAutoTransition": True
+        }
+    })
 
     # ─── 13. Парсинг ответа Capitalist ───────────────────────────────────────
     # Извлекаем курс: "Курс покупки ... BTC ...: 12345"
