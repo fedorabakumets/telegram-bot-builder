@@ -126,18 +126,29 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         await set_user_var(user_id, "{{ saveAlertTo }}", _alert_text)
 {%- endif %}
 
-        # Ждём обновления сообщения и перечитываем (без кэша)
-        await asyncio.sleep(3)
-        _fresh_msgs = await userbot_client.get_messages(_target, limit=5)
-        _fresh_list = _fresh_msgs if isinstance(_fresh_msgs, list) else [_fresh_msgs]
-        # Ищем наше сообщение по ID среди свежих
-        _updated = next((m for m in _fresh_list if m and m.id == _msg_id), None)
-        # Если сообщение удалено — берём первое от бота (fallback)
-        if not _updated or not hasattr(_updated, 'text') or _updated.text is None:
-            logging.info(f"📖 [{{ nodeId }}] msg={_msg_id} не найдено/удалено, читаем последние сообщения")
+        # Ждём обновления сообщения через event (обходит кэш Telethon)
+        _updated = None
+        _edit_future = asyncio.get_event_loop().create_future()
+
+        @userbot_client.on(events.MessageEdited(chats=_target))
+        async def _on_edit_{{ nodeId | replace('-', '_') }}(event):
+            if event.message.id == _msg_id and not _edit_future.done():
+                _edit_future.set_result(event.message)
+
+        try:
+            _updated = await asyncio.wait_for(_edit_future, timeout=5)
+            logging.info(f"📖 [{{ nodeId }}] Получено событие редактирования msg={_msg_id}")
+        except asyncio.TimeoutError:
+            logging.info(f"📖 [{{ nodeId }}] Таймаут ожидания редактирования msg={_msg_id}, читаем историю")
+            # Fallback: читаем последние сообщения
+            _fresh_msgs = await userbot_client.get_messages(_target, limit=5)
+            _fresh_list = _fresh_msgs if isinstance(_fresh_msgs, list) else [_fresh_msgs]
             _my_id_cb = (await userbot_client.get_me()).id
             _bot_fallback = [m for m in _fresh_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb]
             _updated = _bot_fallback[0] if _bot_fallback else None
+        finally:
+            userbot_client.remove_event_handler(_on_edit_{{ nodeId | replace('-', '_') }})
+
         logging.info(f"📖 [{{ nodeId }}] Результат: text={((_updated.text or '') if _updated else 'None')[:80]!r}")
 
 {%- if saveResultTo %}
