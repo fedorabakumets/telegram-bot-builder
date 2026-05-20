@@ -412,3 +412,89 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
 9. `node-handlers.dispatcher.ts` — интеграция в диспетчер
 10. `node-predicates.ts` — предикат
 11. `interactive-callback-handlers.renderer.ts` — добавить тип в `NODE_TYPES_WITH_DEDICATED_HANDLERS`
+
+
+---
+
+# Шаблоны инфраструктуры (imports, config, main)
+
+Если новый узел требует дополнительных Python-библиотек или инициализации при старте бота, нужно обновить инфраструктурные шаблоны.
+
+## Imports (`lib/templates/imports/imports.py.jinja2`)
+
+Добавить условный блок импорта:
+```jinja2
+{%- if hasNewFeatureNodes %}
+from new_library import SomeClass
+{%- endif %}
+```
+
+**Также обновить:**
+- `lib/templates/imports/imports.schema.ts` — добавить `hasNewFeatureNodes: z.boolean().default(false)`
+- `lib/templates/imports/imports.params.ts` — добавить `hasNewFeatureNodes?: boolean`
+- `lib/templates/schemas/imports-schema.ts` — **дублирующая схема**, тоже добавить поле!
+
+## Config (`lib/templates/config/config.py.jinja2`)
+
+Добавить инициализацию клиента/подключения:
+```jinja2
+{%- if hasNewFeatureNodes %}
+# Инициализация нового клиента
+new_client = NewClient(os.getenv("NEW_CLIENT_KEY"))
+{%- endif %}
+```
+
+**Также обновить:**
+- `lib/templates/config/config.schema.ts` — добавить `hasNewFeatureNodes: z.boolean().default(false)`
+- `lib/templates/schemas/config-schema.ts` — **дублирующая схема**, тоже добавить поле!
+
+## Main (`lib/templates/main/main.py.jinja2`)
+
+Добавить подключение при старте и отключение в finally:
+```jinja2
+{%- if hasNewFeatureNodes %}
+        # Подключаем новый клиент
+        if new_client:
+            await new_client.connect()
+{%- endif %}
+```
+
+В блоке `finally`:
+```jinja2
+{%- if hasNewFeatureNodes %}
+        if new_client:
+            await new_client.disconnect()
+{%- endif %}
+```
+
+**Также обновить:**
+- `lib/templates/main/main.schema.ts` — добавить `hasNewFeatureNodes: z.boolean().optional().default(false)`
+- `lib/templates/schemas/main-schema.ts` — **дублирующая схема**, тоже добавить поле!
+
+## Feature Flags (`lib/bot-generator/core/feature-flags.ts`)
+
+Добавить вычисление флага:
+```ts
+hasNewFeatureNodesResult: nodes.some(
+  n => (n.type as string) === 'new_feature_type'
+),
+```
+
+И добавить поле в интерфейс `FeatureFlags`.
+
+## Bot Generator (`lib/bot-generator.ts`)
+
+Передать флаг в вызовы `generateImports`, `generateConfig`, `generateMain`:
+```ts
+hasNewFeatureNodes: flags.hasNewFeatureNodesResult,
+```
+
+---
+
+## ⚠️ Важно: дублирующие схемы
+
+В проекте есть **две копии** схем для imports, config и main:
+1. `lib/templates/imports/imports.schema.ts` — используется в тестах и прямых вызовах
+2. `lib/templates/schemas/imports-schema.ts` — используется в `typed-renderer.ts` через barrel `./schemas`
+
+**Обе копии нужно обновлять синхронно!** Иначе шаблон не получит новый флаг.
