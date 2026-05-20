@@ -18,6 +18,8 @@ export const userbotClickButton: ComponentDefinition = {
     clickValue: '',
     saveAlertTo: '',
     saveResultTo: '',
+    saveButtonsTo: '',
+    saveHasMediaTo: '',
     autoTransitionTo: '',
   }
 };

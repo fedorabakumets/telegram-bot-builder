@@ -130,23 +130,69 @@ export function UserbotClickButtonConfiguration({
             {/* Сохранить alert */}
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Сохранить alert в переменную</Label>
-              <Input
-                value={data.saveAlertTo ?? ''}
-                onChange={(e) => onNodeUpdate(selectedNode.id, { saveAlertTo: e.target.value })}
-                placeholder="alert_text (необязательно)"
-                className="h-8 text-sm"
-              />
+              <div className="flex gap-1">
+                <Input
+                  value={data.saveAlertTo ?? ''}
+                  onChange={(e) => onNodeUpdate(selectedNode.id, { saveAlertTo: e.target.value })}
+                  placeholder="alert_text (необязательно)"
+                  className="h-8 text-sm flex-1"
+                />
+                <VariableSelector
+                  availableVariables={availableVariables as Variable[]}
+                  onSelect={(v) => onNodeUpdate(selectedNode.id, { saveAlertTo: v })}
+                />
+              </div>
             </div>
 
-            {/* Сохранить результат */}
+            {/* Сохранить текст сообщения */}
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Сохранить новый текст сообщения</Label>
-              <Input
-                value={data.saveResultTo ?? ''}
-                onChange={(e) => onNodeUpdate(selectedNode.id, { saveResultTo: e.target.value })}
-                placeholder="new_message_text (необязательно)"
-                className="h-8 text-sm"
-              />
+              <Label className="text-xs text-muted-foreground">Сохранить текст сообщения</Label>
+              <div className="flex gap-1">
+                <Input
+                  value={data.saveResultTo ?? ''}
+                  onChange={(e) => onNodeUpdate(selectedNode.id, { saveResultTo: e.target.value })}
+                  placeholder="new_message_text (необязательно)"
+                  className="h-8 text-sm flex-1"
+                />
+                <VariableSelector
+                  availableVariables={availableVariables as Variable[]}
+                  onSelect={(v) => onNodeUpdate(selectedNode.id, { saveResultTo: v })}
+                />
+              </div>
+            </div>
+
+            {/* Сохранить кнопки (JSON) */}
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Сохранить кнопки (JSON)</Label>
+              <div className="flex gap-1">
+                <Input
+                  value={data.saveButtonsTo ?? ''}
+                  onChange={(e) => onNodeUpdate(selectedNode.id, { saveButtonsTo: e.target.value })}
+                  placeholder="buttons_json (необязательно)"
+                  className="h-8 text-sm flex-1"
+                />
+                <VariableSelector
+                  availableVariables={availableVariables as Variable[]}
+                  onSelect={(v) => onNodeUpdate(selectedNode.id, { saveButtonsTo: v })}
+                />
+              </div>
+            </div>
+
+            {/* Сохранить флаг медиа */}
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Сохранить наличие медиа</Label>
+              <div className="flex gap-1">
+                <Input
+                  value={data.saveHasMediaTo ?? ''}
+                  onChange={(e) => onNodeUpdate(selectedNode.id, { saveHasMediaTo: e.target.value })}
+                  placeholder="has_media (необязательно)"
+                  className="h-8 text-sm flex-1"
+                />
+                <VariableSelector
+                  availableVariables={availableVariables as Variable[]}
+                  onSelect={(v) => onNodeUpdate(selectedNode.id, { saveHasMediaTo: v })}
+                />
+              </div>
             </div>
           </div>
         )}
