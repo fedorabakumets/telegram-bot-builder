@@ -2514,6 +2514,8 @@ def build_planet() -> dict:
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
+        "autoTransitionTo": "tbl-read-my-planet",
+        "enableAutoTransition": True,
     }))
 
     # --- Если планета есть: читаем данные планеты ---
