@@ -609,19 +609,35 @@ def build_bot_compare_sheet():
     })
 
     # ─── 4. Запрос суммы ──────────────────────────────────────────────────────
+    # ─── 4. Запрос суммы (с быстрыми кнопками) ───────────────────────────────
     nodes.append(message_node(
         "bot-msg-ask-amount",
-        "💰 <b>Введи сумму для обмена:</b>\n\n"
-        "Пара: {selected_from_name} → {selected_to_name}",
-        [btn("bot-btn-cancel", "❌ Отмена", "bot-msg-menu")],
+        "📊 Пара: <b>{selected_from_name} → {selected_to_name}</b>\n\n"
+        "💰 Выбери сумму или введи свою (в рублях):",
+        [
+            btn("bot-amt-5000", "5 000 ₽", "bot-setv-amt-5000"),
+            btn("bot-amt-10000", "10 000 ₽", "bot-setv-amt-10000"),
+            btn("bot-amt-50000", "50 000 ₽", "bot-setv-amt-50000"),
+            btn("bot-amt-100000", "100 000 ₽", "bot-setv-amt-100000"),
+            btn("bot-amt-500000", "500 000 ₽", "bot-setv-amt-500000"),
+            btn("bot-btn-cancel", "◀️ Назад", "bot-msg-menu"),
+        ],
         "inline", 1200, 400,
         auto_to="bot-input-amount"
     ))
 
-    # Нода input — ожидание ввода суммы
+    # Быстрые кнопки сумм — каждая устанавливает user_amount и переходит к init
+    for amount in [5000, 10000, 50000, 100000, 500000]:
+        nodes.append(set_var_node(
+            f"bot-setv-amt-{amount}",
+            [{"id": f"sa-{amount}", "variable": "user_amount", "value": str(amount), "mode": "text"}],
+            "bot-setv-init", 1400, 400
+        ))
+
+    # Нода input — ожидание ввода своей суммы
     nodes.append({
         "id": "bot-input-amount", "type": "input",
-        "position": {"x": 1400, "y": 400},
+        "position": {"x": 1400, "y": 500},
         "data": base_data(
             inputType="text",
             inputPrompt="",
