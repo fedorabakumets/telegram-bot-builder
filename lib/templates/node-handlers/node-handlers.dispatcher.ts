@@ -48,6 +48,7 @@ import { generateConditionHandlers } from '../condition/condition.renderer';
 import { generateMediaNode } from '../media-node';
 import { generateUserInputNodeHandler } from '../user-input';
 import { generateUserbotMessageHandlers } from '../userbot-message/userbot-message.renderer';
+import { generateUserbotClickButtonHandlers } from '../userbot-click-button/userbot-click-button.renderer';
 import type { KeyboardLayout } from '../types/keyboard-layout';
 import type { DynamicButtonsConfig } from '../keyboard/dynamic-buttons';
 import type { MessageTemplateParams } from '../message/message.params';
@@ -533,9 +534,16 @@ export function generateNodeHandlers(
     userbotMessageCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Обработчики узлов userbot_click_button ---
+  const userbotClickButtonCode = generateUserbotClickButtonHandlers(nodes, projectId);
+  if (userbotClickButtonCode) {
+    codeLines.push('\n# Обработчики узлов userbot_click_button (Telethon)');
+    userbotClickButtonCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   nodes.forEach((node: Node) => {
     // Пропускаем триггеры — они уже обработаны выше
-    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message' || (node.type as any) === 'set_variable' || (node.type as any) === 'psql_query' || (node.type as any) === 'bot_table' || (node.type as any) === 'convert_file' || (node.type as any) === 'loop' || (node.type as any) === 'delay' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'answer_callback_query' || (node.type as any) === 'userbot_message') {
+    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message' || (node.type as any) === 'set_variable' || (node.type as any) === 'psql_query' || (node.type as any) === 'bot_table' || (node.type as any) === 'convert_file' || (node.type as any) === 'loop' || (node.type as any) === 'delay' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'answer_callback_query' || (node.type as any) === 'userbot_message' || (node.type as any) === 'userbot_click_button') {
       return;
     }
 

@@ -80,6 +80,12 @@ export async function syncTableToScenario(
     case "userbotEntity":
       data.userbotEntity = value;
       break;
+    case "messageId":
+      data.messageId = value;
+      break;
+    case "clickValue":
+      data.clickValue = value;
+      break;
   }
 
   node.data = data;

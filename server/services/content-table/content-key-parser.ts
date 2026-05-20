@@ -132,6 +132,19 @@ export function extractContentFromNodes(sheets: any[]): ContentEntry[] {
       if (nodeType === 'userbot_message' && isNotEmpty(data.userbotEntity)) {
         entries.push({ key: `${contentId}.entity`, type: "entity", sheet: sheetName, value: data.userbotEntity });
       }
+
+      // userbot_click_button — entity, messageId, clickValue
+      if (nodeType === 'userbot_click_button') {
+        if (isNotEmpty(data.userbotEntity)) {
+          entries.push({ key: `${contentId}.entity`, type: "entity", sheet: sheetName, value: data.userbotEntity });
+        }
+        if (isNotEmpty(data.messageId)) {
+          entries.push({ key: `${contentId}.msg_id`, type: "msg_id", sheet: sheetName, value: data.messageId });
+        }
+        if (isNotEmpty(data.clickValue)) {
+          entries.push({ key: `${contentId}.click_val`, type: "click_value", sheet: sheetName, value: data.clickValue });
+        }
+      }
     }
   }
 
@@ -194,6 +207,14 @@ export function parseContentKey(key: string, type: string): ParsedContentKey {
     return { nodeId, field: "userbotEntity" };
   }
 
+  if (suffix === "msg_id") {
+    return { nodeId, field: "messageId" };
+  }
+
+  if (suffix === "click_val") {
+    return { nodeId, field: "clickValue" };
+  }
+
   // btn.{btnId}[.url|.webapp]
   if (suffix.startsWith("btn.")) {
     const btnParts = suffix.split(".");
@@ -215,7 +236,7 @@ export function parseContentKey(key: string, type: string): ParsedContentKey {
 }
 
 /** Известные суффиксы-маркеры */
-const KNOWN_SUFFIXES = ["caption", "btn", "media", "api", "body", "headers", "sql", "desc", "prompt", "entity"];
+const KNOWN_SUFFIXES = ["caption", "btn", "media", "api", "body", "headers", "sql", "desc", "prompt", "entity", "msg_id", "click_val"];
 
 /**
  * Находит индекс начала суффикса в массиве частей ключа

@@ -1,0 +1,179 @@
+{#
+  Шаблон обработчика узла userbot_click_button
+
+  @fileoverview Генерирует Python код для нажатия inline-кнопки через Telethon userbot.
+  Поддерживает поиск по тексту, callback_data или индексу.
+  Сохраняет alert, текст, кнопки, медиа в переменные.
+
+  @param {string} nodeId - ID узла
+  @param {string} userbotEntity - Entity чата
+  @param {string} messageId - ID сообщения
+  @param {string} clickMode - Способ поиска: 'text', 'data', 'index'
+  @param {string} clickValue - Значение для поиска
+  @param {string} saveAlertTo - Переменная для alert
+  @param {string} saveResultTo - Переменная для текста
+  @param {string} saveButtonsTo - Переменная для кнопок
+  @param {string} saveHasMediaTo - Переменная для флага медиа
+  @param {string} saveMediaTo - Переменная для медиа-объекта
+  @param {string} autoTransitionTo - ID узла для автоперехода
+  @param {number|null} projectId - ID проекта (для get_content)
+#}
+
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Обработчик узла {{ nodeId }} — нажатие кнопки через userbot"""
+    user_id = callback_query.from_user.id
+    logging.info(f"🟣 Userbot click_button: узел {{ nodeId }} для пользователя {user_id}")
+
+    # Отвечаем на callback
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    if user_id not in user_data:
+        user_data[user_id] = {}
+
+    # Подстановка переменных
+    all_user_vars = await init_all_user_vars(user_id)
+    if state is not None:
+        try:
+            _fsm_d = await state.get_data()
+            if _fsm_d:
+                all_user_vars.update(_fsm_d)
+        except Exception:
+            pass
+
+    # Резолвим entity
+{%- if projectId %}
+    _entity_raw = get_content("{{ nodeId }}.entity", {{ userbotEntity|format_python_text }})
+{%- else %}
+    _entity_raw = {{ userbotEntity|format_python_text }}
+{%- endif %}
+    _entity = replace_variables_in_text(_entity_raw, all_user_vars, {})
+
+    # Резолвим message ID
+{%- if projectId %}
+    _msg_id_raw = get_content("{{ nodeId }}.msg_id", {{ messageId|format_python_text }})
+{%- else %}
+    _msg_id_raw = {{ messageId|format_python_text }}
+{%- endif %}
+    _msg_id_str = replace_variables_in_text(_msg_id_raw, all_user_vars, {})
+
+    # Резолвим значение для поиска кнопки
+{%- if projectId %}
+    _click_val_raw = get_content("{{ nodeId }}.click_val", {{ clickValue|format_python_text }})
+{%- else %}
+    _click_val_raw = {{ clickValue|format_python_text }}
+{%- endif %}
+    _click_val = replace_variables_in_text(_click_val_raw, all_user_vars, {})
+
+    if not _entity or not _msg_id_str:
+        logging.error(f"❌ Узел {{ nodeId }}: entity или message_id пустой")
+        return
+
+    try:
+        _target = int(_entity) if _entity.lstrip('-').isdigit() else _entity
+        _msg_id = int(_msg_id_str)
+
+        # Получаем сообщение с кнопками
+        _msg = await userbot_client.get_messages(_target, ids=_msg_id)
+        if not _msg:
+            logging.error(f"❌ Узел {{ nodeId }}: сообщение {_msg_id} не найдено в {_entity}")
+            return
+
+        # Нажимаем кнопку
+        _click_result = None
+{%- if clickMode == 'text' %}
+        _click_result = await _msg.click(text=_click_val)
+{%- elif clickMode == 'data' %}
+        _click_result = await _msg.click(data=_click_val.encode('utf-8') if _click_val else b'')
+{%- elif clickMode == 'index' %}
+        # Парсим индекс: "row, col" или просто "index"
+        _idx_parts = [int(x.strip()) for x in _click_val.split(',') if x.strip().isdigit()]
+        if len(_idx_parts) >= 2:
+            _click_result = await _msg.click(_idx_parts[0], _idx_parts[1])
+        elif len(_idx_parts) == 1:
+            _click_result = await _msg.click(_idx_parts[0])
+        else:
+            logging.error(f"❌ Узел {{ nodeId }}: невалидный индекс '{_click_val}'")
+{%- else %}
+        _click_result = await _msg.click(text=_click_val)
+{%- endif %}
+
+        logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }})")
+
+{%- if saveAlertTo %}
+        # Сохраняем alert
+        _alert_text = getattr(_click_result, 'message', '') or ''
+        user_data[user_id]["{{ saveAlertTo }}"] = _alert_text
+        await set_user_var(user_id, "{{ saveAlertTo }}", _alert_text)
+{%- endif %}
+
+        # Ждём обновления сообщения и перечитываем
+        await asyncio.sleep(1.5)
+        _updated = await userbot_client.get_messages(_target, ids=_msg_id)
+
+{%- if saveResultTo %}
+        # Сохраняем текст обновлённого сообщения
+        _new_text = _updated.text if _updated else ''
+        user_data[user_id]["{{ saveResultTo }}"] = _new_text or ''
+        await set_user_var(user_id, "{{ saveResultTo }}", _new_text or '')
+{%- endif %}
+
+{%- if saveButtonsTo %}
+        # Сохраняем кнопки как JSON
+        _btns_list = []
+        if _updated and _updated.reply_markup:
+            for _row in _updated.reply_markup.rows:
+                for _btn in _row.buttons:
+                    _btn_entry = {"text": _btn.text}
+                    if hasattr(_btn, 'data') and _btn.data:
+                        _btn_entry["data"] = _btn.data.decode('utf-8', errors='replace')
+                    if hasattr(_btn, 'url') and _btn.url:
+                        _btn_entry["url"] = _btn.url
+                    _btns_list.append(_btn_entry)
+        import json as _json
+        _btns_json = _json.dumps(_btns_list, ensure_ascii=False)
+        user_data[user_id]["{{ saveButtonsTo }}"] = _btns_json
+        await set_user_var(user_id, "{{ saveButtonsTo }}", _btns_json)
+{%- endif %}
+
+{%- if saveHasMediaTo %}
+        # Сохраняем флаг наличия медиа
+        _has_media = "true" if (_updated and _updated.media) else "false"
+        user_data[user_id]["{{ saveHasMediaTo }}"] = _has_media
+        await set_user_var(user_id, "{{ saveHasMediaTo }}", _has_media)
+{%- endif %}
+
+{%- if saveMediaTo %}
+        # Сохраняем медиа-объект (для пересылки через userbot)
+        if _updated and _updated.media:
+            user_data[user_id]["{{ saveMediaTo }}"] = _updated.media
+{%- endif %}
+
+    except Exception as _ub_err:
+        logging.error(f"❌ Ошибка нажатия кнопки через userbot (узел {{ nodeId }}): {_ub_err}")
+        if "FloodWaitError" in type(_ub_err).__name__ or "flood" in str(_ub_err).lower():
+            _wait = getattr(_ub_err, 'seconds', 30)
+            logging.warning(f"⏳ FloodWait: ждём {_wait} секунд")
+            await asyncio.sleep(_wait)
+
+{%- if autoTransitionTo %}
+    # Автопереход к узлу {{ autoTransitionTo }}
+    logging.info(f"⚡ Автопереход: {{ nodeId }} → {{ autoTransitionTo }}")
+    class FakeCallbackQuery:
+        def __init__(self, from_user, message, target_node_id):
+            self.from_user = from_user
+            self.message = message
+            self.data = target_node_id
+            self._is_fake = True
+        async def answer(self, *args, **kwargs):
+            pass
+
+    _fake_cb = FakeCallbackQuery(callback_query.from_user, callback_query.message, "{{ autoTransitionTo }}")
+    try:
+        await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(_fake_cb, state=state)
+    except Exception as _at_err:
+        logging.error(f"❌ Ошибка автоперехода {{ nodeId }} → {{ autoTransitionTo }}: {_at_err}")
+{%- endif %}
