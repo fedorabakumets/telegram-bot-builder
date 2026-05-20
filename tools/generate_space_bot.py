@@ -403,8 +403,36 @@ def build_start_menu() -> dict:
         "variable": "pilot.flight_target_planet",
         "branches": [
             branch("br-menu-free", "На планете", "equals", "", "msg-main-menu"),
-            branch("br-menu-inflight", "В полёте", "else", "", "msg-main-menu-flight"),
+            branch("br-menu-inflight", "В полёте", "else", "", "menu-cond-delay-expired"),
         ],
+    }))
+
+    # Проверяем: delay истёк? (flight_expires_at < now_ts → нужен recovery)
+    nodes.append(node("menu-cond-delay-expired", "condition", 700, 1280, {
+        "variable": "pilot.flight_expires_at",
+        "branches": [
+            branch("br-menu-delay-active", "Ещё летит", "greater_than", "{now_ts}", "msg-main-menu-flight"),
+            branch("br-menu-delay-expired", "Delay потерян", "else", "", "menu-recovery"),
+        ],
+    }))
+
+    # Recovery: приземляем пилота на целевую планету
+    nodes.append(node("menu-recovery", "bot_table", 900, 1280, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "current_planet", "op": "set", "value": "{pilot.flight_target_planet}"},
+            {"column": "current_planet_name", "op": "set", "value": "{pilot.flight_target_name}"},
+            {"column": "flight_expires_at", "op": "set", "value": ""},
+            {"column": "flight_target_planet", "op": "set", "value": ""},
+            {"column": "flight_target_name", "op": "set", "value": ""},
+            {"column": "flight_fuel_cost", "op": "set", "value": ""},
+            {"column": "flight_start_ts", "op": "set", "value": ""},
+            {"column": "status_text", "op": "set", "value": "📍 Планета: <b>{pilot.flight_target_name}</b>"},
+        ],
+        "autoTransitionTo": "msg-main-menu",
+        "enableAutoTransition": True,
     }))
 
     # Урезанное меню в полёте
