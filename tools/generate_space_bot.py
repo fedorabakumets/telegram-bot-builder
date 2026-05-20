@@ -514,7 +514,7 @@ def build_trade() -> dict:
 
     # Сообщение с inline-кнопками для покупки (8 руд с ценами)
     buy_text = (
-        f"🛒 {MENTION}, руды на планете <b>{{pilot.status_text}}</b>:\n\n"
+        f"🛒 {MENTION}, руды на планете <b>{{pilot.current_planet_name}}</b>:\n\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\n"
         "Выберите руду для покупки (1 шт):"
@@ -1025,7 +1025,7 @@ def build_map() -> dict:
     # Сообщение карты когда НА ПЛАНЕТЕ
     map_menu_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
-        "📍 Вы здесь: <b>{pilot.status_text}</b>\n"
+        "{pilot.status_text}\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>"
     )
     nodes.append(node("msg-map-menu", "message", 700, 100, {
