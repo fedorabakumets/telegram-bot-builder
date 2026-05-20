@@ -25,6 +25,8 @@ export const userbotMessageParamsSchema = z.object({
   saveMessageIdTo: z.string().optional(),
   /** Переменная для сохранения ID ответа от получателя */
   saveResponseIdTo: z.string().optional(),
+  /** Переменная для сохранения текста ответа от получателя */
+  saveResponseTextTo: z.string().optional(),
   /** ID узла для автоперехода */
   autoTransitionTo: z.string().optional(),
   /** ID проекта */

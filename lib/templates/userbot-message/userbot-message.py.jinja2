@@ -171,7 +171,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- endif %}
 
 {%- if saveResponseIdTo %}
-    # Ждём ответ от получателя и сохраняем его ID
+    # Ждём ответ от получателя и сохраняем его ID и текст
     await asyncio.sleep(2)
     try:
         _resp_msgs = await userbot_client.get_messages(_recipients[0] if _recipients else _target, limit=1)
@@ -180,6 +180,12 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             user_data[user_id]["{{ saveResponseIdTo }}"] = _resp_msg.id
             await set_user_var(user_id, "{{ saveResponseIdTo }}", _resp_msg.id)
             logging.info(f"💾 ID ответа сохранён: {{ saveResponseIdTo }} = {_resp_msg.id}")
+{%- if saveResponseTextTo %}
+            _resp_text = _resp_msg.text or ''
+            user_data[user_id]["{{ saveResponseTextTo }}"] = _resp_text
+            await set_user_var(user_id, "{{ saveResponseTextTo }}", _resp_text)
+            logging.info(f"💾 Текст ответа сохранён: {{ saveResponseTextTo }} = {_resp_text[:50]!r}")
+{%- endif %}
     except Exception as _resp_err:
         logging.warning(f"⚠️ Не удалось получить ответ: {_resp_err}")
 {%- endif %}

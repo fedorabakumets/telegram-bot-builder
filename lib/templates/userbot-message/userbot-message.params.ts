@@ -23,6 +23,8 @@ export interface UserbotMessageTemplateParams {
   saveMessageIdTo?: string;
   /** Имя переменной для сохранения ID ответа от получателя */
   saveResponseIdTo?: string;
+  /** Имя переменной для сохранения текста ответа от получателя */
+  saveResponseTextTo?: string;
   /** ID узла для автоперехода */
   autoTransitionTo?: string;
   /** ID проекта (для get_content) */

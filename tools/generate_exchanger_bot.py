@@ -721,36 +721,25 @@ def build_bot_compare_sheet():
     ))
 
     # ─── 11. Capitalist — отправка суммы "0.001" ─────────────────────────────
-    nodes.append(userbot_message_node(
-        "bot-ub-capitalist-amount",
-        "0.001",
-        "@btccapital_bot",
-        "cap_amount_resp_id",
-        "bot-ub-capitalist-read",
-        4000, 400
-    ))
-
-    # ─── 12. Capitalist — чтение ответа (последнее сообщение) ────────────────
+    # saveResponseTextTo сохраняет текст ответа бота (с курсом)
     nodes.append({
-        "id": "bot-ub-capitalist-read", "type": "userbot_click_button",
-        "position": {"x": 4400, "y": 400},
+        "id": "bot-ub-capitalist-amount", "type": "userbot_message",
+        "position": {"x": 4000, "y": 400},
         "data": {
+            "messageText": "0.001",
+            "formatMode": "html",
             "userbotEntity": "@btccapital_bot",
-            "messageId": "",
-            "messageIdSource": "last",
-            "clickMode": "text",
-            "clickValue": "",
-            "saveAlertTo": "",
-            "saveResultTo": "cap_result_text",
-            "saveButtonsTo": "",
-            "saveHasMediaTo": "",
-            "saveMediaTo": "",
+            "attachedMedia": [],
+            "disableLinkPreview": False,
+            "saveMessageIdTo": "ub_sent_msg_id",
+            "saveResponseIdTo": "cap_amount_resp_id",
+            "saveResponseTextTo": "cap_result_text",
             "autoTransitionTo": "bot-setv-parse-capitalist",
             "enableAutoTransition": True
         }
     })
 
-    # ─── 13. Парсинг ответа Capitalist ───────────────────────────────────────
+    # ─── 12. Парсинг ответа Capitalist ───────────────────────────────────────
     # Извлекаем курс: "Курс покупки ... BTC ...: 12345"
     nodes.append(set_var_node(
         "bot-setv-parse-capitalist",

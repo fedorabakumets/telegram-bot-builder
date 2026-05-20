@@ -43,6 +43,7 @@ export function generateUserbotMessageHandlers(nodes: Node[], projectId: number 
       attachedMedia: (data.attachedMedia || []).filter((m: string) => !m.includes('"__type":"file_id"')),
       saveMessageIdTo: data.saveMessageIdTo || undefined,
       saveResponseIdTo: data.saveResponseIdTo || undefined,
+      saveResponseTextTo: data.saveResponseTextTo || undefined,
       autoTransitionTo: data.autoTransitionTo || undefined,
       projectId,
     });
