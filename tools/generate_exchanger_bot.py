@@ -852,7 +852,9 @@ def build_bot_compare_sheet():
         "bot-msg-result",
         result_text,
         [
-            btn("bot-btn-refresh", "🔄 Обновить", "bot-setv-init"),
+            {"id": "bot-btn-refresh", "text": "🔄 Обновить", "action": "goto",
+             "target": "bot-setv-init", "buttonType": "normal", "style": "success",
+             "skipDataCollection": False, "hideAfterClick": False},
             btn("bot-btn-new-amount", "💰 Другая сумма", "bot-msg-ask-amount"),
             btn("bot-btn-new-pair", "🔄 Другая пара", "bot-msg-menu"),
             btn("bot-btn-back-menu", "◀️ Меню", "start_dup_1775330630988_2w4z6c8t9"),
