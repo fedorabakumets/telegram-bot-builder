@@ -1335,8 +1335,11 @@ def build_map() -> dict:
         }))
 
         # Вычисляем timestamp окончания полёта и списываем топливо
+        # Применяем модификатор двигателя: каждый уровень -15% времени
         nodes.append(node(f"fly-set-expires-{planet['id']}", "set_variable", 1500, y_pos, {
             "assignments": [
+                {"id": f"a-engine-mod-{planet['id']}", "variable": "flight_time", "value": "{flight_time} * (110 - {pilot.engine_level} * 15) // 100", "mode": "expression"},
+                {"id": f"a-fmt-actual-{planet['id']}", "variable": "flight_time_fmt", "value": "{flight_time}", "mode": "format_duration"},
                 {"id": f"a-expires-{planet['id']}", "variable": "flight_expires_at", "value": "{flight_time}", "mode": "timestamp"},
             ],
             "autoTransitionTo": f"fly-do-{planet['id']}",
