@@ -610,18 +610,25 @@ def build_bot_compare_sheet():
 
     # ─── 4. Запрос суммы ──────────────────────────────────────────────────────
     # ─── 4. Запрос суммы (с быстрыми кнопками) ───────────────────────────────
+    amount_buttons = []
+    for amount, label in [(5000, "5 000 ₽"), (10000, "10 000 ₽"), (50000, "50 000 ₽"),
+                          (100000, "100 000 ₽"), (500000, "500 000 ₽")]:
+        amount_buttons.append({
+            "id": f"bot-amt-{amount}", "text": label, "action": "goto",
+            "target": f"bot-setv-amt-{amount}", "buttonType": "normal",
+            "hideAfterClick": False, "skipDataCollection": True
+        })
+    amount_buttons.append({
+        "id": "bot-btn-cancel", "text": "◀️ Назад", "action": "goto",
+        "target": "bot-msg-menu", "buttonType": "normal",
+        "hideAfterClick": False, "skipDataCollection": True
+    })
+
     nodes.append(message_node(
         "bot-msg-ask-amount",
         "📊 Пара: <b>{selected_from_name} → {selected_to_name}</b>\n\n"
         "💰 Выбери сумму или введи свою (в рублях):",
-        [
-            btn("bot-amt-5000", "5 000 ₽", "bot-setv-amt-5000"),
-            btn("bot-amt-10000", "10 000 ₽", "bot-setv-amt-10000"),
-            btn("bot-amt-50000", "50 000 ₽", "bot-setv-amt-50000"),
-            btn("bot-amt-100000", "100 000 ₽", "bot-setv-amt-100000"),
-            btn("bot-amt-500000", "500 000 ₽", "bot-setv-amt-500000"),
-            btn("bot-btn-cancel", "◀️ Назад", "bot-msg-menu"),
-        ],
+        amount_buttons,
         "inline", 1200, 400,
         auto_to="bot-input-amount"
     ))
