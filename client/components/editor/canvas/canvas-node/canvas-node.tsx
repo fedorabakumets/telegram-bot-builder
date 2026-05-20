@@ -50,6 +50,7 @@ import { ConvertFilePreview } from './convert-file-preview';
 import { LoopPreview } from './loop-preview';
 import { BotTablePreview } from './bot-table-preview';
 import { DelayPreview } from './delay-preview';
+import { UserbotMessagePreview } from './userbot-message-preview';
 import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
 
 /**
@@ -626,6 +627,9 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
         {/* Delay Preview */}
         {(node.type as any) === 'delay' && <DelayPreview data={node.data} />}
+
+        {/* Userbot Message Preview */}
+        {(node.type as any) === 'userbot_message' && <UserbotMessagePreview node={node} />}
 
         {/* SQL Query Preview */}
         {(node.type as any) === 'psql_query' && <PsqlQueryPreview node={node} />}

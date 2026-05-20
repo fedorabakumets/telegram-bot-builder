@@ -1,6 +1,6 @@
 /**
  * @fileoverview Панель свойств ноды userbot_message
- * Переиспользует компоненты секции текста из message
+ * Переиспользует компоненты секции текста и медиа из message
  * @module components/editor/properties/components/userbot/UserbotMessageConfiguration
  */
 
@@ -8,8 +8,11 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MessageTextSectionContent } from '../message/message-text-section-content';
+import { SaveMessageIdSection } from '../message/save-message-id-section';
+import { MediaFileSection } from '../media-file/media-file-section';
 import { SectionHeader } from '../layout/section-header';
 import type { ProjectVariable } from '../../utils/variables-utils';
+import type { Variable } from '../../../inline-rich/types';
 import type { Node } from '@shared/schema';
 
 /** Пропсы конфигурации userbot_message */
@@ -20,6 +23,8 @@ interface UserbotMessageConfigurationProps {
   allNodes: Node[];
   /** Доступные переменные */
   availableVariables: ProjectVariable[];
+  /** ID проекта */
+  projectId: number;
   /** Функция обновления данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
 }
@@ -33,10 +38,12 @@ export function UserbotMessageConfiguration({
   selectedNode,
   allNodes,
   availableVariables,
+  projectId,
   onNodeUpdate,
 }: UserbotMessageConfigurationProps) {
   const [isTextOpen, setIsTextOpen] = useState(true);
   const [isRecipientOpen, setIsRecipientOpen] = useState(true);
+  const [isMediaOpen, setIsMediaOpen] = useState(false);
   const data = selectedNode.data as any;
 
   return (
@@ -86,16 +93,50 @@ export function UserbotMessageConfiguration({
           descriptionColor="text-blue-700/70 dark:text-blue-300/70"
         />
         {isTextOpen && (
-          <MessageTextSectionContent
-            nodeId={selectedNode.id}
-            messageText={data.messageText || ''}
-            markdown={data.markdown}
-            availableVariables={availableVariables}
-            allNodes={allNodes}
-            variableFilters={data.variableFilters}
-            onNodeUpdate={onNodeUpdate}
-          />
+          <>
+            <MessageTextSectionContent
+              nodeId={selectedNode.id}
+              messageText={data.messageText || ''}
+              markdown={data.markdown}
+              availableVariables={availableVariables}
+              allNodes={allNodes}
+              variableFilters={data.variableFilters}
+              onNodeUpdate={onNodeUpdate}
+            />
+            {/* Отключить превью ссылок */}
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="ub-disableLinkPreview"
+                checked={!!data.disableLinkPreview}
+                onChange={(e) => onNodeUpdate(selectedNode.id, { disableLinkPreview: e.target.checked })}
+                className="h-3.5 w-3.5 rounded border-gray-300"
+              />
+              <label htmlFor="ub-disableLinkPreview" className="text-xs text-muted-foreground cursor-pointer">
+                Отключить превью ссылок
+              </label>
+            </div>
+          </>
         )}
+      </div>
+
+      {/* Секция медиафайлов */}
+      <MediaFileSection
+        projectId={projectId}
+        selectedNode={selectedNode}
+        isOpen={isMediaOpen}
+        onToggle={() => setIsMediaOpen(!isMediaOpen)}
+        onNodeUpdate={onNodeUpdate}
+        getAllNodesFromAllSheets={allNodes}
+      />
+
+      {/* Сохранить ID сообщения */}
+      <div className="bg-gradient-to-br from-amber-50/30 to-yellow-50/20 dark:from-amber-950/20 dark:to-yellow-900/10 rounded-xl p-3 border border-amber-200/30 dark:border-amber-800/30">
+        <SaveMessageIdSection
+          selectedNode={selectedNode}
+          onNodeUpdate={onNodeUpdate}
+          textVariables={availableVariables as Variable[]}
+        />
       </div>
 
       {/* Информация о режиме */}

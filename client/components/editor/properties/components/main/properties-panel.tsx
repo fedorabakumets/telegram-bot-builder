@@ -640,6 +640,7 @@ export function PropertiesPanel({
               selectedNode={selectedNode}
               allNodes={allNodes}
               availableVariables={textVariables}
+              projectId={projectId}
               onNodeUpdate={onNodeUpdate}
             />
           )}
