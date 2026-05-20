@@ -262,6 +262,7 @@ def build_start_menu() -> dict:
         {"level": "3", "hull_slots": "35", "fuel_max": "100", "armor_pct": "60", "price": "20000"},
         {"level": "4", "hull_slots": "50", "fuel_max": "150", "armor_pct": "75", "price": "100000"},
         {"level": "5", "hull_slots": "80", "fuel_max": "200", "armor_pct": "90", "price": "500000"},
+        {"level": "planet", "hull_slots": "0", "fuel_max": "0", "armor_pct": "0", "price": "1000000"},
     ]
     upgrades_base_x = 1700 + len(ORES) * 200
     for i, upg in enumerate(UPGRADES):
@@ -2423,6 +2424,15 @@ def build_planet() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "pilot",
         "resultFormat": "first_row",
+        "autoTransitionTo": "set-planet-cost",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("set-planet-cost", "set_variable", 250, 0, {
+        "assignments": [
+            {"id": "a-planet-cost", "variable": "planet_cost", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "planet"}]},
+            {"id": "a-planet-cost-fmt", "variable": "planet_cost_fmt", "value": "{planet_cost}", "mode": "format_number"},
+        ],
         "autoTransitionTo": "cond-has-planet",
         "enableAutoTransition": True,
     }))
@@ -2442,7 +2452,7 @@ def build_planet() -> dict:
         "⛏ Шахта — пассивная добыча руды\n"
         "🎯 Бафф — бонус к продаже одной руды\n"
         "📦 Склад — хранение добытой руды\n\n"
-        "💰 Стоимость: <code>1 000 000</code> кредитов\n"
+        "💰 Стоимость: <code>{planet_cost_fmt}</code> кредитов\n"
         "💰 Ваш баланс: <code>{pilot.credits}</code>"
     )
     nodes.append(node("msg-no-planet", "message", 700, 200, {
@@ -2476,13 +2486,13 @@ def build_planet() -> dict:
     nodes.append(node("cond-found-credits", "condition", 1000, 200, {
         "variable": "pilot.credits",
         "branches": [
-            branch("br-found-no-money", "Не хватает", "less_than", "1000000", "msg-found-no-money"),
+            branch("br-found-no-money", "Не хватает", "less_than", "{planet_cost}", "msg-found-no-money"),
             branch("br-found-ok", "Хватает", "else", "", "set-found-planet"),
         ],
     }))
 
     nodes.append(node("msg-found-no-money", "message", 1300, 100, {
-        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>1 000 000</code> кредитов\n💰 У вас: <code>{pilot.credits}</code>",
+        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{planet_cost_fmt}</code> кредитов\n💰 У вас: <code>{pilot.credits}</code>",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
@@ -2521,7 +2531,7 @@ def build_planet() -> dict:
         "operation": "update",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "updates": [
-            {"column": "credits", "op": "decrement", "value": "1000000"},
+            {"column": "credits", "op": "decrement", "value": "{planet_cost}"},
             {"column": "planet_id", "op": "set", "value": "1"},
         ],
         "autoTransitionTo": "tbl-insert-planet",
@@ -2556,7 +2566,7 @@ def build_planet() -> dict:
         "🎯 Бафф: +<code>{buff_pct}</code>% к продаже <b>{buff_ore_emoji} {buff_ore_name}</b>\n"
         "⛏ Шахта: ур. 1\n"
         "📦 Склад: ур. 1 (0/50)\n\n"
-        "💰 Списано: <code>1 000 000</code> кредитов"
+        "💰 Списано: <code>{planet_cost_fmt}</code> кредитов"
     )
     nodes.append(node("msg-planet-founded", "message", 2800, 200, {
         "messageText": founded_text,
