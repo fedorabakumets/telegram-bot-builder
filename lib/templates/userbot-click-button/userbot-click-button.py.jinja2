@@ -122,16 +122,35 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- endif %}
 
 {%- if saveButtonsTo %}
-        # Сохраняем кнопки как JSON
+        # Сохраняем кнопки как JSON с типами
         _btns_list = []
         if _updated and _updated.reply_markup:
             for _row in _updated.reply_markup.rows:
                 for _btn in _row.buttons:
                     _btn_entry = {"text": _btn.text}
+                    _btn_type = type(_btn).__name__
                     if hasattr(_btn, 'data') and _btn.data:
                         _btn_entry["data"] = _btn.data.decode('utf-8', errors='replace')
-                    if hasattr(_btn, 'url') and _btn.url:
+                        _btn_entry["type"] = "callback"
+                    elif hasattr(_btn, 'url') and _btn.url:
                         _btn_entry["url"] = _btn.url
+                        _btn_entry["type"] = "url"
+                    elif _btn_type == 'KeyboardButtonSwitchInline':
+                        _btn_entry["query"] = getattr(_btn, 'query', '')
+                        _btn_entry["type"] = "switch_inline"
+                    elif _btn_type == 'KeyboardButtonWebView':
+                        _btn_entry["url"] = getattr(_btn, 'url', '')
+                        _btn_entry["type"] = "web_app"
+                    elif _btn_type == 'KeyboardButtonRequestPhone':
+                        _btn_entry["type"] = "request_phone"
+                    elif _btn_type == 'KeyboardButtonRequestGeoLocation':
+                        _btn_entry["type"] = "request_location"
+                    elif _btn_type == 'KeyboardButtonBuy':
+                        _btn_entry["type"] = "buy"
+                    elif _btn_type == 'KeyboardButtonGame':
+                        _btn_entry["type"] = "game"
+                    else:
+                        _btn_entry["type"] = "text"
                     _btns_list.append(_btn_entry)
         import json as _json
         _btns_json = _json.dumps(_btns_list, ensure_ascii=False)
