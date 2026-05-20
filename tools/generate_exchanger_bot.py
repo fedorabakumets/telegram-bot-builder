@@ -842,10 +842,56 @@ def build_bot_compare_sheet():
                 "mode": "expression"
             },
         ],
-        "bot-setv-calc", 6200, 400
+        "bot-ub-shaxta-start", 6200, 400
     ))
 
-    # ─── 15. Вычисление BTC для всех ботов ───────────────────────────────────
+    # ─── 16. Shaxta — /start → нажать «Актуальные курсы» → парсить ───────────
+    nodes.append(userbot_message_node(
+        "bot-ub-shaxta-start",
+        "/start",
+        "@shaxta24_bot",
+        "shaxta_resp_id",
+        "bot-ub-shaxta-click",
+        6400, 400
+    ))
+
+    nodes.append(userbot_click_button_node(
+        "bot-ub-shaxta-click",
+        "@shaxta24_bot",
+        "{shaxta_resp_id}",
+        "Актуальные курсы",
+        "shaxta_text",
+        "bot-setv-parse-shaxta",
+        6800, 400
+    ))
+
+    nodes.append(set_var_node(
+        "bot-setv-parse-shaxta",
+        [
+            {
+                "id": "psh_1", "variable": "shaxta_rate",
+                "value": "{shaxta_text}",
+                "mode": "regex_extract",
+                "pattern": "Покупка BTC:\\s*([\\d][\\d\\s.,]*[\\d])",
+                "regexGroup": "1"
+            },
+        ],
+        "bot-setv-shaxta-clean", 7200, 400
+    ))
+
+    nodes.append(set_var_node(
+        "bot-setv-shaxta-clean",
+        [
+            {
+                "id": "psh_2", "variable": "shaxta_rate",
+                "value": "float('{shaxta_rate}'.replace(' ', '').replace('\\xa0', '').replace(',', '.'))",
+                "mode": "expression"
+            },
+        ],
+        "bot-setv-calc", 7400, 400
+    ))
+
+    # ─── 17. Вычисление BTC для всех ботов ───────────────────────────────────
     nodes.append(set_var_node(
         "bot-setv-calc",
         [
@@ -864,10 +910,16 @@ def build_bot_compare_sheet():
                 "value": "round({user_amount} / float({crypto24_rate}), 8) if float({crypto24_rate}) > 0 else 0",
                 "mode": "expression"
             },
+            {
+                "id": "calc4", "variable": "shaxta_btc",
+                "value": "round({user_amount} / float({shaxta_rate}), 8) if float({shaxta_rate}) > 0 else 0",
+                "mode": "expression"
+            },
             {"id": "fmt1", "variable": "scooby_rate_fmt", "value": "{scooby_rate}", "mode": "format_number"},
             {"id": "fmt2", "variable": "capitalist_rate_fmt", "value": "{capitalist_rate}", "mode": "format_number"},
             {"id": "fmt3", "variable": "crypto24_rate_fmt", "value": "{crypto24_rate}", "mode": "format_number"},
             {"id": "fmt4", "variable": "user_amount_fmt", "value": "{user_amount}", "mode": "format_number"},
+            {"id": "fmt5", "variable": "shaxta_rate_fmt", "value": "{shaxta_rate}", "mode": "format_number"},
         ],
         "bot-msg-result", 6400, 400
     ))
@@ -879,9 +931,11 @@ def build_bot_compare_sheet():
         "💰 Сумма: <b>{user_amount_fmt}</b> ₽\n\n"
         "🥇 <a href='https://t.me/scdoo_bot?start=7733607050'>ScoobyChange</a>: "
         "<b>{scooby_btc}</b> BTC ({scooby_rate_fmt} ₽)\n"
-        "🥈 <a href='https://t.me/btccapital_bot?start=7733607050'>Capitalist</a>: "
+        "🥈 <a href='https://t.me/shaxta24_bot?start=r-7733607050'>Shaxta</a>: "
+        "<b>{shaxta_btc}</b> BTC ({shaxta_rate_fmt} ₽)\n"
+        "🥉 <a href='https://t.me/btccapital_bot?start=7733607050'>Capitalist</a>: "
         "<b>{capitalist_btc}</b> BTC ({capitalist_rate_fmt} ₽)\n"
-        "🥉 <a href='http://t.me/Exchange24Crypto_bot?start=r-7733607050'>24Crypto</a>: "
+        "🔸 <a href='http://t.me/Exchange24Crypto_bot?start=r-7733607050'>24Crypto</a>: "
         "<b>{crypto24_btc}</b> BTC ({crypto24_rate_fmt} ₽)\n\n"
         "👆 <i>Нажми на название для перехода</i>"
     )
