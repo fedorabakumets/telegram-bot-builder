@@ -785,20 +785,27 @@ def build_bot_compare_sheet():
         "bot-setv-parse-24crypto",
         [
             {
-                "id": "p24_1", "variable": "crypto24_rate_raw",
+                "id": "p24_1", "variable": "crypto24_rate",
                 "value": "{crypto24_text}",
                 "mode": "regex_extract",
-                "pattern": "Покупка BTC:\\s*([\\d\\s.]+)\\s*RUB",
+                "pattern": "Покупка BTC:\\s*([\\d][\\d\\s.,]*[\\d])",
                 "regexGroup": "1"
             },
+        ],
+        "bot-setv-24crypto-clean", 6000, 400
+    ))
+
+    # Убираем пробелы и неразрывные пробелы из числа
+    nodes.append(set_var_node(
+        "bot-setv-24crypto-clean",
+        [
             {
                 "id": "p24_2", "variable": "crypto24_rate",
-                "value": " ", "mode": "str_replace",
-                "replaceWith": "",
-                "replaceSource": "{crypto24_rate_raw}"
+                "value": "float('{crypto24_rate}'.replace(' ', '').replace('\\xa0', '').replace(',', '.'))",
+                "mode": "expression"
             },
         ],
-        "bot-setv-calc", 6000, 400
+        "bot-setv-calc", 6200, 400
     ))
 
     # ─── 15. Вычисление BTC для всех ботов ───────────────────────────────────
