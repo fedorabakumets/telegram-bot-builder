@@ -852,8 +852,11 @@ def build_bot_compare_sheet():
         "bot-msg-result",
         result_text,
         [
-            btn("bot-btn-back-menu", "◀️ Назад", "bot-msg-menu"),
-            btn("bot-btn-retry", "🔄 Обновить", "bot-setv-init"),
+            btn("bot-btn-refresh", "🔄 Обновить", "bot-setv-init"),
+            btn("bot-btn-new-amount", "💰 Другая сумма", "bot-msg-ask-amount"),
+            btn("bot-btn-new-pair", "🔄 Другая пара", "bot-msg-menu"),
+            btn("bot-btn-back-menu", "◀️ Меню", "start_dup_1775330630988_2w4z6c8t9"),
+            btn("bot-btn-sites", "📋 Сайты", "msg-compare-menu"),
         ],
         "inline", 5600, 400
     ))
