@@ -785,7 +785,7 @@ def build_trade() -> dict:
 
         # Успешная покупка
         nodes.append(node(f"msg-buy-ok-{ore['id']}", "message", 2800, y_pos, {
-            "messageText": f"✅ Куплено: {ore['emoji']} <b>{ore['name']}</b> (1 шт.)\n💰 Цена: <code>{{ore_price}}</code> кредитов\n📍 Планета: {{pilot.current_planet_name}}\n\n💰 Баланс: <code>{{pilot.credits}}</code> кредитов\n📦 Трюм: <code>{{pilot.cargo_used}}/{{pilot.cargo_max}}</code>",
+            "messageText": f"✅ Куплено: {ore['emoji']} <b>{ore['name']}</b> (1 шт.)\n💰 Цена: <code>{{ore_price}}</code> кредитов\n📍 Планета: <b>{{pilot.current_planet_name}}</b>\n\n💰 Баланс: <code>{{pilot.credits}}</code> кредитов\n📦 Трюм: <code>{{pilot.cargo_used}}/{{pilot.cargo_max}}</code>",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
