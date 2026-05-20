@@ -610,14 +610,30 @@ def build_bot_compare_sheet():
     })
 
     # ─── 4. Запрос суммы ──────────────────────────────────────────────────────
+    # ─── 4. Запрос суммы ──────────────────────────────────────────────────────
     nodes.append(message_node(
         "bot-msg-ask-amount",
         "💰 <b>Введи сумму для обмена:</b>\n\n"
         "Пара: {selected_from_name} → {selected_to_name}",
         [btn("bot-btn-cancel", "❌ Отмена", "bot-msg-menu")],
         "inline", 1200, 400,
-        collect_input=True, input_var="user_amount"
+        auto_to="bot-input-amount"
     ))
+
+    # Нода input — ожидание ввода суммы
+    nodes.append({
+        "id": "bot-input-amount", "type": "input",
+        "position": {"x": 1400, "y": 400},
+        "data": base_data(
+            inputType="text",
+            inputPrompt="",
+            inputVariable="user_amount",
+            inputRequired=True,
+            appendVariable=False,
+            saveToDatabase=False,
+            inputTargetNodeId="bot-cond-validate"
+        )
+    })
 
     # ─── 5. Валидация ввода (условие: сумма — число) ──────────────────────────
     nodes.append(conditional_branch_node(
@@ -625,7 +641,7 @@ def build_bot_compare_sheet():
         [
             {
                 "id": "cv1", "field": "{user_amount}",
-                "operator": "matches_regex", "value": "^\\d+(\\.\\d+)?$",
+                "operator": "greater_than", "value": "0",
                 "targetNodeId": "bot-setv-init"
             }
         ],
