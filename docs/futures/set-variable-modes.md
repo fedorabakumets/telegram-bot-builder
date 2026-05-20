@@ -1219,3 +1219,370 @@ user_data[user_id]["credits_word"] = _result
 | 28 | base64_encode | Кодирование | 📋 Planned | Base64 |
 | 29 | url_encode | Кодирование | 📋 Planned | URL-кодирование |
 | 30 | pluralize | Локализация | 📋 Planned | Склонение слов |
+| 31 | regex_extract | Парсинг | 📋 Planned | Извлечение по regex |
+| 32 | json_get | Парсинг | 📋 Planned | Значение по ключу из JSON |
+| 33 | substring | Строки | 📋 Planned | Подстрока (start, end) |
+| 34 | trim | Строки | 📋 Planned | Убрать пробелы по краям |
+| 35 | array_filter | Массивы | 📋 Planned | Фильтрация массива |
+| 36 | array_sort | Массивы | 📋 Planned | Сортировка массива |
+| 37 | array_unique | Массивы | 📋 Planned | Уникальные элементы |
+| 38 | array_reverse | Массивы | 📋 Planned | Перевернуть массив |
+| 39 | math_min | Математика | 📋 Planned | Минимум из значений |
+| 40 | math_max | Математика | 📋 Planned | Максимум из значений |
+
+---
+
+### 31. regex_extract — Извлечение по регулярному выражению
+
+**Описание:** Извлекает подстроку по регулярному выражению. Возвращает указанную группу (или всё совпадение).
+
+**JSON:**
+```json
+{
+  "variable": "rate",
+  "value": "{bot_response}",
+  "mode": "regex_extract",
+  "pattern": "(\\d[\\d\\s]*)\\s*рублей",
+  "group": "1"
+}
+```
+
+**Примеры:**
+| # | value | pattern | group | Результат | Описание |
+|---|-------|---------|-------|-----------|----------|
+| 1 | `Курс: 7216970 рублей` | `(\d[\d\s]*)\s*рублей` | `1` | `7216970` | Извлечь курс |
+| 2 | `Заказ #4521 оформлен` | `#(\d+)` | `1` | `4521` | Извлечь ID заказа |
+| 3 | `user@mail.ru` | `@(.+)` | `1` | `mail.ru` | Домен из email |
+| 4 | `Баланс: 1500 BTC` | `(\d+)\s*(BTC\|ETH\|USDT)` | `0` | `1500 BTC` | Полное совпадение |
+| 5 | `v2.1.9` | `v(\d+)\.(\d+)\.(\d+)` | `2` | `1` | Minor версия |
+| 6 | `Нет числа тут` | `(\d+)` | `1` | `` | Не найдено → пусто |
+
+**Генерация Python:**
+```python
+import re as _re
+_text = replace_variables_in_text("{bot_response}", _vars)
+_match = _re.search(r'(\d[\d\s]*)\s*рублей', _text)
+if _match:
+    user_data[user_id]["rate"] = _match.group(1).replace(" ", "")
+else:
+    user_data[user_id]["rate"] = ""
+```
+
+**Применение:** Парсинг ответов ботов, извлечение цен/курсов/ID, обработка текста.
+
+---
+
+### 32. json_get — Значение по ключу из JSON
+
+**Описание:** Извлекает значение из JSON-объекта по пути (dot notation). Поддерживает вложенность.
+
+**JSON:**
+```json
+{
+  "variable": "user_name",
+  "value": "{api_response}",
+  "mode": "json_get",
+  "path": "data.user.name"
+}
+```
+
+**Примеры:**
+| # | JSON | path | Результат | Описание |
+|---|------|------|-----------|----------|
+| 1 | `{"data":{"user":{"name":"Иван"}}}` | `data.user.name` | `Иван` | Вложенный объект |
+| 2 | `{"items":[{"id":1},{"id":2}]}` | `items.0.id` | `1` | Элемент массива |
+| 3 | `{"price":7216970}` | `price` | `7216970` | Простой ключ |
+| 4 | `{"a":{"b":{"c":"deep"}}}` | `a.b.c` | `deep` | Глубокая вложенность |
+| 5 | `{"list":["x","y","z"]}` | `list.2` | `z` | Третий элемент |
+| 6 | `{"status":"ok"}` | `missing` | `` | Ключ не найден → пусто |
+
+**Генерация Python:**
+```python
+import json as _json
+_raw = replace_variables_in_text("{api_response}", _vars)
+try:
+    _obj = _json.loads(_raw)
+    _path = "data.user.name".split(".")
+    _val = _obj
+    for _key in _path:
+        if isinstance(_val, list) and _key.isdigit():
+            _val = _val[int(_key)]
+        elif isinstance(_val, dict):
+            _val = _val.get(_key, "")
+        else:
+            _val = ""
+            break
+    user_data[user_id]["user_name"] = str(_val) if _val != "" else ""
+except Exception:
+    user_data[user_id]["user_name"] = ""
+```
+
+**Применение:** Парсинг API-ответов, извлечение данных из JSON-переменных, работа с вложенными структурами.
+
+---
+
+### 33. substring — Подстрока
+
+**Описание:** Извлекает подстроку по начальному и конечному индексу. Поддерживает отрицательные индексы.
+
+**JSON:**
+```json
+{
+  "variable": "short_id",
+  "value": "{full_id}",
+  "mode": "substring",
+  "start": "0",
+  "end": "8"
+}
+```
+
+**Примеры:**
+| # | value | start | end | Результат | Описание |
+|---|-------|-------|-----|-----------|----------|
+| 1 | `abcdefghij` | `0` | `5` | `abcde` | Первые 5 символов |
+| 2 | `Hello World` | `6` | `` | `World` | С 6-го до конца |
+| 3 | `1234567890` | `-4` | `` | `7890` | Последние 4 |
+| 4 | `user_12345_data` | `5` | `10` | `12345` | Середина строки |
+| 5 | `#FF00AA` | `1` | `` | `FF00AA` | Без первого символа |
+| 6 | `Привет!` | `0` | `6` | `Привет` | Без восклицательного |
+
+**Генерация Python:**
+```python
+_text = replace_variables_in_text("{full_id}", _vars)
+user_data[user_id]["short_id"] = _text[0:8]
+```
+
+**Применение:** Обрезка ID, извлечение частей строки, форматирование.
+
+---
+
+### 34. trim — Убрать пробелы
+
+**Описание:** Убирает пробелы и переносы строк с начала и конца строки.
+
+**JSON:**
+```json
+{
+  "variable": "clean_input",
+  "value": "{user_input}",
+  "mode": "trim"
+}
+```
+
+**Примеры:**
+| # | Ввод | Результат | Описание |
+|---|------|-----------|----------|
+| 1 | `  Привет  ` | `Привет` | Пробелы по краям |
+| 2 | `\n\nТекст\n` | `Текст` | Переносы строк |
+| 3 | `  123  ` | `123` | Число с пробелами |
+| 4 | `Без пробелов` | `Без пробелов` | Без изменений |
+| 5 | `\t\tтаб\t` | `таб` | Табуляция |
+| 6 | ` ` | `` | Только пробел → пусто |
+
+**Генерация Python:**
+```python
+_text = replace_variables_in_text("{user_input}", _vars)
+user_data[user_id]["clean_input"] = _text.strip()
+```
+
+**Применение:** Очистка пользовательского ввода, нормализация данных.
+
+---
+
+### 35. array_filter — Фильтрация массива
+
+**Описание:** Оставляет только элементы массива, содержащие указанную подстроку (или не содержащие).
+
+**JSON:**
+```json
+{
+  "variable": "vip_users",
+  "value": "{all_users}",
+  "mode": "array_filter",
+  "filterValue": "vip",
+  "filterMode": "contains"
+}
+```
+
+**Примеры:**
+| # | Массив | filterValue | filterMode | Результат | Описание |
+|---|--------|-------------|-----------|-----------|----------|
+| 1 | `["vip_ivan","user_petr","vip_anna"]` | `vip` | `contains` | `["vip_ivan","vip_anna"]` | Только VIP |
+| 2 | `["apple","banana","avocado"]` | `a` | `starts_with` | `["apple","avocado"]` | Начинается с "a" |
+| 3 | `["100","200","50","300"]` | `00` | `contains` | `["100","200","300"]` | Содержит "00" |
+| 4 | `["active","banned","active"]` | `banned` | `not_contains` | `["active","active"]` | Без забаненных |
+
+**Генерация Python:**
+```python
+import json as _json
+_arr = _json.loads(replace_variables_in_text("{all_users}", _vars))
+_filtered = [x for x in _arr if "vip" in str(x)]
+user_data[user_id]["vip_users"] = _json.dumps(_filtered, ensure_ascii=False)
+```
+
+**Применение:** Фильтрация списков, поиск по массиву, выборка данных.
+
+---
+
+### 36. array_sort — Сортировка массива
+
+**Описание:** Сортирует JSON-массив по возрастанию или убыванию.
+
+**JSON:**
+```json
+{
+  "variable": "sorted_scores",
+  "value": "{scores}",
+  "mode": "array_sort",
+  "order": "desc"
+}
+```
+
+**Примеры:**
+| # | Массив | order | Результат | Описание |
+|---|--------|-------|-----------|----------|
+| 1 | `[3,1,4,1,5]` | `asc` | `[1,1,3,4,5]` | По возрастанию |
+| 2 | `[3,1,4,1,5]` | `desc` | `[5,4,3,1,1]` | По убыванию |
+| 3 | `["banana","apple","cherry"]` | `asc` | `["apple","banana","cherry"]` | Алфавит |
+| 4 | `[100,50,200]` | `desc` | `[200,100,50]` | Топ-рейтинг |
+
+**Генерация Python:**
+```python
+import json as _json
+_arr = _json.loads(replace_variables_in_text("{scores}", _vars))
+_arr.sort(reverse=True)
+user_data[user_id]["sorted_scores"] = _json.dumps(_arr, ensure_ascii=False)
+```
+
+**Применение:** Рейтинги, топы, сортировка инвентаря.
+
+---
+
+### 37. array_unique — Уникальные элементы
+
+**Описание:** Убирает дубликаты из JSON-массива, оставляя только уникальные элементы.
+
+**JSON:**
+```json
+{
+  "variable": "unique_tags",
+  "value": "{tags}",
+  "mode": "array_unique"
+}
+```
+
+**Примеры:**
+| # | Массив | Результат | Описание |
+|---|--------|-----------|----------|
+| 1 | `["a","b","a","c","b"]` | `["a","b","c"]` | Убрать дубли |
+| 2 | `[1,2,2,3,3,3]` | `[1,2,3]` | Числа |
+| 3 | `["vip","vip","pro"]` | `["vip","pro"]` | Ранги |
+| 4 | `["x"]` | `["x"]` | Один элемент |
+
+**Генерация Python:**
+```python
+import json as _json
+_arr = _json.loads(replace_variables_in_text("{tags}", _vars))
+_unique = list(dict.fromkeys(_arr))
+user_data[user_id]["unique_tags"] = _json.dumps(_unique, ensure_ascii=False)
+```
+
+**Применение:** Дедупликация, уникальные теги, очистка списков.
+
+---
+
+### 38. array_reverse — Перевернуть массив
+
+**Описание:** Переворачивает порядок элементов в JSON-массиве.
+
+**JSON:**
+```json
+{
+  "variable": "reversed",
+  "value": "{history}",
+  "mode": "array_reverse"
+}
+```
+
+**Примеры:**
+| # | Массив | Результат | Описание |
+|---|--------|-----------|----------|
+| 1 | `[1,2,3,4,5]` | `[5,4,3,2,1]` | Числа |
+| 2 | `["first","second","third"]` | `["third","second","first"]` | Строки |
+| 3 | `["old","new"]` | `["new","old"]` | Новые сначала |
+
+**Генерация Python:**
+```python
+import json as _json
+_arr = _json.loads(replace_variables_in_text("{history}", _vars))
+_arr.reverse()
+user_data[user_id]["reversed"] = _json.dumps(_arr, ensure_ascii=False)
+```
+
+**Применение:** Показ истории (новые сначала), обратный порядок, стек.
+
+---
+
+### 39. math_min — Минимум из значений
+
+**Описание:** Возвращает минимальное из двух или более числовых значений.
+
+**JSON:**
+```json
+{
+  "variable": "lowest",
+  "value": "{price_a},{price_b},{price_c}",
+  "mode": "math_min"
+}
+```
+
+**Примеры:**
+| # | Значения | Результат | Описание |
+|---|----------|-----------|----------|
+| 1 | `100,50,200` | `50` | Минимальная цена |
+| 2 | `{hp},{max_hp}` → `150,100` | `100` | HP не больше максимума |
+| 3 | `5,3,8,1` | `1` | Минимум из четырёх |
+| 4 | `42` | `42` | Одно значение |
+
+**Генерация Python:**
+```python
+_raw = replace_variables_in_text("{price_a},{price_b},{price_c}", _vars)
+_nums = [float(x.strip()) for x in _raw.split(",") if x.strip().replace('.','').replace('-','').isdigit()]
+_result = min(_nums) if _nums else 0
+user_data[user_id]["lowest"] = str(int(_result)) if _result == int(_result) else str(_result)
+```
+
+**Применение:** Выбор лучшей цены, ограничение значений, сравнение.
+
+---
+
+### 40. math_max — Максимум из значений
+
+**Описание:** Возвращает максимальное из двух или более числовых значений.
+
+**JSON:**
+```json
+{
+  "variable": "highest",
+  "value": "{score_a},{score_b},{score_c}",
+  "mode": "math_max"
+}
+```
+
+**Примеры:**
+| # | Значения | Результат | Описание |
+|---|----------|-----------|----------|
+| 1 | `100,50,200` | `200` | Максимальный счёт |
+| 2 | `{damage},{min_damage}` → `5,10` | `10` | Минимальный урон |
+| 3 | `1,9,3,7` | `9` | Максимум из четырёх |
+| 4 | `0` | `0` | Одно значение |
+
+**Генерация Python:**
+```python
+_raw = replace_variables_in_text("{score_a},{score_b},{score_c}", _vars)
+_nums = [float(x.strip()) for x in _raw.split(",") if x.strip().replace('.','').replace('-','').isdigit()]
+_result = max(_nums) if _nums else 0
+user_data[user_id]["highest"] = str(int(_result)) if _result == int(_result) else str(_result)
+```
+
+**Применение:** Рекорды, максимальные значения, выбор лучшего.
