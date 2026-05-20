@@ -129,12 +129,14 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         # Ждём обновления сообщения и перечитываем
         await asyncio.sleep(1.5)
         _updated = await userbot_client.get_messages(_target, ids=_msg_id)
+        logging.info(f"📖 [{{ nodeId }}] Перечитано msg={_msg_id}: text={(_updated.text or '')[:80]!r} has_media={bool(_updated.media) if _updated else False}")
 
 {%- if saveResultTo %}
         # Сохраняем текст обновлённого сообщения
         _new_text = _updated.text if _updated else ''
         user_data[user_id]["{{ saveResultTo }}"] = _new_text or ''
         await set_user_var(user_id, "{{ saveResultTo }}", _new_text or '')
+        logging.info(f"💾 [{{ nodeId }}] saveResultTo: {{ saveResultTo }} = {(_new_text or '')[:80]!r}")
 {%- endif %}
 
 {%- if saveButtonsTo %}
