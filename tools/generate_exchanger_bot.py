@@ -888,7 +888,38 @@ def build_bot_compare_sheet():
                 "mode": "expression"
             },
         ],
-        "bot-setv-calc", 7400, 400
+        "bot-ub-bitmixer", 7400, 400
+    ))
+
+    # ─── 18. BitMixer — inline query RUB_BTC FROM {user_amount} ──────────────
+    nodes.append(userbot_inline_query_node(
+        "bot-ub-bitmixer",
+        "@bitmixerac_bot",
+        "RUB_BTC FROM {user_amount}",
+        "bitmixer_title",
+        "bitmixer_desc",
+        "bot-setv-parse-bitmixer",
+        7600, 400
+    ))
+
+    # Парсинг: title = "10000 RUB ~ 0.001368 BTC" → извлекаем BTC напрямую
+    nodes.append(set_var_node(
+        "bot-setv-parse-bitmixer",
+        [
+            {
+                "id": "pbm_1", "variable": "bitmixer_btc",
+                "value": "{bitmixer_title}",
+                "mode": "regex_extract",
+                "pattern": "~\\s*([\\d.]+)\\s*BTC",
+                "regexGroup": "1"
+            },
+            {
+                "id": "pbm_2", "variable": "bitmixer_rate",
+                "value": "round(float({user_amount}) / float({bitmixer_btc}), 0) if float({bitmixer_btc}) > 0 else 0",
+                "mode": "expression"
+            },
+        ],
+        "bot-setv-calc", 8000, 400
     ))
 
     # ─── 17. Вычисление BTC для всех ботов ───────────────────────────────────
@@ -920,6 +951,7 @@ def build_bot_compare_sheet():
             {"id": "fmt3", "variable": "crypto24_rate_fmt", "value": "{crypto24_rate}", "mode": "format_number"},
             {"id": "fmt4", "variable": "user_amount_fmt", "value": "{user_amount}", "mode": "format_number"},
             {"id": "fmt5", "variable": "shaxta_rate_fmt", "value": "{shaxta_rate}", "mode": "format_number"},
+            {"id": "fmt6", "variable": "bitmixer_rate_fmt", "value": "{bitmixer_rate}", "mode": "format_number"},
         ],
         "bot-msg-result", 6400, 400
     ))
@@ -933,7 +965,9 @@ def build_bot_compare_sheet():
         "<b>{scooby_btc}</b> BTC ({scooby_rate_fmt} ₽)\n"
         "🥈 <a href='https://t.me/shaxta24_bot?start=r-7733607050'>Shaxta</a>: "
         "<b>{shaxta_btc}</b> BTC ({shaxta_rate_fmt} ₽)\n"
-        "🥉 <a href='https://t.me/btccapital_bot?start=7733607050'>Capitalist</a>: "
+        "🥉 <a href='https://t.me/bitmixerac_bot?start=7a88e5da'>BitMixer</a>: "
+        "<b>{bitmixer_btc}</b> BTC ({bitmixer_rate_fmt} ₽)\n"
+        "🔸 <a href='https://t.me/btccapital_bot?start=7733607050'>Capitalist</a>: "
         "<b>{capitalist_btc}</b> BTC ({capitalist_rate_fmt} ₽)\n"
         "🔸 <a href='http://t.me/Exchange24Crypto_bot?start=r-7733607050'>24Crypto</a>: "
         "<b>{crypto24_btc}</b> BTC ({crypto24_rate_fmt} ₽)\n\n"
