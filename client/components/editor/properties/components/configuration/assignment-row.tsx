@@ -49,7 +49,8 @@ type AssignmentMode =
   | 'random_item'
   | 'array_item'
   | 'timestamp'
-  | 'format_duration';
+  | 'format_duration'
+  | 'format_number';
 
 /** Конфигурация режима для отображения в dropdown */
 interface ModeConfig {
@@ -100,6 +101,12 @@ const MODE_CONFIGS: Record<AssignmentMode, ModeConfig> = {
     label: 'Длительность',
     hint: 'Секунды → MM:SS или HH:MM:SS',
     borderClass: 'border-orange-400 dark:border-orange-600',
+  },
+  format_number: {
+    icon: '#',
+    label: 'Формат числа',
+    hint: 'Число с разделителями: 5000000 → 5 000 000',
+    borderClass: 'border-violet-400 dark:border-violet-600',
   },
   array_item: {
     icon: '📋',

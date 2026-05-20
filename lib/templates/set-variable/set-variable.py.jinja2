@@ -206,6 +206,17 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         else:
             user_data[user_id]["{{ safe_var }}"] = f"{_sv_m_{{ loop.index }}:02d}:{_sv_s_{{ loop.index }}:02d}"
         logging.info(f"📝 set_variable [{{ nodeId }}]: format_duration «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']} ({_sv_seconds_{{ loop.index }}}s)")
+        {%- elif assignment.mode == 'format_number' %}
+        # Форматирование числа с разделителями (пробелами): 5000000 → "5 000 000"
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_raw_{{ loop.index }} = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        try:
+            _sv_num_{{ loop.index }} = int(float(_sv_raw_{{ loop.index }}))
+            _sv_formatted_{{ loop.index }} = f"{_sv_num_{{ loop.index }}:,}".replace(",", " ")
+        except (ValueError, TypeError):
+            _sv_formatted_{{ loop.index }} = _sv_raw_{{ loop.index }}
+        user_data[user_id]["{{ safe_var }}"] = _sv_formatted_{{ loop.index }}
+        logging.info(f"📝 set_variable [{{ nodeId }}]: format_number «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']}")
         {%- elif assignment.mode == 'timestamp' %}
         import time as _time_mod_sv
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)

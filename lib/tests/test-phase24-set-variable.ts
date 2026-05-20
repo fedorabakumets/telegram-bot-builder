@@ -279,6 +279,38 @@ test('E4_05', 'format_duration с фиксированным значением 
   ]), 'E4_05'), 'E4_05');
 });
 
+// ─── Блок E5: Режим format_number ────────────────────────────────────────────
+console.log('\n─── Блок E5: Режим format_number ───');
+
+test('E5_01', 'format_number содержит replace(",", " ")', () => {
+  const code = gen(makeCleanProject([makeSV('sv_fn', [{ id: 'a1', variable: 'credits_fmt', value: '{pilot.credits}', mode: 'format_number' }])]), 'E5_01');
+  ok(code.includes('replace(",", " ")'), 'Нет replace(",", " ")');
+});
+
+test('E5_02', 'format_number содержит format_number в логе', () => {
+  const code = gen(makeCleanProject([makeSV('sv_fn2', [{ id: 'a1', variable: 'balance_fmt', value: '{balance}', mode: 'format_number' }])]), 'E5_02');
+  ok(code.includes('format_number'), 'Нет format_number в логе');
+});
+
+test('E5_03', 'format_number синтаксис Python OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCmd('cmd1', '/balance', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'credits_fmt', value: '{credits}', mode: 'format_number' }], 'msg1'),
+    makeMsg('msg1', 'Баланс: {credits_fmt}'),
+  ]), 'E5_03'), 'E5_03');
+});
+
+test('E5_04', 'format_number с expression перед ним синтаксис OK', () => {
+  syntax(gen(makeCleanProject([
+    makeCmd('cmd1', '/info', 'sv1'),
+    makeSV('sv1', [
+      { id: 'a1', variable: 'total', value: '{a} + {b}', mode: 'expression' },
+      { id: 'a2', variable: 'total_fmt', value: '{total}', mode: 'format_number' },
+    ], 'msg1'),
+    makeMsg('msg1', 'Итого: {total_fmt}'),
+  ]), 'E5_04'), 'E5_04');
+});
+
 // ─── Блок F: Автопереход ─────────────────────────────────────────────────────
 console.log('\n─── Блок F: Автопереход ───');
 
