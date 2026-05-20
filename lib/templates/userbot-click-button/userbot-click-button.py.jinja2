@@ -127,7 +127,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- endif %}
 
         # Ждём обновления сообщения и перечитываем
-        await asyncio.sleep(1.5)
+        await asyncio.sleep(3)
         _updated = await userbot_client.get_messages(_target, ids=_msg_id)
         # Если сообщение удалено — читаем последнее сообщение бота
         if not _updated or not hasattr(_updated, 'text') or _updated.text is None:
