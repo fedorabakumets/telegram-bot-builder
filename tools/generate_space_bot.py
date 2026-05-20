@@ -243,11 +243,11 @@ def build_start_menu() -> dict:
     # --- Инициализация руд (8 штук с базовыми ценами на 4 планетах) ---
     for i, ore in enumerate(ORES):
         ore_node_id = f"tbl-init-ores" if i == 0 else f"tbl-init-ores-{ore['id']}"
-        # Следующий узел в цепочке
+        # Следующий узел в цепочке — последняя руда переходит к инициализации upgrades
         if i < len(ORES) - 1:
             next_id = f"tbl-init-ores-{ORES[i + 1]['id']}"
         else:
-            next_id = "msg-welcome"
+            next_id = "tbl-init-upgrades-1"
 
         nodes.append(node(ore_node_id, "bot_table", 1700 + i * 200, -150, {
             "tableName": "ores",
@@ -261,6 +261,35 @@ def build_start_menu() -> dict:
                 "base_price_mars": ore["mars"],
                 "base_price_titan": ore["titan"],
                 "base_price_nebula": ore["nebula"],
+            },
+            "onConflict": "ignore",
+            "autoTransitionTo": next_id,
+            "enableAutoTransition": True,
+        }))
+
+    # --- Инициализация таблицы upgrades (5 уровней корабля) ---
+    UPGRADES = [
+        {"level": "1", "hull_slots": "10", "fuel_max": "50", "armor_pct": "30", "price": "0"},
+        {"level": "2", "hull_slots": "20", "fuel_max": "75", "armor_pct": "45", "price": "5000"},
+        {"level": "3", "hull_slots": "35", "fuel_max": "100", "armor_pct": "60", "price": "20000"},
+        {"level": "4", "hull_slots": "50", "fuel_max": "150", "armor_pct": "75", "price": "100000"},
+        {"level": "5", "hull_slots": "80", "fuel_max": "200", "armor_pct": "90", "price": "500000"},
+    ]
+    upgrades_base_x = 1700 + len(ORES) * 200
+    for i, upg in enumerate(UPGRADES):
+        upg_node_id = f"tbl-init-upgrades-{i + 1}"
+        next_id = f"tbl-init-upgrades-{i + 2}" if i < len(UPGRADES) - 1 else "msg-welcome"
+
+        nodes.append(node(upg_node_id, "bot_table", upgrades_base_x + i * 200, -150, {
+            "tableName": "upgrades",
+            "operation": "upsert",
+            "key": "level",
+            "row": {
+                "level": upg["level"],
+                "hull_slots": upg["hull_slots"],
+                "fuel_max": upg["fuel_max"],
+                "armor_pct": upg["armor_pct"],
+                "price": upg["price"],
             },
             "onConflict": "ignore",
             "autoTransitionTo": next_id,
@@ -1613,7 +1642,7 @@ def build_pirates() -> dict:
 def build_ship() -> dict:
     """
     Строит лист «🔧 Корабль».
-    Содержит подменю корабля, заглушки улучшений.
+    Содержит подменю корабля и полную логику улучшений (трюм, двигатель, броня).
     @returns словарь листа
     """
     nodes = []
@@ -1631,9 +1660,10 @@ def build_ship() -> dict:
 
     ship_menu_text = (
         f"🔧 {MENTION}, ваш корабль:\n\n"
-        "📦 Трюм: ур. <code>{pilot.hull_level}</code>\n"
+        "📦 Трюм: ур. <code>{pilot.hull_level}</code> ({pilot.cargo_max} слотов)\n"
         "🚀 Двигатель: ур. <code>{pilot.engine_level}</code>\n"
-        "🛡 Броня: ур. <code>{pilot.armor_level}</code>"
+        "🛡 Броня: ур. <code>{pilot.armor_level}</code>\n\n"
+        "💰 Кредиты: <code>{pilot.credits}</code>"
     )
     nodes.append(node("msg-ship-menu", "message", 400, 0, {
         "messageText": ship_menu_text,
@@ -1656,42 +1686,376 @@ def build_ship() -> dict:
         "resizeKeyboard": True,
     }))
 
-    # --- Триггеры улучшений (заглушки) ---
+    # =============================================
+    # 📦 ТРЮМ (hull) — улучшение
+    # =============================================
     nodes.append(node("trig-hull", "text_trigger", 100, 250, {
         "textMatchType": "exact",
         "textSynonyms": ["📦 Трюм"],
-        "autoTransitionTo": "msg-hull-wip",
+        "autoTransitionTo": "tbl-read-pilot-hull",
         "enableAutoTransition": True,
     }))
 
-    nodes.append(node("msg-hull-wip", "message", 400, 250, {
-        "messageText": "📦 Улучшение трюма — в разработке.",
+    nodes.append(node("tbl-read-pilot-hull", "bot_table", 400, 250, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "set-hull-next",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("set-hull-next", "set_variable", 700, 250, {
+        "assignments": [
+            {"id": "a-hull-next", "variable": "next_level", "value": "{pilot.hull_level} + 1", "mode": "expression"},
+        ],
+        "autoTransitionTo": "cond-hull-max",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("cond-hull-max", "condition", 1000, 250, {
+        "variable": "pilot.hull_level",
+        "branches": [
+            branch("br-hull-max", "MAX", "equals", "5", "msg-hull-max"),
+            branch("br-hull-not-max", "Можно улучшить", "else", "", "lookup-hull-price"),
+        ],
+    }))
+
+    nodes.append(node("msg-hull-max", "message", 1300, 100, {
+        "messageText": "📦 Трюм: ур. <code>5</code> (MAX)\n\n📦 Вместимость: <code>80</code> слотов\n📦 Занято: <code>{pilot.cargo_used}/80</code>",
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    nodes.append(node("trig-engine", "text_trigger", 100, 400, {
+    nodes.append(node("lookup-hull-price", "set_variable", 1300, 250, {
+        "assignments": [
+            {
+                "id": "a-hull-price",
+                "variable": "upgrade_price",
+                "value": "",
+                "mode": "lookup",
+                "lookupTable": "upgrades",
+                "lookupField": "price",
+                "lookupWhere": [{"field": "level", "value": "{next_level}"}],
+            },
+            {
+                "id": "a-hull-slots",
+                "variable": "upgrade_slots",
+                "value": "",
+                "mode": "lookup",
+                "lookupTable": "upgrades",
+                "lookupField": "hull_slots",
+                "lookupWhere": [{"field": "level", "value": "{next_level}"}],
+            },
+        ],
+        "autoTransitionTo": "msg-hull-info",
+        "enableAutoTransition": True,
+    }))
+
+    hull_info_text = (
+        "📦 Трюм вашего корабля:\n\n"
+        "📊 Уровень: <code>{pilot.hull_level}</code>\n"
+        "📦 Вместимость: <code>{pilot.cargo_max}</code> слотов\n"
+        "📦 Занято: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\n"
+        "⬆️ Следующий уровень:\n"
+        "📦 Вместимость: <code>{upgrade_slots}</code> слотов\n"
+        "💰 Стоимость: <code>{upgrade_price}</code> кредитов"
+    )
+    nodes.append(node("msg-hull-info", "message", 1600, 250, {
+        "messageText": hull_info_text,
+        "formatMode": "html",
+        "keyboardType": "inline",
+        "buttons": [
+            {
+                "id": "btn-upgrade-hull",
+                "text": "⬆️ Улучшить за {upgrade_price} кредитов",
+                "action": "goto",
+                "target": "do-upgrade-hull-check",
+            },
+        ],
+    }))
+
+    nodes.append(node("do-upgrade-hull-check", "condition", 1900, 250, {
+        "variable": "pilot.credits",
+        "branches": [
+            branch("br-hull-no-money", "Не хватает", "less_than", "{upgrade_price}", "msg-hull-no-money"),
+            branch("br-hull-has-money", "Хватает", "else", "", "do-upgrade-hull"),
+        ],
+    }))
+
+    nodes.append(node("msg-hull-no-money", "message", 2200, 100, {
+        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{upgrade_price}</code> кредитов\n💰 У вас: <code>{pilot.credits}</code> кредитов",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("do-upgrade-hull", "bot_table", 2200, 250, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "credits", "op": "decrement", "value": "{upgrade_price}"},
+            {"column": "hull_level", "op": "increment", "value": "1"},
+            {"column": "cargo_max", "op": "set", "value": "{upgrade_slots}"},
+        ],
+        "autoTransitionTo": "msg-hull-success",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("msg-hull-success", "message", 2500, 250, {
+        "messageText": "✅ Улучшение установлено!\n\n📦 Трюм: ур. <code>{pilot.hull_level}</code> → ур. <code>{next_level}</code>\n📦 Вместимость: <code>{upgrade_slots}</code> слотов\n💰 Списано: <code>{upgrade_price}</code> кредитов",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # =============================================
+    # 🚀 ДВИГАТЕЛЬ (engine) — улучшение
+    # =============================================
+    nodes.append(node("trig-engine", "text_trigger", 100, 600, {
         "textMatchType": "exact",
         "textSynonyms": ["🚀 Двигатель"],
-        "autoTransitionTo": "msg-engine-wip",
+        "autoTransitionTo": "tbl-read-pilot-engine",
         "enableAutoTransition": True,
     }))
 
-    nodes.append(node("msg-engine-wip", "message", 400, 400, {
-        "messageText": "🚀 Улучшение двигателя — в разработке.",
+    nodes.append(node("tbl-read-pilot-engine", "bot_table", 400, 600, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "set-engine-next",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("set-engine-next", "set_variable", 700, 600, {
+        "assignments": [
+            {"id": "a-engine-next", "variable": "next_level", "value": "{pilot.engine_level} + 1", "mode": "expression"},
+        ],
+        "autoTransitionTo": "cond-engine-max",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("cond-engine-max", "condition", 1000, 600, {
+        "variable": "pilot.engine_level",
+        "branches": [
+            branch("br-engine-max", "MAX", "equals", "5", "msg-engine-max"),
+            branch("br-engine-not-max", "Можно улучшить", "else", "", "lookup-engine-price"),
+        ],
+    }))
+
+    nodes.append(node("msg-engine-max", "message", 1300, 450, {
+        "messageText": "🚀 Двигатель: ур. <code>5</code> (MAX)\n\n⛽ Бак: <code>200</code> топлива",
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
 
-    nodes.append(node("trig-armor", "text_trigger", 100, 550, {
-        "textMatchType": "exact",
-        "textSynonyms": ["🛡 Броня"],
-        "autoTransitionTo": "msg-armor-wip",
+    nodes.append(node("lookup-engine-price", "set_variable", 1300, 600, {
+        "assignments": [
+            {
+                "id": "a-engine-price",
+                "variable": "upgrade_price",
+                "value": "",
+                "mode": "lookup",
+                "lookupTable": "upgrades",
+                "lookupField": "price",
+                "lookupWhere": [{"field": "level", "value": "{next_level}"}],
+            },
+            {
+                "id": "a-engine-fuel",
+                "variable": "upgrade_fuel_max",
+                "value": "",
+                "mode": "lookup",
+                "lookupTable": "upgrades",
+                "lookupField": "fuel_max",
+                "lookupWhere": [{"field": "level", "value": "{next_level}"}],
+            },
+        ],
+        "autoTransitionTo": "msg-engine-info",
         "enableAutoTransition": True,
     }))
 
-    nodes.append(node("msg-armor-wip", "message", 400, 550, {
-        "messageText": "🛡 Улучшение брони — в разработке.",
+    engine_info_text = (
+        "🚀 Двигатель вашего корабля:\n\n"
+        "📊 Уровень: <code>{pilot.engine_level}</code>\n"
+        "⛽ Бак: <code>{pilot.fuel}</code> топлива\n\n"
+        "⬆️ Следующий уровень:\n"
+        "⛽ Бак: <code>{upgrade_fuel_max}</code> топлива\n"
+        "💰 Стоимость: <code>{upgrade_price}</code> кредитов"
+    )
+    nodes.append(node("msg-engine-info", "message", 1600, 600, {
+        "messageText": engine_info_text,
+        "formatMode": "html",
+        "keyboardType": "inline",
+        "buttons": [
+            {
+                "id": "btn-upgrade-engine",
+                "text": "⬆️ Улучшить за {upgrade_price} кредитов",
+                "action": "goto",
+                "target": "do-upgrade-engine-check",
+            },
+        ],
+    }))
+
+    nodes.append(node("do-upgrade-engine-check", "condition", 1900, 600, {
+        "variable": "pilot.credits",
+        "branches": [
+            branch("br-engine-no-money", "Не хватает", "less_than", "{upgrade_price}", "msg-engine-no-money"),
+            branch("br-engine-has-money", "Хватает", "else", "", "do-upgrade-engine"),
+        ],
+    }))
+
+    nodes.append(node("msg-engine-no-money", "message", 2200, 450, {
+        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{upgrade_price}</code> кредитов\n💰 У вас: <code>{pilot.credits}</code> кредитов",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("do-upgrade-engine", "bot_table", 2200, 600, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "credits", "op": "decrement", "value": "{upgrade_price}"},
+            {"column": "engine_level", "op": "increment", "value": "1"},
+        ],
+        "autoTransitionTo": "msg-engine-success",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("msg-engine-success", "message", 2500, 600, {
+        "messageText": "✅ Улучшение установлено!\n\n🚀 Двигатель: ур. <code>{pilot.engine_level}</code> → ур. <code>{next_level}</code>\n⛽ Бак: <code>{upgrade_fuel_max}</code> топлива\n💰 Списано: <code>{upgrade_price}</code> кредитов",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # =============================================
+    # 🛡 БРОНЯ (armor) — улучшение
+    # =============================================
+    nodes.append(node("trig-armor", "text_trigger", 100, 950, {
+        "textMatchType": "exact",
+        "textSynonyms": ["🛡 Броня"],
+        "autoTransitionTo": "tbl-read-pilot-armor",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("tbl-read-pilot-armor", "bot_table", 400, 950, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "set-armor-next",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("set-armor-next", "set_variable", 700, 950, {
+        "assignments": [
+            {"id": "a-armor-next", "variable": "next_level", "value": "{pilot.armor_level} + 1", "mode": "expression"},
+        ],
+        "autoTransitionTo": "cond-armor-max",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("cond-armor-max", "condition", 1000, 950, {
+        "variable": "pilot.armor_level",
+        "branches": [
+            branch("br-armor-max", "MAX", "equals", "5", "msg-armor-max"),
+            branch("br-armor-not-max", "Можно улучшить", "else", "", "lookup-armor-price"),
+        ],
+    }))
+
+    nodes.append(node("msg-armor-max", "message", 1300, 800, {
+        "messageText": "🛡 Броня: ур. <code>5</code> (MAX)\n\n⚔️ Шанс победы: <code>90</code>%",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("lookup-armor-price", "set_variable", 1300, 950, {
+        "assignments": [
+            {
+                "id": "a-armor-price",
+                "variable": "upgrade_price",
+                "value": "",
+                "mode": "lookup",
+                "lookupTable": "upgrades",
+                "lookupField": "price",
+                "lookupWhere": [{"field": "level", "value": "{next_level}"}],
+            },
+            {
+                "id": "a-armor-pct",
+                "variable": "upgrade_armor_pct",
+                "value": "",
+                "mode": "lookup",
+                "lookupTable": "upgrades",
+                "lookupField": "armor_pct",
+                "lookupWhere": [{"field": "level", "value": "{next_level}"}],
+            },
+        ],
+        "autoTransitionTo": "msg-armor-info",
+        "enableAutoTransition": True,
+    }))
+
+    armor_info_text = (
+        "🛡 Броня вашего корабля:\n\n"
+        "📊 Уровень: <code>{pilot.armor_level}</code>\n"
+        "⚔️ Шанс победы: <code>{pilot.armor_level}</code> (текущий)\n\n"
+        "⬆️ Следующий уровень:\n"
+        "⚔️ Шанс победы: <code>{upgrade_armor_pct}</code>%\n"
+        "💰 Стоимость: <code>{upgrade_price}</code> кредитов"
+    )
+    nodes.append(node("msg-armor-info", "message", 1600, 950, {
+        "messageText": armor_info_text,
+        "formatMode": "html",
+        "keyboardType": "inline",
+        "buttons": [
+            {
+                "id": "btn-upgrade-armor",
+                "text": "⬆️ Улучшить за {upgrade_price} кредитов",
+                "action": "goto",
+                "target": "do-upgrade-armor-check",
+            },
+        ],
+    }))
+
+    nodes.append(node("do-upgrade-armor-check", "condition", 1900, 950, {
+        "variable": "pilot.credits",
+        "branches": [
+            branch("br-armor-no-money", "Не хватает", "less_than", "{upgrade_price}", "msg-armor-no-money"),
+            branch("br-armor-has-money", "Хватает", "else", "", "do-upgrade-armor"),
+        ],
+    }))
+
+    nodes.append(node("msg-armor-no-money", "message", 2200, 800, {
+        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{upgrade_price}</code> кредитов\n💰 У вас: <code>{pilot.credits}</code> кредитов",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("do-upgrade-armor", "bot_table", 2200, 950, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "credits", "op": "decrement", "value": "{upgrade_price}"},
+            {"column": "armor_level", "op": "increment", "value": "1"},
+        ],
+        "autoTransitionTo": "msg-armor-success",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("msg-armor-success", "message", 2500, 950, {
+        "messageText": "✅ Улучшение установлено!\n\n🛡 Броня: ур. <code>{pilot.armor_level}</code> → ур. <code>{next_level}</code>\n⚔️ Шанс победы: <code>{upgrade_armor_pct}</code>%\n💰 Списано: <code>{upgrade_price}</code> кредитов",
+        "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
     }))
