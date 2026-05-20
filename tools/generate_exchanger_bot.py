@@ -63,7 +63,7 @@ BOT_EXCHANGERS = [
      "buy_btc 1", r"К оплате будет:\s*([\d]+)", 3),
     ("Capitalist", "@btccapital_bot", "https://t.me/btccapital_bot?start=7733607050",
      "click", "/start", "🔄 Купить BTC", "0.001",
-     "", r"Курс покупки BTC:\s*([\d]+)", 4),
+     "", r"Курс покупки .*?BTC.*?:\s*([\d]+)", 4),
     ("Vortex", "@VortexExchangeBot", "https://t.me/VortexExchangeBot?start=ref789",
      "click", "/exchange", "{selected_from_name} → {selected_to_name}", "{user_amount}",
      "", r"Вы получите:\s*([\d.]+)", 5),
