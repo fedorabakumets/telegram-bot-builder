@@ -47,6 +47,7 @@ export const MANAGEMENT_NODE_TYPES = [
   'delay' as any,
   'userbot_message' as any,
   'userbot_click_button' as any,
+  'userbot_inline_query' as any,
 ] as const;
 
 /**

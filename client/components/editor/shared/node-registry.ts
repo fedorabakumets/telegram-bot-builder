@@ -340,6 +340,12 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     color: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
     canvasColor: 'bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 text-violet-600 dark:text-violet-400 border-2 border-violet-300 dark:border-violet-700/50 shadow-lg shadow-violet-500/20',
   },
+  userbot_inline_query: {
+    name: 'Inline-запрос (юзербот)',
+    icon: 'fas fa-at',
+    color: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
+    canvasColor: 'bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 text-violet-600 dark:text-violet-400 border-2 border-violet-300 dark:border-violet-700/50 shadow-lg shadow-violet-500/20',
+  },
 };
 
 /**

@@ -537,6 +537,29 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
+  // Добавляем переменные от userbot_inline_query-узлов
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'userbot_inline_query') return;
+    const data = node.data as any;
+    const fields = [
+      { field: 'saveResultTitleTo', desc: 'Title inline-результата' },
+      { field: 'saveResultDescTo', desc: 'Description inline-результата' },
+      { field: 'saveResponseIdTo', desc: 'ID отправленного inline-сообщения' },
+    ];
+    for (const { field, desc } of fields) {
+      if (!data[field]?.trim()) continue;
+      const key = `ub_inline_${field}__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data[field],
+          nodeId: node.id,
+          nodeType: 'userbot_inline_query' as any,
+          description: desc,
+        });
+      }
+    }
+  });
+
   // Разделяем на текстовые и медиа
   const all = Array.from(variablesMap.values());
   return { textVariables: all.filter(v => !v.mediaType), mediaVariables: all.filter(v => v.mediaType) };

@@ -4,3 +4,4 @@
  */
 export { userbotMessage } from './userbot-message';
 export { userbotClickButton } from './userbot-click-button';
+export { userbotInlineQuery } from './userbot-inline-query';
