@@ -402,8 +402,8 @@ def build_start_menu() -> dict:
     nodes.append(node("menu-cond-inflight", "condition", 600, 1200, {
         "variable": "pilot.flight_target_planet",
         "branches": [
-            branch("br-menu-inflight", "В полёте", "not_equals", "", "msg-main-menu-flight"),
-            branch("br-menu-free", "На планете", "else", "", "msg-main-menu"),
+            branch("br-menu-free", "На планете", "equals", "", "msg-main-menu"),
+            branch("br-menu-inflight", "В полёте", "else", "", "msg-main-menu-flight"),
         ],
     }))
 
@@ -1169,8 +1169,8 @@ def build_map() -> dict:
     nodes.append(node("map-cond-inflight", "condition", 400, 0, {
         "variable": "pilot.flight_target_planet",
         "branches": [
-            branch("br-map-inflight", "В полёте", "not_equals", "", "set-map-remaining"),
-            branch("br-map-free", "Свободен", "else", "", "set-map-routes"),
+            branch("br-map-free", "Свободен", "equals", "", "set-map-routes"),
+            branch("br-map-inflight", "В полёте", "else", "", "set-map-remaining"),
         ],
     }))
 
