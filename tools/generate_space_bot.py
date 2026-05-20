@@ -377,7 +377,7 @@ def build_start_menu() -> dict:
         f"👤 {MENTION}, ваш профиль:\n\n"
         "🆔 ID: <code>{pilot.game_id}</code>\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
-        "{pilot.status_text}\n"
+        "<b>{pilot.status_text}</b>\n"
         "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>\n"
         "🌀 Фрагменты Эфира: <code>{pilot.fragments}</code>\n\n"
@@ -1025,7 +1025,7 @@ def build_map() -> dict:
     # Сообщение карты когда НА ПЛАНЕТЕ
     map_menu_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
-        "{pilot.status_text}\n"
+        "<b>{pilot.status_text}</b>\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>"
     )
     nodes.append(node("msg-map-menu", "message", 700, 100, {
@@ -1138,7 +1138,7 @@ def build_map() -> dict:
         }))
 
         nodes.append(node(f"msg-fly-inflight-{planet['id']}", "message", 700, y_pos - 160, {
-            "messageText": "🚀 Вы в полёте!\n\n{pilot.status_text}\n🕐 Осталось: <code>{flight_remaining}</code>\n\nДождитесь прибытия.",
+            "messageText": "🚀 Вы в полёте!\n\n<b>{pilot.status_text}</b>\n🕐 Осталось: <code>{flight_remaining}</code>\n\nДождитесь прибытия.",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -1154,7 +1154,7 @@ def build_map() -> dict:
         }))
 
         nodes.append(node(f"msg-fly-same-{planet['id']}", "message", 1000, y_pos - 80, {
-            "messageText": f"📍 Вы уже на планете {planet['full']}!",
+            "messageText": f"📍 Вы уже на планете <b>{planet['full']}</b>!",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -1198,7 +1198,7 @@ def build_map() -> dict:
         }))
 
         nodes.append(node(f"msg-fly-no-fuel-{planet['id']}", "message", 1600, y_pos - 80, {
-            "messageText": f"⛽ Недостаточно топлива для перелёта на планету {planet['full']}!\n\nНужно: <code>{{flight_fuel}}</code> ⛽\nУ вас: <code>{{pilot.fuel}}</code> ⛽",
+            "messageText": f"⛽ Недостаточно топлива для перелёта на планету <b>{planet['full']}</b>!\n\nНужно: <code>{{flight_fuel}}</code> ⛽\nУ вас: <code>{{pilot.fuel}}</code> ⛽",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -1258,7 +1258,7 @@ def build_map() -> dict:
 
         # Сообщение "Летим..."
         nodes.append(node(f"msg-fly-start-{planet['id']}", "message", 1900, y_pos, {
-            "messageText": f"🚀 Летим на планету {planet['full']}!\n\n⛽ Топливо: -{{flight_fuel}}\n🕐 Время в пути: {{flight_time_fmt}}",
+            "messageText": f"🚀 Летим на планету <b>{planet['full']}</b>!\n\n⛽ Топливо: -{{flight_fuel}}\n🕐 Время в пути: {{flight_time_fmt}}",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -1294,7 +1294,7 @@ def build_map() -> dict:
 
         # Сообщение "Прибыли!"
         nodes.append(node(f"msg-fly-arrived-{planet['id']}", "message", 2800, y_pos, {
-            "messageText": f"✅ Вы прибыли на планету {planet['full']}!\n\nТеперь вы можете торговать здесь.",
+            "messageText": f"✅ Вы прибыли на планету <b>{planet['full']}</b>!\n\nТеперь вы можете торговать здесь.",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
