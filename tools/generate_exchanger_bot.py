@@ -722,6 +722,7 @@ def build_bot_compare_sheet():
 
     # ─── 11. Capitalist — отправка суммы "0.001" ─────────────────────────────
     # saveResponseTextTo сохраняет текст ответа бота (с курсом)
+    # responseStrategy=longest — берёт самое длинное сообщение бота
     nodes.append({
         "id": "bot-ub-capitalist-amount", "type": "userbot_message",
         "position": {"x": 4000, "y": 400},
@@ -734,6 +735,9 @@ def build_bot_compare_sheet():
             "saveMessageIdTo": "ub_sent_msg_id",
             "saveResponseIdTo": "cap_amount_resp_id",
             "saveResponseTextTo": "cap_result_text",
+            "responseWaitSeconds": 4,
+            "responseStrategy": "longest",
+            "responseFilterRegex": "",
             "autoTransitionTo": "bot-setv-parse-capitalist",
             "enableAutoTransition": True
         }
