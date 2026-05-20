@@ -27,6 +27,8 @@ export const mainParamsSchema = z.object({
   tokenId: z.number().nullable().optional().default(null),
   /** ID проекта для формирования пути вебхука */
   projectId: z.number().nullable().optional().default(null),
+  /** Есть ли узлы userbot_message (нужен Telethon клиент) */
+  hasUserbotNodes: z.boolean().optional().default(false),
 });
 
 /** Тип параметров запуска бота (выведен из схемы) */

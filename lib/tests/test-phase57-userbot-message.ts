@@ -146,6 +146,18 @@ test('A08', 'содержит инициализацию userbot_client (StringS
   ok(code.includes('StringSession'), 'StringSession должен быть в коде');
 });
 
+test('A09', 'содержит userbot_client.connect() в main', () => {
+  const p = makeCleanProject([makeUserbotMessageNode('ub1')]);
+  const code = gen(p, 'a09');
+  ok(code.includes('userbot_client.connect'), 'userbot_client.connect должен быть в коде');
+});
+
+test('A10', 'содержит userbot_client.disconnect() в finally', () => {
+  const p = makeCleanProject([makeUserbotMessageNode('ub1')]);
+  const code = gen(p, 'a10');
+  ok(code.includes('userbot_client.disconnect'), 'userbot_client.disconnect должен быть в коде');
+});
+
 // ════════════════════════════════════════════════════════════════════════════
 // БЛОК B: Текст и форматирование
 // ════════════════════════════════════════════════════════════════════════════
