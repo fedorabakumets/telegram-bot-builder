@@ -301,7 +301,7 @@ def build_start_menu() -> dict:
     names_base_x = upgrades_base_x + len(UPGRADES) * 200
     for i, pn in enumerate(PLANET_NAMES):
         pn_node_id = f"tbl-init-names-{i + 1}"
-        next_id = f"tbl-init-names-{i + 2}" if i < len(PLANET_NAMES) - 1 else "tbl-read-pilot-menu"
+        next_id = f"tbl-init-names-{i + 2}" if i < len(PLANET_NAMES) - 1 else "tbl-init-planet-upgrades-1"
 
         nodes.append(node(pn_node_id, "bot_table", names_base_x + i * 200, -150, {
             "tableName": "planet_names",
@@ -310,6 +310,36 @@ def build_start_menu() -> dict:
             "row": {
                 "id": pn["id"],
                 "name": pn["name"],
+            },
+            "onConflict": "ignore",
+            "autoTransitionTo": next_id,
+            "enableAutoTransition": True,
+        }))
+
+    # --- Инициализация таблицы planet_upgrades (уровни улучшений планеты) ---
+    PLANET_UPGRADES = [
+        {"level": "1", "mine_rate": "1", "storage_cap": "50", "energy_bonus": "0", "defense_pct": "0", "price": "0"},
+        {"level": "2", "mine_rate": "2", "storage_cap": "100", "energy_bonus": "1", "defense_pct": "10", "price": "50000"},
+        {"level": "3", "mine_rate": "3", "storage_cap": "200", "energy_bonus": "2", "defense_pct": "25", "price": "150000"},
+        {"level": "4", "mine_rate": "5", "storage_cap": "400", "energy_bonus": "3", "defense_pct": "40", "price": "500000"},
+        {"level": "5", "mine_rate": "8", "storage_cap": "800", "energy_bonus": "5", "defense_pct": "60", "price": "1500000"},
+    ]
+    pu_base_x = names_base_x + len(PLANET_NAMES) * 200
+    for i, pu in enumerate(PLANET_UPGRADES):
+        pu_node_id = f"tbl-init-planet-upgrades-{i + 1}"
+        next_id = f"tbl-init-planet-upgrades-{i + 2}" if i < len(PLANET_UPGRADES) - 1 else "tbl-read-pilot-menu"
+
+        nodes.append(node(pu_node_id, "bot_table", pu_base_x + i * 200, -150, {
+            "tableName": "planet_upgrades",
+            "operation": "upsert",
+            "key": "level",
+            "row": {
+                "level": pu["level"],
+                "mine_rate": pu["mine_rate"],
+                "storage_cap": pu["storage_cap"],
+                "energy_bonus": pu["energy_bonus"],
+                "defense_pct": pu["defense_pct"],
+                "price": pu["price"],
             },
             "onConflict": "ignore",
             "autoTransitionTo": next_id,
