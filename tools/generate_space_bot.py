@@ -321,7 +321,7 @@ def build_start_menu() -> dict:
 
     nodes.append(node("trig-map", "text_trigger", 100, 450, {
         "textMatchType": "exact",
-        "textSynonyms": ["🚀 Полёты"],
+        "textSynonyms": ["🚀 Полёты", "🚀 Полёт"],
         "autoTransitionTo": "tbl-read-pilot-map",
         "enableAutoTransition": True,
     }))
@@ -404,9 +404,8 @@ def build_start_menu() -> dict:
         "buttons": [
             btn("btn-mf-profile", "👤 Профиль"),
             btn("btn-mf-ship", "🔧 Корабль"),
-            btn("btn-mf-flights", "🚀 Полёты"),
+            btn("btn-mf-flights", "🚀 Полёт"),
             btn("btn-mf-top", "🏆 Топ"),
-            btn("btn-mf-turn", "🔄 Развернуться"),
         ],
         "keyboardLayout": {
             "autoLayout": False,
@@ -414,7 +413,6 @@ def build_start_menu() -> dict:
             "rows": [
                 {"buttonIds": ["btn-mf-profile", "btn-mf-ship"]},
                 {"buttonIds": ["btn-mf-flights", "btn-mf-top"]},
-                {"buttonIds": ["btn-mf-turn"]},
             ],
         },
         "resizeKeyboard": True,
