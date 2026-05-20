@@ -177,6 +177,7 @@ def build_start_menu() -> dict:
             "flight_target_planet": "",
             "flight_target_name": "",
             "status_text": "📍 Планета: <b>🌍 Земля</b>",
+            "last_daily": "",
         },
         "onConflict": "merge",
         "saveResultTo": "pilot",
@@ -418,6 +419,89 @@ def build_start_menu() -> dict:
     )
     nodes.append(node("msg-profile", "message", 700, 750, {
         "messageText": profile_text,
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # --- /daily — ежедневный бонус ---
+    nodes.append(node("cmd-daily", "command_trigger", 100, 1400, {
+        "command": "/daily",
+        "description": "Ежедневный бонус",
+        "showInMenu": True,
+        "autoTransitionTo": "tbl-read-pilot-daily",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("tbl-read-pilot-daily", "bot_table", 400, 1400, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "set-daily-check",
+        "enableAutoTransition": True,
+    }))
+
+    # Вычисляем: текущий timestamp и timestamp когда можно получить бонус (last_daily + 86400)
+    nodes.append(node("set-daily-check", "set_variable", 700, 1400, {
+        "assignments": [
+            {"id": "a-daily-now", "variable": "now_ts", "value": "0", "mode": "timestamp"},
+            {"id": "a-daily-next", "variable": "daily_next", "value": "{pilot.last_daily} + 86400", "mode": "expression"},
+        ],
+        "autoTransitionTo": "cond-daily-ready",
+        "enableAutoTransition": True,
+    }))
+
+    # Условие: now_ts >= daily_next (прошло 24ч) или last_daily пустое (первый раз)
+    nodes.append(node("cond-daily-ready", "condition", 1000, 1400, {
+        "variable": "pilot.last_daily",
+        "branches": [
+            branch("br-daily-first", "Первый раз", "is_empty", "", "do-daily-bonus"),
+            branch("br-daily-check-time", "Проверить время", "else", "", "cond-daily-time"),
+        ],
+    }))
+
+    nodes.append(node("cond-daily-time", "condition", 1000, 1600, {
+        "variable": "now_ts",
+        "branches": [
+            branch("br-daily-ready", "Готов", "greater_than", "{daily_next}", "do-daily-bonus"),
+            branch("br-daily-wait", "Рано", "else", "", "set-daily-remaining"),
+        ],
+    }))
+
+    # Вычисляем оставшееся время
+    nodes.append(node("set-daily-remaining", "set_variable", 1300, 1600, {
+        "assignments": [
+            {"id": "a-daily-rem", "variable": "daily_remaining", "value": "{daily_next} - {now_ts}", "mode": "format_duration"},
+        ],
+        "autoTransitionTo": "msg-daily-wait",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("msg-daily-wait", "message", 1600, 1600, {
+        "messageText": "⏳ Ежедневный бонус ещё не готов!\n\n🕐 Осталось: <code>{daily_remaining}</code>",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # Начисляем бонус
+    nodes.append(node("do-daily-bonus", "bot_table", 1300, 1400, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "credits", "op": "increment", "value": "500"},
+            {"column": "fuel", "op": "increment", "value": "10"},
+            {"column": "last_daily", "op": "set", "value": "{now_ts}"},
+        ],
+        "autoTransitionTo": "msg-daily-ok",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("msg-daily-ok", "message", 1600, 1400, {
+        "messageText": "🎁 Ежедневный бонус получен!\n\n💰 +<code>500</code> кредитов\n⛽ +<code>10</code> топлива\n\nВозвращайтесь завтра!",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
