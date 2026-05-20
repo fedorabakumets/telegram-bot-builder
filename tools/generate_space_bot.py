@@ -438,36 +438,46 @@ def build_start_menu() -> dict:
 
     refuel_text = (
         f"⛽ {MENTION}, космическая заправка:\n\n"
-        "📍 Планета: {pilot.current_planet_name}\n"
+        "📍 {pilot.status_text}\n"
         "⛽ Топливо: <code>{fuel_fmt}</code>\n"
         "💰 Кредиты: <code>{credits_fmt}</code>\n\n"
         "📊 Цена: <code>5</code> кредитов = 1 ⛽\n\n"
-        "Выберите количество:"
+        "Нажмите кнопку или введите сумму:"
     )
     nodes.append(node("msg-refuel-menu", "message", 1300, 1100, {
         "messageText": refuel_text,
         "formatMode": "html",
-        "keyboardType": "inline",
+        "keyboardType": "reply",
         "buttons": [
-            {"id": "btn-refuel-10", "text": "⛽ +10 (50 💰)", "action": "goto", "target": "do-refuel-10"},
-            {"id": "btn-refuel-50", "text": "⛽ +50 (250 💰)", "action": "goto", "target": "do-refuel-50"},
-            {"id": "btn-refuel-100", "text": "⛽ +100 (500 💰)", "action": "goto", "target": "do-refuel-100"},
-            {"id": "btn-refuel-custom", "text": "✏️ Своя сумма", "action": "goto", "target": "msg-refuel-input"},
+            btn("btn-refuel-10", "⛽ +10"),
+            btn("btn-refuel-50", "⛽ +50"),
+            btn("btn-refuel-100", "⛽ +100"),
+            btn("btn-refuel-back", "⬅️ Меню"),
         ],
-    }))
-
-    # Ввод своей суммы
-    nodes.append(node("msg-refuel-input", "message", 1600, 1100, {
-        "messageText": "✏️ Введите количество топлива для покупки:\n\n📊 Цена: <code>5</code> кредитов = 1 ⛽",
-        "formatMode": "html",
-        "keyboardType": "none",
-        "buttons": [],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 3,
+            "rows": [
+                {"buttonIds": ["btn-refuel-10", "btn-refuel-50", "btn-refuel-100"]},
+                {"buttonIds": ["btn-refuel-back"]},
+            ],
+        },
+        "resizeKeyboard": True,
         "collectUserInput": True,
         "inputVariable": "refuel_amount",
         "enableTextInput": True,
         "autoTransitionTo": "set-refuel-custom-calc",
         "enableAutoTransition": True,
     }))
+
+    # Триггеры для фиксированных кнопок
+    for amount, cost in [(10, 50), (50, 250), (100, 500)]:
+        nodes.append(node(f"trig-refuel-{amount}", "text_trigger", 100, 1200 + amount, {
+            "textMatchType": "exact",
+            "textSynonyms": [f"⛽ +{amount}"],
+            "autoTransitionTo": f"do-refuel-{amount}",
+            "enableAutoTransition": True,
+        }))
 
     # Вычисляем стоимость
     nodes.append(node("set-refuel-custom-calc", "set_variable", 1900, 1100, {
