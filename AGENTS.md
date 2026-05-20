@@ -79,6 +79,7 @@ export function MyComponent({ ... }: MyProps) { ... }
 2. Обновить фазовый тест в `lib/tests/test-phase*-{name}.ts` — добавить тесты на новую функциональность
 3. Запустить фазовый тест и убедиться что проходит
 4. Обновить промт для ИИ `docs/bot-json-prompt.md` — добавить описание новых возможностей
+5. Обновить документацию для людей `docs/features/NODE_TYPES.md` — описание настроек и ограничений
 
 ### Существенное расширение существующей ноды (новый mode, новые поля в UI)
 
@@ -89,6 +90,7 @@ export function MyComponent({ ... }: MyProps) { ... }
 3. Обновить/создать фазовый тест в `lib/tests/`
 4. Протестировать фазу
 5. Обновить промт `docs/bot-json-prompt.md`
+6. Обновить документацию `docs/features/NODE_TYPES.md`
 
 ### Создание новой ноды
 
@@ -97,4 +99,5 @@ export function MyComponent({ ... }: MyProps) { ... }
 3. После обновления lib — обновить/создать фазовый тест в `lib/tests/`
 4. Протестировать фазу
 5. Обновить промт `docs/bot-json-prompt.md`
+6. Обновить документацию `docs/features/NODE_TYPES.md`
 
