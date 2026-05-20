@@ -438,7 +438,7 @@ def build_start_menu() -> dict:
 
     refuel_text = (
         f"⛽ {MENTION}, космическая заправка:\n\n"
-        "📍 {pilot.status_text}\n"
+        "{pilot.status_text}\n"
         "⛽ Топливо: <code>{fuel_fmt}</code>\n"
         "💰 Кредиты: <code>{credits_fmt}</code>\n\n"
         "📊 Цена: <code>5</code> кредитов = 1 ⛽\n\n"
