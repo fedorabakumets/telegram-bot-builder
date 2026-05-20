@@ -549,8 +549,12 @@ def build_bot_compare_sheet():
     nodes.append(cmd_trigger(
         "bot-cmd-compare", "/compare_bots",
         "Сравнить курсы через ботов",
-        "bot-msg-menu", 0, 400
+        "tbl-init-bot-ex-1", 0, 400
     ))
+
+    # ─── 1.5. Инициализация таблицы bot_exchangers (upsert при каждом вызове) ─
+    init_nodes = build_bot_exchangers_init_nodes(200, 200, "bot-msg-menu")
+    nodes.extend(init_nodes)
 
     # ─── 2. Меню выбора пары (динамические кнопки из table.pairs) ─────────────
     dynamic_btns = {
@@ -856,52 +860,47 @@ def build_bot_compare_sheet():
     }
 
 
-# ─── Генерация SQL для таблицы bot_exchangers ─────────────────────────────────
+# ─── Генерация нод инициализации таблицы bot_exchangers ───────────────────────
 
-def generate_bot_exchangers_sql():
+def build_bot_exchangers_init_nodes(start_x, y, final_target):
     """
-    Генерирует SQL-запросы для создания таблицы bot_exchangers и вставки данных.
-    Выводит в консоль (не выполняет).
-    @returns Строка с SQL-запросами
+    Строит цепочку bot_table нод для инициализации таблицы bot_exchangers.
+    Аналогично generate_space_bot.py — при /start бот сам создаёт записи.
+    @param start_x - Начальная позиция X
+    @param y - Позиция Y
+    @param final_target - ID ноды, куда перейти после инициализации
+    @returns Список нод bot_table
     """
-    create_table = """
--- Создание таблицы bot_exchangers для хранения Telegram-ботов обменников
-CREATE TABLE IF NOT EXISTS bot_exchangers (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    username VARCHAR(100) NOT NULL,
-    ref_url TEXT DEFAULT '',
-    mode VARCHAR(20) NOT NULL CHECK (mode IN ('message', 'click', 'inline')),
-    step1_text TEXT DEFAULT '/start',
-    click_button TEXT DEFAULT '',
-    step2_text TEXT DEFAULT '',
-    inline_query TEXT DEFAULT '',
-    rate_regex TEXT NOT NULL DEFAULT '([\\d.]+)',
-    wait_seconds INTEGER DEFAULT 3,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- Индекс для быстрого поиска активных ботов
-CREATE INDEX IF NOT EXISTS idx_bot_exchangers_active ON bot_exchangers(is_active);
-""".strip()
-
-    inserts = []
-    for (name, username, ref_url, mode, step1, click_btn,
-         step2, inline_q, regex, wait) in BOT_EXCHANGERS:
-        # Экранируем одинарные кавычки в значениях
-        esc = lambda s: s.replace("'", "''")
-        inserts.append(
-            f"INSERT INTO bot_exchangers (name, username, ref_url, mode, "
-            f"step1_text, click_button, step2_text, inline_query, rate_regex, wait_seconds) "
-            f"VALUES ('{esc(name)}', '{esc(username)}', '{esc(ref_url)}', '{esc(mode)}', "
-            f"'{esc(step1)}', '{esc(click_btn)}', '{esc(step2)}', '{esc(inline_q)}', "
-            f"'{esc(regex)}', {wait});"
-        )
-
-    insert_block = "\n".join(inserts)
-    return f"{create_table}\n\n-- Вставка данных обменников-ботов\n{insert_block}"
+    nodes = []
+    for i, (name, username, ref_url, mode, step1, click_btn,
+            step2, inline_q, regex, wait) in enumerate(BOT_EXCHANGERS):
+        node_id = f"tbl-init-bot-ex-{i+1}"
+        next_id = f"tbl-init-bot-ex-{i+2}" if i < len(BOT_EXCHANGERS) - 1 else final_target
+        nodes.append({
+            "id": node_id, "type": "bot_table",
+            "position": {"x": start_x + i * 250, "y": y},
+            "data": {
+                "tableName": "bot_exchangers",
+                "operation": "upsert",
+                "key": "username",
+                "row": {
+                    "name": name,
+                    "username": username,
+                    "ref_url": ref_url,
+                    "mode": mode,
+                    "step1_text": step1,
+                    "click_button": click_btn,
+                    "step2_text": step2,
+                    "inline_query": inline_q,
+                    "rate_regex": regex,
+                    "wait_seconds": str(wait),
+                },
+                "onConflict": "ignore",
+                "autoTransitionTo": next_id,
+                "enableAutoTransition": True,
+            }
+        })
+    return nodes
 
 
 # ─── Главная функция сборки проекта ──────────────────────────────────────────
@@ -944,12 +943,4 @@ if __name__ == "__main__":
     print(f"\n✅ Сохранено: {OUTPUT_FILE}")
     print(f"📊 Всего нод: {total_nodes}")
     print(f"📋 Листов: {sheet_count}")
-    print("🎉 JSON валидный!\n")
-
-    # Вывод SQL для таблицы bot_exchangers
-    print("=" * 60)
-    print("📦 SQL для создания таблицы bot_exchangers:")
-    print("=" * 60)
-    sql = generate_bot_exchangers_sql()
-    print(sql)
-    print("=" * 60)
+    print("🎉 JSON валидный!")
