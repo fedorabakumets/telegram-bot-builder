@@ -228,7 +228,7 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         import re as _re_sv_{{ loop.index }}
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
         _sv_source_{{ loop.index }} = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
-        _sv_pattern_{{ loop.index }} = {{ assignment.pattern | default('') | tojson }}
+        _sv_pattern_{{ loop.index }} = replace_variables_in_text({{ assignment.pattern | default('') | tojson }}, _sv_vars_{{ loop.index }})
         _sv_group_{{ loop.index }} = {{ assignment.regexGroup | default('0') | tojson }}
         try:
             _sv_match_{{ loop.index }} = _re_sv_{{ loop.index }}.search(_sv_pattern_{{ loop.index }}, _sv_source_{{ loop.index }})
