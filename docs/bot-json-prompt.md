@@ -301,6 +301,7 @@
 | `str_replace` | Замена подстроки | `"старый_текст"` + `replaceWith: "новый"` |
 | `json_push` | Добавить объект в массив-переменную | `"{\"name\": \"{item.name}\"}"` |
 | `json_format` | Форматировать массив в строку | шаблон строки |
+| `regex_extract` | Извлечение по регулярному выражению | `value: "{source}"`, `pattern: "(\\d+)\\s*руб"`, `regexGroup: "1"` |
 
 #### Примеры
 
@@ -333,6 +334,16 @@
 Начислить 10 к репутации:
 ```json
 { "id": "a1", "variable": "reputation", "value": "{reputation} + 10", "mode": "expression" }
+```
+
+Извлечь число (курс) из текста ответа бота:
+```json
+{ "id": "a1", "variable": "rate", "value": "{bot_response}", "mode": "regex_extract", "pattern": "(\\d+)\\s*рублей", "regexGroup": "1" }
+```
+
+Извлечь ID заказа из строки:
+```json
+{ "id": "a1", "variable": "order_id", "value": "{text}", "mode": "regex_extract", "pattern": "#(\\d+)", "regexGroup": "1" }
 ```
 
 Списать 50 🍪:
