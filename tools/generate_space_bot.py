@@ -423,24 +423,8 @@ def build_start_menu() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "pilot",
         "resultFormat": "first_row",
-        "autoTransitionTo": "cond-refuel-inflight",
+        "autoTransitionTo": "set-refuel-fmt",
         "enableAutoTransition": True,
-    }))
-
-    # Проверка: не в полёте?
-    nodes.append(node("cond-refuel-inflight", "condition", 700, 1100, {
-        "variable": "pilot.flight_target_planet",
-        "branches": [
-            branch("br-refuel-free", "На планете", "equals", "", "set-refuel-fmt"),
-            branch("br-refuel-inflight", "В полёте", "else", "", "msg-refuel-inflight"),
-        ],
-    }))
-
-    nodes.append(node("msg-refuel-inflight", "message", 1000, 1000, {
-        "messageText": "❌ Заправка доступна только на планете!\n\nДождитесь прибытия.",
-        "formatMode": "html",
-        "keyboardType": "none",
-        "buttons": [],
     }))
 
     nodes.append(node("set-refuel-fmt", "set_variable", 1000, 1100, {
@@ -581,6 +565,7 @@ def build_start_menu() -> dict:
             btn("btn-mf-profile", "👤 Профиль"),
             btn("btn-mf-ship", "🔧 Корабль"),
             btn("btn-mf-flights", "🚀 Полёт"),
+            btn("btn-mf-refuel", "⛽ Заправка"),
             btn("btn-mf-top", "🏆 Топ"),
         ],
         "keyboardLayout": {
@@ -588,7 +573,8 @@ def build_start_menu() -> dict:
             "columns": 2,
             "rows": [
                 {"buttonIds": ["btn-mf-profile", "btn-mf-ship"]},
-                {"buttonIds": ["btn-mf-flights", "btn-mf-top"]},
+                {"buttonIds": ["btn-mf-flights", "btn-mf-refuel"]},
+                {"buttonIds": ["btn-mf-top"]},
             ],
         },
         "resizeKeyboard": True,
