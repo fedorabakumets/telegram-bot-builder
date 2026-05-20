@@ -463,9 +463,15 @@ def build_start_menu() -> dict:
             ],
         },
         "resizeKeyboard": True,
-        "collectUserInput": True,
+        "autoTransitionTo": "input-refuel-custom",
+        "enableAutoTransition": True,
+    }))
+
+    # Нода input — ждёт ввод числа (своя сумма)
+    nodes.append(node("input-refuel-custom", "input", 1600, 1100, {
         "inputVariable": "refuel_amount",
-        "enableTextInput": True,
+        "inputPrompt": "",
+        "inputType": "text",
         "autoTransitionTo": "set-refuel-custom-calc",
         "enableAutoTransition": True,
     }))

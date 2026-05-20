@@ -753,6 +753,8 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 
 ### input — ожидать ввод пользователя
 
+⚠️ **Предпочтительный способ сбора ввода.** Поле `collectUserInput` в message-ноде — устаревшее. Используйте отдельную ноду `input` вместо него.
+
 ```json
 {
   "type": "input",
