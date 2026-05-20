@@ -178,6 +178,8 @@ def build_start_menu() -> dict:
             "flight_target_name": "",
             "status_text": "📍 Планета: <b>🌍 Земля</b>",
             "last_daily": "",
+            "flight_fuel_cost": "",
+            "flight_start_ts": "",
         },
         "onConflict": "merge",
         "saveResultTo": "pilot",
@@ -1293,9 +1295,10 @@ def build_map() -> dict:
             "formatMode": "html",
             "keyboardType": "reply",
             "buttons": [
+                btn(f"btn-inflight-turn-{planet['id']}", "🔄 Развернуться"),
                 btn(f"btn-inflight-back-{planet['id']}", "⬅️ Меню"),
             ],
-            "keyboardLayout": {"autoLayout": False, "columns": 1, "rows": [{"buttonIds": [f"btn-inflight-back-{planet['id']}"]}]},
+            "keyboardLayout": {"autoLayout": False, "columns": 2, "rows": [{"buttonIds": [f"btn-inflight-turn-{planet['id']}", f"btn-inflight-back-{planet['id']}"]}]},
             "resizeKeyboard": True,
         }))
 
@@ -1409,6 +1412,8 @@ def build_map() -> dict:
             "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
             "updates": [
                 {"column": "status_text", "op": "set", "value": f"🚀 В полёте на планету <b>{planet['full']}</b>"},
+                {"column": "flight_fuel_cost", "op": "set", "value": "{flight_fuel}"},
+                {"column": "flight_start_ts", "op": "set", "value": "{now_ts}"},
             ],
             "autoTransitionTo": f"msg-fly-start-{planet['id']}",
             "enableAutoTransition": True,
@@ -1420,9 +1425,10 @@ def build_map() -> dict:
             "formatMode": "html",
             "keyboardType": "reply",
             "buttons": [
+                btn(f"btn-fly-turn-{planet['id']}", "🔄 Развернуться"),
                 btn(f"btn-fly-back-{planet['id']}", "⬅️ Меню"),
             ],
-            "keyboardLayout": {"autoLayout": False, "columns": 1, "rows": [{"buttonIds": [f"btn-fly-back-{planet['id']}"]}]},
+            "keyboardLayout": {"autoLayout": False, "columns": 2, "rows": [{"buttonIds": [f"btn-fly-turn-{planet['id']}", f"btn-fly-back-{planet['id']}"]}]},
             "resizeKeyboard": True,
             "autoTransitionTo": f"fly-delay-{planet['id']}",
             "enableAutoTransition": True,
@@ -1436,6 +1442,88 @@ def build_map() -> dict:
             "autoTransitionTo": "pirate-reread-pilot",
             "enableAutoTransition": True,
         }))
+
+    # =============================================
+    # 🔄 РАЗВЕРНУТЬСЯ — отмена полёта
+    # =============================================
+    nodes.append(node("trig-turn-around", "text_trigger", 100, 2000, {
+        "textMatchType": "exact",
+        "textSynonyms": ["🔄 Развернуться"],
+        "autoTransitionTo": "tbl-read-pilot-turn",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("tbl-read-pilot-turn", "bot_table", 400, 2000, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "set-turn-now",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("set-turn-now", "set_variable", 700, 2000, {
+        "assignments": [
+            {"id": "a-turn-now", "variable": "now_ts", "value": "0", "mode": "timestamp"},
+        ],
+        "autoTransitionTo": "cond-turn-inflight",
+        "enableAutoTransition": True,
+    }))
+
+    # Проверка: в полёте ли?
+    nodes.append(node("cond-turn-inflight", "condition", 1000, 2000, {
+        "variable": "pilot.flight_expires_at",
+        "branches": [
+            branch("br-turn-yes", "В полёте", "greater_than", "{now_ts}", "set-turn-penalty"),
+            branch("br-turn-no", "Не в полёте", "else", "", "msg-turn-not-flying"),
+        ],
+    }))
+
+    nodes.append(node("msg-turn-not-flying", "message", 1300, 2150, {
+        "messageText": "❌ Вы не в полёте!",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # Вычисляем штраф: % пройденного пути × потраченное топливо
+    nodes.append(node("set-turn-penalty", "set_variable", 1300, 2000, {
+        "assignments": [
+            {"id": "a-turn-total", "variable": "flight_total_time", "value": "{pilot.flight_expires_at} - {pilot.flight_start_ts}", "mode": "expression"},
+            {"id": "a-turn-elapsed", "variable": "flight_elapsed", "value": "{now_ts} - {pilot.flight_start_ts}", "mode": "expression"},
+            {"id": "a-turn-progress", "variable": "turn_progress", "value": "{flight_elapsed} * 100 // {flight_total_time}", "mode": "expression"},
+            {"id": "a-turn-fuel-penalty", "variable": "turn_fuel_penalty", "value": "max({pilot.flight_fuel_cost} * {turn_progress} // 100, 1)", "mode": "expression"},
+        ],
+        "autoTransitionTo": "do-turn-around",
+        "enableAutoTransition": True,
+    }))
+
+    # Выполняем разворот: сбрасываем flight-поля, списываем доп. топливо
+    nodes.append(node("do-turn-around", "bot_table", 1600, 2000, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "flight_expires_at", "op": "set", "value": ""},
+            {"column": "flight_target_planet", "op": "set", "value": ""},
+            {"column": "flight_target_name", "op": "set", "value": ""},
+            {"column": "flight_fuel_cost", "op": "set", "value": ""},
+            {"column": "flight_start_ts", "op": "set", "value": ""},
+            {"column": "status_text", "op": "set", "value": "📍 Планета: <b>{pilot.current_planet_name}</b>"},
+            {"column": "fuel", "op": "decrement", "value": "{turn_fuel_penalty}"},
+        ],
+        "autoTransitionTo": "msg-turn-ok",
+        "enableAutoTransition": True,
+    }))
+
+    turn_ok_text = (
+        "🔄 Вы развернулись!\n\n"
+        "📍 Вернулись на планету <b>{pilot.current_planet_name}</b>\n"
+        "📊 Пройдено: <code>{turn_progress}</code>% пути\n"
+        "⛽ Топливо на возврат: -<code>{turn_fuel_penalty}</code>"
+    )
+    nodes.append(main_menu_msg("msg-turn-ok", turn_ok_text, 1900, 2000))
 
     return {
         "id": "sheet-map",
