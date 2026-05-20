@@ -179,8 +179,14 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     try:
         _resp_msgs = await userbot_client.get_messages(_resp_entity, limit=5)
         _resp_list = _resp_msgs if isinstance(_resp_msgs, list) else [_resp_msgs]
-        # Фильтруем: ищем сообщения НЕ от нас (ответы бота)
+        # Логируем все полученные сообщения для отладки
         _my_id = (await userbot_client.get_me()).id
+        for _idx, _rm in enumerate(_resp_list):
+            _rm_sender = getattr(_rm, 'sender_id', None)
+            _rm_text = (_rm.text or '')[:60] if _rm else ''
+            _rm_is_mine = (_rm_sender == _my_id) if _rm_sender else False
+            logging.info(f"📨 [{{ nodeId }}] msg[{_idx}] id={getattr(_rm, 'id', '?')} sender={_rm_sender} mine={_rm_is_mine} text={_rm_text!r}")
+        # Фильтруем: ищем сообщения НЕ от нас (ответы бота)
         _bot_msgs = [m for m in _resp_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id]
         _resp_msg = _bot_msgs[0] if _bot_msgs else (_resp_list[0] if _resp_list else None)
     except Exception as _resp_err:
@@ -191,7 +197,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         await set_user_var(user_id, "{{ saveResponseIdTo }}", _resp_msg.id)
         logging.info(f"💾 ID ответа сохранён: {{ saveResponseIdTo }} = {_resp_msg.id}")
 {%- if saveResponseTextTo %}
-        # Ищем сообщение бота с содержательным текстом
+        # Ищем сообщение бота с содержательным текстом (пропускаем короткие)
         _resp_text = ''
         for _bm in _bot_msgs:
             if _bm and _bm.text and len(_bm.text) > 20:
