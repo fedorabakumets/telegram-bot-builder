@@ -1023,15 +1023,38 @@ def build_bot_compare_sheet():
     ))
 
     # Нажимаем inline кнопку "Я изучил и готов к оплате"
+    # После нажатия бот шлёт НОВОЕ сообщение с курсом — читаем через saveResponseTextTo
     nodes.append(userbot_click_button_node(
         "bot-ub-sanchez-ready",
         "@Sanchez_exchange_bot",
         "{sanchez_resp2}",
         "изучил",
-        "sanchez_text",
-        "bot-setv-parse-sanchez",
+        "sanchez_ready_text",
+        "bot-ub-sanchez-read",
         10000, 400
     ))
+
+    # Читаем сообщение с курсом — отправляем точку чтобы триггернуть чтение
+    # saveResponseTextTo с strategy=longest найдёт сообщение с курсом
+    nodes.append({
+        "id": "bot-ub-sanchez-read", "type": "userbot_message",
+        "position": {"x": 10200, "y": 400},
+        "data": {
+            "messageText": ".",
+            "formatMode": "html",
+            "userbotEntity": "@Sanchez_exchange_bot",
+            "attachedMedia": [],
+            "disableLinkPreview": False,
+            "saveMessageIdTo": "",
+            "saveResponseIdTo": "sanchez_final_id",
+            "saveResponseTextTo": "sanchez_text",
+            "responseWaitSeconds": 3,
+            "responseStrategy": "longest",
+            "responseFilterRegex": "",
+            "autoTransitionTo": "bot-setv-parse-sanchez",
+            "enableAutoTransition": True
+        }
+    })
 
     # Парсинг: "Курс в рублях 6,726,121₽"
     nodes.append(set_var_node(
