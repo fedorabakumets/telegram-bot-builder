@@ -1362,6 +1362,7 @@ def build_pirates() -> dict:
     pirate_text = (
         f"🏴‍☠️ {MENTION}, на вас напали пираты!\n\n"
         "Они требуют <code>{ransom}</code> кр. или ваш груз.\n\n"
+        "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "🛡 Броня: ур. <code>{pilot.armor_level}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
     )
