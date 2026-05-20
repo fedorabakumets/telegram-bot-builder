@@ -509,19 +509,31 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
-  // Добавляем переменные от userbot_message-узлов (saveMessageIdTo)
+  // Добавляем переменные от userbot_message-узлов (saveMessageIdTo, saveResponseIdTo)
   allNodes.forEach(node => {
     if ((node.type as string) !== 'userbot_message') return;
     const data = node.data as any;
-    if (!data.saveMessageIdTo?.trim()) return;
-    const key = `ub_msg_id__${node.id}`;
-    if (!variablesMap.has(key)) {
-      variablesMap.set(key, {
-        name: data.saveMessageIdTo,
-        nodeId: node.id,
-        nodeType: 'userbot_message' as any,
-        description: 'ID сообщения от юзербота',
-      });
+    if (data.saveMessageIdTo?.trim()) {
+      const key = `ub_msg_id__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.saveMessageIdTo,
+          nodeId: node.id,
+          nodeType: 'userbot_message' as any,
+          description: 'ID сообщения от юзербота',
+        });
+      }
+    }
+    if (data.saveResponseIdTo?.trim()) {
+      const key = `ub_resp_id__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.saveResponseIdTo,
+          nodeId: node.id,
+          nodeType: 'userbot_message' as any,
+          description: 'ID ответа от получателя',
+        });
+      }
     }
   });
 

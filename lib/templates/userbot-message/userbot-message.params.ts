@@ -21,6 +21,8 @@ export interface UserbotMessageTemplateParams {
   attachedMedia?: string[];
   /** Имя переменной для сохранения ID отправленного сообщения */
   saveMessageIdTo?: string;
+  /** Имя переменной для сохранения ID ответа от получателя */
+  saveResponseIdTo?: string;
   /** ID узла для автоперехода */
   autoTransitionTo?: string;
   /** ID проекта (для get_content) */

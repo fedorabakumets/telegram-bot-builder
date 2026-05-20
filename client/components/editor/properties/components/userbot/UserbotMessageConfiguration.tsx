@@ -182,6 +182,26 @@ export function UserbotMessageConfiguration({
         />
       </div>
 
+      {/* Сохранить ID ответа (ждёт ответ от получателя) */}
+      <div className="bg-gradient-to-br from-violet-50/30 to-purple-50/20 dark:from-violet-950/20 dark:to-purple-900/10 rounded-xl p-3 border border-violet-200/30 dark:border-violet-800/30 space-y-2">
+        <Label className="text-xs text-muted-foreground">Сохранить ID ответа (ждёт ответ)</Label>
+        <div className="flex gap-1">
+          <Input
+            value={data.saveResponseIdTo ?? ''}
+            onChange={(e) => onNodeUpdate(selectedNode.id, { saveResponseIdTo: e.target.value })}
+            placeholder="response_msg_id (необязательно)"
+            className="h-8 text-sm flex-1"
+          />
+          <VariableSelector
+            availableVariables={availableVariables as Variable[]}
+            onSelect={(v) => onNodeUpdate(selectedNode.id, { saveResponseIdTo: v })}
+          />
+        </div>
+        <p className="text-[10px] text-muted-foreground/60">
+          После отправки ждёт 2 сек и сохраняет ID последнего сообщения от получателя. Используй в «Нажать кнопку».
+        </p>
+      </div>
+
       {/* Информация о режиме */}
       <div className="rounded-lg border border-violet-200/40 dark:border-violet-800/40 bg-violet-50/30 dark:bg-violet-950/20 p-3">
         <div className="flex items-center gap-2 text-xs text-violet-700 dark:text-violet-300">
