@@ -1548,10 +1548,10 @@ def build_map() -> dict:
 
     # Проверка: в полёте ли?
     nodes.append(node("cond-turn-inflight", "condition", 1000, 2000, {
-        "variable": "pilot.flight_expires_at",
+        "variable": "pilot.flight_target_planet",
         "branches": [
-            branch("br-turn-yes", "В полёте", "greater_than", "{now_ts}", "set-turn-penalty"),
-            branch("br-turn-no", "Не в полёте", "else", "", "msg-turn-not-flying"),
+            branch("br-turn-no", "Не в полёте", "equals", "", "msg-turn-not-flying"),
+            branch("br-turn-yes", "В полёте", "else", "", "set-turn-penalty"),
         ],
     }))
 
