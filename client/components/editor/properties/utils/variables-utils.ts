@@ -493,6 +493,7 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
       { field: 'saveResultTo', desc: 'Текст сообщения после нажатия' },
       { field: 'saveButtonsTo', desc: 'Кнопки после нажатия (JSON)' },
       { field: 'saveHasMediaTo', desc: 'Наличие медиа (true/false)' },
+      { field: 'saveMediaTo', desc: 'Медиа-объект (для пересылки)' },
     ];
     for (const { field, desc } of fields) {
       if (!data[field]?.trim()) continue;

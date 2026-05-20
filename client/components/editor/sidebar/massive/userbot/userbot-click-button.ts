@@ -20,6 +20,7 @@ export const userbotClickButton: ComponentDefinition = {
     saveResultTo: '',
     saveButtonsTo: '',
     saveHasMediaTo: '',
+    saveMediaTo: '',
     autoTransitionTo: '',
   }
 };

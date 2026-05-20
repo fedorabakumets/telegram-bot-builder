@@ -194,6 +194,26 @@ export function UserbotClickButtonConfiguration({
                 />
               </div>
             </div>
+
+            {/* Сохранить медиа (для пересылки) */}
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Сохранить медиа (для пересылки)</Label>
+              <div className="flex gap-1">
+                <Input
+                  value={data.saveMediaTo ?? ''}
+                  onChange={(e) => onNodeUpdate(selectedNode.id, { saveMediaTo: e.target.value })}
+                  placeholder="media_object (необязательно)"
+                  className="h-8 text-sm flex-1"
+                />
+                <VariableSelector
+                  availableVariables={availableVariables as Variable[]}
+                  onSelect={(v) => onNodeUpdate(selectedNode.id, { saveMediaTo: v })}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground/60">
+                Медиа-объект можно переслать через userbot_message в поле attachedMedia как {'{переменная}'}
+              </p>
+            </div>
           </div>
         )}
       </div>
