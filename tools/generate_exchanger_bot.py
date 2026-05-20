@@ -919,7 +919,76 @@ def build_bot_compare_sheet():
                 "mode": "expression"
             },
         ],
-        "bot-setv-calc", 8000, 400
+        "bot-ub-litebit-start", 8000, 400
+    ))
+
+    # ─── 19. LiteBit — /start → Калькулятор → BTC → {user_amount} ────────────
+    nodes.append(userbot_message_node(
+        "bot-ub-litebit-start",
+        "/start",
+        "@litebitbit_bot",
+        "litebit_resp1",
+        "bot-ub-litebit-calc",
+        8200, 400
+    ))
+
+    nodes.append(userbot_message_node(
+        "bot-ub-litebit-calc",
+        "🧮 Калькулятор",
+        "@litebitbit_bot",
+        "litebit_resp2",
+        "bot-ub-litebit-btc",
+        8400, 400
+    ))
+
+    nodes.append(userbot_message_node(
+        "bot-ub-litebit-btc",
+        "BTC",
+        "@litebitbit_bot",
+        "litebit_resp3",
+        "bot-ub-litebit-amount",
+        8600, 400
+    ))
+
+    # Отправляем сумму и сохраняем текст ответа
+    nodes.append({
+        "id": "bot-ub-litebit-amount", "type": "userbot_message",
+        "position": {"x": 8800, "y": 400},
+        "data": {
+            "messageText": "{user_amount}",
+            "formatMode": "html",
+            "userbotEntity": "@litebitbit_bot",
+            "attachedMedia": [],
+            "disableLinkPreview": False,
+            "saveMessageIdTo": "",
+            "saveResponseIdTo": "litebit_resp4",
+            "saveResponseTextTo": "litebit_text",
+            "responseWaitSeconds": 3,
+            "responseStrategy": "longest",
+            "responseFilterRegex": "",
+            "autoTransitionTo": "bot-setv-parse-litebit",
+            "enableAutoTransition": True
+        }
+    })
+
+    # Парсинг: "10000 рублей это по курсу 0.00173762 BTC"
+    nodes.append(set_var_node(
+        "bot-setv-parse-litebit",
+        [
+            {
+                "id": "plb_1", "variable": "litebit_btc",
+                "value": "{litebit_text}",
+                "mode": "regex_extract",
+                "pattern": "([\\d.]+)\\s*BTC",
+                "regexGroup": "1"
+            },
+            {
+                "id": "plb_2", "variable": "litebit_rate",
+                "value": "round(float({user_amount}) / float({litebit_btc}), 0) if float({litebit_btc}) > 0 else 0",
+                "mode": "expression"
+            },
+        ],
+        "bot-setv-calc", 9200, 400
     ))
 
     # ─── 17. Вычисление BTC для всех ботов ───────────────────────────────────
@@ -952,6 +1021,7 @@ def build_bot_compare_sheet():
             {"id": "fmt4", "variable": "user_amount_fmt", "value": "{user_amount}", "mode": "format_number"},
             {"id": "fmt5", "variable": "shaxta_rate_fmt", "value": "{shaxta_rate}", "mode": "format_number"},
             {"id": "fmt6", "variable": "bitmixer_rate_fmt", "value": "{bitmixer_rate}", "mode": "format_number"},
+            {"id": "fmt7", "variable": "litebit_rate_fmt", "value": "{litebit_rate}", "mode": "format_number"},
         ],
         "bot-msg-result", 6400, 400
     ))
@@ -970,7 +1040,9 @@ def build_bot_compare_sheet():
         "🔸 <a href='https://t.me/btccapital_bot?start=7733607050'>Capitalist</a>: "
         "<b>{capitalist_btc}</b> BTC ({capitalist_rate_fmt} ₽)\n"
         "🔸 <a href='http://t.me/Exchange24Crypto_bot?start=r-7733607050'>24Crypto</a>: "
-        "<b>{crypto24_btc}</b> BTC ({crypto24_rate_fmt} ₽)\n\n"
+        "<b>{crypto24_btc}</b> BTC ({crypto24_rate_fmt} ₽)\n"
+        "🔸 <a href='https://telegram.me/litebitbit_bot?start=7733607050'>LiteBit</a>: "
+        "<b>{litebit_btc}</b> BTC ({litebit_rate_fmt} ₽)\n\n"
         "👆 <i>Нажми на название для перехода</i>"
     )
     nodes.append(message_node(
