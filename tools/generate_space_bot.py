@@ -318,11 +318,11 @@ def build_start_menu() -> dict:
 
     # --- Инициализация таблицы planet_upgrades (уровни улучшений планеты) ---
     PLANET_UPGRADES = [
-        {"level": "1", "mine_rate": "1", "storage_cap": "50", "energy_bonus": "0", "defense_pct": "0", "price": "0"},
-        {"level": "2", "mine_rate": "2", "storage_cap": "100", "energy_bonus": "1", "defense_pct": "10", "price": "50000"},
-        {"level": "3", "mine_rate": "3", "storage_cap": "200", "energy_bonus": "2", "defense_pct": "25", "price": "150000"},
-        {"level": "4", "mine_rate": "5", "storage_cap": "400", "energy_bonus": "3", "defense_pct": "40", "price": "500000"},
-        {"level": "5", "mine_rate": "8", "storage_cap": "800", "energy_bonus": "5", "defense_pct": "60", "price": "1500000"},
+        {"level": "1", "mine_rate": "5", "storage_cap": "50", "energy_bonus": "0", "defense_pct": "0", "price": "0"},
+        {"level": "2", "mine_rate": "12", "storage_cap": "100", "energy_bonus": "1", "defense_pct": "10", "price": "50000"},
+        {"level": "3", "mine_rate": "20", "storage_cap": "200", "energy_bonus": "2", "defense_pct": "25", "price": "150000"},
+        {"level": "4", "mine_rate": "35", "storage_cap": "400", "energy_bonus": "3", "defense_pct": "40", "price": "500000"},
+        {"level": "5", "mine_rate": "50", "storage_cap": "800", "energy_bonus": "5", "defense_pct": "60", "price": "1500000"},
     ]
     pu_base_x = names_base_x + len(PLANET_NAMES) * 200
     for i, pu in enumerate(PLANET_UPGRADES):
@@ -2622,12 +2622,13 @@ def build_planet() -> dict:
         "assignments": [
             {"id": "a-pc-now", "variable": "now_ts", "value": "0", "mode": "timestamp"},
             {"id": "a-pc-hours", "variable": "hours_passed", "value": "({now_ts} - {planet.last_harvest}) // 3600", "mode": "expression"},
-            {"id": "a-pc-mined", "variable": "ore_mined", "value": "{hours_passed} * {planet.mine_level}", "mode": "expression"},
+            {"id": "a-pc-mined", "variable": "ore_mined", "value": "{hours_passed} * {current_mine_rate}", "mode": "expression"},
             {"id": "a-pc-max", "variable": "storage_max", "value": "{planet.storage_level} * 50", "mode": "expression"},
             {"id": "a-pc-avail", "variable": "ore_available", "value": "min({planet.ore_stored} + {ore_mined}, {storage_max})", "mode": "expression"},
             {"id": "a-pc-credits-fmt", "variable": "credits_fmt", "value": "{pilot.credits}", "mode": "format_number"},
             {"id": "a-pc-fuel-fmt", "variable": "fuel_fmt", "value": "{pilot.fuel}", "mode": "format_number"},
             {"id": "a-pc-mine-next", "variable": "mine_next", "value": "{planet.mine_level} + 1", "mode": "expression"},
+            {"id": "a-pc-mine-rate", "variable": "current_mine_rate", "value": "", "mode": "lookup", "lookupTable": "planet_upgrades", "lookupField": "mine_rate", "lookupWhere": [{"field": "level", "value": "{planet.mine_level}"}]},
             {"id": "a-pc-storage-next", "variable": "storage_next", "value": "{planet.storage_level} + 1", "mode": "expression"},
             {"id": "a-pc-mine-price", "variable": "mine_price", "value": "", "mode": "lookup", "lookupTable": "planet_upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "{mine_next}"}]},
             {"id": "a-pc-storage-price", "variable": "storage_price", "value": "", "mode": "lookup", "lookupTable": "planet_upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "{storage_next}"}]},
@@ -2640,7 +2641,7 @@ def build_planet() -> dict:
 
     my_planet_text = (
         f"🌍 {MENTION}, ваша планета <b>{{planet.name}}</b>:\n\n"
-        "⛏ Шахта: ур. <code>{planet.mine_level}</code> ({planet.mine_level} руды/час)\n"
+        "⛏ Шахта: ур. <code>{planet.mine_level}</code> ({current_mine_rate} руды/час)\n"
         "📦 Склад: ур. <code>{planet.storage_level}</code> (<code>{ore_available}</code>/<code>{storage_max}</code>)\n"
         "⚡ Энергия: ур. <code>{planet.energy_level}</code>\n"
         "🛡 Защита: ур. <code>{planet.defense_level}</code>\n\n"
@@ -2705,8 +2706,9 @@ def build_planet() -> dict:
     nodes.append(node("set-harvest-calc", "set_variable", 1000, 500, {
         "assignments": [
             {"id": "a-hc-now", "variable": "now_ts", "value": "0", "mode": "timestamp"},
+            {"id": "a-hc-mine-rate", "variable": "current_mine_rate", "value": "", "mode": "lookup", "lookupTable": "planet_upgrades", "lookupField": "mine_rate", "lookupWhere": [{"field": "level", "value": "{planet.mine_level}"}]},
             {"id": "a-hc-hours", "variable": "hours_passed", "value": "({now_ts} - {planet.last_harvest}) // 3600", "mode": "expression"},
-            {"id": "a-hc-mined", "variable": "ore_mined", "value": "{hours_passed} * {planet.mine_level}", "mode": "expression"},
+            {"id": "a-hc-mined", "variable": "ore_mined", "value": "{hours_passed} * {current_mine_rate}", "mode": "expression"},
             {"id": "a-hc-max", "variable": "storage_max", "value": "{planet.storage_level} * 50", "mode": "expression"},
             {"id": "a-hc-collect", "variable": "ore_to_collect", "value": "min({planet.ore_stored} + {ore_mined}, {storage_max})", "mode": "expression"},
         ],
