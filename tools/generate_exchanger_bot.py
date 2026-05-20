@@ -979,7 +979,7 @@ def build_bot_compare_sheet():
                 "id": "plb_1", "variable": "litebit_btc",
                 "value": "{litebit_text}",
                 "mode": "regex_extract",
-                "pattern": "([\\d.]+)\\s*BTC",
+                "pattern": "`?([\\d.]+)`?\\s*BTC",
                 "regexGroup": "1"
             },
             {
