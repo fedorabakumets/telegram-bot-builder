@@ -523,7 +523,7 @@ def build_trade() -> dict:
     for ore in ORES:
         buy_buttons.append({
             "id": f"btn-buy-{ore['id']}",
-            "text": f"{ore['emoji']} {ore['name']} — {{price_{ore['id']}}} 💰",
+            "text": f"{ore['emoji']} {ore['name']} — {{price_{ore['id']}}} кредитов",
             "action": "goto",
             "target": f"buy-check-{ore['id']}",
         })
@@ -571,7 +571,7 @@ def build_trade() -> dict:
 
         # Не хватает кредитов
         nodes.append(node(f"msg-buy-no-money-{ore['id']}", "message", 1000, y_pos - 100, {
-            "messageText": f"❌ Недостаточно кредитов!\n\n{ore['emoji']} {ore['name']}\n💰 Нужно: <code>{{ore_price}}</code> 💰\n💰 У вас: <code>{{pilot.credits}}</code> 💰",
+            "messageText": f"❌ Недостаточно кредитов!\n\n{ore['emoji']} {ore['name']}\n💰 Нужно: <code>{{ore_price}}</code> кредитов\n💰 У вас: <code>{{pilot.credits}}</code> кредитов",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -672,7 +672,7 @@ def build_trade() -> dict:
 
         # Успешная покупка
         nodes.append(node(f"msg-buy-ok-{ore['id']}", "message", 2800, y_pos, {
-            "messageText": f"✅ Куплено: {ore['emoji']} <b>{ore['name']}</b> (1 шт.)\n\n💰 Баланс: <code>{{pilot.credits}}</code> 💰\n📦 Трюм: <code>{{pilot.cargo_used}}/{{pilot.cargo_max}}</code>",
+            "messageText": f"✅ Куплено: {ore['emoji']} <b>{ore['name']}</b> (1 шт.)\n\n💰 Баланс: <code>{{pilot.credits}}</code> кредитов\n📦 Трюм: <code>{{pilot.cargo_used}}/{{pilot.cargo_max}}</code>",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -872,7 +872,7 @@ def build_trade() -> dict:
 
         # Успешная продажа
         nodes.append(node(f"msg-sell-ok-{ore['id']}", "message", 2200, y_pos, {
-            "messageText": f"✅ Продано: {ore['emoji']} <b>{ore['name']}</b> x{{sell_item.quantity}}\n\n💰 Получено: <code>{{sell_income}}</code> 💰\n💰 Баланс: <code>{{pilot.credits}}</code> 💰",
+            "messageText": f"✅ Продано: {ore['emoji']} <b>{ore['name']}</b> x{{sell_item.quantity}}\n\n💰 Получено: <code>{{sell_income}}</code> кредитов\n💰 Баланс: <code>{{pilot.credits}}</code> кредитов",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -1361,7 +1361,7 @@ def build_pirates() -> dict:
     # --- Сообщение о нападении пиратов (inline кнопки) ---
     pirate_text = (
         f"🏴‍☠️ {MENTION}, на вас напали пираты!\n\n"
-        "Они требуют <code>{ransom}</code> 💰 или ваш груз.\n\n"
+        "Они требуют <code>{ransom}</code> кредитов или ваш груз.\n\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
         "🛡 Броня: ур. <code>{pilot.armor_level}</code>\n"
         "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
@@ -1372,7 +1372,7 @@ def build_pirates() -> dict:
         "keyboardType": "inline",
         "buttons": [
             btn("btn-fight", "⚔️ Драться", "goto", target="fight-roll"),
-            btn("btn-pay", "💰 Откупиться ({ransom} 💰)", "goto", target="pay-check"),
+            btn("btn-pay", "💰 Откупиться ({ransom} кредитов)", "goto", target="pay-check"),
         ],
         "keyboardLayout": {
             "autoLayout": False,
@@ -1450,7 +1450,7 @@ def build_pirates() -> dict:
 
     # Сообщение победы с фрагментом
     nodes.append(node("msg-win-with-fragment", "message", 1900, -800, {
-        "messageText": "🎉 Вы победили пиратов!\n\n🏆 Трофей: +<code>{loot}</code> 💰\n🌀 Фрагмент Эфира: +1",
+        "messageText": "🎉 Вы победили пиратов!\n\n🏆 Трофей: +<code>{loot}</code> кредитов\n🌀 Фрагмент Эфира: +1",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
@@ -1460,7 +1460,7 @@ def build_pirates() -> dict:
 
     # Сообщение победы без фрагмента
     nodes.append(node("msg-win-no-fragment", "message", 1900, -600, {
-        "messageText": "🎉 Вы победили пиратов!\n\n🏆 Трофей: +<code>{loot}</code> 💰",
+        "messageText": "🎉 Вы победили пиратов!\n\n🏆 Трофей: +<code>{loot}</code> кредитов",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
@@ -1558,7 +1558,7 @@ def build_pirates() -> dict:
 
     # Не хватает кредитов — придётся драться
     nodes.append(node("msg-cant-pay", "message", 400, 400, {
-        "messageText": "💰 Недостаточно кредитов для откупа!\n\nНужно: <code>{ransom}</code> 💰\nУ вас: <code>{pilot.credits}</code> 💰\n\nПридётся драться!",
+        "messageText": "💰 Недостаточно кредитов для откупа!\n\nНужно: <code>{ransom}</code> кредитов\nУ вас: <code>{pilot.credits}</code> кредитов\n\nПридётся драться!",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
@@ -1580,7 +1580,7 @@ def build_pirates() -> dict:
 
     # Сообщение об откупе
     nodes.append(node("msg-paid", "message", 700, 600, {
-        "messageText": "💰 Вы откупились от пиратов.\n\nЗаплачено: <code>{ransom}</code> 💰",
+        "messageText": "💰 Вы откупились от пиратов.\n\nЗаплачено: <code>{ransom}</code> кредитов",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
