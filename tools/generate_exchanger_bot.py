@@ -58,9 +58,9 @@ EXCHANGERS = [
 # Обменники-боты: (name, username, ref_url, mode, step1_text, click_button,
 #                   step2_text, inline_query, rate_regex, wait_seconds)
 BOT_EXCHANGERS = [
-    ("ScoobyChange", "@ScoobyChangeBot", "https://t.me/ScoobyChangeBot?start=ref123",
-     "message", "{user_amount} {selected_from_name}", "", "",
-     "", r"Получите:\s*([\d.]+)", 3),
+    ("ScoobyChange", "@scdoo_bot", "https://t.me/scdoo_bot?start=7733607050",
+     "inline", "", "", "",
+     "buy_{selected_to_key} 1", r"К оплате будет:\s*([\d]+)", 3),
     ("Shaxta", "@ShaxtaBot", "https://t.me/ShaxtaBot?start=ref456",
      "click", "/start", "Карта → {selected_to_name}", "",
      "", r"Итого:\s*([\d.]+)", 4),
