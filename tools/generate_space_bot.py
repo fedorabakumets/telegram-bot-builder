@@ -377,7 +377,7 @@ def build_start_menu() -> dict:
         f"👤 {MENTION}, ваш профиль:\n\n"
         "🆔 ID: <code>{pilot.game_id}</code>\n"
         "💰 Кредиты: <code>{pilot.credits}</code>\n"
-        "🌍 Планета: <code>{pilot.status_text}</code>\n"
+        "{pilot.status_text}\n"
         "📦 Трюм: {pilot.cargo_used}/{pilot.cargo_max}\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>\n"
         "🌀 Фрагменты Эфира: <code>{pilot.fragments}</code>\n\n"
