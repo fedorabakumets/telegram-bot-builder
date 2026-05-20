@@ -64,15 +64,6 @@ BOT_EXCHANGERS = [
     ("Capitalist", "@btccapital_bot", "https://t.me/btccapital_bot?start=7733607050",
      "click", "/start", "🔄 Купить BTC", "0.001",
      "", r"Курс покупки .*?BTC.*?:\s*([\d]+)", 4),
-    ("Vortex", "@VortexExchangeBot", "https://t.me/VortexExchangeBot?start=ref789",
-     "click", "/exchange", "{selected_from_name} → {selected_to_name}", "{user_amount}",
-     "", r"Вы получите:\s*([\d.]+)", 5),
-    ("CryptoFlow", "@CryptoFlowBot", "https://t.me/CryptoFlowBot?start=ref000",
-     "inline", "", "", "",
-     "{selected_from_name} {user_amount} {selected_to_name}", r"([\d.]+)", 3),
-    ("Hustle", "@HustleExBot", "https://t.me/HustleExBot?start=refabc",
-     "message", "/rate {selected_from_name} {selected_to_name} {user_amount}", "", "",
-     "", r"Результат:\s*([\d.]+)", 3),
 ]
 
 
