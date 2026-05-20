@@ -1416,7 +1416,7 @@ def build_map() -> dict:
 
         # Сообщение "Летим..."
         nodes.append(node(f"msg-fly-start-{planet['id']}", "message", 1900, y_pos, {
-            "messageText": f"🚀 Летим на планету <b>{planet['full']}</b>!\n\n⛽ Топливо: -{{flight_fuel}}\n🕐 Время в пути: {{flight_time_fmt}}",
+            "messageText": f"🚀 Летим на планету <b>{planet['full']}</b>!\n\n⛽ Потрачено: <code>{{flight_fuel}}</code> топлива\n🕐 Время в пути: <code>{{flight_time_fmt}}</code>",
             "formatMode": "html",
             "keyboardType": "reply",
             "buttons": [
