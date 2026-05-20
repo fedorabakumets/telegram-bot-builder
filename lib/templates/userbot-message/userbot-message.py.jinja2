@@ -158,6 +158,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             except Exception as _retry_err:
                 logging.error(f"❌ Повторная ошибка: {_retry_err}")
 
+      # Пауза между получателями (защита от FloodWait)
+      if len(_recipients) > 1:
+          await asyncio.sleep(2)
+
 {%- if saveMessageIdTo %}
     # Сохраняем ID отправленного сообщения
     if sent and hasattr(sent, 'id'):
