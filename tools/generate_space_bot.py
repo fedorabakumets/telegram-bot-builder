@@ -1,6 +1,6 @@
 """
 @fileoverview Генератор project.json для бота «Космический Торговец».
-Создаёт 4 листа: Старт/Меню, Торговля, Карта, Корабль.
+Создаёт 5 листов: Старт/Меню, Торговля, Карта, Пираты, Корабль.
 Фаза 1 — скелет с заглушками для будущей логики.
 8 руд, динамические цены, фрагменты Эфира.
 @module tools/generate_space_bot
@@ -1266,38 +1266,13 @@ def build_map() -> dict:
             "enableAutoTransition": True,
         }))
 
-        # Delay (background) — ждём время перелёта
+        # Delay (background) — ждём время перелёта, затем переход на пиратов
         nodes.append(node(f"fly-delay-{planet['id']}", "delay", 2200, y_pos, {
             "seconds": "{flight_time}",
             "unit": "seconds",
             "mode": "background",
-            "autoTransitionTo": f"fly-arrive-{planet['id']}",
+            "autoTransitionTo": "pirate-reread-pilot",
             "enableAutoTransition": True,
-        }))
-
-        # Обновляем планету после прибытия
-        nodes.append(node(f"fly-arrive-{planet['id']}", "bot_table", 2500, y_pos, {
-            "tableName": "pilots",
-            "operation": "update",
-            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
-            "updates": [
-                {"column": "current_planet", "op": "set", "value": planet['id']},
-                {"column": "current_planet_name", "op": "set", "value": planet['full']},
-                {"column": "flight_expires_at", "op": "set", "value": ""},
-                {"column": "flight_target_planet", "op": "set", "value": ""},
-                {"column": "flight_target_name", "op": "set", "value": ""},
-                {"column": "status_text", "op": "set", "value": f"📍 Планета: <b>{planet['full']}</b>"},
-            ],
-            "autoTransitionTo": f"msg-fly-arrived-{planet['id']}",
-            "enableAutoTransition": True,
-        }))
-
-        # Сообщение "Прибыли!"
-        nodes.append(node(f"msg-fly-arrived-{planet['id']}", "message", 2800, y_pos, {
-            "messageText": f"✅ Вы прибыли на планету <b>{planet['full']}</b>!\n\nТеперь вы можете торговать здесь.",
-            "formatMode": "html",
-            "keyboardType": "none",
-            "buttons": [],
         }))
 
     return {
@@ -1308,7 +1283,312 @@ def build_map() -> dict:
 
 
 # ============================================================
-# Лист 4: 🔧 Корабль (sheet-ship)
+# Лист 4: 🏴‍☠️ Пираты (sheet-pirates)
+# ============================================================
+
+def build_pirates() -> dict:
+    """
+    Строит лист «🏴‍☠️ Пираты».
+    Содержит логику случайного нападения пиратов после перелёта:
+    30% шанс атаки, выбор драться или откупиться, лут/потери.
+    @returns словарь листа
+    """
+    nodes = []
+
+    # --- Перечитываем пилота после delay ---
+    nodes.append(node("pirate-reread-pilot", "bot_table", 100, 0, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "pirate-set-ransom",
+        "enableAutoTransition": True,
+    }))
+
+    # --- Вычисляем переменные: выкуп, шанс пиратов, порог победы ---
+    nodes.append(node("pirate-set-ransom", "set_variable", 400, 0, {
+        "assignments": [
+            {"id": "a-ransom-raw", "variable": "ransom_raw", "value": "{pilot.credits} * 20 / 100", "mode": "expression"},
+            {"id": "a-ransom", "variable": "ransom", "value": "max({ransom_raw}, 50)", "mode": "expression"},
+            {"id": "a-pirate-chance", "variable": "pirate_chance", "value": "1", "maxValue": "100", "mode": "random"},
+            {"id": "a-win-threshold", "variable": "win_threshold", "value": "{pilot.armor_level} * 15 + 15", "mode": "expression"},
+        ],
+        "autoTransitionTo": "cond-pirates",
+        "enableAutoTransition": True,
+    }))
+
+    # --- Условие: пираты нападают (pirate_chance < 31 → 30% шанс) ---
+    nodes.append(node("cond-pirates", "condition", 700, 0, {
+        "variable": "pirate_chance",
+        "branches": [
+            branch("br-pirates-attack", "В полёте", "less_than", "31", "msg-pirates"),
+            branch("br-pirates-safe", "Безопасно", "else", "", "fly-arrive-generic"),
+        ],
+    }))
+
+    # --- Безопасное прибытие (общее для всех планет) ---
+    nodes.append(node("fly-arrive-generic", "bot_table", 1000, 200, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "current_planet", "op": "set", "value": "{pilot.flight_target_planet}"},
+            {"column": "current_planet_name", "op": "set", "value": "{pilot.flight_target_name}"},
+            {"column": "flight_expires_at", "op": "set", "value": ""},
+            {"column": "flight_target_planet", "op": "set", "value": ""},
+            {"column": "flight_target_name", "op": "set", "value": ""},
+            {"column": "status_text", "op": "set", "value": "📍 Планета: <b>{pilot.flight_target_name}</b>"},
+        ],
+        "autoTransitionTo": "msg-arrived-generic",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("msg-arrived-generic", "message", 1300, 200, {
+        "messageText": "✅ Вы прибыли на планету <b>{pilot.flight_target_name}</b>!\n\nТеперь вы можете торговать здесь.",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # --- Сообщение о нападении пиратов (inline кнопки) ---
+    pirate_text = (
+        f"🏴‍☠️ {MENTION}, на вас напали пираты!\n\n"
+        "Они требуют <code>{ransom}</code> кр. или ваш груз.\n\n"
+        "🛡 Броня: ур. <code>{pilot.armor_level}</code>\n"
+        "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
+    )
+    nodes.append(node("msg-pirates", "message", 1000, -200, {
+        "messageText": pirate_text,
+        "formatMode": "html",
+        "keyboardType": "inline",
+        "buttons": [
+            btn("btn-fight", "⚔️ Драться", "goto", target="fight-roll"),
+            btn("btn-pay", "💰 Откупиться ({ransom} кр.)", "goto", target="pay-check"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 2,
+            "rows": [
+                {"buttonIds": ["btn-fight", "btn-pay"]},
+            ],
+        },
+    }))
+
+    # =============================================
+    # ⚔️ ДРАТЬСЯ
+    # =============================================
+
+    # Бросок боя
+    nodes.append(node("fight-roll", "set_variable", 100, -400, {
+        "assignments": [
+            {"id": "a-fight-roll", "variable": "fight_roll", "value": "1", "maxValue": "100", "mode": "random"},
+        ],
+        "autoTransitionTo": "cond-fight-result",
+        "enableAutoTransition": True,
+    }))
+
+    # Условие: победа или поражение
+    nodes.append(node("cond-fight-result", "condition", 400, -400, {
+        "variable": "fight_roll",
+        "branches": [
+            branch("br-fight-win", "Победа", "less_than", "{win_threshold}", "fight-win-loot"),
+            branch("br-fight-lose", "Поражение", "else", "", "fight-lose-check-cargo"),
+        ],
+    }))
+
+    # --- Победа: лут ---
+    nodes.append(node("fight-win-loot", "set_variable", 700, -600, {
+        "assignments": [
+            {"id": "a-loot", "variable": "loot", "value": "50", "maxValue": "200", "mode": "random"},
+            {"id": "a-frag-roll", "variable": "fragment_roll", "value": "1", "maxValue": "100", "mode": "random"},
+        ],
+        "autoTransitionTo": "fight-win-credits",
+        "enableAutoTransition": True,
+    }))
+
+    # Начисляем кредиты за победу
+    nodes.append(node("fight-win-credits", "bot_table", 1000, -600, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "credits", "op": "increment", "value": "{loot}"},
+        ],
+        "autoTransitionTo": "cond-fragment-drop",
+        "enableAutoTransition": True,
+    }))
+
+    # Условие: дроп фрагмента (15% шанс)
+    nodes.append(node("cond-fragment-drop", "condition", 1300, -600, {
+        "variable": "fragment_roll",
+        "branches": [
+            branch("br-frag-drop", "Дроп", "less_than", "16", "fight-win-fragment"),
+            branch("br-frag-no", "Без фрагмента", "else", "", "msg-win-no-fragment"),
+        ],
+    }))
+
+    # Дроп фрагмента
+    nodes.append(node("fight-win-fragment", "bot_table", 1600, -800, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "fragments", "op": "increment", "value": "1"},
+        ],
+        "autoTransitionTo": "msg-win-with-fragment",
+        "enableAutoTransition": True,
+    }))
+
+    # Сообщение победы с фрагментом
+    nodes.append(node("msg-win-with-fragment", "message", 1900, -800, {
+        "messageText": "🎉 Вы победили пиратов!\n\n🏆 Трофей: +<code>{loot}</code> кр.\n🌀 Фрагмент Эфира: +1",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+        "autoTransitionTo": "fly-arrive-generic",
+        "enableAutoTransition": True,
+    }))
+
+    # Сообщение победы без фрагмента
+    nodes.append(node("msg-win-no-fragment", "message", 1900, -600, {
+        "messageText": "🎉 Вы победили пиратов!\n\n🏆 Трофей: +<code>{loot}</code> кр.",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+        "autoTransitionTo": "fly-arrive-generic",
+        "enableAutoTransition": True,
+    }))
+
+    # --- Поражение: проверка трюма ---
+    nodes.append(node("fight-lose-check-cargo", "condition", 700, -200, {
+        "variable": "pilot.cargo_used",
+        "branches": [
+            branch("br-lose-empty", "Пусто", "equals", "0", "msg-lose-empty"),
+            branch("br-lose-steal", "Есть груз", "else", "", "fight-lose-steal"),
+        ],
+    }))
+
+    # Трюм пуст — пираты ничего не нашли
+    nodes.append(node("msg-lose-empty", "message", 1000, -100, {
+        "messageText": "💥 Пираты оказались сильнее...\n\nОни обыскали трюм, но ничего не нашли!",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+        "autoTransitionTo": "fly-arrive-generic",
+        "enableAutoTransition": True,
+    }))
+
+    # Кража: читаем случайную руду из трюма
+    nodes.append(node("fight-lose-steal", "bot_table", 1000, -300, {
+        "tableName": "pilot_cargo",
+        "operation": "read",
+        "where": [{"column": "pilot_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "stolen",
+        "resultFormat": "random_row",
+        "autoTransitionTo": "fight-lose-decrement",
+        "enableAutoTransition": True,
+    }))
+
+    # Уменьшаем quantity украденной руды
+    nodes.append(node("fight-lose-decrement", "bot_table", 1300, -300, {
+        "tableName": "pilot_cargo",
+        "operation": "update",
+        "where": [
+            {"column": "pilot_id", "operator": "equals", "value": "{user_id}"},
+            {"column": "ore_id", "operator": "equals", "value": "{stolen.ore_id}"},
+        ],
+        "updates": [
+            {"column": "quantity", "op": "decrement", "value": "1"},
+        ],
+        "autoTransitionTo": "fight-lose-cargo-dec",
+        "enableAutoTransition": True,
+    }))
+
+    # Уменьшаем cargo_used у пилота
+    nodes.append(node("fight-lose-cargo-dec", "bot_table", 1600, -300, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "cargo_used", "op": "decrement", "value": "1"},
+        ],
+        "autoTransitionTo": "fight-lose-cleanup",
+        "enableAutoTransition": True,
+    }))
+
+    # Удаляем записи с quantity <= 0
+    nodes.append(node("fight-lose-cleanup", "psql_query", 1900, -300, {
+        "query": "DELETE FROM bot_table_rows WHERE table_id = 35 AND data->>'263' = '{user_id}' AND (data->>'264')::int <= 0",
+        "connectionSource": "builtin",
+        "autoTransitionTo": "msg-lose-stolen",
+        "enableAutoTransition": True,
+    }))
+
+    # Сообщение о краже
+    nodes.append(node("msg-lose-stolen", "message", 2200, -300, {
+        "messageText": "💥 Пираты оказались сильнее...\n\n📦 Украдено: <b>{stolen.ore_emoji} {stolen.ore_name}</b> (1 шт.)",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+        "autoTransitionTo": "fly-arrive-generic",
+        "enableAutoTransition": True,
+    }))
+
+    # =============================================
+    # 💰 ОТКУПИТЬСЯ
+    # =============================================
+
+    # Проверка: хватает ли кредитов на выкуп
+    nodes.append(node("pay-check", "condition", 100, 400, {
+        "variable": "pilot.credits",
+        "branches": [
+            branch("br-cant-pay", "Не хватает", "less_than", "{ransom}", "msg-cant-pay"),
+            branch("br-can-pay", "Хватает", "else", "", "pay-do"),
+        ],
+    }))
+
+    # Не хватает кредитов — придётся драться
+    nodes.append(node("msg-cant-pay", "message", 400, 400, {
+        "messageText": "💰 Недостаточно кредитов для откупа!\n\nНужно: <code>{ransom}</code> кр.\nУ вас: <code>{pilot.credits}</code> кр.\n\nПридётся драться!",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+        "autoTransitionTo": "fight-roll",
+        "enableAutoTransition": True,
+    }))
+
+    # Списываем выкуп
+    nodes.append(node("pay-do", "bot_table", 400, 600, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "credits", "op": "decrement", "value": "{ransom}"},
+        ],
+        "autoTransitionTo": "msg-paid",
+        "enableAutoTransition": True,
+    }))
+
+    # Сообщение об откупе
+    nodes.append(node("msg-paid", "message", 700, 600, {
+        "messageText": "💰 Вы откупились от пиратов.\n\nЗаплачено: <code>{ransom}</code> кр.",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+        "autoTransitionTo": "fly-arrive-generic",
+        "enableAutoTransition": True,
+    }))
+
+    return {
+        "id": "sheet-pirates",
+        "name": "🏴‍☠️ Пираты",
+        "nodes": nodes,
+    }
+
+
+# ============================================================
+# Лист 5: 🔧 Корабль (sheet-ship)
 # ============================================================
 
 def build_ship() -> dict:
@@ -1420,6 +1700,7 @@ def build_project() -> dict:
             build_start_menu(),
             build_trade(),
             build_map(),
+            build_pirates(),
             build_ship(),
         ],
     }
