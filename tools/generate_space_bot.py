@@ -1316,7 +1316,7 @@ def build_pirates() -> dict:
     # --- Вычисляем переменные: выкуп, шанс пиратов, порог победы ---
     nodes.append(node("pirate-set-ransom", "set_variable", 400, 0, {
         "assignments": [
-            {"id": "a-ransom-raw", "variable": "ransom_raw", "value": "{pilot.credits} * 20 / 100", "mode": "expression"},
+            {"id": "a-ransom-raw", "variable": "ransom_raw", "value": "{pilot.credits} * 20 // 100", "mode": "expression"},
             {"id": "a-ransom", "variable": "ransom", "value": "max({ransom_raw}, 50)", "mode": "expression"},
             {"id": "a-pirate-chance", "variable": "pirate_chance", "value": "1", "maxValue": "100", "mode": "random"},
             {"id": "a-win-threshold", "variable": "win_threshold", "value": "{pilot.armor_level} * 15 + 15", "mode": "expression"},
