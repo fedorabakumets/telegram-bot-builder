@@ -484,6 +484,30 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     });
   }
 
+  // Добавляем переменные от userbot_click_button-узлов
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'userbot_click_button') return;
+    const data = node.data as any;
+    const fields = [
+      { field: 'saveAlertTo', desc: 'Alert после нажатия кнопки' },
+      { field: 'saveResultTo', desc: 'Текст сообщения после нажатия' },
+      { field: 'saveButtonsTo', desc: 'Кнопки после нажатия (JSON)' },
+      { field: 'saveHasMediaTo', desc: 'Наличие медиа (true/false)' },
+    ];
+    for (const { field, desc } of fields) {
+      if (!data[field]?.trim()) continue;
+      const key = `ub_click_${field}__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data[field],
+          nodeId: node.id,
+          nodeType: 'userbot_click_button' as any,
+          description: desc,
+        });
+      }
+    }
+  });
+
   // Разделяем на текстовые и медиа
   const all = Array.from(variablesMap.values());
   return { textVariables: all.filter(v => !v.mediaType), mediaVariables: all.filter(v => v.mediaType) };
