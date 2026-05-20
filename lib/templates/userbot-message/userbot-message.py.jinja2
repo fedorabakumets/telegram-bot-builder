@@ -197,12 +197,13 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         await set_user_var(user_id, "{{ saveResponseIdTo }}", _resp_msg.id)
         logging.info(f"💾 ID ответа сохранён: {{ saveResponseIdTo }} = {_resp_msg.id}")
 {%- if saveResponseTextTo %}
-        # Ищем сообщение бота с содержательным текстом (пропускаем короткие)
+        # Ищем сообщение бота с содержательным текстом (самое длинное)
         _resp_text = ''
+        _max_len = 0
         for _bm in _bot_msgs:
-            if _bm and _bm.text and len(_bm.text) > 20:
+            if _bm and _bm.text and len(_bm.text) > _max_len:
+                _max_len = len(_bm.text)
                 _resp_text = _bm.text
-                break
         if not _resp_text:
             _resp_text = _resp_msg.text or ''
         user_data[user_id]["{{ saveResponseTextTo }}"] = _resp_text
