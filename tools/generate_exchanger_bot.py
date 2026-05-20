@@ -262,7 +262,7 @@ def loop_node(node_id, source_variable, item_variable, loop_body_to, after_loop_
             enableAutoTransition=True,
             parallel=False,
             delaySeconds=0,
-            maxIterations=0
+            maxIterations=10
         )
     }
 
