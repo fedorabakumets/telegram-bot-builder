@@ -1766,37 +1766,60 @@ def build_ship() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "pilot",
         "resultFormat": "first_row",
+        "autoTransitionTo": "set-ship-prices",
+        "enableAutoTransition": True,
+    }))
+
+    # Вычисляем цены и значения для всех трёх модулей
+    nodes.append(node("set-ship-prices", "set_variable", 300, 0, {
+        "assignments": [
+            {"id": "a-ship-hull-next", "variable": "hull_next", "value": "{pilot.hull_level} + 1", "mode": "expression"},
+            {"id": "a-ship-engine-next", "variable": "engine_next", "value": "{pilot.engine_level} + 1", "mode": "expression"},
+            {"id": "a-ship-armor-next", "variable": "armor_next", "value": "{pilot.armor_level} + 1", "mode": "expression"},
+            {"id": "a-ship-armor-cur", "variable": "current_armor_pct", "value": "{pilot.armor_level} * 15 + 15", "mode": "expression"},
+            {"id": "a-ship-hull-price", "variable": "hull_price", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "{hull_next}"}]},
+            {"id": "a-ship-hull-slots", "variable": "hull_next_slots", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "hull_slots", "lookupWhere": [{"field": "level", "value": "{hull_next}"}]},
+            {"id": "a-ship-engine-price", "variable": "engine_price", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "{engine_next}"}]},
+            {"id": "a-ship-armor-price", "variable": "armor_price", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "{armor_next}"}]},
+            {"id": "a-ship-armor-next-pct", "variable": "armor_next_pct", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "armor_pct", "lookupWhere": [{"field": "level", "value": "{armor_next}"}]},
+        ],
         "autoTransitionTo": "msg-ship-menu",
         "enableAutoTransition": True,
     }))
 
     ship_menu_text = (
         f"🔧 {MENTION}, ваш корабль:\n\n"
-        "━━━━ Модули ━━━━\n\n"
-        "📦 Трюм          ур. <code>{pilot.hull_level}</code> • {pilot.cargo_max} слотов\n"
-        "🚀 Двигатель  ур. <code>{pilot.engine_level}</code> • ⛽ {pilot.fuel}\n"
-        "🛡 Броня          ур. <code>{pilot.armor_level}</code>\n\n"
-        "💰 Кредиты: <code>{pilot.credits}</code>"
+        "📦 <b>Трюм</b> — ур. {pilot.hull_level}\n"
+        "   Вместимость: <code>{pilot.cargo_max}</code> слотов\n"
+        "   Занято: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n"
+        "   ⬆️ Следующий: <code>{hull_next_slots}</code> слотов за <code>{hull_price}</code> 💰\n\n"
+        "🚀 <b>Двигатель</b> — ур. {pilot.engine_level}\n"
+        "   Скорость: -<code>{pilot.engine_level}</code>×15% к перелётам\n"
+        "   ⬆️ Следующий: ещё -15% за <code>{engine_price}</code> 💰\n\n"
+        "🛡 <b>Броня</b> — ур. {pilot.armor_level}\n"
+        "   Шанс победы: <code>{current_armor_pct}</code>%\n"
+        "   ⬆️ Следующий: <code>{armor_next_pct}</code>% за <code>{armor_price}</code> 💰\n\n"
+        "━━━━━━━━━━━━━━━━\n"
+        "💰 <code>{pilot.credits}</code> | ⛽ <code>{pilot.fuel}</code>"
     )
-    nodes.append(node("msg-ship-menu", "message", 400, 0, {
+    nodes.append(node("msg-ship-menu", "message", 600, 0, {
         "messageText": ship_menu_text,
         "formatMode": "html",
-        "keyboardType": "reply",
+        "keyboardType": "inline",
         "buttons": [
-            btn("btn-s-hull", "⬆️ Трюм"),
-            btn("btn-s-engine", "⬆️ Двигатель"),
-            btn("btn-s-armor", "⬆️ Броня"),
-            btn("btn-s-back", "⬅️ Меню"),
+            btn("btn-i-hull", "⬆️ Трюм — {hull_price} 💰", "goto", target="do-upgrade-hull-check"),
+            btn("btn-i-engine", "⬆️ Двигатель — {engine_price} 💰", "goto", target="do-upgrade-engine-check"),
+            btn("btn-i-armor", "⬆️ Броня — {armor_price} 💰", "goto", target="do-upgrade-armor-check"),
         ],
         "keyboardLayout": {
             "autoLayout": False,
-            "columns": 3,
+            "columns": 1,
             "rows": [
-                {"buttonIds": ["btn-s-hull", "btn-s-engine", "btn-s-armor"]},
-                {"buttonIds": ["btn-s-back"]},
+                {"buttonIds": ["btn-i-hull"]},
+                {"buttonIds": ["btn-i-engine"]},
+                {"buttonIds": ["btn-i-armor"]},
             ],
         },
-        "resizeKeyboard": True,
     }))
 
     # =============================================
@@ -1894,13 +1917,13 @@ def build_ship() -> dict:
     nodes.append(node("do-upgrade-hull-check", "condition", 1900, 250, {
         "variable": "pilot.credits",
         "branches": [
-            branch("br-hull-no-money", "Не хватает", "less_than", "{upgrade_price}", "msg-hull-no-money"),
+            branch("br-hull-no-money", "Не хватает", "less_than", "{hull_price}", "msg-hull-no-money"),
             branch("br-hull-has-money", "Хватает", "else", "", "do-upgrade-hull"),
         ],
     }))
 
     nodes.append(node("msg-hull-no-money", "message", 2200, 100, {
-        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{upgrade_price}</code> кредитов\n💰 У вас: <code>{pilot.credits}</code> кредитов",
+        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{hull_price}</code> кредитов\n💰 У вас: <code>{pilot.credits}</code> кредитов",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
@@ -1911,16 +1934,16 @@ def build_ship() -> dict:
         "operation": "update",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "updates": [
-            {"column": "credits", "op": "decrement", "value": "{upgrade_price}"},
+            {"column": "credits", "op": "decrement", "value": "{hull_price}"},
             {"column": "hull_level", "op": "increment", "value": "1"},
-            {"column": "cargo_max", "op": "set", "value": "{upgrade_slots}"},
+            {"column": "cargo_max", "op": "set", "value": "{hull_next_slots}"},
         ],
         "autoTransitionTo": "msg-hull-success",
         "enableAutoTransition": True,
     }))
 
     nodes.append(node("msg-hull-success", "message", 2500, 250, {
-        "messageText": "✅ Улучшение установлено!\n\n📦 Трюм: ур. <code>{pilot.hull_level}</code> → ур. <code>{next_level}</code>\n📦 Вместимость: <code>{upgrade_slots}</code> слотов\n💰 Списано: <code>{upgrade_price}</code> кредитов",
+        "messageText": "✅ Улучшение установлено!\n\n📦 Трюм: ур. <code>{hull_next}</code>\n📦 Вместимость: <code>{hull_next_slots}</code> слотов\n💰 Списано: <code>{hull_price}</code> кредитов",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
@@ -2020,13 +2043,13 @@ def build_ship() -> dict:
     nodes.append(node("do-upgrade-engine-check", "condition", 1900, 600, {
         "variable": "pilot.credits",
         "branches": [
-            branch("br-engine-no-money", "Не хватает", "less_than", "{upgrade_price}", "msg-engine-no-money"),
+            branch("br-engine-no-money", "Не хватает", "less_than", "{engine_price}", "msg-engine-no-money"),
             branch("br-engine-has-money", "Хватает", "else", "", "do-upgrade-engine"),
         ],
     }))
 
     nodes.append(node("msg-engine-no-money", "message", 2200, 450, {
-        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{upgrade_price}</code> кредитов\n💰 У вас: <code>{pilot.credits}</code> кредитов",
+        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{engine_price}</code> кредитов\n💰 У вас: <code>{pilot.credits}</code> кредитов",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
@@ -2037,7 +2060,7 @@ def build_ship() -> dict:
         "operation": "update",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "updates": [
-            {"column": "credits", "op": "decrement", "value": "{upgrade_price}"},
+            {"column": "credits", "op": "decrement", "value": "{engine_price}"},
             {"column": "engine_level", "op": "increment", "value": "1"},
         ],
         "autoTransitionTo": "msg-engine-success",
@@ -2045,7 +2068,7 @@ def build_ship() -> dict:
     }))
 
     nodes.append(node("msg-engine-success", "message", 2500, 600, {
-        "messageText": "✅ Улучшение установлено!\n\n🚀 Двигатель: ур. <code>{pilot.engine_level}</code> → ур. <code>{next_level}</code>\n⛽ Бак: <code>{upgrade_fuel_max}</code> топлива\n💰 Списано: <code>{upgrade_price}</code> кредитов",
+        "messageText": "✅ Улучшение установлено!\n\n🚀 Двигатель: ур. <code>{engine_next}</code>\n🕐 Перелёты ещё быстрее!\n💰 Списано: <code>{engine_price}</code> кредитов",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
@@ -2151,13 +2174,13 @@ def build_ship() -> dict:
     nodes.append(node("do-upgrade-armor-check", "condition", 1900, 950, {
         "variable": "pilot.credits",
         "branches": [
-            branch("br-armor-no-money", "Не хватает", "less_than", "{upgrade_price}", "msg-armor-no-money"),
+            branch("br-armor-no-money", "Не хватает", "less_than", "{armor_price}", "msg-armor-no-money"),
             branch("br-armor-has-money", "Хватает", "else", "", "do-upgrade-armor"),
         ],
     }))
 
     nodes.append(node("msg-armor-no-money", "message", 2200, 800, {
-        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{upgrade_price}</code> кредитов\n💰 У вас: <code>{pilot.credits}</code> кредитов",
+        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>{armor_price}</code> кредитов\n💰 У вас: <code>{pilot.credits}</code> кредитов",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
@@ -2168,7 +2191,7 @@ def build_ship() -> dict:
         "operation": "update",
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "updates": [
-            {"column": "credits", "op": "decrement", "value": "{upgrade_price}"},
+            {"column": "credits", "op": "decrement", "value": "{armor_price}"},
             {"column": "armor_level", "op": "increment", "value": "1"},
         ],
         "autoTransitionTo": "msg-armor-success",
@@ -2176,7 +2199,7 @@ def build_ship() -> dict:
     }))
 
     nodes.append(node("msg-armor-success", "message", 2500, 950, {
-        "messageText": "✅ Улучшение установлено!\n\n🛡 Броня: ур. <code>{pilot.armor_level}</code> → ур. <code>{next_level}</code>\n⚔️ Шанс победы: <code>{upgrade_armor_pct}</code>%\n💰 Списано: <code>{upgrade_price}</code> кредитов",
+        "messageText": "✅ Улучшение установлено!\n\n🛡 Броня: ур. <code>{armor_next}</code>\n⚔️ Шанс победы: <code>{armor_next_pct}</code>%\n💰 Списано: <code>{armor_price}</code> кредитов",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
