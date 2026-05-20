@@ -1121,12 +1121,21 @@ def build_map() -> dict:
             "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
             "saveResultTo": "pilot",
             "resultFormat": "first_row",
+            "autoTransitionTo": f"fly-calc-remaining-{planet['id']}",
+            "enableAutoTransition": True,
+        }))
+
+        # Вычисляем оставшееся время полёта
+        nodes.append(node(f"fly-calc-remaining-{planet['id']}", "set_variable", 700, y_pos - 180, {
+            "assignments": [
+                {"id": f"a-remaining-{planet['id']}", "variable": "flight_remaining", "value": "{pilot.flight_expires_at} - {now_ts}", "mode": "format_duration"},
+            ],
             "autoTransitionTo": f"msg-fly-inflight-{planet['id']}",
             "enableAutoTransition": True,
         }))
 
         nodes.append(node(f"msg-fly-inflight-{planet['id']}", "message", 700, y_pos - 160, {
-            "messageText": "🚀 Вы уже в полёте на <b>{pilot.flight_target_name}</b>!\n\nДождитесь прибытия.",
+            "messageText": "🚀 Вы в полёте на <b>{pilot.flight_target_name}</b>!\n\n🕐 Осталось: <code>{flight_remaining}</code>\n\nДождитесь прибытия.",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
