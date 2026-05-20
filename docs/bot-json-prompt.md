@@ -473,7 +473,7 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 }
 ```
 
-`resultFormat`: `"first_row"` (объект), `"all_rows"` (массив), `"scalar"` (одно значение), `"count"` (количество), `"random_row"` (случайная строка).
+`resultFormat`: `"first_row"` (объект), `"all_rows"` (массив), `"scalar"` (одно значение), `"count"` (количество), `"random_row"` (случайная строка — объект, как first_row но выбирается рандомно из результатов).
 
 Операторы WHERE: `equals` (по умолчанию), `not_equals`, `greater_than`, `less_than`, `contains`, `is_empty`, `is_not_empty`.
 
@@ -1356,3 +1356,55 @@ condition (cargo_used > 0?) → update (decrement)
 ### 6. bot_table read с all_rows: переменная — массив
 
 После `read` с `resultFormat: "all_rows"` переменная содержит JSON-массив. Для доступа к элементам используйте `loop` или `array_item` в set_variable. Нельзя обращаться как `{list.field}` — это работает только с `first_row`.
+
+### 7. bot_table read с random_row: случайная строка из результата
+
+`resultFormat: "random_row"` — выбирает случайную строку из отфильтрованных результатов и сохраняет как объект (аналогично `first_row`).
+
+**Пример: выбрать случайную руду из трюма игрока:**
+```json
+{
+  "type": "bot_table",
+  "data": {
+    "tableName": "pilot_cargo",
+    "operation": "read",
+    "where": [
+      { "column": "pilot_id", "operator": "equals", "value": "{user_id}" }
+    ],
+    "saveResultTo": "stolen",
+    "resultFormat": "random_row",
+    "autoTransitionTo": "next_node"
+  }
+}
+```
+После выполнения доступны: `{stolen.ore_id}`, `{stolen.ore_name}`, `{stolen.ore_emoji}`, `{stolen.quantity}`.
+
+Если результат пуст (0 строк) — переменные не устанавливаются. Используйте condition с `is_empty` для проверки.
+
+### 8. Inline кнопки с condition: проверка после нажатия
+
+Inline кнопка с `action: "goto"` ведёт на target-ноду. Первой нодой в цепочке может быть `condition` — это позволяет проверять условия после нажатия кнопки.
+
+**Пример: кнопка "Откупиться" → проверка баланса:**
+```json
+{
+  "id": "btn-pay",
+  "text": "💰 Откупиться ({ransom} кр.)",
+  "action": "goto",
+  "target": "cond-check-balance"
+}
+```
+```json
+{
+  "id": "cond-check-balance",
+  "type": "condition",
+  "data": {
+    "variable": "pilot.credits",
+    "branches": [
+      { "operator": "less_than", "value": "{ransom}", "target": "msg-no-money" },
+      { "operator": "else", "value": "", "target": "do-pay" }
+    ]
+  }
+}
+```
+Это заменяет "скрытие кнопки по условию" — кнопка всегда видна, но при нажатии проверяется условие.
