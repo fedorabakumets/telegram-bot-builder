@@ -117,6 +117,62 @@ user_data[user_id]["event"] = _result
 
 ---
 
+### extract_number — Извлечение числа из строки
+
+**Описание:** Извлекает первое число из строки. Полезно для парсинга ввода пользователя или текста reply-кнопок.
+
+**UI в панели свойств:**
+```
+переменная = [refuel_amount]
+режим: [🔢 Извлечь число]
+значение: [{raw_input}]
+```
+
+**JSON:**
+```json
+{
+  "variable": "refuel_amount",
+  "value": "{raw_input}",
+  "mode": "extract_number"
+}
+```
+
+**Генерация Python:**
+```python
+import re as _re_extract
+_raw = replace_variables_in_text("{raw_input}", _vars)
+_match = _re_extract.search(r'\d+', str(_raw))
+user_data[user_id]["refuel_amount"] = _match.group() if _match else "0"
+```
+
+**Примеры:**
+| Ввод | Результат |
+|------|-----------|
+| `"⛽ +1000"` | `"1000"` |
+| `"Купить 5 штук"` | `"5"` |
+| `"1000"` | `"1000"` |
+| `"abc"` | `"0"` |
+
+**Применение:**
+- Динамические reply-кнопки с числами (заправка, покупка)
+- Парсинг пользовательского ввода ("хочу 10 штук")
+- Извлечение ID из callback_data
+
+**Паттерн: динамические кнопки заправки**
+```
+msg (reply кнопки: "⛽ +{amount1}", "⛽ +{amount2}", "⛽ +{amount3}")
+  ↓
+input (сохраняет нажатие/ввод в raw_input)
+  ↓
+set_variable extract_number (raw_input → refuel_amount)
+  ↓
+set_variable expression (refuel_cost = refuel_amount * 5)
+  ↓
+condition → update → msg ok
+```
+
+---
+
 ### split_get — Разделить и взять элемент
 
 **Описание:** Разделяет строку по разделителю и берёт N-й элемент.
@@ -153,10 +209,11 @@ user_data[user_id]["event"] = _result
 ## Приоритет реализации
 
 1. **weighted_random** — самый востребованный (игровые боты, лут, события)
-2. **date_format** — часто нужен (регистрация, логи, расписания)
-3. **conditional** — убирает лишние ноды condition для простых случаев
-4. **split_get** — парсинг пользовательского ввода
-5. **math_round** — нишевый
+2. **extract_number** — парсинг чисел из ввода/кнопок (динамические кнопки)
+3. **date_format** — часто нужен (регистрация, логи, расписания)
+4. **conditional** — убирает лишние ноды condition для простых случаев
+5. **split_get** — парсинг пользовательского ввода
+6. **math_round** — нишевый
 
 ---
 
