@@ -48,9 +48,11 @@ class WorkerLogHandler(logging.Handler):
 
 
 def emit_log(token_id: int, content: str, stream: str = "stdout") -> None:
-    """Отправляет строку лога в stdout как JSON."""
+    """Отправляет строку лога в stdout как JSON с timestamp."""
     try:
-        line = json.dumps({"token_id": token_id, "type": stream, "content": content}, ensure_ascii=False)
+        from datetime import datetime
+        ts = datetime.now().strftime("%H:%M:%S")
+        line = json.dumps({"token_id": token_id, "type": stream, "content": f"[{ts}] {content}"}, ensure_ascii=False)
         sys.stdout.write(line + "\n")
         sys.stdout.flush()
     except Exception:
