@@ -489,6 +489,10 @@ def build_start_menu() -> dict:
     nodes.append(node("set-refuel-custom-calc", "set_variable", 1900, 1100, {
         "assignments": [
             {"id": "a-refuel-custom-cost", "variable": "refuel_cost", "value": "{refuel_amount} * 5", "mode": "expression"},
+            {"id": "a-refuel-new-credits", "variable": "new_credits", "value": "{pilot.credits} - {refuel_cost}", "mode": "expression"},
+            {"id": "a-refuel-new-fuel", "variable": "new_fuel", "value": "{pilot.fuel} + {refuel_amount}", "mode": "expression"},
+            {"id": "a-refuel-new-credits-fmt", "variable": "new_credits_fmt", "value": "{new_credits}", "mode": "format_number"},
+            {"id": "a-refuel-new-fuel-fmt", "variable": "new_fuel_fmt", "value": "{new_fuel}", "mode": "format_number"},
         ],
         "autoTransitionTo": "do-refuel-custom-check",
         "enableAutoTransition": True,
@@ -523,7 +527,7 @@ def build_start_menu() -> dict:
     }))
 
     nodes.append(node("msg-refuel-custom-ok", "message", 2800, 1100, {
-        "messageText": "✅ Заправлено!\n\n⛽ +<code>{refuel_amount}</code> топлива\n💰 Списано: <code>{refuel_cost}</code> кредитов",
+        "messageText": "✅ Заправлено!\n\n⛽ +<code>{refuel_amount}</code> топлива\n💰 Списано: <code>{refuel_cost}</code> кредитов\n\n⛽ Топливо: <code>{new_fuel_fmt}</code>\n💰 Баланс: <code>{new_credits_fmt}</code>",
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
