@@ -1342,6 +1342,92 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Авторизация Telethon userbot — шаг 1: отправка кода
+   * POST /api/projects/:projectId/tokens/:tokenId/userbot/send-code
+   */
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/send-code", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const { apiId, apiHash, phone } = req.body as { apiId: string; apiHash: string; phone: string };
+
+      if (!apiId || !apiHash || !phone) {
+        return res.status(400).json({ ok: false, message: "Заполните API ID, API Hash и номер телефона" });
+      }
+
+      const { sendAuthCommand } = await import('../bots/userbotAuthManager');
+      const result = await sendAuthCommand(tokenId, 'send_code', {
+        api_id: apiId,
+        api_hash: apiHash,
+        phone,
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ ok: false, message: error.message || "Ошибка отправки кода" });
+    }
+  });
+
+  /**
+   * Авторизация Telethon userbot — шаг 2: ввод кода
+   * POST /api/projects/:projectId/tokens/:tokenId/userbot/sign-in
+   */
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const { phone, code } = req.body as { phone: string; code: string };
+
+      if (!phone || !code) {
+        return res.status(400).json({ ok: false, message: "Заполните номер телефона и код" });
+      }
+
+      const { sendAuthCommand } = await import('../bots/userbotAuthManager');
+      const result = await sendAuthCommand(tokenId, 'sign_in', { phone, code });
+
+      // Если получили session_string — сохраняем в БД
+      if (result.ok && result.session_string) {
+        await storage.updateBotToken(tokenId, {
+          userbotSessionString: result.session_string,
+          userbotEnabled: 1,
+        });
+      }
+
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ ok: false, message: error.message || "Ошибка авторизации" });
+    }
+  });
+
+  /**
+   * Авторизация Telethon userbot — шаг 3: ввод 2FA пароля
+   * POST /api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa
+   */
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const { password } = req.body as { password: string };
+
+      if (!password) {
+        return res.status(400).json({ ok: false, message: "Введите пароль" });
+      }
+
+      const { sendAuthCommand } = await import('../bots/userbotAuthManager');
+      const result = await sendAuthCommand(tokenId, 'sign_in_2fa', { password });
+
+      // Если получили session_string — сохраняем в БД
+      if (result.ok && result.session_string) {
+        await storage.updateBotToken(tokenId, {
+          userbotSessionString: result.session_string,
+          userbotEnabled: 1,
+        });
+      }
+
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ ok: false, message: error.message || "Ошибка 2FA авторизации" });
+    }
+  });
+
+  /**
    * Обновление уровня логирования для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/log-level
    */
