@@ -97,7 +97,7 @@ def main_menu_msg(msg_id: str, text: str, x: int, y: int) -> dict:
         "keyboardType": "reply",
         "buttons": [
             btn(f"{msg_id}-trade", "🛒 Торговля"),
-            btn(f"{msg_id}-map", "🗺 Карта"),
+            btn(f"{msg_id}-map", "🚀 Полёты"),
             btn(f"{msg_id}-ship", "🔧 Корабль"),
             btn(f"{msg_id}-profile", "👤 Профиль"),
             btn(f"{msg_id}-top", "🏆 Топ"),
@@ -289,7 +289,7 @@ def build_start_menu() -> dict:
 
     nodes.append(node("trig-map", "text_trigger", 100, 450, {
         "textMatchType": "exact",
-        "textSynonyms": ["🗺 Карта"],
+        "textSynonyms": ["🚀 Полёты"],
         "autoTransitionTo": "tbl-read-pilot-map",
         "enableAutoTransition": True,
     }))
@@ -937,12 +937,12 @@ def build_trade() -> dict:
 
 
 # ============================================================
-# Лист 3: 🗺 Карта (sheet-map)
+# Лист 3: 🚀 Полёты (sheet-map)
 # ============================================================
 
 def build_map() -> dict:
     """
-    Строит лист «🗺 Карта».
+    Строит лист «🚀 Полёты».
     Содержит подменю карты, перелёты между планетами с delay.
     @returns словарь листа
     """
@@ -1001,7 +1001,7 @@ def build_map() -> dict:
 
     # Сообщение карты когда В ПОЛЁТЕ
     map_inflight_text = (
-        f"🗺 {MENTION}, карта галактики:\n\n"
+        f"🚀 {MENTION}, карта галактики:\n\n"
         "{pilot.status_text}\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>"
     )
@@ -1024,9 +1024,16 @@ def build_map() -> dict:
 
     # Сообщение карты когда НА ПЛАНЕТЕ
     map_menu_text = (
-        f"🗺 {MENTION}, карта галактики:\n\n"
+        f"🚀 {MENTION}, карта галактики:\n\n"
         "{pilot.status_text}\n"
-        "⛽ Топливо: <code>{pilot.fuel}</code>"
+        "⛽ Топливо: <code>{pilot.fuel}</code>\n\n"
+        "📍 Маршруты:\n"
+        "🌍 Земля ↔ 🔴 Марс — ⛽10 | 🕐 02:00\n"
+        "🌍 Земля ↔ 🪐 Титан — ⛽20 | 🕐 05:00\n"
+        "🌍 Земля ↔ 🌌 Туманность — ⛽15 | 🕐 03:00\n"
+        "🔴 Марс ↔ 🪐 Титан — ⛽15 | 🕐 03:00\n"
+        "🔴 Марс ↔ 🌌 Туманность — ⛽25 | 🕐 06:00\n"
+        "🪐 Титан ↔ 🌌 Туманность — ⛽30 | 🕐 08:00"
     )
     nodes.append(node("msg-map-menu", "message", 700, 100, {
         "messageText": map_menu_text,
@@ -1277,7 +1284,7 @@ def build_map() -> dict:
 
     return {
         "id": "sheet-map",
-        "name": "🗺 Карта",
+        "name": "🚀 Полёты",
         "nodes": nodes,
     }
 
