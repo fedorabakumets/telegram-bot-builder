@@ -18,6 +18,7 @@ import { botTableNode } from './massive/bot-table';
 import { convertFileNode } from './massive/convert-file';
 import { getManagedBotTokenNode } from './massive/managed-bots';
 import { answerCallbackQueryNode, editMessageNode } from './massive/actions';
+import { userbotMessage } from './massive/userbot';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -48,6 +49,10 @@ export const componentCategories: Array<{
   {
     title: 'Интеграции',
     components: [httpRequestNode, psqlQueryNode, botTableNode, convertFileNode, conditionNode, setVariableNode, loopNode, delayNode]
+  },
+  {
+    title: 'Юзербот',
+    components: [userbotMessage]
   }
 ];
 
