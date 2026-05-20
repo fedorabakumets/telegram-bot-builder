@@ -548,8 +548,12 @@ def build_http_compare_sheet():
 def build_bot_compare_sheet():
     """
     Строит лист "💱 Сравнение через ботов" — сравнение курсов через Telegram-ботов.
-    Поток: /compare_bots → выбор пары → ввод суммы → цикл по bot_exchangers →
-    условное ветвление по mode (message/click/inline) → сбор результатов → таблица.
+    Поток: /compare_bots → init bot_exchangers → меню (динамические кнопки) →
+    callback_trigger → ввод суммы → валидация → init переменных →
+    ScoobyChange (inline) → parse → Capitalist (click chain) → parse →
+    calculate → показ результатов.
+
+    Без циклов и условных ветвлений — каждый бот имеет свою хардкодную цепочку.
     @returns Словарь листа с нодами
     """
     nodes = []
@@ -605,7 +609,6 @@ def build_bot_compare_sheet():
     })
 
     # ─── 4. Запрос суммы ──────────────────────────────────────────────────────
-    # ─── 4. Запрос суммы ──────────────────────────────────────────────────────
     nodes.append(message_node(
         "bot-msg-ask-amount",
         "💰 <b>Введи сумму для обмена:</b>\n\n"
@@ -651,7 +654,7 @@ def build_bot_compare_sheet():
         auto_to="bot-msg-ask-amount"
     ))
 
-    # ─── 6. Инициализация переменных перед циклом ─────────────────────────────
+    # ─── 6. Инициализация переменных перед цепочкой ботов ─────────────────────
     nodes.append(set_var_node(
         "bot-setv-init",
         [
@@ -660,201 +663,127 @@ def build_bot_compare_sheet():
                 "value": "[]", "mode": "expression"
             },
             {
-                "id": "bi2", "variable": "bot_idx",
-                "value": "0", "mode": "text"
+                "id": "bi2", "variable": "user_amount_fmt",
+                "value": "{user_amount}", "mode": "text"
             },
         ],
-        "bot-loop-exchangers", 2000, 400
+        "bot-ub-scooby", 2000, 400
     ))
 
-    # ─── 7. Цикл по bot_exchangers ───────────────────────────────────────────
-    nodes.append(loop_node(
-        "bot-loop-exchangers",
-        "table.bot_exchangers", "bot",
-        "bot-cond-mode",       # тело цикла начинается с ветвления по mode
-        "bot-setv-best",       # после цикла — формирование результата
+    # ─── 7. ScoobyChange — инлайн-запрос ─────────────────────────────────────
+    # @scdoo_bot: inline query "buy_btc 1" → получаем title с курсом
+    nodes.append(userbot_inline_query_node(
+        "bot-ub-scooby",
+        "@scdoo_bot",
+        "buy_btc 1",
+        "ub_inline_title",
+        "ub_inline_desc",
+        "bot-setv-parse-scooby",
         2400, 400
     ))
 
-    # ─── 8. Ветвление по mode бота ───────────────────────────────────────────
-    nodes.append(conditional_branch_node(
-        "bot-cond-mode",
-        [
-            {
-                "id": "cm1", "field": "bot.mode",
-                "operator": "equals", "value": "message",
-                "targetNodeId": "bot-ub-send-msg"
-            },
-            {
-                "id": "cm2", "field": "bot.mode",
-                "operator": "equals", "value": "click",
-                "targetNodeId": "bot-ub-send-start"
-            },
-            {
-                "id": "cm3", "field": "bot.mode",
-                "operator": "equals", "value": "inline",
-                "targetNodeId": "bot-ub-inline"
-            },
-        ],
-        "bot-setv-push-result",  # по умолчанию — пропускаем
-        2800, 400
-    ))
-
-    # ─── 9a. Ветка MESSAGE: отправить сообщение → дождаться ответа → парсить ─
-    nodes.append(userbot_message_node(
-        "bot-ub-send-msg",
-        "{bot.step1_text}",
-        "{bot.username}",
-        "ub_bot_resp_id",
-        "bot-setv-parse-msg",
-        3200, 200
-    ))
-
-    # Парсинг ответа regex_extract (mode=message)
+    # ─── 8. Парсинг ответа ScoobyChange ──────────────────────────────────────
+    # Извлекаем курс из title: "К оплате будет: 12345"
     nodes.append(set_var_node(
-        "bot-setv-parse-msg",
+        "bot-setv-parse-scooby",
         [
             {
-                "id": "pm1", "variable": "parsed_rate",
-                "value": "{ub_bot_resp_text}", "mode": "regex_extract",
-                "pattern": "{bot.rate_regex}",
+                "id": "ps1", "variable": "scooby_rate",
+                "value": "{ub_inline_title}",
+                "mode": "regex_extract",
+                "pattern": "К оплате будет:\\s*([\\d]+)",
                 "regexGroup": "1"
             }
         ],
-        "bot-setv-push-result", 3600, 200
+        "bot-ub-capitalist-start", 2800, 400
     ))
 
-    # ─── 9b. Ветка CLICK: /start → нажать кнопку → парсить ───────────────────
+    # ─── 9. Capitalist — отправка /start ─────────────────────────────────────
+    # @btccapital_bot: отправляем /start, сохраняем ID ответа
     nodes.append(userbot_message_node(
-        "bot-ub-send-start",
-        "{bot.step1_text}",
-        "{bot.username}",
-        "ub_click_resp_id",
-        "bot-ub-click-pair",
-        3200, 500
+        "bot-ub-capitalist-start",
+        "/start",
+        "@btccapital_bot",
+        "cap_resp_id",
+        "bot-ub-capitalist-click",
+        3200, 400
     ))
 
-    # Нажатие кнопки с текстом пары
+    # ─── 10. Capitalist — нажатие кнопки "🔄 Купить BTC" ─────────────────────
     nodes.append(userbot_click_button_node(
-        "bot-ub-click-pair",
-        "{bot.username}",
-        "{ub_click_resp_id}",
-        "{bot.click_button}",
-        "ub_click_result_text",
-        "bot-cond-click-step2",
-        3600, 500
+        "bot-ub-capitalist-click",
+        "@btccapital_bot",
+        "{cap_resp_id}",
+        "🔄 Купить BTC",
+        "cap_click_text",
+        "bot-ub-capitalist-amount",
+        3600, 400
     ))
 
-    # Проверка: нужен ли step2 (отправка суммы после нажатия кнопки)
-    nodes.append(conditional_branch_node(
-        "bot-cond-click-step2",
-        [
-            {
-                "id": "cs1", "field": "bot.step2_text",
-                "operator": "not_empty", "value": "",
-                "targetNodeId": "bot-ub-send-step2"
-            }
-        ],
-        "bot-setv-parse-click",  # если step2 пуст — сразу парсим
-        4000, 500
-    ))
-
-    # Отправка суммы (step2) для click-ботов, которые требуют ввод суммы
+    # ─── 11. Capitalist — отправка суммы "0.001" ─────────────────────────────
     nodes.append(userbot_message_node(
-        "bot-ub-send-step2",
-        "{bot.step2_text}",
-        "{bot.username}",
-        "ub_step2_resp_id",
-        "bot-setv-parse-click",
-        4400, 500
+        "bot-ub-capitalist-amount",
+        "0.001",
+        "@btccapital_bot",
+        "cap_amount_resp_id",
+        "bot-ub-capitalist-read",
+        4000, 400
     ))
 
-    # Парсинг ответа regex_extract (mode=click)
+    # ─── 12. Capitalist — чтение ответа (click last message для текста) ──────
+    nodes.append(userbot_click_button_node(
+        "bot-ub-capitalist-read",
+        "@btccapital_bot",
+        "last",
+        "",
+        "cap_result_text",
+        "bot-setv-parse-capitalist",
+        4400, 400
+    ))
+
+    # ─── 13. Парсинг ответа Capitalist ───────────────────────────────────────
+    # Извлекаем курс: "Курс покупки ... BTC ...: 12345"
     nodes.append(set_var_node(
-        "bot-setv-parse-click",
+        "bot-setv-parse-capitalist",
         [
             {
-                "id": "pc1", "variable": "parsed_rate",
-                "value": "{ub_click_result_text}", "mode": "regex_extract",
-                "pattern": "{bot.rate_regex}",
+                "id": "pc1", "variable": "capitalist_rate",
+                "value": "{cap_result_text}",
+                "mode": "regex_extract",
+                "pattern": "Курс покупки .*?BTC.*?:\\s*([\\d]+)",
                 "regexGroup": "1"
             }
         ],
-        "bot-setv-push-result", 4800, 500
+        "bot-setv-calc", 4800, 400
     ))
 
-    # ─── 9c. Ветка INLINE: инлайн-запрос → парсить title/desc ────────────────
-    nodes.append(userbot_inline_query_node(
-        "bot-ub-inline",
-        "{bot.username}",
-        "{bot.inline_query}",
-        "ub_inline_title",
-        "ub_inline_desc",
-        "bot-setv-parse-inline",
-        3200, 800
-    ))
-
-    # Парсинг инлайн-результата regex_extract
+    # ─── 14. Вычисление BTC для обоих ботов ──────────────────────────────────
     nodes.append(set_var_node(
-        "bot-setv-parse-inline",
+        "bot-setv-calc",
         [
             {
-                "id": "pi1", "variable": "parsed_rate",
-                "value": "{ub_inline_title} {ub_inline_desc}", "mode": "regex_extract",
-                "pattern": "{bot.rate_regex}",
-                "regexGroup": "1"
-            }
-        ],
-        "bot-setv-push-result", 3600, 800
-    ))
-
-    # ─── 10. Вычисление BTC и добавление результата в массив ─────────────────
-    nodes.append(set_var_node(
-        "bot-setv-push-result",
-        [
-            {
-                "id": "pr0", "variable": "user_btc",
-                "value": "round({user_amount} / float({parsed_rate}), 8) if float({parsed_rate}) > 0 else 0",
+                "id": "calc1", "variable": "scooby_btc",
+                "value": "round({user_amount} / float({scooby_rate}), 8) if float({scooby_rate}) > 0 else 0",
                 "mode": "expression"
             },
             {
-                "id": "pr1", "variable": "compare_bot_results",
-                "value": "", "mode": "json_push",
-                "jsonPushTarget": "compare_bot_results",
-                "jsonPushValue": '{"name": "{bot.name}", "rate": "{parsed_rate}", '
-                                 '"btc": "{user_btc}", '
-                                 '"ref_url": "{bot.ref_url}", "username": "{bot.username}"}'
-            }
+                "id": "calc2", "variable": "capitalist_btc",
+                "value": "round({user_amount} / float({capitalist_rate}), 8) if float({capitalist_rate}) > 0 else 0",
+                "mode": "expression"
+            },
         ],
-        "bot-loop-exchangers",  # возврат в цикл (следующая итерация)
-        5200, 400
+        "bot-msg-result", 5200, 400
     ))
 
-    # ─── 11. После цикла: формирование таблицы результатов ────────────────────
-    nodes.append(set_var_node(
-        "bot-setv-best",
-        [
-            {
-                "id": "bb1", "variable": "bot_rates_text",
-                "value": "", "mode": "json_format",
-                "jsonFormatSource": "compare_bot_results",
-                "jsonFormatTemplate": "🤖 <a href=\"{ref_url}\">{name}</a>: <b>{btc} BTC</b> ({rate} ₽)",
-                "jsonFormatSeparator": "\n",
-                "jsonFormatSortField": "rate",
-                "jsonFormatSortOrder": "asc"
-            }
-        ],
-        "bot-msg-result", 5600, 400
-    ))
-
-    # ─── 12. Показ результатов ────────────────────────────────────────────────
+    # ─── 15. Показ результатов ────────────────────────────────────────────────
     result_text = (
         "💱 <b>Сравнение через ботов</b>\n"
         "Пара: <b>{selected_from_name} → {selected_to_name}</b>\n"
         "Сумма: <b>{user_amount}</b> ₽\n\n"
-        "📊 <b>Результаты:</b>\n\n"
-        "{bot_rates_text}\n\n"
-        "<i>Данные получены через Telegram-ботов обменников</i>"
+        "📊 <b>Результаты:</b>\n"
+        "🤖 ScoobyChange: <b>{scooby_btc}</b> BTC ({scooby_rate} ₽)\n"
+        "🤖 Capitalist: <b>{capitalist_btc}</b> BTC ({capitalist_rate} ₽)\n\n"
+        "<i>Данные получены через Telegram-ботов</i>"
     )
     nodes.append(message_node(
         "bot-msg-result",
@@ -863,7 +792,7 @@ def build_bot_compare_sheet():
             btn("bot-btn-back-menu", "◀️ Назад", "bot-msg-menu"),
             btn("bot-btn-retry", "🔄 Обновить", "bot-setv-init"),
         ],
-        "inline", 6000, 400
+        "inline", 5600, 400
     ))
 
     return {
