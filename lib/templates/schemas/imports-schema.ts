@@ -17,6 +17,7 @@ export const importsParamsSchema = z.object({
   hasUrlImages: z.boolean().default(false),
   hasDatetimeNodes: z.boolean().default(false),
   hasTimezoneNodes: z.boolean().default(false),
+  hasUserbotNodes: z.boolean().default(false),
 });
 
 /** Тип параметров импортов (выведен из схемы) */

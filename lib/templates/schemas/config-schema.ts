@@ -13,6 +13,8 @@ export const configParamsSchema = z.object({
   webhookUrl: z.string().nullable().optional().default(null),
   /** Порт aiohttp сервера для webhook режима */
   webhookPort: z.number().nullable().optional().default(null),
+  /** Есть ли узлы userbot_message (нужен Telethon клиент) */
+  hasUserbotNodes: z.boolean().default(false),
 });
 
 /** Тип параметров конфигурации (выведен из схемы) */
