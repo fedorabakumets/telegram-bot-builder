@@ -88,4 +88,7 @@ from types import SimpleNamespace
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 from telethon.errors import FloodWaitError as TelethonFloodWaitError
+
+# Подавляем verbose-логи Telethon
+logging.getLogger('telethon').setLevel(logging.WARNING)
 {%- endif %}
