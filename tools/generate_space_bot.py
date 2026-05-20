@@ -1872,6 +1872,7 @@ def build_ship() -> dict:
         "📊 Уровень: <code>{pilot.hull_level}</code>\n"
         "📦 Вместимость: <code>{pilot.cargo_max}</code> слотов\n"
         "📦 Занято: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\n"
+        "💡 <i>Больше трюм — больше руды за рейс</i>\n\n"
         "⬆️ Следующий уровень:\n"
         "📦 Вместимость: <code>{upgrade_slots}</code> слотов\n"
         "💰 Стоимость: <code>{upgrade_price}</code> кредитов"
@@ -1996,9 +1997,10 @@ def build_ship() -> dict:
     engine_info_text = (
         "🚀 Двигатель вашего корабля:\n\n"
         "📊 Уровень: <code>{pilot.engine_level}</code>\n"
-        "⛽ Бак: <code>{pilot.fuel}</code> топлива\n\n"
+        "⛽ Топливо: <code>{pilot.fuel}</code>\n\n"
+        "💡 <i>Выше уровень — быстрее перелёты (-15% за ур.)</i>\n\n"
         "⬆️ Следующий уровень:\n"
-        "⛽ Бак: <code>{upgrade_fuel_max}</code> топлива\n"
+        "🕐 Ещё -15% к времени перелёта\n"
         "💰 Стоимость: <code>{upgrade_price}</code> кредитов"
     )
     nodes.append(node("msg-engine-info", "message", 1600, 600, {
@@ -2095,6 +2097,12 @@ def build_ship() -> dict:
     nodes.append(node("lookup-armor-price", "set_variable", 1300, 950, {
         "assignments": [
             {
+                "id": "a-armor-cur-pct",
+                "variable": "current_armor_pct",
+                "value": "{pilot.armor_level} * 15 + 15",
+                "mode": "expression",
+            },
+            {
                 "id": "a-armor-price",
                 "variable": "upgrade_price",
                 "value": "",
@@ -2120,7 +2128,8 @@ def build_ship() -> dict:
     armor_info_text = (
         "🛡 Броня вашего корабля:\n\n"
         "📊 Уровень: <code>{pilot.armor_level}</code>\n"
-        "⚔️ Шанс победы: <code>{pilot.armor_level}</code> (текущий)\n\n"
+        "⚔️ Шанс победы: <code>{current_armor_pct}</code>%\n\n"
+        "💡 <i>Выше броня — чаще побеждаете пиратов</i>\n\n"
         "⬆️ Следующий уровень:\n"
         "⚔️ Шанс победы: <code>{upgrade_armor_pct}</code>%\n"
         "💰 Стоимость: <code>{upgrade_price}</code> кредитов"
