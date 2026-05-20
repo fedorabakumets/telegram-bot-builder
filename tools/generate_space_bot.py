@@ -1153,8 +1153,12 @@ def build_map() -> dict:
         nodes.append(node(f"msg-fly-inflight-{planet['id']}", "message", 700, y_pos - 160, {
             "messageText": "🚀 Вы в полёте!\n\n{pilot.status_text}\n🕐 Осталось: <code>{flight_remaining}</code>\n\nДождитесь прибытия.",
             "formatMode": "html",
-            "keyboardType": "none",
-            "buttons": [],
+            "keyboardType": "reply",
+            "buttons": [
+                btn(f"btn-inflight-back-{planet['id']}", "⬅️ Меню"),
+            ],
+            "keyboardLayout": {"autoLayout": False, "columns": 1, "rows": [{"buttonIds": [f"btn-inflight-back-{planet['id']}"]}]},
+            "resizeKeyboard": True,
         }))
 
         # Проверка: уже на этой планете?
@@ -1273,8 +1277,12 @@ def build_map() -> dict:
         nodes.append(node(f"msg-fly-start-{planet['id']}", "message", 1900, y_pos, {
             "messageText": f"🚀 Летим на планету <b>{planet['full']}</b>!\n\n⛽ Топливо: -{{flight_fuel}}\n🕐 Время в пути: {{flight_time_fmt}}",
             "formatMode": "html",
-            "keyboardType": "none",
-            "buttons": [],
+            "keyboardType": "reply",
+            "buttons": [
+                btn(f"btn-fly-back-{planet['id']}", "⬅️ Меню"),
+            ],
+            "keyboardLayout": {"autoLayout": False, "columns": 1, "rows": [{"buttonIds": [f"btn-fly-back-{planet['id']}"]}]},
+            "resizeKeyboard": True,
             "autoTransitionTo": f"fly-delay-{planet['id']}",
             "enableAutoTransition": True,
         }))
@@ -1357,12 +1365,9 @@ def build_pirates() -> dict:
         "enableAutoTransition": True,
     }))
 
-    nodes.append(node("msg-arrived-generic", "message", 1300, 200, {
-        "messageText": "✅ Вы прибыли на планету <b>{pilot.flight_target_name}</b>!\n\nТеперь вы можете торговать здесь.",
-        "formatMode": "html",
-        "keyboardType": "none",
-        "buttons": [],
-    }))
+    nodes.append(main_menu_msg("msg-arrived-generic",
+        "✅ Вы прибыли на планету <b>{pilot.flight_target_name}</b>!\n\nТеперь вы можете торговать здесь.",
+        1300, 200))
 
     # --- Сообщение о нападении пиратов (inline кнопки) ---
     pirate_text = (
