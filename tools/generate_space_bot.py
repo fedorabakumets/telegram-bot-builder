@@ -368,10 +368,57 @@ def build_start_menu() -> dict:
         "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
         "saveResultTo": "pilot",
         "resultFormat": "first_row",
-        "autoTransitionTo": "msg-main-menu",
+        "autoTransitionTo": "menu-set-now",
         "enableAutoTransition": True,
     }))
 
+    # Проверяем в полёте ли для выбора меню
+    nodes.append(node("menu-set-now", "set_variable", 500, 1200, {
+        "assignments": [
+            {"id": "a-menu-now", "variable": "now_ts", "value": "0", "mode": "timestamp"},
+        ],
+        "autoTransitionTo": "menu-cond-inflight",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("menu-cond-inflight", "condition", 600, 1200, {
+        "variable": "pilot.flight_expires_at",
+        "branches": [
+            branch("br-menu-inflight", "В полёте", "greater_than", "{now_ts}", "msg-main-menu-flight"),
+            branch("br-menu-free", "На планете", "else", "", "msg-main-menu"),
+        ],
+    }))
+
+    # Урезанное меню в полёте
+    flight_menu_text = (
+        f"🚀 {MENTION}, главное меню:\n\n"
+        "{pilot.status_text}\n"
+        "💰 Кредиты: <code>{pilot.credits}</code>\n"
+        "⛽ Топливо: <code>{pilot.fuel}</code>\n"
+        "📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>"
+    )
+    nodes.append(node("msg-main-menu-flight", "message", 700, 1350, {
+        "messageText": flight_menu_text,
+        "formatMode": "html",
+        "keyboardType": "reply",
+        "buttons": [
+            btn("btn-mf-profile", "👤 Профиль"),
+            btn("btn-mf-ship", "🔧 Корабль"),
+            btn("btn-mf-flights", "🚀 Полёты"),
+            btn("btn-mf-turn", "🔄 Развернуться"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 2,
+            "rows": [
+                {"buttonIds": ["btn-mf-profile", "btn-mf-ship"]},
+                {"buttonIds": ["btn-mf-flights", "btn-mf-turn"]},
+            ],
+        },
+        "resizeKeyboard": True,
+    }))
+
+    # Полное меню на планете
     main_menu_text = (
         f"🚀 {MENTION}, главное меню:\n\n"
         "{pilot.status_text}\n"
