@@ -126,16 +126,17 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         await set_user_var(user_id, "{{ saveAlertTo }}", _alert_text)
 {%- endif %}
 
-        # Ждём обновления сообщения и перечитываем
+        # Ждём обновления сообщения и перечитываем (без кэша)
         await asyncio.sleep(3)
-        _updated = await userbot_client.get_messages(_target, ids=_msg_id)
-        # Если сообщение удалено — читаем последнее сообщение бота
+        _fresh_msgs = await userbot_client.get_messages(_target, limit=5)
+        _fresh_list = _fresh_msgs if isinstance(_fresh_msgs, list) else [_fresh_msgs]
+        # Ищем наше сообщение по ID среди свежих
+        _updated = next((m for m in _fresh_list if m and m.id == _msg_id), None)
+        # Если сообщение удалено — берём первое от бота (fallback)
         if not _updated or not hasattr(_updated, 'text') or _updated.text is None:
-            logging.info(f"📖 [{{ nodeId }}] msg={_msg_id} удалено, читаем последние сообщения")
-            _fallback_msgs = await userbot_client.get_messages(_target, limit=3)
-            _fallback_list = _fallback_msgs if isinstance(_fallback_msgs, list) else [_fallback_msgs]
+            logging.info(f"📖 [{{ nodeId }}] msg={_msg_id} не найдено/удалено, читаем последние сообщения")
             _my_id_cb = (await userbot_client.get_me()).id
-            _bot_fallback = [m for m in _fallback_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb]
+            _bot_fallback = [m for m in _fresh_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb]
             _updated = _bot_fallback[0] if _bot_fallback else None
         logging.info(f"📖 [{{ nodeId }}] Результат: text={((_updated.text or '') if _updated else 'None')[:80]!r}")
 
