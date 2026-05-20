@@ -14,7 +14,7 @@ const setVariableAssignmentSchema = z.object({
   /** Значение или шаблон с {переменными} */
   value: z.string(),
   /** Режим: "text" — шаблон, "expression" — выражение, "lookup" — поиск, "str_replace" — замена подстроки, "json_push" — добавить объект в массив, "json_format" — форматировать массив в строку, "random" — случайное число, "random_item" — случайный элемент из списка, "array_item" — элемент массива/объекта по индексу/ключу, "timestamp" — временная метка, "format_duration" — форматирование секунд в MM:SS */
-  mode: z.enum(['text', 'expression', 'lookup', 'str_replace', 'json_push', 'json_format', 'random', 'random_item', 'array_item', 'timestamp', 'format_duration', 'format_number', 'regex_extract', 'extract_number', 'split_get', 'json_get', 'substring']),
+  mode: z.enum(['text', 'expression', 'lookup', 'str_replace', 'json_push', 'json_format', 'random', 'random_item', 'array_item', 'timestamp', 'format_duration', 'format_number', 'regex_extract', 'extract_number', 'split_get', 'json_get', 'substring', 'conditional', 'lowercase', 'uppercase', 'trim', 'length']),
   /** Имя таблицы для поиска (только для mode=lookup) */
   lookupTable: z.string().optional().default(''),
   /** Поле таблицы, значение которого сохранить (только для mode=lookup) */
@@ -42,6 +42,16 @@ const setVariableAssignmentSchema = z.object({
   startIndex: z.string().optional().default('0'),
   /** Конечный индекс для substring */
   endIndex: z.string().optional().default(''),
+  /** Переменная для проверки (conditional) */
+  conditionVariable: z.string().optional().default(''),
+  /** Оператор сравнения (conditional) */
+  conditionOperator: z.string().optional().default('equals'),
+  /** Значение для сравнения (conditional) */
+  conditionValue: z.string().optional().default(''),
+  /** Значение если true (conditional) */
+  trueValue: z.string().optional().default(''),
+  /** Значение если false (conditional) */
+  falseValue: z.string().optional().default(''),
   /** Условие пропуска: имя переменной — если пустая/0, assignment не выполняется */
   skipIfEmpty: z.string().optional().default(''),
 });

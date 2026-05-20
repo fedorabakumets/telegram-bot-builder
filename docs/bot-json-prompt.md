@@ -306,6 +306,11 @@
 | `split_get` | Разделить строку и взять N-й элемент | `value: "{email}"`, `separator: "@"`, `maxValue: "1"` |
 | `json_get` | Значение из JSON по пути (dot notation) | `value: "{api_response}"`, `jsonPath: "data.user.name"` |
 | `substring` | Подстрока (start, end) | `value: "{id}"`, `startIndex: "0"`, `endIndex: "8"` |
+| `conditional` | Тернарный оператор (если/иначе) | `conditionVariable: "{balance}"`, `conditionOperator: "greater_than"`, `conditionValue: "1000"`, `trueValue: "💰"`, `falseValue: "💸"` |
+| `lowercase` | В нижний регистр | `"{user_input}"` |
+| `uppercase` | В верхний регистр | `"{user_input}"` |
+| `trim` | Убрать пробелы по краям | `"{user_input}"` |
+| `length` | Длина строки или массива | `"{inventory}"` → "3" |
 
 #### Примеры
 

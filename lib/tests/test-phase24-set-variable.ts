@@ -542,6 +542,91 @@ test('L03', 'substring без end → до конца строки', () => {
   syntax(code, 'L03');
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК M: conditional
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок M: conditional ───────────────────────────────────────────');
+
+test('M01', 'conditional → содержит if/else логику', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'status', value: '', mode: 'conditional', conditionVariable: '{balance}', conditionOperator: 'greater_than', conditionValue: '1000', trueValue: '💰', falseValue: '💸' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'M01');
+  ok(code.includes('conditional'), 'conditional должен быть в логе');
+});
+
+test('M02', 'conditional → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'emoji', value: '', mode: 'conditional', conditionVariable: '{level}', conditionOperator: 'greater_or_equal', conditionValue: '10', trueValue: 'Ветеран', falseValue: 'Новичок' }], 'msg1'),
+    makeMsg('msg1', 'Статус: {emoji}'),
+  ]);
+  syntax(gen(p, 'M02'), 'M02');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК N: lowercase / uppercase / trim / length
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок N: lowercase / uppercase / trim / length ─────────────────');
+
+test('N01', 'lowercase → содержит .lower()', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'normalized', value: '{input}', mode: 'lowercase' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'N01');
+  ok(code.includes('.lower()'), '.lower() должен быть в коде');
+});
+
+test('N02', 'uppercase → содержит .upper()', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'shout', value: '{input}', mode: 'uppercase' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'N02');
+  ok(code.includes('.upper()'), '.upper() должен быть в коде');
+});
+
+test('N03', 'trim → содержит .strip()', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'clean', value: '{input}', mode: 'trim' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'N03');
+  ok(code.includes('.strip()'), '.strip() должен быть в коде');
+});
+
+test('N04', 'length → содержит len()', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'count', value: '{items}', mode: 'length' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'N04');
+  ok(code.includes('len('), 'len() должен быть в коде');
+});
+
+test('N05', 'все 4 режима → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [
+      { id: 'a1', variable: 'low', value: '{text}', mode: 'lowercase' },
+      { id: 'a2', variable: 'up', value: '{text}', mode: 'uppercase' },
+      { id: 'a3', variable: 'trimmed', value: '{text}', mode: 'trim' },
+      { id: 'a4', variable: 'len', value: '{items}', mode: 'length' },
+    ], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  syntax(gen(p, 'N05'), 'N05');
+});
+
 // ─── Итоги ───────────────────────────────────────────────────────────────────
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

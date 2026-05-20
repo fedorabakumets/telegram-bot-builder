@@ -294,6 +294,65 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         _sv_end_{{ loop.index }} = int(replace_variables_in_text(_sv_end_raw_{{ loop.index }}, _sv_vars_{{ loop.index }})) if _sv_end_raw_{{ loop.index }} else None
         user_data[user_id]["{{ safe_var }}"] = _sv_source_{{ loop.index }}[_sv_start_{{ loop.index }}:_sv_end_{{ loop.index }}]
         logging.info(f"📝 set_variable [{{ nodeId }}]: substring «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (start={_sv_start_{{ loop.index }}}, end={_sv_end_{{ loop.index }}})") 
+        {%- elif assignment.mode == 'conditional' %}
+        # Тернарный оператор: если условие → trueValue, иначе → falseValue
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_cond_var_{{ loop.index }} = replace_variables_in_text({{ assignment.conditionVariable | default('') | tojson }}, _sv_vars_{{ loop.index }})
+        _sv_cond_val_{{ loop.index }} = replace_variables_in_text({{ assignment.conditionValue | default('') | tojson }}, _sv_vars_{{ loop.index }})
+        _sv_op_{{ loop.index }} = {{ assignment.conditionOperator | default('equals') | tojson }}
+        _sv_cond_result_{{ loop.index }} = False
+        try:
+            if _sv_op_{{ loop.index }} == "equals":
+                _sv_cond_result_{{ loop.index }} = str(_sv_cond_var_{{ loop.index }}) == str(_sv_cond_val_{{ loop.index }})
+            elif _sv_op_{{ loop.index }} == "not_equals":
+                _sv_cond_result_{{ loop.index }} = str(_sv_cond_var_{{ loop.index }}) != str(_sv_cond_val_{{ loop.index }})
+            elif _sv_op_{{ loop.index }} == "greater_than":
+                _sv_cond_result_{{ loop.index }} = float(_sv_cond_var_{{ loop.index }}) > float(_sv_cond_val_{{ loop.index }})
+            elif _sv_op_{{ loop.index }} == "less_than":
+                _sv_cond_result_{{ loop.index }} = float(_sv_cond_var_{{ loop.index }}) < float(_sv_cond_val_{{ loop.index }})
+            elif _sv_op_{{ loop.index }} == "greater_or_equal":
+                _sv_cond_result_{{ loop.index }} = float(_sv_cond_var_{{ loop.index }}) >= float(_sv_cond_val_{{ loop.index }})
+            elif _sv_op_{{ loop.index }} == "less_or_equal":
+                _sv_cond_result_{{ loop.index }} = float(_sv_cond_var_{{ loop.index }}) <= float(_sv_cond_val_{{ loop.index }})
+            elif _sv_op_{{ loop.index }} == "contains":
+                _sv_cond_result_{{ loop.index }} = str(_sv_cond_val_{{ loop.index }}) in str(_sv_cond_var_{{ loop.index }})
+            elif _sv_op_{{ loop.index }} == "not_contains":
+                _sv_cond_result_{{ loop.index }} = str(_sv_cond_val_{{ loop.index }}) not in str(_sv_cond_var_{{ loop.index }})
+        except (ValueError, TypeError):
+            pass
+        _sv_true_{{ loop.index }} = replace_variables_in_text({{ assignment.trueValue | default('') | tojson }}, _sv_vars_{{ loop.index }})
+        _sv_false_{{ loop.index }} = replace_variables_in_text({{ assignment.falseValue | default('') | tojson }}, _sv_vars_{{ loop.index }})
+        user_data[user_id]["{{ safe_var }}"] = _sv_true_{{ loop.index }} if _sv_cond_result_{{ loop.index }} else _sv_false_{{ loop.index }}
+        logging.info(f"📝 set_variable [{{ nodeId }}]: conditional «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (условие: {_sv_cond_result_{{ loop.index }}})")
+        {%- elif assignment.mode == 'lowercase' %}
+        # В нижний регистр
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_source_{{ loop.index }} = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        user_data[user_id]["{{ safe_var }}"] = _sv_source_{{ loop.index }}.lower()
+        logging.info(f"📝 set_variable [{{ nodeId }}]: lowercase «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r}")
+        {%- elif assignment.mode == 'uppercase' %}
+        # В верхний регистр
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_source_{{ loop.index }} = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        user_data[user_id]["{{ safe_var }}"] = _sv_source_{{ loop.index }}.upper()
+        logging.info(f"📝 set_variable [{{ nodeId }}]: uppercase «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r}")
+        {%- elif assignment.mode == 'trim' %}
+        # Убрать пробелы по краям
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_source_{{ loop.index }} = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        user_data[user_id]["{{ safe_var }}"] = _sv_source_{{ loop.index }}.strip()
+        logging.info(f"📝 set_variable [{{ nodeId }}]: trim «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r}")
+        {%- elif assignment.mode == 'length' %}
+        # Длина строки или массива
+        import json as _json_len_{{ loop.index }}
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_source_{{ loop.index }} = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        try:
+            _sv_parsed_{{ loop.index }} = _json_len_{{ loop.index }}.loads(_sv_source_{{ loop.index }})
+            user_data[user_id]["{{ safe_var }}"] = str(len(_sv_parsed_{{ loop.index }}))
+        except (Exception):
+            user_data[user_id]["{{ safe_var }}"] = str(len(str(_sv_source_{{ loop.index }})))
+        logging.info(f"📝 set_variable [{{ nodeId }}]: length «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r}")
         {%- else %}
         # Устанавливаем переменную через шаблон
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)

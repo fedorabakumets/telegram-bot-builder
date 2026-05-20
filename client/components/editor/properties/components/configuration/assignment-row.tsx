@@ -55,7 +55,12 @@ type AssignmentMode =
   | 'extract_number'
   | 'split_get'
   | 'json_get'
-  | 'substring';
+  | 'substring'
+  | 'conditional'
+  | 'lowercase'
+  | 'uppercase'
+  | 'trim'
+  | 'length';
 
 /** Конфигурация режима для отображения в dropdown */
 interface ModeConfig {
@@ -160,6 +165,36 @@ const MODE_CONFIGS: Record<AssignmentMode, ModeConfig> = {
     label: 'Подстрока',
     hint: 'Вырезать часть строки (start, end)',
     borderClass: 'border-teal-400 dark:border-teal-600',
+  },
+  conditional: {
+    icon: '❓',
+    label: 'Условие (если/иначе)',
+    hint: 'Если условие → значение A, иначе → B',
+    borderClass: 'border-amber-400 dark:border-amber-600',
+  },
+  lowercase: {
+    icon: 'aA',
+    label: 'Нижний регистр',
+    hint: 'Все буквы строчные',
+    borderClass: 'border-slate-400 dark:border-slate-600',
+  },
+  uppercase: {
+    icon: 'AA',
+    label: 'Верхний регистр',
+    hint: 'Все буквы заглавные',
+    borderClass: 'border-slate-400 dark:border-slate-600',
+  },
+  trim: {
+    icon: '⌫',
+    label: 'Убрать пробелы',
+    hint: 'Удалить пробелы с начала и конца',
+    borderClass: 'border-slate-400 dark:border-slate-600',
+  },
+  length: {
+    icon: '📐',
+    label: 'Длина',
+    hint: 'Количество символов или элементов массива',
+    borderClass: 'border-cyan-400 dark:border-cyan-600',
   },
 };
 
@@ -476,6 +511,73 @@ function renderValueInput(
               className={`w-24 ${inputClass}`}
             />
           </div>
+        </div>
+      );
+
+    case 'conditional':
+      return (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <Input
+              placeholder="{переменная}"
+              value={(assignment as any).conditionVariable || ''}
+              onChange={(e) => onChange(assignment.id, 'conditionVariable', e.target.value)}
+              className={`w-28 ${inputClass}`}
+            />
+            <select
+              value={(assignment as any).conditionOperator || 'equals'}
+              onChange={(e) => onChange(assignment.id, 'conditionOperator', e.target.value)}
+              className="h-7 text-[10px] bg-muted/40 border rounded px-1"
+            >
+              <option value="equals">=</option>
+              <option value="not_equals">≠</option>
+              <option value="greater_than">&gt;</option>
+              <option value="less_than">&lt;</option>
+              <option value="contains">∋</option>
+              <option value="not_contains">∌</option>
+            </select>
+            <Input
+              placeholder="значение"
+              value={(assignment as any).conditionValue || ''}
+              onChange={(e) => onChange(assignment.id, 'conditionValue', e.target.value)}
+              className={`flex-1 ${inputClass}`}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-green-500 w-6">✓</span>
+            <Input
+              placeholder="если true"
+              value={(assignment as any).trueValue || ''}
+              onChange={(e) => onChange(assignment.id, 'trueValue', e.target.value)}
+              className={`flex-1 ${inputClass}`}
+            />
+            <span className="text-[10px] text-red-500 w-6">✗</span>
+            <Input
+              placeholder="если false"
+              value={(assignment as any).falseValue || ''}
+              onChange={(e) => onChange(assignment.id, 'falseValue', e.target.value)}
+              className={`flex-1 ${inputClass}`}
+            />
+          </div>
+        </div>
+      );
+
+    case 'lowercase':
+    case 'uppercase':
+    case 'trim':
+    case 'length':
+      return (
+        <div className="flex items-center gap-1">
+          <Input
+            placeholder="{переменная} — источник"
+            value={assignment.value || ''}
+            onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
+            className={`flex-1 ${inputClass}`}
+          />
+          <VariableSelector
+            availableVariables={textVariables}
+            onSelect={handleInsertVariable}
+          />
         </div>
       );
 
