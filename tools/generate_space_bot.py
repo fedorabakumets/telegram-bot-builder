@@ -1084,7 +1084,7 @@ def build_map() -> dict:
         nodes.append(node(f"fly-cond-inflight-check-{planet['id']}", "condition", 700, y_pos - 60, {
             "variable": "pilot.flight_expires_at",
             "branches": [
-                branch(f"br-inflight-{planet['id']}", "В полёте", "greater_than", "{now_ts}", f"msg-fly-inflight-{planet['id']}"),
+                branch(f"br-inflight-{planet['id']}", "В полёте", "greater_than", "{now_ts}", f"fly-reread-inflight-{planet['id']}"),
                 branch(f"br-flight-expired-{planet['id']}", "Истёк/нет", "else", "", f"fly-recover-check-{planet['id']}"),
             ],
         }))
@@ -1114,8 +1114,19 @@ def build_map() -> dict:
             "enableAutoTransition": True,
         }))
 
+        # Перечитываем пилота перед сообщением "в полёте" (чтобы flight_target_name был актуальным)
+        nodes.append(node(f"fly-reread-inflight-{planet['id']}", "bot_table", 700, y_pos - 200, {
+            "tableName": "pilots",
+            "operation": "read",
+            "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+            "saveResultTo": "pilot",
+            "resultFormat": "first_row",
+            "autoTransitionTo": f"msg-fly-inflight-{planet['id']}",
+            "enableAutoTransition": True,
+        }))
+
         nodes.append(node(f"msg-fly-inflight-{planet['id']}", "message", 700, y_pos - 160, {
-            "messageText": f"🚀 Вы уже в полёте!\n\nДождитесь прибытия.",
+            "messageText": "🚀 Вы уже в полёте на <b>{pilot.flight_target_name}</b>!\n\nДождитесь прибытия.",
             "formatMode": "html",
             "keyboardType": "none",
             "buttons": [],
@@ -1217,7 +1228,7 @@ def build_map() -> dict:
             "variable": "fly_result.id",
             "branches": [
                 branch(f"br-updated-{planet['id']}", "Обновлено", "greater_than", "0", f"msg-fly-start-{planet['id']}"),
-                branch(f"br-not-updated-{planet['id']}", "Не обновлено", "else", "", f"msg-fly-inflight-{planet['id']}"),
+                branch(f"br-not-updated-{planet['id']}", "Не обновлено", "else", "", f"fly-reread-inflight-{planet['id']}"),
             ],
         }))
 
