@@ -579,7 +579,7 @@ def build_bot_compare_sheet():
         "textTemplate": "{emoji_from} {from_name} → {emoji_to} {to_name}",
         "styleTemplate": "",
         "sourceVariable": "table.pairs",
-        "callbackTemplate": "cmp_{from_id}_{to_id}_{from_name}_{to_name}"
+        "callbackTemplate": "botcmp_{from_id}_{to_id}_{from_name}_{to_name}"
     }
     nodes.append(message_node(
         "bot-msg-menu",
@@ -588,34 +588,26 @@ def build_bot_compare_sheet():
         dynamic_btns=dynamic_btns
     ))
 
-    # ─── 3. Сохранение выбранной пары (парсинг callback_data) ────────────────
-    # callback_data формат: cmp_{from_id}_{to_id}_{from_name}_{to_name}
-    nodes.append(set_var_node(
-        "bot-setv-pair",
-        [
-            {
-                "id": "bp1", "variable": "selected_from_id",
-                "value": "{callback_data}", "mode": "split_get",
-                "separator": "_", "splitIndex": "1"
-            },
-            {
-                "id": "bp2", "variable": "selected_to_id",
-                "value": "{callback_data}", "mode": "split_get",
-                "separator": "_", "splitIndex": "2"
-            },
-            {
-                "id": "bp3", "variable": "selected_from_name",
-                "value": "{callback_data}", "mode": "split_get",
-                "separator": "_", "splitIndex": "3"
-            },
-            {
-                "id": "bp4", "variable": "selected_to_name",
-                "value": "{callback_data}", "mode": "split_get",
-                "separator": "_", "splitIndex": "4"
-            },
-        ],
-        "bot-msg-ask-amount", 800, 400
-    ))
+    # ─── 3. Callback trigger для парсинга выбранной пары ─────────────────────
+    nodes.append({
+        "id": "bot-cb-pair", "type": "callback_trigger",
+        "position": {"x": 600, "y": 400},
+        "data": base_data(
+            matchType="startswith",
+            callbackData="botcmp_",
+            callbackPattern="botcmp_",
+            callbackMatchMode="startsWith",
+            callbackParseTemplate="botcmp_{from_id}_{to_id}_{from_name}_{to_name}",
+            callbackSaveVariables=[
+                {"saveAs": "selected_from_id", "templateVar": "from_id"},
+                {"saveAs": "selected_to_id", "templateVar": "to_id"},
+                {"saveAs": "selected_from_name", "templateVar": "from_name"},
+                {"saveAs": "selected_to_name", "templateVar": "to_name"},
+            ],
+            autoTransitionTo="bot-msg-ask-amount",
+            enableAutoTransition=True
+        )
+    })
 
     # ─── 4. Запрос суммы ──────────────────────────────────────────────────────
     nodes.append(message_node(
