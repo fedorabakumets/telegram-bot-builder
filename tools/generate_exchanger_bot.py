@@ -759,26 +759,37 @@ def build_bot_compare_sheet():
         "bot-ub-24crypto-start", 4800, 400
     ))
 
-    # ─── 14. 24Crypto — /start → нажать «Актуальные курсы» → парсить ─────────
+    # ─── 14. 24Crypto — /start → отправить "Актуальные курсы" → парсить ──────
     nodes.append(userbot_message_node(
         "bot-ub-24crypto-start",
         "/start",
         "@Exchange24Crypto_bot",
         "crypto24_resp_id",
-        "bot-ub-24crypto-click",
+        "bot-ub-24crypto-rates",
         5200, 400
     ))
 
-    # Нажимаем «Актуальные курсы» — бот редактирует сообщение (saveResultTo)
-    nodes.append(userbot_click_button_node(
-        "bot-ub-24crypto-click",
-        "@Exchange24Crypto_bot",
-        "{crypto24_resp_id}",
-        "Актуальные курсы",
-        "crypto24_text",
-        "bot-setv-parse-24crypto",
-        5600, 400
-    ))
+    # Отправляем текст кнопки "Актуальные курсы" (reply keyboard)
+    # и сохраняем текст ответа с курсами
+    nodes.append({
+        "id": "bot-ub-24crypto-rates", "type": "userbot_message",
+        "position": {"x": 5600, "y": 400},
+        "data": {
+            "messageText": "Актуальные курсы",
+            "formatMode": "html",
+            "userbotEntity": "@Exchange24Crypto_bot",
+            "attachedMedia": [],
+            "disableLinkPreview": False,
+            "saveMessageIdTo": "",
+            "saveResponseIdTo": "crypto24_rates_resp_id",
+            "saveResponseTextTo": "crypto24_text",
+            "responseWaitSeconds": 3,
+            "responseStrategy": "longest",
+            "responseFilterRegex": "",
+            "autoTransitionTo": "bot-setv-parse-24crypto",
+            "enableAutoTransition": True
+        }
+    })
 
     # Парсинг курса (пробелы в числе — убираем через str_replace после)
     nodes.append(set_var_node(
