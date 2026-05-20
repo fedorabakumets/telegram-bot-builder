@@ -1241,6 +1241,10 @@ def build_map() -> dict:
             {"id": f"a-{rid}-fmt", "variable": f"{rid}_fmt", "value": f"{{{rid}_time}}", "mode": "format_duration"}
         )
 
+    route_assignments.append(
+        {"id": "a-map-fuel-fmt", "variable": "fuel_fmt", "value": "{pilot.fuel}", "mode": "format_number"}
+    )
+
     nodes.append(node("set-map-routes", "set_variable", 550, 100, {
         "assignments": route_assignments,
         "autoTransitionTo": "msg-map-menu",
@@ -1250,7 +1254,7 @@ def build_map() -> dict:
     map_menu_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
         "{pilot.status_text}\n"
-        "⛽ Топливо: <code>{pilot.fuel}</code>\n"
+        "⛽ Топливо: <code>{fuel_fmt}</code>\n"
         "🚀 Двигатель: ур. <code>{pilot.engine_level}</code>\n\n"
         "━━━━ Маршруты ━━━━\n\n"
         "🌍↔🔴  Земля — Марс\n"
