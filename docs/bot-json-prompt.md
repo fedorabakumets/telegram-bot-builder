@@ -302,6 +302,10 @@
 | `json_push` | Добавить объект в массив-переменную | `"{\"name\": \"{item.name}\"}"` |
 | `json_format` | Форматировать массив в строку | шаблон строки |
 | `regex_extract` | Извлечение по регулярному выражению | `value: "{source}"`, `pattern: "(\\d+)\\s*руб"`, `regexGroup: "1"` |
+| `extract_number` | Извлечение первого числа из строки | `"{bot_response}"` → "7216970" |
+| `split_get` | Разделить строку и взять N-й элемент | `value: "{email}"`, `separator: "@"`, `maxValue: "1"` |
+| `json_get` | Значение из JSON по пути (dot notation) | `value: "{api_response}"`, `jsonPath: "data.user.name"` |
+| `substring` | Подстрока (start, end) | `value: "{id}"`, `startIndex: "0"`, `endIndex: "8"` |
 
 #### Примеры
 

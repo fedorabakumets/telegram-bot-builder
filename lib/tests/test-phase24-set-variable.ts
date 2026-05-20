@@ -422,6 +422,126 @@ test('H05', 'regex_extract → содержит logging.info с regex_extract', 
   ok(code.includes('regex_extract'), 'regex_extract должен быть в логе');
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК I: extract_number
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок I: extract_number ────────────────────────────────────────');
+
+test('I01', 'extract_number → содержит re.search с \\d+', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'num', value: '{text}', mode: 'extract_number' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'I01');
+  ok(code.includes('\\d+'), '\\d+ должен быть в коде');
+});
+
+test('I02', 'extract_number → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'amount', value: '{response}', mode: 'extract_number' }], 'msg1'),
+    makeMsg('msg1', 'Сумма: {amount}'),
+  ]);
+  syntax(gen(p, 'I02'), 'I02');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК J: split_get
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок J: split_get ─────────────────────────────────────────────');
+
+test('J01', 'split_get → содержит .split()', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'first', value: '{name}', mode: 'split_get', separator: ' ', maxValue: '0' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'J01');
+  ok(code.includes('.split('), '.split() должен быть в коде');
+});
+
+test('J02', 'split_get → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'domain', value: '{email}', mode: 'split_get', separator: '@', maxValue: '1' }], 'msg1'),
+    makeMsg('msg1', 'Домен: {domain}'),
+  ]);
+  syntax(gen(p, 'J02'), 'J02');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК K: json_get
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок K: json_get ──────────────────────────────────────────────');
+
+test('K01', 'json_get → содержит json.loads', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'name', value: '{api_response}', mode: 'json_get', jsonPath: 'data.user.name' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'K01');
+  ok(code.includes('json') && code.includes('loads'), 'json.loads должен быть в коде');
+});
+
+test('K02', 'json_get → содержит путь', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'price', value: '{data}', mode: 'json_get', jsonPath: 'items.0.price' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'K02');
+  ok(code.includes('items.0.price'), 'путь items.0.price должен быть в коде');
+});
+
+test('K03', 'json_get → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'val', value: '{json_var}', mode: 'json_get', jsonPath: 'result.data' }], 'msg1'),
+    makeMsg('msg1', 'Результат: {val}'),
+  ]);
+  syntax(gen(p, 'K03'), 'K03');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК L: substring
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок L: substring ─────────────────────────────────────────────');
+
+test('L01', 'substring → содержит срез [start:end]', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'short', value: '{full_id}', mode: 'substring', startIndex: '0', endIndex: '8' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'L01');
+  ok(code.includes('[') && code.includes(':'), 'срез [start:end] должен быть в коде');
+});
+
+test('L02', 'substring → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'prefix', value: '{text}', mode: 'substring', startIndex: '0', endIndex: '5' }], 'msg1'),
+    makeMsg('msg1', 'Префикс: {prefix}'),
+  ]);
+  syntax(gen(p, 'L02'), 'L02');
+});
+
+test('L03', 'substring без end → до конца строки', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'tail', value: '{text}', mode: 'substring', startIndex: '5', endIndex: '' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'L03');
+  syntax(code, 'L03');
+});
+
 // ─── Итоги ───────────────────────────────────────────────────────────────────
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;

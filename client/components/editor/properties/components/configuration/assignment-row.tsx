@@ -51,7 +51,11 @@ type AssignmentMode =
   | 'timestamp'
   | 'format_duration'
   | 'format_number'
-  | 'regex_extract';
+  | 'regex_extract'
+  | 'extract_number'
+  | 'split_get'
+  | 'json_get'
+  | 'substring';
 
 /** Конфигурация режима для отображения в dropdown */
 interface ModeConfig {
@@ -132,6 +136,30 @@ const MODE_CONFIGS: Record<AssignmentMode, ModeConfig> = {
     label: 'Regex извлечение',
     hint: 'Извлечь по регулярному выражению',
     borderClass: 'border-rose-400 dark:border-rose-600',
+  },
+  extract_number: {
+    icon: '🔢',
+    label: 'Число из строки',
+    hint: 'Извлекает первое число из текста',
+    borderClass: 'border-rose-400 dark:border-rose-600',
+  },
+  split_get: {
+    icon: '✂️',
+    label: 'Разделить и взять',
+    hint: 'Разделить строку и взять N-й элемент',
+    borderClass: 'border-indigo-400 dark:border-indigo-600',
+  },
+  json_get: {
+    icon: '{}',
+    label: 'JSON по ключу',
+    hint: 'Значение из JSON по пути (data.user.name)',
+    borderClass: 'border-sky-400 dark:border-sky-600',
+  },
+  substring: {
+    icon: '📏',
+    label: 'Подстрока',
+    hint: 'Вырезать часть строки (start, end)',
+    borderClass: 'border-teal-400 dark:border-teal-600',
   },
 };
 
@@ -339,6 +367,113 @@ function renderValueInput(
               value={(assignment as any).regexGroup || '0'}
               onChange={(e) => onChange(assignment.id, 'regexGroup', e.target.value)}
               className={`w-16 ${inputClass}`}
+            />
+          </div>
+        </div>
+      );
+
+    case 'extract_number':
+      return (
+        <div className="flex items-center gap-1">
+          <Input
+            placeholder="{переменная} — источник"
+            value={assignment.value || ''}
+            onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
+            className={`flex-1 ${inputClass}`}
+          />
+          <VariableSelector
+            availableVariables={textVariables}
+            onSelect={handleInsertVariable}
+          />
+        </div>
+      );
+
+    case 'split_get':
+      return (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <Input
+              placeholder="{переменная} — источник"
+              value={assignment.value || ''}
+              onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
+              className={`flex-1 ${inputClass}`}
+            />
+            <VariableSelector
+              availableVariables={textVariables}
+              onSelect={handleInsertVariable}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <Input
+              placeholder="разделитель"
+              value={(assignment as any).separator || ''}
+              onChange={(e) => onChange(assignment.id, 'separator', e.target.value)}
+              className={`w-24 ${inputClass}`}
+            />
+            <span className="text-muted-foreground text-[10px]">[</span>
+            <Input
+              placeholder="индекс"
+              value={assignment.maxValue || '0'}
+              onChange={(e) => onChange(assignment.id, 'maxValue', e.target.value)}
+              className={`w-16 ${inputClass}`}
+            />
+            <span className="text-muted-foreground text-[10px]">]</span>
+          </div>
+        </div>
+      );
+
+    case 'json_get':
+      return (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <Input
+              placeholder="{переменная} — JSON источник"
+              value={assignment.value || ''}
+              onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
+              className={`flex-1 ${inputClass}`}
+            />
+            <VariableSelector
+              availableVariables={textVariables}
+              onSelect={handleInsertVariable}
+            />
+          </div>
+          <Input
+            placeholder="путь: data.user.name"
+            value={(assignment as any).jsonPath || ''}
+            onChange={(e) => onChange(assignment.id, 'jsonPath', e.target.value)}
+            className={`flex-1 ${inputClass} font-mono`}
+          />
+        </div>
+      );
+
+    case 'substring':
+      return (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <Input
+              placeholder="{переменная} — источник"
+              value={assignment.value || ''}
+              onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
+              className={`flex-1 ${inputClass}`}
+            />
+            <VariableSelector
+              availableVariables={textVariables}
+              onSelect={handleInsertVariable}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <Input
+              placeholder="start"
+              value={(assignment as any).startIndex || '0'}
+              onChange={(e) => onChange(assignment.id, 'startIndex', e.target.value)}
+              className={`w-16 ${inputClass}`}
+            />
+            <span className="text-muted-foreground text-[10px]">:</span>
+            <Input
+              placeholder="end (пусто=конец)"
+              value={(assignment as any).endIndex || ''}
+              onChange={(e) => onChange(assignment.id, 'endIndex', e.target.value)}
+              className={`w-24 ${inputClass}`}
             />
           </div>
         </div>
