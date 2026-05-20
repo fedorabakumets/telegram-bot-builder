@@ -1893,21 +1893,22 @@ def build_ship() -> dict:
     nodes.append(node("msg-ship-menu", "message", 600, 0, {
         "messageText": ship_menu_text,
         "formatMode": "html",
-        "keyboardType": "inline",
+        "keyboardType": "reply",
         "buttons": [
-            btn("btn-i-hull", "⬆️ Трюм — {hull_price} 💰", "goto", target="do-upgrade-hull-check"),
-            btn("btn-i-engine", "⬆️ Двигатель — {engine_price} 💰", "goto", target="do-upgrade-engine-check"),
-            btn("btn-i-armor", "⬆️ Броня — {armor_price} 💰", "goto", target="do-upgrade-armor-check"),
+            btn("btn-s-hull", "⬆️ Трюм"),
+            btn("btn-s-engine", "⬆️ Двигатель"),
+            btn("btn-s-armor", "⬆️ Броня"),
+            btn("btn-s-back", "⬅️ Меню"),
         ],
         "keyboardLayout": {
             "autoLayout": False,
-            "columns": 1,
+            "columns": 3,
             "rows": [
-                {"buttonIds": ["btn-i-hull"]},
-                {"buttonIds": ["btn-i-engine"]},
-                {"buttonIds": ["btn-i-armor"]},
+                {"buttonIds": ["btn-s-hull", "btn-s-engine", "btn-s-armor"]},
+                {"buttonIds": ["btn-s-back"]},
             ],
         },
+        "resizeKeyboard": True,
     }))
 
     # =============================================
@@ -1916,7 +1917,7 @@ def build_ship() -> dict:
     nodes.append(node("trig-hull", "text_trigger", 100, 250, {
         "textMatchType": "exact",
         "textSynonyms": ["⬆️ Трюм"],
-        "autoTransitionTo": "tbl-read-pilot-hull",
+        "autoTransitionTo": "do-upgrade-hull-check",
         "enableAutoTransition": True,
     }))
 
@@ -2026,15 +2027,8 @@ def build_ship() -> dict:
             {"column": "hull_level", "op": "increment", "value": "1"},
             {"column": "cargo_max", "op": "set", "value": "{hull_next_slots}"},
         ],
-        "autoTransitionTo": "msg-hull-success",
+        "autoTransitionTo": "tbl-read-pilot-ship",
         "enableAutoTransition": True,
-    }))
-
-    nodes.append(node("msg-hull-success", "message", 2500, 250, {
-        "messageText": "✅ Улучшение установлено!\n\n📦 Трюм: ур. <code>{hull_next}</code>\n📦 Вместимость: <code>{hull_next_slots}</code> слотов\n💰 Списано: <code>{hull_price}</code> кредитов",
-        "formatMode": "html",
-        "keyboardType": "none",
-        "buttons": [],
     }))
 
     # =============================================
@@ -2043,7 +2037,7 @@ def build_ship() -> dict:
     nodes.append(node("trig-engine", "text_trigger", 100, 600, {
         "textMatchType": "exact",
         "textSynonyms": ["⬆️ Двигатель"],
-        "autoTransitionTo": "tbl-read-pilot-engine",
+        "autoTransitionTo": "do-upgrade-engine-check",
         "enableAutoTransition": True,
     }))
 
@@ -2151,15 +2145,8 @@ def build_ship() -> dict:
             {"column": "credits", "op": "decrement", "value": "{engine_price}"},
             {"column": "engine_level", "op": "increment", "value": "1"},
         ],
-        "autoTransitionTo": "msg-engine-success",
+        "autoTransitionTo": "tbl-read-pilot-ship",
         "enableAutoTransition": True,
-    }))
-
-    nodes.append(node("msg-engine-success", "message", 2500, 600, {
-        "messageText": "✅ Улучшение установлено!\n\n🚀 Двигатель: ур. <code>{engine_next}</code>\n🕐 Перелёты ещё быстрее!\n💰 Списано: <code>{engine_price}</code> кредитов",
-        "formatMode": "html",
-        "keyboardType": "none",
-        "buttons": [],
     }))
 
     # =============================================
@@ -2168,7 +2155,7 @@ def build_ship() -> dict:
     nodes.append(node("trig-armor", "text_trigger", 100, 950, {
         "textMatchType": "exact",
         "textSynonyms": ["⬆️ Броня"],
-        "autoTransitionTo": "tbl-read-pilot-armor",
+        "autoTransitionTo": "do-upgrade-armor-check",
         "enableAutoTransition": True,
     }))
 
@@ -2282,15 +2269,8 @@ def build_ship() -> dict:
             {"column": "credits", "op": "decrement", "value": "{armor_price}"},
             {"column": "armor_level", "op": "increment", "value": "1"},
         ],
-        "autoTransitionTo": "msg-armor-success",
+        "autoTransitionTo": "tbl-read-pilot-ship",
         "enableAutoTransition": True,
-    }))
-
-    nodes.append(node("msg-armor-success", "message", 2500, 950, {
-        "messageText": "✅ Улучшение установлено!\n\n🛡 Броня: ур. <code>{armor_next}</code>\n⚔️ Шанс победы: <code>{armor_next_pct}</code>%\n💰 Списано: <code>{armor_price}</code> кредитов",
-        "formatMode": "html",
-        "keyboardType": "none",
-        "buttons": [],
     }))
 
     return {
