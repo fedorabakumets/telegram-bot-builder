@@ -7,10 +7,12 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { MessageTextSectionContent } from '../message/message-text-section-content';
 import { SaveMessageIdSection } from '../message/save-message-id-section';
 import { MediaFileSection } from '../media-file/media-file-section';
 import { SectionHeader } from '../layout/section-header';
+import { VariableSelector } from '../variables/variable-selector';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Variable } from '../../../inline-rich/types';
 import type { Node } from '@shared/schema';
@@ -63,15 +65,56 @@ export function UserbotMessageConfiguration({
         />
         {isRecipientOpen && (
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">
-              Entity (получатель)
-            </Label>
-            <Input
-              value={data.userbotEntity ?? ''}
-              onChange={(e) => onNodeUpdate(selectedNode.id, { userbotEntity: e.target.value })}
-              placeholder="@username, ID, {переменная} или 'me'"
-              className="h-9 text-sm font-mono"
-            />
+            {(data.userbotRecipients ?? [data.userbotEntity || '']).map((entity: string, idx: number) => (
+              <div key={idx} className="flex items-center gap-1">
+                <span className="text-xs text-violet-500/70 w-5 flex-shrink-0">{idx + 1}.</span>
+                <Input
+                  value={entity}
+                  onChange={(e) => {
+                    const list = [...(data.userbotRecipients ?? [data.userbotEntity || ''])];
+                    list[idx] = e.target.value;
+                    onNodeUpdate(selectedNode.id, { userbotRecipients: list, userbotEntity: list[0] || '' });
+                  }}
+                  placeholder="@username, ID, {переменная} или 'me'"
+                  className="h-8 text-sm font-mono flex-1"
+                />
+                <VariableSelector
+                  availableVariables={availableVariables as Variable[]}
+                  onSelect={(v) => {
+                    const list = [...(data.userbotRecipients ?? [data.userbotEntity || ''])];
+                    list[idx] = `{${v}}`;
+                    onNodeUpdate(selectedNode.id, { userbotRecipients: list, userbotEntity: list[0] || '' });
+                  }}
+                />
+                {(data.userbotRecipients ?? []).length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-red-400 hover:text-red-500"
+                    onClick={() => {
+                      const list = [...(data.userbotRecipients ?? [data.userbotEntity || ''])];
+                      list.splice(idx, 1);
+                      onNodeUpdate(selectedNode.id, { userbotRecipients: list, userbotEntity: list[0] || '' });
+                    }}
+                  >
+                    <i className="fas fa-times text-xs" />
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full h-7 text-xs border-dashed border-violet-300 text-violet-600 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-400 dark:hover:bg-violet-950/20"
+              onClick={() => {
+                const list = [...(data.userbotRecipients ?? [data.userbotEntity || '']), ''];
+                onNodeUpdate(selectedNode.id, { userbotRecipients: list, userbotEntity: list[0] || '' });
+              }}
+            >
+              <i className="fas fa-plus mr-1" /> Добавить получателя
+            </Button>
             <p className="text-[10px] text-muted-foreground/70">
               Юзербот должен быть участником чата. Поддерживается: @username, числовой ID, телефон, {'{переменная}'}.
             </p>
