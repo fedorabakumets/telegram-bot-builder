@@ -69,6 +69,14 @@ export const botTokens = pgTable("bot_tokens", {
   webhookBaseUrl: text("webhook_base_url"),
   /** Секретный токен для верификации webhook запросов */
   webhookSecretToken: text("webhook_secret_token"),
+  /** Включён ли Telethon userbot (0 = выключено, 1 = включено) */
+  userbotEnabled: integer("userbot_enabled").default(0),
+  /** API ID для Telethon (из my.telegram.org) */
+  userbotApiId: text("userbot_api_id"),
+  /** API Hash для Telethon (из my.telegram.org) */
+  userbotApiHash: text("userbot_api_hash"),
+  /** Session string для Telethon (авторизованная сессия) */
+  userbotSessionString: text("userbot_session_string"),
   /** Дата создания токена */
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления токена */
@@ -119,6 +127,14 @@ export const insertBotTokenSchema = z.object({
   webhookBaseUrl: z.string().nullable().optional(),
   /** Секретный токен для верификации webhook запросов */
   webhookSecretToken: z.string().nullable().optional(),
+  /** Включён ли Telethon userbot (0 = выключено, 1 = включено) */
+  userbotEnabled: z.number().min(0).max(1).default(0).optional(),
+  /** API ID для Telethon */
+  userbotApiId: z.string().nullable().optional(),
+  /** API Hash для Telethon */
+  userbotApiHash: z.string().nullable().optional(),
+  /** Session string для Telethon */
+  userbotSessionString: z.string().nullable().optional(),
 });
 
 /** Тип записи токена бота */

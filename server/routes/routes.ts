@@ -1260,6 +1260,88 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Обновление настроек Telethon userbot для токена бота
+   * PUT /api/projects/:projectId/tokens/:tokenId/userbot
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/userbot", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
+      const { userbotEnabled, userbotApiId, userbotApiHash, userbotSessionString } = req.body as {
+        userbotEnabled: number;
+        userbotApiId: string | null;
+        userbotApiHash: string | null;
+        userbotSessionString: string | null;
+      };
+
+      if (userbotEnabled !== 0 && userbotEnabled !== 1) {
+        return res.status(400).json({ message: "userbotEnabled должен быть 0 или 1" });
+      }
+
+      const updated = await storage.updateBotToken(tokenId, {
+        userbotEnabled,
+        userbotApiId,
+        userbotApiHash,
+        userbotSessionString,
+      });
+      if (!updated) {
+        return res.status(404).json({ message: "Токен не найден" });
+      }
+
+      try {
+        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
+        const { join } = await import('path');
+        const botsDir = join(process.cwd(), 'bots');
+
+        if (existsSync(botsDir)) {
+          const dirs = readdirSync(botsDir, { withFileTypes: true });
+
+          for (const dir of dirs) {
+            if (!dir.isDirectory()) continue;
+
+            const envPath = join(botsDir, dir.name, '.env');
+            if (!existsSync(envPath)) continue;
+
+            const content = readFileSync(envPath, 'utf8');
+            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
+
+            let updatedContent = content;
+
+            const envLines: Array<{ key: string; value: string; comment: string }> = [
+              { key: 'USERBOT_ENABLED', value: userbotEnabled === 1 ? 'true' : 'false', comment: '# Telethon userbot' },
+              { key: 'USERBOT_API_ID', value: userbotApiId ?? '', comment: '' },
+              { key: 'USERBOT_API_HASH', value: userbotApiHash ?? '', comment: '' },
+              { key: 'USERBOT_SESSION_STRING', value: userbotSessionString ?? '', comment: '' },
+            ];
+
+            for (const { key, value, comment } of envLines) {
+              const regex = new RegExp(`^${key}=.*`, 'm');
+              const line = `${key}=${value}`;
+              if (regex.test(updatedContent)) {
+                updatedContent = updatedContent.replace(regex, line);
+              } else if (value) {
+                const prefix = comment ? `\n${comment}\n` : '\n';
+                updatedContent = `${updatedContent.trim()}${prefix}${line}\n`;
+              }
+            }
+
+            if (updatedContent !== content) {
+              writeFileSync(envPath, updatedContent, 'utf8');
+              console.log(`✅ Userbot настройки обновлены в ${envPath}`);
+            }
+          }
+        }
+      } catch (envErr) {
+        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
+      }
+
+      res.json({ success: true, userbotEnabled });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка обновления настроек юзербота" });
+    }
+  });
+
+  /**
    * Обновление уровня логирования для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/log-level
    */

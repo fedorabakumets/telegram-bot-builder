@@ -21,6 +21,7 @@ import { BotAdminIds } from '../profile/BotAdminIds';
 import { ProjectCollaborators } from '../profile/ProjectCollaborators';
 import { BotLaunchHistory } from './BotLaunchHistory';
 import { BotLaunchSettings } from './BotLaunchSettings';
+import { BotUserbotSettings } from './BotUserbotSettings';
 import type { BotStatusResponse } from '../bot-types';
 import type { BotToken } from '@shared/schema';
 
@@ -43,7 +44,7 @@ interface BotSettingsGridProps {
   /** Статусы всех ботов */
   allBotStatuses: BotStatusResponse[];
   /** Данные токена для настроек автоперезапуска */
-  token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia'>;
+  token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia' | 'userbotEnabled' | 'userbotApiId' | 'userbotApiHash' | 'userbotSessionString'>;
   /** Мутация переключения базы данных */
   toggleDatabaseMutation: {
     /** Флаг ожидания ответа */
@@ -144,6 +145,15 @@ export function BotSettingsGrid({
         tokenId={tokenId}
         projectId={projectId}
         botName={resolvedBotName}
+      />
+      <BotUserbotSettings
+        projectId={projectId}
+        tokenId={tokenId}
+        userbotEnabled={token.userbotEnabled ?? 0}
+        userbotApiId={token.userbotApiId ?? null}
+        userbotApiHash={token.userbotApiHash ?? null}
+        userbotSessionString={token.userbotSessionString ?? null}
+        onPendingChange={onPendingChange}
       />
     </div>
   );
