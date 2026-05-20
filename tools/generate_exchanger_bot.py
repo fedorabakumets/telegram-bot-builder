@@ -899,6 +899,16 @@ def build_bot_compare_sheet():
         ],
         "inline", 5600, 400
     ))
+    # Layout: Обновить на всю ширину, потом 2+2+1
+    nodes[-1]["data"]["keyboardLayout"] = {
+        "rows": [
+            {"buttonIds": ["bot-btn-refresh"]},
+            {"buttonIds": ["bot-btn-new-amount", "bot-btn-new-pair"]},
+            {"buttonIds": ["bot-btn-back-menu", "bot-btn-sites"]},
+        ],
+        "columns": 2,
+        "autoLayout": False
+    }
 
     return {
         "id": "sheet-bots",
