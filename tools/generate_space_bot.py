@@ -1183,15 +1183,25 @@ def build_map() -> dict:
     nodes.append(node("map-cond-inflight", "condition", 400, 0, {
         "variable": "pilot.flight_expires_at",
         "branches": [
-            branch("br-map-inflight", "В полёте", "greater_than", "{now_ts}", "msg-map-inflight"),
+            branch("br-map-inflight", "В полёте", "greater_than", "{now_ts}", "set-map-remaining"),
             branch("br-map-free", "Свободен", "else", "", "set-map-routes"),
         ],
+    }))
+
+    # Вычисляем оставшееся время для карты в полёте
+    nodes.append(node("set-map-remaining", "set_variable", 550, -100, {
+        "assignments": [
+            {"id": "a-map-rem", "variable": "map_remaining", "value": "{pilot.flight_expires_at} - {now_ts}", "mode": "format_duration"},
+        ],
+        "autoTransitionTo": "msg-map-inflight",
+        "enableAutoTransition": True,
     }))
 
     # Сообщение карты когда В ПОЛЁТЕ
     map_inflight_text = (
         f"🚀 {MENTION}, карта галактики:\n\n"
         "{pilot.status_text}\n"
+        "🕐 Оставшееся время: <code>{map_remaining}</code>\n"
         "⛽ Топливо: <code>{pilot.fuel}</code>"
     )
     nodes.append(node("msg-map-inflight", "message", 700, -100, {
@@ -1495,7 +1505,7 @@ def build_map() -> dict:
 
         # Сообщение "Летим..."
         nodes.append(node(f"msg-fly-start-{planet['id']}", "message", 1900, y_pos, {
-            "messageText": f"🚀 Летим на планету <b>{planet['full']}</b>!\n\n⛽ Потрачено: <code>{{flight_fuel}}</code> топлива\n🕐 Время в пути: <code>{{flight_time_fmt}}</code>",
+            "messageText": f"🚀 Летим на планету <b>{planet['full']}</b>!\n\n⛽ Потрачено: <code>{{flight_fuel}}</code> топлива\n🕐 Оставшееся время: <code>{{flight_time_fmt}}</code>",
             "formatMode": "html",
             "keyboardType": "reply",
             "buttons": [
