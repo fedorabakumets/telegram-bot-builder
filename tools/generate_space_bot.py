@@ -1660,9 +1660,10 @@ def build_ship() -> dict:
 
     ship_menu_text = (
         f"🔧 {MENTION}, ваш корабль:\n\n"
-        "📦 Трюм: ур. <code>{pilot.hull_level}</code> ({pilot.cargo_max} слотов)\n"
-        "🚀 Двигатель: ур. <code>{pilot.engine_level}</code>\n"
-        "🛡 Броня: ур. <code>{pilot.armor_level}</code>\n\n"
+        "━━━━ Модули ━━━━\n\n"
+        "📦 Трюм          ур. <code>{pilot.hull_level}</code> • {pilot.cargo_max} слотов\n"
+        "🚀 Двигатель  ур. <code>{pilot.engine_level}</code> • ⛽ {pilot.fuel}\n"
+        "🛡 Броня          ур. <code>{pilot.armor_level}</code>\n\n"
         "💰 Кредиты: <code>{pilot.credits}</code>"
     )
     nodes.append(node("msg-ship-menu", "message", 400, 0, {
