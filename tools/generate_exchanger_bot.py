@@ -1051,17 +1051,7 @@ def build_bot_compare_sheet():
                 "mode": "expression"
             },
         ],
-        "bot-setv-sanchez-cancel", 10400, 400
-    ))
-
-    # Отмена покупки чтобы не оставлять бота в состоянии ожидания
-    nodes.append(userbot_message_node(
-        "bot-setv-sanchez-cancel",
-        "/cancel",
-        "@Sanchez_exchange_bot",
-        "",
-        "bot-setv-calc",
-        10600, 400
+        "bot-setv-calc", 10400, 400
     ))
 
     # ─── 17. Вычисление BTC для всех ботов ───────────────────────────────────
