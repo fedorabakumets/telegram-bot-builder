@@ -1865,6 +1865,7 @@ def build_ship() -> dict:
             {"id": "a-ship-engine-next", "variable": "engine_next", "value": "{pilot.engine_level} + 1", "mode": "expression"},
             {"id": "a-ship-armor-next", "variable": "armor_next", "value": "{pilot.armor_level} + 1", "mode": "expression"},
             {"id": "a-ship-armor-cur", "variable": "current_armor_pct", "value": "{pilot.armor_level} * 15 + 15", "mode": "expression"},
+            {"id": "a-ship-engine-cur", "variable": "engine_current_pct", "value": "({pilot.engine_level} - 1) * 15", "mode": "expression"},
             {"id": "a-ship-hull-price", "variable": "hull_price", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "{hull_next}"}]},
             {"id": "a-ship-hull-slots", "variable": "hull_next_slots", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "hull_slots", "lookupWhere": [{"field": "level", "value": "{hull_next}"}]},
             {"id": "a-ship-engine-price", "variable": "engine_price", "value": "", "mode": "lookup", "lookupTable": "upgrades", "lookupField": "price", "lookupWhere": [{"field": "level", "value": "{engine_next}"}]},
@@ -1882,7 +1883,7 @@ def build_ship() -> dict:
         "   Занято: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n"
         "   ⬆️ Следующий: <code>{hull_next_slots}</code> слотов за <code>{hull_price}</code> 💰\n\n"
         "🚀 <b>Двигатель</b> — ур. {pilot.engine_level}\n"
-        "   Скорость: -<code>{pilot.engine_level}</code>×15% к перелётам\n"
+        "   Скорость: -<code>{engine_current_pct}</code>% к перелётам\n"
         "   ⬆️ Следующий: ещё -15% за <code>{engine_price}</code> 💰\n\n"
         "🛡 <b>Броня</b> — ур. {pilot.armor_level}\n"
         "   Шанс победы: <code>{current_armor_pct}</code>%\n"
