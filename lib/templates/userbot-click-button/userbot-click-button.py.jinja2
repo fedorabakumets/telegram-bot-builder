@@ -137,7 +137,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _my_id_cb = (await userbot_client.get_me()).id
             _bot_fallback = [m for m in _fallback_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb]
             _updated = _bot_fallback[0] if _bot_fallback else None
-        logging.info(f"📖 [{{ nodeId }}] Результат: text={(_updated.text or '')[:80]!r if _updated else 'None'}")
+        logging.info(f"📖 [{{ nodeId }}] Результат: text={((_updated.text or '') if _updated else 'None')[:80]!r}")
 
 {%- if saveResultTo %}
         # Сохраняем текст обновлённого сообщения
