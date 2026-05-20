@@ -1108,7 +1108,7 @@ def build_map() -> dict:
         "variable": "pilot.flight_expires_at",
         "branches": [
             branch("br-map-inflight", "В полёте", "greater_than", "{now_ts}", "msg-map-inflight"),
-            branch("br-map-free", "Свободен", "else", "", "msg-map-menu"),
+            branch("br-map-free", "Свободен", "else", "", "set-map-routes"),
         ],
     }))
 
@@ -1135,24 +1135,49 @@ def build_map() -> dict:
         "resizeKeyboard": True,
     }))
 
-    # Сообщение карты когда НА ПЛАНЕТЕ
+    # Сообщение карты когда НА ПЛАНЕТЕ — вычисляем время маршрутов с учётом двигателя
+    # Базовые времена: earth-mars=120, earth-titan=300, earth-nebula=180, mars-titan=180, mars-nebula=360, titan-nebula=480
+    route_times = [
+        ("r1", "120"),  # earth-mars
+        ("r2", "300"),  # earth-titan
+        ("r3", "180"),  # earth-nebula
+        ("r4", "180"),  # mars-titan
+        ("r5", "360"),  # mars-nebula
+        ("r6", "480"),  # titan-nebula
+    ]
+    route_assignments = []
+    for rid, base_time in route_times:
+        route_assignments.append(
+            {"id": f"a-{rid}-time", "variable": f"{rid}_time", "value": f"{base_time} * (110 - {{pilot.engine_level}} * 15) // 100", "mode": "expression"}
+        )
+        route_assignments.append(
+            {"id": f"a-{rid}-fmt", "variable": f"{rid}_fmt", "value": f"{{{rid}_time}}", "mode": "format_duration"}
+        )
+
+    nodes.append(node("set-map-routes", "set_variable", 550, 100, {
+        "assignments": route_assignments,
+        "autoTransitionTo": "msg-map-menu",
+        "enableAutoTransition": True,
+    }))
+
     map_menu_text = (
         f"🗺 {MENTION}, карта галактики:\n\n"
         "{pilot.status_text}\n"
-        "⛽ Топливо: <code>{pilot.fuel}</code>\n\n"
+        "⛽ Топливо: <code>{pilot.fuel}</code>\n"
+        "🚀 Двигатель: ур. <code>{pilot.engine_level}</code>\n\n"
         "━━━━ Маршруты ━━━━\n\n"
         "🌍↔🔴  Земля — Марс\n"
-        "        ⛽ <code>10</code>  🕐 <code>02:00</code>\n"
+        "        ⛽ <code>10</code>  🕐 <code>{r1_fmt}</code>\n"
         "🌍↔🪐  Земля — Титан\n"
-        "        ⛽ <code>20</code>  🕐 <code>05:00</code>\n"
+        "        ⛽ <code>20</code>  🕐 <code>{r2_fmt}</code>\n"
         "🌍↔🌌  Земля — Туманность\n"
-        "        ⛽ <code>15</code>  🕐 <code>03:00</code>\n"
+        "        ⛽ <code>15</code>  🕐 <code>{r3_fmt}</code>\n"
         "🔴↔🪐  Марс — Титан\n"
-        "        ⛽ <code>15</code>  🕐 <code>03:00</code>\n"
+        "        ⛽ <code>15</code>  🕐 <code>{r4_fmt}</code>\n"
         "🔴↔🌌  Марс — Туманность\n"
-        "        ⛽ <code>25</code>  🕐 <code>06:00</code>\n"
+        "        ⛽ <code>25</code>  🕐 <code>{r5_fmt}</code>\n"
         "🪐↔🌌  Титан — Туманность\n"
-        "        ⛽ <code>30</code>  🕐 <code>08:00</code>"
+        "        ⛽ <code>30</code>  🕐 <code>{r6_fmt}</code>"
     )
     nodes.append(node("msg-map-menu", "message", 700, 100, {
         "messageText": map_menu_text,
