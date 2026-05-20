@@ -164,6 +164,19 @@ export async function createCompleteBotFiles(
     customVariables.push({ key: 'DATABASE_URL', value: process.env.DATABASE_URL });
   }
 
+  // Добавляем Telethon userbot переменные из токена (если включён)
+  if (tokenRecord?.userbotEnabled === 1) {
+    if (tokenRecord.userbotApiId) {
+      customVariables.push({ key: 'USERBOT_API_ID', value: tokenRecord.userbotApiId });
+    }
+    if (tokenRecord.userbotApiHash) {
+      customVariables.push({ key: 'USERBOT_API_HASH', value: tokenRecord.userbotApiHash });
+    }
+    if (tokenRecord.userbotSessionString) {
+      customVariables.push({ key: 'USERBOT_SESSION_STRING', value: tokenRecord.userbotSessionString });
+    }
+  }
+
   const envContent = generateEnvFile(
     tokenRecord?.token || "YOUR_BOT_TOKEN_HERE",
     existingAdminIds,
