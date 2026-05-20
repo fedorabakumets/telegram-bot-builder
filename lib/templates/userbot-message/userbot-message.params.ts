@@ -13,8 +13,10 @@ export interface UserbotMessageTemplateParams {
   formatMode?: 'html' | 'markdown' | 'none';
   /** Отключить превью ссылок */
   disableLinkPreview?: boolean;
-  /** Entity получателя (@username, ID, {переменная}) */
+  /** Entity получателя (@username, ID, {переменная}) — основной (обратная совместимость) */
   userbotEntity?: string;
+  /** Список получателей (если несколько) */
+  userbotRecipients?: string[];
   /** Прикреплённые медиафайлы (пути /uploads/ или URL) */
   attachedMedia?: string[];
   /** Имя переменной для сохранения ID отправленного сообщения */

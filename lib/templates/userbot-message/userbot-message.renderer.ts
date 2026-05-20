@@ -39,6 +39,7 @@ export function generateUserbotMessageHandlers(nodes: Node[], projectId: number 
       formatMode: data.formatMode || 'html',
       disableLinkPreview: data.disableLinkPreview || false,
       userbotEntity: data.userbotEntity || '',
+      userbotRecipients: (data.userbotRecipients || []).filter((r: string) => r.trim()),
       attachedMedia: (data.attachedMedia || []).filter((m: string) => !m.includes('"__type":"file_id"')),
       saveMessageIdTo: data.saveMessageIdTo || undefined,
       autoTransitionTo: data.autoTransitionTo || undefined,

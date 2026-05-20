@@ -17,6 +17,8 @@ export const userbotMessageParamsSchema = z.object({
   disableLinkPreview: z.boolean().optional().default(false),
   /** Entity получателя */
   userbotEntity: z.string().optional().default(''),
+  /** Список получателей (если несколько) */
+  userbotRecipients: z.array(z.string()).optional().default([]),
   /** Прикреплённые медиафайлы */
   attachedMedia: z.array(z.string()).optional().default([]),
   /** Переменная для сохранения ID сообщения */

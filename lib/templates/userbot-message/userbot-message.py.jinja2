@@ -51,15 +51,25 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     text = replace_variables_in_text(text, all_user_vars, {})
 
     # Резолвим entity получателя
+{%- if userbotRecipients and userbotRecipients|length > 0 %}
+    _recipients = [
+{%- for r in userbotRecipients %}
+        replace_variables_in_text({% if projectId %}get_content("{{ nodeId }}.entity.{{ loop.index0 }}", {{ r|format_python_text }}){% else %}{{ r|format_python_text }}{% endif %}, all_user_vars, {}),
+{%- endfor %}
+    ]
+    _recipients = [r for r in _recipients if r]
+{%- else %}
 {%- if projectId %}
     _entity_raw = get_content("{{ nodeId }}.entity", {{ userbotEntity|format_python_text }})
 {%- else %}
     _entity_raw = {{ userbotEntity|format_python_text }}
 {%- endif %}
-    _entity = replace_variables_in_text(_entity_raw, all_user_vars, {})
+    _recipients = [replace_variables_in_text(_entity_raw, all_user_vars, {})]
+    _recipients = [r for r in _recipients if r]
+{%- endif %}
 
-    if not _entity:
-        logging.error(f"❌ Узел {{ nodeId }}: entity получателя пустой")
+    if not _recipients:
+        logging.error(f"❌ Узел {{ nodeId }}: нет получателей")
         return
 
     # Определяем parse_mode
@@ -73,7 +83,8 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 
     # Отправка сообщения через userbot
     sent = None
-    try:
+    for _entity in _recipients:
+      try:
         # Резолвим entity (число или строка)
         _target = int(_entity) if _entity.lstrip('-').isdigit() else _entity
 
@@ -135,8 +146,8 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 
         logging.info(f"✅ Userbot отправил сообщение в {_entity} (узел {{ nodeId }})")
 
-    except Exception as _ub_err:
-        logging.error(f"❌ Ошибка отправки через userbot (узел {{ nodeId }}): {_ub_err}")
+      except Exception as _ub_err:
+        logging.error(f"❌ Ошибка отправки через userbot (узел {{ nodeId }}) → {_entity}: {_ub_err}")
         # FloodWait — ждём и пробуем снова
         if "FloodWaitError" in type(_ub_err).__name__ or "flood" in str(_ub_err).lower():
             _wait = getattr(_ub_err, 'seconds', 30)
