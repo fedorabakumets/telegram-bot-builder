@@ -1,6 +1,6 @@
 """
 @fileoverview Генератор project.json для бота «Космический Торговец».
-Создаёт 5 листов: Старт/Меню, Торговля, Карта, Пираты, Корабль.
+Создаёт 6 листов: Старт/Меню, Торговля, Карта, Пираты, Корабль, Планета.
 Фаза 1 — скелет с заглушками для будущей логики.
 8 руд, динамические цены, фрагменты Эфира.
 @module tools/generate_space_bot
@@ -281,7 +281,7 @@ def build_start_menu() -> dict:
     upgrades_base_x = 1700 + len(ORES) * 200
     for i, upg in enumerate(UPGRADES):
         upg_node_id = f"tbl-init-upgrades-{i + 1}"
-        next_id = f"tbl-init-upgrades-{i + 2}" if i < len(UPGRADES) - 1 else "msg-welcome"
+        next_id = f"tbl-init-upgrades-{i + 2}" if i < len(UPGRADES) - 1 else "tbl-init-names-1"
 
         nodes.append(node(upg_node_id, "bot_table", upgrades_base_x + i * 200, -150, {
             "tableName": "upgrades",
@@ -293,6 +293,37 @@ def build_start_menu() -> dict:
                 "fuel_max": upg["fuel_max"],
                 "armor_pct": upg["armor_pct"],
                 "price": upg["price"],
+            },
+            "onConflict": "ignore",
+            "autoTransitionTo": next_id,
+            "enableAutoTransition": True,
+        }))
+
+    # --- Инициализация таблицы planet_names (10 случайных названий) ---
+    PLANET_NAMES = [
+        {"id": "1", "name": "Нова-7"},
+        {"id": "2", "name": "Кеплер-22"},
+        {"id": "3", "name": "Андромеда-X"},
+        {"id": "4", "name": "Сириус-3"},
+        {"id": "5", "name": "Орион-12"},
+        {"id": "6", "name": "Вега-Prime"},
+        {"id": "7", "name": "Альтаир-9"},
+        {"id": "8", "name": "Проксима-4"},
+        {"id": "9", "name": "Центавр-6"},
+        {"id": "10", "name": "Дзета-11"},
+    ]
+    names_base_x = upgrades_base_x + len(UPGRADES) * 200
+    for i, pn in enumerate(PLANET_NAMES):
+        pn_node_id = f"tbl-init-names-{i + 1}"
+        next_id = f"tbl-init-names-{i + 2}" if i < len(PLANET_NAMES) - 1 else "msg-welcome"
+
+        nodes.append(node(pn_node_id, "bot_table", names_base_x + i * 200, -150, {
+            "tableName": "planet_names",
+            "operation": "upsert",
+            "key": "id",
+            "row": {
+                "id": pn["id"],
+                "name": pn["name"],
             },
             "onConflict": "ignore",
             "autoTransitionTo": next_id,
@@ -350,7 +381,7 @@ def build_start_menu() -> dict:
     nodes.append(node("trig-planet", "text_trigger", 100, 1050, {
         "textMatchType": "exact",
         "textSynonyms": ["🌍 Планета"],
-        "autoTransitionTo": "msg-planet-wip",
+        "autoTransitionTo": "tbl-read-pilot-planet",
         "enableAutoTransition": True,
     }))
 
@@ -428,15 +459,9 @@ def build_start_menu() -> dict:
     )
     nodes.append(main_menu_msg("msg-main-menu", main_menu_text, 700, 1200))
 
-    # --- Заглушки: Топ, Планета ---
+    # --- Заглушка: Топ ---
     nodes.append(node("msg-top-wip", "message", 400, 900, {
         "messageText": "🏆 Топ пилотов — в разработке.",
-        "keyboardType": "none",
-        "buttons": [],
-    }))
-
-    nodes.append(node("msg-planet-wip", "message", 400, 1050, {
-        "messageText": "🌍 Моя планета — в разработке.",
         "keyboardType": "none",
         "buttons": [],
     }))
@@ -2331,6 +2356,469 @@ def build_ship() -> dict:
 
 
 # ============================================================
+# Лист 6: 🌍 Планета (sheet-planet)
+# ============================================================
+
+def build_planet() -> dict:
+    """
+    Строит лист «🌍 Планета».
+    Содержит основание планеты, просмотр, сбор руды, смену баффа.
+    @returns словарь листа
+    """
+    nodes = []
+
+    # --- Цепочка входа: читаем пилота → проверяем есть ли планета ---
+    nodes.append(node("tbl-read-pilot-planet", "bot_table", 100, 0, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "cond-has-planet",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("cond-has-planet", "condition", 400, 0, {
+        "variable": "pilot.planet_id",
+        "branches": [
+            branch("br-has-planet", "Есть планета", "is_not_empty", "", "tbl-read-my-planet"),
+            branch("br-no-planet", "Нет планеты", "else", "", "msg-no-planet"),
+        ],
+    }))
+
+    # --- Если планеты нет ---
+    no_planet_text = (
+        f"🌍 {MENTION}, у вас нет своей планеты.\n\n"
+        "Основание планеты даёт:\n"
+        "⛏ Шахта — пассивная добыча руды\n"
+        "🎯 Бафф — бонус к продаже одной руды\n"
+        "📦 Склад — хранение добытой руды\n\n"
+        "💰 Стоимость: <code>1000000</code> кредитов\n"
+        "💰 Ваш баланс: <code>{pilot.credits}</code>"
+    )
+    nodes.append(node("msg-no-planet", "message", 700, 200, {
+        "messageText": no_planet_text,
+        "formatMode": "html",
+        "keyboardType": "inline",
+        "buttons": [
+            {"id": "btn-found-planet", "text": "🌍 Основать планету", "action": "goto", "target": "cond-found-credits"},
+        ],
+    }))
+
+    # --- Основание планеты ---
+    nodes.append(node("cond-found-credits", "condition", 1000, 200, {
+        "variable": "pilot.credits",
+        "branches": [
+            branch("br-found-no-money", "Не хватает", "less_than", "1000000", "msg-found-no-money"),
+            branch("br-found-ok", "Хватает", "else", "", "set-found-planet"),
+        ],
+    }))
+
+    nodes.append(node("msg-found-no-money", "message", 1300, 100, {
+        "messageText": "❌ Недостаточно кредитов!\n\n💰 Нужно: <code>1000000</code> кредитов\n💰 У вас: <code>{pilot.credits}</code>",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("set-found-planet", "set_variable", 1300, 200, {
+        "assignments": [
+            {"id": "a-planet-name-id", "variable": "planet_name_id", "value": "1", "maxValue": "10", "mode": "random"},
+            {"id": "a-buff-ore-roll", "variable": "buff_ore_roll", "value": "1", "maxValue": "8", "mode": "random"},
+            {"id": "a-buff-pct", "variable": "buff_pct", "value": "1", "maxValue": "100", "mode": "random"},
+        ],
+        "autoTransitionTo": "lookup-planet-name",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("lookup-planet-name", "set_variable", 1600, 200, {
+        "assignments": [
+            {"id": "a-lookup-pname", "variable": "new_planet_name", "value": "", "mode": "lookup", "lookupTable": "planet_names", "lookupField": "name", "lookupWhere": [{"field": "id", "value": "{planet_name_id}"}]},
+        ],
+        "autoTransitionTo": "set-buff-ore",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("set-buff-ore", "set_variable", 1900, 200, {
+        "assignments": [
+            {"id": "a-buff-ore-id", "variable": "buff_ore_id", "value": "iron,copper,titanium,uranium,crystal,etherite,mithril,nexar", "mode": "random_item"},
+            {"id": "a-buff-ore-name", "variable": "buff_ore_name", "value": "", "mode": "lookup", "lookupTable": "ores", "lookupField": "name", "lookupWhere": [{"field": "id", "value": "{buff_ore_id}"}]},
+            {"id": "a-buff-ore-emoji", "variable": "buff_ore_emoji", "value": "", "mode": "lookup", "lookupTable": "ores", "lookupField": "emoji", "lookupWhere": [{"field": "id", "value": "{buff_ore_id}"}]},
+        ],
+        "autoTransitionTo": "do-found-planet",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("do-found-planet", "bot_table", 2200, 200, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "credits", "op": "decrement", "value": "1000000"},
+            {"column": "planet_id", "op": "set", "value": "1"},
+        ],
+        "autoTransitionTo": "tbl-insert-planet",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("tbl-insert-planet", "bot_table", 2500, 200, {
+        "tableName": "player_planets",
+        "operation": "upsert",
+        "key": "owner_id",
+        "row": {
+            "owner_id": "{user_id}",
+            "name": "{new_planet_name}",
+            "mine_level": "1",
+            "energy_level": "1",
+            "storage_level": "1",
+            "defense_level": "1",
+            "ore_stored": "0",
+            "last_harvest": "{now_ts}",
+            "buff_ore_id": "{buff_ore_id}",
+            "buff_ore_name": "{buff_ore_emoji} {buff_ore_name}",
+            "buff_percent": "{buff_pct}",
+        },
+        "onConflict": "ignore",
+        "autoTransitionTo": "msg-planet-founded",
+        "enableAutoTransition": True,
+    }))
+
+    founded_text = (
+        f"🎉 Планета основана!\n\n"
+        "🌍 <b>{new_planet_name}</b>\n\n"
+        "🎯 Бафф: +<code>{buff_pct}</code>% к продаже <b>{buff_ore_emoji} {buff_ore_name}</b>\n"
+        "⛏ Шахта: ур. 1\n"
+        "📦 Склад: ур. 1 (0/50)\n\n"
+        "💰 Списано: <code>1000000</code> кредитов"
+    )
+    nodes.append(node("msg-planet-founded", "message", 2800, 200, {
+        "messageText": founded_text,
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # --- Если планета есть: читаем данные планеты ---
+    nodes.append(node("tbl-read-my-planet", "bot_table", 400, -200, {
+        "tableName": "player_planets",
+        "operation": "read",
+        "where": [{"column": "owner_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "planet",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "set-planet-calc",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("set-planet-calc", "set_variable", 700, -200, {
+        "assignments": [
+            {"id": "a-pc-now", "variable": "now_ts", "value": "0", "mode": "timestamp"},
+            {"id": "a-pc-hours", "variable": "hours_passed", "value": "({now_ts} - {planet.last_harvest}) // 3600", "mode": "expression"},
+            {"id": "a-pc-mined", "variable": "ore_mined", "value": "{hours_passed} * {planet.mine_level}", "mode": "expression"},
+            {"id": "a-pc-max", "variable": "storage_max", "value": "{planet.storage_level} * 50", "mode": "expression"},
+            {"id": "a-pc-avail", "variable": "ore_available", "value": "min({planet.ore_stored} + {ore_mined}, {storage_max})", "mode": "expression"},
+        ],
+        "autoTransitionTo": "msg-my-planet",
+        "enableAutoTransition": True,
+    }))
+
+    my_planet_text = (
+        f"🌍 {MENTION}, ваша планета <b>{{planet.name}}</b>:\n\n"
+        "⛏ Шахта: ур. <code>{planet.mine_level}</code> ({planet.mine_level} руды/час)\n"
+        "📦 Склад: ур. <code>{planet.storage_level}</code> (<code>{ore_available}</code>/<code>{storage_max}</code>)\n"
+        "⚡ Энергия: ур. <code>{planet.energy_level}</code>\n"
+        "🛡 Защита: ур. <code>{planet.defense_level}</code>\n\n"
+        "🎯 Бафф: +<code>{planet.buff_percent}</code>% к продаже <b>{planet.buff_ore_name}</b>\n"
+        "🌀 Фрагменты Эфира: <code>{pilot.fragments}</code>\n\n"
+        "━━━━━━━━━━━━━━━━\n"
+        "💰 <code>{pilot.credits}</code> | ⛽ <code>{pilot.fuel}</code>"
+    )
+    nodes.append(node("msg-my-planet", "message", 1000, -200, {
+        "messageText": my_planet_text,
+        "formatMode": "html",
+        "keyboardType": "reply",
+        "buttons": [
+            btn("btn-p-harvest", "⛏ Собрать руду"),
+            btn("btn-p-buff", "🌀 Сменить бафф"),
+            btn("btn-p-back", "⬅️ Меню"),
+        ],
+        "keyboardLayout": {
+            "autoLayout": False,
+            "columns": 2,
+            "rows": [
+                {"buttonIds": ["btn-p-harvest", "btn-p-buff"]},
+                {"buttonIds": ["btn-p-back"]},
+            ],
+        },
+        "resizeKeyboard": True,
+    }))
+
+    # =============================================
+    # ⛏ СБОР РУДЫ
+    # =============================================
+    nodes.append(node("trig-harvest", "text_trigger", 100, 500, {
+        "textMatchType": "exact",
+        "textSynonyms": ["⛏ Собрать руду"],
+        "autoTransitionTo": "tbl-harvest-read-pilot",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("tbl-harvest-read-pilot", "bot_table", 400, 500, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "tbl-harvest-read-planet",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("tbl-harvest-read-planet", "bot_table", 700, 500, {
+        "tableName": "player_planets",
+        "operation": "read",
+        "where": [{"column": "owner_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "planet",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "set-harvest-calc",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("set-harvest-calc", "set_variable", 1000, 500, {
+        "assignments": [
+            {"id": "a-hc-now", "variable": "now_ts", "value": "0", "mode": "timestamp"},
+            {"id": "a-hc-hours", "variable": "hours_passed", "value": "({now_ts} - {planet.last_harvest}) // 3600", "mode": "expression"},
+            {"id": "a-hc-mined", "variable": "ore_mined", "value": "{hours_passed} * {planet.mine_level}", "mode": "expression"},
+            {"id": "a-hc-max", "variable": "storage_max", "value": "{planet.storage_level} * 50", "mode": "expression"},
+            {"id": "a-hc-collect", "variable": "ore_to_collect", "value": "min({planet.ore_stored} + {ore_mined}, {storage_max})", "mode": "expression"},
+        ],
+        "autoTransitionTo": "cond-harvest-empty",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("cond-harvest-empty", "condition", 1300, 500, {
+        "variable": "ore_to_collect",
+        "branches": [
+            branch("br-harvest-empty", "Пусто", "equals", "0", "msg-harvest-empty"),
+            branch("br-harvest-has", "Есть руда", "else", "", "cond-harvest-cargo"),
+        ],
+    }))
+
+    nodes.append(node("msg-harvest-empty", "message", 1600, 400, {
+        "messageText": "⛏ Склад пуст!\n\nШахта ещё не добыла руду.",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("cond-harvest-cargo", "condition", 1600, 500, {
+        "variable": "pilot.cargo_used",
+        "branches": [
+            branch("br-harvest-full", "Трюм полон", "equals", "{pilot.cargo_max}", "msg-harvest-full"),
+            branch("br-harvest-space", "Есть место", "else", "", "do-harvest"),
+        ],
+    }))
+
+    nodes.append(node("msg-harvest-full", "message", 1900, 400, {
+        "messageText": "❌ Трюм полон!\n\n📦 <code>{pilot.cargo_used}/{pilot.cargo_max}</code>\n\nПродайте руду чтобы освободить место.",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("do-harvest", "set_variable", 1900, 500, {
+        "assignments": [
+            {"id": "a-h-space", "variable": "space_left", "value": "{pilot.cargo_max} - {pilot.cargo_used}", "mode": "expression"},
+            {"id": "a-h-amount", "variable": "harvest_amount", "value": "min({ore_to_collect}, {space_left})", "mode": "expression"},
+        ],
+        "autoTransitionTo": "do-harvest-update",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("do-harvest-update", "bot_table", 2200, 500, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "cargo_used", "op": "increment", "value": "{harvest_amount}"},
+        ],
+        "autoTransitionTo": "do-harvest-planet-update",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("do-harvest-planet-update", "bot_table", 2500, 500, {
+        "tableName": "player_planets",
+        "operation": "update",
+        "where": [{"column": "owner_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "ore_stored", "op": "set", "value": "0"},
+            {"column": "last_harvest", "op": "set", "value": "{now_ts}"},
+        ],
+        "autoTransitionTo": "do-harvest-cargo-upsert",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("do-harvest-cargo-upsert", "bot_table", 2800, 500, {
+        "tableName": "pilot_cargo",
+        "operation": "count",
+        "where": [
+            {"column": "pilot_id", "operator": "equals", "value": "{user_id}"},
+            {"column": "ore_id", "operator": "equals", "value": "iron"},
+        ],
+        "saveResultTo": "harvest_cargo_exists",
+        "autoTransitionTo": "cond-harvest-cargo-exists",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("cond-harvest-cargo-exists", "condition", 3100, 500, {
+        "variable": "harvest_cargo_exists",
+        "branches": [
+            branch("br-hc-new", "Новая", "equals", "0", "do-harvest-cargo-insert"),
+            branch("br-hc-exists", "Уже есть", "else", "", "do-harvest-cargo-inc"),
+        ],
+    }))
+
+    nodes.append(node("do-harvest-cargo-insert", "bot_table", 3400, 400, {
+        "tableName": "pilot_cargo",
+        "operation": "insert",
+        "row": {
+            "pilot_id": "{user_id}",
+            "ore_id": "iron",
+            "ore_name": "Железо",
+            "ore_emoji": "⚙️",
+            "quantity": "{harvest_amount}",
+        },
+        "autoTransitionTo": "msg-harvest-ok",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("do-harvest-cargo-inc", "bot_table", 3400, 600, {
+        "tableName": "pilot_cargo",
+        "operation": "update",
+        "where": [
+            {"column": "pilot_id", "operator": "equals", "value": "{user_id}"},
+            {"column": "ore_id", "operator": "equals", "value": "iron"},
+        ],
+        "updates": [
+            {"column": "quantity", "op": "increment", "value": "{harvest_amount}"},
+        ],
+        "autoTransitionTo": "msg-harvest-ok",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("msg-harvest-ok", "message", 3700, 500, {
+        "messageText": "⛏ Собрано руды!\n\n⚙️ Железо: +<code>{harvest_amount}</code> шт.\n📦 Трюм: <code>{pilot.cargo_used}/{pilot.cargo_max}</code>",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    # =============================================
+    # 🌀 СМЕНА БАФФА
+    # =============================================
+    nodes.append(node("trig-buff", "text_trigger", 100, 900, {
+        "textMatchType": "exact",
+        "textSynonyms": ["🌀 Сменить бафф"],
+        "autoTransitionTo": "tbl-buff-read-pilot",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("tbl-buff-read-pilot", "bot_table", 400, 900, {
+        "tableName": "pilots",
+        "operation": "read",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "pilot",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "tbl-buff-read-planet",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("tbl-buff-read-planet", "bot_table", 700, 900, {
+        "tableName": "player_planets",
+        "operation": "read",
+        "where": [{"column": "owner_id", "operator": "equals", "value": "{user_id}"}],
+        "saveResultTo": "planet",
+        "resultFormat": "first_row",
+        "autoTransitionTo": "cond-buff-fragments",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("cond-buff-fragments", "condition", 1000, 900, {
+        "variable": "pilot.fragments",
+        "branches": [
+            branch("br-buff-no", "Нет фрагментов", "less_than", "1", "msg-buff-no-fragments"),
+            branch("br-buff-ok", "Есть", "else", "", "set-buff-new"),
+        ],
+    }))
+
+    nodes.append(node("msg-buff-no-fragments", "message", 1300, 800, {
+        "messageText": "❌ Нет Фрагментов Эфира!\n\n🌀 У вас: <code>0</code>\n\n💡 Фрагменты выпадают при победе над пиратами (15% шанс).",
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    nodes.append(node("set-buff-new", "set_variable", 1300, 900, {
+        "assignments": [
+            {"id": "a-new-buff-ore", "variable": "new_buff_ore_id", "value": "iron,copper,titanium,uranium,crystal,etherite,mithril,nexar", "mode": "random_item"},
+            {"id": "a-new-buff-pct", "variable": "new_buff_pct", "value": "1", "maxValue": "100", "mode": "random"},
+        ],
+        "autoTransitionTo": "lookup-buff-new-name",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("lookup-buff-new-name", "set_variable", 1600, 900, {
+        "assignments": [
+            {"id": "a-lk-buff-name", "variable": "new_buff_ore_name", "value": "", "mode": "lookup", "lookupTable": "ores", "lookupField": "name", "lookupWhere": [{"field": "id", "value": "{new_buff_ore_id}"}]},
+            {"id": "a-lk-buff-emoji", "variable": "new_buff_ore_emoji", "value": "", "mode": "lookup", "lookupTable": "ores", "lookupField": "emoji", "lookupWhere": [{"field": "id", "value": "{new_buff_ore_id}"}]},
+        ],
+        "autoTransitionTo": "do-buff-update",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("do-buff-update", "bot_table", 1900, 900, {
+        "tableName": "pilots",
+        "operation": "update",
+        "where": [{"column": "telegram_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "fragments", "op": "decrement", "value": "1"},
+        ],
+        "autoTransitionTo": "do-buff-planet-update",
+        "enableAutoTransition": True,
+    }))
+
+    nodes.append(node("do-buff-planet-update", "bot_table", 2200, 900, {
+        "tableName": "player_planets",
+        "operation": "update",
+        "where": [{"column": "owner_id", "operator": "equals", "value": "{user_id}"}],
+        "updates": [
+            {"column": "buff_ore_id", "op": "set", "value": "{new_buff_ore_id}"},
+            {"column": "buff_ore_name", "op": "set", "value": "{new_buff_ore_emoji} {new_buff_ore_name}"},
+            {"column": "buff_percent", "op": "set", "value": "{new_buff_pct}"},
+        ],
+        "autoTransitionTo": "msg-buff-changed",
+        "enableAutoTransition": True,
+    }))
+
+    buff_changed_text = (
+        "🌀 Бафф изменён!\n\n"
+        "Было: +<code>{planet.buff_percent}</code>% к продаже <b>{planet.buff_ore_name}</b>\n"
+        "Стало: +<code>{new_buff_pct}</code>% к продаже <b>{new_buff_ore_emoji} {new_buff_ore_name}</b>\n\n"
+        "🌀 Фрагменты: <code>{pilot.fragments}</code>"
+    )
+    nodes.append(node("msg-buff-changed", "message", 2500, 900, {
+        "messageText": buff_changed_text,
+        "formatMode": "html",
+        "keyboardType": "none",
+        "buttons": [],
+    }))
+
+    return {
+        "id": "sheet-planet",
+        "name": "🌍 Планета",
+        "nodes": nodes,
+    }
+
+
+# ============================================================
 # Сборка проекта
 # ============================================================
 
@@ -2348,6 +2836,7 @@ def build_project() -> dict:
             build_map(),
             build_pirates(),
             build_ship(),
+            build_planet(),
         ],
     }
 
