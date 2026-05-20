@@ -1670,9 +1670,9 @@ def build_ship() -> dict:
         "formatMode": "html",
         "keyboardType": "reply",
         "buttons": [
-            btn("btn-s-hull", "📦 Трюм"),
-            btn("btn-s-engine", "🚀 Двигатель"),
-            btn("btn-s-armor", "🛡 Броня"),
+            btn("btn-s-hull", "⬆️ Трюм"),
+            btn("btn-s-engine", "⬆️ Двигатель"),
+            btn("btn-s-armor", "⬆️ Броня"),
             btn("btn-s-back", "⬅️ Меню"),
         ],
         "keyboardLayout": {
@@ -1691,7 +1691,7 @@ def build_ship() -> dict:
     # =============================================
     nodes.append(node("trig-hull", "text_trigger", 100, 250, {
         "textMatchType": "exact",
-        "textSynonyms": ["📦 Трюм"],
+        "textSynonyms": ["⬆️ Трюм"],
         "autoTransitionTo": "tbl-read-pilot-hull",
         "enableAutoTransition": True,
     }))
@@ -1817,7 +1817,7 @@ def build_ship() -> dict:
     # =============================================
     nodes.append(node("trig-engine", "text_trigger", 100, 600, {
         "textMatchType": "exact",
-        "textSynonyms": ["🚀 Двигатель"],
+        "textSynonyms": ["⬆️ Двигатель"],
         "autoTransitionTo": "tbl-read-pilot-engine",
         "enableAutoTransition": True,
     }))
@@ -1941,7 +1941,7 @@ def build_ship() -> dict:
     # =============================================
     nodes.append(node("trig-armor", "text_trigger", 100, 950, {
         "textMatchType": "exact",
-        "textSynonyms": ["🛡 Броня"],
+        "textSynonyms": ["⬆️ Броня"],
         "autoTransitionTo": "tbl-read-pilot-armor",
         "enableAutoTransition": True,
     }))
