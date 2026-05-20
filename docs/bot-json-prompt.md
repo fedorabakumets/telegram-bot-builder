@@ -880,6 +880,84 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 
 ---
 
+### userbot_click_button — Нажатие кнопки через юзербот
+
+Нажимает inline-кнопку в сообщении через Telethon userbot.
+
+```json
+{
+  "id": "ub-click-1",
+  "type": "userbot_click_button",
+  "position": { "x": 400, "y": 200 },
+  "data": {
+    "userbotEntity": "@target_bot",
+    "messageId": "{response_msg_id}",
+    "messageIdSource": "last",
+    "clickMode": "text",
+    "clickValue": "Играть",
+    "saveAlertTo": "alert_text",
+    "saveResultTo": "new_message_text",
+    "saveButtonsTo": "buttons_json",
+    "saveHasMediaTo": "has_media",
+    "saveMediaTo": "media_obj",
+    "autoTransitionTo": ""
+  }
+}
+```
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `userbotEntity` | string | Чат с кнопками (@username, ID, {переменная}) |
+| `messageId` | string | ID сообщения ({переменная} или число) |
+| `messageIdSource` | "manual" \| "last" | Источник: конкретный ID или последнее сообщение |
+| `clickMode` | "text" \| "data" \| "index" | Способ поиска кнопки |
+| `clickValue` | string | Текст / callback_data / "row, col" |
+| `saveAlertTo` | string | Переменная для alert |
+| `saveResultTo` | string | Переменная для текста после нажатия |
+| `saveButtonsTo` | string | Переменная для JSON кнопок |
+| `saveHasMediaTo` | string | Переменная для флага медиа |
+| `saveMediaTo` | string | Переменная для медиа-объекта |
+| `autoTransitionTo` | string | ID узла для автоперехода |
+
+---
+
+### userbot_inline_query — Inline-запрос через юзербот
+
+Выполняет inline-запрос (@bot query) и отправляет результат в чат.
+
+```json
+{
+  "id": "ub-iq-1",
+  "type": "userbot_inline_query",
+  "position": { "x": 400, "y": 200 },
+  "data": {
+    "botUsername": "@scdoo_bot",
+    "query": "buy_btc 1",
+    "targetChat": "",
+    "sendToSameChat": true,
+    "resultIndex": "0",
+    "saveResultTitleTo": "result_title",
+    "saveResultDescTo": "result_desc",
+    "saveResponseIdTo": "sent_msg_id",
+    "autoTransitionTo": ""
+  }
+}
+```
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `botUsername` | string | Username бота (@bot или {переменная}) |
+| `query` | string | Текст inline-запроса |
+| `targetChat` | string | Целевой чат (если sendToSameChat=false) |
+| `sendToSameChat` | boolean | Отправить в чат с ботом (по умолчанию true) |
+| `resultIndex` | string | Индекс результата (0 = первый) |
+| `saveResultTitleTo` | string | Переменная для title |
+| `saveResultDescTo` | string | Переменная для description |
+| `saveResponseIdTo` | string | Переменная для ID сообщения |
+| `autoTransitionTo` | string | ID узла для автоперехода |
+
+---
+
 ## Кнопки (Button)
 
 Кнопки задаются в `data.buttons[]` узла. Тип клавиатуры задаётся в `data.keyboardType`:
