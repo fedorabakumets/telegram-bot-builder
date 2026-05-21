@@ -20,7 +20,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, ZoomIn, ZoomOut, Trash2, Copy, Save, EyeOff } from 'lucide-react';
+import { MoreVertical, ZoomIn, ZoomOut, Trash2, Copy, Save, EyeOff, Search } from 'lucide-react';
 
 interface TerminalHeaderProps {
   onZoomIn: () => void;
@@ -29,6 +29,8 @@ interface TerminalHeaderProps {
   onCopy: () => void;
   onSave: () => void;
   onHide?: () => void;
+  /** Переключить панель поиска */
+  onToggleSearch?: () => void;
   headerBgClass: string;
   buttonTextColorClass: string;
   buttonHoverClass: string;
@@ -45,6 +47,7 @@ export function TerminalHeader({
   onCopy,
   onSave,
   onHide,
+  onToggleSearch,
   headerBgClass,
   buttonTextColorClass,
   buttonHoverClass,
@@ -64,6 +67,9 @@ export function TerminalHeader({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onToggleSearch}>
+                  <Search className="mr-2 h-4 w-4" />Поиск
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={onZoomIn}>
                   <ZoomIn className="mr-2 h-4 w-4" />Увеличить
                 </DropdownMenuItem>
@@ -90,6 +96,9 @@ export function TerminalHeader({
 
           {/* Десктоп: кнопки в строку */}
           <div className="hidden sm:flex space-x-2 flex-wrap justify-end">
+            <Button variant="ghost" size="sm" onClick={onToggleSearch} className={`${buttonTextColorClass} ${buttonHoverClass}`}>
+              <Search className="h-4 w-4 mr-1" />Поиск
+            </Button>
             <Button variant="ghost" size="sm" onClick={onZoomIn} className={`${buttonTextColorClass} ${buttonHoverClass}`}>
               Увеличить
             </Button>

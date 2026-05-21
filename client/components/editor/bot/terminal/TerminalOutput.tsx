@@ -1,5 +1,5 @@
 /**
- * @fileoverview Вывод терминала с автоскроллом и кнопкой прокрутки вниз
+ * @fileoverview Вывод терминала с автоскроллом и подсветкой поиска
  *
  * Компонент отображает строки вывода терминала с поддержкой ANSI,
  * автоматически скроллит вниз при новых строках (если пользователь не листал вверх),
@@ -8,7 +8,7 @@
  * @module TerminalOutput
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Ansi from 'ansi-to-react';
 
 /** Строка вывода терминала */
@@ -37,6 +37,10 @@ interface TerminalOutputProps {
   stderrTextClass: string;
   /** CSS-класс для текста-заглушки */
   placeholderTextClass: string;
+  /** Поисковый запрос для подсветки совпадений */
+  searchQuery?: string;
+  /** ID строки с текущим активным совпадением */
+  currentMatchLineId?: string;
 }
 
 /**
@@ -49,25 +53,50 @@ function checkIsAtBottom(el: HTMLDivElement): boolean {
 }
 
 /**
- * Компонент вывода терминала с автоскроллом
+ * Разбивает текст по поисковому запросу и оборачивает совпадения в mark
+ * @param text - Исходный текст
+ * @param query - Поисковый запрос
+ * @param isCurrentMatch - Является ли строка текущим совпадением
+ * @returns Массив React-элементов с подсветкой
+ */
+function highlightMatches(text: string, query: string, isCurrentMatch: boolean) {
+  if (!query) return <Ansi>{text}</Ansi>;
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
+  const markClass = isCurrentMatch
+    ? 'bg-yellow-400/60 dark:bg-yellow-500/50 rounded-sm px-0.5'
+    : 'bg-yellow-300/40 dark:bg-yellow-500/30 rounded-sm px-0.5';
+
+  return parts.map((part, i) =>
+    part.toLowerCase() === query.toLowerCase() ? (
+      <mark key={i} className={markClass}>{part}</mark>
+    ) : (
+      <Ansi key={i}>{part}</Ansi>
+    )
+  );
+}
+
+/**
+ * Компонент вывода терминала с автоскроллом и подсветкой поиска
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function TerminalOutput({
   lines,
   containerRef,
-  height,
   scale,
   terminalTextClass,
   stderrTextClass,
   placeholderTextClass,
+  searchQuery,
+  currentMatchLineId,
 }: TerminalOutputProps) {
   /** Флаг видимости кнопки прокрутки вниз */
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+  /** Рефы строк для скролла к текущему совпадению */
+  const lineRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  /**
-   * Прокручивает контейнер в самый низ и скрывает кнопку
-   */
+  /** Прокручивает контейнер в самый низ и скрывает кнопку */
   const scrollToBottom = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -75,9 +104,7 @@ export function TerminalOutput({
     setShowScrollBtn(false);
   }, [containerRef]);
 
-  /**
-   * Обработчик события прокрутки — обновляет видимость кнопки
-   */
+  /** Обработчик события прокрутки — обновляет видимость кнопки */
   const handleScroll = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -92,6 +119,15 @@ export function TerminalOutput({
       el.scrollTo({ top: el.scrollHeight });
     }
   }, [lines, containerRef]);
+
+  // Скролл к текущему совпадению при смене currentMatchLineId
+  useEffect(() => {
+    if (!currentMatchLineId) return;
+    const el = lineRefs.current.get(currentMatchLineId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentMatchLineId]);
 
   return (
     <div className="relative h-full w-full">
@@ -112,10 +148,13 @@ export function TerminalOutput({
           lines.map((line) => (
             <div
               key={line.id}
+              ref={(el) => { if (el) lineRefs.current.set(line.id, el); }}
               className={line.type === 'stderr' ? stderrTextClass : terminalTextClass}
               style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
             >
-              <Ansi>{line.content}</Ansi>
+              {searchQuery
+                ? highlightMatches(line.content, searchQuery, line.id === currentMatchLineId)
+                : <Ansi>{line.content}</Ansi>}
             </div>
           ))
         )}

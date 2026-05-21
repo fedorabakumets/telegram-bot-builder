@@ -7,10 +7,11 @@
  * @module Terminal
  */
 
-import { forwardRef, useImperativeHandle, useCallback } from 'react';
+import { forwardRef, useImperativeHandle, useCallback, useState } from 'react';
 import { TerminalHeader } from './TerminalHeader';
 import { TerminalOutput } from './TerminalOutput';
 import { TerminalFilterBar } from './TerminalFilterBar';
+import { TerminalSearchBar } from './TerminalSearchBar';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { TerminalHandle, TerminalProps } from './terminalTypes';
 import { useTerminalTheme } from './useTerminalTheme';
@@ -18,6 +19,7 @@ import { useTerminalResize } from './useTerminalResize';
 import { useTerminalLines } from './useTerminalLines';
 import { useTerminalMethods } from './useTerminalMethods';
 import { useTerminalFilter } from './useTerminalFilter';
+import { useTerminalSearch } from './useTerminalSearch';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 
 export type { TerminalHandle, TerminalProps };
@@ -79,6 +81,33 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
   // Отфильтрованные строки для вывода
   const visibleLines = filterLines(lines);
 
+  // Состояние панели поиска
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Хук поиска по видимым строкам
+  const {
+    searchQuery,
+    matchIndices,
+    currentMatchIndex,
+    setSearchQuery,
+    goToNextMatch,
+    goToPrevMatch,
+    clearSearch,
+  } = useTerminalSearch(visibleLines);
+
+  /** Переключить панель поиска */
+  const toggleSearch = useCallback(() => {
+    setIsSearchOpen((prev) => {
+      if (prev) clearSearch();
+      return !prev;
+    });
+  }, [clearSearch]);
+
+  /** ID строки с текущим активным совпадением */
+  const currentMatchLineId = matchIndices.length > 0
+    ? visibleLines[matchIndices[currentMatchIndex]]?.id
+    : undefined;
+
   return (
     <div
       className={`border rounded-lg overflow-hidden ${themeClasses.terminalBgClass} ${themeClasses.terminalTextClass} font-mono text-sm transition-all duration-200 w-full h-full flex flex-col ${isVisible ? 'opacity-100' : 'hidden'}`}
@@ -90,6 +119,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         onCopy={() => copyTerminalOutput(visibleLines)}
         onSave={() => saveTerminalOutput(visibleLines)}
         onHide={onToggleVisibility}
+        onToggleSearch={toggleSearch}
         headerBgClass={themeClasses.headerBgClass}
         buttonTextColorClass={themeClasses.buttonTextColorClass}
         buttonHoverClass={themeClasses.buttonHoverClass}
@@ -99,6 +129,17 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         onFilterChange={setFilter}
         stderrCount={stderrCount(lines)}
       />
+      {isSearchOpen && (
+        <TerminalSearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          currentMatch={currentMatchIndex}
+          totalMatches={matchIndices.length}
+          onNext={goToNextMatch}
+          onPrev={goToPrevMatch}
+          onClose={toggleSearch}
+        />
+      )}
       <div className="flex-1 overflow-hidden min-h-0">
         <TerminalOutput
           lines={visibleLines}
@@ -107,6 +148,8 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
           terminalTextClass={themeClasses.terminalTextClass}
           stderrTextClass={themeClasses.stderrTextClass}
           placeholderTextClass={themeClasses.placeholderTextClass}
+          searchQuery={searchQuery || undefined}
+          currentMatchLineId={currentMatchLineId}
         />
       </div>
     </div>
