@@ -65,13 +65,13 @@ export function Toolbar({
 }: ToolbarProps) {
   if (compact) {
     return (
-      <div className="flex items-center gap-1 bg-white dark:bg-slate-900/50 rounded-lg p-1 border border-slate-200/50 dark:border-slate-800/50">
+      <div className="flex flex-wrap items-center gap-1 bg-white dark:bg-slate-900/50 rounded-lg p-1 border border-slate-200/50 dark:border-slate-800/50">
         {formatOptions.map((format) => {
           const isActive = activeFormats?.has(format.command) ?? false;
           return (
             <Button key={format.command} variant="ghost" size="icon"
               className={cn(
-                "h-7 w-7 transition-colors",
+                "h-7 w-7 transition-colors shrink-0",
                 isActive
                   ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200/80 dark:hover:bg-blue-800/50"
                   : "hover:bg-slate-200/60 dark:hover:bg-slate-700/60"
@@ -85,19 +85,19 @@ export function Toolbar({
             </Button>
           );
         })}
-        <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-0.5" />
+        <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-0.5 shrink-0" />
         <Button variant="ghost" size="icon"
-          className="h-7 w-7 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 disabled:opacity-40"
+          className="h-7 w-7 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 disabled:opacity-40 shrink-0"
           onClick={undo} disabled={!canUndo} title="Отменить (Ctrl+Z)">
           <RotateCcw className="h-3.5 w-3.5" />
         </Button>
         <Button variant="ghost" size="icon"
-          className="h-7 w-7 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 disabled:opacity-40"
+          className="h-7 w-7 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 disabled:opacity-40 shrink-0"
           onClick={redo} disabled={!canRedo} title="Повторить (Ctrl+Shift+Z)">
           <RotateCw className="h-3.5 w-3.5" />
         </Button>
         <Button variant="ghost" size="icon"
-          className="h-7 w-7 hover:bg-slate-200/60 dark:hover:bg-slate-700/60"
+          className="h-7 w-7 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 shrink-0"
           onClick={copyFormatted} title="Копировать форматированный текст">
           <Copy className="h-3.5 w-3.5" />
         </Button>
