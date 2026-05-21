@@ -257,7 +257,7 @@ export function BotUserbotSettings({
           </div>
 
           {/* API ID + API Hash (всегда видны) */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label htmlFor={`ub-api-id-${tokenId}`} className="text-xs">API ID</Label>
               <Input
@@ -365,7 +365,7 @@ export function BotUserbotSettings({
 
           {/* Шаг: авторизация завершена */}
           {step === 'done' && (
-            <div className="flex items-center justify-between gap-2 rounded-md bg-emerald-500/10 border border-emerald-500/30 p-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-emerald-500/10 border border-emerald-500/30 p-2">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
