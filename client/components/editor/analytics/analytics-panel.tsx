@@ -139,15 +139,17 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Шапка */}
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-muted/40 to-background">
-        <div className="flex items-center gap-2.5">
-          <div className="rounded-lg bg-primary/10 p-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b bg-gradient-to-r from-muted/40 to-background">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="rounded-lg bg-primary/10 p-2 shrink-0">
             <BarChart2 className="h-5 w-5 text-primary" />
           </div>
-          <div>
-            <h2 className="text-base font-semibold leading-none">Аналитика</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Статистика и рост аудитории</p>
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold leading-none truncate">Аналитика</h2>
+            <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">Статистика и рост аудитории</p>
           </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
           {allProjects && allProjects.length > 1 && onProjectChange && (
             <ProjectSelector
               projects={allProjects}
@@ -162,11 +164,9 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               onSelect={(id) => onSelectToken?.(id)}
             />
           )}
-        </div>
-        <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => refetchStats()}>
             <RefreshCw className="h-4 w-4" />
-            Обновить
+            <span className="hidden sm:inline">Обновить</span>
           </Button>
         </div>
       </div>
