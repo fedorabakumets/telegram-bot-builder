@@ -162,7 +162,16 @@ export function BotCardHeader({
             </TooltipProvider>
           )}
           {token.botUsername && (
-            <span className="text-xs sm:text-sm text-muted-foreground">@{token.botUsername}</span>
+            <a
+              href={`https://t.me/${token.botUsername}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs sm:text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors"
+              title="Открыть бота в Telegram"
+              data-testid="link-bot-username"
+            >
+              @{token.botUsername}
+            </a>
           )}
         </div>
         <div className="flex items-center gap-2 mb-2 flex-wrap">
