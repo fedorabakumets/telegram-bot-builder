@@ -135,9 +135,9 @@ export function DialogList({
           </div>
         ) : (
           <>
-            {allUsers.map((user) => (
+            {allUsers.map((user, index) => (
               <DialogListItem
-                key={user.userId}
+                key={`${user.userId}-${index}`}
                 user={user}
                 isSelected={selectedUserId === String(user.userId)}
                 onClick={() => onSelectUser(user)}
