@@ -16,6 +16,8 @@ export interface UserDatabasePanelProps {
   onOpenDialogPanel?: (user: UserBotData) => void;
   /** Callback-функция для открытия внешней панели с детальной информацией о пользователе */
   onOpenUserDetailsPanel?: (user: UserBotData) => void;
+  /** Callback для перехода на вкладку «Диалоги» с выбранным пользователем */
+  onNavigateToDialog?: (user: UserBotData) => void;
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
   /** Список доступных токенов проекта */

@@ -30,6 +30,7 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
     projectName,
     onOpenDialogPanel,
     onOpenUserDetailsPanel,
+    onNavigateToDialog,
     selectedTokenId: selectedTokenIdProp,
     availableTokens: availableTokensProp,
     onSelectToken,
@@ -192,6 +193,7 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
         formatUserName={formatUserName}
         onOpenUserDetailsPanel={onOpenUserDetailsPanel}
         onOpenDialogPanel={onOpenDialogPanel}
+        onNavigateToDialog={onNavigateToDialog}
         handleUserStatusToggle={handleUserStatusToggle}
         deleteUserMutation={deleteUserMutation}
         project={project}

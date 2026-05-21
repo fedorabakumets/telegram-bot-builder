@@ -6,7 +6,7 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { TableCell } from '@/components/ui/table';
-import { MessageSquare, Trash2 } from 'lucide-react';
+import { MessageSquare, ExternalLink, Trash2 } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
 
 /**
@@ -25,6 +25,8 @@ interface DesktopActionsCellProps {
   onOpenDialogPanel?: (user: UserBotData) => void;
   /** Открытие панели деталей пользователя */
   onOpenUserDetailsPanel?: (user: UserBotData) => void;
+  /** Переход на вкладку «Диалоги» с пользователем */
+  onNavigateToDialog?: (user: UserBotData) => void;
 }
 
 /**
@@ -33,12 +35,12 @@ interface DesktopActionsCellProps {
  * @returns JSX компонент ячейки
  */
 export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.Element {
-  const { user, index, formatUserName, deleteUserMutation, onOpenDialogPanel, onOpenUserDetailsPanel } = props;
+  const { user, index, formatUserName, deleteUserMutation, onOpenDialogPanel, onOpenUserDetailsPanel, onNavigateToDialog } = props;
 
   return (
     <TableCell className="py-2 text-right">
       <div className="flex items-center justify-end gap-1">
-        {/* Кнопка открытия диалога */}
+        {/* Кнопка открытия диалога в панели */}
         {onOpenDialogPanel && (
           <Button
             variant="ghost"
@@ -52,6 +54,19 @@ export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.El
             }}
           >
             <MessageSquare className="w-3.5 h-3.5" />
+          </Button>
+        )}
+
+        {/* Кнопка перехода на вкладку «Диалоги» */}
+        {onNavigateToDialog && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+            title="Открыть в Диалогах"
+            onClick={(e) => { e.stopPropagation(); onNavigateToDialog(user); }}
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
           </Button>
         )}
 

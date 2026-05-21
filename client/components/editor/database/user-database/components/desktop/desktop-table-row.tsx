@@ -31,6 +31,8 @@ interface DesktopTableRowProps {
   onOpenUserDetailsPanel?: (user: UserBotData) => void;
   /** Открытие диалоговой панели */
   onOpenDialogPanel?: (user: UserBotData) => void;
+  /** Переход на вкладку «Диалоги» с пользователем */
+  onNavigateToDialog?: (user: UserBotData) => void;
 }
 
 /**

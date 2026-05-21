@@ -1492,6 +1492,7 @@ export default function Editor() {
                 projectName={activeProject.name}
                 onOpenDialogPanel={handleOpenDialogPanel}
                 onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
+                onNavigateToDialog={() => handleTabChange('dialogs')}
                 selectedTokenId={selectedDatabaseTokenId}
                 onSelectToken={setSelectedDatabaseTokenId}
                 allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
@@ -1861,6 +1862,7 @@ export default function Editor() {
                     projectName={activeProject.name}
                     onOpenDialogPanel={handleOpenDialogPanel}
                     onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
+                    onNavigateToDialog={() => handleTabChange('dialogs')}
                     selectedTokenId={selectedDatabaseTokenId}
                     onSelectToken={setSelectedDatabaseTokenId}
                     allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}

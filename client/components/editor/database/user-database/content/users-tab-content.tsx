@@ -23,6 +23,7 @@ type UsersTabContentProps = Pick<
   | 'selectedTokenId'
   | 'onOpenUserDetailsPanel'
   | 'onOpenDialogPanel'
+  | 'onNavigateToDialog'
   | 'fetchNextPage'
   | 'hasNextPage'
   | 'isFetchingNextPage'
@@ -45,6 +46,7 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
     selectedTokenId,
     onOpenUserDetailsPanel,
     onOpenDialogPanel,
+    onNavigateToDialog,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -70,6 +72,7 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
             tokenId={selectedTokenId}
             onOpenUserDetailsPanel={onOpenUserDetailsPanel}
             onOpenDialogPanel={onOpenDialogPanel}
+            onNavigateToDialog={onNavigateToDialog}
             fetchNextPage={fetchNextPage}
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}

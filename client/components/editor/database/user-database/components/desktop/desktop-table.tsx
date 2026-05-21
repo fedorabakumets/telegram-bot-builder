@@ -30,6 +30,8 @@ interface DesktopTableProps {
   onOpenUserDetailsPanel?: (user: UserBotData) => void;
   /** Открытие диалоговой панели */
   onOpenDialogPanel?: (user: UserBotData) => void;
+  /** Переход на вкладку «Диалоги» с пользователем */
+  onNavigateToDialog?: (user: UserBotData) => void;
   /** ID токена для резолва аватара */
   tokenId?: number | null;
   /** Загрузить следующую страницу */
@@ -56,6 +58,7 @@ export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
     deleteUserMutation,
     onOpenUserDetailsPanel,
     onOpenDialogPanel,
+    onNavigateToDialog,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -101,6 +104,7 @@ export function DesktopTable(props: DesktopTableProps): React.JSX.Element {
                   deleteUserMutation={deleteUserMutation}
                   onOpenUserDetailsPanel={onOpenUserDetailsPanel}
                   onOpenDialogPanel={onOpenDialogPanel}
+                  onNavigateToDialog={onNavigateToDialog}
                 />
               ))
             )}

@@ -77,6 +77,8 @@ export interface DatabaseContentProps {
   onOpenUserDetailsPanel?: (user: UserBotData) => void;
   /** Открытие диалога */
   onOpenDialogPanel?: (user: UserBotData) => void;
+  /** Переход на вкладку «Диалоги» с пользователем */
+  onNavigateToDialog?: (user: UserBotData) => void;
   /** Переключение статуса */
   handleUserStatusToggle: (
     user: UserBotData,
