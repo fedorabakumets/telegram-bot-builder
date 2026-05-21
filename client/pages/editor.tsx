@@ -1491,7 +1491,13 @@ export default function Editor() {
           )}
           {currentTab === 'terminal' && (
             <div className="h-full">
-              <TerminalPanel />
+              <TerminalPanel
+                allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
+                currentProjectId={activeProject.id}
+                onProjectChange={(projectId) => {
+                  setLocation(`/projects/${projectId}`);
+                }}
+              />
             </div>
           )}
           {currentTab === 'users' && (

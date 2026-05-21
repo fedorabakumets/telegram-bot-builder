@@ -19,6 +19,7 @@ import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
 import type { TerminalInfo } from '../bot/contexts/ActiveTerminalsContext';
 import { useBotQueries } from '../bot/hooks/use-bot-queries';
 import { getBotDisplayName } from '../bot/contexts/bot-control-utils';
+import { ProjectSelector } from '../database/user-database/components/header/project-selector';
 
 /**
  * Возвращает строковый ключ вкладки терминала
@@ -31,11 +32,22 @@ function getTabKey(terminal: TerminalInfo): string {
     : `${terminal.projectId}_${terminal.tokenId}`;
 }
 
+/** Пропсы панели терминалов */
+interface TerminalPanelProps {
+  /** Список всех проектов для переключателя */
+  allProjects?: Array<{ id: number; name: string }>;
+  /** ID текущего проекта */
+  currentProjectId?: number;
+  /** Обработчик смены проекта */
+  onProjectChange?: (projectId: number) => void;
+}
+
 /**
  * Панель терминалов с TabHeader и lazy mount.
+ * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function TerminalPanel() {
+export function TerminalPanel({ allProjects, currentProjectId, onProjectChange }: TerminalPanelProps) {
   const { activeTerminalId, terminals, addTerminal } = useActiveTerminals();
   const { allTokensFlat, allBotStatuses } = useBotQueries();
 
@@ -85,7 +97,15 @@ export function TerminalPanel() {
         <TabHeader
           icon={<TerminalIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
           title="Терминал"
-        />
+        >
+          {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
+            <ProjectSelector
+              projects={allProjects}
+              selectedProjectId={currentProjectId}
+              onSelect={onProjectChange}
+            />
+          )}
+        </TabHeader>
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <div className="text-center">
             <p className="text-lg font-medium mb-2">Терминалы не активны</p>
@@ -102,6 +122,13 @@ export function TerminalPanel() {
         icon={<TerminalIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
         title="Терминал"
       >
+        {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
+          <ProjectSelector
+            projects={allProjects}
+            selectedProjectId={currentProjectId}
+            onSelect={onProjectChange}
+          />
+        )}
         <TerminalTabs onTerminalSelect={handleTerminalSelect} />
       </TabHeader>
 
