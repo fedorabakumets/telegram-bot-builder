@@ -24,6 +24,7 @@ async def main():
 
     _stop_event = asyncio.Event()
     _lock_acquired = False
+    _background_tasks: list = []  # Все фоновые задачи для корректной отмены при остановке
 
     def signal_handler(signum, _frame):
         print(f"⚠️ Получен сигнал {signum}, начинаем корректное завершение...")
@@ -62,7 +63,7 @@ async def main():
                     except Exception:
                         pass
 
-            asyncio.create_task(_refresh_lock())
+            _background_tasks.append(asyncio.create_task(_refresh_lock()))
 
         # Публикуем событие о запуске бота в Redis (если доступен)
         if _redis_connected and _redis_client is not None:
@@ -142,7 +143,7 @@ async def main():
         {%- endif %}
 
         # Запускаем фоновую задачу TTL-очистки user_data
-        asyncio.create_task(cleanup_user_data())
+        _background_tasks.append(asyncio.create_task(cleanup_user_data()))
 
 {%- if hasUserbotNodes %}
         # Подключаем Telethon userbot клиент
@@ -157,10 +158,10 @@ async def main():
 {%- if projectId %}
         # Фоновая перезагрузка контента из _content каждые 60 сек (fallback)
         if db_pool:
-            asyncio.create_task(_content_reload_loop(db_pool))
+            _background_tasks.append(asyncio.create_task(_content_reload_loop(db_pool)))
         # Мгновенное обновление контента через Redis pub/sub
         if _redis_connected:
-            asyncio.create_task(_content_subscribe_redis())
+            _background_tasks.append(asyncio.create_task(_content_subscribe_redis()))
 {%- endif %}
 
         # Выбор режима запуска: webhook или polling
@@ -196,6 +197,7 @@ async def main():
             logging.info("🔄 Polling режим")
             # Запускаем polling и ждём сигнала остановки
             polling_task = asyncio.create_task(dp.start_polling(bot))
+            _background_tasks.append(polling_task)
             await _stop_event.wait()
             await dp.stop_polling()
             await polling_task
@@ -208,6 +210,16 @@ async def main():
     except Exception as e:
         logging.error(f"Ошибка: {e}")
     finally:
+        # Отменяем все фоновые задачи перед закрытием ресурсов
+        for _task in _background_tasks:
+            if not _task.done():
+                _task.cancel()
+        if _background_tasks:
+            try:
+                await asyncio.gather(*_background_tasks, return_exceptions=True)
+            except Exception:
+                pass
+        _background_tasks.clear()
         {%- if hasScheduleTrigger %}
         # Останавливаем фоновые schedule-задачи
         try:

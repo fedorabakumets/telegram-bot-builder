@@ -136,11 +136,24 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       ws.onopen = () => {
         console.log('Соединение с терминалом установлено');
         setStatus('connected');
+
+        // Keepalive ping каждые 30 сек — Railway proxy закрывает idle WebSocket
+        const pingInterval = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ command: 'ping' }));
+          } else {
+            clearInterval(pingInterval);
+          }
+        }, 30_000);
+        (ws as any).__pingInterval = pingInterval;
       };
 
       ws.onmessage = (event) => {
         try {
           const message: TerminalWebSocketMessage = JSON.parse(event.data);
+
+          // Игнорируем pong-ответы на keepalive ping
+          if ((message as any).command === 'pong') return;
 
           // Отправляем сообщение в терминал без отправки обратно на сервер
           if (terminalRefRef.current?.current) {
@@ -163,6 +176,10 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
 
       ws.onclose = (event) => {
         console.log(`Соединение с терминалом закрыто: код ${event.code}, причина: ${event.reason}`);
+        // Очищаем keepalive ping
+        if ((ws as any).__pingInterval) {
+          clearInterval((ws as any).__pingInterval);
+        }
         setStatus('disconnected');
         // Удаляем из реестра при закрытии
         if (connectionKeyRef.current) {

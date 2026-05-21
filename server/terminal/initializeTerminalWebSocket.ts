@@ -132,6 +132,8 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
         const parsed = JSON.parse(data.toString());
         if (parsed.command === "clear") {
           console.log(`Команда очистки терминала для проекта ${projectId}, токена ${tokenId}`);
+        } else if (parsed.command === "ping") {
+          ws.send(JSON.stringify({ command: "pong" }));
         }
       } catch {
         console.warn("Некорректное сообщение от клиента:", data.toString());
