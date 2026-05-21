@@ -201,48 +201,50 @@ export function DialogsTabContent({
         </div>
       </div>
 
-      {/* Мобильный хедер */}
-      <div className="md:hidden border-b border-border/50 bg-card px-3 py-2 flex-shrink-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-foreground">Диалоги</span>
-          <span className="text-border/60">·</span>
-          {showProjectSelector ? (
-            <ProjectSelector
-              projects={allProjects!}
-              selectedProjectId={projectId}
-              onSelect={onProjectChange!}
-            />
-          ) : (
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {projectName && <>Проект: <span className="font-medium text-foreground">{projectName}</span></>}
-            </span>
-          )}
-          {projectTokens.length > 0 && (
-            <>
-              <span className="text-border/60">·</span>
-              <BotTokenSelector
-                tokens={projectTokens}
-                selectedTokenId={resolvedTokenId}
-                onSelect={(id) => {
-                  setInternalTokenId(id);
-                  onSelectToken?.(id);
-                  setSelectedUser(null);
-                }}
+      {/* Мобильный хедер — скрывается когда открыт диалог */}
+      {!selectedUser && !isBroadcastDialogOpen && (
+        <div className="md:hidden border-b border-border/50 bg-card px-3 py-2 flex-shrink-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold text-foreground">Диалоги</span>
+            <span className="text-border/60">·</span>
+            {showProjectSelector ? (
+              <ProjectSelector
+                projects={allProjects!}
+                selectedProjectId={projectId}
+                onSelect={onProjectChange!}
               />
-            </>
-          )}
-          <span className="text-border/60">·</span>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 h-7 text-xs"
-            onClick={() => setBroadcastModalOpen(true)}
-          >
-            <Megaphone className="h-3.5 w-3.5" />
-            + Рассылка
-          </Button>
+            ) : (
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {projectName && <>Проект: <span className="font-medium text-foreground">{projectName}</span></>}
+              </span>
+            )}
+            {projectTokens.length > 0 && (
+              <>
+                <span className="text-border/60">·</span>
+                <BotTokenSelector
+                  tokens={projectTokens}
+                  selectedTokenId={resolvedTokenId}
+                  onSelect={(id) => {
+                    setInternalTokenId(id);
+                    onSelectToken?.(id);
+                    setSelectedUser(null);
+                  }}
+                />
+              </>
+            )}
+            <span className="text-border/60">·</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 h-7 text-xs"
+              onClick={() => setBroadcastModalOpen(true)}
+            >
+              <Megaphone className="h-3.5 w-3.5" />
+              + Рассылка
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Desktop: двухколоночный layout */}
       <div className="hidden md:flex flex-1 min-h-0">
@@ -287,10 +289,17 @@ export function DialogsTabContent({
       <div className="flex md:hidden flex-col flex-1 min-h-0">
         {isBroadcastDialogOpen ? (
           <div className="flex flex-col h-full min-h-0">
-            <div className="flex-shrink-0 px-2 py-1 border-b border-border">
-              <Button variant="ghost" size="sm" onClick={handleClose} className="gap-1 text-sm">
+            {/* Компактный хедер: ← + Рассылка + ✕ */}
+            <div className="flex-shrink-0 flex items-center gap-2 px-2 py-1.5 border-b border-border">
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleClose}>
                 <ArrowLeft className="h-4 w-4" />
-                Назад
+              </Button>
+              <div className="w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center shrink-0">
+                <Megaphone className="w-3 h-3 text-violet-600 dark:text-violet-400" />
+              </div>
+              <span className="text-sm font-medium truncate flex-1 min-w-0">Рассылка</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleClose}>
+                <X className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex-1 min-h-0">
@@ -298,30 +307,39 @@ export function DialogsTabContent({
                 projectId={projectId}
                 selectedTokenId={resolvedTokenId}
                 onClose={handleClose}
+                hideHeader
               />
             </div>
           </div>
         ) : selectedUser ? (
           <div className="flex flex-col h-full min-h-0">
-            {/* Кнопка "Назад" */}
-            <div className="flex-shrink-0 px-2 py-1 border-b border-border">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClose}
-                className="gap-1 text-sm"
-              >
+            {/* Компактный хедер: ← + аватарка + имя + ✕ */}
+            <div className="flex-shrink-0 flex items-center gap-2 px-2 py-1.5 border-b border-border">
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleClose}>
                 <ArrowLeft className="h-4 w-4" />
-                Назад
+              </Button>
+              <UserAvatar
+                key={selectedUser.userId}
+                messageType="user"
+                user={selectedUser}
+                projectId={projectId}
+                tokenId={resolvedTokenId}
+                size={24}
+              />
+              <span className="text-sm font-medium truncate flex-1 min-w-0">{formatUserName(selectedUser)}</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleClose}>
+                <X className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex-1 min-h-0">
               <DialogPanel
+                key={selectedUser.userId}
                 projectId={projectId}
                 selectedTokenId={resolvedTokenId}
                 user={selectedUser}
                 onClose={handleClose}
                 onSelectUser={handleSelectUser}
+                hideHeader
               />
             </div>
           </div>
