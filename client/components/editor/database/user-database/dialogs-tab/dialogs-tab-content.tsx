@@ -175,6 +175,7 @@ export function DialogsTabContent({
                 ) : (
                   <>
                     <UserAvatar
+                      key={selectedUser?.userId}
                       messageType="user"
                       user={selectedUser}
                       projectId={projectId}
@@ -268,6 +269,7 @@ export function DialogsTabContent({
             />
           ) : selectedUser ? (
             <DialogPanel
+              key={selectedUser.userId}
               projectId={projectId}
               selectedTokenId={resolvedTokenId}
               user={selectedUser}
