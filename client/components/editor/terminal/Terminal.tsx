@@ -7,10 +7,11 @@
  * @module Terminal
  */
 
-import { forwardRef, useImperativeHandle, useCallback, useState } from 'react';
+import { forwardRef, useImperativeHandle, useCallback, useState, useRef } from 'react';
 import { TerminalOutput } from './TerminalOutput';
 import { TerminalFilterBar } from './TerminalFilterBar';
 import { TerminalSearchBar } from './TerminalSearchBar';
+import { TerminalLogDetail } from './TerminalLogDetail';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { TerminalHandle, TerminalProps } from './terminalTypes';
 import { useTerminalTheme } from './useTerminalTheme';
@@ -94,6 +95,32 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
   /** Флаг: нужно ли скроллить к совпадению (только при навигации ↑/↓) */
   const [shouldScrollToMatch, setShouldScrollToMatch] = useState(false);
 
+  /** ID выбранной строки для панели деталей */
+  const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+
+  /** Реф для скролла к выбранной строке */
+  const selectedLineRef = useRef<string | null>(null);
+  selectedLineRef.current = selectedLineId;
+
+  /** Навигация к предыдущей строке */
+  const handleDetailPrev = useCallback(() => {
+    const idx = visibleLines.findIndex(l => l.id === selectedLineRef.current);
+    if (idx > 0) setSelectedLineId(visibleLines[idx - 1].id);
+  }, [visibleLines]);
+
+  /** Навигация к следующей строке */
+  const handleDetailNext = useCallback(() => {
+    const idx = visibleLines.findIndex(l => l.id === selectedLineRef.current);
+    if (idx >= 0 && idx < visibleLines.length - 1) setSelectedLineId(visibleLines[idx + 1].id);
+  }, [visibleLines]);
+
+  /** Скролл к выбранной строке в контексте */
+  const handleScrollToLine = useCallback(() => {
+    if (!selectedLineRef.current || !outputContainerRef.current) return;
+    const el = outputContainerRef.current.querySelector(`[data-line-id="${selectedLineRef.current}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [outputContainerRef]);
+
   /** Обёртка навигации — устанавливает флаг скролла */
   const handleNextMatch = useCallback(() => {
     goToNextMatch();
@@ -138,18 +165,31 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         onNext={handleNextMatch}
         onPrev={handlePrevMatch}
       />
-      <div className="flex-1 overflow-hidden min-h-0">
-        <TerminalOutput
-          lines={visibleLines}
-          containerRef={outputContainerRef}
-          scale={scale}
-          terminalTextClass={themeClasses.terminalTextClass}
-          stderrTextClass={themeClasses.stderrTextClass}
-          placeholderTextClass={themeClasses.placeholderTextClass}
-          searchQuery={searchQuery || undefined}
-          currentMatchLineId={currentMatchLineId}
-          shouldScrollToMatch={shouldScrollToMatch}
-        />
+      <div className="flex-1 overflow-hidden min-h-0 flex">
+        <div className="flex-1 min-w-0">
+          <TerminalOutput
+            lines={visibleLines}
+            containerRef={outputContainerRef}
+            scale={scale}
+            terminalTextClass={themeClasses.terminalTextClass}
+            stderrTextClass={themeClasses.stderrTextClass}
+            placeholderTextClass={themeClasses.placeholderTextClass}
+            searchQuery={searchQuery || undefined}
+            currentMatchLineId={currentMatchLineId}
+            shouldScrollToMatch={shouldScrollToMatch}
+            onLineClick={setSelectedLineId}
+            selectedLineId={selectedLineId ?? undefined}
+          />
+        </div>
+        {selectedLineId && (
+          <TerminalLogDetail
+            line={visibleLines.find(l => l.id === selectedLineId)}
+            onClose={() => setSelectedLineId(null)}
+            onPrev={handleDetailPrev}
+            onNext={handleDetailNext}
+            onScrollToLine={handleScrollToLine}
+          />
+        )}
       </div>
     </div>
   );

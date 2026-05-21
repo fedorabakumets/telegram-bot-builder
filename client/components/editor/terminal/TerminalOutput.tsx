@@ -48,6 +48,10 @@ interface TerminalOutputProps {
   currentMatchLineId?: string;
   /** Нужно ли скроллить к текущему совпадению (только при навигации ↑/↓) */
   shouldScrollToMatch?: boolean;
+  /** Обработчик клика по строке */
+  onLineClick?: (lineId: string) => void;
+  /** ID выбранной строки для подсветки */
+  selectedLineId?: string;
 }
 
 /**
@@ -108,6 +112,8 @@ export function TerminalOutput({
   searchQuery,
   currentMatchLineId,
   shouldScrollToMatch,
+  onLineClick,
+  selectedLineId,
 }: TerminalOutputProps) {
   /** Флаг видимости кнопки прокрутки вниз */
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -172,7 +178,9 @@ export function TerminalOutput({
             <div
               key={line.id}
               ref={(el) => { if (el) lineRefs.current.set(line.id, el); }}
-              className={`flex items-start gap-2 ${line.type === 'stderr' ? stderrTextClass : terminalTextClass}`}
+              className={`flex items-start gap-2 cursor-pointer hover:bg-muted/20 rounded px-1 -mx-1 ${selectedLineId === line.id ? 'bg-muted/30' : ''} ${line.type === 'stderr' ? stderrTextClass : terminalTextClass}`}
+              onClick={() => onLineClick?.(line.id)}
+              data-line-id={line.id}
             >
               <span className="shrink-0 w-[72px] text-[11px] text-muted-foreground/70 tabular-nums font-mono">
                 {formatTime(line.timestamp)}
