@@ -143,16 +143,16 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
   return (
     <div className="bg-background border rounded-xl p-3 flex flex-col gap-3">
       {/* Заголовок + переключатель типа + переключатель периодов */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Источники трафика</span>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-medium truncate">Источники трафика</span>
           {totalForPeriod > 0 && (
-            <span className="text-xs text-muted-foreground">+{totalForPeriod} за период</span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">+{totalForPeriod} за период</span>
           )}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <ChartTypeToggle value={chartType} onChange={setChartType} />
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5 flex-wrap">
             {PERIOD_ORDER.map((g) => (
               <button key={g} type="button" onClick={() => setGranularity(g)}
                 className={['text-xs px-1.5 py-0.5 rounded transition-colors',
