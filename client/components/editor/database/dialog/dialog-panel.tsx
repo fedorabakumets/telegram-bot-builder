@@ -4,7 +4,7 @@
  * Поддерживает как личные диалоги, так и групповые чаты.
  */
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Users, Radio } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -149,21 +149,19 @@ export function DialogPanel({
   }, [user?.userId, resetLiveMessages]);
 
   /** Автопрокрутка при первой загрузке и при новых live-сообщениях */
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (messagesLoading) return;
     if (messages.length === 0) return;
     if (messages.length <= prevMessageCountRef.current) return;
 
     prevMessageCountRef.current = messages.length;
 
-    setTimeout(() => {
-      const viewport = messagesScrollRef.current?.querySelector(
-        '[data-radix-scroll-area-viewport]',
-      );
-      if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
-      }
-    }, 100);
+    const viewport = messagesScrollRef.current?.querySelector(
+      '[data-radix-scroll-area-viewport]',
+    );
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
   }, [messagesLoading, messages.length]);
 
   // Мутация отправки для личного диалога
