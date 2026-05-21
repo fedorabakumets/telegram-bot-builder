@@ -107,6 +107,9 @@ export default function Editor() {
    */
   const [currentTab, setCurrentTab] = useState<EditorTab>('editor');
 
+  /** Пользователь для автоматического открытия в диалогах (при переходе из таблицы) */
+  const [pendingDialogUser, setPendingDialogUser] = useState<any>(null);
+
   /**
    * Флаг отображения модального окна сохранения сценария
    * @type {boolean}
@@ -1492,14 +1495,13 @@ export default function Editor() {
                 projectName={activeProject.name}
                 onOpenDialogPanel={handleOpenDialogPanel}
                 onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
-                onNavigateToDialog={() => handleTabChange('dialogs')}
+                onNavigateToDialog={(user) => { setPendingDialogUser(user); handleTabChange('dialogs'); }}
                 selectedTokenId={selectedDatabaseTokenId}
                 onSelectToken={setSelectedDatabaseTokenId}
                 allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
                 onProjectChange={(projectId) => {
                   setSelectedDatabaseTokenId(null);
-                  setLocation(`/projects/${projectId}`);
-                }}
+                  setLocation(`/projects/${projectId}`);                }}
               />
             </div>
           )}
@@ -1511,6 +1513,7 @@ export default function Editor() {
                   projectName={activeProject.name}
                   selectedTokenId={selectedDatabaseTokenId}
                   onSelectToken={setSelectedDatabaseTokenId}
+                  initialUser={pendingDialogUser}
                   allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
                   onProjectChange={(pid) => {
                     setSelectedDatabaseTokenId(null);
@@ -1862,7 +1865,7 @@ export default function Editor() {
                     projectName={activeProject.name}
                     onOpenDialogPanel={handleOpenDialogPanel}
                     onOpenUserDetailsPanel={handleOpenUserDetailsPanel}
-                    onNavigateToDialog={() => handleTabChange('dialogs')}
+                    onNavigateToDialog={(user) => { setPendingDialogUser(user); handleTabChange('dialogs'); }}
                     selectedTokenId={selectedDatabaseTokenId}
                     onSelectToken={setSelectedDatabaseTokenId}
                     allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}

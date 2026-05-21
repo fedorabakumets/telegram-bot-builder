@@ -36,6 +36,8 @@ interface DialogsTabContentProps {
   allProjects?: Array<{ id: number; name: string }>;
   /** Колбэк смены проекта */
   onProjectChange?: (projectId: number) => void;
+  /** Пользователь для автоматического открытия диалога (из другой вкладки) */
+  initialUser?: UserBotData | null;
 }
 
 /**
@@ -63,12 +65,21 @@ export function DialogsTabContent({
   onSelectToken,
   allProjects,
   onProjectChange,
+  initialUser,
 }: DialogsTabContentProps): React.JSX.Element {
-  const [selectedUser, setSelectedUser] = useState<UserBotData | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserBotData | null>(initialUser ?? null);
   /** Флаг открытия виртуального диалога рассылок */
   const [isBroadcastDialogOpen, setIsBroadcastDialogOpen] = useState(false);
   /** Флаг открытия модалки создания рассылки */
   const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
+
+  /** Реагируем на изменение initialUser извне (переход из другой вкладки) */
+  useEffect(() => {
+    if (initialUser) {
+      setSelectedUser(initialUser);
+      setIsBroadcastDialogOpen(false);
+    }
+  }, [initialUser]);
 
   // Автоматически выбираем токен по умолчанию если снаружи не передан
   const projectTokensInfo = useProjectTokens([projectId]);
