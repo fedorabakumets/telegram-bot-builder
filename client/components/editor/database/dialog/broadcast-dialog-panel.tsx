@@ -248,8 +248,9 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
           </div>
 
           <Button size="sm" onClick={handleSend} disabled={!messageText.trim()}>
-            <Send className="w-4 h-4 mr-1" />
-            Отправить рассылку
+            <Send className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Отправить рассылку</span>
+            <span className="sm:hidden">Отправить</span>
           </Button>
         </div>
       </div>
