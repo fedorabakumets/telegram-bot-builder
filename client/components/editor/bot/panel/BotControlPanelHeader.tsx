@@ -34,14 +34,11 @@ export function BotControlPanelHeader({ onConnectBot, allProjects, currentProjec
 
   return (
     <div className="flex items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b bg-gradient-to-r from-muted/40 to-background">
-      <div className="flex items-center gap-2.5 min-w-0">
-        <div className="rounded-lg bg-primary/10 p-2 flex-shrink-0">
-          <Bot className="h-5 w-5 text-primary" />
+      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+        <div className="rounded-lg bg-primary/10 p-1.5 sm:p-2 flex-shrink-0">
+          <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
         </div>
-        <div className="flex-shrink-0 min-w-0">
-          <h2 className="text-base font-semibold leading-none">Боты</h2>
-          <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">Управление ботами проекта</p>
-        </div>
+        <h2 className="text-sm sm:text-base font-semibold leading-none shrink-0">Боты</h2>
         {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
           <ProjectSelector
             projects={allProjects}
@@ -49,18 +46,19 @@ export function BotControlPanelHeader({ onConnectBot, allProjects, currentProjec
             onSelect={onProjectChange}
           />
         )}
-        <WorkerPoolStatus />
+        <div className="hidden sm:block">
+          <WorkerPoolStatus />
+        </div>
       </div>
       {!isGuestUser && (
         <Button
           variant="outline"
           onClick={onConnectBot}
-          className="gap-1.5 h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm flex-shrink-0"
+          className="gap-1.5 h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm flex-shrink-0"
           data-testid="button-connect-bot"
         >
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Подключить бот</span>
-          <span className="sm:hidden">Бот</span>
         </Button>
       )}
     </div>
