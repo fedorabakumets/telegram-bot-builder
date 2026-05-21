@@ -67,9 +67,15 @@ interface UseTerminalWebSocketResult {
  * @param {UseTerminalWebSocketParams} params - Параметры хука
  * @returns {UseTerminalWebSocketResult} Объект с состоянием соединения и методами управления
  */
+
+/** Глобальный реестр активных WebSocket-соединений по ключу projectId_tokenId */
+const activeConnections = new Map<string, { ws: WebSocket; refCount: number }>();
+
 export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTerminalWebSocketParams): UseTerminalWebSocketResult => {
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
+  /** Ключ для реестра соединений */
+  const connectionKeyRef = useRef<string | null>(null);
 
   // Используем ref для хранения актуальных значений чтобы избежать пересоздания connect
   const projectIdRef = useRef(projectId);
@@ -93,6 +99,18 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       return;
     }
 
+    const key = `${projectIdRef.current}_${tokenIdRef.current}`;
+
+    // Если уже есть активное соединение для этого бота — переиспользуем
+    const existing = activeConnections.get(key);
+    if (existing && existing.ws.readyState === WebSocket.OPEN) {
+      existing.refCount++;
+      connectionKeyRef.current = key;
+      wsRef.current = existing.ws;
+      setStatus('connected');
+      return;
+    }
+
     // Закрываем предыдущее соединение, если оно существует
     if (wsRef.current) {
       console.log('Закрываем старое WebSocket-соединение перед новым подключением');
@@ -110,6 +128,10 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
 
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
+      connectionKeyRef.current = key;
+
+      // Регистрируем в глобальном реестре
+      activeConnections.set(key, { ws, refCount: 1 });
 
       ws.onopen = () => {
         console.log('Соединение с терминалом установлено');
@@ -142,6 +164,10 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       ws.onclose = (event) => {
         console.log(`Соединение с терминалом закрыто: код ${event.code}, причина: ${event.reason}`);
         setStatus('disconnected');
+        // Удаляем из реестра при закрытии
+        if (connectionKeyRef.current) {
+          activeConnections.delete(connectionKeyRef.current);
+        }
       };
 
       ws.onerror = (error) => {
@@ -162,11 +188,21 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
    * Отключается от WebSocket-сервера терминала
    */
   const disconnect = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
+    const key = connectionKeyRef.current;
+    if (key) {
+      const entry = activeConnections.get(key);
+      if (entry) {
+        entry.refCount--;
+        // Закрываем только если больше никто не использует
+        if (entry.refCount <= 0) {
+          entry.ws.close();
+          activeConnections.delete(key);
+        }
+      }
+      connectionKeyRef.current = null;
     }
 
+    wsRef.current = null;
     setStatus('disconnected');
 
     if (terminalRef?.current) {

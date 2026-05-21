@@ -40,6 +40,12 @@ export function BotLogsProvider({ children }: { children: ReactNode }) {
   const addLog = useCallback((key: string, entry: LogEntry) => {
     setLogs(prev => {
       const currentLogs = prev[key] || [];
+      // Дедупликация: пропускаем если последняя строка с тем же содержимым и временем
+      const last = currentLogs[currentLogs.length - 1];
+      if (last && last.content === entry.content && last.type === entry.type &&
+          Math.abs(last.timestamp.getTime() - entry.timestamp.getTime()) < 500) {
+        return prev;
+      }
       const updatedLogs = [...currentLogs, entry]
         .slice(-1000)
         .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
