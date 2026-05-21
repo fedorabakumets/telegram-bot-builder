@@ -65,7 +65,7 @@ export function BotTokenSelector({
         value={selectedTokenId != null ? String(selectedTokenId) : 'all'}
         onValueChange={(value) => onSelect(value === 'all' ? null : Number(value))}
       >
-        <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px] max-w-[180px]">
+        <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px]">
           <SelectValue placeholder="Бот" />
         </SelectTrigger>
         <SelectContent>
