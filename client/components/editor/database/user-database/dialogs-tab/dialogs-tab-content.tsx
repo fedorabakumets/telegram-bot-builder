@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, MessageSquare, Megaphone, X, Users, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { TabHeader } from '@/components/ui/tab-header';
 import { UserBotData } from '@shared/schema';
 import { DialogPanel } from '../../dialog/dialog-panel';
 import { BroadcastDialogPanel } from '../../dialog/broadcast-dialog-panel';
@@ -218,46 +219,42 @@ export function DialogsTabContent({
 
       {/* Мобильный хедер — скрывается когда открыт диалог */}
       {!selectedUser && !isBroadcastDialogOpen && (
-        <div className="md:hidden border-b border-border/50 bg-card px-3 py-2 flex-shrink-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-foreground">Диалоги</span>
-            <span className="text-border/60">·</span>
-            {showProjectSelector ? (
+        <div className="md:hidden flex-shrink-0">
+          <TabHeader
+            icon={<MessageSquare className="h-4 w-4 text-primary" />}
+            title="Диалоги"
+            actions={
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 h-7 text-xs"
+                onClick={() => setBroadcastModalOpen(true)}
+              >
+                <Megaphone className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">+ Рассылка</span>
+                <span className="sm:hidden">+</span>
+              </Button>
+            }
+          >
+            {showProjectSelector && (
               <ProjectSelector
                 projects={allProjects!}
                 selectedProjectId={projectId}
                 onSelect={onProjectChange!}
               />
-            ) : (
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {projectName && <>Проект: <span className="font-medium text-foreground">{projectName}</span></>}
-              </span>
             )}
             {projectTokens.length > 0 && (
-              <>
-                <span className="text-border/60">·</span>
-                <BotTokenSelector
-                  tokens={projectTokens}
-                  selectedTokenId={resolvedTokenId}
-                  onSelect={(id) => {
-                    setInternalTokenId(id);
-                    onSelectToken?.(id);
-                    setSelectedUser(null);
-                  }}
-                />
-              </>
+              <BotTokenSelector
+                tokens={projectTokens}
+                selectedTokenId={resolvedTokenId}
+                onSelect={(id) => {
+                  setInternalTokenId(id);
+                  onSelectToken?.(id);
+                  setSelectedUser(null);
+                }}
+              />
             )}
-            <span className="text-border/60">·</span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 h-7 text-xs"
-              onClick={() => setBroadcastModalOpen(true)}
-            >
-              <Megaphone className="h-3.5 w-3.5" />
-              + Рассылка
-            </Button>
-          </div>
+          </TabHeader>
         </div>
       )}
 
