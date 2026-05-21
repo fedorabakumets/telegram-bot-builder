@@ -81,9 +81,6 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
   // Отфильтрованные строки для вывода
   const visibleLines = filterLines(lines);
 
-  // Состояние панели поиска
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-
   // Хук поиска по видимым строкам
   const {
     searchQuery,
@@ -115,14 +112,6 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
     setShouldScrollToMatch(false);
   }, [setSearchQuery]);
 
-  /** Переключить панель поиска */
-  const toggleSearch = useCallback(() => {
-    setIsSearchOpen((prev) => {
-      if (prev) clearSearch();
-      return !prev;
-    });
-  }, [clearSearch]);
-
   /** ID строки с текущим активным совпадением */
   const currentMatchLineId = matchIndices.length > 0
     ? visibleLines[matchIndices[currentMatchIndex]]?.id
@@ -139,7 +128,6 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         onCopy={() => copyTerminalOutput(visibleLines)}
         onSave={() => saveTerminalOutput(visibleLines)}
         onHide={onToggleVisibility}
-        onToggleSearch={toggleSearch}
         headerBgClass={themeClasses.headerBgClass}
         buttonTextColorClass={themeClasses.buttonTextColorClass}
         buttonHoverClass={themeClasses.buttonHoverClass}
@@ -149,17 +137,14 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         onFilterChange={setFilter}
         stderrCount={stderrCount(lines)}
       />
-      {isSearchOpen && (
-        <TerminalSearchBar
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          currentMatch={currentMatchIndex}
-          totalMatches={matchIndices.length}
-          onNext={handleNextMatch}
-          onPrev={handlePrevMatch}
-          onClose={toggleSearch}
-        />
-      )}
+      <TerminalSearchBar
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        currentMatch={currentMatchIndex}
+        totalMatches={matchIndices.length}
+        onNext={handleNextMatch}
+        onPrev={handlePrevMatch}
+      />
       <div className="flex-1 overflow-hidden min-h-0">
         <TerminalOutput
           lines={visibleLines}

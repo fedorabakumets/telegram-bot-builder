@@ -1,16 +1,16 @@
 /**
  * @fileoverview Панель поиска по строкам терминала
  *
- * Компактная строка поиска с навигацией между совпадениями (↑/↓),
- * счётчиком совпадений и кнопкой закрытия.
+ * Всегда видимая строка поиска с навигацией между совпадениями (↑/↓)
+ * и счётчиком совпадений. Стиль как у Railway — отдельная строка сверху.
  *
  * @module TerminalSearchBar
  */
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, ChevronUp, ChevronDown, X } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown } from 'lucide-react';
 
 /** Пропсы компонента панели поиска */
 interface TerminalSearchBarProps {
@@ -26,8 +26,6 @@ interface TerminalSearchBarProps {
   onNext: () => void;
   /** Перейти к предыдущему совпадению */
   onPrev: () => void;
-  /** Закрыть панель поиска */
-  onClose: () => void;
 }
 
 /**
@@ -42,20 +40,12 @@ export function TerminalSearchBar({
   totalMatches,
   onNext,
   onPrev,
-  onClose,
 }: TerminalSearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  /** Автофокус при открытии */
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  /** Обработка клавиш: Enter — следующее, Shift+Enter — предыдущее, Escape — закрыть */
+  /** Обработка клавиш: Enter — следующее, Shift+Enter — предыдущее */
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onClose();
-    } else if (e.key === 'Enter' && e.shiftKey) {
+    if (e.key === 'Enter' && e.shiftKey) {
       onPrev();
     } else if (e.key === 'Enter') {
       onNext();
@@ -70,21 +60,22 @@ export function TerminalSearchBar({
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Поиск..."
+        placeholder="Фильтрация и поиск в журналах"
         className="h-6 text-xs flex-1 min-w-0 border-none bg-transparent shadow-none focus-visible:ring-0 px-1"
       />
-      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-        {totalMatches > 0 ? `${currentMatch + 1} / ${totalMatches}` : '0 / 0'}
-      </span>
-      <Button variant="ghost" size="icon" className="h-5 w-5" onClick={onPrev} disabled={totalMatches === 0}>
-        <ChevronUp className="h-3.5 w-3.5" />
-      </Button>
-      <Button variant="ghost" size="icon" className="h-5 w-5" onClick={onNext} disabled={totalMatches === 0}>
-        <ChevronDown className="h-3.5 w-3.5" />
-      </Button>
-      <Button variant="ghost" size="icon" className="h-5 w-5" onClick={onClose}>
-        <X className="h-3.5 w-3.5" />
-      </Button>
+      {searchQuery && (
+        <>
+          <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+            {totalMatches > 0 ? `${currentMatch + 1} / ${totalMatches}` : '0 / 0'}
+          </span>
+          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={onPrev} disabled={totalMatches === 0}>
+            <ChevronUp className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-5 w-5" onClick={onNext} disabled={totalMatches === 0}>
+            <ChevronDown className="h-3.5 w-3.5" />
+          </Button>
+        </>
+      )}
     </div>
   );
 }
