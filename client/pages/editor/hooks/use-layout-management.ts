@@ -84,8 +84,9 @@ export function useLayoutManager(
           return el;
         }
 
-        // Для header применяем ручные изменения всегда
+        // Для header применяем ручные изменения, кроме вкладки terminal (там всегда скрыт)
         if (el.id === 'header') {
+          if (currentTab === 'terminal') return el;
           const manual = manualVisibility.get(el.id);
           if (manual !== undefined) {
             return { ...el, visible: manual };
