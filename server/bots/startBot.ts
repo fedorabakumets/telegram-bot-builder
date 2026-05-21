@@ -311,7 +311,10 @@ export async function startBot(projectId: number, token: string, tokenId: number
       console.log(`🏭 [WorkerPool] Запуск бота ${projectId}/${tokenId} через воркер...`);
       console.log(`🏭 [WorkerPool] mainFile: ${mainFile}`);
       try {
-        await workerManager.startBot(projectId, token, tokenId, mainFile);
+        await workerManager.startBot(projectId, token, tokenId, mainFile, effectiveWebhookUrl ? {
+          webhookUrl: effectiveWebhookUrl,
+          webhookPort: 9000 + tokenId,
+        } : undefined);
         console.log(`🏭 [WorkerPool] Бот ${projectId}/${tokenId} отправлен в воркер`);
       } catch (workerError) {
         console.error(`🏭 [WorkerPool] Ошибка запуска бота через воркер:`, workerError);

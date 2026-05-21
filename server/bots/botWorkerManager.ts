@@ -301,7 +301,7 @@ class BotWorkerManager extends EventEmitter {
    * @param tokenId - ID токена
    * @param botFile - Путь к сгенерированному bot.py
    */
-  async startBot(projectId: number, token: string, tokenId: number, botFile: string): Promise<void> {
+  async startBot(projectId: number, token: string, tokenId: number, botFile: string, webhook?: { webhookUrl: string; webhookPort: number }): Promise<void> {
     const worker = await this.getOrCreateWorker(projectId);
 
     this.sendCommand(projectId, {
@@ -309,6 +309,7 @@ class BotWorkerManager extends EventEmitter {
       token,
       token_id: tokenId,
       bot_file: botFile,
+      ...(webhook ? { webhook_url: webhook.webhookUrl, webhook_port: webhook.webhookPort } : {}),
     });
 
     worker.activeBots.add(tokenId);

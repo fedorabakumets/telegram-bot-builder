@@ -25,6 +25,7 @@ async def main():
     _stop_event = asyncio.Event()
     _lock_acquired = False
     _background_tasks: list = []  # Все фоновые задачи для корректной отмены при остановке
+    _webhook_runner = None  # aiohttp runner для корректного завершения webhook-сервера
 
     def signal_handler(signum, _frame):
         print(f"⚠️ Получен сигнал {signum}, начинаем корректное завершение...")
@@ -186,11 +187,13 @@ async def main():
             await runner.setup()
             site = web.TCPSite(runner, host="0.0.0.0", port=WEBHOOK_PORT)
             await site.start()
+            _webhook_runner = runner
 
             logging.info(f"✅ Webhook сервер запущен на порту {WEBHOOK_PORT}")
             await _stop_event.wait()
 
             await runner.cleanup()
+            _webhook_runner = None
             await bot.delete_webhook()
         else:
             # Polling режим — стандартный запуск
@@ -220,6 +223,13 @@ async def main():
             except Exception:
                 pass
         _background_tasks.clear()
+
+        # Останавливаем webhook-сервер если он был запущен (освобождаем порт)
+        if _webhook_runner:
+            try:
+                await _webhook_runner.cleanup()
+            except Exception:
+                pass
         {%- if hasScheduleTrigger %}
         # Останавливаем фоновые schedule-задачи
         try:

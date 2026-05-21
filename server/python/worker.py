@@ -85,6 +85,8 @@ class BotContext:
         self.task: Optional[asyncio.Task] = None
         self.started_at: Optional[datetime] = None
         self.status: str = "starting"
+        self.webhook_url: Optional[str] = None
+        self.webhook_port: Optional[int] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Сериализация для команды status."""
@@ -126,6 +128,8 @@ class BotWorker:
         token_id = data.get("token_id")
         token = data.get("token", "")
         bot_file = data.get("bot_file", "")
+        webhook_url = data.get("webhook_url")
+        webhook_port = data.get("webhook_port")
 
         if not token_id or not token or not bot_file:
             emit_log(token_id or 0, "Ошибка: не указаны token_id, token или bot_file", "stderr")
@@ -138,6 +142,8 @@ class BotWorker:
             await asyncio.sleep(0.5)
 
         ctx = BotContext(token_id=token_id, token=token, bot_file=bot_file)
+        ctx.webhook_url = webhook_url
+        ctx.webhook_port = webhook_port
         self.bots[token_id] = ctx
 
         # Запускаем бота как asyncio Task
@@ -186,6 +192,13 @@ class BotWorker:
             # Подменяем переменные окружения для этого бота
             os.environ["BOT_TOKEN"] = ctx.token
             os.environ["TOKEN_ID"] = str(token_id)
+            # Webhook параметры — уникальные для каждого бота
+            if ctx.webhook_url:
+                os.environ["WEBHOOK_URL"] = ctx.webhook_url
+                os.environ["WEBHOOK_PORT"] = str(ctx.webhook_port or (9000 + token_id))
+            else:
+                os.environ.pop("WEBHOOK_URL", None)
+                os.environ.pop("WEBHOOK_PORT", None)
             emit_log(token_id, f"Env: PROJECT_ID={PROJECT_ID}, TOKEN_ID={token_id}", "stdout")
 
             # Перехватываем print для маршрутизации логов
