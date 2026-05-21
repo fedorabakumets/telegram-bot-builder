@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MessageSquare, Megaphone } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Megaphone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserBotData } from '@shared/schema';
 import { DialogPanel } from '../../dialog/dialog-panel';
@@ -17,6 +17,7 @@ import { useSyncGroups } from '../hooks/use-sync-groups';
 import { useInfiniteUsers } from '../hooks/queries/use-infinite-users';
 import { BotTokenSelector, ProjectSelector } from '../components/header';
 import { NewBroadcastModal } from '@/components/editor/broadcast/wizard/new-broadcast-modal';
+import { formatUserName } from '../../utils';
 
 /**
  * Пропсы компонента DialogsTabContent
@@ -160,6 +161,24 @@ export function DialogsTabContent({
             <Megaphone className="h-3.5 w-3.5" />
             + Рассылка
           </Button>
+
+          {/* Инфо о выбранном пользователе / рассылке — справа */}
+          {(selectedUser || isBroadcastDialogOpen) && (
+            <div className="hidden md:flex items-center gap-1.5 ml-auto">
+              <span className="text-border/60">·</span>
+              <span className="text-xs font-medium text-foreground truncate max-w-[200px]">
+                {isBroadcastDialogOpen ? '📢 Рассылка' : formatUserName(selectedUser)}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                onClick={handleClose}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -192,6 +211,7 @@ export function DialogsTabContent({
               user={selectedUser}
               onClose={handleClose}
               onSelectUser={handleSelectUser}
+              hideHeader
             />
           ) : (
             <NoDialogSelected />

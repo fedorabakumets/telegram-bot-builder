@@ -38,4 +38,6 @@ export interface DialogPanelProps {
   onClose: () => void;
   /** Функция выбора пользователя */
   onSelectUser?: (user: UserBotData) => void;
+  /** Скрыть заголовок (если он уже отображается в родительском компоненте) */
+  hideHeader?: boolean;
 }

@@ -68,6 +68,7 @@ export function DialogPanel({
   user,
   onClose,
   onSelectUser,
+  hideHeader,
 }: DialogPanelProps) {
   const [showWarning, setShowWarning] = useState(() => {
     if (typeof window === 'undefined') return true;
@@ -218,7 +219,7 @@ export function DialogPanel({
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background">
-      {isGroup ? (
+      {!hideHeader && (isGroup ? (
         /* Заголовок группового диалога */
         <div className="flex items-center justify-between gap-2 p-2 xs:p-2.5 sm:p-3 border-b">
           <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -255,7 +256,7 @@ export function DialogPanel({
           onSelectUser={handleSelectUser}
           onClose={onClose}
         />
-      )}
+      ))}
 
       {!isGroup && showWarning && (
         <DialogWarning
