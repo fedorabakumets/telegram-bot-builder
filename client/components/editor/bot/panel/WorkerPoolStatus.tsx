@@ -49,15 +49,18 @@ export function WorkerPoolStatus() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium cursor-default">
+        <div className="flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium cursor-default">
           <Activity className="w-3 h-3" />
-          <span>{data.workers} воркер{data.workers > 1 ? 'а' : ''}</span>
-          <span className="text-muted-foreground">·</span>
-          <span>{data.totalBots} бот{data.totalBots > 1 ? 'а' : ''}</span>
+          {/* Мобильная версия: только число ботов */}
+          <span className="sm:hidden tabular-nums">{data.totalBots}</span>
+          {/* Десктопная версия: полная информация */}
+          <span className="hidden sm:inline">{data.workers} воркер{data.workers > 1 ? 'а' : ''}</span>
+          <span className="hidden sm:inline text-muted-foreground">·</span>
+          <span className="hidden sm:inline">{data.totalBots} бот{data.totalBots > 1 ? 'а' : ''}</span>
           {data.totalMemoryMb > 0 && (
             <>
-              <span className="text-muted-foreground">·</span>
-              <span>{data.totalMemoryMb} MB</span>
+              <span className="hidden sm:inline text-muted-foreground">·</span>
+              <span className="hidden sm:inline">{data.totalMemoryMb} MB</span>
             </>
           )}
         </div>

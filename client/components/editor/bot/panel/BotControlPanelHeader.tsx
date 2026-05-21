@@ -46,9 +46,7 @@ export function BotControlPanelHeader({ onConnectBot, allProjects, currentProjec
             onSelect={onProjectChange}
           />
         )}
-        <div className="hidden sm:block">
-          <WorkerPoolStatus />
-        </div>
+        <WorkerPoolStatus />
       </div>
       {!isGuestUser && (
         <Button
