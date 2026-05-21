@@ -190,10 +190,10 @@ export async function startBot(projectId: number, token: string, tokenId: number
     const tokenSettings = await storage.getBotToken(tokenId);
     const launchMode = tokenSettings?.launchMode ?? 'polling';
     const webhookBaseUrl = tokenSettings?.webhookBaseUrl ?? null;
-    // Webhook активен если: режим webhook И задан baseUrl ИЛИ глобальный WEBHOOK_URL в env
-    const effectiveWebhookUrl = launchMode === 'webhook' && webhookBaseUrl
-      ? webhookBaseUrl
-      : process.env.WEBHOOK_URL ?? null;
+    // Webhook активен только если режим явно webhook
+    const effectiveWebhookUrl = launchMode === 'webhook'
+      ? (webhookBaseUrl || process.env.WEBHOOK_URL || null)
+      : null;
 
     // В polling режиме сбрасываем webhook чтобы избежать конфликтов
     // В webhook режиме — Python сам установит webhook при старте
