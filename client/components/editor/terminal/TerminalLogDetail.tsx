@@ -127,7 +127,7 @@ export function TerminalLogDetail({ line, onClose, onPrev, onNext, onScrollToLin
           <tbody>
             <tr className="border-b border-border/50">
               <td className="py-1.5 text-muted-foreground">Уровень</td>
-              <td className="py-1.5 font-mono">{line.type === 'stderr' ? 'ошибка' : 'информация'}</td>
+              <td className="py-1.5 font-mono">{line.type === 'stderr' ? 'error' : 'info'}</td>
             </tr>
             <tr>
               <td className="py-1.5 text-muted-foreground">Время</td>
