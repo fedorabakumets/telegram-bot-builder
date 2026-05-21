@@ -117,22 +117,6 @@ export default function Editor() {
     return 'editor';
   });
 
-  // Синхронизация вкладки и выбранного бота с URL query-параметрами
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    if (currentTab === 'editor') {
-      url.searchParams.delete('tab');
-    } else {
-      url.searchParams.set('tab', currentTab);
-    }
-    if (selectedDatabaseTokenId) {
-      url.searchParams.set('bot', String(selectedDatabaseTokenId));
-    } else {
-      url.searchParams.delete('bot');
-    }
-    window.history.replaceState(null, '', url.toString());
-  }, [currentTab, selectedDatabaseTokenId]);
-
   /** Пользователь для автоматического открытия в диалогах (при переходе из таблицы) */
   const [pendingDialogUser, setPendingDialogUser] = useState<any>(null);
 
@@ -164,6 +148,22 @@ export default function Editor() {
     const bot = params.get('bot');
     return bot ? parseInt(bot, 10) || null : null;
   });
+
+  // Синхронизация вкладки и выбранного бота с URL query-параметрами
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (currentTab === 'editor') {
+      url.searchParams.delete('tab');
+    } else {
+      url.searchParams.set('tab', currentTab);
+    }
+    if (selectedDatabaseTokenId) {
+      url.searchParams.set('bot', String(selectedDatabaseTokenId));
+    } else {
+      url.searchParams.delete('bot');
+    }
+    window.history.replaceState(null, '', url.toString());
+  }, [currentTab, selectedDatabaseTokenId]);
 
   /**
    * Флаг использования гибкого макета
