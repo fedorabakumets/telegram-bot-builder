@@ -1,15 +1,17 @@
 /**
- * @fileoverview Правая панель с терминалами ботов
+ * @fileoverview Панель терминалов ботов
  *
  * Отображает вкладки терминалов и активный терминал или просмотрщик истории.
  * Реализует lazy mount: компонент монтируется только при первом открытии вкладки.
- * Поддерживает режим "Все" — одновременное отображение всех терминалов в стеке.
+ * Использует TabHeader для единообразия с другими вкладками приложения.
  * Автоматически регистрирует терминалы для запущенных ботов при монтировании.
  *
  * @module terminal/TerminalPanel
  */
 
 import { useState, useCallback, useEffect } from 'react';
+import { Terminal as TerminalIcon } from 'lucide-react';
+import { TabHeader } from '@/components/ui/tab-header';
 import { BotTerminal } from './BotTerminal';
 import { LaunchHistoryViewer } from './LaunchHistoryViewer';
 import { TerminalTabs } from './TerminalTabs';
@@ -30,8 +32,7 @@ function getTabKey(terminal: TerminalInfo): string {
 }
 
 /**
- * Панель терминалов с lazy mount и поддержкой history-вкладок.
- * При activeTerminalId === 'all' показывает все терминалы в вертикальном стеке.
+ * Панель терминалов с TabHeader и lazy mount.
  * @returns JSX элемент
  */
 export function TerminalPanel() {
@@ -80,18 +81,30 @@ export function TerminalPanel() {
 
   if (terminals.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center text-muted-foreground">
-        <div className="text-center">
-          <p className="text-lg font-medium mb-2">Терминалы не активны</p>
-          <p className="text-sm">Запустите бота, чтобы увидеть его логи</p>
+      <div className="flex flex-col h-full bg-background">
+        <TabHeader
+          icon={<TerminalIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
+          title="Терминал"
+        />
+        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          <div className="text-center">
+            <p className="text-lg font-medium mb-2">Терминалы не активны</p>
+            <p className="text-sm">Запустите бота, чтобы увидеть его логи</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <TerminalTabs onTerminalSelect={handleTerminalSelect} />
+    <div className="flex flex-col h-full bg-background">
+      <TabHeader
+        icon={<TerminalIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
+        title="Терминал"
+      >
+        <TerminalTabs onTerminalSelect={handleTerminalSelect} />
+      </TabHeader>
+
       <div className="flex-1 overflow-hidden p-2">
         {terminals.map((terminal: TerminalInfo) => {
           const key = getTabKey(terminal);

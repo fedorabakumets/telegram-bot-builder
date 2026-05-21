@@ -83,28 +83,23 @@ export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
   };
 
   return (
-    <>
-      {/* Компактный Select-селектор для всех размеров экрана */}
-      <div className="px-2 py-1">
-        <Select
-          value={activeTerminalId || ''}
-          onValueChange={handleSelectChange}
-        >
-          <SelectTrigger className="h-7 text-xs w-full">
-            <SelectValue placeholder="Выберите терминал" />
-          </SelectTrigger>
-          <SelectContent>
-            {terminals.map(terminal => {
-              const key = getTabKey(terminal);
-              return (
-                <SelectItem key={key} value={key} className="text-xs">
-                  {getTerminalLabel(terminal)}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-      </div>
-    </>
+    <Select
+      value={activeTerminalId || ''}
+      onValueChange={handleSelectChange}
+    >
+      <SelectTrigger className="h-7 text-xs w-[180px]">
+        <SelectValue placeholder="Выберите терминал" />
+      </SelectTrigger>
+      <SelectContent>
+        {terminals.map(terminal => {
+          const key = getTabKey(terminal);
+          return (
+            <SelectItem key={key} value={key} className="text-xs">
+              {getTerminalLabel(terminal)}
+            </SelectItem>
+          );
+        })}
+      </SelectContent>
+    </Select>
   );
 }
