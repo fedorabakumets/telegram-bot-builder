@@ -85,8 +85,9 @@ export function TablesPanel({ projectId, allProjects, onProjectChange, selectedT
         )}
       </TabHeader>
 
-      {/* Контент: список таблиц + редактор */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* Контент: на десктопе split, на мобильных — переключение */}
+      {/* Десктоп: список + редактор */}
+      <div className="hidden sm:flex flex-1 overflow-hidden">
         <TableList
           tables={tables}
           selectedTableId={selectedTableId}
@@ -122,6 +123,53 @@ export function TablesPanel({ projectId, allProjects, onProjectChange, selectedT
               <p className="text-sm text-muted-foreground">Выберите таблицу или создайте новую</p>
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Мобильный: переключение между списком и редактором */}
+      <div className="sm:hidden flex-1 overflow-hidden flex flex-col">
+        {selectedTable ? (
+          <div className="flex flex-col h-full">
+            <div className="flex-shrink-0 px-3 py-1.5 border-b flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedTableId(null)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                ← Назад
+              </button>
+              <span className="text-xs font-medium truncate">{selectedTable.name}</span>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <TableEditor
+                table={selectedTable}
+                readOnly={selectedTable.id.startsWith('_system_')}
+                isContentTable={selectedTable.name === '_content'}
+                systemInfo={selectedTable.id.startsWith('_system_')
+                  ? `Данные токена #${selectedTokenId ?? 'все'} • проект #${projectId}`
+                  : undefined
+                }
+                onAddColumn={(name) => addColumn(selectedTable.id, name)}
+                onAddAlphabetColumns={() => addAlphabetColumns(selectedTable.id)}
+                onRenameColumn={(colId, name) => renameColumn(selectedTable.id, colId, name)}
+                onDeleteColumn={(colId) => deleteColumn(selectedTable.id, colId)}
+                onAddRows={(count) => addRows(selectedTable.id, count)}
+                onDeleteRow={(rowId) => deleteRow(selectedTable.id, rowId)}
+                onReindex={() => reindexRows(selectedTable.id)}
+                onUpdateCell={(rowId, colId, val) => updateCell(selectedTable.id, rowId, colId, val)}
+                onImportNew={importNewTable}
+                onImportRows={(rows) => importRows(selectedTable.id, rows)}
+              />
+            </div>
+          </div>
+        ) : (
+          <TableList
+            tables={tables}
+            selectedTableId={selectedTableId}
+            onSelect={setSelectedTableId}
+            onCreate={createTable}
+            onDelete={deleteTable}
+          />
         )}
       </div>
     </div>
