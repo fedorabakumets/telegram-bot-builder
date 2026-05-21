@@ -162,6 +162,7 @@ export function TerminalOutput({
       {/* Заголовки колонок */}
       <div className="flex items-center gap-2 px-4 py-1 border-b border-border/50 text-[11px] text-muted-foreground/60 uppercase tracking-wider select-none shrink-0">
         <span className="shrink-0 w-[72px]">Время</span>
+        <span className="shrink-0 w-[44px]">Уровень</span>
         <span className="flex-1 min-w-0">Данные</span>
       </div>
       <div
@@ -188,6 +189,9 @@ export function TerminalOutput({
             >
               <span className="shrink-0 w-[72px] text-muted-foreground/70 tabular-nums font-mono">
                 {formatTime(line.timestamp)}
+              </span>
+              <span className={`shrink-0 w-[44px] text-[10px] font-medium uppercase ${line.type === 'stderr' ? 'text-red-400' : 'text-green-400/70'}`}>
+                {line.type === 'stderr' ? 'err' : 'info'}
               </span>
               <div
                 className="flex-1 min-w-0"
