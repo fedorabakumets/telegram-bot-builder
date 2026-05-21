@@ -74,11 +74,11 @@ export function BotControlPanel({
   onProjectChange,
 }: BotControlPanelProps) {
   const { setShowAddBot, setProjectForNewBot, allTokensFlat, allBotStatuses } = useBotControl();
-  const { user } = useTelegramAuth();
+  const { user, isLoading: authLoading } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
 
   /** Является ли текущий пользователь гостем */
-  const isGuestUser = !user || isGuest(user);
+  const isGuestUser = !authLoading && (!user || isGuest(user));
   /** Есть ли хотя бы один запущенный бот */
   const hasRunningBot = allBotStatuses.some(s => s?.status === 'running');
 
