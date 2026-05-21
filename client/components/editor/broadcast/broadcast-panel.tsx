@@ -72,17 +72,19 @@ export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allP
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Шапка с градиентом */}
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-muted/40 to-background">
-        <div className="flex items-center gap-2.5">
-          <div className="rounded-lg bg-primary/10 p-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b bg-gradient-to-r from-muted/40 to-background">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="rounded-lg bg-primary/10 p-2 shrink-0">
             <Radio className="h-5 w-5 text-primary" />
           </div>
-          <div>
-            <h2 className="text-base font-semibold leading-none">Рассылки</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold leading-none truncate">Рассылки</h2>
+            <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
               {total > 0 ? `${total} рассыл${total === 1 ? 'ка' : total < 5 ? 'ки' : 'ок'}` : 'Нет рассылок'}
             </p>
           </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
           {allProjects && allProjects.length > 1 && onProjectChange && (
             <ProjectSelector
               projects={allProjects}
@@ -97,11 +99,12 @@ export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allP
               onSelect={(id) => onSelectToken?.(id)}
             />
           )}
+          <Button size="sm" className="gap-1.5" onClick={() => setModalOpen(true)}>
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Новая рассылка</span>
+            <span className="sm:hidden">Новая</span>
+          </Button>
         </div>
-        <Button size="sm" className="gap-1.5" onClick={() => setModalOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Новая рассылка
-        </Button>
       </div>
 
       {/* Split layout */}
