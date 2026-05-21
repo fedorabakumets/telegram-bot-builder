@@ -3,11 +3,15 @@
  * Отображает фото пользователя или иконку по умолчанию.
  * Запрашивает аватарку через прокси всегда когда есть projectId и userId —
  * сервер сам получит её из Telegram если в БД пусто.
+ * Кэширует неудачные запросы чтобы не спамить сервер.
  */
 
 import { Bot, User } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
 import { useState } from 'react';
+
+/** Кэш неудачных запросов аватарок — не повторяем запрос в течение сессии */
+const failedAvatarCache = new Set<string>();
 
 /** Свойства аватара */
 interface UserAvatarProps {
@@ -47,9 +51,17 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }:
   const isBot = messageType === 'bot';
   /** Для групп (отрицательный userId) аватарку через этот роут не запрашиваем */
   const isGroupChat = user?.userId ? String(user.userId).startsWith('-') : false;
+  /** Ключ для кэша неудачных запросов */
+  const cacheKey = projectId && user?.userId ? `${projectId}:${user.userId}:${tokenId ?? ''}` : '';
   /** Показываем img если есть projectId и userId — avatarUrl в БД не обязателен */
-  const canFetchPhoto = !!projectId && !!user?.userId && !imageError && !isGroupChat;
+  const canFetchPhoto = !!projectId && !!user?.userId && !imageError && !isGroupChat && !failedAvatarCache.has(cacheKey);
   const iconSize = size * 0.5;
+
+  /** Обработчик ошибки загрузки — кэшируем чтобы не повторять */
+  const handleError = () => {
+    setImageError(true);
+    if (cacheKey) failedAvatarCache.add(cacheKey);
+  };
 
   if (isBot && canFetchPhoto && user?.userId) {
     return (
@@ -58,7 +70,7 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }:
         alt="Bot avatar"
         style={{ width: size, height: size }}
         className="flex-shrink-0 rounded-full object-cover"
-        onError={() => setImageError(true)}
+        onError={handleError}
       />
     );
   }
@@ -78,7 +90,7 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }:
         alt="User avatar"
         style={{ width: size, height: size }}
         className="flex-shrink-0 rounded-full object-cover"
-        onError={() => setImageError(true)}
+        onError={handleError}
       />
     );
   }
