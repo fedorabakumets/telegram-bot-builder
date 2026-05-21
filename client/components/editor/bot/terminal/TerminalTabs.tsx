@@ -18,9 +18,6 @@ import {
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 import type { TerminalInfo } from '../contexts/ActiveTerminalsContext';
 
-/** Специальное значение для отображения всех терминалов */
-export const ALL_TERMINALS_VALUE = 'all';
-
 /** Пропсы компонента вкладок терминалов */
 interface TerminalTabsProps {
   /** Обработчик выбора терминала */
@@ -78,13 +75,11 @@ export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
 
   /**
    * Обработчик смены значения в Select
-   * @param value - Ключ выбранной опции или 'all'
+   * @param value - Ключ выбранной опции
    */
   const handleSelectChange = (value: string) => {
     setActiveTerminalById(value);
-    if (value !== ALL_TERMINALS_VALUE) {
-      onTerminalSelect(value);
-    }
+    onTerminalSelect(value);
   };
 
   return (
@@ -92,16 +87,13 @@ export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
       {/* Компактный Select-селектор для всех размеров экрана */}
       <div className="px-2 py-1">
         <Select
-          value={activeTerminalId || ALL_TERMINALS_VALUE}
+          value={activeTerminalId || ''}
           onValueChange={handleSelectChange}
         >
           <SelectTrigger className="h-7 text-xs w-full">
             <SelectValue placeholder="Выберите терминал" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL_TERMINALS_VALUE} className="text-xs">
-              Все
-            </SelectItem>
             {terminals.map(terminal => {
               const key = getTabKey(terminal);
               return (

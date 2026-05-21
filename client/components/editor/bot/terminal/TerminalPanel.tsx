@@ -11,10 +11,9 @@
 import { useState, useCallback } from 'react';
 import { BotTerminal } from './BotTerminal';
 import { LaunchHistoryViewer } from './LaunchHistoryViewer';
-import { TerminalTabs, ALL_TERMINALS_VALUE } from './TerminalTabs';
+import { TerminalTabs } from './TerminalTabs';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 import type { TerminalInfo } from '../contexts/ActiveTerminalsContext';
-import { Separator } from '@/components/ui/separator';
 
 /**
  * Возвращает строковый ключ вкладки терминала
@@ -65,77 +64,19 @@ export function TerminalPanel() {
     );
   }
 
-  /** Режим отображения всех терминалов одновременно */
-  const isAllMode = activeTerminalId === ALL_TERMINALS_VALUE;
-
   return (
     <div className="h-full flex flex-col">
       <TerminalTabs onTerminalSelect={handleTerminalSelect} />
+      <div className="flex-1 overflow-hidden p-2">
+        {terminals.map((terminal: TerminalInfo) => {
+          const key = getTabKey(terminal);
+          const isActive = key === activeTerminalId;
+          const isHistory = terminal.tabType === 'history';
 
-      {isAllMode ? (
-        <AllTerminalsStack terminals={terminals} />
-      ) : (
-        <div className="flex-1 overflow-hidden p-2">
-          {terminals.map((terminal: TerminalInfo) => {
-            const key = getTabKey(terminal);
-            const isActive = key === activeTerminalId;
-            const isHistory = terminal.tabType === 'history';
+          if (!mountedTabs.has(key) && !isActive) return null;
 
-            if (!mountedTabs.has(key) && !isActive) return null;
-
-            return (
-              <div key={key} className={isActive ? 'block h-full' : 'hidden'}>
-                {isHistory ? (
-                  <LaunchHistoryViewer
-                    launchId={terminal.launchId!}
-                    startedAt={terminal.launchStartedAt ?? null}
-                  />
-                ) : (
-                  <BotTerminal
-                    projectId={terminal.projectId}
-                    tokenId={terminal.tokenId}
-                    isBotRunning={terminal.isRunning}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Пропсы компонента стека всех терминалов */
-interface AllTerminalsStackProps {
-  /** Список терминалов для отображения */
-  terminals: TerminalInfo[];
-}
-
-/**
- * Вертикальный стек всех терминалов с заголовками и разделителями
- * @param props - Свойства компонента
- * @returns JSX элемент
- */
-function AllTerminalsStack({ terminals }: AllTerminalsStackProps) {
-  return (
-    <div className="flex-1 overflow-y-auto p-2 space-y-2">
-      {terminals.map((terminal, index) => {
-        const key = getTabKey(terminal);
-        const isHistory = terminal.tabType === 'history';
-
-        return (
-          <div key={key}>
-            {index > 0 && <Separator className="mb-2" />}
-            <div className="text-xs font-medium text-muted-foreground mb-1 px-1">
-              {isHistory
-                ? `📜 История — ${terminal.botName}`
-                : terminal.botName}
-              {!isHistory && terminal.isRunning && (
-                <span className="ml-2 inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              )}
-            </div>
-            <div className="h-48 min-h-[12rem]">
+          return (
+            <div key={key} className={isActive ? 'block h-full' : 'hidden'}>
               {isHistory ? (
                 <LaunchHistoryViewer
                   launchId={terminal.launchId!}
@@ -149,9 +90,9 @@ function AllTerminalsStack({ terminals }: AllTerminalsStackProps) {
                 />
               )}
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
