@@ -8,7 +8,6 @@
  * @module bot/TerminalTabs
  */
 
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectTrigger,
@@ -17,7 +16,6 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
-import { Terminal, Bot, Clock } from 'lucide-react';
 import type { TerminalInfo } from '../contexts/ActiveTerminalsContext';
 
 /** Специальное значение для отображения всех терминалов */
@@ -74,21 +72,12 @@ function getTerminalLabel(terminal: TerminalInfo): string {
  * @returns JSX элемент или null
  */
 export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
-  const { terminals, activeTerminalId, setActiveTerminalById, removeTerminalById } = useActiveTerminals();
+  const { terminals, activeTerminalId, setActiveTerminalById } = useActiveTerminals();
 
   if (terminals.length === 0) return null;
 
   /**
-   * Обработчик смены вкладки (десктоп)
-   * @param value - Ключ выбранной вкладки
-   */
-  const handleValueChange = (value: string) => {
-    setActiveTerminalById(value);
-    onTerminalSelect(value);
-  };
-
-  /**
-   * Обработчик смены значения в мобильном Select
+   * Обработчик смены значения в Select
    * @param value - Ключ выбранной опции или 'all'
    */
   const handleSelectChange = (value: string) => {
@@ -100,8 +89,8 @@ export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
 
   return (
     <>
-      {/* Мобильный: компактный Select-селектор */}
-      <div className="sm:hidden px-2 py-1">
+      {/* Компактный Select-селектор для всех размеров экрана */}
+      <div className="px-2 py-1">
         <Select
           value={activeTerminalId || ALL_TERMINALS_VALUE}
           onValueChange={handleSelectChange}
@@ -123,50 +112,6 @@ export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
             })}
           </SelectContent>
         </Select>
-      </div>
-
-      {/* Десктоп: стандартные вкладки */}
-      <div className="hidden sm:block">
-        <Tabs value={activeTerminalId || ''} onValueChange={handleValueChange}>
-          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
-            <TabsList className="w-max min-w-full justify-start">
-              {terminals.map(terminal => {
-                const key = getTabKey(terminal);
-                const isHistory = terminal.tabType === 'history';
-                return (
-                  <TabsTrigger
-                    key={key}
-                    value={key}
-                    className="flex items-center gap-2"
-                  >
-                    {isHistory ? (
-                      <Clock className="w-3 h-3 text-blue-400" />
-                    ) : terminal.isRunning ? (
-                      <Terminal className="w-3 h-3 text-green-500" />
-                    ) : (
-                      <Bot className="w-3 h-3 text-gray-400" />
-                    )}
-                    <span>
-                      {isHistory ? formatTabDate(terminal.launchStartedAt) : terminal.botName}
-                    </span>
-                    {!isHistory && terminal.isRunning && (
-                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                    )}
-                    {isHistory && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); removeTerminalById(key); }}
-                        className="ml-1 text-muted-foreground/60 hover:text-muted-foreground transition-colors leading-none"
-                        title="Закрыть"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-          </div>
-        </Tabs>
       </div>
     </>
   );
