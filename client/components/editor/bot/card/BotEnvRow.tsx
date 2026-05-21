@@ -104,9 +104,9 @@ export function BotEnvRow({
     ? 'bg-amber-50/50 dark:bg-amber-950/20' : '';
 
   return (
-    <div className={`flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/40 group/row transition-colors ${pendingHighlight}`}>
+    <div className={`flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 py-1.5 rounded-md hover:bg-muted/40 group/row transition-colors flex-wrap ${pendingHighlight}`}>
       <Braces className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
-      <span className="text-xs font-mono font-medium text-foreground min-w-[80px] shrink-0">
+      <span className="text-xs font-mono font-medium text-foreground min-w-[60px] sm:min-w-[80px] shrink-0 break-all">
         {envKey}
       </span>
       <span className="text-muted-foreground/50 text-xs">=</span>
@@ -127,7 +127,7 @@ export function BotEnvRow({
         </div>
       ) : (
         <span
-          className={`text-xs truncate flex-1 min-w-0 ${canEdit ? 'text-foreground/80 cursor-pointer' : 'text-muted-foreground/70'}`}
+          className={`text-xs break-all flex-1 min-w-0 ${canEdit ? 'text-foreground/80 cursor-pointer' : 'text-muted-foreground/70'}`}
           onClick={() => { if (canEdit) handleStartEdit(); }}
           title={canEdit ? 'Нажмите для редактирования' : 'Только для чтения'}
         >

@@ -67,7 +67,7 @@ export function BotActions({
   const isDeletingThisBot = deleteBotMutation.variables === tokenId;
 
   return (
-    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 flex-wrap">
       {!isBotRunning ? (
         <Button
           size="sm"

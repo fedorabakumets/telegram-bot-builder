@@ -86,7 +86,7 @@ export function BotSettingsGrid({
   const resolvedBotName = botName ?? `Бот ${tokenId}`;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
       <BotLaunchSettings
         tokenId={tokenId}
         projectId={projectId}

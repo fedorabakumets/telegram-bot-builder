@@ -87,7 +87,7 @@ export function BotCardInfo({
         )
       )}
 
-      <div className="rounded-md bg-muted/30 px-3 py-2 space-y-1">
+      <div className="rounded-md bg-muted/30 px-2 sm:px-3 py-2 space-y-1">
         <TokenDisplayEdit
           token={token.token}
           tokenId={token.id}
@@ -123,17 +123,17 @@ export function BotCardInfo({
           )
         )}
 
-        <p className="text-xs text-muted-foreground space-y-0.5 sm:space-y-0">
-          <span className="block sm:inline">
+        <p className="text-xs text-muted-foreground flex flex-wrap gap-x-1 gap-y-0.5">
+          <span className="whitespace-nowrap">
             Добавлен: {new Date(token.createdAt!).toLocaleDateString('ru-RU')}
           </span>
           {token.lastUsedAt && (
-            <span className="block sm:inline sm:before:content-['_•_']">
+            <span className="whitespace-nowrap before:content-['•_'] sm:before:content-['•_']">
               Последний: {new Date(token.lastUsedAt).toLocaleDateString('ru-RU')}
             </span>
           )}
           {token.trackExecutionTime === 1 && (
-            <span className="block sm:inline sm:before:content-['_•_']">
+            <span className="whitespace-nowrap before:content-['•_'] sm:before:content-['•_']">
               {formatExecutionTime(token.totalExecutionSeconds || 0)}
             </span>
           )}

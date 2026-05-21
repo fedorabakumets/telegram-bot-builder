@@ -110,7 +110,7 @@ export function BotCardHeader({
   );
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
       <div className="flex items-start justify-between sm:contents">
         <BotAvatar
           botName={displayName}
@@ -121,7 +121,7 @@ export function BotCardHeader({
           size={64}
           className="flex-shrink-0"
         />
-        <div className="sm:hidden flex items-center gap-1">
+        <div className="sm:hidden flex items-center gap-1 flex-wrap">
           {CollapseButton}
           <BotActions
             isBotRunning={isBotRunning} startBotMutation={startBotMutation}
@@ -174,7 +174,7 @@ export function BotCardHeader({
       </div>
 
       {/* На десктопе кнопки справа */}
-      <div className="hidden sm:flex items-center gap-1">
+      <div className="hidden sm:flex items-center gap-1 flex-wrap">
         {CollapseButton}
         <BotActions
           isBotRunning={isBotRunning} startBotMutation={startBotMutation}
