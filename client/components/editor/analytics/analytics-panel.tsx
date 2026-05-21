@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { TabHeader } from '@/components/ui/tab-header';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStats } from '@/components/editor/database/user-database/hooks/queries/use-stats';
 import { useGrowth, GrowthGranularity } from '@/components/editor/database/user-database/hooks/queries/use-growth';
@@ -139,37 +140,31 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Шапка */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b bg-gradient-to-r from-muted/40 to-background">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="rounded-lg bg-primary/10 p-2 shrink-0">
-            <BarChart2 className="h-5 w-5 text-primary" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-base font-semibold leading-none truncate">Аналитика</h2>
-            <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">Статистика и рост аудитории</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {allProjects && allProjects.length > 1 && onProjectChange && (
-            <ProjectSelector
-              projects={allProjects}
-              selectedProjectId={projectId}
-              onSelect={(id) => { onSelectToken?.(null); onProjectChange(id); }}
-            />
-          )}
-          {tokens.length > 0 && (
-            <BotTokenSelector
-              tokens={tokens}
-              selectedTokenId={selectedTokenId ?? null}
-              onSelect={(id) => onSelectToken?.(id)}
-            />
-          )}
+      <TabHeader
+        icon={<BarChart2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
+        title="Аналитика"
+        actions={
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => refetchStats()}>
             <RefreshCw className="h-4 w-4" />
             <span className="hidden sm:inline">Обновить</span>
           </Button>
-        </div>
-      </div>
+        }
+      >
+        {allProjects && allProjects.length > 1 && onProjectChange && (
+          <ProjectSelector
+            projects={allProjects}
+            selectedProjectId={projectId}
+            onSelect={(id) => { onSelectToken?.(null); onProjectChange(id); }}
+          />
+        )}
+        {tokens.length > 0 && (
+          <BotTokenSelector
+            tokens={tokens}
+            selectedTokenId={selectedTokenId ?? null}
+            onSelect={(id) => onSelectToken?.(id)}
+          />
+        )}
+      </TabHeader>
 
       {/* Контент */}
       <ScrollArea className="flex-1">

@@ -6,6 +6,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Bot, Plus } from 'lucide-react';
+import { TabHeader } from '@/components/ui/tab-header';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { isGuest } from '@/types/telegram-user';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
@@ -33,13 +34,26 @@ export function BotControlPanelHeader({ onConnectBot, allProjects, currentProjec
   const isGuestUser = !user || isGuest(user);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b bg-gradient-to-r from-muted/40 to-background">
-      <div className="flex items-center gap-2 sm:gap-2.5">
-        <div className="rounded-lg bg-primary/10 p-1.5 sm:p-2 flex-shrink-0">
-          <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-        </div>
-        <h2 className="text-sm sm:text-base font-semibold leading-none shrink-0">Боты</h2>
-      </div>
+    <TabHeader
+      icon={<Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
+      title="Боты"
+      actions={
+        <>
+          {!isGuestUser && (
+            <Button
+              variant="outline"
+              onClick={onConnectBot}
+              className="gap-1.5 h-7 sm:h-8 px-2 sm:px-3 text-xs sm:text-sm flex-shrink-0"
+              data-testid="button-connect-bot"
+            >
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Подключить бот</span>
+            </Button>
+          )}
+          <WorkerPoolStatus />
+        </>
+      }
+    >
       {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
         <ProjectSelector
           projects={allProjects}
@@ -47,18 +61,6 @@ export function BotControlPanelHeader({ onConnectBot, allProjects, currentProjec
           onSelect={onProjectChange}
         />
       )}
-      {!isGuestUser && (
-        <Button
-          variant="outline"
-          onClick={onConnectBot}
-          className="gap-1.5 h-7 sm:h-8 px-2 sm:px-3 text-xs sm:text-sm flex-shrink-0"
-          data-testid="button-connect-bot"
-        >
-          <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span className="hidden sm:inline">Подключить бот</span>
-        </Button>
-      )}
-      <WorkerPoolStatus />
-    </div>
+    </TabHeader>
   );
 }
