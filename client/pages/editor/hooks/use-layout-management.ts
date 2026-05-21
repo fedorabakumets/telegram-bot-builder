@@ -41,8 +41,8 @@ function createBaseConfig(isMobile: boolean, currentTab: string): SimpleLayoutCo
 
   return {
     elements: [
-      /** Шапка скрыта на вкладке терминала */
-      { id: 'header', type: 'header', name: 'Шапка', position: 'top', size: headerSize, visible: currentTab !== 'terminal' },
+      /** Шапка видима только на вкладке редактора */
+      { id: 'header', type: 'header', name: 'Шапка', position: 'top', size: headerSize, visible: currentTab === 'editor' },
       { id: 'sidebar', type: 'sidebar', name: 'Боковая панель', position: 'left', size: 20, visible: showPanels },
       { id: 'canvas', type: 'canvas', name: 'Холст', position: 'center', size: 30, visible: showCanvas },
       { id: 'properties', type: 'properties', name: 'Свойства', position: 'right', size: 25, visible: false },
@@ -84,9 +84,9 @@ export function useLayoutManager(
           return el;
         }
 
-        // Для header применяем ручные изменения, кроме вкладки terminal (там всегда скрыт)
+        // Для header применяем ручные изменения только на вкладке editor
         if (el.id === 'header') {
-          if (currentTab === 'terminal') return el;
+          if (currentTab !== 'editor') return el;
           const manual = manualVisibility.get(el.id);
           if (manual !== undefined) {
             return { ...el, visible: manual };
