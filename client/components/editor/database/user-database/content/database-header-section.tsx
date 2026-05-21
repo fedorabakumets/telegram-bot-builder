@@ -3,11 +3,11 @@
  * @description Строка 1: заголовок + кнопка обновить. Строка 2: проект, бот, статус БД, удалить
  */
 
+import { Users, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { BotProject } from '@shared/schema';
 import {
   BotTokenSelector,
-  DatabaseHeader,
-  DatabaseToggle,
   HeaderActions,
   ProjectSelector,
 } from '../components/header';
@@ -36,7 +36,7 @@ interface DatabaseHeaderSectionProps
 }
 
 /**
- * Компактная секция заголовка панели БД
+ * Компактная секция заголовка панели БД — одна строка
  * @param props - Пропсы компонента
  * @returns JSX компонент заголовка
  */
@@ -60,28 +60,26 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
     allProjects !== undefined && allProjects.length > 1 && onProjectChange !== undefined;
 
   return (
-    <div className="border-b border-border/50 bg-card w-full px-3 py-2 sm:px-4 sm:py-3">
-      {/* Строка 1: заголовок + кнопка обновить */}
-      <DatabaseHeader projectName={projectName} onRefresh={handleRefresh} />
+    <div className="border-b border-border/50 bg-card w-full px-3 py-2 sm:px-4 sm:py-2.5">
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Иконка + заголовок */}
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-primary/10 p-1.5">
+            <Users className="w-4 h-4 text-primary" />
+          </div>
+          <h2 className="text-sm font-semibold leading-none">Пользователи</h2>
+        </div>
 
-      <div className="mt-1 border-b border-border/40" />
+        <span className="text-border/60 text-[10px]">·</span>
 
-      {/* Строка 2: проект, бот, статус БД, удалить */}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        {/* Селектор проекта — только если доступно несколько проектов */}
+        {/* Селектор проекта */}
         {showProjectSelector ? (
           <ProjectSelector
             projects={allProjects!}
             selectedProjectId={projectId}
             onSelect={onProjectChange!}
           />
-        ) : (
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
-            Проект: <span className="font-medium text-foreground">{projectName}</span>
-          </span>
-        )}
-
-        <span className="text-border/60 hidden sm:inline">·</span>
+        ) : null}
 
         {/* Селектор бота */}
         <BotTokenSelector
@@ -90,23 +88,31 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
           onSelect={onSelectToken}
         />
 
-        <span className="text-border/60 hidden sm:inline">·</span>
-
-        {/* Переключатель БД — скрыт из UI (функционал сохранён) */}
-        {/* <DatabaseToggle
-          isDatabaseEnabled={isDatabaseEnabled}
-          onToggle={(checked) => toggleDatabaseMutation.mutate(checked)}
-          isPending={toggleDatabaseMutation.isPending}
-        /> */}
-
-        {/* Кнопка удалить — только когда БД включена */}
+        {/* Кнопка очистить */}
         {isDatabaseEnabled && (
-          <HeaderActions
-            projectId={projectId}
-            projectName={projectName}
-            onRefresh={handleRefresh}
-            onDeleteAll={() => deleteAllUsersMutation.mutate()}
-          />
+          <>
+            <span className="text-border/60 text-[10px]">·</span>
+            <HeaderActions
+              projectId={projectId}
+              projectName={projectName}
+              onRefresh={handleRefresh}
+              onDeleteAll={() => deleteAllUsersMutation.mutate()}
+            />
+          </>
+        )}
+
+        {/* Кнопка обновить — справа */}
+        {handleRefresh && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRefresh}
+            className="h-7 px-2 text-muted-foreground hover:text-foreground ml-auto"
+            title="Обновить данные"
+          >
+            <RefreshCw className="w-3.5 h-3.5 mr-1" />
+            <span className="text-xs hidden sm:inline">Обновить</span>
+          </Button>
         )}
       </div>
     </div>
