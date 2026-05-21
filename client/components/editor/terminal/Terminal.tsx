@@ -8,7 +8,6 @@
  */
 
 import { forwardRef, useImperativeHandle, useCallback, useState } from 'react';
-import { TerminalHeader } from './TerminalHeader';
 import { TerminalOutput } from './TerminalOutput';
 import { TerminalFilterBar } from './TerminalFilterBar';
 import { TerminalSearchBar } from './TerminalSearchBar';
@@ -119,23 +118,17 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
 
   return (
     <div
-      className={`border rounded-lg overflow-hidden ${themeClasses.terminalBgClass} ${themeClasses.terminalTextClass} font-mono text-sm transition-all duration-200 w-full h-full flex flex-col ${isVisible ? 'opacity-100' : 'hidden'}`}
+      className={`overflow-hidden ${themeClasses.terminalBgClass} ${themeClasses.terminalTextClass} font-mono text-sm w-full h-full flex flex-col ${isVisible ? 'opacity-100' : 'hidden'}`}
     >
-      <TerminalHeader
+      <TerminalFilterBar
+        filter={filter}
+        onFilterChange={setFilter}
+        stderrCount={stderrCount(lines)}
         onZoomIn={() => adjustScale(1.2)}
         onZoomOut={() => adjustScale(0.8)}
         onClear={clearTerminal}
         onCopy={(format) => copyTerminalOutput(visibleLines, format)}
         onSave={(format) => saveTerminalOutput(visibleLines, format)}
-        onHide={onToggleVisibility}
-        headerBgClass={themeClasses.headerBgClass}
-        buttonTextColorClass={themeClasses.buttonTextColorClass}
-        buttonHoverClass={themeClasses.buttonHoverClass}
-      />
-      <TerminalFilterBar
-        filter={filter}
-        onFilterChange={setFilter}
-        stderrCount={stderrCount(lines)}
       />
       <TerminalSearchBar
         searchQuery={searchQuery}
