@@ -4,11 +4,8 @@
  * Компонент отображает заголовок терминала с кнопками управления:
  * - Изменение масштаба
  * - Очистка терминала
- * - Копирование вывода
- * - Сохранение вывода
+ * - Копирование/сохранение в форматах: текст, JSON, CSV
  * - Скрытие терминала
- *
- * На мобильных кнопки скрыты в dropdown-меню для экономии места.
  *
  * @module TerminalHeader
  */
@@ -19,36 +16,45 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, ZoomIn, ZoomOut, Trash2, Copy, Save, EyeOff } from 'lucide-react';
+import { MoreVertical, ZoomIn, ZoomOut, Trash2, Copy, Download, EyeOff } from 'lucide-react';
+import type { ExportFormat } from './terminalUtils';
 
+/** Пропсы заголовка терминала */
 interface TerminalHeaderProps {
+  /** Увеличить масштаб */
   onZoomIn: () => void;
+  /** Уменьшить масштаб */
   onZoomOut: () => void;
+  /** Очистить терминал */
   onClear: () => void;
-  onCopy: () => void;
-  onSave: () => void;
+  /** Копировать в формате */
+  onCopy: (format: ExportFormat) => void;
+  /** Сохранить в формате */
+  onSave: (format: ExportFormat) => void;
+  /** Скрыть терминал */
   onHide?: () => void;
+  /** CSS-класс фона заголовка */
   headerBgClass: string;
+  /** CSS-класс цвета текста кнопок */
   buttonTextColorClass: string;
+  /** CSS-класс hover кнопок */
   buttonHoverClass: string;
+  /** Показывать ли кнопки управления */
   showControls?: boolean;
 }
 
 /**
- * Заголовок терминала
+ * Заголовок терминала с кнопками управления и экспортом
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
 export function TerminalHeader({
-  onZoomIn,
-  onZoomOut,
-  onClear,
-  onCopy,
-  onSave,
-  onHide,
-  headerBgClass,
-  buttonTextColorClass,
-  buttonHoverClass,
-  showControls = true
+  onZoomIn, onZoomOut, onClear, onCopy, onSave, onHide,
+  headerBgClass, buttonTextColorClass, buttonHoverClass,
+  showControls = true,
 }: TerminalHeaderProps) {
   return (
     <div className={`${headerBgClass} px-3 sm:px-4 py-2 flex justify-between items-center`}>
@@ -73,41 +79,73 @@ export function TerminalHeader({
                 <DropdownMenuItem onClick={onClear}>
                   <Trash2 className="mr-2 h-4 w-4" />Очистить
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onCopy}>
-                  <Copy className="mr-2 h-4 w-4" />Копировать
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onSave}>
-                  <Save className="mr-2 h-4 w-4" />Сохранить
-                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs">Копировать</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => onCopy('text')}>Текст</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onCopy('json')}>JSON</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onCopy('csv')}>CSV</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs">Скачать</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => onSave('text')}>Текст</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSave('json')}>JSON</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSave('csv')}>CSV</DropdownMenuItem>
                 {onHide && (
-                  <DropdownMenuItem onClick={onHide}>
-                    <EyeOff className="mr-2 h-4 w-4" />Скрыть
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={onHide}>
+                      <EyeOff className="mr-2 h-4 w-4" />Скрыть
+                    </DropdownMenuItem>
+                  </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
 
           {/* Десктоп: кнопки в строку */}
-          <div className="hidden sm:flex space-x-2 flex-wrap justify-end">
+          <div className="hidden sm:flex items-center space-x-1 flex-wrap justify-end">
             <Button variant="ghost" size="sm" onClick={onZoomIn} className={`${buttonTextColorClass} ${buttonHoverClass}`}>
-              Увеличить
+              <ZoomIn className="h-3.5 w-3.5" />
             </Button>
             <Button variant="ghost" size="sm" onClick={onZoomOut} className={`${buttonTextColorClass} ${buttonHoverClass}`}>
-              Уменьшить
+              <ZoomOut className="h-3.5 w-3.5" />
             </Button>
             <Button variant="ghost" size="sm" onClick={onClear} className={`${buttonTextColorClass} ${buttonHoverClass}`}>
-              Очистить
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={onCopy} className={`${buttonTextColorClass} ${buttonHoverClass}`}>
-              Копировать
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onSave} className={`${buttonTextColorClass} ${buttonHoverClass}`}>
-              Сохранить
-            </Button>
+
+            {/* Копировать — dropdown с форматами */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className={`${buttonTextColorClass} ${buttonHoverClass}`}>
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel className="text-xs">Копировать в формате</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => onCopy('text')}>Обычный текст</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onCopy('json')}>JSON</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onCopy('csv')}>CSV</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Скачать — dropdown с форматами */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className={`${buttonTextColorClass} ${buttonHoverClass}`}>
+                  <Download className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel className="text-xs">Загрузить в формате</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => onSave('text')}>Обычный текст</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSave('json')}>JSON</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSave('csv')}>CSV</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {onHide && (
               <Button variant="ghost" size="sm" onClick={onHide} className={`${buttonTextColorClass} ${buttonHoverClass}`}>
-                Скрыть
+                <EyeOff className="h-3.5 w-3.5" />
               </Button>
             )}
           </div>

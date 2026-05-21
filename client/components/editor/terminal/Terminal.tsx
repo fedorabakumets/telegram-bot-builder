@@ -125,8 +125,8 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         onZoomIn={() => adjustScale(1.2)}
         onZoomOut={() => adjustScale(0.8)}
         onClear={clearTerminal}
-        onCopy={() => copyTerminalOutput(visibleLines)}
-        onSave={() => saveTerminalOutput(visibleLines)}
+        onCopy={(format) => copyTerminalOutput(visibleLines, format)}
+        onSave={(format) => saveTerminalOutput(visibleLines, format)}
         onHide={onToggleVisibility}
         headerBgClass={themeClasses.headerBgClass}
         buttonTextColorClass={themeClasses.buttonTextColorClass}
