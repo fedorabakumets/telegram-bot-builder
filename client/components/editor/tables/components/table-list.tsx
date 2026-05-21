@@ -45,7 +45,7 @@ export function TableList({ tables, selectedTableId, onSelect, onCreate, onDelet
   };
 
   return (
-    <div className="flex flex-col h-full w-56 border-r border-border/50 bg-muted/20">
+    <div className="flex flex-col h-full w-full sm:w-56 border-r border-border/50 bg-muted/20">
       {/* Заголовок */}
       <div className="px-3 py-3 border-b border-border/50 flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
