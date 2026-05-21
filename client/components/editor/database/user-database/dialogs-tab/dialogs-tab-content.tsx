@@ -138,6 +138,9 @@ export function DialogsTabContent({
       <div className="hidden md:flex flex-col border-b border-border/50 bg-card flex-shrink-0">
         {/* Строка 1: навигация — проект + токен */}
         <div className="flex items-center gap-x-1.5 px-3 py-1 border-b border-border/30">
+          <div className="rounded-lg bg-primary/10 p-1 shrink-0">
+            <MessageSquare className="w-3.5 h-3.5 text-primary" />
+          </div>
           <span className="text-xs font-semibold text-foreground">Диалоги</span>
           <span className="text-border/60 text-[10px]">·</span>
           {showProjectSelector ? (
