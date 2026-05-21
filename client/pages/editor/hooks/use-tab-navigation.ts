@@ -57,9 +57,14 @@ export function useTabNavigation({
       setPreviousTab(currentTab as PreviousEditorTab);
     }
 
-    startTransition(() => {
+    // Для вкладки export обновляем синхронно чтобы избежать мелькания
+    if (tab === 'export') {
       setCurrentTab(tab);
-    });
+    } else {
+      startTransition(() => {
+        setCurrentTab(tab);
+      });
+    }
 
     // Автосохранение при переключении
     if (tab === 'preview' && projectId && setLocation) {
