@@ -7,7 +7,7 @@
  * @module TerminalLogDetail
  */
 
-import { ChevronUp, ChevronDown, X, Copy, Eye } from 'lucide-react';
+import { ChevronUp, ChevronDown, X, Link, FileJson, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TerminalLine } from './terminalTypes';
@@ -27,16 +27,15 @@ export interface TerminalLogDetailProps {
 }
 
 /**
- * Форматирует дату в полный формат: "21 мая 2026 г., 09:31:08"
+ * Форматирует дату: "21 мая 2026, 21:20:31"
  * @param date - Дата для форматирования
  * @returns Отформатированная строка даты
  */
 function formatFullDate(date?: Date): string {
   if (!date) return '—';
-  return date.toLocaleString('ru-RU', {
-    day: 'numeric', month: 'long', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-  });
+  const d = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  const t = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return `${d}, ${t}`;
 }
 
 /**
@@ -45,12 +44,21 @@ function formatFullDate(date?: Date): string {
  */
 function copyAsJson(line: TerminalLine) {
   const json = JSON.stringify({
-    id: line.id,
     content: line.content,
     type: line.type,
     timestamp: line.timestamp?.toISOString(),
   }, null, 2);
   navigator.clipboard.writeText(json);
+}
+
+/**
+ * Копирует постоянную ссылку на лог в буфер обмена
+ * @param line - Строка лога
+ */
+function copyPermalink(line: TerminalLine) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('log', line.id);
+  navigator.clipboard.writeText(url.toString());
 }
 
 /**
@@ -65,7 +73,7 @@ export function TerminalLogDetail({ line, onClose, onPrev, onNext, onScrollToLin
 
   return (
     <div className="w-[380px] shrink-0 h-full bg-card border-l border-border flex flex-col overflow-hidden">
-      {/* Заголовок */}
+      {/* Заголовок с кнопками */}
       <div className="flex items-center gap-1 px-3 py-2 border-b border-border shrink-0">
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onPrev} title="Предыдущая строка">
           <ChevronUp className="h-4 w-4" />
@@ -73,11 +81,15 @@ export function TerminalLogDetail({ line, onClose, onPrev, onNext, onScrollToLin
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onNext} title="Следующая строка">
           <ChevronDown className="h-4 w-4" />
         </Button>
+        <div className="w-px h-4 bg-border mx-1" />
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onScrollToLine} title="Просмотр в контексте">
           <Eye className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyAsJson(line)} title="Копировать JSON">
-          <Copy className="h-4 w-4" />
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyAsJson(line)} title="Скопировать журнал в формате JSON">
+          <FileJson className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyPermalink(line)} title="Скопировать постоянную ссылку">
+          <Link className="h-4 w-4" />
         </Button>
         <div className="flex-1" />
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} title="Закрыть">
@@ -115,7 +127,7 @@ export function TerminalLogDetail({ line, onClose, onPrev, onNext, onScrollToLin
           <tbody>
             <tr className="border-b border-border/50">
               <td className="py-1.5 text-muted-foreground">Уровень</td>
-              <td className="py-1.5 font-mono">{line.type}</td>
+              <td className="py-1.5 font-mono">{line.type === 'stderr' ? 'ошибка' : 'информация'}</td>
             </tr>
             <tr>
               <td className="py-1.5 text-muted-foreground">Время</td>
