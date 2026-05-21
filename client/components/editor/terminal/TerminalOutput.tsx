@@ -1,8 +1,11 @@
 /**
- * @fileoverview Вывод терминала с автоскроллом и подсветкой поиска
+ * @fileoverview Вывод терминала с автоскроллом, подсветкой поиска и колонкой timestamp
  *
- * Компонент отображает строки вывода терминала с поддержкой ANSI,
- * автоматически скроллит вниз при новых строках (если пользователь не листал вверх),
+ * Компонент отображает строки вывода терминала в табличном виде:
+ * - Фиксированная колонка timestamp слева (формат HH:MM:SS)
+ * - Колонка содержимого с поддержкой ANSI и подсветкой поиска
+ *
+ * Автоматически скроллит вниз при новых строках (если пользователь не листал вверх),
  * и показывает кнопку "↓" когда пользователь прокрутил вверх.
  *
  * @module TerminalOutput
@@ -19,6 +22,8 @@ interface TerminalLine {
   content: string;
   /** Тип потока: стандартный вывод или ошибки */
   type: 'stdout' | 'stderr';
+  /** Время добавления строки */
+  timestamp?: Date;
 }
 
 /** Пропсы компонента вывода терминала */
@@ -43,6 +48,16 @@ interface TerminalOutputProps {
   currentMatchLineId?: string;
   /** Нужно ли скроллить к текущему совпадению (только при навигации ↑/↓) */
   shouldScrollToMatch?: boolean;
+}
+
+/**
+ * Форматирует дату в строку HH:MM:SS
+ * @param date - Дата для форматирования
+ * @returns Строка времени или пустая строка если дата не задана
+ */
+function formatTime(date?: Date): string {
+  if (!date) return '';
+  return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 /**
@@ -79,7 +94,7 @@ function highlightMatches(text: string, query: string, isCurrentMatch: boolean) 
 }
 
 /**
- * Компонент вывода терминала с автоскроллом и подсветкой поиска
+ * Компонент вывода терминала с автоскроллом, timestamp-колонкой и подсветкой поиска
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
@@ -152,12 +167,19 @@ export function TerminalOutput({
             <div
               key={line.id}
               ref={(el) => { if (el) lineRefs.current.set(line.id, el); }}
-              className={line.type === 'stderr' ? stderrTextClass : terminalTextClass}
-              style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
+              className={`flex items-start gap-2 ${line.type === 'stderr' ? stderrTextClass : terminalTextClass}`}
             >
-              {searchQuery
-                ? highlightMatches(line.content, searchQuery, line.id === currentMatchLineId)
-                : <Ansi>{line.content}</Ansi>}
+              <span className="shrink-0 w-[72px] text-[11px] text-muted-foreground/70 select-none tabular-nums font-mono">
+                {formatTime(line.timestamp)}
+              </span>
+              <div
+                className="flex-1 min-w-0"
+                style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
+              >
+                {searchQuery
+                  ? highlightMatches(line.content, searchQuery, line.id === currentMatchLineId)
+                  : <Ansi>{line.content}</Ansi>}
+              </div>
             </div>
           ))
         )}
