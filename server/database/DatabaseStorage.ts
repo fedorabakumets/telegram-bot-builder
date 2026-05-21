@@ -1232,6 +1232,57 @@ export class DatabaseStorage implements IStorage {
     return rows.reverse();
   }
 
+  /**
+   * Получить логи только последнего запуска бота
+   * @param projectId - Идентификатор проекта
+   * @param tokenId - Идентификатор токена
+   * @param limit - Максимальное количество строк
+   * @returns Массив записей логов последнего запуска
+   */
+  async getLatestLaunchLogs(projectId: number, tokenId: number, limit = 500): Promise<BotLog[]> {
+    // Находим последний launchId для этого токена
+    const lastLaunch = await this.db
+      .select({ launchId: botLogs.launchId })
+      .from(botLogs)
+      .where(and(
+        eq(botLogs.projectId, projectId),
+        eq(botLogs.tokenId, tokenId),
+        sql`${botLogs.launchId} IS NOT NULL`
+      ))
+      .orderBy(desc(botLogs.timestamp))
+      .limit(1);
+
+    const launchId = lastLaunch[0]?.launchId;
+
+    // Если нет запусков — возвращаем логи без launch_id (live-логи)
+    if (!launchId) {
+      const rows = await this.db
+        .select()
+        .from(botLogs)
+        .where(and(
+          eq(botLogs.projectId, projectId),
+          eq(botLogs.tokenId, tokenId),
+          sql`${botLogs.launchId} IS NULL`
+        ))
+        .orderBy(desc(botLogs.timestamp))
+        .limit(limit);
+      return rows.reverse();
+    }
+
+    // Возвращаем логи последнего запуска
+    const rows = await this.db
+      .select()
+      .from(botLogs)
+      .where(and(
+        eq(botLogs.projectId, projectId),
+        eq(botLogs.tokenId, tokenId),
+        eq(botLogs.launchId, launchId)
+      ))
+      .orderBy(desc(botLogs.timestamp))
+      .limit(limit);
+    return rows.reverse();
+  }
+
   /** Максимальное количество записей истории запусков на один токен */
   private static readonly LAUNCH_HISTORY_LIMIT = 20;
 

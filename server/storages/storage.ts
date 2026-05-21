@@ -647,6 +647,15 @@ export interface IStorage {
   getBotLogs(projectId: number, tokenId: number, limit?: number): Promise<BotLog[]>;
 
   /**
+   * Получить логи только последнего запуска бота
+   * @param projectId - Идентификатор проекта
+   * @param tokenId - Идентификатор токена
+   * @param limit - Максимальное количество строк
+   * @returns Массив записей логов последнего запуска
+   */
+  getLatestLaunchLogs(projectId: number, tokenId: number, limit?: number): Promise<BotLog[]>;
+
+  /**
    * Создать запись о запуске бота
    * @param data - Данные для создания записи
    * @returns Созданная запись истории запуска

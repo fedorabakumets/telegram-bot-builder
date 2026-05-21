@@ -153,7 +153,7 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
 }
 
 /**
- * Загружает историю логов из БД и отправляет её клиенту
+ * Загружает логи только последнего запуска из БД и отправляет клиенту
  * @param ws - WebSocket-соединение клиента
  * @param projectId - Идентификатор проекта
  * @param tokenId - Идентификатор токена
@@ -164,7 +164,7 @@ async function sendHistoryToClient(
   tokenId: number
 ): Promise<void> {
   try {
-    const logs = await storage.getBotLogs(projectId, tokenId, 500);
+    const logs = await storage.getLatestLaunchLogs(projectId, tokenId, 500);
     for (const log of logs) {
       if (ws.readyState !== WebSocket.OPEN) break;
       const message: TerminalMessage = {
