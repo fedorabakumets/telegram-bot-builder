@@ -113,6 +113,7 @@ function Router() {
     <Suspense fallback={<LoadingSpinner />}>
       <AuthGuard>
         <SetupGuard>
+          <TerminalAutoRegister />
           <ProjectsGuard>
             <Switch>
               <Route path="/projects" component={Home} />
@@ -212,7 +213,6 @@ function App() {
         <TooltipProvider>
           <BotLogsProvider>
             <ActiveTerminalsProvider>
-              <TerminalAutoRegister />
               <ServerStatus />
               <Toaster />
               <Router />
