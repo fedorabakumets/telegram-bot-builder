@@ -164,17 +164,17 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds, pending }: Bo
   return (
     <div className="mt-3 space-y-2">
       {/* Заголовок */}
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground font-medium">{totalCount} переменных</span>
-        <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">{totalCount} перем.</span>
+        <div className="flex items-center gap-0.5 ml-auto">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowRaw(!showRaw)} title="Raw-редактор">
             <FileCode className="h-3.5 w-3.5" />
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSearch(!showSearch)} title="Поиск">
             <Search className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowAdd(true)}>
-            <Plus className="h-3.5 w-3.5" /> Новая
+          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 px-1.5" onClick={() => setShowAdd(true)}>
+            <Plus className="h-3.5 w-3.5" /><span className="hidden sm:inline">Новая</span>
           </Button>
         </div>
       </div>
