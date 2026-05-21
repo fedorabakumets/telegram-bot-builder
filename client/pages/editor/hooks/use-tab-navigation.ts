@@ -72,11 +72,8 @@ export function useTabNavigation({
       if (projectId) {
         onSaveProject?.();
       }
-      // Открываем обе панели кода (редактор и боковую панель)
-      // Вызываем с небольшим delay, чтобы убедиться, что currentTab обновился
-      requestAnimationFrame(() => {
-        onOpenCodePanel?.();
-      });
+      // Открываем обе панели кода синхронно — startTransition уже гарантирует обновление currentTab
+      onOpenCodePanel?.();
     } else if (currentTab === 'export') {
       onCloseCodePanel?.();
       onRestoreCanvas?.();
