@@ -204,6 +204,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               lineColor="#10b981"
               gradientId="analyticsActivity"
               subtitle={weeklyMessages > 0 ? `+${weeklyMessages} за неделю` : undefined}
+              secondarySubtitle={stats.avgInteractionsPerUser !== undefined ? `~${stats.avgInteractionsPerUser.toFixed(1)} среднее` : undefined}
               trend={weeklyMessages > 0 ? 'up' : 'neutral'}
               cumulative={activityMode === 'cumulative'}
               chartGranularity={msgGranularity}

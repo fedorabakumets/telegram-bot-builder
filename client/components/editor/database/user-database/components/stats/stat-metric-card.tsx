@@ -52,6 +52,8 @@ export interface StatMetricCardProps {
    * По умолчанию false — заголовок и переключатели в одной строке.
    */
   stackHeader?: boolean;
+  /** Дополнительная подпись под числом (не зависит от тренда) */
+  secondarySubtitle?: string;
 }
 
 /**
@@ -110,6 +112,7 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
     chartHeight,
     chartType,
     stackHeader,
+    secondarySubtitle,
   } = props;
   const fmt = formatValue ?? defaultFormat;
   const displayValue = value !== undefined ? fmt(value) : '—';
@@ -154,9 +157,14 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
 
       {/* Большое числовое значение (только в обычном режиме) */}
       {!stackHeader && (
-        <span className="text-xl sm:text-2xl font-bold text-foreground tabular-nums leading-none">
-          {displayValue}
-        </span>
+        <div className="flex items-baseline gap-2">
+          <span className="text-xl sm:text-2xl font-bold text-foreground tabular-nums leading-none">
+            {displayValue}
+          </span>
+          {secondarySubtitle && (
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{secondarySubtitle}</span>
+          )}
+        </div>
       )}
 
       {/* График на всю ширину карточки */}
