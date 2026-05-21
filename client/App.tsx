@@ -24,6 +24,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { BotLogsProvider } from "./components/editor/bot/contexts/bot-logs-context";
 import { ActiveTerminalsProvider } from "./components/editor/bot/contexts/ActiveTerminalsContext";
+import { TerminalAutoRegister } from "./components/editor/bot/hooks/TerminalAutoRegister";
 import { SetupGuard } from "@/components/editor/setup";
 import { AuthGuard } from "@/components/editor/auth";
 import { NoProjectsScreen } from "@/components/editor/no-projects";
@@ -211,6 +212,7 @@ function App() {
         <TooltipProvider>
           <BotLogsProvider>
             <ActiveTerminalsProvider>
+              <TerminalAutoRegister />
               <ServerStatus />
               <Toaster />
               <Router />
