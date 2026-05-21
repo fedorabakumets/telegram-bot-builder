@@ -19,6 +19,7 @@ type DatabaseTabsProps = Pick<
   | 'formatUserName'
   | 'onOpenUserDetailsPanel'
   | 'onOpenDialogPanel'
+  | 'onNavigateToDialog'
   | 'handleUserStatusToggle'
   | 'deleteUserMutation'
   | 'visibleColumns'
@@ -59,6 +60,7 @@ export function DatabaseTabs(props: DatabaseTabsProps): React.JSX.Element {
         deleteUserMutation={restProps.deleteUserMutation}
         onOpenUserDetailsPanel={restProps.onOpenUserDetailsPanel}
         onOpenDialogPanel={restProps.onOpenDialogPanel}
+        onNavigateToDialog={restProps.onNavigateToDialog}
         fetchNextPage={restProps.fetchNextPage}
         hasNextPage={restProps.hasNextPage}
         isFetchingNextPage={restProps.isFetchingNextPage}
