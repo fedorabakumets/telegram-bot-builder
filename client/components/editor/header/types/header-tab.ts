@@ -16,4 +16,5 @@ export type HeaderTab =
   | 'client-api'
   | 'broadcast'
   | 'analytics'
-  | 'tables';
+  | 'tables'
+  | 'terminal';

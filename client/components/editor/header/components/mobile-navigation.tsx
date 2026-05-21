@@ -32,6 +32,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { key: 'editor', label: 'Редактор' },
   { key: 'bot', label: 'Бот' },
+  { key: 'terminal', label: 'Терминал' },
   { key: 'users', label: 'Пользователи' },
 ];
 

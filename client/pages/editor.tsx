@@ -18,6 +18,7 @@ import { ComponentsSidebar } from '@/components/editor/sidebar/components-sideba
 import { PropertiesPanel } from '@/components/editor/properties/components/main/properties-panel';
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
 import { BotLayout } from '@/components/editor/bot/panel/BotLayout';
+import { TerminalPanel } from '@/components/editor/bot/terminal/TerminalPanel';
 import { BotControl } from '@/components/editor/bot/bot-control';
 import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
 import { createActionHistoryItem } from './editor/utils/action-logger';
@@ -1486,6 +1487,11 @@ export default function Editor() {
                   setLocation(`/projects/${projectId}`);
                 }}
               />
+            </div>
+          )}
+          {currentTab === 'terminal' && (
+            <div className="h-full">
+              <TerminalPanel />
             </div>
           )}
           {currentTab === 'users' && (
