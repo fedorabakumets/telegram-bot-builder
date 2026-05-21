@@ -8,6 +8,7 @@
 import { getRedisSubscriber } from './redisClient';
 import { sendOutputToTerminals } from '../terminal/sendOutputToTerminals';
 import { waitForRedis } from './waitForRedis';
+import { storage } from '../storages/storage';
 
 /** Паттерн подписки на каналы логов всех ботов */
 const LOGS_PATTERN = 'bot:logs:*';
@@ -48,6 +49,30 @@ function parseLogsChannel(channel: string): { projectId: number; tokenId: number
   return { projectId, tokenId };
 }
 
+/** Кэш активных launchId по tokenId чтобы не делать запрос к БД на каждое сообщение */
+const launchIdCache = new Map<number, number | null>();
+
+/**
+ * Получает launchId для токена (с кэшированием)
+ * @param tokenId - Идентификатор токена
+ * @returns launchId или undefined
+ */
+async function getCachedLaunchId(tokenId: number): Promise<number | undefined> {
+  if (launchIdCache.has(tokenId)) {
+    return launchIdCache.get(tokenId) ?? undefined;
+  }
+  try {
+    const active = await storage.getActiveLaunchHistory(tokenId);
+    const id = active?.id ?? null;
+    launchIdCache.set(tokenId, id);
+    // Инвалидируем кэш через 30 секунд
+    setTimeout(() => launchIdCache.delete(tokenId), 30_000);
+    return id ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Обрабатывает входящее сообщение лога из Redis.
  * Парсит канал и тело, затем вызывает sendOutputToTerminals.
@@ -65,13 +90,16 @@ function handleLogMessage(channel: string, message: string): void {
     return;
   }
 
-  // launchId не передаётся — Redis-логи не привязаны к конкретному запуску
-  sendOutputToTerminals(
-    data.message,
-    'stdout',
-    parsed.projectId,
-    parsed.tokenId
-  );
+  // Получаем launchId асинхронно и отправляем лог
+  getCachedLaunchId(parsed.tokenId).then(launchId => {
+    sendOutputToTerminals(
+      data.message,
+      'stdout',
+      parsed.projectId,
+      parsed.tokenId,
+      launchId
+    );
+  });
 }
 
 /**
