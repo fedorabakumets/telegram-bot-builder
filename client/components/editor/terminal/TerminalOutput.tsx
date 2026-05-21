@@ -174,7 +174,7 @@ export function TerminalOutput({
               ref={(el) => { if (el) lineRefs.current.set(line.id, el); }}
               className={`flex items-start gap-2 ${line.type === 'stderr' ? stderrTextClass : terminalTextClass}`}
             >
-              <span className="shrink-0 w-[72px] text-[11px] text-muted-foreground/70 select-none tabular-nums font-mono">
+              <span className="shrink-0 w-[72px] text-[11px] text-muted-foreground/70 tabular-nums font-mono">
                 {formatTime(line.timestamp)}
               </span>
               <div
