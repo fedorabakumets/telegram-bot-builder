@@ -60,6 +60,10 @@ export function UsersTabContent(props: UsersTabContentProps): React.JSX.Element 
             users={filteredAndSortedUsers}
             searchQuery={searchQuery}
             formatUserName={formatUserName}
+            onNavigateToDialog={onNavigateToDialog}
+            fetchNextPage={fetchNextPage}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
           />
         ) : (
           <DesktopTable
