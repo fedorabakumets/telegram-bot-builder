@@ -110,7 +110,7 @@ export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allP
       {/* Баннер устаревшей вкладки */}
       <div className="mx-4 sm:mx-6 mt-3 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200">
         <span className="font-medium">Устаревшая вкладка.</span>{' '}
-        Рассылка теперь доступна как отдельная вкладка в диалоге. Эта страница скоро будет перенесена.
+        Рассылка теперь доступна в диалоге пользователя как отдельная панель. Функциональность этой вкладки будет перенесена туда.
       </div>
 
       {/* Split layout */}
