@@ -65,10 +65,14 @@ function formatTime(date?: Date): string {
 }
 
 /**
- * Проверяет, находится ли контейнер в нижней позиции прокрутки
- * @param el - DOM-элемент контейнера
- * @returns true если прокрутка у нижнего края (погрешность 10px)
+ * Убирает дублирующийся timestamp из начала содержимого строки
+ * Паттерн: [HH:MM:SS] в начале строки
+ * @param content - Содержимое строки
+ * @returns Содержимое без дублирующегося timestamp
  */
+function stripLeadingTimestamp(content: string): string {
+  return content.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, '');
+}
 function checkIsAtBottom(el: HTMLDivElement): boolean {
   return el.scrollTop + el.clientHeight >= el.scrollHeight - 10;
 }
@@ -182,7 +186,7 @@ export function TerminalOutput({
               onClick={() => onLineClick?.(line.id)}
               data-line-id={line.id}
             >
-              <span className="shrink-0 w-[72px] text-[11px] text-muted-foreground/70 tabular-nums font-mono">
+              <span className="shrink-0 w-[72px] text-muted-foreground/70 tabular-nums font-mono">
                 {formatTime(line.timestamp)}
               </span>
               <div
@@ -190,8 +194,8 @@ export function TerminalOutput({
                 style={{ wordWrap: 'break-word', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
               >
                 {searchQuery
-                  ? highlightMatches(line.content, searchQuery, line.id === currentMatchLineId)
-                  : <Ansi>{line.content}</Ansi>}
+                  ? highlightMatches(stripLeadingTimestamp(line.content), searchQuery, line.id === currentMatchLineId)
+                  : <Ansi>{stripLeadingTimestamp(line.content)}</Ansi>}
               </div>
             </div>
           ))
