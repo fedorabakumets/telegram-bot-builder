@@ -20,8 +20,9 @@ export interface TabHeaderProps {
 }
 
 /**
- * Универсальный заголовок вкладки: иконка + заголовок + действия в первой строке,
- * контент (селекторы) переносится ниже при нехватке места.
+ * Универсальный заголовок вкладки.
+ * На десктопе — одна строка: иконка + заголовок + children + actions.
+ * На мобильных — children переносятся при нехватке места.
  *
  * @param props - Свойства компонента
  * @returns JSX элемент заголовка вкладки
@@ -30,31 +31,27 @@ export function TabHeader({ icon, title, children, actions, className }: TabHead
   return (
     <div
       className={cn(
-        "px-4 sm:px-6 py-2.5 sm:py-3 border-b bg-gradient-to-r from-muted/40 to-background",
+        "flex flex-wrap items-center gap-x-2 gap-y-1.5 px-4 sm:px-6 py-2.5 sm:py-3 border-b bg-gradient-to-r from-muted/40 to-background",
         className,
       )}
     >
-      {/* Строка 1: заголовок + actions (не переносятся) */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          <div className="rounded-lg bg-primary/10 p-1.5 sm:p-2 shrink-0">
-            {icon}
-          </div>
-          <h2 className="text-sm sm:text-base font-semibold leading-none shrink-0">
-            {title}
-          </h2>
+      {/* Иконка + заголовок */}
+      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        <div className="rounded-lg bg-primary/10 p-1.5 sm:p-2 shrink-0">
+          {icon}
         </div>
-        {actions && (
-          <div className="flex items-center gap-2 shrink-0">
-            {actions}
-          </div>
-        )}
+        <h2 className="text-sm sm:text-base font-semibold leading-none shrink-0">
+          {title}
+        </h2>
       </div>
 
-      {/* Строка 2: children (селекторы, бейджи) — flex-wrap */}
-      {children && (
-        <div className="flex flex-wrap items-center gap-2 mt-1.5">
-          {children}
+      {/* Children (селекторы, бейджи) */}
+      {children}
+
+      {/* Actions — прижаты вправо */}
+      {actions && (
+        <div className="ml-auto flex items-center gap-2 shrink-0">
+          {actions}
         </div>
       )}
     </div>
