@@ -105,12 +105,17 @@ export function useTerminalMethods({
   };
 
   /**
-   * Очистить терминал
+   * Очистить терминал (клиент + сервер)
    */
   const clearTerminal = () => {
     setLines([]);
     if (logKey) {
       clearLogs(logKey);
+    }
+    // Удаляем логи из БД на сервере
+    if (projectId && tokenId) {
+      fetch(`/api/projects/${projectId}/tokens/${tokenId}/logs`, { method: 'DELETE' })
+        .catch(err => console.error('Ошибка очистки логов на сервере:', err));
     }
   };
 
