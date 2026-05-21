@@ -119,7 +119,7 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg w-[calc(100vw-2rem)] sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
             📢 Новая рассылка
