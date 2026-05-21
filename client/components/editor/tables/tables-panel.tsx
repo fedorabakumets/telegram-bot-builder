@@ -5,6 +5,7 @@
 
 import { Table2, RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { TabHeader } from '@/components/ui/tab-header';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
@@ -46,49 +47,43 @@ export function TablesPanel({ projectId, allProjects, onProjectChange, selectedT
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Шапка */}
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-muted/40 to-background">
-        <div className="flex items-center gap-2.5">
-          <div className="rounded-lg bg-primary/10 p-2">
-            <Table2 className="h-5 w-5 text-primary" />
+      <TabHeader
+        icon={<Table2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
+        title="Таблицы"
+        actions={
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['bot-tables'] })}
+              className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              title="Обновить данные таблиц"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </button>
+            <AllTablesActions projectId={projectId} onImportTable={importNewTable} />
           </div>
-          <div>
-            <h2 className="text-base font-semibold leading-none">Таблицы</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Данные проекта</p>
-          </div>
-          {/* Переключатель таблиц в шапке */}
-          <TableSwitcher
-            tables={tables}
-            selectedTable={selectedTable}
-            onSelect={setSelectedTableId}
+        }
+      >
+        <TableSwitcher
+          tables={tables}
+          selectedTable={selectedTable}
+          onSelect={setSelectedTableId}
+        />
+        {allProjects && allProjects.length > 1 && onProjectChange && (
+          <ProjectSelector
+            projects={allProjects}
+            selectedProjectId={projectId}
+            onSelect={onProjectChange}
           />
-          {allProjects && allProjects.length > 1 && onProjectChange && (
-            <ProjectSelector
-              projects={allProjects}
-              selectedProjectId={projectId}
-              onSelect={onProjectChange}
-            />
-          )}
-          {tokens.length > 0 && onSelectToken && (
-            <BotTokenSelector
-              tokens={tokens}
-              selectedTokenId={selectedTokenId ?? null}
-              onSelect={(id) => onSelectToken(id)}
-            />
-          )}
-        </div>
-        {/* Кнопка обновления + Экспорт/импорт всех таблиц */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => queryClient.invalidateQueries({ queryKey: ['bot-tables'] })}
-            className="p-2 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            title="Обновить данные таблиц"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </button>
-          <AllTablesActions projectId={projectId} onImportTable={importNewTable} />
-        </div>
-      </div>
+        )}
+        {tokens.length > 0 && onSelectToken && (
+          <BotTokenSelector
+            tokens={tokens}
+            selectedTokenId={selectedTokenId ?? null}
+            onSelect={(id) => onSelectToken(id)}
+          />
+        )}
+      </TabHeader>
 
       {/* Контент: список таблиц + редактор */}
       <div className="flex flex-1 overflow-hidden">
