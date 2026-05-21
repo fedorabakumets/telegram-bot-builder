@@ -4,16 +4,19 @@
  * Отображает вкладки терминалов и активный терминал или просмотрщик истории.
  * Реализует lazy mount: компонент монтируется только при первом открытии вкладки.
  * Поддерживает режим "Все" — одновременное отображение всех терминалов в стеке.
+ * Автоматически регистрирует терминалы для запущенных ботов при монтировании.
  *
- * @module bot/TerminalPanel
+ * @module terminal/TerminalPanel
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { BotTerminal } from './BotTerminal';
 import { LaunchHistoryViewer } from './LaunchHistoryViewer';
 import { TerminalTabs } from './TerminalTabs';
 import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
 import type { TerminalInfo } from '../bot/contexts/ActiveTerminalsContext';
+import { useBotQueries } from '../bot/hooks/use-bot-queries';
+import { getBotDisplayName } from '../bot/contexts/bot-control-utils';
 
 /**
  * Возвращает строковый ключ вкладки терминала
@@ -32,7 +35,29 @@ function getTabKey(terminal: TerminalInfo): string {
  * @returns JSX элемент
  */
 export function TerminalPanel() {
-  const { activeTerminalId, terminals } = useActiveTerminals();
+  const { activeTerminalId, terminals, addTerminal } = useActiveTerminals();
+  const { allTokensFlat, allBotStatuses } = useBotQueries();
+
+  // Автоматическая регистрация терминалов для запущенных ботов
+  useEffect(() => {
+    if (allTokensFlat.length === 0 || allBotStatuses.length === 0) return;
+
+    allTokensFlat.forEach(token => {
+      const statusEntry = allBotStatuses.find(s => s.tokenId === token.id);
+      if (statusEntry?.status === 'running') {
+        addTerminal({
+          projectId: token.projectId,
+          tokenId: token.id,
+          botName: getBotDisplayName(token, `Bot #${token.id}`),
+          isRunning: true,
+        });
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    JSON.stringify(allTokensFlat.map(t => t.id)),
+    JSON.stringify(allBotStatuses.map(s => ({ id: s.tokenId, status: s.status }))),
+  ]);
 
   const [mountedTabs, setMountedTabs] = useState<Set<string>>(() => {
     const initial = new Set<string>();
