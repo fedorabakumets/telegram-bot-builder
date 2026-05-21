@@ -114,7 +114,7 @@ export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) 
             <Hash className="w-4 h-4" />
           </Button>
 
-          <p className="text-xs text-muted-foreground ml-1 hidden sm:block">Enter - отправить</p>
+          <p className="text-xs text-muted-foreground ml-1 hidden">Enter - отправить</p>
         </div>
 
         <Button
