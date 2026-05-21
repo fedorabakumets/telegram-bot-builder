@@ -20,8 +20,8 @@ export interface TabHeaderProps {
 }
 
 /**
- * Универсальный заголовок вкладки: иконка + заголовок + действия в первой строке,
- * слот контента (селекторы, бейджи) во второй строке при переносе.
+ * Универсальный заголовок вкладки: иконка + заголовок + контент + действия в одной строке.
+ * На узких экранах элементы переносятся через flex-wrap.
  *
  * @param props - Свойства компонента
  * @returns JSX элемент заголовка вкладки
@@ -30,31 +30,24 @@ export function TabHeader({ icon, title, children, actions, className }: TabHead
   return (
     <div
       className={cn(
-        "px-4 sm:px-6 py-3 sm:py-4 border-b bg-gradient-to-r from-muted/40 to-background space-y-1.5",
+        "flex flex-wrap items-center gap-x-2 gap-y-1.5 px-4 sm:px-6 py-2.5 sm:py-3 border-b bg-gradient-to-r from-muted/40 to-background",
         className,
       )}
     >
-      {/* Строка 1: иконка + заголовок + actions */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          <div className="rounded-lg bg-primary/10 p-1.5 sm:p-2 shrink-0">
-            {icon}
-          </div>
-          <h2 className="text-sm sm:text-base font-semibold leading-none shrink-0">
-            {title}
-          </h2>
+      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        <div className="rounded-lg bg-primary/10 p-1.5 sm:p-2 shrink-0">
+          {icon}
         </div>
-        {actions && (
-          <div className="flex items-center gap-2 shrink-0">
-            {actions}
-          </div>
-        )}
+        <h2 className="text-sm sm:text-base font-semibold leading-none shrink-0">
+          {title}
+        </h2>
       </div>
 
-      {/* Строка 2: children (селекторы, бейджи) — только если есть */}
-      {children && (
-        <div className="flex flex-wrap items-center gap-2">
-          {children}
+      {children}
+
+      {actions && (
+        <div className="ml-auto flex items-center gap-2 shrink-0">
+          {actions}
         </div>
       )}
     </div>
