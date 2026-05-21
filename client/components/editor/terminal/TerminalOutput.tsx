@@ -148,11 +148,16 @@ export function TerminalOutput({
   }, [currentMatchLineId, shouldScrollToMatch]);
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full flex flex-col">
+      {/* Заголовки колонок */}
+      <div className="flex items-center gap-2 px-4 py-1 border-b border-border/50 text-[11px] text-muted-foreground/60 uppercase tracking-wider select-none shrink-0">
+        <span className="shrink-0 w-[72px]">Время</span>
+        <span className="flex-1 min-w-0">Данные</span>
+      </div>
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="overflow-y-auto p-4 whitespace-pre-wrap break-all flex flex-col h-full w-full"
+        className="overflow-y-auto px-4 py-2 whitespace-pre-wrap break-all flex flex-col flex-1 min-h-0 w-full"
         style={{ fontSize: `${scale}em`, lineHeight: `${1.2 * scale}` }}
       >
         {lines.length === 0 ? (
