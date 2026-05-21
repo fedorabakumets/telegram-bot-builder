@@ -30,7 +30,15 @@ const GUEST_USER: AppUser = { isGuest: true };
  * @returns Объект с пользователем, методами login/logout, флагом загрузки, хелпером isGuest и флагом sessionReady
  */
 export function useTelegramAuth() {
-  const [user, setUser] = useState<AppUser | null>(null);
+  const [user, setUser] = useState<AppUser | null>(() => {
+    // Синхронно читаем пользователя из localStorage чтобы избежать flash GuestBanner
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : GUEST_USER;
+    } catch {
+      return GUEST_USER;
+    }
+  });
   const [isLoading, setIsLoading] = useState(() => {
     // Если пользователь уже сохранён в localStorage — не показываем загрузку при монтировании
     try {
