@@ -95,6 +95,26 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
     clearSearch,
   } = useTerminalSearch(visibleLines);
 
+  /** Флаг: нужно ли скроллить к совпадению (только при навигации ↑/↓) */
+  const [shouldScrollToMatch, setShouldScrollToMatch] = useState(false);
+
+  /** Обёртка навигации — устанавливает флаг скролла */
+  const handleNextMatch = useCallback(() => {
+    goToNextMatch();
+    setShouldScrollToMatch(true);
+  }, [goToNextMatch]);
+
+  const handlePrevMatch = useCallback(() => {
+    goToPrevMatch();
+    setShouldScrollToMatch(true);
+  }, [goToPrevMatch]);
+
+  /** При вводе текста — не скроллим */
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    setShouldScrollToMatch(false);
+  }, [setSearchQuery]);
+
   /** Переключить панель поиска */
   const toggleSearch = useCallback(() => {
     setIsSearchOpen((prev) => {
@@ -132,11 +152,11 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
       {isSearchOpen && (
         <TerminalSearchBar
           searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          onSearchChange={handleSearchChange}
           currentMatch={currentMatchIndex}
           totalMatches={matchIndices.length}
-          onNext={goToNextMatch}
-          onPrev={goToPrevMatch}
+          onNext={handleNextMatch}
+          onPrev={handlePrevMatch}
           onClose={toggleSearch}
         />
       )}
@@ -150,6 +170,7 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
           placeholderTextClass={themeClasses.placeholderTextClass}
           searchQuery={searchQuery || undefined}
           currentMatchLineId={currentMatchLineId}
+          shouldScrollToMatch={shouldScrollToMatch}
         />
       </div>
     </div>

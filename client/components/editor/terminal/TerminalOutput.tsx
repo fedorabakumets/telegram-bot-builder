@@ -41,6 +41,8 @@ interface TerminalOutputProps {
   searchQuery?: string;
   /** ID строки с текущим активным совпадением */
   currentMatchLineId?: string;
+  /** Нужно ли скроллить к текущему совпадению (только при навигации ↑/↓) */
+  shouldScrollToMatch?: boolean;
 }
 
 /**
@@ -90,6 +92,7 @@ export function TerminalOutput({
   placeholderTextClass,
   searchQuery,
   currentMatchLineId,
+  shouldScrollToMatch,
 }: TerminalOutputProps) {
   /** Флаг видимости кнопки прокрутки вниз */
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -120,14 +123,14 @@ export function TerminalOutput({
     }
   }, [lines, containerRef]);
 
-  // Скролл к текущему совпадению при смене currentMatchLineId
+  // Скролл к текущему совпадению только при явной навигации (↑/↓)
   useEffect(() => {
-    if (!currentMatchLineId) return;
+    if (!shouldScrollToMatch || !currentMatchLineId) return;
     const el = lineRefs.current.get(currentMatchLineId);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [currentMatchLineId]);
+  }, [currentMatchLineId, shouldScrollToMatch]);
 
   return (
     <div className="relative h-full w-full">
