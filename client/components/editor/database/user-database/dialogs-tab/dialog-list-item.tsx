@@ -110,7 +110,7 @@ export function DialogListItem({
         'w-full flex items-center gap-3 px-3 py-3 text-left',
         'transition-colors border-b border-border/30',
         'hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        isSelected ? 'bg-primary/10 hover:bg-primary/15' : '',
+        isSelected ? 'bg-primary/15 border-l-2 border-l-primary' : '',
       ].join(' ')}
     >
       {/* Аватар: для групп — фото из Telegram или иконка, для пользователей — фото */}
