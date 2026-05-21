@@ -118,6 +118,10 @@ export function useLayoutManager(
   const flexibleLayoutConfigRef = useRef(flexibleLayoutConfig);
   flexibleLayoutConfigRef.current = flexibleLayoutConfig;
 
+  /** Ref для текущей вкладки внутри setFlexibleLayoutConfig */
+  const currentTabRef = useRef(currentTab);
+  currentTabRef.current = currentTab;
+
   const setFlexibleLayoutConfig = useCallback((updater: React.SetStateAction<SimpleLayoutConfig>) => {
     setManualVisibility(prev => {
       const newMap = new Map(prev);
@@ -127,7 +131,10 @@ export function useLayoutManager(
         ? updater(flexibleLayoutConfigRef.current)
         : updater;
       
+      const tab = currentTabRef.current;
       config.elements.forEach(el => {
+        // Не сохраняем header в manualVisibility если вкладка не editor/export
+        if (el.id === 'header' && tab !== 'editor' && tab !== 'export') return;
         // Сохраняем только ручные изменения видимости
         if (el.id !== 'dialog' && el.id !== 'userDetails') {
           newMap.set(el.id, el.visible);
