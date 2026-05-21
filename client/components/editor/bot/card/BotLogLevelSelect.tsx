@@ -79,15 +79,17 @@ export function BotLogLevelSelect({ projectId, tokenId, logLevel, onPendingChang
 
   return (
     <div className="flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border bg-muted/40 border-border/50 transition-all">
-      <div className="flex items-center gap-2 sm:gap-3">
-        <FileText className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-        <div className="flex-1 min-w-0">
-          <span className="text-xs sm:text-sm font-semibold text-muted-foreground block">
-            Уровень логирования
-          </span>
-          <p className="text-xs text-muted-foreground/70 mt-0.5">
-            Детализация вывода в терминал
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+          <FileText className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+          <div className="min-w-0">
+            <span className="text-xs sm:text-sm font-semibold text-muted-foreground block">
+              Уровень логирования
+            </span>
+            <p className="text-xs text-muted-foreground/70 mt-0.5">
+              Детализация вывода в терминал
+            </p>
+          </div>
         </div>
         <Select
           value={localLevel}
@@ -101,7 +103,7 @@ export function BotLogLevelSelect({ projectId, tokenId, logLevel, onPendingChang
           }}
           disabled={mutation.isPending}
         >
-          <SelectTrigger className="h-7 w-36 text-xs">
+          <SelectTrigger className="h-7 w-full sm:w-36 text-xs">
             <SelectValue placeholder="Уровень" />
           </SelectTrigger>
           <SelectContent>
