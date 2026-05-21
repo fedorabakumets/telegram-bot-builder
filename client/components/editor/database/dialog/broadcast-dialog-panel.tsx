@@ -26,6 +26,8 @@ export interface BroadcastDialogPanelProps {
   selectedTokenId?: number | null;
   /** Колбэк закрытия панели */
   onClose: () => void;
+  /** Скрыть заголовок (если он уже отображается в родительском компоненте) */
+  hideHeader?: boolean;
 }
 
 /**
@@ -34,7 +36,7 @@ export interface BroadcastDialogPanelProps {
  * @param props - Свойства компонента
  * @returns JSX элемент панели рассылок
  */
-export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: BroadcastDialogPanelProps) {
+export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hideHeader }: BroadcastDialogPanelProps) {
   const [messageText, setMessageText] = useState('');
   /** Список URL выбранных медиафайлов */
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
@@ -138,17 +140,19 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose }: Br
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background">
       {/* Шапка */}
-      <div className="flex items-center justify-between gap-2 p-3 border-b bg-gradient-to-r from-violet-50 to-fuchsia-50 dark:from-violet-950/30 dark:to-fuchsia-950/20">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center">
-            <Megaphone className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+      {!hideHeader && (
+        <div className="flex items-center justify-between gap-2 p-3 border-b bg-gradient-to-r from-violet-50 to-fuchsia-50 dark:from-violet-950/30 dark:to-fuchsia-950/20">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center">
+              <Megaphone className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+            </div>
+            <h3 className="font-medium text-sm">Рассылка</h3>
           </div>
-          <h3 className="font-medium text-sm">Рассылка</h3>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+      )}
 
       {/* Область сообщений */}
       <ScrollArea ref={scrollRef} className="min-h-0 flex-1 p-3">
