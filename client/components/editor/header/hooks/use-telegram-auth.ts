@@ -31,7 +31,15 @@ const GUEST_USER: AppUser = { isGuest: true };
  */
 export function useTelegramAuth() {
   const [user, setUser] = useState<AppUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => {
+    // Если пользователь уже сохранён в localStorage — не показываем загрузку при монтировании
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return !saved;
+    } catch {
+      return true;
+    }
+  });
   /** true когда серверная сессия точно готова (или пользователь гость) */
   const [sessionReady, setSessionReady] = useState(false);
 
