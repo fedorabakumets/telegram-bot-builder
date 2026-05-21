@@ -30,8 +30,8 @@ interface BotControlPanelHeaderProps {
  * @returns JSX элемент заголовка
  */
 export function BotControlPanelHeader({ onConnectBot, allProjects, currentProjectId, onProjectChange }: BotControlPanelHeaderProps) {
-  const { user } = useTelegramAuth();
-  const isGuestUser = !user || isGuest(user);
+  const { user, isLoading: authLoading } = useTelegramAuth();
+  const isGuestUser = !authLoading && (!user || isGuest(user));
 
   return (
     <TabHeader
