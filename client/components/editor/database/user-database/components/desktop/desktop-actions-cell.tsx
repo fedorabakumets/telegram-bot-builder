@@ -23,6 +23,8 @@ interface DesktopActionsCellProps {
   deleteUserMutation: any;
   /** Открытие диалоговой панели */
   onOpenDialogPanel?: (user: UserBotData) => void;
+  /** Открытие панели деталей пользователя */
+  onOpenUserDetailsPanel?: (user: UserBotData) => void;
 }
 
 /**
@@ -31,7 +33,7 @@ interface DesktopActionsCellProps {
  * @returns JSX компонент ячейки
  */
 export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.Element {
-  const { user, index, formatUserName, deleteUserMutation, onOpenDialogPanel } = props;
+  const { user, index, formatUserName, deleteUserMutation, onOpenDialogPanel, onOpenUserDetailsPanel } = props;
 
   return (
     <TableCell className="py-2 text-right">
@@ -43,7 +45,11 @@ export function DesktopActionsCell(props: DesktopActionsCellProps): React.JSX.El
             size="sm"
             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
             title="Открыть диалог"
-            onClick={(e) => { e.stopPropagation(); onOpenDialogPanel(user); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenDialogPanel(user);
+              onOpenUserDetailsPanel?.(user);
+            }}
           >
             <MessageSquare className="w-3.5 h-3.5" />
           </Button>
