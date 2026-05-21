@@ -5,11 +5,12 @@
  */
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MessageSquare, Megaphone, X } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Megaphone, X, Users, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserBotData } from '@shared/schema';
 import { DialogPanel } from '../../dialog/dialog-panel';
 import { BroadcastDialogPanel } from '../../dialog/broadcast-dialog-panel';
+import { UserAvatar } from '../../dialog/components/user-avatar';
 import { DialogList } from './dialog-list';
 import { useLiveInvalidate } from '../hooks/use-live-invalidate';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
@@ -173,9 +174,13 @@ export function DialogsTabContent({
                   </>
                 ) : (
                   <>
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shrink-0">
-                      <MessageSquare className="w-3 h-3 text-white" />
-                    </div>
+                    <UserAvatar
+                      messageType="user"
+                      user={selectedUser}
+                      projectId={projectId}
+                      tokenId={resolvedTokenId}
+                      size={24}
+                    />
                     <span className="text-xs font-medium truncate">{formatUserName(selectedUser)}</span>
                   </>
                 )}
