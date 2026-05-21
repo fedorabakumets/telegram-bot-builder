@@ -1,6 +1,6 @@
 /**
  * @fileoverview Компактная секция заголовка панели базы данных пользователей
- * @description Строка 1: заголовок + кнопка обновить. Строка 2: проект, бот, статус БД, удалить
+ * @description Строка с заголовком, инлайн-бейджами статистики и кнопками управления
  */
 
 import { Users, RefreshCw } from 'lucide-react';
@@ -12,6 +12,7 @@ import {
   ProjectSelector,
 } from '../components/header';
 import { DatabaseContentProps } from './database-content-props';
+import { InlineStatsBadges } from '../components/header/inline-stats-badges';
 
 /**
  * Пропсы компонента DatabaseHeaderSection
@@ -30,6 +31,7 @@ interface DatabaseHeaderSectionProps
     | 'deleteAllUsersMutation'
     | 'allProjects'
     | 'onProjectChange'
+    | 'stats'
   > {
   /** Данные проекта */
   project: BotProject | null;
@@ -53,6 +55,7 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
     deleteAllUsersMutation,
     allProjects,
     onProjectChange,
+    stats,
   } = props;
 
   /** Показывать селектор проекта только если передан список из более чем одного проекта */
@@ -98,6 +101,14 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
               onRefresh={handleRefresh}
               onDeleteAll={() => deleteAllUsersMutation.mutate()}
             />
+          </>
+        )}
+
+        {/* Инлайн-бейджи статистики */}
+        {isDatabaseEnabled && stats && (
+          <>
+            <span className="text-border/60 text-[10px]">·</span>
+            <InlineStatsBadges stats={stats} />
           </>
         )}
 
