@@ -122,82 +122,75 @@ export function DialogsTabContent({
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Хедер — split layout: левая часть над списком, правая над диалогом */}
-      <div className="hidden md:flex border-b border-border/50 bg-card flex-shrink-0">
+      <div className="hidden md:flex border-b border-border/50 bg-card flex-shrink-0 items-center">
         {/* Левая часть хедера — над списком диалогов */}
-        <div className="w-80 flex-shrink-0 border-r border-border px-3 py-2 sm:px-4 sm:py-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-foreground">Диалоги</span>
-            <span className="text-border/60">·</span>
+        <div className="w-80 flex-shrink-0 border-r border-border px-3 py-1.5">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <span className="text-xs font-semibold text-foreground">Диалоги</span>
+            <span className="text-border/60 text-[10px]">·</span>
             {showProjectSelector ? (
               <ProjectSelector
                 projects={allProjects!}
                 selectedProjectId={projectId}
                 onSelect={onProjectChange!}
               />
-            ) : (
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {projectName && <>Проект: <span className="font-medium text-foreground">{projectName}</span></>}
-              </span>
-            )}
+            ) : null}
             {projectTokens.length > 0 && (
-              <>
-                <span className="text-border/60">·</span>
-                <BotTokenSelector
-                  tokens={projectTokens}
-                  selectedTokenId={resolvedTokenId}
-                  onSelect={(id) => {
-                    setInternalTokenId(id);
-                    onSelectToken?.(id);
-                    setSelectedUser(null);
-                  }}
-                />
-              </>
+              <BotTokenSelector
+                tokens={projectTokens}
+                selectedTokenId={resolvedTokenId}
+                onSelect={(id) => {
+                  setInternalTokenId(id);
+                  onSelectToken?.(id);
+                  setSelectedUser(null);
+                }}
+              />
             )}
-            <span className="text-border/60">·</span>
+            <span className="text-border/60 text-[10px]">·</span>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="gap-1.5 h-7 text-xs"
+              className="gap-1 h-6 text-[11px] px-1.5"
               onClick={() => setBroadcastModalOpen(true)}
             >
-              <Megaphone className="h-3.5 w-3.5" />
-              + Рассылка
+              <Megaphone className="h-3 w-3" />
+              Рассылка
             </Button>
           </div>
         </div>
 
         {/* Правая часть хедера — над диалогом */}
-        <div className="flex-1 min-w-0 px-3 py-2 sm:px-4 sm:py-3 flex items-center justify-between gap-2">
+        <div className="flex-1 min-w-0 px-3 py-1.5 flex items-center justify-between gap-2">
           {(selectedUser || isBroadcastDialogOpen) ? (
             <>
               <div className="flex items-center gap-2 min-w-0">
                 {isBroadcastDialogOpen ? (
                   <>
-                    <div className="w-7 h-7 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center shrink-0">
-                      <Megaphone className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+                    <div className="w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center shrink-0">
+                      <Megaphone className="w-3 h-3 text-violet-600 dark:text-violet-400" />
                     </div>
-                    <span className="text-sm font-medium truncate">Рассылка</span>
+                    <span className="text-xs font-medium truncate">Рассылка</span>
                   </>
                 ) : (
                   <>
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shrink-0">
-                      <MessageSquare className="w-3.5 h-3.5 text-white" />
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shrink-0">
+                      <MessageSquare className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-sm font-medium truncate">{formatUserName(selectedUser)}</span>
+                    <span className="text-xs font-medium truncate">{formatUserName(selectedUser)}</span>
                   </>
                 )}
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 shrink-0"
+                className="h-6 w-6 shrink-0"
                 onClick={handleClose}
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             </>
           ) : (
-            <span className="text-xs text-muted-foreground">Выберите диалог</span>
+            <span className="text-[11px] text-muted-foreground">Выберите диалог</span>
           )}
         </div>
       </div>
