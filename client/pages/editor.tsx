@@ -103,10 +103,30 @@ export default function Editor() {
   })();
 
   /**
-   * Текущая выбранная вкладка в интерфейсе редактора
+   * Текущая выбранная вкладка в интерфейсе редактора.
+   * Инициализируется из query-параметра ?tab= в URL.
    * @type {EditorTab}
    */
-  const [currentTab, setCurrentTab] = useState<EditorTab>('editor');
+  const [currentTab, setCurrentTab] = useState<EditorTab>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    const validTabs: EditorTab[] = ['editor', 'export', 'bot', 'terminal', 'users', 'dialogs', 'broadcast', 'analytics', 'tables'];
+    if (tab && validTabs.includes(tab as EditorTab)) {
+      return tab as EditorTab;
+    }
+    return 'editor';
+  });
+
+  // Синхронизация вкладки с URL query-параметром ?tab=
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (currentTab === 'editor') {
+      url.searchParams.delete('tab');
+    } else {
+      url.searchParams.set('tab', currentTab);
+    }
+    window.history.replaceState(null, '', url.toString());
+  }, [currentTab]);
 
   /** Пользователь для автоматического открытия в диалогах (при переходе из таблицы) */
   const [pendingDialogUser, setPendingDialogUser] = useState<any>(null);
