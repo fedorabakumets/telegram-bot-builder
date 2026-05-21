@@ -4,7 +4,7 @@
  * Управляет переключением между вкладками интерфейса редактора.
  */
 
-import { useCallback } from 'react';
+import { useCallback, startTransition } from 'react';
 import type { EditorTab, PreviousEditorTab } from '../types';
 
 /** Параметры хука навигации */
@@ -57,7 +57,9 @@ export function useTabNavigation({
       setPreviousTab(currentTab as PreviousEditorTab);
     }
 
-    setCurrentTab(tab);
+    startTransition(() => {
+      setCurrentTab(tab);
+    });
 
     // Автосохранение при переключении
     if (tab === 'preview' && projectId && setLocation) {
