@@ -414,16 +414,15 @@ export default function Editor() {
   });
 
   /**
-   * Эффект для автоматического выбора первого пользователя при переключении на вкладку "Пользователи"
+   * Эффект для сброса панелей при переключении на вкладку "Пользователи"
+   * Панели открываются только по кнопке в таблице
    */
   useEffect(() => {
-    if (currentTab === 'users' && users.length > 0) {
-      const firstUser = users[0];
-      // Открываем обе панели с первым пользователем
-      handleSelectUserDetails(firstUser);
-      handleSelectDialogUser(firstUser);
+    if (currentTab === 'users') {
+      handleCloseDialogPanel();
+      handleCloseUserDetailsPanel();
     }
-  }, [currentTab, users, handleSelectUserDetails, handleSelectDialogUser]);
+  }, [currentTab]);
 
   // Использование хука генератора кода.
   // Передаём botDataWithSheets вместо activeProject?.data, чтобы генератор
