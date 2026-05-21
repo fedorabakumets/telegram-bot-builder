@@ -15,7 +15,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { useMediaQuery } from '@/components/editor/properties/hooks/use-media-query';
 import { Bot, Terminal } from 'lucide-react';
 import { BotsPanel } from './BotsPanel';
-import { TerminalPanel } from '../terminal/TerminalPanel';
+import { TerminalPanel } from '../../terminal/TerminalPanel';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 
 type MobileTab = 'bots' | 'terminal';

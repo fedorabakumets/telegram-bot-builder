@@ -8,9 +8,9 @@
  */
 
 import { useRef, useCallback, useEffect } from 'react';
-import { useLaunchLogs } from '../hooks/use-launch-logs';
+import { useLaunchLogs } from '../bot/hooks/use-launch-logs';
 import { useTerminalTheme } from './useTerminalTheme';
-import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
+import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
 import { TerminalOutput } from './TerminalOutput';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { Button } from '@/components/ui/button';

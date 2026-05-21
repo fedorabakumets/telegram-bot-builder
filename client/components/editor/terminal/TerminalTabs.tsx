@@ -15,8 +15,8 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
-import type { TerminalInfo } from '../contexts/ActiveTerminalsContext';
+import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
+import type { TerminalInfo } from '../bot/contexts/ActiveTerminalsContext';
 
 /** Пропсы компонента вкладок терминалов */
 interface TerminalTabsProps {

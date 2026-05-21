@@ -12,8 +12,8 @@ import { useState, useCallback } from 'react';
 import { BotTerminal } from './BotTerminal';
 import { LaunchHistoryViewer } from './LaunchHistoryViewer';
 import { TerminalTabs } from './TerminalTabs';
-import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
-import type { TerminalInfo } from '../contexts/ActiveTerminalsContext';
+import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
+import type { TerminalInfo } from '../bot/contexts/ActiveTerminalsContext';
 
 /**
  * Возвращает строковый ключ вкладки терминала

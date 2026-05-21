@@ -20,7 +20,7 @@ import { useTerminalLines } from './useTerminalLines';
 import { useTerminalMethods } from './useTerminalMethods';
 import { useTerminalFilter } from './useTerminalFilter';
 import { useTerminalSearch } from './useTerminalSearch';
-import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
+import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
 
 export type { TerminalHandle, TerminalProps };
 
