@@ -443,6 +443,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
   const toggleSheetExpanded = (sheetId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const wasExpanded = expandedSheets.has(sheetId);
     setExpandedSheets((prev) => {
       const next = new Set(prev);
       if (next.has(sheetId)) {
@@ -452,6 +453,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       }
       return next;
     });
+    // При сворачивании — прокрутить к заголовку листа
+    if (wasExpanded) {
+      const btn = (e.currentTarget as HTMLElement).closest('[data-sheet-id]');
+      if (btn) {
+        setTimeout(() => btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+      }
+    }
   };
 
   const sheetsInfo = getSheetsInfo(project);
@@ -737,7 +745,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             const isDraggedSheet = dragState.draggedSheet?.sheetId === sheetId && dragState.draggedSheet?.projectId === project.id;
 
             return (
-              <div key={sheetId || index} className="relative">
+              <div key={sheetId || index} className="relative" data-sheet-id={sheetId}>
               <div
                 className={cn(
                   'w-full flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl',
