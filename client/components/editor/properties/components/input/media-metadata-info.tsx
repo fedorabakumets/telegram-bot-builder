@@ -3,10 +3,8 @@
  * Позволяет включать/выключать каждую переменную и редактировать имя.
  */
 
-import { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Pencil, Check } from 'lucide-react';
 import { cn } from '@/utils/utils';
 import { MEDIA_METADATA_SUFFIXES } from './media-metadata-suffixes';
 
@@ -27,7 +25,7 @@ interface MediaMetadataInfoProps {
 }
 
 /**
- * Блок выбора метаданных медиа с чекбоксами и редактированием имён.
+ * Блок выбора метаданных медиа с чекбоксами и полями ввода имён.
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
@@ -37,10 +35,6 @@ export function MediaMetadataInfo({
 }: MediaMetadataInfoProps) {
   const suffixes = MEDIA_METADATA_SUFFIXES[inputType] || [];
   const baseName = variableName || 'variable';
-  /** Суффикс, для которого сейчас редактируется имя */
-  const [editingSuffix, setEditingSuffix] = useState<string | null>(null);
-  /** Текущее значение в поле ввода */
-  const [editValue, setEditValue] = useState('');
 
   /** Переключение суффикса */
   const toggleSuffix = (suffix: string) => {
@@ -57,29 +51,19 @@ export function MediaMetadataInfo({
     onSuffixesChange(allSelected ? [] : suffixes.map(s => s.suffix));
   };
 
-  /** Начать редактирование имени */
-  const startEdit = (suffix: string) => {
-    setEditingSuffix(suffix);
-    setEditValue(customNames[suffix] || `${baseName}_${suffix}`);
-  };
-
-  /** Сохранить отредактированное имя */
-  const saveEdit = () => {
-    if (!editingSuffix || !onCustomNamesChange) return;
-    const trimmed = editValue.trim();
-    const defaultName = `${baseName}_${editingSuffix}`;
+  /** Обновить кастомное имя переменной */
+  const updateName = (suffix: string, value: string) => {
+    if (!onCustomNamesChange) return;
     const updated = { ...customNames };
+    const trimmed = value.trim();
+    const defaultName = `${baseName}_${suffix}`;
     if (!trimmed || trimmed === defaultName) {
-      delete updated[editingSuffix];
+      delete updated[suffix];
     } else {
-      updated[editingSuffix] = trimmed;
+      updated[suffix] = trimmed;
     }
     onCustomNamesChange(updated);
-    setEditingSuffix(null);
   };
-
-  /** Получить отображаемое имя переменной */
-  const getDisplayName = (suffix: string) => customNames[suffix] || `${baseName}_${suffix}`;
 
   return (
     <div className="rounded-lg border border-cyan-200/60 dark:border-cyan-700/40 bg-cyan-50/20 dark:bg-cyan-950/20 p-2.5 space-y-2">
@@ -95,12 +79,11 @@ export function MediaMetadataInfo({
           {allSelected ? 'Снять все' : 'Выбрать все'}
         </button>
       </div>
-      <div className="space-y-0.5">
+      <div className="space-y-1">
         {suffixes.map(({ suffix, description, icon }) => {
           const isEnabled = enabledSuffixes.includes(suffix);
-          const isEditing = editingSuffix === suffix;
           return (
-            <div key={suffix} className="flex items-center gap-2 py-1">
+            <div key={suffix} className="flex items-center gap-2 py-0.5">
               <Checkbox
                 checked={isEnabled}
                 onCheckedChange={() => toggleSuffix(suffix)}
@@ -111,42 +94,21 @@ export function MediaMetadataInfo({
                 }}
               />
               <span className="shrink-0 text-xs">{icon}</span>
-              {isEditing ? (
-                <div className="flex items-center gap-1 flex-1 min-w-0">
-                  <Input
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
-                    className="h-6 text-[11px] font-mono px-1.5 flex-1"
-                    autoFocus
-                  />
-                  <button type="button" onClick={saveEdit} className="shrink-0 text-green-500 hover:text-green-700">
-                    <Check className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+              {isEnabled ? (
+                <Input
+                  value={customNames[suffix] || `${baseName}_${suffix}`}
+                  onChange={(e) => updateName(suffix, e.target.value)}
+                  className="h-6 text-[11px] font-mono px-1.5 flex-1 min-w-0"
+                  placeholder={`${baseName}_${suffix}`}
+                />
               ) : (
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <code className={cn(
-                    'font-mono text-[11px] truncate',
-                    isEnabled ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500'
-                  )}>
-                    {getDisplayName(suffix)}
-                  </code>
-                  {isEnabled && onCustomNamesChange && (
-                    <button
-                      type="button"
-                      onClick={() => startEdit(suffix)}
-                      className="shrink-0 text-slate-400 hover:text-cyan-500 transition-colors"
-                      title="Изменить имя переменной"
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
+                <code className="font-mono text-[11px] text-slate-400 dark:text-slate-500 truncate flex-1 min-w-0">
+                  {baseName}_{suffix}
+                </code>
               )}
               <span className={cn(
-                'text-[10px] shrink-0 hidden sm:inline',
-                isEnabled ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400/60 dark:text-slate-600'
+                'text-[10px] shrink-0 hidden lg:inline max-w-[90px] truncate',
+                isEnabled ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400/60'
               )}>
                 {description}
               </span>
