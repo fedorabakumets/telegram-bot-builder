@@ -73,7 +73,7 @@ export function ComponentsTab({
             {/* Заголовок категории — sticky относительно ближайшего scroll-ancestor (родительский overflow-y-auto в components-sidebar) */}
             <button
               onClick={() => onToggleCategory(category.title)}
-              className="w-full flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl sticky top-0 z-10 bg-gradient-to-r from-slate-100/95 to-slate-50/90 dark:from-slate-800/95 dark:to-slate-900/90 backdrop-blur-sm hover:from-slate-200/60 hover:to-slate-100/30 dark:hover:from-slate-700/50 dark:hover:to-slate-800/30 transition-all duration-200 group border border-slate-200/40 dark:border-slate-700/40 hover:border-primary/30"
+              className="w-full flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200 group border border-slate-200/40 dark:border-slate-700/40 hover:border-primary/30"
               data-testid={`category-${category.title}`}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -172,7 +172,7 @@ export function ComponentsTab({
           {/* Заголовок секции команд — sticky относительно scroll-ancestor */}
           <button
             onClick={() => onToggleCategory(COMMANDS_TITLE)}
-            className="w-full flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl sticky top-0 z-10 bg-gradient-to-r from-slate-100/95 to-slate-50/90 dark:from-slate-800/95 dark:to-slate-900/90 backdrop-blur-sm hover:from-slate-200/60 hover:to-slate-100/30 dark:hover:from-slate-700/50 dark:hover:to-slate-800/30 transition-all duration-200 group border border-slate-200/40 dark:border-slate-700/40 hover:border-primary/30"
+            className="w-full flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200 group border border-slate-200/40 dark:border-slate-700/40 hover:border-primary/30"
             data-testid={`category-${COMMANDS_TITLE}`}
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
