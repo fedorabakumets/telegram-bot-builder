@@ -2005,7 +2005,7 @@ export default function Editor() {
 
       {/* Мобильный sidebar */}
       <Sheet open={showMobileSidebar && currentTab === 'editor'} onOpenChange={setShowMobileSidebar}>
-        <SheetContent side="left" className="p-0 w-80" aria-describedby={undefined}>
+        <SheetContent side="left" className="p-0 w-80 [&>button[data-testid='button-sheet-close']]:hidden" aria-describedby={undefined}>
           <SheetHeader className="sr-only">
             <SheetTitle>Компоненты</SheetTitle>
           </SheetHeader>
