@@ -77,9 +77,21 @@ export async function getTelegramFileHandler(req: Request, res: Response): Promi
     const contentRange = fileResp.headers.get("content-range");
     const acceptRanges = fileResp.headers.get("accept-ranges") || "bytes";
 
-    // Определяем имя файла из file_path или query-параметра
+    // Определяем имя файла из query-параметра или file_path + расширение из content-type
     const filePath = fileData.result.file_path as string;
-    const fileName = (req.query.fileName as string) || filePath.split('/').pop() || 'file';
+    let fileName = (req.query.fileName as string) || filePath.split('/').pop() || 'file';
+
+    // Если имя файла не содержит расширения — добавляем из content-type
+    if (!fileName.includes('.')) {
+      const extMap: Record<string, string> = {
+        'image/jpeg': '.jpg', 'image/png': '.png', 'image/gif': '.gif', 'image/webp': '.webp',
+        'video/mp4': '.mp4', 'video/webm': '.webm',
+        'audio/mpeg': '.mp3', 'audio/ogg': '.ogg', 'audio/mp4': '.m4a',
+        'application/pdf': '.pdf', 'application/zip': '.zip',
+      };
+      const ext = extMap[contentType] || '';
+      fileName += ext;
+    }
 
     res.status(fileResp.status);
     res.set("Content-Type", contentType);
