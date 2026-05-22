@@ -403,7 +403,11 @@ export function ComponentsSidebar({
                 className="space-y-3"
                 onDragLeave={() => handleContainerDragLeave(setDragOverProject, setDragOverSheet)}
               >
-                {projects.map((project: BotProject) => (
+                {[...projects].sort((a, b) => {
+                  if (a.id === currentProjectId) return -1;
+                  if (b.id === currentProjectId) return 1;
+                  return 0;
+                }).map((project: BotProject) => (
                   <ProjectCardWrapper
                     key={project.id}
                     project={project}
