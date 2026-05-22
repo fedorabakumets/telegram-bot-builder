@@ -44,7 +44,7 @@ async def handle_photo_input(message: types.Message):
         message_type="user",
         message_text="[Фото ответ]",
         node_id=node_id,
-        message_data={"photo": {"file_id": photo_file_id}, "is_photo_answer": True}
+        message_data={"photo": {"file_id": photo_file_id, "file_size": message.photo[-1].file_size or 0, "width": message.photo[-1].width, "height": message.photo[-1].height, "file_unique_id": message.photo[-1].file_unique_id}, "is_photo_answer": True}
     )
 
     media_result = None
@@ -124,12 +124,17 @@ async def handle_video_input(message: types.Message):
     video_file_id = message.video.file_id
     logging.info(f"🎥 Получен file_id видео: {video_file_id}")
 
+    # Извлекаем thumbnail если есть
+    video_thumb = None
+    if message.video.thumbnail:
+        video_thumb = {"file_id": message.video.thumbnail.file_id, "file_unique_id": message.video.thumbnail.file_unique_id, "width": message.video.thumbnail.width, "height": message.video.thumbnail.height}
+
     saved_msg = await save_message_to_api(
         user_id=str(user_id),
         message_type="user",
         message_text="[Видео ответ]",
         node_id=node_id,
-        message_data={"video": {"file_id": video_file_id}, "is_video_answer": True}
+        message_data={"video": {"file_id": video_file_id, "file_size": message.video.file_size or 0, "duration": message.video.duration, "width": message.video.width, "height": message.video.height, "file_unique_id": message.video.file_unique_id, "thumbnail": video_thumb}, "is_video_answer": True}
     )
 
     media_result = None
@@ -208,19 +213,25 @@ async def handle_audio_input(message: types.Message):
 
     if message.audio:
         audio_file_id = message.audio.file_id
+        audio_thumb = {"file_id": message.audio.thumbnail.file_id, "file_unique_id": message.audio.thumbnail.file_unique_id} if message.audio.thumbnail else None
+        audio_duration = message.audio.duration
+        audio_meta = {"file_id": audio_file_id, "file_size": message.audio.file_size or 0, "duration": audio_duration, "file_unique_id": message.audio.file_unique_id, "file_name": message.audio.file_name, "thumbnail": audio_thumb}
     elif message.voice:
         audio_file_id = message.voice.file_id
+        audio_duration = message.voice.duration
+        audio_meta = {"file_id": audio_file_id, "file_size": message.voice.file_size or 0, "duration": audio_duration, "file_unique_id": message.voice.file_unique_id}
     else:
         logging.error("Не удалось получить file_id аудио")
         return
     logging.info(f"🎵 Получен file_id аудио: {audio_file_id}")
 
+    file_type_key = "voice" if message.voice else "audio"
     saved_msg = await save_message_to_api(
         user_id=str(user_id),
         message_type="user",
         message_text="[Аудио ответ]",
         node_id=node_id,
-        message_data={"audio": {"file_id": audio_file_id}, "is_audio_answer": True}
+        message_data={file_type_key: audio_meta, "is_audio_answer": True}
     )
 
     media_result = None
@@ -301,12 +312,17 @@ async def handle_document_input(message: types.Message):
     document_file_id = message.document.file_id
     logging.info(f"📄 Получен file_id документа: {document_file_id}")
 
+    # Извлекаем thumbnail если есть
+    doc_thumb = None
+    if message.document.thumbnail:
+        doc_thumb = {"file_id": message.document.thumbnail.file_id, "file_unique_id": message.document.thumbnail.file_unique_id, "width": message.document.thumbnail.width, "height": message.document.thumbnail.height}
+
     saved_msg = await save_message_to_api(
         user_id=str(user_id),
         message_type="user",
         message_text="[Документ ответ]",
         node_id=node_id,
-        message_data={"document": {"file_id": document_file_id}, "is_document_answer": True}
+        message_data={"document": {"file_id": document_file_id, "file_size": message.document.file_size or 0, "file_name": message.document.file_name, "mime_type": message.document.mime_type, "file_unique_id": message.document.file_unique_id, "thumbnail": doc_thumb}, "is_document_answer": True}
     )
 
     media_result = None
