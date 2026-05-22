@@ -620,14 +620,31 @@ interface FilePickerContext {
 
 - [x] Роуты зарегистрированы в `server/routes/setupBotIntegrationRoutes.ts`
 
-### ⬜ Этап 2: UI — вкладка "Файлы" (следующий)
+### ✅ Этап 2: UI — вкладка "Файлы" (выполнено)
 
-- [ ] Добавить `'files'` в типы `HeaderTab` и `EditorTab`
-- [ ] Добавить в `NAV_ITEMS` в `sidebar-nav.tsx`
-- [ ] Добавить в `validTabs` и рендеринг в `editor.tsx`
-- [ ] Создать `FilesPanel` — главный компонент вкладки
-- [ ] React Query хук `useProjectFiles`
-- [ ] Таблица файлов с превью и пагинацией
+- [x] Добавлен `'files'` в типы `HeaderTab` и `EditorTab`
+- [x] Добавлен в `NAV_ITEMS` в `sidebar-nav.tsx` (иконка `FolderOpen`, после "Таблицы")
+- [x] Добавлен в `validTabs` и рендеринг в `editor.tsx`
+- [x] Создан `FilesPanel` — главный компонент вкладки
+  - Header с `ProjectSwitcher` + `BotTokenSelector`
+  - Табы: Входящие / Исходящие / Загруженные
+  - Фильтр по типу медиа
+  - Пагинация
+- [x] React Query хук `useProjectFiles` с пагинацией и фильтрацией
+- [x] Таблица файлов `FilesTable`:
+  - Десктоп: полноценная таблица с колонками (☐, превью, название, тип, file_id, размер, дата, действия)
+  - Мобилка: карточный вид
+  - Цветные индикаторы размера
+  - Копирование file_id
+  - Чекбоксы для множественного выбора
+- [x] Тулбар `FilesToolbar` с табами источника и фильтром типа
+
+Файлы:
+- `client/components/editor/files/files-panel.tsx`
+- `client/components/editor/files/hooks/use-project-files.ts`
+- `client/components/editor/files/components/files-table.tsx`
+- `client/components/editor/files/components/files-toolbar.tsx`
+- `client/components/editor/files/index.ts`
 
 ### ⬜ Этап 3: Интеграция с нодами
 
