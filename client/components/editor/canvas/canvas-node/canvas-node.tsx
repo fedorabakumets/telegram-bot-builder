@@ -459,6 +459,17 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   }, [node.id, onSizeChange]);
 
   /**
+   * Refs для нативных touch-обработчиков — позволяют useEffect не перерегистрировать
+   * listeners при каждом рендере, но всегда вызывать актуальную версию функции
+   */
+  const touchStartRef = useRef(handleNativeTouchStart);
+  const touchMoveRef = useRef(handleNativeTouchMove);
+  const touchEndRef = useRef(handleNativeTouchEnd);
+  touchStartRef.current = handleNativeTouchStart;
+  touchMoveRef.current = handleNativeTouchMove;
+  touchEndRef.current = handleNativeTouchEnd;
+
+  /**
    * Регистрация touch-обработчиков с { passive: false }
    * чтобы preventDefault() работал корректно в Chrome
    */
@@ -467,17 +478,20 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     if (!el) return;
 
     const opts: AddEventListenerOptions = { passive: false };
+    const onStart = (e: TouchEvent) => touchStartRef.current(e);
+    const onMove = (e: TouchEvent) => touchMoveRef.current(e);
+    const onEnd = (e: TouchEvent) => touchEndRef.current(e);
 
-    el.addEventListener('touchstart', handleNativeTouchStart, opts);
-    el.addEventListener('touchmove', handleNativeTouchMove, opts);
-    el.addEventListener('touchend', handleNativeTouchEnd, opts);
+    el.addEventListener('touchstart', onStart, opts);
+    el.addEventListener('touchmove', onMove, opts);
+    el.addEventListener('touchend', onEnd, opts);
 
     return () => {
-      el.removeEventListener('touchstart', handleNativeTouchStart);
-      el.removeEventListener('touchmove', handleNativeTouchMove);
-      el.removeEventListener('touchend', handleNativeTouchEnd);
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
     };
-  });
+  }, []);
 
   const isDragActive = isDragging || isTouchDragging;
   const [isHovered, setIsHovered] = useState(false);
