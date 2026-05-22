@@ -209,6 +209,8 @@ interface SheetAccordionContentProps {
   availableSheets?: Array<{ id: string; name: string }>;
   /** Колбэк массового перемещения узлов */
   onBulkMoveNodes?: (nodeIds: string[], targetSheetId: string) => void;
+  /** Колбэк выделения узла (открытие панели свойств без центрирования холста) */
+  onNodeSelect?: (nodeId: string) => void;
 }
 
 /**
@@ -223,6 +225,7 @@ function SheetAccordionContent({
   onNodeFocus,
   availableSheets = [],
   onBulkMoveNodes,
+  onNodeSelect,
 }: SheetAccordionContentProps) {
   const filtered = useSheetNodeSearch(nodes, searchQuery);
   const { selectedNodeIds, toggleNode, clearSelection, isSelected, selectedCount } = useNodeSelection();
@@ -351,6 +354,19 @@ function SheetAccordionContent({
                     </div>
                   )}
                 </div>
+                {/* Кнопка открытия свойств узла */}
+                {onNodeSelect && (
+                  <button
+                    className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:bg-primary/15 dark:hover:bg-primary/25 hidden group-hover/node:flex items-center justify-center transition-all duration-200 hover:shadow-md hover:shadow-primary/20"
+                    title="Открыть свойства"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (node.id) onNodeSelect(node.id);
+                    }}
+                  >
+                    <i className="fas fa-sliders-h text-xs" />
+                  </button>
+                )}
                 {/* Кнопка центрирования на узле */}
                 <button
                   className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:bg-primary/15 dark:hover:bg-primary/25 hidden group-hover/node:flex items-center justify-center transition-all duration-200 hover:shadow-md hover:shadow-primary/20"
@@ -940,6 +956,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                   searchQuery={getSheetQuery(sheetId)}
                   onSearchChange={(q) => setSheetQuery(sheetId, q)}
                   onNodeFocus={onNodeFocus}
+                  onNodeSelect={onNodeFocus}
                   availableSheets={
                     SheetsManager.isNewFormat(projectData)
                       ? projectData.sheets
