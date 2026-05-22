@@ -151,6 +151,7 @@ export function SaveAnswerProperties({
               onCustomNamesChange={(names) =>
                 onNodeUpdate(selectedNode.id, { mediaMetadataCustomNames: names })
               }
+              availableVariables={textVariables}
             />
           )}
         </div>

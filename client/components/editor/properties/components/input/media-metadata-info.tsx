@@ -7,6 +7,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/utils/utils';
 import { MEDIA_METADATA_SUFFIXES } from './media-metadata-suffixes';
+import { VariableSelector } from '../variables/variable-selector';
+import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы компонента MediaMetadataInfo */
 interface MediaMetadataInfoProps {
@@ -22,6 +24,8 @@ interface MediaMetadataInfoProps {
   customNames?: Record<string, string>;
   /** Callback при изменении кастомных имён */
   onCustomNamesChange?: (names: Record<string, string>) => void;
+  /** Доступные переменные для селектора */
+  availableVariables?: Variable[];
 }
 
 /**
@@ -32,6 +36,7 @@ interface MediaMetadataInfoProps {
 export function MediaMetadataInfo({
   inputType, variableName, enabledSuffixes,
   onSuffixesChange, customNames = {}, onCustomNamesChange,
+  availableVariables = [],
 }: MediaMetadataInfoProps) {
   const suffixes = MEDIA_METADATA_SUFFIXES[inputType] || [];
   const baseName = variableName || 'variable';
@@ -95,12 +100,20 @@ export function MediaMetadataInfo({
               />
               <span className="shrink-0 text-xs">{icon}</span>
               {isEnabled ? (
-                <Input
-                  value={customNames[suffix] || `${baseName}_${suffix}`}
-                  onChange={(e) => updateName(suffix, e.target.value)}
-                  className="h-6 text-[11px] font-mono px-1.5 flex-1 min-w-0"
-                  placeholder={`${baseName}_${suffix}`}
-                />
+                <div className="flex items-center gap-1 flex-1 min-w-0">
+                  <Input
+                    value={customNames[suffix] || `${baseName}_${suffix}`}
+                    onChange={(e) => updateName(suffix, e.target.value)}
+                    className="h-6 text-[11px] font-mono px-1.5 flex-1 min-w-0"
+                    placeholder={`${baseName}_${suffix}`}
+                  />
+                  {availableVariables.length > 0 && (
+                    <VariableSelector
+                      availableVariables={availableVariables}
+                      onSelect={(v) => updateName(suffix, v)}
+                    />
+                  )}
+                </div>
               ) : (
                 <code className="font-mono text-[11px] text-slate-400 dark:text-slate-500 truncate flex-1 min-w-0">
                   {baseName}_{suffix}
