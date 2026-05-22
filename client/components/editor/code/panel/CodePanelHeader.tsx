@@ -7,6 +7,7 @@
 import { Code2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TabHeader } from '@/components/ui/tab-header';
+import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 
 /**
  * Свойства заголовка панели кода
@@ -14,6 +15,12 @@ import { TabHeader } from '@/components/ui/tab-header';
 interface CodePanelHeaderProps {
   /** Колбэк для закрытия панели */
   onClose?: () => void;
+  /** Список всех проектов для переключателя */
+  allProjects?: Array<{ id: number; name: string }>;
+  /** ID текущего проекта */
+  currentProjectId?: number;
+  /** Обработчик смены проекта */
+  onProjectChange?: (projectId: number) => void;
 }
 
 /**
@@ -21,7 +28,7 @@ interface CodePanelHeaderProps {
  * @param props - Свойства компонента
  * @returns JSX элемент заголовка
  */
-export function CodePanelHeader({ onClose }: CodePanelHeaderProps) {
+export function CodePanelHeader({ onClose, allProjects, currentProjectId, onProjectChange }: CodePanelHeaderProps) {
   return (
     <div className="space-y-2">
       <TabHeader
@@ -42,9 +49,13 @@ export function CodePanelHeader({ onClose }: CodePanelHeaderProps) {
           ) : undefined
         }
       >
-        <span className="text-xs text-muted-foreground hidden sm:inline">
-          Просмотр и загрузка сгенерированного кода
-        </span>
+        {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
+          <ProjectSelector
+            projects={allProjects}
+            selectedProjectId={currentProjectId}
+            onSelect={onProjectChange}
+          />
+        )}
       </TabHeader>
 
       <div className="mx-4 sm:mx-6 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 rounded-lg p-3 text-xs text-blue-800 dark:text-blue-200">

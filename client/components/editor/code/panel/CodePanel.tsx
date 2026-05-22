@@ -54,6 +54,12 @@ interface CodePanelProps {
   editedContent?: string;
   /** Колбэк сброса редактора к исходному контенту */
   onResetEditor?: () => void;
+  /** Список всех проектов для переключателя */
+  allProjects?: Array<{ id: number; name: string }>;
+  /** ID текущего проекта */
+  currentProjectId?: number;
+  /** Обработчик смены проекта */
+  onProjectChange?: (projectId: number) => void;
 }
 
 /**
@@ -68,6 +74,7 @@ export function CodePanel({
   onShowFullCodeChange, onBotDataUpdate,
   codeContent, isLoading, displayContent,
   onApplyJson, editedContent, onResetEditor,
+  allProjects, currentProjectId, onProjectChange,
 }: CodePanelProps) {
   const [localSelectedFormat, setLocalSelectedFormat] = useState<CodeFormat>('python');
   const [localAreAllCollapsed, setLocalAreAllCollapsed] = useState(true);
@@ -194,7 +201,12 @@ export function CodePanel({
     <div className="h-full bg-background overflow-auto">
       <div className="p-1.5 xs:p-2 sm:p-3">
         <div className="space-y-3 xs:space-y-4 sm:space-y-5 md:space-y-6">
-          <CodePanelHeader onClose={onClose} />
+          <CodePanelHeader
+            onClose={onClose}
+            allProjects={allProjects}
+            currentProjectId={currentProjectId}
+            onProjectChange={onProjectChange}
+          />
 
           {botDataArray.map((_botData, index) => {
             const content = getCurrentContent(index);
