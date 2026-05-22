@@ -46,6 +46,7 @@ import { useSheetNodeSearch } from '../hooks/use-sheet-node-search';
 import { useSheetSearchState } from '../hooks/use-sheet-search-state';
 import { HighlightText } from './highlight-text';
 import { useNodeSelection } from '../hooks/use-node-selection';
+import { DeleteProjectDialog } from './delete-project-dialog';
 
 /**
  * Состояние drag-and-drop для проектов и листов
@@ -463,6 +464,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const { getSheetQuery, setSheetQuery } = useSheetSearchState();
   /** Глобальный поисковый запрос по всем листам */
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
+  /** Показывать ли диалог подтверждения удаления */
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const toggleSheetExpanded = (sheetId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -522,12 +525,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
   /**
    * Обработчик удаления проекта
-   * Предотвращает всплытие события
+   * Открывает диалог подтверждения удаления
    * @param e - Событие клика
    */
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onProjectDelete(project.id);
+    setShowDeleteDialog(true);
   };
 
   /**
@@ -1021,6 +1024,15 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           })}
         </div>
       )}
+
+      {/* Диалог подтверждения удаления проекта */}
+      <DeleteProjectDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        projectName={project.name}
+        projectData={projectData}
+        onDelete={() => onProjectDelete(project.id)}
+      />
     </div>
   );
 };
