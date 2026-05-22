@@ -295,26 +295,29 @@ function SheetAccordionContent({
                 }}
               >
                 {/* Чекбокс выбора для массового перемещения */}
-                <input
-                  type="checkbox"
-                  checked={selected}
+                <div
                   className={cn(
-                    "h-4 w-4 flex-shrink-0 cursor-pointer rounded border-2 accent-blue-500 transition-all",
+                    "h-5 w-5 flex-shrink-0 cursor-pointer rounded border-2 flex items-center justify-center transition-all",
                     selected
-                      ? 'opacity-100 border-blue-500'
-                      : 'opacity-40 group-hover/node:opacity-80 border-slate-400 dark:border-slate-500'
+                      ? 'bg-blue-500 border-blue-500 text-white'
+                      : 'border-slate-400 dark:border-slate-500 bg-transparent hover:border-blue-400'
                   )}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => {
+                  onClick={(e) => {
                     e.stopPropagation();
                     toggleNode(node.id);
-                    if (e.target.checked) {
+                    if (!selected) {
                       onNodeFocus?.(node.id, undefined, true);
                     } else {
                       onNodeFocus?.(node.id, undefined, false);
                     }
                   }}
-                />
+                >
+                  {selected && (
+                    <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M2 6l3 3 5-5" />
+                    </svg>
+                  )}
+                </div>
                 {/* Цветная иконка */}
                 <div className={cn(
                   "w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0",
