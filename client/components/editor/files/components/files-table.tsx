@@ -284,14 +284,20 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
       <td className="p-2 text-muted-foreground text-[10px] uppercase">{getExtension(file.fileName, file.mediaType)}</td>
       <td className="p-2 text-center">
         {file.thumbnailFileId ? (
-          <div className="w-6 h-6 mx-auto rounded overflow-hidden bg-muted cursor-pointer hover:ring-1 hover:ring-primary/50"
-            onClick={() => onPreviewClick()}>
-            <img
-              src={`/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(file.thumbnailFileId)}`}
-              alt="Обл."
-              className="w-full h-full object-cover"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
+          <div className="relative group w-6 h-6 mx-auto">
+            <div className="w-6 h-6 rounded overflow-hidden bg-muted cursor-pointer hover:ring-1 hover:ring-primary/50"
+              onClick={() => onCopy(file.thumbnailFileId!)}
+              title="Копировать file_id обложки">
+              <img
+                src={`/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(file.thumbnailFileId)}`}
+                alt="Обл."
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Copy className="h-2.5 w-2.5 text-primary" />
+            </div>
           </div>
         ) : (
           <span className="text-muted-foreground text-[10px]">—</span>
