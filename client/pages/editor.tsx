@@ -1271,7 +1271,7 @@ export default function Editor() {
       onButtonDelete={handleButtonDelete}
       onNodeAdd={addNode}
       onNodeDelete={handleNodeDelete}
-      onClose={handleToggleProperties}
+      onClose={() => { handleToggleProperties(); setShowMobileProperties(false); }}
       onActionLog={handleActionLog}
       onSaveProject={handleSaveProject}
       focusButtonId={focusButtonId}
