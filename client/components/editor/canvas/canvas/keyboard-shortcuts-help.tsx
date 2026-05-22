@@ -43,7 +43,7 @@ export function KeyboardShortcutsHelp() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Авто-уместить (A):</span>
-                <span className="text-gray-500 dark:text-gray-500 text-[10px]">при смене листа</span>
+                <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + Shift + 1</code>
               </div>
             </div>
           </div>

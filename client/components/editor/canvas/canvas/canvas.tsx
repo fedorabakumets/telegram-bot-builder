@@ -18,6 +18,7 @@ import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-
 import { PortType } from '../canvas-node/port-colors';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from './utils/canvas-coordinate-utils';
 
+import { toast } from '@/hooks/use-toast';
 import { Node, ComponentDefinition } from '@/types/bot';
 import type { CommandPreset } from '@/components/editor/sidebar/massive/commands';
 import { BotDataWithSheets } from '@shared/schema';
@@ -1141,7 +1142,19 @@ export function Canvas({
             break;
           case '1':
             e.preventDefault();
-            fitToContent();
+            if (e.shiftKey) {
+              /** Ctrl+Shift+1 — переключение авто-уместить при смене листа */
+              const current = localStorage.getItem('canvas-auto-fit-sheet');
+              const newValue = current === 'false' ? 'true' : 'false';
+              localStorage.setItem('canvas-auto-fit-sheet', newValue);
+              toast({
+                title: newValue === 'true'
+                  ? 'Авто-уместить при смене листа: ВКЛ'
+                  : 'Авто-уместить при смене листа: ВЫКЛ',
+              });
+            } else {
+              fitToContent();
+            }
             break;
           case 'z':
           case 'Z':
