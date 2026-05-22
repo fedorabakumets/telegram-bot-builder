@@ -525,7 +525,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
               <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
                 <Upload className="w-4 h-4 text-white" />
               </div>
-              <span className="font-semibold truncate">Загрузить медиафайлы</span>
+              <span className="font-semibold break-words">Загрузить медиафайлы</span>
             </div>
             {uploadingFiles.length > 0 && (
               <Button
@@ -615,7 +615,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
                 <p className="text-sm text-gray-500 mb-4">
                   Поддерживаются: изображения, видео, аудио, документы (до 50МБ)
                 </p>
-                <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
+                <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-400">
                   <div className="flex items-center gap-1">
                     <Image className="w-4 h-4" />
                     Фото
@@ -781,7 +781,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
             </div>
 
             {/* Статистика */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <span>Макс. размер: 100МБ (видео), 50МБ (остальное)</span>
                 <span>•</span>
@@ -801,7 +801,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
       {/* Расширенный поиск и фильтрация */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
@@ -814,7 +814,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
 
             {/* Статистика загрузки */}
             {allFiles && allFiles.length > 0 && (
-              <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-1">
                   <Image className="w-4 h-4" />
                   <span>{photoFiles?.length || 0}</span>
