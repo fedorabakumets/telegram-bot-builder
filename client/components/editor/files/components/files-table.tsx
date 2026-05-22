@@ -64,11 +64,21 @@ function formatSize(bytes: number | null): string {
   return `${(bytes / 1_048_576).toFixed(1)} MB`;
 }
 
-/** Извлекает расширение из имени файла */
-function getExtension(fileName: string | null): string {
-  if (!fileName) return '—';
-  const ext = fileName.split('.').pop()?.toLowerCase();
-  return ext && ext !== fileName.toLowerCase() ? ext : '—';
+/** Расширение по умолчанию для типов медиа (когда нет file_name) */
+const DEFAULT_EXTENSIONS: Record<string, string> = {
+  photo: 'jpg', video: 'mp4', animation: 'gif', audio: 'mp3',
+  voice: 'ogg', video_note: 'mp4', sticker: 'webp',
+};
+
+/** Извлекает расширение из имени файла или определяет по типу медиа */
+function getExtension(fileName: string | null, mediaType?: string | null): string {
+  if (fileName) {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    if (ext && ext !== fileName.toLowerCase()) return ext;
+  }
+  // Fallback: определяем по типу медиа
+  if (mediaType && DEFAULT_EXTENSIONS[mediaType]) return DEFAULT_EXTENSIONS[mediaType];
+  return '—';
 }
 
 /** Форматирование даты */
@@ -271,7 +281,7 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
         </div>
       </td>
       <td className="p-2 max-w-[180px] truncate">{file.fileName ?? '—'}</td>
-      <td className="p-2 text-muted-foreground text-[10px] uppercase">{getExtension(file.fileName)}</td>
+      <td className="p-2 text-muted-foreground text-[10px] uppercase">{getExtension(file.fileName, file.mediaType)}</td>
       <td className="p-2 text-center">
         {file.thumbnailFileId ? (
           <div className="w-6 h-6 mx-auto rounded overflow-hidden bg-muted cursor-pointer hover:ring-1 hover:ring-primary/50"
