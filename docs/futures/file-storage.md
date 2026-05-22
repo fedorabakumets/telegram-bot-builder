@@ -649,7 +649,8 @@ interface FilePickerContext {
 Дополнительно:
 - [x] Удалён legacy endpoint `POST /api/projects/:id/media/register-telegram-photo` (скачивание файлов)
 - [x] Обновлён Python-шаблон `media-input-handlers` — сохраняет полные метаданные (file_size, duration, file_unique_id, thumbnail) в messageData
-- [x] Прокси-handler `getTelegramFileHandler` — добавлен `Content-Disposition` с именем файла
+- [x] Добавлен обработчик `F.animation` в Python-шаблон — GIF/анимации теперь сохраняются как тип `animation`, а не `document`
+- [x] Прокси-handler `getTelegramFileHandler` — добавлен `Content-Disposition` с именем файла, определение расширения из file_path директории, исправлен Content-Type для фото/видео
 
 Файлы:
 - `client/components/editor/files/files-panel.tsx`
