@@ -48,10 +48,10 @@ export function PropertyCheckbox({
         onCheckedChange={(value) => onChange(value as boolean)}
         disabled={disabled}
         className={cn(
-          'shrink-0 h-[18px] w-[18px] rounded border-2 transition-all',
+          'shrink-0 !h-[18px] !w-[18px] !rounded !border-2 transition-all',
           checked
-            ? 'border-primary bg-primary text-primary-foreground'
-            : 'border-muted-foreground/50 dark:border-muted-foreground/40 bg-transparent',
+            ? '!border-primary !bg-primary !text-primary-foreground dark:!border-primary'
+            : '!border-slate-400 dark:!border-slate-500 !bg-transparent',
           disabled && 'opacity-50 cursor-not-allowed',
         )}
       />
