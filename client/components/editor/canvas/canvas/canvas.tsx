@@ -345,8 +345,16 @@ export function Canvas({
     const containerHeight = scrollContainer.clientHeight;
     const nodeW = nodeSizes.get(focusNodeId)?.width ?? 320;
     const nodeH = nodeSizes.get(focusNodeId)?.height ?? 200;
-    const newPanX = containerWidth / 2 - (node.position.x + nodeW / 2) * (zoom / 100);
-    const newPanY = containerHeight / 2 - (node.position.y + nodeH / 2) * (zoom / 100);
+
+    // Подбираем масштаб чтобы узел занимал ~60% экрана, но не больше 100%
+    const scaleX = (containerWidth * 0.6) / nodeW;
+    const scaleY = (containerHeight * 0.6) / nodeH;
+    const targetZoom = Math.min(Math.min(scaleX, scaleY) * 100, 100);
+    const newZoom = Math.max(targetZoom, 30);
+
+    setZoom(newZoom);
+    const newPanX = containerWidth / 2 - (node.position.x + nodeW / 2) * (newZoom / 100);
+    const newPanY = containerHeight / 2 - (node.position.y + nodeH / 2) * (newZoom / 100);
     setPan({ x: newPanX, y: newPanY });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusNodeId]);
