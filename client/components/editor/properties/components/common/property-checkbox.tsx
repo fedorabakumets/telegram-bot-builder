@@ -47,13 +47,11 @@ export function PropertyCheckbox({
         checked={checked}
         onCheckedChange={(value) => onChange(value as boolean)}
         disabled={disabled}
-        className={cn(
-          'shrink-0 !h-[18px] !w-[18px] !rounded !border-2 transition-all',
-          checked
-            ? '!border-primary !bg-primary !text-primary-foreground dark:!border-primary'
-            : '!border-slate-400 dark:!border-slate-500 !bg-transparent',
-          disabled && 'opacity-50 cursor-not-allowed',
-        )}
+        className="shrink-0 !h-[18px] !w-[18px] !rounded"
+        style={{
+          border: checked ? '2px solid var(--primary)' : '2px solid hsl(215, 20%, 50%)',
+          background: checked ? 'var(--primary)' : 'transparent',
+        }}
       />
       <label
         htmlFor={id}
