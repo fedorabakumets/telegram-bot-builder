@@ -161,8 +161,8 @@ export function useProjectTouchHandlers({
   /** Комбинированный обработчик начала касания */
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     baseTouchStart(e);
-    handleDragStart();
-  }, [baseTouchStart, handleDragStart]);
+    // Не вызываем handleDragStart сразу — drag начнётся в handleTouchMove после порога
+  }, [baseTouchStart]);
 
   /** Комбинированный обработчик движения касания */
   const handleTouchMove = useCallback((e: React.TouchEvent) => {

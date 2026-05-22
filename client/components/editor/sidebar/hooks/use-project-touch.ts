@@ -45,23 +45,29 @@ export function useProjectTouch({
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
     setStartPos({ x: touch.clientX, y: touch.clientY });
-    setIsDragging(true);
-    onDragStart?.();
-  }, [onDragStart]);
+    // Не начинаем drag сразу — ждём перемещения в handleTouchMove
+  }, []);
 
   /** Обработчик движения касания */
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isDragging) return;
-    
     const touch = e.touches[0];
     const diffX = touch.clientX - startPos.x;
     const diffY = touch.clientY - startPos.y;
+
+    // Начинаем drag только после перемещения на >15px по горизонтали
+    if (!isDragging) {
+      if (Math.abs(diffX) > 15) {
+        setIsDragging(true);
+        onDragStart?.();
+      }
+      return;
+    }
     
     // Перемещаем элемент визуально
     const target = e.currentTarget as HTMLElement;
     target.style.transform = `translate(${diffX}px, ${diffY}px)`;
     target.style.opacity = '0.5';
-  }, [isDragging, startPos]);
+  }, [isDragging, startPos, onDragStart]);
 
   /** Обработчик окончания касания */
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
