@@ -77,6 +77,10 @@ export async function getTelegramFileHandler(req: Request, res: Response): Promi
     const contentRange = fileResp.headers.get("content-range");
     const acceptRanges = fileResp.headers.get("accept-ranges") || "bytes";
 
+    // Определяем имя файла из query-параметра или file_path
+    const filePath = fileData.result.file_path as string;
+    let fileName = (req.query.fileName as string) || filePath.split('/').pop() || 'file';
+
     // Если Telegram отдаёт generic content-type — определяем из file_path
     if (contentType === "application/octet-stream") {
       const dir = filePath.split('/')[0];
@@ -87,10 +91,6 @@ export async function getTelegramFileHandler(req: Request, res: Response): Promi
       };
       if (ctMap[dir]) contentType = ctMap[dir];
     }
-
-    // Определяем имя файла из query-параметра или file_path + расширение из content-type
-    const filePath = fileData.result.file_path as string;
-    let fileName = (req.query.fileName as string) || filePath.split('/').pop() || 'file';
 
     // Если имя файла не содержит расширения — добавляем из content-type или file_path
     if (!fileName.includes('.')) {
