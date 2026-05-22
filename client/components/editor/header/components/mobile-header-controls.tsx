@@ -24,7 +24,7 @@ export function MobileHeaderControls({
   onOpenMobileProperties,
 }: MobileHeaderControlsProps) {
   return (
-    <div className="flex items-center gap-2 sm:gap-2">
+    <div className="flex items-center gap-2 sm:gap-2 flex-shrink-0">
       {onOpenMobileSidebar && (
         <MobileSidebarButton onClick={onOpenMobileSidebar} />
       )}
