@@ -7,6 +7,46 @@
 import { Node } from '@shared/schema';
 import { SYSTEM_VARIABLES } from '../components/variables/system-variables';
 
+/** Суффикс метаданных медиа для извлечения переменных */
+interface MediaMetaSuffix {
+  /** Суффикс переменной */
+  suffix: string;
+  /** Описание на русском */
+  description: string;
+}
+
+/** Карта суффиксов метаданных по типу медиа */
+const MEDIA_META_SUFFIXES_MAP: Record<string, MediaMetaSuffix[]> = {
+  video: [
+    { suffix: 'thumbnail', description: 'Обложка (file_id)' },
+    { suffix: 'duration', description: 'Длительность (сек)' },
+    { suffix: 'file_size', description: 'Размер файла (байт)' },
+    { suffix: 'file_name', description: 'Имя файла' },
+    { suffix: 'width', description: 'Ширина (px)' },
+    { suffix: 'height', description: 'Высота (px)' },
+    { suffix: 'mime_type', description: 'MIME тип' },
+  ],
+  photo: [
+    { suffix: 'file_size', description: 'Размер файла (байт)' },
+    { suffix: 'width', description: 'Ширина (px)' },
+    { suffix: 'height', description: 'Высота (px)' },
+  ],
+  audio: [
+    { suffix: 'thumbnail', description: 'Обложка (file_id)' },
+    { suffix: 'duration', description: 'Длительность (сек)' },
+    { suffix: 'file_size', description: 'Размер файла (байт)' },
+    { suffix: 'title', description: 'Название трека' },
+    { suffix: 'performer', description: 'Исполнитель' },
+    { suffix: 'mime_type', description: 'MIME тип' },
+  ],
+  document: [
+    { suffix: 'thumbnail', description: 'Обложка (file_id)' },
+    { suffix: 'file_name', description: 'Имя файла' },
+    { suffix: 'file_size', description: 'Размер файла (байт)' },
+    { suffix: 'mime_type', description: 'MIME тип' },
+  ],
+};
+
 /** Переменная проекта */
 export interface ProjectVariable {
   name: string;
@@ -579,6 +619,28 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
           nodeId: node.id,
           nodeType: 'userbot_edit_trigger' as any,
           description: desc,
+        });
+      }
+    }
+  });
+
+  // Добавляем переменные метаданных медиа от input-узлов с saveMediaMetadata
+  allNodes.forEach(node => {
+    if (node.type !== 'input') return;
+    const data = node.data as any;
+    if (!data.saveMediaMetadata || !data.inputVariable) return;
+    const mediaType = data.inputType as string;
+    const suffixes = MEDIA_META_SUFFIXES_MAP[mediaType];
+    if (!suffixes) return;
+    for (const { suffix, description } of suffixes) {
+      const key = `media_meta__${node.id}__${suffix}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: `${data.inputVariable}_${suffix}`,
+          nodeId: node.id,
+          nodeType: 'media_meta' as any,
+          sourceTable: 'bot_users',
+          description,
         });
       }
     }

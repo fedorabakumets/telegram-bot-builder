@@ -54,6 +54,7 @@ export function getBadgeText(variable: Variable): string {
     message_id: '🆔 ID сообщения',
     http_request: '🌐 HTTP',
     input: '⌨️ Ввод',
+    media_meta: '📎 Медиа',
     set_variable: '✏️ Переменная',
     psql_query: '🗄️ SQL',
     convert_file: '📄 Файл',
@@ -207,6 +208,14 @@ export function getNodeInfo(variable: Variable) {
     return (
       <div className="text-[10px] text-cyan-500 dark:text-cyan-400 mt-0.5 truncate">
         ⌨️ {variable.description}
+      </div>
+    );
+  }
+  // Для media_meta показываем описание метаданных
+  if ((variable.nodeType as string) === 'media_meta') {
+    return (
+      <div className="text-[10px] text-cyan-500 dark:text-cyan-400 mt-0.5 truncate">
+        📎 {variable.description}
       </div>
     );
   }

@@ -383,6 +383,8 @@ export const nodeSchema = z.object({
     defaultValue: z.string().optional(),
     /** Добавлять значение к существующей переменной, а не перезаписывать */
     appendVariable: z.boolean().default(false),
+    /** Сохранять метаданные медиа в отдельные переменные (суффиксы _thumbnail, _duration и т.д.) */
+    saveMediaMetadata: z.boolean().optional().default(false),
     /** Фильтры переменных (ключ — имя переменной, значение — фильтр) */
     variableFilters: z.record(z.string()).default({}),
     /** Включить обработку действий пользователей */
