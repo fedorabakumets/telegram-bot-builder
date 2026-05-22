@@ -6,17 +6,20 @@
 
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
 
 /**
  * Структура события проекта, получаемого по WebSocket
  */
 interface ProjectEvent {
   /** Тип события */
-  type: 'token-created' | 'token-deleted' | 'bot-started' | 'bot-stopped' | 'bot-error';
+  type: 'token-created' | 'token-deleted' | 'bot-started' | 'bot-stopped' | 'bot-error' | 'stdout' | 'stderr' | 'status';
   /** Идентификатор проекта */
   projectId: number;
   /** ID токена (для событий бота) */
   tokenId?: number;
+  /** Содержимое лога (для stdout/stderr) */
+  content?: string;
   /** Дополнительные данные */
   data?: unknown;
   /** Временная метка */
@@ -87,6 +90,7 @@ function handleBotEvent(
 export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions): void {
   const { onTokenCreated, onBotStarted } = options ?? {};
   const queryClient = useQueryClient();
+  const { addLog } = useBotLogs();
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onTokenCreatedRef = useRef(onTokenCreated);
@@ -95,6 +99,8 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
   onBotStartedRef.current = onBotStarted;
   /** Флаг первого подключения — при первом onopen рефетч не нужен */
   const isFirstConnectRef = useRef(true);
+  /** Счётчик логов для диагностики */
+  const logCountRef = useRef(0);
 
   useEffect(() => {
     let destroyed = false;
@@ -122,6 +128,20 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
       ws.onmessage = (event) => {
         try {
           const msg: ProjectEvent = JSON.parse(event.data);
+
+          // Логи бота (stdout/stderr) — записываем в BotLogsContext
+          if ((msg.type === 'stdout' || msg.type === 'stderr') && msg.projectId && msg.tokenId && msg.content) {
+            const logKey = `${msg.projectId}-${msg.tokenId}`;
+            const ts = msg.timestamp ? new Date(msg.timestamp) : new Date();
+            addLog(logKey, {
+              id: `${Date.now()}-${++logCountRef.current}`,
+              content: msg.content,
+              type: msg.type,
+              timestamp: ts,
+            });
+            return;
+          }
+
           if (msg.type === 'token-created' || msg.type === 'token-deleted') {
             handleTokenEvent(queryClient, msg, onTokenCreatedRef.current);
           }

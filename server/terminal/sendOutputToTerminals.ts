@@ -59,15 +59,15 @@ export function sendOutputToTerminals(
     }
   }
 
-  if (connections) {
-    const message: TerminalMessage = {
-      type,
-      content,
-      projectId,
-      tokenId,
-      timestamp,
-    };
+  const message: TerminalMessage = {
+    type,
+    content,
+    projectId,
+    tokenId,
+    timestamp,
+  };
 
+  if (connections) {
     let sentCount = 0;
     for (const ws of connections) {
       if (ws.readyState === WebSocket.OPEN) {
@@ -77,6 +77,17 @@ export function sendOutputToTerminals(
     }
     if (sentCount === 0 && connections.size > 0) {
       console.warn(`[Terminal] ⚠️ ${connections.size} соединений для ${connectionKey}, но ни одно не OPEN`);
+    }
+  }
+
+  // Рассылаем также подписчикам user_* (глобальная подписка на все проекты)
+  for (const [key, conns] of activeConnections.entries()) {
+    if (!key.startsWith('user_')) continue;
+    const payload = JSON.stringify(message);
+    for (const ws of conns) {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(payload);
+      }
     }
   }
 
