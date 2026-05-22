@@ -936,31 +936,23 @@ export function Canvas({
     e.preventDefault();
 
     if (e.ctrlKey || e.metaKey) {
-      // Зум относительно позиции курсора (pinch на тачпаде или Ctrl+scroll)
-      // Плавный шаг: используем deltaY для пропорционального изменения
+      // Зум (pinch на тачпаде или Ctrl+scroll)
+      // Плавный шаг пропорционально deltaY
       const sensitivity = 0.003;
       const zoomFactor = Math.max(0.85, Math.min(1.15, 1 - e.deltaY * sensitivity));
 
-      // Используем scrollContainer (видимая область)
-      const container = scrollContainerRef.current ?? canvasRef.current?.parentElement;
-      const rect = container?.getBoundingClientRect();
-      if (rect) {
-        // Для тачпада (pinch) зумим к центру видимой области,
-        // для мыши (Ctrl+scroll) — к позиции курсора
-        const isPinch = Math.abs(e.deltaY) < 50;
-        const anchorX = isPinch ? rect.width / 2 : e.clientX - rect.left;
-        const anchorY = isPinch ? rect.height / 2 : e.clientY - rect.top;
+      const newZoom = Math.max(Math.min(zoom * zoomFactor, 200), 1);
 
-        const newZoom = Math.max(Math.min(zoom * zoomFactor, 200), 1);
+      // Простой зум без пересчёта пана — масштабируем от текущей позиции
+      setPan(prev => {
         const zoomRatio = newZoom / zoom;
+        return {
+          x: prev.x * zoomRatio,
+          y: prev.y * zoomRatio
+        };
+      });
 
-        setPan(prev => ({
-          x: anchorX - (anchorX - prev.x) * zoomRatio,
-          y: anchorY - (anchorY - prev.y) * zoomRatio
-        }));
-
-        setZoom(newZoom);
-      }
+      setZoom(newZoom);
     } else {
       // Обычный скролл/тачпад без Ctrl — двигаем пан вместо скролла контейнера
       setPan(prev => ({
