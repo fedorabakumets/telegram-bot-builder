@@ -18,6 +18,7 @@ interface MediaMetaSuffix {
 /** Карта суффиксов метаданных по типу медиа */
 const MEDIA_META_SUFFIXES_MAP: Record<string, MediaMetaSuffix[]> = {
   video: [
+    { suffix: 'file_id', description: 'Telegram file_id' },
     { suffix: 'file_unique_id', description: 'Уникальный ID файла' },
     { suffix: 'thumbnail', description: 'Обложка (file_id)' },
     { suffix: 'duration', description: 'Длительность (сек)' },
@@ -28,21 +29,25 @@ const MEDIA_META_SUFFIXES_MAP: Record<string, MediaMetaSuffix[]> = {
     { suffix: 'mime_type', description: 'MIME тип' },
   ],
   photo: [
+    { suffix: 'file_id', description: 'Telegram file_id' },
     { suffix: 'file_unique_id', description: 'Уникальный ID файла' },
     { suffix: 'file_size', description: 'Размер файла (байт)' },
     { suffix: 'width', description: 'Ширина (px)' },
     { suffix: 'height', description: 'Высота (px)' },
   ],
   audio: [
+    { suffix: 'file_id', description: 'Telegram file_id' },
     { suffix: 'file_unique_id', description: 'Уникальный ID файла' },
     { suffix: 'thumbnail', description: 'Обложка (file_id)' },
     { suffix: 'duration', description: 'Длительность (сек)' },
     { suffix: 'file_size', description: 'Размер файла (байт)' },
+    { suffix: 'file_name', description: 'Имя файла' },
     { suffix: 'title', description: 'Название трека' },
     { suffix: 'performer', description: 'Исполнитель' },
     { suffix: 'mime_type', description: 'MIME тип' },
   ],
   document: [
+    { suffix: 'file_id', description: 'Telegram file_id' },
     { suffix: 'file_unique_id', description: 'Уникальный ID файла' },
     { suffix: 'thumbnail', description: 'Обложка (file_id)' },
     { suffix: 'file_name', description: 'Имя файла' },
