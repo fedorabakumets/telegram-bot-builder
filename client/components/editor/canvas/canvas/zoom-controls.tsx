@@ -5,7 +5,7 @@
  * выпадающий список выбора масштаба и кнопку "Уместить всё".
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 /**
@@ -72,6 +72,18 @@ export function ZoomControls({
   const [localAutoFit, setLocalAutoFit] = useState(() => {
     try { return localStorage.getItem('canvas-auto-fit-sheet') !== 'false'; } catch { return true; }
   });
+
+  /** Синхронизация с localStorage при изменении из горячей клавиши */
+  useEffect(() => {
+    const sync = () => {
+      try { setLocalAutoFit(localStorage.getItem('canvas-auto-fit-sheet') !== 'false'); } catch {}
+    };
+    window.addEventListener('storage', sync);
+    /** Интервал-фоллбэк для изменений в том же окне */
+    const id = setInterval(sync, 500);
+    return () => { window.removeEventListener('storage', sync); clearInterval(id); };
+  }, []);
+
   const autoFitValue = autoFitProp ?? localAutoFit;
   const handleAutoFitToggle = (value: boolean) => {
     try { localStorage.setItem('canvas-auto-fit-sheet', String(value)); } catch {}
