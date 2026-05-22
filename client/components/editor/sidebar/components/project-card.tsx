@@ -711,10 +711,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               <div key={sheetId || index}>
               <div
                 className={cn(
-                  'flex items-center gap-1 sm:gap-1.5 group/sheet px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md hover:bg-muted/50 transition-colors border-t-2',
+                  'w-full flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl',
+                  'bg-gradient-to-r from-slate-100/80 to-slate-50/40 dark:from-slate-800/60 dark:to-slate-900/40',
+                  'hover:from-slate-200/60 hover:to-slate-100/30 dark:hover:from-slate-700/50 dark:hover:to-slate-800/30',
+                  'transition-all duration-200 group/sheet border border-slate-200/40 dark:border-slate-700/40 hover:border-primary/30',
                   dragOverSheetIndex === index && draggingSheetIndex !== index
                     ? 'border-blue-500'
-                    : 'border-transparent'
+                    : ''
                 )}
                 onDragOver={(e) => {
                   if (dragSheetIndexRef.current !== null) {
@@ -736,82 +739,85 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                   dragSheetIndexRef.current = null;
                 }}
               >
-                {/* Кнопка-стрелка аккордеона (только для нового формата) */}
-                {SheetsManager.isNewFormat(projectData) && sheetId && !isEditing && (
-                  <button
-                    className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded"
-                    onClick={(e) => toggleSheetExpanded(sheetId, e)}
-                    title={expandedSheets.has(sheetId) ? 'Свернуть' : 'Развернуть'}
-                  >
-                    {expandedSheets.has(sheetId)
-                      ? <ChevronDown className="h-3 w-3" />
-                      : <ChevronRight className="h-3 w-3" />
-                    }
-                  </button>
-                )}
-
-                {isEditing ? (
-                  <Input
-                    value={editingState.editingSheetName}
-                    onChange={(e) => onEditingSheetNameChange(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        onSaveSheetName();
-                      } else if (e.key === 'Escape') {
-                        onCancelEditSheetName();
+                {/* Левая часть: стрелка + название */}
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {/* Кнопка-стрелка аккордеона */}
+                  {SheetsManager.isNewFormat(projectData) && sheetId && !isEditing && (
+                    <button
+                      className="flex-shrink-0 p-1 rounded-md hover:bg-muted/50 transition-colors"
+                      onClick={(e) => toggleSheetExpanded(sheetId, e)}
+                      title={expandedSheets.has(sheetId) ? 'Свернуть' : 'Развернуть'}
+                    >
+                      {expandedSheets.has(sheetId)
+                        ? <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                        : <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                       }
-                    }}
-                    onBlur={onSaveSheetName}
-                    autoFocus
-                    className="text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 h-5 sm:h-6 flex-1 font-medium"
-                  />
-                ) : (
-                  <div
-                    draggable
-                    onDragStart={(e) => {
-                      if (sheetId) {
+                    </button>
+                  )}
+
+                  {isEditing ? (
+                    <Input
+                      value={editingState.editingSheetName}
+                      onChange={(e) => onEditingSheetNameChange(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          onSaveSheetName();
+                        } else if (e.key === 'Escape') {
+                          onCancelEditSheetName();
+                        }
+                      }}
+                      onBlur={onSaveSheetName}
+                      autoFocus
+                      className="text-xs sm:text-sm px-2 py-1 h-7 flex-1 font-medium"
+                    />
+                  ) : (
+                    <div
+                      draggable
+                      onDragStart={(e) => {
+                        if (sheetId) {
+                          e.stopPropagation();
+                          dragSheetIndexRef.current = index;
+                          setDraggingSheetIndex(index);
+                          onSheetDragStart(e, sheetId);
+                        }
+                      }}
+                      onDragEnd={(e) => {
                         e.stopPropagation();
-                        dragSheetIndexRef.current = index;
-                        setDraggingSheetIndex(index);
-                        onSheetDragStart(e, sheetId);
-                      }
-                    }}
-                    onDragEnd={(e) => {
-                      e.stopPropagation();
-                      dragSheetIndexRef.current = null;
-                      setDraggingSheetIndex(null);
-                      setDragOverSheetIndex(null);
-                      onSheetDragLeave();
-                    }}
-                    className={cn(
-                      'text-xs px-1.5 sm:px-2 py-0.5 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center text-center line-clamp-1',
-                      isActiveSheet
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-muted/50 text-foreground hover:bg-muted',
-                      isDraggedSheet ? 'opacity-50' : ''
-                    )}
-                    onClick={() => {
-                      if (sheetId) {
-                        handleSheetClick(sheetId);
-                      }
-                    }}
-                    onDoubleClick={() => {
-                      if (sheetId) {
-                        handleEditSheet(sheetId, name);
-                      }
-                    }}
-                    title={name}
-                  >
-                    <span className="truncate">{name || 'Без названия'}</span>
-                    {SheetsManager.isNewFormat(projectData) && (
-                      <span className="ml-1 flex-shrink-0 text-xs opacity-50 font-normal">
-                        {projectData.sheets[index]?.nodes?.length ?? 0}
-                      </span>
-                    )}
-                  </div>
-                )}
+                        dragSheetIndexRef.current = null;
+                        setDraggingSheetIndex(null);
+                        setDragOverSheetIndex(null);
+                        onSheetDragLeave();
+                      }}
+                      className={cn(
+                        'truncate cursor-grab active:cursor-grabbing font-medium text-sm',
+                        isActiveSheet ? 'text-primary' : 'text-foreground',
+                        isDraggedSheet ? 'opacity-50' : ''
+                      )}
+                      onClick={() => {
+                        if (sheetId) {
+                          handleSheetClick(sheetId);
+                        }
+                      }}
+                      onDoubleClick={() => {
+                        if (sheetId) {
+                          handleEditSheet(sheetId, name);
+                        }
+                      }}
+                      title={name}
+                    >
+                      {name || 'Без названия'}
+                    </div>
+                  )}
 
-                {/* Кнопки управления листом */}
+                  {/* Счётчик узлов */}
+                  {SheetsManager.isNewFormat(projectData) && (
+                    <span className="text-xs bg-muted/60 dark:bg-slate-700/60 px-2 py-0.5 rounded-full font-semibold text-muted-foreground whitespace-nowrap flex-shrink-0">
+                      {projectData.sheets[index]?.nodes?.length ?? 0}
+                    </span>
+                  )}
+                </div>
+
+                {/* Правая часть: кнопки управления */}
                 {currentProjectId === project.id && !isEditing && sheetId && (
                   <div className="flex gap-0.5 sm:gap-1 opacity-0 group-hover/sheet:opacity-100 transition-opacity flex-shrink-0">
                     <Button
