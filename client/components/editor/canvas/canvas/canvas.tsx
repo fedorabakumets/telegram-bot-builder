@@ -286,6 +286,12 @@ export function Canvas({
   // Флаг что был запрошен принудительный fit (не ждём 50% nodeSizes)
   const forceFitRef = useRef(false);
 
+  /**
+   * Флаг первой загрузки — при первом auto-fit всегда вписываем,
+   * при последующих (смена листа) проверяем localStorage
+   */
+  const isFirstAutoFitRef = useRef(true);
+
   // Автоматически вписываем содержимое в экран при первой загрузке узлов
   useEffect(() => {
     if (!autoFitOnLoad || nodes.length === 0) return;
@@ -301,6 +307,16 @@ export function Canvas({
 
     if (nodesKey === lastAutoFitNodesKeyRef.current) return;
 
+    // При смене листа (не первая загрузка) проверяем localStorage
+    if (!isFirstAutoFitRef.current) {
+      try {
+        if (localStorage.getItem('canvas-auto-fit-sheet') === 'false') {
+          lastAutoFitNodesKeyRef.current = nodesKey;
+          return;
+        }
+      } catch { /* localStorage недоступен — разрешаем fit */ }
+    }
+
     // Если был принудительный fit — не ждём nodeSizes, вписываем сразу
     if (!forceFitRef.current) {
       const coveredCount = nodes.filter(n => nodeSizes.has(n.id)).length;
@@ -309,6 +325,7 @@ export function Canvas({
 
     forceFitRef.current = false;
     lastAutoFitNodesKeyRef.current = nodesKey;
+    isFirstAutoFitRef.current = false;
     const timer = setTimeout(() => fitToContentRef.current(), 150);
     return () => clearTimeout(timer);
   }, [autoFitOnLoad, nodes, nodeSizes, suppressAutoFit]);
