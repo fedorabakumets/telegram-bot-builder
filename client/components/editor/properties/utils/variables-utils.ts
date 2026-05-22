@@ -38,6 +38,7 @@ const MEDIA_META_SUFFIXES_MAP: Record<string, MediaMetaSuffix[]> = {
     { suffix: 'small_width', description: 'Ширина миниатюры (px)' },
     { suffix: 'small_height', description: 'Высота миниатюры (px)' },
     { suffix: 'sizes_count', description: 'Количество размеров' },
+    { suffix: 'all_sizes', description: 'JSON всех размеров [{file_id, w, h, size}]' },
   ],
   audio: [
     { suffix: 'file_id', description: 'Telegram file_id' },

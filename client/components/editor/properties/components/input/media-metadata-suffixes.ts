@@ -36,6 +36,7 @@ export const MEDIA_METADATA_SUFFIXES: Record<string, MetadataSuffix[]> = {
     { suffix: 'small_width', description: 'Ширина миниатюры (px)', icon: '↔️' },
     { suffix: 'small_height', description: 'Высота миниатюры (px)', icon: '↕️' },
     { suffix: 'sizes_count', description: 'Количество размеров', icon: '📐' },
+    { suffix: 'all_sizes', description: 'JSON всех размеров [{file_id, w, h, size}]', icon: '📋' },
   ],
   audio: [
     { suffix: 'file_id', description: 'Telegram file_id', icon: '📎' },
