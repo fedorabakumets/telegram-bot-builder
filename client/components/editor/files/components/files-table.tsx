@@ -3,7 +3,7 @@
  * @module components/editor/files/components/files-table
  */
 
-import { Image, Film, Music, FileText, Sticker, Copy, Trash2 } from 'lucide-react';
+import { Image, Film, Music, FileText, Sticker, Copy, Trash2, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,6 +14,8 @@ import type { ProjectFile, FileMediaType } from '../hooks/use-project-files';
 interface FilesTableProps {
   /** Массив файлов для отображения */
   files: ProjectFile[];
+  /** ID проекта для проксирования превью */
+  projectId: number;
   /** Выбранные ID файлов */
   selectedIds: Set<number>;
   /** Обработчик выбора/снятия файла */
@@ -55,12 +57,29 @@ function formatDate(dateStr: string | null): string {
   return `${pad(d.getHours())}:${pad(d.getMinutes())} ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${String(d.getFullYear()).slice(2)}`;
 }
 
+/** Строит URL превью для файла */
+function getPreviewUrl(file: ProjectFile, projectId: number): string | null {
+  // Для загруженных файлов с локальным URL
+  if (file.url && !file.url.startsWith('{')) return file.url;
+  // Для файлов с file_id — проксирование через Telegram
+  if (file.fileId && file.tokenId) {
+    return `/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(file.fileId)}&tokenId=${file.tokenId}`;
+  }
+  if (file.fileId) {
+    return `/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(file.fileId)}`;
+  }
+  return null;
+}
+
+/** Типы медиа для которых показываем миниатюру */
+const PREVIEW_TYPES = new Set(['photo', 'video', 'sticker', 'animation']);
+
 /**
  * Таблица файлов — десктоп: таблица, мобильный: карточки
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function FilesTable({ files, selectedIds, onToggleSelect, onCopyFileId, onDelete }: FilesTableProps) {
+export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCopyFileId, onDelete }: FilesTableProps) {
   if (files.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
@@ -88,7 +107,7 @@ export function FilesTable({ files, selectedIds, onToggleSelect, onCopyFileId, o
           </thead>
           <tbody className="divide-y">
             {files.map((file) => (
-              <FileRow key={file.id} file={file} selected={selectedIds.has(file.id)}
+              <FileRow key={file.id} file={file} projectId={projectId} selected={selectedIds.has(file.id)}
                 onToggle={() => onToggleSelect(file.id)} onCopy={onCopyFileId} onDelete={onDelete} />
             ))}
           </tbody>
@@ -98,7 +117,7 @@ export function FilesTable({ files, selectedIds, onToggleSelect, onCopyFileId, o
       {/* Мобильный: карточки */}
       <div className="sm:hidden flex-1 overflow-auto p-3 space-y-2">
         {files.map((file) => (
-          <FileCard key={file.id} file={file} selected={selectedIds.has(file.id)}
+          <FileCard key={file.id} file={file} projectId={projectId} selected={selectedIds.has(file.id)}
             onToggle={() => onToggleSelect(file.id)} onCopy={onCopyFileId} onDelete={onDelete} />
         ))}
       </div>
@@ -107,19 +126,25 @@ export function FilesTable({ files, selectedIds, onToggleSelect, onCopyFileId, o
 }
 
 /** Строка таблицы для одного файла */
-function FileRow({ file, selected, onToggle, onCopy, onDelete }: {
-  file: ProjectFile; selected: boolean; onToggle: () => void;
+function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete }: {
+  file: ProjectFile; projectId: number; selected: boolean; onToggle: () => void;
   onCopy: (id: string) => void; onDelete?: (id: number) => void;
 }) {
   const Icon = MEDIA_ICONS[file.mediaType ?? ''] ?? FileText;
+  const previewUrl = getPreviewUrl(file, projectId);
+  const showThumbnail = PREVIEW_TYPES.has(file.mediaType ?? '') && previewUrl;
   return (
     <tr className={cn('hover:bg-muted/30 transition-colors', selected && 'bg-primary/5')}>
       <td className="p-2 text-center">
         <Checkbox checked={selected} onCheckedChange={onToggle} />
       </td>
       <td className="p-2">
-        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
-          <Icon className="h-4 w-4 text-muted-foreground" />
+        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center overflow-hidden">
+          {showThumbnail ? (
+            <img src={previewUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          ) : (
+            <Icon className="h-4 w-4 text-muted-foreground" />
+          )}
         </div>
       </td>
       <td className="p-2 max-w-[180px] truncate">{file.fileName ?? '—'}</td>
@@ -137,13 +162,20 @@ function FileRow({ file, selected, onToggle, onCopy, onDelete }: {
       <td className="p-2 text-muted-foreground">{formatDate(file.createdAt)}</td>
       <td className="p-2">
         <div className="flex gap-1">
+          {previewUrl && (
+            <a href={previewUrl} download={file.fileName ?? 'file'} target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="icon" className="h-6 w-6" title="Скачать">
+                <Download className="h-3 w-3" />
+              </Button>
+            </a>
+          )}
           {file.fileId && (
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onCopy(file.fileId!)}>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onCopy(file.fileId!)} title="Копировать file_id">
               <Copy className="h-3 w-3" />
             </Button>
           )}
           {onDelete && (
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => onDelete(file.id)}>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => onDelete(file.id)} title="Удалить">
               <Trash2 className="h-3 w-3" />
             </Button>
           )}
@@ -154,16 +186,22 @@ function FileRow({ file, selected, onToggle, onCopy, onDelete }: {
 }
 
 /** Карточка файла для мобильного вида */
-function FileCard({ file, selected, onToggle, onCopy, onDelete }: {
-  file: ProjectFile; selected: boolean; onToggle: () => void;
+function FileCard({ file, projectId, selected, onToggle, onCopy, onDelete }: {
+  file: ProjectFile; projectId: number; selected: boolean; onToggle: () => void;
   onCopy: (id: string) => void; onDelete?: (id: number) => void;
 }) {
   const Icon = MEDIA_ICONS[file.mediaType ?? ''] ?? FileText;
+  const previewUrl = getPreviewUrl(file, projectId);
+  const showThumbnail = PREVIEW_TYPES.has(file.mediaType ?? '') && previewUrl;
   return (
     <div className={cn('rounded-xl border p-3 flex gap-3 items-start', selected && 'border-primary/50 bg-primary/5')}>
       <Checkbox checked={selected} onCheckedChange={onToggle} className="mt-1" />
-      <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+      <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+        {showThumbnail ? (
+          <img src={previewUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+        ) : (
+          <Icon className="h-4 w-4 text-muted-foreground" />
+        )}
       </div>
       <div className="flex-1 min-w-0 space-y-1">
         <p className="text-xs font-medium truncate">{file.fileName ?? '—'}</p>
@@ -176,7 +214,14 @@ function FileCard({ file, selected, onToggle, onCopy, onDelete }: {
           <p className="font-mono text-[10px] text-muted-foreground truncate">{file.fileId.slice(0, 24)}…</p>
         )}
       </div>
-      <div className="flex gap-1 shrink-0">
+      <div className="flex flex-col gap-1 shrink-0">
+        {previewUrl && (
+          <a href={previewUrl} download={file.fileName ?? 'file'} target="_blank" rel="noopener noreferrer">
+            <Button variant="ghost" size="icon" className="h-6 w-6" title="Скачать">
+              <Download className="h-3 w-3" />
+            </Button>
+          </a>
+        )}
         {file.fileId && (
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onCopy(file.fileId!)}>
             <Copy className="h-3 w-3" />

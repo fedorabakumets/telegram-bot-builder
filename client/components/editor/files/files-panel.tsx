@@ -99,7 +99,7 @@ export function FilesPanel({ projectId, selectedTokenId, onSelectToken, allProje
       />
 
       <FilesTable
-        files={files} selectedIds={selectedIds}
+        files={files} projectId={projectId} selectedIds={selectedIds}
         onToggleSelect={handleToggleSelect} onCopyFileId={handleCopyFileId}
       />
 

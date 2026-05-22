@@ -27,6 +27,8 @@ export interface ProjectFile {
   fileSize: number | null;
   /** Длительность (для аудио/видео) */
   duration: number | null;
+  /** URL файла (для загруженных) */
+  url?: string | null;
   /** ID пользователя (для incoming) */
   userId?: number | null;
   /** ID токена бота */
