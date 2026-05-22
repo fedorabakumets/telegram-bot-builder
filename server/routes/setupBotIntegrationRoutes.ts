@@ -13,7 +13,6 @@ import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/b
 import { getTelegramFileHandler } from "./botIntegration/handlers/botData/getTelegramFileHandler";
 import { getProjectFilesHandler, addProjectFileHandler, deleteProjectFilesHandler } from "./botIntegration/handlers/botData/getProjectFilesHandler";
 import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, saveMessageHandler, deleteMessagesHandler, deleteSingleMessageHandler, editSingleMessageHandler, getGroupMessagesHandler } from "./botIntegration/handlers/messages";
-import { registerTelegramMediaHandler } from "./botIntegration/handlers/media";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler, syncGroupHandler } from "./botIntegration/handlers/groups";
 import { getBotInfoHandler, updateBotNameHandler, updateBotDescriptionHandler, updateBotShortDescriptionHandler } from "./botIntegration/handlers/botInfo";
 import { sendGroupMessageHandler, getGroupInfoHandler, getGroupMembersCountHandler, getBotAdminStatusHandler, getGroupAdminsHandler, getGroupMembersHandler, getSavedMembersHandler } from "./botIntegration/handlers/telegramGroups";
@@ -172,15 +171,6 @@ export function setupBotIntegrationRoutes(app: Express) {
      * @route PATCH /api/projects/:projectId/messages/:messageId
      */
     app.patch("/api/projects/:projectId/messages/:messageId", editSingleMessageHandler);
-
-    /**
-     * Обработчик маршрута POST /api/projects/:projectId/media/register-telegram-photo
-     *
-     * Регистрирует медиафайл из Telegram и связывает его с сообщением
-     *
-     * @route POST /api/projects/:projectId/media/register-telegram-photo
-     */
-    app.post("/api/projects/:projectId/media/register-telegram-photo", registerTelegramMediaHandler);
 
     // API групп ботов
     app.get("/api/projects/:id/groups", getGroupsHandler);
