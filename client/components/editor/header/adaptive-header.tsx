@@ -117,13 +117,7 @@ export function AdaptiveHeader({
           )}
 
           <Separator />
-          {/* Мобильные кнопки компонентов и свойств после разделителя */}
-          {isMobile && !isVertical && (
-            <MobileHeaderControls
-              onOpenMobileSidebar={onOpenMobileSidebar}
-              onOpenMobileProperties={onOpenMobileProperties}
-            />
-          )}
+          {/* Мобильные кнопки перенесены на FAB канваса — см. mobile-canvas-fab.tsx */}
         </div>
 
         <div className="flex items-center gap-1 lg:gap-2 flex-1">
