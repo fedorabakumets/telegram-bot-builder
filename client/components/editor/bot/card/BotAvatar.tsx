@@ -7,7 +7,7 @@
  * @module BotAvatar
  */
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 /**
  * Свойства аватарки бота
@@ -38,15 +38,21 @@ export function BotAvatar({ photoUrl, botName, size = 40, className = '', projec
   /** Флаг наличия фото — true если photoUrl не пустой */
   const hasPhoto = !!photoUrl && !!projectId;
 
+  /** Флаг ошибки загрузки — при 404 показываем fallback */
+  const [imgError, setImgError] = useState(false);
+
   /** Стабилизируем URL — не сбрасываем при рефетче */
   const stableRef = useRef<string | null>(null);
   const proxyUrl = hasPhoto
     ? `/api/projects/${projectId}/users/bot/avatar${tokenId ? `?tokenId=${tokenId}` : ''}`
     : null;
-  if (proxyUrl) stableRef.current = proxyUrl;
+  if (proxyUrl && proxyUrl !== stableRef.current) {
+    stableRef.current = proxyUrl;
+    setImgError(false);
+  }
   const resolvedUrl = proxyUrl || stableRef.current;
 
-  if (resolvedUrl) {
+  if (resolvedUrl && !imgError) {
     return (
       <div
         className={`relative rounded-full overflow-hidden flex-shrink-0 ${className}`}
@@ -56,6 +62,7 @@ export function BotAvatar({ photoUrl, botName, size = 40, className = '', projec
           src={resolvedUrl}
           alt={`${botName} avatar`}
           className="w-full h-full object-cover"
+          onError={() => setImgError(true)}
         />
       </div>
     );
