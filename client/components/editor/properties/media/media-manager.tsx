@@ -520,12 +520,12 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
       {/* Область загрузки файлов */}
       <Card className="relative overflow-hidden">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between gap-3">
+          <CardTitle className="flex items-center justify-between gap-2 sm:gap-3">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                <Upload className="w-4 h-4 text-white" />
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                <Upload className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
               </div>
-              <span className="font-semibold break-words">Загрузить медиафайлы</span>
+              <span className="font-semibold text-sm sm:text-base break-words">Загрузить медиафайлы</span>
             </div>
             {uploadingFiles.length > 0 && (
               <Button
@@ -544,7 +544,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
           <div
             {...getRootProps()}
             className={`
-              relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 group
+              relative border-2 border-dashed rounded-xl p-4 sm:p-8 text-center cursor-pointer transition-all duration-300 group
               ${isDragActive && !isDragReject
                 ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 scale-105'
                 : isDragReject
@@ -558,20 +558,20 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
             <input {...getInputProps()} />
 
             {/* Иконка загрузки с анимацией */}
-            <div className="relative mb-4">
+            <div className="relative mb-3 sm:mb-4">
               {uploadingFiles.some(uf => uf.status === 'uploading') ? (
-                <Loader2 className="w-16 h-16 mx-auto text-blue-500 animate-spin" />
+                <Loader2 className="w-10 h-10 sm:w-16 sm:h-16 mx-auto text-blue-500 animate-spin" />
               ) : isDragActive && !isDragReject ? (
-                <div className="w-16 h-16 mx-auto bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
-                  <Upload className="w-8 h-8 text-white" />
+                <div className="w-10 h-10 sm:w-16 sm:h-16 mx-auto bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
+                  <Upload className="w-5 h-5 sm:w-8 sm:h-8 text-white" />
                 </div>
               ) : isDragReject ? (
-                <div className="w-16 h-16 mx-auto bg-red-500 rounded-full flex items-center justify-center">
-                  <AlertCircle className="w-8 h-8 text-white" />
+                <div className="w-10 h-10 sm:w-16 sm:h-16 mx-auto bg-red-500 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-5 h-5 sm:w-8 sm:h-8 text-white" />
                 </div>
               ) : (
                 <div className="relative">
-                  <Upload className="w-16 h-16 mx-auto text-gray-400 group-hover:text-blue-500 transition-colors" />
+                  <Upload className="w-10 h-10 sm:w-16 sm:h-16 mx-auto text-gray-400 group-hover:text-blue-500 transition-colors" />
                   <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Camera className="w-3 h-3 text-white" />
                   </div>
@@ -609,10 +609,10 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
               </div>
             ) : (
               <div>
-                <p className="text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">
+                <p className="text-sm sm:text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">
                   Перетащите файлы сюда или нажмите для выбора
                 </p>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
                   Поддерживаются: изображения, видео, аудио, документы (до 50МБ)
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-400">

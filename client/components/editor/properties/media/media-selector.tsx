@@ -296,7 +296,7 @@ export function MediaSelector({
             </DialogTrigger>
             <DialogContent className="w-full sm:max-w-5xl">
               <DialogHeader>
-                <DialogTitle className="text-base sm:text-xl">
+                <DialogTitle className="text-sm sm:text-xl">
                   <i className="fas fa-folder-open mr-2 text-blue-600 dark:text-blue-400"></i>
                   Управление медиафайлами
                 </DialogTitle>
