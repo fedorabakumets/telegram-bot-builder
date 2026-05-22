@@ -2,12 +2,16 @@
  * @fileoverview Компонент аватарки бота
  *
  * Отображает аватарку бота через серверный прокси с передачей tokenId.
+ * Кеширует неудачные загрузки (404) на уровне модуля чтобы не мигать сломанным img.
  * Fallback — инициалы или иконка бота.
  *
  * @module BotAvatar
  */
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
+
+/** Глобальный кеш URL-ов, для которых загрузка завершилась ошибкой */
+const failedUrlCache = new Set<string>();
 
 /**
  * Свойства аватарки бота
@@ -35,34 +39,32 @@ interface BotAvatarProps {
  * @returns JSX элемент
  */
 export function BotAvatar({ photoUrl, botName, size = 40, className = '', projectId, tokenId }: BotAvatarProps) {
-  /** Флаг наличия фото — true если photoUrl не пустой */
+  /** URL прокси аватарки */
   const hasPhoto = !!photoUrl && !!projectId;
-
-  /** Флаг ошибки загрузки — при 404 показываем fallback */
-  const [imgError, setImgError] = useState(false);
-
-  /** Стабилизируем URL — не сбрасываем при рефетче */
-  const stableRef = useRef<string | null>(null);
   const proxyUrl = hasPhoto
     ? `/api/projects/${projectId}/users/bot/avatar${tokenId ? `?tokenId=${tokenId}` : ''}`
     : null;
-  if (proxyUrl && proxyUrl !== stableRef.current) {
-    stableRef.current = proxyUrl;
-    setImgError(false);
-  }
-  const resolvedUrl = proxyUrl || stableRef.current;
 
-  if (resolvedUrl && !imgError) {
+  /** Локальный флаг ошибки — для ре-рендера при onError */
+  const [imgError, setImgError] = useState(() => !!proxyUrl && failedUrlCache.has(proxyUrl));
+
+  /** Показываем img только если URL есть и не в кеше ошибок */
+  const showImg = proxyUrl && !failedUrlCache.has(proxyUrl) && !imgError;
+
+  if (showImg) {
     return (
       <div
         className={`relative rounded-full overflow-hidden flex-shrink-0 ${className}`}
         style={{ width: size, height: size }}
       >
         <img
-          src={resolvedUrl}
+          src={proxyUrl}
           alt={`${botName} avatar`}
           className="w-full h-full object-cover"
-          onError={() => setImgError(true)}
+          onError={() => {
+            failedUrlCache.add(proxyUrl);
+            setImgError(true);
+          }}
         />
       </div>
     );
