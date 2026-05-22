@@ -70,26 +70,26 @@ export function DeleteProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl shadow-2xl border-slate-200/60 dark:border-slate-700/60">
+      <DialogContent className="rounded-2xl shadow-2xl border-slate-200/60 dark:border-slate-700/60 max-w-md w-[calc(100%-2rem)]">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">Удалить проект?</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
             Проект «{projectName}» будет удалён. Это действие нельзя отменить.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:gap-2 pt-2">
+        <DialogFooter className="flex flex-col gap-2 pt-2 sm:flex-col">
           <Button
             onClick={handleSaveAndDelete}
-            className="bg-teal-600 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white gap-2"
+            className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white gap-2"
           >
             <Save className="h-4 w-4" />
             Сохранить как сценарий и удалить
           </Button>
-          <Button variant="destructive" onClick={handleDeleteForever} className="gap-2">
+          <Button variant="destructive" onClick={handleDeleteForever} className="w-full gap-2">
             <Trash2 className="h-4 w-4" />
             Удалить навсегда
           </Button>
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full gap-2">
             <X className="h-4 w-4" />
             Отмена
           </Button>
