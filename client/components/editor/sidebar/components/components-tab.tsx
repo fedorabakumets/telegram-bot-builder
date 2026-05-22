@@ -63,7 +63,7 @@ export function ComponentsTab({
   const COMMANDS_TITLE = 'Команды';
 
   return (
-    <div className="p-2 space-y-2 sm:space-y-3">
+    <div className="px-2 pt-1 pb-2 space-y-2 sm:space-y-3">
       {categories.map((category) => {
         /** Флаг свёрнутости категории */
         const isCollapsed = collapsedCategories.has(category.title);
