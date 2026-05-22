@@ -623,21 +623,33 @@ interface FilePickerContext {
 ### ✅ Этап 2: UI — вкладка "Файлы" (выполнено)
 
 - [x] Добавлен `'files'` в типы `HeaderTab` и `EditorTab`
-- [x] Добавлен в `NAV_ITEMS` в `sidebar-nav.tsx` (иконка `FolderOpen`, после "Таблицы")
+- [x] Добавлен в `NAV_ITEMS` в `sidebar-nav.tsx` (иконка `FileImage`, после "Таблицы")
 - [x] Добавлен в `validTabs` и рендеринг в `editor.tsx`
 - [x] Создан `FilesPanel` — главный компонент вкладки
   - Header с `ProjectSwitcher` + `BotTokenSelector`
   - Табы: Входящие / Исходящие / Загруженные
-  - Фильтр по типу медиа
+  - Фильтр по типу медиа (8 типов: photo, video, animation, audio, voice, video_note, document, sticker)
   - Пагинация
 - [x] React Query хук `useProjectFiles` с пагинацией и фильтрацией
 - [x] Таблица файлов `FilesTable`:
-  - Десктоп: полноценная таблица с колонками (☐, превью, название, тип, file_id, размер, дата, действия)
+  - Десктоп: полноценная таблица с колонками (☐, превью, название, расширение, тип, обложка, file_id, размер, дата загрузки, действия)
   - Мобилка: карточный вид
-  - Цветные индикаторы размера
+  - Цветные индикаторы размера (🟢<1MB, 🟡1-10MB, 🟠10-50MB, 🔴>50MB)
   - Копирование file_id
-  - Чекбоксы для множественного выбора
+  - Кнопка скачивания (через проксирование с правильным именем файла)
+  - Чекбоксы для множественного выбора + "Выбрать все"
+  - Лайтбокс с навигацией (← →) при клике на превью
+  - Русские названия типов (Фото, Видео, GIF, Аудио, Голосовое, Кружок, Документ, Стикер)
+  - Расширение определяется из fileName или mediaType (fallback)
+  - Колонка "Обл." — миниатюра thumbnail если есть
 - [x] Тулбар `FilesToolbar` с табами источника и фильтром типа
+- [x] Массовое удаление — sticky плашка с кнопкой "Удалить (N)"
+- [x] API `DELETE /api/projects/:projectId/files` — удаление из БД + физических файлов
+
+Дополнительно:
+- [x] Удалён legacy endpoint `POST /api/projects/:id/media/register-telegram-photo` (скачивание файлов)
+- [x] Обновлён Python-шаблон `media-input-handlers` — сохраняет полные метаданные (file_size, duration, file_unique_id, thumbnail) в messageData
+- [x] Прокси-handler `getTelegramFileHandler` — добавлен `Content-Disposition` с именем файла
 
 Файлы:
 - `client/components/editor/files/files-panel.tsx`
@@ -645,6 +657,9 @@ interface FilePickerContext {
 - `client/components/editor/files/components/files-table.tsx`
 - `client/components/editor/files/components/files-toolbar.tsx`
 - `client/components/editor/files/index.ts`
+- `server/routes/botIntegration/handlers/botData/getProjectFilesHandler.ts`
+- `server/routes/botIntegration/handlers/botData/getTelegramFileHandler.ts`
+- `lib/templates/media-input-handlers/media-input-handlers.py.jinja2`
 
 ### ⬜ Этап 3: Интеграция с нодами
 
