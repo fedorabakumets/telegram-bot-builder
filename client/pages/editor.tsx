@@ -2000,7 +2000,10 @@ export default function Editor() {
 
       {/* Мобильный sidebar */}
       <Sheet open={showMobileSidebar && currentTab === 'editor'} onOpenChange={setShowMobileSidebar}>
-        <SheetContent side="left" className="p-0 w-80">
+        <SheetContent side="left" className="p-0 w-80" aria-describedby={undefined}>
+          <SheetHeader className="sr-only">
+            <SheetTitle>Компоненты</SheetTitle>
+          </SheetHeader>
           <div className="h-full overflow-auto">
             <ComponentsSidebar
               onComponentDrag={handleComponentDrag}
