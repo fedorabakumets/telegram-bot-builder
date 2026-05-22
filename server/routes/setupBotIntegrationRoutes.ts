@@ -11,7 +11,7 @@
 import type { Express } from "express";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
 import { getTelegramFileHandler } from "./botIntegration/handlers/botData/getTelegramFileHandler";
-import { getProjectFilesHandler } from "./botIntegration/handlers/botData/getProjectFilesHandler";
+import { getProjectFilesHandler, addProjectFileHandler } from "./botIntegration/handlers/botData/getProjectFilesHandler";
 import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, saveMessageHandler, deleteMessagesHandler, deleteSingleMessageHandler, editSingleMessageHandler, getGroupMessagesHandler } from "./botIntegration/handlers/messages";
 import { registerTelegramMediaHandler } from "./botIntegration/handlers/media";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler, syncGroupHandler } from "./botIntegration/handlers/groups";
@@ -83,6 +83,16 @@ export function setupBotIntegrationRoutes(app: Express) {
      * @route GET /api/projects/:projectId/files?source=incoming|outgoing|uploaded
      */
     app.get("/api/projects/:projectId/files", getProjectFilesHandler);
+
+    /**
+     * Обработчик маршрута POST /api/projects/:projectId/files
+     *
+     * Добавляет file_id вручную в файловое хранилище проекта.
+     * Создаёт запись в media_files с маппингом tokenId → file_id.
+     *
+     * @route POST /api/projects/:projectId/files
+     */
+    app.post("/api/projects/:projectId/files", addProjectFileHandler);
 
     /**
      * Обработчик маршрута GET /api/projects/:projectId/users/:userId/messages
