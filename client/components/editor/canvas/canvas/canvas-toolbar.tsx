@@ -192,8 +192,8 @@ export function CanvasToolbar({
             {/* Р Р°Р·РґРµР»РёС‚РµР»СЊ */}
             <div className="h-6 w-px bg-slate-300/50 dark:bg-slate-600/50" />
 
-            {/* РљРЅРѕРїРєРё СѓРїСЂР°РІР»РµРЅРёСЏ РёРЅС‚РµСЂС„РµР№СЃРѕРј */}
-            {headerVisible === false && (onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
+            {/* Кнопки управления интерфейсом — показываются когда любая панель скрыта */}
+            {(headerVisible === false || sidebarVisible === false || propertiesVisible === false) && (onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
               <InterfaceToggles
                 headerVisible={headerVisible}
                 sidebarVisible={sidebarVisible}
