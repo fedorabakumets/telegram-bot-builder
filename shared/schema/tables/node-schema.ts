@@ -385,6 +385,8 @@ export const nodeSchema = z.object({
     appendVariable: z.boolean().default(false),
     /** Сохранять метаданные медиа в отдельные переменные (суффиксы _thumbnail, _duration и т.д.) */
     saveMediaMetadata: z.boolean().optional().default(false),
+    /** Список включённых суффиксов метаданных (если пуст — сохраняются все) */
+    mediaMetadataSuffixes: z.array(z.string()).optional().default([]),
     /** Фильтры переменных (ключ — имя переменной, значение — фильтр) */
     variableFilters: z.record(z.string()).default({}),
     /** Включить обработку действий пользователей */

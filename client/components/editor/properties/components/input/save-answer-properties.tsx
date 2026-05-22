@@ -143,7 +143,14 @@ export function SaveAnswerProperties({
             </Label>
           </div>
           {saveMediaMetadata && (
-            <MediaMetadataInfo inputType={inputType} variableName={variableName} />
+            <MediaMetadataInfo
+              inputType={inputType}
+              variableName={variableName}
+              enabledSuffixes={data.mediaMetadataSuffixes || []}
+              onSuffixesChange={(suffixes) =>
+                onNodeUpdate(selectedNode.id, { mediaMetadataSuffixes: suffixes })
+              }
+            />
           )}
         </div>
       )}
