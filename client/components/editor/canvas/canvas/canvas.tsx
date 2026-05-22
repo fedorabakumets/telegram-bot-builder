@@ -1142,8 +1142,12 @@ export function Canvas({
             break;
           case '1':
             e.preventDefault();
-            if (e.shiftKey) {
-              /** Ctrl+Shift+1 — переключение авто-уместить при смене листа */
+            fitToContent();
+            break;
+          case '2':
+            e.preventDefault();
+            {
+              /** Ctrl+2 — переключение авто-уместить при смене листа */
               const current = localStorage.getItem('canvas-auto-fit-sheet');
               const newValue = current === 'false' ? 'true' : 'false';
               localStorage.setItem('canvas-auto-fit-sheet', newValue);
@@ -1152,8 +1156,6 @@ export function Canvas({
                   ? 'Авто-уместить при смене листа: ВКЛ'
                   : 'Авто-уместить при смене листа: ВЫКЛ',
               });
-            } else {
-              fitToContent();
             }
             break;
           case 'z':
