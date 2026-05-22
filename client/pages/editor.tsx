@@ -1308,9 +1308,6 @@ export default function Editor() {
         editorRef.current?.setValue(displayContent);
         setTimeout(() => { isResettingEditorRef.current = false; }, 0);
       }}
-      allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-      currentProjectId={activeProject.id}
-      onProjectChange={handleProjectSelect}
     />
   ) : null;
 
@@ -1649,9 +1646,6 @@ export default function Editor() {
             editorRef.current?.setValue(displayContent);
             setTimeout(() => { isResettingEditorRef.current = false; }, 0);
           }}
-          allProjects={allProjects.map((p) => ({ id: p.id, name: p.name }))}
-          currentProjectId={activeProject.id}
-          onProjectChange={handleProjectSelect}
         />
       </div>
     ) : currentTab === 'editor' ? (
