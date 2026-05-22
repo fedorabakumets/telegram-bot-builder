@@ -31,8 +31,20 @@ interface FilesTableProps {
 
 /** Иконка по типу медиа */
 const MEDIA_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  photo: Image, video: Film, audio: Music, voice: Music,
-  document: FileText, sticker: Sticker,
+  photo: Image, video: Film, animation: Film, audio: Music, voice: Music,
+  video_note: Film, document: FileText, sticker: Sticker,
+};
+
+/** Русские названия типов медиа */
+const MEDIA_TYPE_LABELS: Record<string, string> = {
+  photo: 'Фото',
+  video: 'Видео',
+  animation: 'GIF',
+  audio: 'Аудио',
+  voice: 'Голосовое',
+  video_note: 'Кружок',
+  document: 'Документ',
+  sticker: 'Стикер',
 };
 
 /** Цвет бейджа размера */
@@ -260,7 +272,7 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
       <td className="p-2 max-w-[180px] truncate">{file.fileName ?? '—'}</td>
       <td className="p-2 text-muted-foreground text-[10px] uppercase">{getExtension(file.fileName)}</td>
       <td className="p-2">
-        <Badge variant="secondary" className="text-[10px]">{file.mediaType ?? '?'}</Badge>
+        <Badge variant="secondary" className="text-[10px]">{MEDIA_TYPE_LABELS[file.mediaType ?? ''] ?? file.mediaType ?? '?'}</Badge>
       </td>
       <td className="p-2 max-w-[140px]">
         {file.fileId ? (
@@ -321,7 +333,7 @@ function FileCard({ file, projectId, selected, onToggle, onCopy, onDelete, onPre
       <div className="flex-1 min-w-0 space-y-1">
         <p className="text-xs font-medium truncate">{file.fileName ?? '—'}</p>
         <div className="flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
-          <Badge variant="secondary" className="text-[10px]">{file.mediaType ?? '?'}</Badge>
+          <Badge variant="secondary" className="text-[10px]">{MEDIA_TYPE_LABELS[file.mediaType ?? ''] ?? file.mediaType ?? '?'}</Badge>
           <span className={getSizeColor(file.fileSize)}>{formatSize(file.fileSize)}</span>
           <span>{formatDate(file.createdAt)}</span>
         </div>

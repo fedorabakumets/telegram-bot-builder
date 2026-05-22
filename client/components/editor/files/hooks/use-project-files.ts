@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 export type FileSource = 'incoming' | 'outgoing' | 'uploaded';
 
 /** Тип медиа файла */
-export type FileMediaType = 'photo' | 'video' | 'audio' | 'voice' | 'document' | 'sticker';
+export type FileMediaType = 'photo' | 'video' | 'animation' | 'audio' | 'voice' | 'video_note' | 'document' | 'sticker';
 
 /** Структура одного файла из API */
 export interface ProjectFile {

@@ -13,7 +13,7 @@ import { db } from "../../../../database/db";
 import { botMessages, mediaFiles } from "@shared/schema";
 
 /** Допустимые типы медиа для фильтрации (GET) */
-const MEDIA_TYPES = ["photo", "video", "audio", "voice", "document", "sticker"] as const;
+const MEDIA_TYPES = ["photo", "video", "animation", "audio", "voice", "video_note", "document", "sticker"] as const;
 type MediaType = (typeof MEDIA_TYPES)[number];
 
 /** Допустимые типы медиа для ручного добавления file_id (POST) */

@@ -37,7 +37,10 @@ const MEDIA_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'all', label: 'Все типы' },
   { value: 'photo', label: 'Фото' },
   { value: 'video', label: 'Видео' },
+  { value: 'animation', label: 'GIF' },
   { value: 'audio', label: 'Аудио' },
+  { value: 'voice', label: 'Голосовое' },
+  { value: 'video_note', label: 'Кружок' },
   { value: 'document', label: 'Документы' },
   { value: 'sticker', label: 'Стикеры' },
 ];
