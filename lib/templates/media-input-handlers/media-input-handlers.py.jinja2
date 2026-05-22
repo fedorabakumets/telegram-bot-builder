@@ -8,6 +8,7 @@
   @param {boolean} hasLocationInput - Есть узлы с enableLocationInput
   @param {boolean} hasContactInput - Есть узлы с enableContactInput
   @param {string}  navigationCode  - Код навигации к следующему узлу
+  @param {Array}   mediaMetadataConfigs - Конфигурация сохранения метаданных медиа
 #}
 
 {% if hasPhotoInput %}
@@ -77,6 +78,54 @@ async def handle_photo_input(message: types.Message):
         logging.info(f"Фото сохранено в БД: {photo_variable} (пользователь {user_id})")
     else:
         logging.warning(f"Не удалось сохранить фото в БД, данные сохранены локально")
+{% if mediaMetadataConfigs %}
+{% for config in mediaMetadataConfigs %}
+{% if config.mediaType == 'photo' %}
+
+    # Сохранение метаданных фото
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_id' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_id if config.customNames.file_id else config.baseVariable + '_file_id' }}"] = photo_file_id
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_id if config.customNames.file_id else config.baseVariable + '_file_id' }}", photo_file_id)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_unique_id' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_unique_id if config.customNames.file_unique_id else config.baseVariable + '_file_unique_id' }}"] = message.photo[-1].file_unique_id
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_unique_id if config.customNames.file_unique_id else config.baseVariable + '_file_unique_id' }}", message.photo[-1].file_unique_id)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_size' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_size if config.customNames.file_size else config.baseVariable + '_file_size' }}"] = message.photo[-1].file_size or 0
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_size if config.customNames.file_size else config.baseVariable + '_file_size' }}", message.photo[-1].file_size or 0)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'width' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.width if config.customNames.width else config.baseVariable + '_width' }}"] = message.photo[-1].width
+    await update_user_data_in_db(user_id, "{{ config.customNames.width if config.customNames.width else config.baseVariable + '_width' }}", message.photo[-1].width)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'height' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.height if config.customNames.height else config.baseVariable + '_height' }}"] = message.photo[-1].height
+    await update_user_data_in_db(user_id, "{{ config.customNames.height if config.customNames.height else config.baseVariable + '_height' }}", message.photo[-1].height)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'small_file_id' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.small_file_id if config.customNames.small_file_id else config.baseVariable + '_small_file_id' }}"] = message.photo[0].file_id
+    await update_user_data_in_db(user_id, "{{ config.customNames.small_file_id if config.customNames.small_file_id else config.baseVariable + '_small_file_id' }}", message.photo[0].file_id)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'small_width' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.small_width if config.customNames.small_width else config.baseVariable + '_small_width' }}"] = message.photo[0].width
+    await update_user_data_in_db(user_id, "{{ config.customNames.small_width if config.customNames.small_width else config.baseVariable + '_small_width' }}", message.photo[0].width)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'small_height' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.small_height if config.customNames.small_height else config.baseVariable + '_small_height' }}"] = message.photo[0].height
+    await update_user_data_in_db(user_id, "{{ config.customNames.small_height if config.customNames.small_height else config.baseVariable + '_small_height' }}", message.photo[0].height)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'sizes_count' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.sizes_count if config.customNames.sizes_count else config.baseVariable + '_sizes_count' }}"] = len(message.photo)
+    await update_user_data_in_db(user_id, "{{ config.customNames.sizes_count if config.customNames.sizes_count else config.baseVariable + '_sizes_count' }}", len(message.photo))
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'all_sizes' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.all_sizes if config.customNames.all_sizes else config.baseVariable + '_all_sizes' }}"] = json.dumps([{"file_id": p.file_id, "w": p.width, "h": p.height, "size": p.file_size or 0} for p in message.photo])
+    await update_user_data_in_db(user_id, "{{ config.customNames.all_sizes if config.customNames.all_sizes else config.baseVariable + '_all_sizes' }}", json.dumps([{"file_id": p.file_id, "w": p.width, "h": p.height, "size": p.file_size or 0} for p in message.photo]))
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
 
     del user_data[user_id]["waiting_for_input"]
     logging.info(f"Фото сохранено: {photo_variable} = {photo_file_id}")
@@ -167,6 +216,50 @@ async def handle_video_input(message: types.Message):
         logging.info(f"✅ Видео сохранено в БД: {video_variable} = {video_file_id} (пользователь {user_id})")
     else:
         logging.warning(f"⚠️ Не удалось сохранить видео в БД, данные сохранены локально")
+{% if mediaMetadataConfigs %}
+{% for config in mediaMetadataConfigs %}
+{% if config.mediaType == 'video' %}
+
+    # Сохранение метаданных видео
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_id' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_id if config.customNames.file_id else config.baseVariable + '_file_id' }}"] = message.video.file_id
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_id if config.customNames.file_id else config.baseVariable + '_file_id' }}", message.video.file_id)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_unique_id' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_unique_id if config.customNames.file_unique_id else config.baseVariable + '_file_unique_id' }}"] = message.video.file_unique_id
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_unique_id if config.customNames.file_unique_id else config.baseVariable + '_file_unique_id' }}", message.video.file_unique_id)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'thumbnail' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.thumbnail if config.customNames.thumbnail else config.baseVariable + '_thumbnail' }}"] = message.video.thumbnail.file_id if message.video.thumbnail else ""
+    await update_user_data_in_db(user_id, "{{ config.customNames.thumbnail if config.customNames.thumbnail else config.baseVariable + '_thumbnail' }}", message.video.thumbnail.file_id if message.video.thumbnail else "")
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'duration' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.duration if config.customNames.duration else config.baseVariable + '_duration' }}"] = message.video.duration
+    await update_user_data_in_db(user_id, "{{ config.customNames.duration if config.customNames.duration else config.baseVariable + '_duration' }}", message.video.duration)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_size' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_size if config.customNames.file_size else config.baseVariable + '_file_size' }}"] = message.video.file_size or 0
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_size if config.customNames.file_size else config.baseVariable + '_file_size' }}", message.video.file_size or 0)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_name' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_name if config.customNames.file_name else config.baseVariable + '_file_name' }}"] = message.video.file_name or ""
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_name if config.customNames.file_name else config.baseVariable + '_file_name' }}", message.video.file_name or "")
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'width' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.width if config.customNames.width else config.baseVariable + '_width' }}"] = message.video.width
+    await update_user_data_in_db(user_id, "{{ config.customNames.width if config.customNames.width else config.baseVariable + '_width' }}", message.video.width)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'height' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.height if config.customNames.height else config.baseVariable + '_height' }}"] = message.video.height
+    await update_user_data_in_db(user_id, "{{ config.customNames.height if config.customNames.height else config.baseVariable + '_height' }}", message.video.height)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'mime_type' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.mime_type if config.customNames.mime_type else config.baseVariable + '_mime_type' }}"] = message.video.mime_type or ""
+    await update_user_data_in_db(user_id, "{{ config.customNames.mime_type if config.customNames.mime_type else config.baseVariable + '_mime_type' }}", message.video.mime_type or "")
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
 
     del user_data[user_id]["waiting_for_input"]
     logging.info(f"🎥 Видео сохранено: {video_variable} = {video_file_id}")
@@ -265,6 +358,50 @@ async def handle_audio_input(message: types.Message):
         logging.info(f"✅ Аудио сохранено в БД: {audio_variable} = {audio_file_id} (пользователь {user_id})")
     else:
         logging.warning(f"⚠️ Не удалось сохранить аудио в БД, данные сохранены локально")
+{% if mediaMetadataConfigs %}
+{% for config in mediaMetadataConfigs %}
+{% if config.mediaType == 'audio' %}
+
+    # Сохранение метаданных аудио
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_id' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_id if config.customNames.file_id else config.baseVariable + '_file_id' }}"] = audio_file_id
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_id if config.customNames.file_id else config.baseVariable + '_file_id' }}", audio_file_id)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_unique_id' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_unique_id if config.customNames.file_unique_id else config.baseVariable + '_file_unique_id' }}"] = (message.audio.file_unique_id if message.audio else message.voice.file_unique_id)
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_unique_id if config.customNames.file_unique_id else config.baseVariable + '_file_unique_id' }}", (message.audio.file_unique_id if message.audio else message.voice.file_unique_id))
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'thumbnail' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.thumbnail if config.customNames.thumbnail else config.baseVariable + '_thumbnail' }}"] = message.audio.thumbnail.file_id if message.audio and message.audio.thumbnail else ""
+    await update_user_data_in_db(user_id, "{{ config.customNames.thumbnail if config.customNames.thumbnail else config.baseVariable + '_thumbnail' }}", message.audio.thumbnail.file_id if message.audio and message.audio.thumbnail else "")
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'duration' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.duration if config.customNames.duration else config.baseVariable + '_duration' }}"] = audio_duration
+    await update_user_data_in_db(user_id, "{{ config.customNames.duration if config.customNames.duration else config.baseVariable + '_duration' }}", audio_duration)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_size' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_size if config.customNames.file_size else config.baseVariable + '_file_size' }}"] = (message.audio.file_size if message.audio else message.voice.file_size) or 0
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_size if config.customNames.file_size else config.baseVariable + '_file_size' }}", (message.audio.file_size if message.audio else message.voice.file_size) or 0)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_name' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_name if config.customNames.file_name else config.baseVariable + '_file_name' }}"] = message.audio.file_name if message.audio else ""
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_name if config.customNames.file_name else config.baseVariable + '_file_name' }}", message.audio.file_name if message.audio else "")
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'title' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.title if config.customNames.title else config.baseVariable + '_title' }}"] = message.audio.title if message.audio else ""
+    await update_user_data_in_db(user_id, "{{ config.customNames.title if config.customNames.title else config.baseVariable + '_title' }}", message.audio.title if message.audio else "")
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'performer' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.performer if config.customNames.performer else config.baseVariable + '_performer' }}"] = message.audio.performer if message.audio else ""
+    await update_user_data_in_db(user_id, "{{ config.customNames.performer if config.customNames.performer else config.baseVariable + '_performer' }}", message.audio.performer if message.audio else "")
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'mime_type' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.mime_type if config.customNames.mime_type else config.baseVariable + '_mime_type' }}"] = (message.audio.mime_type if message.audio else "audio/ogg") or ""
+    await update_user_data_in_db(user_id, "{{ config.customNames.mime_type if config.customNames.mime_type else config.baseVariable + '_mime_type' }}", (message.audio.mime_type if message.audio else "audio/ogg") or "")
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
 
     del user_data[user_id]["waiting_for_input"]
     logging.info(f"🎵 Аудио сохранено: {audio_variable} = {audio_file_id}")
@@ -443,6 +580,38 @@ async def handle_document_input(message: types.Message):
         logging.info(f"✅ Документ сохранен в БД: {document_variable} = {document_file_id} (пользователь {user_id})")
     else:
         logging.warning(f"⚠️ Не удалось сохранить документ в БД, данные сохранены локально")
+{% if mediaMetadataConfigs %}
+{% for config in mediaMetadataConfigs %}
+{% if config.mediaType == 'document' %}
+
+    # Сохранение метаданных документа
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_id' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_id if config.customNames.file_id else config.baseVariable + '_file_id' }}"] = message.document.file_id
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_id if config.customNames.file_id else config.baseVariable + '_file_id' }}", message.document.file_id)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_unique_id' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_unique_id if config.customNames.file_unique_id else config.baseVariable + '_file_unique_id' }}"] = message.document.file_unique_id
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_unique_id if config.customNames.file_unique_id else config.baseVariable + '_file_unique_id' }}", message.document.file_unique_id)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'thumbnail' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.thumbnail if config.customNames.thumbnail else config.baseVariable + '_thumbnail' }}"] = message.document.thumbnail.file_id if message.document.thumbnail else ""
+    await update_user_data_in_db(user_id, "{{ config.customNames.thumbnail if config.customNames.thumbnail else config.baseVariable + '_thumbnail' }}", message.document.thumbnail.file_id if message.document.thumbnail else "")
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_name' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_name if config.customNames.file_name else config.baseVariable + '_file_name' }}"] = message.document.file_name or ""
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_name if config.customNames.file_name else config.baseVariable + '_file_name' }}", message.document.file_name or "")
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'file_size' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.file_size if config.customNames.file_size else config.baseVariable + '_file_size' }}"] = message.document.file_size or 0
+    await update_user_data_in_db(user_id, "{{ config.customNames.file_size if config.customNames.file_size else config.baseVariable + '_file_size' }}", message.document.file_size or 0)
+{% endif %}
+{% if not config.enabledSuffixes or config.enabledSuffixes.length == 0 or 'mime_type' in config.enabledSuffixes %}
+    user_data[user_id]["{{ config.customNames.mime_type if config.customNames.mime_type else config.baseVariable + '_mime_type' }}"] = message.document.mime_type or ""
+    await update_user_data_in_db(user_id, "{{ config.customNames.mime_type if config.customNames.mime_type else config.baseVariable + '_mime_type' }}", message.document.mime_type or "")
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
 
     del user_data[user_id]["waiting_for_input"]
     logging.info(f"📄 Документ сохранен: {document_variable} = {document_file_id}")
