@@ -4,9 +4,9 @@
 
 import type { Node } from '@shared/schema';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InputNavigationGrid } from '../navigation/input-navigation-grid';
+import { PropertyCheckbox } from '../common/property-checkbox';
 import { MediaMetadataInfo } from './media-metadata-info';
 import type { Variable } from '../../../inline-rich/types';
 
@@ -129,19 +129,16 @@ export function SaveAnswerProperties({
       </div>
 
       {isMediaType && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="saveMediaMetadata"
-              checked={saveMediaMetadata}
-              onCheckedChange={(checked) =>
-                onNodeUpdate(selectedNode.id, { saveMediaMetadata: !!checked })
-              }
-            />
-            <Label htmlFor="saveMediaMetadata" className="text-sm font-medium cursor-pointer">
-              Сохранить метаданные медиа
-            </Label>
-          </div>
+        <div className="space-y-2">
+          <PropertyCheckbox
+            id="saveMediaMetadata"
+            label="Сохранить метаданные медиа"
+            description="Дополнительные переменные с информацией о файле"
+            checked={saveMediaMetadata}
+            onChange={(checked) =>
+              onNodeUpdate(selectedNode.id, { saveMediaMetadata: checked })
+            }
+          />
           {saveMediaMetadata && (
             <MediaMetadataInfo
               inputType={inputType}
@@ -149,6 +146,10 @@ export function SaveAnswerProperties({
               enabledSuffixes={data.mediaMetadataSuffixes || []}
               onSuffixesChange={(suffixes) =>
                 onNodeUpdate(selectedNode.id, { mediaMetadataSuffixes: suffixes })
+              }
+              customNames={data.mediaMetadataCustomNames || {}}
+              onCustomNamesChange={(names) =>
+                onNodeUpdate(selectedNode.id, { mediaMetadataCustomNames: names })
               }
             />
           )}

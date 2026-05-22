@@ -642,13 +642,15 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     const suffixes = MEDIA_META_SUFFIXES_MAP[mediaType];
     if (!suffixes) return;
     const enabledList: string[] = data.mediaMetadataSuffixes || [];
+    const customNames: Record<string, string> = data.mediaMetadataCustomNames || {};
     for (const { suffix, description } of suffixes) {
       // Если список включённых пуст — показываем все, иначе только выбранные
       if (enabledList.length > 0 && !enabledList.includes(suffix)) continue;
       const key = `media_meta__${node.id}__${suffix}`;
+      const varName = customNames[suffix] || `${data.inputVariable}_${suffix}`;
       if (!variablesMap.has(key)) {
         variablesMap.set(key, {
-          name: `${data.inputVariable}_${suffix}`,
+          name: varName,
           nodeId: node.id,
           nodeType: 'media_meta' as any,
           sourceTable: 'bot_users',

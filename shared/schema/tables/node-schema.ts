@@ -387,6 +387,8 @@ export const nodeSchema = z.object({
     saveMediaMetadata: z.boolean().optional().default(false),
     /** Список включённых суффиксов метаданных (если пуст — сохраняются все) */
     mediaMetadataSuffixes: z.array(z.string()).optional().default([]),
+    /** Кастомные имена переменных метаданных: ключ — суффикс, значение — имя */
+    mediaMetadataCustomNames: z.record(z.string(), z.string()).optional().default({}),
     /** Фильтры переменных (ключ — имя переменной, значение — фильтр) */
     variableFilters: z.record(z.string()).default({}),
     /** Включить обработку действий пользователей */
