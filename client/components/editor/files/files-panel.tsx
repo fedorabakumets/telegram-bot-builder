@@ -4,8 +4,8 @@
  */
 
 import { useState, useCallback } from 'react';
-import { FolderOpen, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
+import { FolderOpen, RefreshCw, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { TabHeader } from '@/components/ui/tab-header';
 import { Button } from '@/components/ui/button';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
@@ -52,6 +52,40 @@ export function FilesPanel({ projectId, selectedTokenId, onSelectToken, allProje
   const files = data?.files ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / 50);
+
+  /** Мутация массового удаления файлов */
+  const deleteMutation = useMutation({
+    mutationFn: async (payload: { ids: number[]; source: string }) => {
+      const res = await fetch(`/api/projects/${projectId}/files`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('Ошибка удаления файлов');
+      return res.json();
+    },
+    onSuccess: () => {
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'files'] });
+    },
+  });
+
+  const isDeleting = deleteMutation.isPending;
+
+  /** Обработчик массового удаления */
+  const handleBulkDelete = useCallback(() => {
+    if (selectedIds.size === 0) return;
+    deleteMutation.mutate({ ids: [...selectedIds], source });
+  }, [selectedIds, source, deleteMutation]);
+
+  /** Выбрать все / снять выбор */
+  const handleSelectAll = useCallback((selectAll: boolean) => {
+    if (selectAll) {
+      setSelectedIds(new Set(files.map(f => f.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  }, [files]);
 
   /** Сброс страницы при смене фильтров */
   const handleSourceChange = useCallback((s: FileSource) => { setSource(s); setPage(1); setSelectedIds(new Set()); }, []);
@@ -101,7 +135,26 @@ export function FilesPanel({ projectId, selectedTokenId, onSelectToken, allProje
       <FilesTable
         files={files} projectId={projectId} selectedIds={selectedIds}
         onToggleSelect={handleToggleSelect} onCopyFileId={handleCopyFileId}
+        onSelectAll={handleSelectAll}
       />
+
+      {/* Плашка массового удаления */}
+      {selectedIds.size > 0 && (
+        <div className="sticky bottom-0 border-t bg-background/95 backdrop-blur px-4 py-2.5 flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            Выбрано: {selectedIds.size}
+          </span>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+              Снять выбор
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleBulkDelete} disabled={isDeleting}>
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+              Удалить ({selectedIds.size})
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Пагинация */}
       {totalPages > 1 && (

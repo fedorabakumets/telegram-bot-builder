@@ -11,7 +11,7 @@
 import type { Express } from "express";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
 import { getTelegramFileHandler } from "./botIntegration/handlers/botData/getTelegramFileHandler";
-import { getProjectFilesHandler, addProjectFileHandler } from "./botIntegration/handlers/botData/getProjectFilesHandler";
+import { getProjectFilesHandler, addProjectFileHandler, deleteProjectFilesHandler } from "./botIntegration/handlers/botData/getProjectFilesHandler";
 import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, saveMessageHandler, deleteMessagesHandler, deleteSingleMessageHandler, editSingleMessageHandler, getGroupMessagesHandler } from "./botIntegration/handlers/messages";
 import { registerTelegramMediaHandler } from "./botIntegration/handlers/media";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler, syncGroupHandler } from "./botIntegration/handlers/groups";
@@ -93,6 +93,17 @@ export function setupBotIntegrationRoutes(app: Express) {
      * @route POST /api/projects/:projectId/files
      */
     app.post("/api/projects/:projectId/files", addProjectFileHandler);
+
+    /**
+     * Обработчик маршрута DELETE /api/projects/:projectId/files
+     *
+     * Массовое удаление файлов проекта.
+     * Для uploaded — удаляет записи из media_files и физические файлы.
+     * Для incoming/outgoing — удаляет записи из bot_messages.
+     *
+     * @route DELETE /api/projects/:projectId/files
+     */
+    app.delete("/api/projects/:projectId/files", deleteProjectFilesHandler);
 
     /**
      * Обработчик маршрута GET /api/projects/:projectId/users/:userId/messages

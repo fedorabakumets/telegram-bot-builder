@@ -25,6 +25,8 @@ interface FilesTableProps {
   onCopyFileId: (fileId: string) => void;
   /** Обработчик удаления файла */
   onDelete?: (id: number) => void;
+  /** Обработчик выбора/снятия всех файлов */
+  onSelectAll: (selectAll: boolean) => void;
 }
 
 /** Иконка по типу медиа */
@@ -100,7 +102,7 @@ function getLightboxType(file: ProjectFile): 'image' | 'video' {
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCopyFileId, onDelete }: FilesTableProps) {
+export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCopyFileId, onDelete, onSelectAll }: FilesTableProps) {
   /** Индекс файла в лайтбоксе (null = закрыт) */
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -136,7 +138,12 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
         <table className="w-full text-xs">
           <thead className="sticky top-0 bg-muted/60 border-b">
             <tr>
-              <th className="w-8 p-2"><span className="sr-only">Выбрать</span></th>
+              <th className="w-8 p-2">
+                <Checkbox
+                  checked={files.length > 0 && selectedIds.size === files.length}
+                  onCheckedChange={(checked) => onSelectAll(checked as boolean)}
+                />
+              </th>
               <th className="w-10 p-2"></th>
               <th className="p-2 text-left font-medium">Название файла</th>
               <th className="p-2 text-left font-medium w-20">Тип</th>
