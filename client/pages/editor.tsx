@@ -800,8 +800,8 @@ export default function Editor() {
         sheetsData = projectData;
       } else {
         sheetsData = SheetsManager.migrateLegacyData(projectData as BotData);
-        // Сохраняем мигрированные данные
-        updateProjectMutation.mutate({});
+        // Автосохранение мигрированных данных — с задержкой чтобы state обновился
+        setTimeout(() => updateProjectMutation.mutate({}), 500);
       }
 
       // Миграция keyboardLayout для всех узлов
