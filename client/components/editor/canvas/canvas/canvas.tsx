@@ -936,7 +936,7 @@ export function Canvas({
     e.preventDefault();
 
     if (e.ctrlKey || e.metaKey) {
-      // Зум относительно позиции курсора
+      // Зум относительно позиции курсора (pinch на тачпаде или Ctrl+scroll)
       const delta = e.deltaY;
       const zoomFactor = delta > 0 ? 0.9 : 1.1;
 
@@ -951,7 +951,7 @@ export function Canvas({
         const zoomRatio = newZoom / zoom;
 
         setPan(prev => ({
-          x: mouseX - (mouseX - prev.x) * zoomRatio,
+          x: mouseX - (mouseX - prev.x) * zoomRatio - e.deltaX,
           y: mouseY - (mouseY - prev.y) * zoomRatio
         }));
 
