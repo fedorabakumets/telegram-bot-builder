@@ -2001,9 +2001,6 @@ export default function Editor() {
       {/* Мобильный sidebar */}
       <Sheet open={showMobileSidebar && currentTab === 'editor'} onOpenChange={setShowMobileSidebar}>
         <SheetContent side="left" className="p-0 w-80">
-          <SheetHeader className="px-4 py-3 border-b">
-            <SheetTitle>Компоненты</SheetTitle>
-          </SheetHeader>
           <div className="h-full overflow-auto">
             <ComponentsSidebar
               onComponentDrag={handleComponentDrag}
