@@ -16,6 +16,7 @@ export interface MetadataSuffix {
 /** Суффиксы метаданных по типу медиа */
 export const MEDIA_METADATA_SUFFIXES: Record<string, MetadataSuffix[]> = {
   video: [
+    { suffix: 'file_unique_id', description: 'Уникальный ID файла', icon: '🔑' },
     { suffix: 'thumbnail', description: 'Обложка (file_id)', icon: '🖼️' },
     { suffix: 'duration', description: 'Длительность (сек)', icon: '⏱️' },
     { suffix: 'file_size', description: 'Размер файла (байт)', icon: '📦' },
@@ -25,11 +26,13 @@ export const MEDIA_METADATA_SUFFIXES: Record<string, MetadataSuffix[]> = {
     { suffix: 'mime_type', description: 'MIME тип', icon: '🏷️' },
   ],
   photo: [
+    { suffix: 'file_unique_id', description: 'Уникальный ID файла', icon: '🔑' },
     { suffix: 'file_size', description: 'Размер файла (байт)', icon: '📦' },
     { suffix: 'width', description: 'Ширина (px)', icon: '↔️' },
     { suffix: 'height', description: 'Высота (px)', icon: '↕️' },
   ],
   audio: [
+    { suffix: 'file_unique_id', description: 'Уникальный ID файла', icon: '🔑' },
     { suffix: 'thumbnail', description: 'Обложка (file_id)', icon: '🖼️' },
     { suffix: 'duration', description: 'Длительность (сек)', icon: '⏱️' },
     { suffix: 'file_size', description: 'Размер файла (байт)', icon: '📦' },
@@ -38,6 +41,7 @@ export const MEDIA_METADATA_SUFFIXES: Record<string, MetadataSuffix[]> = {
     { suffix: 'mime_type', description: 'MIME тип', icon: '🏷️' },
   ],
   document: [
+    { suffix: 'file_unique_id', description: 'Уникальный ID файла', icon: '🔑' },
     { suffix: 'thumbnail', description: 'Обложка (file_id)', icon: '🖼️' },
     { suffix: 'file_name', description: 'Имя файла', icon: '📝' },
     { suffix: 'file_size', description: 'Размер файла (байт)', icon: '📦' },
