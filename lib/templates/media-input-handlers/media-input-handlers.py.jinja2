@@ -284,6 +284,94 @@ async def handle_audio_input(message: types.Message):
 {% endif %}
 
 {% if hasDocumentInput %}
+# Обработчик получения GIF/анимации от пользователя (должен быть ВЫШЕ document)
+@dp.message(F.animation)
+async def handle_animation_input(message: types.Message):
+    user_id = message.from_user.id
+    logging.info(f"🎞️ Получена анимация от пользователя {user_id}")
+
+    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:
+        logging.info(f"Анимация от пользователя {user_id} проигнорирована - не ожидается ввод")
+        return
+
+    waiting_config = user_data[user_id]["waiting_for_input"]
+    waiting_modes = waiting_config.get("modes", []) if isinstance(waiting_config, dict) else []
+    # Принимаем animation если ожидается document, video или явно animation
+    if not (
+        isinstance(waiting_config, dict) and (
+            waiting_config.get("type") in ("document", "video", "animation") or
+            (isinstance(waiting_modes, list) and any(m in waiting_modes for m in ("document", "video", "animation")))
+        )
+    ):
+        logging.info(f"Анимация от пользователя {user_id} проигнорирована - ожидается другой тип ввода")
+        return
+
+    document_variable = waiting_config.get("document_variable") or waiting_config.get("variable") or "user_animation"
+    node_id = waiting_config.get("node_id", "unknown")
+    next_node_id = waiting_config.get("next_node_id")
+
+    anim_file_id = message.animation.file_id
+    logging.info(f"🎞️ Получен file_id анимации: {anim_file_id}")
+
+    # Извлекаем thumbnail если есть
+    anim_thumb = None
+    if message.animation.thumbnail:
+        anim_thumb = {"file_id": message.animation.thumbnail.file_id, "file_unique_id": message.animation.thumbnail.file_unique_id, "width": message.animation.thumbnail.width, "height": message.animation.thumbnail.height}
+
+    saved_msg = await save_message_to_api(
+        user_id=str(user_id),
+        message_type="user",
+        message_text="[GIF ответ]",
+        node_id=node_id,
+        message_data={"animation": {"file_id": anim_file_id, "file_size": message.animation.file_size or 0, "duration": message.animation.duration, "width": message.animation.width, "height": message.animation.height, "file_name": message.animation.file_name, "mime_type": message.animation.mime_type, "file_unique_id": message.animation.file_unique_id, "thumbnail": anim_thumb}, "is_animation_answer": True}
+    )
+
+    media_result = None
+    if saved_msg and "id" in saved_msg:
+        media_result = await save_media_to_db(
+            file_id=anim_file_id,
+            file_type="video",
+            file_name=message.animation.file_name or f"animation_{anim_file_id}",
+            file_size=message.animation.file_size or 0,
+            mime_type=message.animation.mime_type or "video/mp4"
+        )
+        if media_result:
+            await link_media_to_message(
+                message_id=saved_msg["id"],
+                media_id=media_result["id"],
+                media_kind="animation",
+                order_index=0
+            )
+
+    anim_data = {
+        "value": anim_file_id,
+        "type": "animation",
+        "timestamp": datetime.now().isoformat()
+    }
+    user_data[user_id][document_variable] = anim_data
+
+    saved_to_db = await update_user_data_in_db(user_id, document_variable, anim_data)
+    if saved_to_db:
+        logging.info(f"✅ Анимация сохранена в БД: {document_variable} = {anim_file_id} (пользователь {user_id})")
+
+    del user_data[user_id]["waiting_for_input"]
+    logging.info(f"Анимация сохранена: {document_variable} = {anim_file_id}")
+
+    if next_node_id:
+        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
+        try:
+            user_record = await get_user_from_db(user_id)
+            if user_record and "user_data" in user_record:
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = user_data.get(user_id, {})
+            {{ navigationCode | indent(12) }}
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+    return
+{% endif %}
+
+{% if hasDocumentInput %}
 # Обработчик получения документа от пользователя
 @dp.message(F.document)
 async def handle_document_input(message: types.Message):
