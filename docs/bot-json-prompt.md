@@ -787,6 +787,30 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 }
 ```
 
+#### Сохранение метаданных медиа
+
+Для медиа-типов (`photo`, `video`, `audio`, `document`) можно включить сохранение метаданных в отдельные переменные:
+
+```json
+{
+  "type": "input",
+  "data": {
+    "inputVariable": "user_video",
+    "inputType": "video",
+    "saveMediaMetadata": true,
+    "mediaMetadataSuffixes": ["thumbnail", "duration", "file_size", "file_name"],
+    "mediaMetadataCustomNames": { "duration": "video_len" },
+    "autoTransitionTo": "next_node_id"
+  }
+}
+```
+
+- `saveMediaMetadata` — включить сохранение метаданных (по умолчанию `false`)
+- `mediaMetadataSuffixes` — массив суффиксов для сохранения (пустой = все)
+- `mediaMetadataCustomNames` — кастомные имена переменных (ключ — суффикс, значение — имя)
+
+Доступные суффиксы: `file_id`, `file_unique_id`, `thumbnail`, `duration`, `file_size`, `file_name`, `width`, `height`, `mime_type`, `title`, `performer`, `small_file_id`, `small_width`, `small_height`, `sizes_count`, `all_sizes`
+
 ### broadcast — рассылка
 
 ```json
