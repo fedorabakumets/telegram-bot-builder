@@ -277,9 +277,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     // Не запускать события если кликнули по кнопке
     if ((e.target as HTMLElement).closest('button')) return;
 
-    // Предотвращаем стандартное поведение браузера
-    e.preventDefault();
-    e.stopPropagation(); // Останавливаем всплытие, чтобы не конфликтовать с панорамированием холста
+    // Останавливаем всплытие, чтобы не конфликтовать с панорамированием холста
+    e.stopPropagation();
 
     const touch = e.touches[0];
     if (!touch) return;
