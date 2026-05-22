@@ -190,7 +190,7 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
               <th className="p-2 text-left font-medium font-mono">file_id</th>
               <th className="p-2 text-right font-medium w-20">Размер</th>
               <th className="p-2 text-left font-medium w-32">Дата загрузки</th>
-              <th className="w-24 p-2"></th>
+              <th className="w-24 p-2 text-left font-medium">Действия</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -351,11 +351,6 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
                 <Download className="h-3 w-3" />
               </Button>
             </a>
-          )}
-          {file.fileId && (
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onCopy(file.fileId!)} title="Копировать file_id">
-              <Copy className="h-3 w-3" />
-            </Button>
           )}
           {onDelete && (
             <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => onDelete(file.id)} title="Удалить">
