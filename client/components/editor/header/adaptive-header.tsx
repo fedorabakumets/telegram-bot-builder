@@ -106,7 +106,7 @@ export function AdaptiveHeader({
   return (
     <>
       <header className={containerClasses}>
-        <div className="flex items-center gap-0 md:order-first flex-1 min-w-0">
+        <div className="flex items-center gap-0 md:order-first flex-shrink-0">
           {/* Переключатель проекта — без лого, лого живёт в сайдбаре */}
           {projects && projects.length > 0 && currentProjectId && onProjectChange && (
             <ProjectSwitcher
@@ -153,7 +153,32 @@ export function AdaptiveHeader({
           />
         </div>
 
-        {/* Мобильная кнопка меню перенесена в app-sidebar */}
+        {/* Мобильная кнопка меню — скрыта, функционал перенесён на FAB и навигацию */}
+        {/* <div className="lg:hidden">
+          <MobileMenu
+            currentTab={currentTab}
+            onTabChange={onTabChange}
+            onToggleHeader={onToggleHeader}
+            onToggleSidebar={onToggleSidebar}
+            onToggleCanvas={onToggleCanvas}
+            onToggleProperties={onToggleProperties}
+            onToggleCode={onToggleCode}
+            onToggleCodeEditor={onToggleCodeEditor}
+            onOpenFileExplorer={onOpenFileExplorer}
+            onLoadTemplate={onLoadTemplate}
+            onSaveAsTemplate={onSaveAsTemplate}
+            headerVisible={headerVisible}
+            sidebarVisible={sidebarVisible}
+            canvasVisible={canvasVisible}
+            propertiesVisible={propertiesVisible}
+            codeVisible={codeVisible}
+            codeEditorVisible={codeEditorVisible}
+            user={user}
+            isLoading={isLoading}
+            onLogout={logout}
+            onLogin={handleTelegramLogin}
+          />
+        </div> */}
       </header>
     </>
   );
