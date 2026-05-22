@@ -483,13 +483,13 @@ export function UrlDownloader({
   return (
     <div className="space-y-6">
       {/* Заголовок */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div>
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <LinkIcon className="w-5 h-5" />
+          <h3 className="text-sm sm:text-lg font-semibold flex items-center gap-2">
+            <LinkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             Загрузка файлов по ссылкам
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Загружайте файлы напрямую из интернета по URL
           </p>
         </div>
@@ -501,9 +501,9 @@ export function UrlDownloader({
       {/* Общие настройки */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Общие настройки</CardTitle>
+          <CardTitle className="text-sm sm:text-base">Общие настройки</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-3 sm:p-6 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="defaultDescription">Описание по умолчанию</Label>
             <Textarea
@@ -529,7 +529,7 @@ export function UrlDownloader({
       {/* URL поля */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center justify-between">
+          <CardTitle className="text-sm sm:text-base flex items-center justify-between">
             URL для загрузки
             <Button
               onClick={addUrlField}
@@ -537,19 +537,19 @@ export function UrlDownloader({
               variant="outline"
               disabled={urls.length >= maxUrls}
             >
-              <Plus className="w-4 h-4 mr-1" />
-              Добавить URL
+              <Plus className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Добавить URL</span>
             </Button>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
             Поддерживаются изображения, видео, аудио и документы до 200МБ
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-3 sm:p-6 space-y-4">
           {urls.map((urlData, _index) => (
-            <div key={urlData.id} className="space-y-3 p-4 border rounded-lg">
+            <div key={urlData.id} className="space-y-3 p-2.5 sm:p-4 border rounded-lg">
               {/* URL ввод */}
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-1.5 sm:gap-2">
                 <div className="flex-1">
                   <Input
                     placeholder="https://example.com/file.jpg"
@@ -558,34 +558,36 @@ export function UrlDownloader({
                     onBlur={() => urlData.url.trim() && checkUrl(urlData.id, urlData.url)}
                   />
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => pasteFromClipboard(urlData.id)}
-                >
-                  <Copy className="w-4 h-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => urlData.url.trim() && checkUrl(urlData.id, urlData.url)}
-                  disabled={!urlData.url.trim() || urlData.status === 'checking'}
-                >
-                  {urlData.status === 'checking' ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <ExternalLink className="w-4 h-4" />
-                  )}
-                </Button>
-                {urls.length > 1 && (
+                <div className="flex gap-1.5 sm:gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => removeUrlField(urlData.id)}
+                    onClick={() => pasteFromClipboard(urlData.id)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Copy className="w-4 h-4" />
                   </Button>
-                )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => urlData.url.trim() && checkUrl(urlData.id, urlData.url)}
+                    disabled={!urlData.url.trim() || urlData.status === 'checking'}
+                  >
+                    {urlData.status === 'checking' ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ExternalLink className="w-4 h-4" />
+                    )}
+                  </Button>
+                  {urls.length > 1 && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => removeUrlField(urlData.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Статус */}
@@ -638,10 +640,10 @@ export function UrlDownloader({
 
               {/* Информация о файле */}
               {urlData.fileInfo && (
-                <div className="flex items-center gap-3 p-2 bg-muted rounded text-sm">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 p-2 bg-muted rounded text-xs sm:text-sm">
                   {getFileIcon(urlData.fileInfo.fileType)}
-                  <div className="flex-1">
-                    <div className="font-medium">{urlData.fileInfo.fileName}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{urlData.fileInfo.fileName}</div>
                     <div className="text-muted-foreground">
                       {urlData.fileInfo.category} • {urlData.fileInfo.sizeMB}МБ
                     </div>
@@ -694,18 +696,18 @@ export function UrlDownloader({
       {/* Информационное сообщение */}
       <Alert>
         <Info className="h-4 w-4" />
-        <AlertDescription>
+        <AlertDescription className="text-xs sm:text-sm">
           <strong>Совет:</strong> Сначала добавьте все URL и дождитесь их проверки, 
           затем используйте "Загрузить все файлы" для эффективной пакетной загрузки.
         </AlertDescription>
       </Alert>
 
       {/* Кнопки действий */}
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <Button
           onClick={downloadAll}
           disabled={validUrlsCount === 0 || isProcessing}
-          className="flex-1"
+          className="flex-1 text-xs sm:text-sm"
         >
           {isProcessing ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
