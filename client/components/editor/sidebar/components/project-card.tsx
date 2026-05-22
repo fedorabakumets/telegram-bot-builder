@@ -296,6 +296,12 @@ function SheetAccordionContent({
                   setFocusedNodeId(node.id);
                   if (onNodeFocus && node.id) onNodeFocus(node.id);
                 }}
+                /** Обработчик тача для мобильных — дублирует onClick при перехвате touch-событий родителем */
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  setFocusedNodeId(node.id);
+                  if (onNodeFocus && node.id) onNodeFocus(node.id);
+                }}
               >
                 {/* Чекбокс выбора для массового перемещения */}
                 <div
@@ -354,10 +360,10 @@ function SheetAccordionContent({
                     </div>
                   )}
                 </div>
-                {/* Кнопка открытия свойств узла */}
+                {/* Кнопка открытия свойств узла (всегда видна для мобильных устройств) */}
                 {onNodeSelect && (
                   <button
-                    className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:bg-primary/15 dark:hover:bg-primary/25 hidden group-hover/node:flex items-center justify-center transition-all duration-200 hover:shadow-md hover:shadow-primary/20"
+                    className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:bg-primary/15 dark:hover:bg-primary/25 flex items-center justify-center transition-all duration-200 hover:shadow-md hover:shadow-primary/20"
                     title="Открыть свойства"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -367,9 +373,9 @@ function SheetAccordionContent({
                     <i className="fas fa-sliders-h text-xs" />
                   </button>
                 )}
-                {/* Кнопка центрирования на узле */}
+                {/* Кнопка центрирования на узле (всегда видна для мобильных устройств) */}
                 <button
-                  className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:bg-primary/15 dark:hover:bg-primary/25 hidden group-hover/node:flex items-center justify-center transition-all duration-200 hover:shadow-md hover:shadow-primary/20"
+                  className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:bg-primary/15 dark:hover:bg-primary/25 flex items-center justify-center transition-all duration-200 hover:shadow-md hover:shadow-primary/20"
                   title="Центрировать на узле"
                   onClick={(e) => {
                     e.stopPropagation();
