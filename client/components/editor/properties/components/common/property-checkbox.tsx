@@ -1,6 +1,6 @@
 /**
  * @fileoverview Стилизованный чекбокс для панели свойств
- * Более заметный и выделенный по сравнению с нативным input[type=checkbox]
+ * Крупный, контрастный, хорошо заметный на тёмном фоне
  * @module components/editor/properties/components/common/property-checkbox
  */
 
@@ -27,7 +27,7 @@ interface PropertyCheckboxProps {
 
 /**
  * Стилизованный чекбокс для панели свойств
- * Обёртка над Checkbox с фоновой подложкой и чётким визуальным выделением
+ * Крупный квадрат с контрастной рамкой + подложка-строка
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
@@ -44,12 +44,12 @@ export function PropertyCheckbox({
     <label
       htmlFor={id}
       className={cn(
-        'flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-150',
-        'border border-transparent',
-        'hover:bg-accent/50 dark:hover:bg-accent/30',
+        'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150',
+        'border',
+        'hover:bg-accent/60 dark:hover:bg-accent/40',
         checked
-          ? 'bg-primary/5 border-primary/20 dark:bg-primary/10 dark:border-primary/30'
-          : 'bg-muted/30 dark:bg-muted/20',
+          ? 'bg-primary/8 border-primary/30 dark:bg-primary/15 dark:border-primary/40'
+          : 'bg-muted/40 border-border/60 dark:bg-muted/30 dark:border-border/50',
         disabled && 'opacity-50 cursor-not-allowed',
         className,
       )}
@@ -59,17 +59,22 @@ export function PropertyCheckbox({
         checked={checked}
         onCheckedChange={(value) => onChange(value as boolean)}
         disabled={disabled}
-        className="shrink-0"
+        className={cn(
+          'shrink-0 h-5 w-5 rounded border-2 transition-all',
+          checked
+            ? 'border-primary bg-primary text-primary-foreground'
+            : 'border-muted-foreground/60 dark:border-muted-foreground/50 bg-background dark:bg-muted/40',
+        )}
       />
       <div className="flex flex-col gap-0.5 select-none">
         <span className={cn(
-          'text-xs font-medium leading-tight',
-          checked ? 'text-foreground' : 'text-muted-foreground',
+          'text-sm font-medium leading-tight',
+          checked ? 'text-foreground' : 'text-foreground/80 dark:text-foreground/70',
         )}>
           {label}
         </span>
         {description && (
-          <span className="text-[10px] text-muted-foreground/70 leading-tight">
+          <span className="text-[11px] text-muted-foreground/70 leading-tight">
             {description}
           </span>
         )}
