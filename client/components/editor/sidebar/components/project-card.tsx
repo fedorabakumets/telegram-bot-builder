@@ -639,7 +639,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       className={cn(
-        'group p-2.5 xs:p-3 sm:p-4 rounded-lg xs:rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm overflow-hidden',
+        'group p-2.5 xs:p-3 sm:p-4 rounded-lg xs:rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 border backdrop-blur-sm',
         isActive
           ? 'bg-gradient-to-br from-blue-600/20 via-blue-500/10 to-cyan-600/15 dark:from-blue-600/30 dark:via-blue-500/20 dark:to-cyan-600/25 border-blue-500/50 dark:border-blue-400/50 shadow-lg shadow-blue-500/25'
           : 'bg-gradient-to-br from-slate-50/60 to-slate-100/40 dark:from-slate-900/50 dark:to-slate-800/40 border-slate-200/40 dark:border-slate-700/40 hover:border-slate-300/60 dark:hover:border-slate-600/60 hover:bg-gradient-to-br hover:from-slate-100/80 hover:to-slate-100/50 dark:hover:from-slate-800/70 dark:hover:to-slate-700/50 hover:shadow-md hover:shadow-slate-500/20',
@@ -737,12 +737,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             const isDraggedSheet = dragState.draggedSheet?.sheetId === sheetId && dragState.draggedSheet?.projectId === project.id;
 
             return (
-              <div key={sheetId || index}>
+              <div key={sheetId || index} className="relative">
               <div
                 className={cn(
                   'w-full flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl',
-                  'bg-gradient-to-r from-slate-100/95 to-slate-50/90 dark:from-slate-800/95 dark:to-slate-900/90 backdrop-blur-sm',
-                  'hover:from-slate-200/60 hover:to-slate-100/30 dark:hover:from-slate-700/50 dark:hover:to-slate-800/30',
+                  'sticky top-0 z-10',
+                  'bg-slate-100 dark:bg-slate-800',
+                  'hover:bg-slate-200 dark:hover:bg-slate-700',
                   'transition-all duration-200 group/sheet border border-slate-200/40 dark:border-slate-700/40 hover:border-primary/30',
                   dragOverSheetIndex === index && draggingSheetIndex !== index
                     ? 'border-blue-500'
