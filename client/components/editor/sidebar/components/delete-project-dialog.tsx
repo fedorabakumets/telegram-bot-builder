@@ -4,8 +4,8 @@
  * @module components/editor/sidebar/components/delete-project-dialog
  */
 
-import React from 'react';
-import { Save, Trash2, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Save, Trash2, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,6 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { apiRequest } from '@/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 /** Пропсы компонента DeleteProjectDialog */
 export interface DeleteProjectDialogProps {
@@ -31,18 +33,6 @@ export interface DeleteProjectDialogProps {
 }
 
 /**
- * Сохраняет проект как шаблон в localStorage
- * @param name - Название шаблона
- * @param data - Данные проекта
- */
-const saveAsTemplate = (name: string, data: any) => {
-  const key = 'saved-templates';
-  const existing = JSON.parse(localStorage.getItem(key) || '[]');
-  existing.push({ name, data, savedAt: new Date().toISOString() });
-  localStorage.setItem(key, JSON.stringify(existing));
-};
-
-/**
  * Диалог подтверждения удаления проекта
  * Предлагает сохранить как шаблон, удалить навсегда или отменить
  * @param props - Свойства компонента
@@ -55,11 +45,35 @@ export function DeleteProjectDialog({
   projectData,
   onDelete,
 }: DeleteProjectDialogProps) {
-  /** Сохранить как шаблон и удалить */
-  const handleSaveAndDelete = () => {
-    saveAsTemplate(projectName, projectData);
-    onDelete();
-    onOpenChange(false);
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+
+  /** Сохранить как сценарий через API и удалить */
+  const handleSaveAndDelete = async () => {
+    setIsSaving(true);
+    try {
+      await apiRequest('POST', '/api/templates', {
+        name: projectName,
+        description: `Сохранено перед удалением`,
+        category: 'custom',
+        tags: [],
+        isPublic: 0,
+        difficulty: 'easy',
+        language: 'ru',
+        requiresToken: 1,
+        complexity: 1,
+        estimatedTime: 5,
+        featured: 0,
+        data: projectData,
+      });
+      toast({ title: '✅ Сценарий сохранён', description: `"${projectName}" сохранён в ваши сценарии` });
+      onDelete();
+      onOpenChange(false);
+    } catch {
+      toast({ title: '❌ Ошибка', description: 'Не удалось сохранить сценарий', variant: 'destructive' as any });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   /** Удалить навсегда */
@@ -80,12 +94,13 @@ export function DeleteProjectDialog({
         <DialogFooter className="flex flex-col gap-2 pt-2 sm:flex-col">
           <Button
             onClick={handleSaveAndDelete}
+            disabled={isSaving}
             className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white gap-2"
           >
-            <Save className="h-4 w-4" />
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Сохранить как сценарий и удалить
           </Button>
-          <Button variant="destructive" onClick={handleDeleteForever} className="w-full gap-2">
+          <Button variant="destructive" onClick={handleDeleteForever} disabled={isSaving} className="w-full gap-2">
             <Trash2 className="h-4 w-4" />
             Удалить навсегда
           </Button>
