@@ -48,6 +48,102 @@
 | `sticker` | Стикер |
 | `animation` | GIF/анимация |
 
+## Существующая инфраструктура (что уже есть)
+
+### Таблица `bot_messages` — источник входящих/исходящих файлов
+
+Сообщения уже хранятся с медиа-метаданными. Не нужна отдельная таблица для входящих/исходящих — достаточно SELECT с фильтром.
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `id` | serial | PK |
+| `projectId` | integer | FK на проект |
+| `tokenId` | integer | К какому боту относится |
+| `userId` | text | Telegram user ID |
+| `messageType` | text | `"user"` (входящее) или `"bot"` (исходящее) |
+| `messageText` | text | Текст сообщения |
+| `messageData` | jsonb | **Медиа-метаданные** (file_id, размер, имя и т.д.) |
+| `primaryMediaId` | integer | FK на `media_files` (если файл скачан) |
+| `telegramMessageId` | integer | ID сообщения в Telegram |
+| `chatType` | text | private/group/supergroup/channel |
+| `chatId` | text | ID чата |
+| `createdAt` | timestamp | Дата |
+
+### Структура `messageData` (jsonb) — где лежит file_id
+
+```json
+{
+  "photo": { "file_id": "AgACAgIAA...", "file_size": 12345 },
+  "video": { "file_id": "BAACAgIAA...", "duration": 30, "file_size": 5000000 },
+  "audio": { "file_id": "CQACAgIAA...", "duration": 180, "file_name": "song.mp3" },
+  "voice": { "file_id": "AwACAgIAA...", "duration": 5 },
+  "document": { "file_id": "BQACAgIAA...", "file_name": "report.pdf", "file_size": 200000 },
+  "sticker": { "file_id": "CAACAgIAA...", "emoji": "😀", "is_video": false }
+}
+```
+
+### Таблица `media_files` — загруженные файлы
+
+Уже существует для хранения загруженных пользователем файлов. Поле `telegramFileId` — кэшированный file_id после первой отправки.
+
+### Таблица `bot_message_media` — связь сообщений с медиа
+
+`messageId` → `mediaFileId` + `mediaKind` + `orderIndex`. Используется когда файл скачан локально.
+
+### Проксирование — уже реализовано
+
+Эндпоинт: `GET /api/projects/:projectId/telegram-file?fileId=...&tokenId=...`
+
+- Streaming без буферизации в память
+- Поддержка Range-запросов (перемотка видео/аудио)
+- Cache-Control: 24 часа
+- Скрывает токен бота от клиента
+- Файл: `server/routes/botIntegration/handlers/botData/getTelegramFileHandler.ts`
+
+### Отображение медиа в диалоге (`message-media.tsx`)
+
+Приоритет:
+1. Локальные файлы из `media_files` (если скачаны) → `<img src={url}>`
+2. Telegram CDN через прокси → `/api/projects/:projectId/telegram-file?fileId=...&tokenId=...`
+
+Поддерживаемые типы: photo, video, audio, voice, document, sticker.
+
+### Вывод: что нужно для файлового хранилища
+
+Для вкладок "Входящие" и "Исходящие" **не нужна новая таблица** — достаточно:
+```sql
+-- Входящие файлы
+SELECT * FROM bot_messages
+WHERE project_id = :projectId
+  AND message_type = 'user'
+  AND message_data IS NOT NULL
+  AND (message_data->>'photo' IS NOT NULL
+    OR message_data->>'video' IS NOT NULL
+    OR message_data->>'audio' IS NOT NULL
+    OR message_data->>'voice' IS NOT NULL
+    OR message_data->>'document' IS NOT NULL
+    OR message_data->>'sticker' IS NOT NULL)
+ORDER BY created_at DESC
+LIMIT 50 OFFSET :offset;
+
+-- Исходящие файлы
+SELECT * FROM bot_messages
+WHERE project_id = :projectId
+  AND message_type = 'bot'
+  AND (message_data->>'photo' IS NOT NULL
+    OR message_data->>'video' IS NOT NULL
+    ...)
+ORDER BY created_at DESC;
+```
+
+Для вкладки "Загруженные" — используется существующая таблица `media_files`.
+
+Таблица `project_files` (описанная выше) нужна только если хотим:
+- Хранить дополнительные метаданные (теги, описание, счётчик использований)
+- Связывать файлы с нодами (attached_to_node_id)
+- Дедуплицировать по file_unique_id
+- Хранить маппинг file_id по нескольким ботам
+
 ## Схема БД
 
 ```sql
