@@ -35,6 +35,7 @@ import {
   MessageSquare,
   Radio,
   Save,
+  Search,
   Share2,
   Trash2,
   Zap,
@@ -211,6 +212,8 @@ interface SheetAccordionContentProps {
   onBulkMoveNodes?: (nodeIds: string[], targetSheetId: string) => void;
   /** Колбэк выделения узла (открытие панели свойств без центрирования холста) */
   onNodeSelect?: (nodeId: string) => void;
+  /** Скрыть встроенное поле поиска (при активном глобальном поиске) */
+  hideSearch?: boolean;
 }
 
 /**
@@ -226,6 +229,7 @@ function SheetAccordionContent({
   availableSheets = [],
   onBulkMoveNodes,
   onNodeSelect,
+  hideSearch = false,
 }: SheetAccordionContentProps) {
   const filtered = useSheetNodeSearch(nodes, searchQuery);
   const { selectedNodeIds, toggleNode, clearSelection, isSelected, selectedCount } = useNodeSelection();
@@ -245,7 +249,7 @@ function SheetAccordionContent({
 
   return (
     <div className="mt-0.5 mb-1 transition-all">
-      <SheetNodeSearch value={searchQuery} onChange={onSearchChange} />
+      {!hideSearch && <SheetNodeSearch value={searchQuery} onChange={onSearchChange} />}
       {/* Панель перемещения — над списком, появляется при выборе хотя бы одного узла */}
       {selectedCount > 0 && availableSheets.length > 0 && (
         <div className="px-1.5 py-1 mb-1 flex flex-wrap items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -457,6 +461,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const dragSheetIndexRef = useRef<number | null>(null);
   const [expandedSheets, setExpandedSheets] = useState<Set<string>>(new Set());
   const { getSheetQuery, setSheetQuery } = useSheetSearchState();
+  /** Глобальный поисковый запрос по всем листам */
+  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
 
   const toggleSheetExpanded = (sheetId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -752,11 +758,43 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         </span>
       </div>
 
+      {/* Глобальный поиск узлов по всем листам */}
+      {sheetsInfo.names.length > 0 && (
+        <div className="relative mb-2" onClick={(e) => e.stopPropagation()}>
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+          <Input
+            value={globalSearchQuery}
+            onChange={(e) => setGlobalSearchQuery(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            placeholder="Поиск узлов..."
+            className="h-7 text-xs pl-7 pr-2 py-0"
+          />
+        </div>
+      )}
+
       {/* Список листов */}
       {sheetsInfo.names.length > 0 && (
         <div className="space-y-0.5 sm:space-y-1">
           {sheetsInfo.names.map((name: string, index: number) => {
             const sheetId = SheetsManager.isNewFormat(projectData) ? projectData.sheets[index]?.id : null;
+
+            // При активном глобальном поиске — скрываем листы без совпадений
+            if (globalSearchQuery.trim()) {
+              const sheetNodes: any[] = projectData.sheets?.[index]?.nodes || [];
+              const lower = globalSearchQuery.toLowerCase();
+              const hasMatch = sheetNodes.some((node: any) => {
+                const typeName = getNodeName(node.type).toLowerCase();
+                if (typeName.includes(lower)) return true;
+                const content = getShortContent(node).toLowerCase();
+                if (content.includes(lower)) return true;
+                const buttons: string[] = node.data?.buttons?.map((b: any) => b.text || '') ?? [];
+                if (buttons.some((text) => text.toLowerCase().includes(lower))) return true;
+                return false;
+              });
+              if (!hasMatch) return null;
+            }
+
             const isActiveSheet = currentProjectId === project.id && sheetId === activeSheetId;
             const isEditing = editingState.editingSheetId !== null && sheetId !== null && editingState.editingSheetId === sheetId;
             const isDraggedSheet = dragState.draggedSheet?.sheetId === sheetId && dragState.draggedSheet?.projectId === project.id;
@@ -801,9 +839,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                     <button
                       className="flex-shrink-0 p-1 rounded-md hover:bg-muted/50 transition-colors"
                       onClick={(e) => toggleSheetExpanded(sheetId, e)}
-                      title={expandedSheets.has(sheetId) ? 'Свернуть' : 'Развернуть'}
+                      title={(expandedSheets.has(sheetId) || globalSearchQuery.trim()) ? 'Свернуть' : 'Развернуть'}
                     >
-                      {expandedSheets.has(sheetId)
+                      {(expandedSheets.has(sheetId) || globalSearchQuery.trim())
                         ? <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                         : <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                       }
@@ -956,13 +994,14 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               </div>
 
               {/* Аккордеон: поиск и список узлов листа */}
-              {SheetsManager.isNewFormat(projectData) && sheetId && expandedSheets.has(sheetId) && (
+              {SheetsManager.isNewFormat(projectData) && sheetId && (expandedSheets.has(sheetId) || globalSearchQuery.trim()) && (
                 <SheetAccordionContent
                   nodes={projectData.sheets[index]?.nodes || []}
-                  searchQuery={getSheetQuery(sheetId)}
+                  searchQuery={globalSearchQuery.trim() ? globalSearchQuery : getSheetQuery(sheetId)}
                   onSearchChange={(q) => setSheetQuery(sheetId, q)}
                   onNodeFocus={onNodeFocus}
                   onNodeSelect={onNodeFocus}
+                  hideSearch={!!globalSearchQuery.trim()}
                   availableSheets={
                     SheetsManager.isNewFormat(projectData)
                       ? projectData.sheets
