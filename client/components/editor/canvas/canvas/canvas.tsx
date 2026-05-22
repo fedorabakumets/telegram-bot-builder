@@ -12,6 +12,7 @@ import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useTouchGestures } from './use-touch-gestures';
 import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
+import { MobileCanvasFab } from './mobile-canvas-fab';
 import { useConnectionDrag } from './use-connection-drag';
 import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-connection';
 import { PortType } from '../canvas-node/port-colors';
@@ -1556,6 +1557,13 @@ export function Canvas({
         handleUndoSelected={handleUndoSelected}
         canvasView={canvasView}
         onViewChange={onViewChange}
+      />
+
+      {/* Плавающая панель для мобильных устройств */}
+      <MobileCanvasFab
+        onOpenMobileSidebar={onOpenMobileSidebar}
+        onOpenMobileProperties={onOpenMobileProperties}
+        selectedNodeId={selectedNodeId}
       />
 
       {/* Компонент листов холста - фиксированная панель внизу */}
