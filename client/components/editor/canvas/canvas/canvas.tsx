@@ -239,6 +239,8 @@ export function Canvas({
   onViewChange,
   suppressAutoFit,
   projectId,
+  onOpenMobileSidebar,
+  onOpenMobileProperties,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
