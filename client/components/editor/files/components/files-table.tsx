@@ -269,22 +269,26 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
         <Checkbox checked={selected} onCheckedChange={onToggle} />
       </td>
       <td className="p-2">
-        <div
-          className={cn('w-8 h-8 rounded bg-muted flex items-center justify-center overflow-hidden', showThumbnail && 'cursor-pointer hover:ring-2 hover:ring-primary/50')}
-          onClick={() => showThumbnail && onPreviewClick()}
-        >
-          {showThumbnail ? (
-            <img src={previewUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          ) : file.thumbnailFileId ? (
-            <img
-              src={`/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(file.thumbnailFileId)}`}
-              alt="" className="w-full h-full object-cover"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
-          ) : (
-            <Icon className="h-4 w-4 text-muted-foreground" />
-          )}
-        </div>
+        {(() => {
+          const isVideoType = file.mediaType === 'video' || file.mediaType === 'animation' || file.mediaType === 'video_note';
+          const thumbUrl = file.thumbnailFileId
+            ? `/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(file.thumbnailFileId)}`
+            : null;
+          const imgUrl = isVideoType ? thumbUrl : (showThumbnail ? previewUrl : thumbUrl);
+          const isClickable = showThumbnail || !!thumbUrl;
+          return (
+            <div
+              className={cn('w-8 h-8 rounded bg-muted flex items-center justify-center overflow-hidden', isClickable && 'cursor-pointer hover:ring-2 hover:ring-primary/50')}
+              onClick={() => isClickable && onPreviewClick()}
+            >
+              {imgUrl ? (
+                <img src={imgUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              ) : (
+                <Icon className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
+          );
+        })()}
       </td>
       <td className="p-2 max-w-[180px] truncate">{file.fileName ?? '—'}</td>
       <td className="p-2 text-muted-foreground text-[10px] uppercase">{getExtension(file.fileName, file.mediaType)}</td>
