@@ -2,7 +2,8 @@
  * @fileoverview Компонент аватарки бота
  *
  * Отображает аватарку бота через серверный прокси с передачей tokenId.
- * Кеширует неудачные загрузки (404) на уровне модуля чтобы не мигать сломанным img.
+ * Кеширует неудачные загрузки (404) в sessionStorage чтобы не мигать сломанным img
+ * даже после перезагрузки страницы (сбрасывается при закрытии вкладки).
  * Fallback — инициалы или иконка бота.
  *
  * @module BotAvatar
@@ -10,8 +11,41 @@
 
 import { useState } from 'react';
 
-/** Глобальный кеш URL-ов, для которых загрузка завершилась ошибкой */
-const failedUrlCache = new Set<string>();
+/** Ключ для sessionStorage */
+const STORAGE_KEY = 'bot-avatar-failed-urls';
+
+/**
+ * Проверяет, есть ли URL в кеше неудачных загрузок
+ * @param url - URL аватарки
+ * @returns true если загрузка ранее завершилась ошибкой
+ */
+function isUrlFailed(url: string): boolean {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const list: string[] = JSON.parse(raw);
+    return list.includes(url);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Добавляет URL в кеш неудачных загрузок
+ * @param url - URL аватарки который вернул ошибку
+ */
+function markUrlFailed(url: string): void {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const list: string[] = raw ? JSON.parse(raw) : [];
+    if (!list.includes(url)) {
+      list.push(url);
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+  } catch {
+    // sessionStorage недоступен — игнорируем
+  }
+}
 
 /**
  * Свойства аватарки бота
@@ -46,10 +80,10 @@ export function BotAvatar({ photoUrl, botName, size = 40, className = '', projec
     : null;
 
   /** Локальный флаг ошибки — для ре-рендера при onError */
-  const [imgError, setImgError] = useState(() => !!proxyUrl && failedUrlCache.has(proxyUrl));
+  const [imgError, setImgError] = useState(() => !!proxyUrl && isUrlFailed(proxyUrl));
 
   /** Показываем img только если URL есть и не в кеше ошибок */
-  const showImg = proxyUrl && !failedUrlCache.has(proxyUrl) && !imgError;
+  const showImg = proxyUrl && !isUrlFailed(proxyUrl) && !imgError;
 
   if (showImg) {
     return (
@@ -62,7 +96,7 @@ export function BotAvatar({ photoUrl, botName, size = 40, className = '', projec
           alt={`${botName} avatar`}
           className="w-full h-full object-cover"
           onError={() => {
-            failedUrlCache.add(proxyUrl);
+            markUrlFailed(proxyUrl);
             setImgError(true);
           }}
         />
