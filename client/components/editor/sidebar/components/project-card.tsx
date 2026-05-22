@@ -305,11 +305,6 @@ function SheetAccordionContent({
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleNode(node.id);
-                    if (!selected) {
-                      onNodeFocus?.(node.id, undefined, true);
-                    } else {
-                      onNodeFocus?.(node.id, undefined, false);
-                    }
                   }}
                 >
                   {selected && (
