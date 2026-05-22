@@ -307,13 +307,13 @@ export function MediaSelector({
               
               <Tabs defaultValue="upload" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 h-auto">
-                  <TabsTrigger value="upload" className="flex items-center gap-2 text-xs sm:text-sm py-2">
-                    <Upload className="w-4 h-4" />
+                  <TabsTrigger value="upload" className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-sm py-2 px-1 sm:px-3">
+                    <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden sm:inline" />
                     <span className="hidden sm:inline">Загрузить</span>
                     <span className="sm:hidden">Файлы</span>
                   </TabsTrigger>
-                  <TabsTrigger value="url" className="flex items-center gap-2 text-xs sm:text-sm py-2">
-                    <LinkIcon className="w-4 h-4" />
+                  <TabsTrigger value="url" className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-sm py-2 px-1 sm:px-3">
+                    <LinkIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden sm:inline" />
                     <span className="hidden sm:inline">По URL</span>
                     <span className="sm:hidden">URL</span>
                   </TabsTrigger>

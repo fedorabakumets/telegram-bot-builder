@@ -856,13 +856,28 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
       </Card>
 
       {/* Вкладки */}
+      {/* Вкладки фильтрации по типу медиа — на мобилке иконки, на десктопе текст */}
       <Tabs value={currentTab} onValueChange={setCurrentTab} ref={filesSectionRef}>
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all">Все</TabsTrigger>
-          <TabsTrigger value="photo">Фото</TabsTrigger>
-          <TabsTrigger value="video">Видео</TabsTrigger>
-          <TabsTrigger value="audio">Аудио</TabsTrigger>
-          <TabsTrigger value="document">Документы</TabsTrigger>
+          <TabsTrigger value="all" className="text-[11px] sm:text-sm px-1 sm:px-3">
+            Все
+          </TabsTrigger>
+          <TabsTrigger value="photo" className="text-[11px] sm:text-sm px-1 sm:px-3">
+            <Image className="w-3.5 h-3.5 sm:hidden" />
+            <span className="hidden sm:inline">Фото</span>
+          </TabsTrigger>
+          <TabsTrigger value="video" className="text-[11px] sm:text-sm px-1 sm:px-3">
+            <Play className="w-3.5 h-3.5 sm:hidden" />
+            <span className="hidden sm:inline">Видео</span>
+          </TabsTrigger>
+          <TabsTrigger value="audio" className="text-[11px] sm:text-sm px-1 sm:px-3">
+            <Volume2 className="w-3.5 h-3.5 sm:hidden" />
+            <span className="hidden sm:inline">Аудио</span>
+          </TabsTrigger>
+          <TabsTrigger value="document" className="text-[11px] sm:text-sm px-1 sm:px-3">
+            <FileText className="w-3.5 h-3.5 sm:hidden" />
+            <span className="hidden sm:inline">Документы</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={currentTab} className="mt-6">
