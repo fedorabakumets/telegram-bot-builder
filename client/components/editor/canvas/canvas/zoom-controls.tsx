@@ -175,17 +175,6 @@ export function ZoomControls({
                 <span>Уместить всё</span>
               </div>
             </button>
-
-            {/* Переключатель авто-уместить при смене листа */}
-            <label className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 rounded transition-colors">
-              <input
-                type="checkbox"
-                checked={autoFitValue}
-                onChange={(e) => handleAutoFitToggle(e.target.checked)}
-                className="w-3.5 h-3.5 rounded accent-blue-500"
-              />
-              <span className="text-slate-600 dark:text-slate-400">Авто при смене листа</span>
-            </label>
           </div>
         </PopoverContent>
       </Popover>
@@ -208,6 +197,18 @@ export function ZoomControls({
         title="Уместить в экран (Ctrl + 1)"
       >
         <i className={`fas fa-expand-arrows-alt ${ICON_CLASSES}`} />
+      </button>
+
+      {/* Toggle авто-уместить при смене листа */}
+      <button
+        onClick={() => handleAutoFitToggle(!autoFitValue)}
+        className={`${BUTTON_BASE_CLASSES} ${autoFitValue
+          ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30'
+          : BUTTON_INACTIVE_CLASSES
+        } flex items-center justify-center`}
+        title={autoFitValue ? 'Авто-уместить при смене листа: ВКЛ' : 'Авто-уместить при смене листа: ВЫКЛ'}
+      >
+        <span className="text-[10px] font-bold leading-none">A</span>
       </button>
     </>
   );
