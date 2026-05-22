@@ -158,6 +158,9 @@ class BotWorkerManager extends EventEmitter {
           } catch {
             // Не JSON — это raw логи от Python (aiogram, root logger)
             // Маршрутизируем как stdout лог для всех активных ботов воркера
+            if (worker.activeBots.size === 0) {
+              console.warn(`[WorkerPool:${projectId}] ⚠️ Raw лог, но activeBots пуст: "${line.slice(0, 80)}"`);
+            }
             for (const tokenId of worker.activeBots) {
               this.emit("bot-log", projectId, tokenId, "stdout", line);
             }
@@ -247,6 +250,8 @@ class BotWorkerManager extends EventEmitter {
     // Логи бота — маршрутизируем по token_id
     if (msg.token_id !== undefined) {
       this.emit("bot-log", projectId, msg.token_id, msg.type, msg.content || "");
+    } else {
+      console.warn(`[WorkerPool] ⚠️ Сообщение без token_id от проекта ${projectId}: type=${msg.type}, content="${(msg.content || "").slice(0, 60)}"`);
     }
   }
 
