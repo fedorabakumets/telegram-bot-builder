@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Image, Film, Music, FileText, Sticker, Copy, Trash2, Download, X } from 'lucide-react';
+import { Image, Film, Music, FileText, Sticker, Copy, Trash2, Download, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -101,8 +101,25 @@ function getLightboxType(file: ProjectFile): 'image' | 'video' {
  * @returns JSX элемент
  */
 export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCopyFileId, onDelete }: FilesTableProps) {
-  /** URL и тип для лайтбокса */
-  const [lightbox, setLightbox] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
+  /** Индекс файла в лайтбоксе (null = закрыт) */
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  /** Список файлов с превью для навигации в лайтбоксе */
+  const previewableFiles = files
+    .map((file, idx) => ({ file, idx, url: getPreviewUrl(file, projectId) }))
+    .filter(({ file, url }) => shouldShowPreview(file) && url);
+
+  /** Открыть лайтбокс для конкретного файла */
+  const openLightbox = (fileId: number) => {
+    const idx = previewableFiles.findIndex(({ file }) => file.id === fileId);
+    if (idx >= 0) setLightboxIndex(idx);
+  };
+
+  /** Навигация в лайтбоксе */
+  const goPrev = () => setLightboxIndex((i) => (i !== null && i > 0 ? i - 1 : i));
+  const goNext = () => setLightboxIndex((i) => (i !== null && i < previewableFiles.length - 1 ? i + 1 : i));
+
+  const currentLightbox = lightboxIndex !== null ? previewableFiles[lightboxIndex] : null;
 
   if (files.length === 0) {
     return (
@@ -133,7 +150,7 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
             {files.map((file) => (
               <FileRow key={file.id} file={file} projectId={projectId} selected={selectedIds.has(file.id)}
                 onToggle={() => onToggleSelect(file.id)} onCopy={onCopyFileId} onDelete={onDelete}
-                onPreviewClick={(url, type) => setLightbox({ url, type })} />
+                onPreviewClick={() => openLightbox(file.id)} />
             ))}
           </tbody>
         </table>
@@ -144,22 +161,45 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
         {files.map((file) => (
           <FileCard key={file.id} file={file} projectId={projectId} selected={selectedIds.has(file.id)}
             onToggle={() => onToggleSelect(file.id)} onCopy={onCopyFileId} onDelete={onDelete}
-            onPreviewClick={(url, type) => setLightbox({ url, type })} />
+            onPreviewClick={() => openLightbox(file.id)} />
         ))}
       </div>
 
-      {/* Лайтбокс */}
-      {lightbox && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
-          <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-white hover:bg-white/20 h-10 w-10" onClick={() => setLightbox(null)}>
+      {/* Лайтбокс с навигацией */}
+      {currentLightbox && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setLightboxIndex(null)}>
+          <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-white hover:bg-white/20 h-10 w-10" onClick={() => setLightboxIndex(null)}>
             <X className="h-6 w-6" />
           </Button>
-          <div className="max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-            {lightbox.type === 'video' ? (
-              <video src={lightbox.url} controls autoPlay className="max-w-full max-h-[85vh] rounded-lg" />
+
+          {/* Стрелка влево */}
+          {lightboxIndex !== null && lightboxIndex > 0 && (
+            <Button variant="ghost" size="icon"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
+              onClick={(e) => { e.stopPropagation(); goPrev(); }}>
+              <ChevronLeft className="h-8 w-8" />
+            </Button>
+          )}
+
+          {/* Стрелка вправо */}
+          {lightboxIndex !== null && lightboxIndex < previewableFiles.length - 1 && (
+            <Button variant="ghost" size="icon"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
+              onClick={(e) => { e.stopPropagation(); goNext(); }}>
+              <ChevronRight className="h-8 w-8" />
+            </Button>
+          )}
+
+          {/* Контент */}
+          <div className="max-w-[90vw] max-h-[90vh] flex flex-col items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            {getLightboxType(currentLightbox.file) === 'video' ? (
+              <video key={currentLightbox.url} src={currentLightbox.url!} controls autoPlay className="max-w-full max-h-[80vh] rounded-lg" />
             ) : (
-              <img src={lightbox.url} alt="Превью" className="max-w-full max-h-[85vh] rounded-lg object-contain" />
+              <img src={currentLightbox.url!} alt="Превью" className="max-w-full max-h-[80vh] rounded-lg object-contain" />
             )}
+            <p className="text-white/70 text-xs text-center truncate max-w-[80vw]">
+              {currentLightbox.file.fileName ?? '—'} • {lightboxIndex! + 1}/{previewableFiles.length}
+            </p>
           </div>
         </div>
       )}
@@ -171,7 +211,7 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
 function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPreviewClick }: {
   file: ProjectFile; projectId: number; selected: boolean; onToggle: () => void;
   onCopy: (id: string) => void; onDelete?: (id: number) => void;
-  onPreviewClick: (url: string, type: 'image' | 'video') => void;
+  onPreviewClick: () => void;
 }) {
   const Icon = MEDIA_ICONS[file.mediaType ?? ''] ?? FileText;
   const previewUrl = getPreviewUrl(file, projectId);
@@ -184,7 +224,7 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
       <td className="p-2">
         <div
           className={cn('w-8 h-8 rounded bg-muted flex items-center justify-center overflow-hidden', showThumbnail && 'cursor-pointer hover:ring-2 hover:ring-primary/50')}
-          onClick={() => showThumbnail && previewUrl && onPreviewClick(previewUrl, getLightboxType(file))}
+          onClick={() => showThumbnail && onPreviewClick()}
         >
           {showThumbnail ? (
             <img src={previewUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -235,7 +275,7 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
 function FileCard({ file, projectId, selected, onToggle, onCopy, onDelete, onPreviewClick }: {
   file: ProjectFile; projectId: number; selected: boolean; onToggle: () => void;
   onCopy: (id: string) => void; onDelete?: (id: number) => void;
-  onPreviewClick: (url: string, type: 'image' | 'video') => void;
+  onPreviewClick: () => void;
 }) {
   const Icon = MEDIA_ICONS[file.mediaType ?? ''] ?? FileText;
   const previewUrl = getPreviewUrl(file, projectId);
@@ -245,7 +285,7 @@ function FileCard({ file, projectId, selected, onToggle, onCopy, onDelete, onPre
       <Checkbox checked={selected} onCheckedChange={onToggle} className="mt-1" />
       <div
         className={cn('w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden', showThumbnail && 'cursor-pointer hover:ring-2 hover:ring-primary/50')}
-        onClick={() => showThumbnail && previewUrl && onPreviewClick(previewUrl, getLightboxType(file))}
+        onClick={() => showThumbnail && onPreviewClick()}
       >
         {showThumbnail ? (
           <img src={previewUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
