@@ -226,6 +226,8 @@ function SheetAccordionContent({
 }: SheetAccordionContentProps) {
   const filtered = useSheetNodeSearch(nodes, searchQuery);
   const { selectedNodeIds, toggleNode, clearSelection, isSelected, selectedCount } = useNodeSelection();
+  /** ID узла, на который последний раз кликнули (подсветка в списке) */
+  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
 
   /**
    * Обработчик выбора целевого листа для массового перемещения
@@ -278,9 +280,17 @@ function SheetAccordionContent({
             return (
               <div
                 key={node.id}
-                className="group/node flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30 hover:from-muted/70 hover:to-muted/40 rounded-lg sm:rounded-xl cursor-pointer border border-border/30 hover:border-primary/30 transition-all duration-200"
+                className={cn(
+                  "group/node flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg sm:rounded-xl cursor-pointer border transition-all duration-200",
+                  "bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30",
+                  "hover:from-muted/70 hover:to-muted/40",
+                  focusedNodeId === node.id
+                    ? 'border-primary/60 ring-1 ring-primary/30 shadow-sm shadow-primary/10'
+                    : 'border-border/30 hover:border-primary/30'
+                )}
                 onClick={(e) => {
                   e.stopPropagation();
+                  setFocusedNodeId(node.id);
                   if (onNodeFocus && node.id) onNodeFocus(node.id);
                 }}
               >
