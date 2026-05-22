@@ -58,6 +58,7 @@ import { UserDetailsPanel } from '@/components/editor/database/user-details/user
 import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
 import { AdaptiveHeader } from '@/components/editor/header/adaptive-header';
+import { MobileMenu } from '@/components/editor/header/components/mobile-menu';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { FlexibleLayout } from '@/components/layout/flexible/flexible-layout';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
@@ -1701,6 +1702,30 @@ export default function Editor() {
             onToggleCollapsed={toggleCollapsed}
             headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? false}
             onToggleHeader={handleToggleHeader}
+            mobileMenuSlot={
+              <MobileMenu
+                currentTab={currentTab}
+                onTabChange={handleTabChange}
+                onToggleHeader={handleToggleHeader}
+                onToggleSidebar={handleToggleSidebar}
+                onToggleCanvas={handleToggleCanvas}
+                onToggleProperties={handleToggleProperties}
+                onToggleCode={handleToggleCodePanel}
+                onToggleCodeEditor={handleToggleCodeEditor}
+                onLoadTemplate={handleLoadTemplate}
+                onSaveAsTemplate={handleSaveAsTemplate}
+                headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+                sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+                canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+                propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+                codeVisible={codePanelVisible}
+                codeEditorVisible={codeEditorVisible}
+                user={undefined}
+                isLoading={false}
+                onLogout={() => {}}
+                onLogin={() => {}}
+              />
+            }
           />
           {/** Основная рабочая область */}
           <div className="flex-1 min-w-0 overflow-hidden h-full">

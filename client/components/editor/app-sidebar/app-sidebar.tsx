@@ -27,6 +27,7 @@ export function AppSidebar({
   onToggleCollapsed,
   headerVisible,
   onToggleHeader,
+  mobileMenuSlot,
 }: AppSidebarProps) {
   return (
     <aside
@@ -84,6 +85,7 @@ export function AppSidebar({
 
       {/* Футер */}
       <div className="p-2">
+        {mobileMenuSlot}
         <SidebarFooter
           isCollapsed={isCollapsed}
           headerVisible={headerVisible}

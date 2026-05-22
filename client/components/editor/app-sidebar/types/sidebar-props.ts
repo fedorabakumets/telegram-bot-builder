@@ -31,4 +31,6 @@ export interface AppSidebarProps {
   headerVisible?: boolean;
   /** Переключить видимость шапки */
   onToggleHeader?: () => void;
+  /** Слот для мобильного меню (рендерится в футере сайдбара) */
+  mobileMenuSlot?: React.ReactNode;
 }

@@ -153,32 +153,7 @@ export function AdaptiveHeader({
           />
         </div>
 
-        {/* Мобильная кнопка меню */}
-        <div className="lg:hidden">
-          <MobileMenu
-            currentTab={currentTab}
-            onTabChange={onTabChange}
-            onToggleHeader={onToggleHeader}
-            onToggleSidebar={onToggleSidebar}
-            onToggleCanvas={onToggleCanvas}
-            onToggleProperties={onToggleProperties}
-            onToggleCode={onToggleCode}
-            onToggleCodeEditor={onToggleCodeEditor}
-            onOpenFileExplorer={onOpenFileExplorer}
-            onLoadTemplate={onLoadTemplate}
-            onSaveAsTemplate={onSaveAsTemplate}
-            headerVisible={headerVisible}
-            sidebarVisible={sidebarVisible}
-            canvasVisible={canvasVisible}
-            propertiesVisible={propertiesVisible}
-            codeVisible={codeVisible}
-            codeEditorVisible={codeEditorVisible}
-            user={user}
-            isLoading={isLoading}
-            onLogout={logout}
-            onLogin={handleTelegramLogin}
-          />
-        </div>
+        {/* Мобильная кнопка меню перенесена в app-sidebar */}
       </header>
     </>
   );
