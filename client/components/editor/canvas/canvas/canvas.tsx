@@ -937,8 +937,9 @@ export function Canvas({
 
     if (e.ctrlKey || e.metaKey) {
       // Зум относительно позиции курсора (pinch на тачпаде или Ctrl+scroll)
-      const delta = e.deltaY;
-      const zoomFactor = delta > 0 ? 0.9 : 1.1;
+      // Плавный шаг: используем deltaY для пропорционального изменения
+      const sensitivity = 0.003;
+      const zoomFactor = Math.max(0.85, Math.min(1.15, 1 - e.deltaY * sensitivity));
 
       // Используем scrollContainer (видимая область), а не сам canvas-div
       const container = scrollContainerRef.current ?? canvasRef.current?.parentElement;
