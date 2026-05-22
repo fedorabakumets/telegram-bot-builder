@@ -52,6 +52,13 @@ function formatSize(bytes: number | null): string {
   return `${(bytes / 1_048_576).toFixed(1)} MB`;
 }
 
+/** Извлекает расширение из имени файла */
+function getExtension(fileName: string | null): string {
+  if (!fileName) return '—';
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  return ext && ext !== fileName.toLowerCase() ? ext : '—';
+}
+
 /** Форматирование даты */
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '—';
@@ -155,6 +162,7 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
               </th>
               <th className="w-10 p-2"></th>
               <th className="p-2 text-left font-medium">Название файла</th>
+              <th className="p-2 text-left font-medium w-14">Расш.</th>
               <th className="p-2 text-left font-medium w-20">Тип</th>
               <th className="p-2 text-left font-medium">file_id</th>
               <th className="p-2 text-right font-medium w-20">Размер</th>
@@ -250,6 +258,7 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
         </div>
       </td>
       <td className="p-2 max-w-[180px] truncate">{file.fileName ?? '—'}</td>
+      <td className="p-2 text-muted-foreground text-[10px] uppercase">{getExtension(file.fileName)}</td>
       <td className="p-2">
         <Badge variant="secondary" className="text-[10px]">{file.mediaType ?? '?'}</Badge>
       </td>
