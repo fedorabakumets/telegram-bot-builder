@@ -294,10 +294,10 @@ export function MediaSelector({
                 </span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-full sm:max-w-5xl">
+            <DialogContent className="w-full sm:max-w-5xl p-3 sm:p-6">
               <DialogHeader>
-                <DialogTitle className="text-sm sm:text-xl">
-                  <i className="fas fa-folder-open mr-2 text-blue-600 dark:text-blue-400"></i>
+                <DialogTitle className="text-sm sm:text-xl leading-tight">
+                  <i className="fas fa-folder-open mr-1.5 sm:mr-2 text-blue-600 dark:text-blue-400"></i>
                   Управление медиафайлами
                 </DialogTitle>
                 <DialogDescription className="sr-only">

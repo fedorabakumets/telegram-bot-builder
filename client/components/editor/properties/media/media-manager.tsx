@@ -610,12 +610,13 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
             ) : (
               <div>
                 <p className="text-sm sm:text-xl font-semibold mb-2 text-gray-800 dark:text-gray-200">
-                  Перетащите файлы сюда или нажмите для выбора
+                  <span className="hidden sm:inline">Перетащите файлы сюда или нажмите для выбора</span>
+                  <span className="sm:hidden">Нажмите для выбора файлов</span>
                 </p>
                 <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
-                  Поддерживаются: изображения, видео, аудио, документы (до 50МБ)
+                  Изображения, видео, аудио, документы (до 50МБ)
                 </p>
-                <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-400">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs text-gray-400">
                   <div className="flex items-center gap-1">
                     <Image className="w-4 h-4" />
                     Фото
@@ -708,7 +709,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
               )}
 
               {/* Скрытые поля ввода файлов для конкретных типов */}
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <input
                   type="file"
                   id="photo-input"
