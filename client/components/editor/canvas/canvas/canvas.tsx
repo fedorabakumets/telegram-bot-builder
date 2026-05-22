@@ -941,19 +941,22 @@ export function Canvas({
       const sensitivity = 0.003;
       const zoomFactor = Math.max(0.85, Math.min(1.15, 1 - e.deltaY * sensitivity));
 
-      // Используем scrollContainer (видимая область), а не сам canvas-div
+      // Используем scrollContainer (видимая область)
       const container = scrollContainerRef.current ?? canvasRef.current?.parentElement;
       const rect = container?.getBoundingClientRect();
       if (rect) {
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        // Для тачпада (pinch) зумим к центру видимой области,
+        // для мыши (Ctrl+scroll) — к позиции курсора
+        const isPinch = Math.abs(e.deltaY) < 50;
+        const anchorX = isPinch ? rect.width / 2 : e.clientX - rect.left;
+        const anchorY = isPinch ? rect.height / 2 : e.clientY - rect.top;
 
         const newZoom = Math.max(Math.min(zoom * zoomFactor, 200), 1);
         const zoomRatio = newZoom / zoom;
 
         setPan(prev => ({
-          x: mouseX - (mouseX - prev.x) * zoomRatio,
-          y: mouseY - (mouseY - prev.y) * zoomRatio
+          x: anchorX - (anchorX - prev.x) * zoomRatio,
+          y: anchorY - (anchorY - prev.y) * zoomRatio
         }));
 
         setZoom(newZoom);
