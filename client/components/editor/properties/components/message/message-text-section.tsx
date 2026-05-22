@@ -11,6 +11,7 @@ import { MessageRecipientSection } from './message-recipient-section';
 import { SaveMessageIdSection } from './save-message-id-section';
 import { BroadcastToggle } from '../broadcast/broadcast-toggle';
 import { ContentSyncBadge } from '../content-sync-badge';
+import { PropertyCheckbox } from '../common/property-checkbox';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Variable } from '../../../inline-rich/types';
 import type { Node } from '@shared/schema';
@@ -92,18 +93,12 @@ export function MessageTextSection({
             textVariables={[...textVariables, ...mediaVariables] as Variable[]}
           />
           {/* Переключатель превью ссылок */}
-          <div className="flex items-center gap-2 pt-1">
-            <input
-              type="checkbox"
-              id="disableLinkPreview"
-              checked={!!selectedNode.data.disableLinkPreview}
-              onChange={(e) => onNodeUpdate(selectedNode.id, { disableLinkPreview: e.target.checked })}
-              className="h-3.5 w-3.5 rounded border-gray-300"
-            />
-            <label htmlFor="disableLinkPreview" className="text-xs text-muted-foreground cursor-pointer">
-              Отключить превью ссылок
-            </label>
-          </div>
+          <PropertyCheckbox
+            id="disableLinkPreview"
+            label="Отключить превью ссылок"
+            checked={!!selectedNode.data.disableLinkPreview}
+            onChange={(checked) => onNodeUpdate(selectedNode.id, { disableLinkPreview: checked })}
+          />
         </>
       )}
 

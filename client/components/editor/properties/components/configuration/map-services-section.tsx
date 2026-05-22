@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { YandexMapSection } from './yandex-map-section';
 import { GoogleMapSection } from './google-map-section';
 import { GisMapSection } from './gis-map-section';
+import { PropertyCheckbox } from '../common/property-checkbox';
 
 /**
  * Пропсы компонента секции картографических сервисов
@@ -108,34 +109,22 @@ export function MapServicesSection({
             />
           </div>
           <div className="flex flex-col justify-end">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="showDirections"
-                checked={selectedNode.data.showDirections || false}
-                onChange={(e) => onNodeUpdate(selectedNode.id, { showDirections: e.target.checked })}
-                className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-              />
-              <Label htmlFor="showDirections" className="text-xs font-medium text-orange-700 dark:text-orange-300">
-                Показать маршрут
-              </Label>
-            </div>
+            <PropertyCheckbox
+              id="showDirections"
+              label="Показать маршрут"
+              checked={selectedNode.data.showDirections || false}
+              onChange={(checked) => onNodeUpdate(selectedNode.id, { showDirections: checked })}
+            />
           </div>
         </div>
 
         {/* Generate Map Preview */}
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="generateMapPreview"
-            checked={selectedNode.data.generateMapPreview !== false}
-            onChange={(e) => onNodeUpdate(selectedNode.id, { generateMapPreview: e.target.checked })}
-            className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-          />
-          <Label htmlFor="generateMapPreview" className="text-xs font-medium text-orange-700 dark:text-orange-300">
-            Генерировать превью карты с кнопками сервисов
-          </Label>
-        </div>
+        <PropertyCheckbox
+          id="generateMapPreview"
+          label="Генерировать превью карты с кнопками сервисов"
+          checked={selectedNode.data.generateMapPreview !== false}
+          onChange={(checked) => onNodeUpdate(selectedNode.id, { generateMapPreview: checked })}
+        />
       </div>
     </div>
   );

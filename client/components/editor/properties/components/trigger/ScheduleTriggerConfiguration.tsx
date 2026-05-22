@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { TriggerTargetSelector } from './TriggerTargetSelector';
 import { formatNodeDisplay as defaultFormatNodeDisplay } from '../../utils/node-formatters';
 import { ScheduleRuleEditor } from './schedule-trigger/ScheduleRuleEditor';
+import { PropertyCheckbox } from '../common/property-checkbox';
 
 /** Пропсы компонента ScheduleTriggerConfiguration */
 interface ScheduleTriggerConfigurationProps {
@@ -139,17 +140,12 @@ export function ScheduleTriggerConfiguration({
       </div>
 
       {/* Запустить при старте */}
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={runOnStart}
-          onChange={(e) => update('runOnStart', e.target.checked)}
-          className="w-4 h-4 rounded border-2 border-slate-400 dark:border-slate-500 bg-slate-100 dark:bg-slate-700 text-teal-600 dark:text-teal-500 focus:ring-teal-500 dark:focus:ring-teal-400 focus:ring-2"
-        />
-        <span className="text-xs text-slate-600 dark:text-slate-300">
-          Запустить при старте бота
-        </span>
-      </label>
+      <PropertyCheckbox
+        id="runOnStart"
+        label="Запустить при старте бота"
+        checked={runOnStart}
+        onChange={(checked) => update('runOnStart', checked)}
+      />
 
       {/* Выбор следующего узла */}
       <TriggerTargetSelector

@@ -14,6 +14,7 @@ import { BotTableUpdatesSection } from './bot-table-updates-section';
 import { BotTableRowSection } from './bot-table-row-section';
 import { useTablesQuery } from '../../../tables/hooks/use-tables-query';
 import { VariableSelector } from '../variables/variable-selector';
+import { PropertyCheckbox } from '../common/property-checkbox';
 
 /** Пропсы компонента BotTableConfiguration */
 interface BotTableConfigurationProps {
@@ -267,15 +268,12 @@ export function BotTableConfiguration({
 
       {/* Вернуть ID вставленной строки (insert/upsert) */}
       {['insert', 'upsert'].includes(operation) && (
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={data?.returnInsertedId || false}
-            onChange={(e) => onNodeUpdate(selectedNode.id, { returnInsertedId: e.target.checked })}
-            className="h-3.5 w-3.5 rounded border-gray-300"
-          />
-          <Label className="text-xs text-muted-foreground">Сохранить ID вставленной строки в переменную</Label>
-        </div>
+        <PropertyCheckbox
+          id="returnInsertedId"
+          label="Сохранить ID вставленной строки в переменную"
+          checked={data?.returnInsertedId || false}
+          onChange={(checked) => onNodeUpdate(selectedNode.id, { returnInsertedId: checked })}
+        />
       )}
 
       {/* Формат результата (только read) */}

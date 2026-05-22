@@ -13,6 +13,7 @@ import { SaveMessageIdSection } from '../message/save-message-id-section';
 import { MediaFileSection } from '../media-file/media-file-section';
 import { SectionHeader } from '../layout/section-header';
 import { VariableSelector } from '../variables/variable-selector';
+import { PropertyCheckbox } from '../common/property-checkbox';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Variable } from '../../../inline-rich/types';
 import type { Node } from '@shared/schema';
@@ -147,18 +148,12 @@ export function UserbotMessageConfiguration({
               onNodeUpdate={onNodeUpdate}
             />
             {/* Отключить превью ссылок */}
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="ub-disableLinkPreview"
-                checked={!!data.disableLinkPreview}
-                onChange={(e) => onNodeUpdate(selectedNode.id, { disableLinkPreview: e.target.checked })}
-                className="h-3.5 w-3.5 rounded border-gray-300"
-              />
-              <label htmlFor="ub-disableLinkPreview" className="text-xs text-muted-foreground cursor-pointer">
-                Отключить превью ссылок
-              </label>
-            </div>
+            <PropertyCheckbox
+              id="ub-disableLinkPreview"
+              label="Отключить превью ссылок"
+              checked={!!data.disableLinkPreview}
+              onChange={(checked) => onNodeUpdate(selectedNode.id, { disableLinkPreview: checked })}
+            />
           </>
         )}
       </div>

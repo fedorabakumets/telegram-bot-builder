@@ -8,3 +8,4 @@ export * from './message-info-block';
 export * from './complete-button-info';
 export * from './normal-button-info';
 export * from './option-button-info';
+export * from './property-checkbox';

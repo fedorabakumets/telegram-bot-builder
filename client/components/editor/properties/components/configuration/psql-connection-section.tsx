@@ -17,6 +17,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Eye, EyeOff, Unplug, Server, Bot, Pencil } from 'lucide-react';
+import { PropertyCheckbox } from '../common/property-checkbox';
 
 /** Тип источника подключения */
 type ConnectionSource = 'builtin' | 'env' | 'custom';
@@ -306,15 +307,12 @@ export function PsqlConnectionSection({
                   className="text-xs h-7 font-mono"
                 />
               </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={parsedFields.ssl}
-                  onChange={(e) => handleFieldChange('ssl', e.target.checked)}
-                  className="rounded border-slate-300"
-                />
-                <span className="text-xs text-muted-foreground">SSL (sslmode=require)</span>
-              </label>
+              <PropertyCheckbox
+                id="psql-ssl"
+                label="SSL (sslmode=require)"
+                checked={parsedFields.ssl}
+                onChange={(checked) => handleFieldChange('ssl', checked)}
+              />
             </div>
           )}
         </div>
