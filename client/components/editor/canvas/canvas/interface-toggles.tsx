@@ -79,16 +79,6 @@ export function InterfaceToggles({
         </button>
       )}
 
-      {onToggleCanvas && (
-        <button
-          onClick={onToggleCanvas}
-          className={getButtonClasses(canvasVisible)}
-          title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
-        >
-          <Monitor className="w-4 h-4" />
-        </button>
-      )}
-
       {onToggleProperties && (
         <button
           onClick={onToggleProperties}
