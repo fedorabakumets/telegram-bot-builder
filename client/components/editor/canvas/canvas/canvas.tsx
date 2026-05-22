@@ -952,7 +952,7 @@ export function Canvas({
         const zoomRatio = newZoom / zoom;
 
         setPan(prev => ({
-          x: mouseX - (mouseX - prev.x) * zoomRatio - e.deltaX,
+          x: mouseX - (mouseX - prev.x) * zoomRatio,
           y: mouseY - (mouseY - prev.y) * zoomRatio
         }));
 
