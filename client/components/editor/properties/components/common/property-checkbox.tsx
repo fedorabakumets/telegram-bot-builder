@@ -1,6 +1,6 @@
 /**
  * @fileoverview Стилизованный чекбокс для панели свойств
- * Крупный, контрастный, хорошо заметный на тёмном фоне
+ * Крупный квадрат с контрастной рамкой, отделённый от текста
  * @module components/editor/properties/components/common/property-checkbox
  */
 
@@ -27,7 +27,7 @@ interface PropertyCheckboxProps {
 
 /**
  * Стилизованный чекбокс для панели свойств
- * Крупный квадрат с контрастной рамкой + подложка-строка
+ * Квадрат чекбокса визуально отделён от текста надписи
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
@@ -41,44 +41,39 @@ export function PropertyCheckbox({
   disabled = false,
 }: PropertyCheckboxProps) {
   return (
-    <label
-      htmlFor={id}
-      className={cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150',
-        'border',
-        'hover:bg-accent/60 dark:hover:bg-accent/40',
-        checked
-          ? 'bg-primary/8 border-primary/30 dark:bg-primary/15 dark:border-primary/40'
-          : 'bg-muted/40 border-border/60 dark:bg-muted/30 dark:border-border/50',
-        disabled && 'opacity-50 cursor-not-allowed',
-        className,
-      )}
-    >
+    <div className={cn('flex items-center gap-3 py-1.5', className)}>
       <Checkbox
         id={id}
         checked={checked}
         onCheckedChange={(value) => onChange(value as boolean)}
         disabled={disabled}
         className={cn(
-          'shrink-0 h-5 w-5 rounded border-2 transition-all',
+          'shrink-0 h-[18px] w-[18px] rounded border-2 transition-all',
           checked
             ? 'border-primary bg-primary text-primary-foreground'
-            : 'border-muted-foreground/60 dark:border-muted-foreground/50 bg-background dark:bg-muted/40',
+            : 'border-muted-foreground/50 dark:border-muted-foreground/40 bg-transparent',
+          disabled && 'opacity-50 cursor-not-allowed',
         )}
       />
-      <div className="flex flex-col gap-0.5 select-none">
+      <label
+        htmlFor={id}
+        className={cn(
+          'cursor-pointer select-none flex flex-col gap-0.5',
+          disabled && 'cursor-not-allowed',
+        )}
+      >
         <span className={cn(
-          'text-sm font-medium leading-tight',
-          checked ? 'text-foreground' : 'text-foreground/80 dark:text-foreground/70',
+          'text-xs font-medium leading-tight',
+          checked ? 'text-foreground' : 'text-muted-foreground',
         )}>
           {label}
         </span>
         {description && (
-          <span className="text-[11px] text-muted-foreground/70 leading-tight">
+          <span className="text-[10px] text-muted-foreground/60 leading-tight">
             {description}
           </span>
         )}
-      </div>
-    </label>
+      </label>
+    </div>
   );
 }
