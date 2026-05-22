@@ -3,7 +3,8 @@
  * @module components/editor/files/components/files-table
  */
 
-import { Image, Film, Music, FileText, Sticker, Copy, Trash2, Download } from 'lucide-react';
+import { useState } from 'react';
+import { Image, Film, Music, FileText, Sticker, Copy, Trash2, Download, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -74,12 +75,35 @@ function getPreviewUrl(file: ProjectFile, projectId: number): string | null {
 /** Типы медиа для которых показываем миниатюру */
 const PREVIEW_TYPES = new Set(['photo', 'video', 'sticker', 'animation']);
 
+/** Расширения файлов которые являются изображениями/видео (для document с расширением) */
+const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
+const VIDEO_EXTENSIONS = new Set(['mp4', 'avi', 'mov', 'webm', 'mkv']);
+
+/** Определяет, нужно ли показывать превью для файла */
+function shouldShowPreview(file: ProjectFile): boolean {
+  if (PREVIEW_TYPES.has(file.mediaType ?? '')) return true;
+  // Проверяем расширение для документов (mp4 может быть сохранён как document)
+  const ext = file.fileName?.split('.').pop()?.toLowerCase() ?? '';
+  return IMAGE_EXTENSIONS.has(ext) || VIDEO_EXTENSIONS.has(ext);
+}
+
+/** Определяет тип медиа для лайтбокса */
+function getLightboxType(file: ProjectFile): 'image' | 'video' {
+  if (file.mediaType === 'video' || file.mediaType === 'animation') return 'video';
+  const ext = file.fileName?.split('.').pop()?.toLowerCase() ?? '';
+  if (VIDEO_EXTENSIONS.has(ext)) return 'video';
+  return 'image';
+}
+
 /**
  * Таблица файлов — десктоп: таблица, мобильный: карточки
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCopyFileId, onDelete }: FilesTableProps) {
+  /** URL и тип для лайтбокса */
+  const [lightbox, setLightbox] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
+
   if (files.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
@@ -102,13 +126,14 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
               <th className="p-2 text-left font-medium">file_id</th>
               <th className="p-2 text-right font-medium w-20">Размер</th>
               <th className="p-2 text-left font-medium w-32">Дата</th>
-              <th className="w-20 p-2"></th>
+              <th className="w-24 p-2"></th>
             </tr>
           </thead>
           <tbody className="divide-y">
             {files.map((file) => (
               <FileRow key={file.id} file={file} projectId={projectId} selected={selectedIds.has(file.id)}
-                onToggle={() => onToggleSelect(file.id)} onCopy={onCopyFileId} onDelete={onDelete} />
+                onToggle={() => onToggleSelect(file.id)} onCopy={onCopyFileId} onDelete={onDelete}
+                onPreviewClick={(url, type) => setLightbox({ url, type })} />
             ))}
           </tbody>
         </table>
@@ -118,28 +143,49 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
       <div className="sm:hidden flex-1 overflow-auto p-3 space-y-2">
         {files.map((file) => (
           <FileCard key={file.id} file={file} projectId={projectId} selected={selectedIds.has(file.id)}
-            onToggle={() => onToggleSelect(file.id)} onCopy={onCopyFileId} onDelete={onDelete} />
+            onToggle={() => onToggleSelect(file.id)} onCopy={onCopyFileId} onDelete={onDelete}
+            onPreviewClick={(url, type) => setLightbox({ url, type })} />
         ))}
       </div>
+
+      {/* Лайтбокс */}
+      {lightbox && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
+          <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-white hover:bg-white/20 h-10 w-10" onClick={() => setLightbox(null)}>
+            <X className="h-6 w-6" />
+          </Button>
+          <div className="max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            {lightbox.type === 'video' ? (
+              <video src={lightbox.url} controls autoPlay className="max-w-full max-h-[85vh] rounded-lg" />
+            ) : (
+              <img src={lightbox.url} alt="Превью" className="max-w-full max-h-[85vh] rounded-lg object-contain" />
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
 
 /** Строка таблицы для одного файла */
-function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete }: {
+function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPreviewClick }: {
   file: ProjectFile; projectId: number; selected: boolean; onToggle: () => void;
   onCopy: (id: string) => void; onDelete?: (id: number) => void;
+  onPreviewClick: (url: string, type: 'image' | 'video') => void;
 }) {
   const Icon = MEDIA_ICONS[file.mediaType ?? ''] ?? FileText;
   const previewUrl = getPreviewUrl(file, projectId);
-  const showThumbnail = PREVIEW_TYPES.has(file.mediaType ?? '') && previewUrl;
+  const showThumbnail = shouldShowPreview(file) && previewUrl;
   return (
     <tr className={cn('hover:bg-muted/30 transition-colors', selected && 'bg-primary/5')}>
       <td className="p-2 text-center">
         <Checkbox checked={selected} onCheckedChange={onToggle} />
       </td>
       <td className="p-2">
-        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center overflow-hidden">
+        <div
+          className={cn('w-8 h-8 rounded bg-muted flex items-center justify-center overflow-hidden', showThumbnail && 'cursor-pointer hover:ring-2 hover:ring-primary/50')}
+          onClick={() => showThumbnail && previewUrl && onPreviewClick(previewUrl, getLightboxType(file))}
+        >
           {showThumbnail ? (
             <img src={previewUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           ) : (
@@ -186,17 +232,21 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete }: {
 }
 
 /** Карточка файла для мобильного вида */
-function FileCard({ file, projectId, selected, onToggle, onCopy, onDelete }: {
+function FileCard({ file, projectId, selected, onToggle, onCopy, onDelete, onPreviewClick }: {
   file: ProjectFile; projectId: number; selected: boolean; onToggle: () => void;
   onCopy: (id: string) => void; onDelete?: (id: number) => void;
+  onPreviewClick: (url: string, type: 'image' | 'video') => void;
 }) {
   const Icon = MEDIA_ICONS[file.mediaType ?? ''] ?? FileText;
   const previewUrl = getPreviewUrl(file, projectId);
-  const showThumbnail = PREVIEW_TYPES.has(file.mediaType ?? '') && previewUrl;
+  const showThumbnail = shouldShowPreview(file) && previewUrl;
   return (
     <div className={cn('rounded-xl border p-3 flex gap-3 items-start', selected && 'border-primary/50 bg-primary/5')}>
       <Checkbox checked={selected} onCheckedChange={onToggle} className="mt-1" />
-      <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+      <div
+        className={cn('w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden', showThumbnail && 'cursor-pointer hover:ring-2 hover:ring-primary/50')}
+        onClick={() => showThumbnail && previewUrl && onPreviewClick(previewUrl, getLightboxType(file))}
+      >
         {showThumbnail ? (
           <img src={previewUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
         ) : (
