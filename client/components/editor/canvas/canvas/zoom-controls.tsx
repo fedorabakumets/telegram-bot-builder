@@ -5,6 +5,7 @@
  * выпадающий список выбора масштаба и кнопку "Уместить всё".
  */
 
+import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 /**
@@ -29,6 +30,10 @@ interface ZoomControlsProps {
   onFitToContent: () => void;
   /** Колбэк установки уровня масштаба */
   onZoomLevelChange: (level: number) => void;
+  /** Авто-уместить при переключении листа */
+  autoFitOnSheetChange?: boolean;
+  /** Колбэк переключения авто-уместить */
+  onAutoFitOnSheetChangeToggle?: (value: boolean) => void;
 }
 
 /**
@@ -59,8 +64,20 @@ export function ZoomControls({
   onZoomIn,
   onResetZoom,
   onFitToContent,
-  onZoomLevelChange
+  onZoomLevelChange,
+  autoFitOnSheetChange: autoFitProp,
+  onAutoFitOnSheetChangeToggle,
 }: ZoomControlsProps) {
+  /** Локальное состояние для переключателя авто-fit (если пропсы не переданы) */
+  const [localAutoFit, setLocalAutoFit] = useState(() => {
+    try { return localStorage.getItem('canvas-auto-fit-sheet') !== 'false'; } catch { return true; }
+  });
+  const autoFitValue = autoFitProp ?? localAutoFit;
+  const handleAutoFitToggle = (value: boolean) => {
+    try { localStorage.setItem('canvas-auto-fit-sheet', String(value)); } catch {}
+    setLocalAutoFit(value);
+    onAutoFitOnSheetChangeToggle?.(value);
+  };
   return (
     <>
       {/* Кнопка уменьшения масштаба */}
@@ -158,6 +175,17 @@ export function ZoomControls({
                 <span>Уместить всё</span>
               </div>
             </button>
+
+            {/* Переключатель авто-уместить при смене листа */}
+            <label className="flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 rounded transition-colors">
+              <input
+                type="checkbox"
+                checked={autoFitValue}
+                onChange={(e) => handleAutoFitToggle(e.target.checked)}
+                className="w-3.5 h-3.5 rounded accent-blue-500"
+              />
+              <span className="text-slate-600 dark:text-slate-400">Авто при смене листа</span>
+            </label>
           </div>
         </PopoverContent>
       </Popover>
