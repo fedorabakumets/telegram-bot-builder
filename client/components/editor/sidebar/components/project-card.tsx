@@ -338,6 +338,17 @@ function SheetAccordionContent({
                     </div>
                   )}
                 </div>
+                {/* Кнопка центрирования на узле */}
+                <button
+                  className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:bg-primary/15 dark:hover:bg-primary/25 hidden group-hover/node:flex items-center justify-center transition-all duration-200 hover:shadow-md hover:shadow-primary/20"
+                  title="Центрировать на узле"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onNodeFocus && node.id) onNodeFocus(node.id);
+                  }}
+                >
+                  <i className="fas fa-crosshairs text-xs" />
+                </button>
               </div>
             );
           })}
