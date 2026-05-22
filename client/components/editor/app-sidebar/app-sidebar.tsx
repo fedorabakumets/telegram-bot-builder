@@ -85,11 +85,12 @@ export function AppSidebar({
 
       {/* Футер */}
       <div className="p-2">
+        {/* mobileMenuSlot скрыт — доступен при необходимости */}
+        <div className="hidden">{mobileMenuSlot}</div>
         <SidebarFooter
           isCollapsed={isCollapsed}
           headerVisible={headerVisible}
           onToggleHeader={onToggleHeader}
-          mobileMenuSlot={mobileMenuSlot}
         />
       </div>
     </aside>

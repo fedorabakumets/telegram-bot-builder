@@ -19,8 +19,6 @@ interface SidebarFooterProps {
   headerVisible?: boolean;
   /** Переключить видимость шапки */
   onToggleHeader?: () => void;
-  /** Слот для мобильного меню */
-  mobileMenuSlot?: React.ReactNode;
 }
 
 /**
@@ -28,7 +26,7 @@ interface SidebarFooterProps {
  * @param props - Свойства компонента
  * @returns JSX элемент с профилем и кнопкой шапки
  */
-export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader, mobileMenuSlot }: SidebarFooterProps) {
+export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: SidebarFooterProps) {
   const { user, logout } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
 
@@ -52,8 +50,6 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader, mobi
           <PanelTop className="h-4 w-4" />
         </Button>
       )}
-
-      {mobileMenuSlot}
 
       {isAuthed ? (
         <div className={cn('flex items-center gap-2', isCollapsed ? 'justify-center' : '')}>
