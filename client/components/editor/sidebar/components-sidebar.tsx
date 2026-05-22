@@ -196,13 +196,14 @@ export function ComponentsSidebar({
   const handleDeleteProject = (projectId: number) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
-    // Если удаляем активный проект — переключаемся на соседний
-    if (currentProjectId === projectId && onProjectSelect) {
-      const idx = projects.findIndex(p => p.id === projectId);
-      const next = projects[idx + 1] ?? projects[idx - 1];
-      if (next) onProjectSelect(next.id);
-    }
-    deleteProject(project.id);
+    // Сначала удаляем, потом переключаемся — чтобы не было race condition
+    deleteProject(project).then(() => {
+      if (currentProjectId === projectId && onProjectSelect) {
+        const remaining = projects.filter(p => p.id !== projectId);
+        const next = remaining[0];
+        if (next) onProjectSelect(next.id);
+      }
+    });
   };
 
   // Обработчики inline редактирования листов
