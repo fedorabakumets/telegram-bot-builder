@@ -39,7 +39,7 @@ export function ProjectSwitcher({ projects, currentProjectId, onSelect }: Projec
           variant="ghost"
           className="h-8 px-1.5 gap-1 text-sm font-medium border-none shadow-none focus-visible:ring-0 min-w-0"
         >
-          <span className="truncate max-w-[40vw] sm:max-w-[200px] md:max-w-none">{current?.name ?? 'Проект'}</span>
+          <span className="truncate max-w-[60vw] sm:max-w-[250px] md:max-w-none">{current?.name ?? 'Проект'}</span>
           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
         </Button>
       </DropdownMenuTrigger>
