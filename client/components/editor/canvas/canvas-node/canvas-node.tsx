@@ -272,8 +272,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     }
   };
 
-  // Touch обработчики для мобильного перемещения элементов
-  const handleTouchStart = (e: React.TouchEvent) => {
+  // Touch обработчики для мобильного перемещения элементов (нативные, для passive: false)
+  const handleNativeTouchStart = (e: TouchEvent) => {
     // Не запускать события если кликнули по кнопке
     if ((e.target as HTMLElement).closest('button')) return;
 
@@ -314,11 +314,13 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     }
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleNativeTouchMove = (e: TouchEvent) => {
     const touch = e.touches[0];
     if (!touch || !onMove) return;
 
-    e.preventDefault();
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     e.stopPropagation();
 
     // Вычисляем расстояние от начальной точки касания
@@ -360,8 +362,10 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     onMove({ x: snappedX, y: snappedY });
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
+  const handleNativeTouchEnd = (e: TouchEvent) => {
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     e.stopPropagation();
 
     const touchEndTime = Date.now();
@@ -454,6 +458,27 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     };
   }, [node.id, onSizeChange]);
 
+  /**
+   * Регистрация touch-обработчиков с { passive: false }
+   * чтобы preventDefault() работал корректно в Chrome
+   */
+  useEffect(() => {
+    const el = nodeRef.current;
+    if (!el) return;
+
+    const opts: AddEventListenerOptions = { passive: false };
+
+    el.addEventListener('touchstart', handleNativeTouchStart, opts);
+    el.addEventListener('touchmove', handleNativeTouchMove, opts);
+    el.addEventListener('touchend', handleNativeTouchEnd, opts);
+
+    return () => {
+      el.removeEventListener('touchstart', handleNativeTouchStart);
+      el.removeEventListener('touchmove', handleNativeTouchMove);
+      el.removeEventListener('touchend', handleNativeTouchEnd);
+    };
+  });
+
   const isDragActive = isDragging || isTouchDragging;
   const [isHovered, setIsHovered] = useState(false);
   /** ����������� hover: ��������� ��� �������������� �� �������� */
@@ -521,9 +546,6 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         onClick={!isDragging ? onClick : undefined}
         onMouseDown={handleMouseDown}
         onContextMenu={openContextMenu}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         style={{
           position: 'relative',
           overflow: 'visible',

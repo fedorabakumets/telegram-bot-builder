@@ -190,7 +190,9 @@ export function useTouchGestures({
    * Обработчик завершения touch-события (нативный, для { passive: false })
    */
   const handleTouchEnd = useCallback((e: TouchEvent) => {
-    e.preventDefault();
+    if (e.cancelable) {
+      e.preventDefault();
+    }
 
     if (e.touches.length === 0) {
       setIsTouchPanning(false);
