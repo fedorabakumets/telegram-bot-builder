@@ -27,11 +27,15 @@ export const MEDIA_METADATA_SUFFIXES: Record<string, MetadataSuffix[]> = {
     { suffix: 'mime_type', description: 'MIME тип', icon: '🏷️' },
   ],
   photo: [
-    { suffix: 'file_id', description: 'Telegram file_id', icon: '📎' },
+    { suffix: 'file_id', description: 'Telegram file_id (макс. размер)', icon: '📎' },
     { suffix: 'file_unique_id', description: 'Уникальный ID файла', icon: '🔑' },
     { suffix: 'file_size', description: 'Размер файла (байт)', icon: '📦' },
     { suffix: 'width', description: 'Ширина (px)', icon: '↔️' },
     { suffix: 'height', description: 'Высота (px)', icon: '↕️' },
+    { suffix: 'small_file_id', description: 'file_id миниатюры (мин. размер)', icon: '🔍' },
+    { suffix: 'small_width', description: 'Ширина миниатюры (px)', icon: '↔️' },
+    { suffix: 'small_height', description: 'Высота миниатюры (px)', icon: '↕️' },
+    { suffix: 'sizes_count', description: 'Количество размеров', icon: '📐' },
   ],
   audio: [
     { suffix: 'file_id', description: 'Telegram file_id', icon: '📎' },

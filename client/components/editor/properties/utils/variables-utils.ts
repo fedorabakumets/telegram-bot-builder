@@ -29,11 +29,15 @@ const MEDIA_META_SUFFIXES_MAP: Record<string, MediaMetaSuffix[]> = {
     { suffix: 'mime_type', description: 'MIME тип' },
   ],
   photo: [
-    { suffix: 'file_id', description: 'Telegram file_id' },
+    { suffix: 'file_id', description: 'Telegram file_id (макс. размер)' },
     { suffix: 'file_unique_id', description: 'Уникальный ID файла' },
     { suffix: 'file_size', description: 'Размер файла (байт)' },
     { suffix: 'width', description: 'Ширина (px)' },
     { suffix: 'height', description: 'Высота (px)' },
+    { suffix: 'small_file_id', description: 'file_id миниатюры (мин. размер)' },
+    { suffix: 'small_width', description: 'Ширина миниатюры (px)' },
+    { suffix: 'small_height', description: 'Высота миниатюры (px)' },
+    { suffix: 'sizes_count', description: 'Количество размеров' },
   ],
   audio: [
     { suffix: 'file_id', description: 'Telegram file_id' },
