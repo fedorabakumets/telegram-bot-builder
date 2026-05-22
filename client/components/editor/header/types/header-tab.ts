@@ -17,4 +17,5 @@ export type HeaderTab =
   | 'broadcast'
   | 'analytics'
   | 'tables'
+  | 'files'
   | 'terminal';

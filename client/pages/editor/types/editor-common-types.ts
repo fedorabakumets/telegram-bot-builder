@@ -27,7 +27,8 @@ export type EditorTab =
   | 'dialogs'
   | 'broadcast'
   | 'analytics'
-  | 'tables';
+  | 'tables'
+  | 'files';
 
 /**
  * Тип предыдущей вкладки
