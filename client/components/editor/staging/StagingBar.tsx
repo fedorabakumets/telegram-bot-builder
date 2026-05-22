@@ -47,8 +47,8 @@ export function StagingBar(props: StagingBarProps) {
           </span>
         </div>
       )}
-      <div className={`flex flex-wrap items-center justify-center border-b shrink-0 py-1 px-2 sm:py-1.5 sm:px-3 ${barClass}`}>
-        <div className="flex flex-wrap items-center justify-center gap-1.5 w-full sm:w-auto">
+      <div className={`flex flex-col items-center border-b shrink-0 py-1 px-2 sm:py-1.5 sm:px-3 gap-1 ${barClass}`}>
+        <div className="flex flex-col sm:flex-row items-center gap-1.5 w-full sm:w-auto">
           {variant === 'canvas' && (
             <CanvasVariant
               changesCount={changesCount}
@@ -127,19 +127,19 @@ function CanvasVariant({ changesCount, isSaving, onSave, onSaveAndRestart, onDis
         </Button>
       </div>
       {/* Нижняя строка на мобилке / продолжение на десктопе: кнопки действий */}
-      <div className="flex items-center gap-1.5 w-full sm:w-auto">
+      <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center">
         <Button size="sm" variant="ghost" onClick={onDiscard}
-          className="h-7 px-2 text-xs flex-1 sm:flex-none text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
           Сбросить
         </Button>
         <Button size="sm" onClick={onSave} disabled={isSaving}
-          className="h-7 px-2.5 text-xs flex-1 sm:flex-none bg-violet-600 hover:bg-violet-700 text-white">
+          className="h-7 px-2.5 text-xs bg-violet-600 hover:bg-violet-700 text-white">
           {isSaving
             ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
             : <><i className="fas fa-floppy-disk mr-1" />Сохранить <kbd className="ml-1 opacity-60 text-[10px] hidden sm:inline">⇧+↵</kbd></>}
         </Button>
         <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
-          className="h-7 px-2.5 text-xs flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white">
+          className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
           {isSaving
             ? <><i className="fas fa-spinner fa-spin mr-1" />…</>
             : <><i className="fas fa-play mr-1" /><span className="sm:hidden">Рестарт</span><span className="hidden sm:inline">Сохранить и перезапустить</span></>}
@@ -184,19 +184,19 @@ function JsonDirtyVariant({ onReset, onDetails, onSave, onSaveAndRestart, isSavi
         </Button>
       </div>
       {/* Нижняя строка на мобилке / продолжение на десктопе: кнопки действий */}
-      <div className="flex items-center gap-1.5 w-full sm:w-auto">
+      <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center">
         <Button size="sm" variant="ghost" onClick={onReset}
-          className="h-7 px-2 text-xs flex-1 sm:flex-none text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
           Сбросить
         </Button>
         <Button size="sm" onClick={onSave} disabled={isSaving}
-          className="h-7 px-2.5 text-xs flex-1 sm:flex-none bg-violet-600 hover:bg-violet-700 text-white">
+          className="h-7 px-2.5 text-xs bg-violet-600 hover:bg-violet-700 text-white">
           {isSaving
             ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
             : <><i className="fas fa-floppy-disk mr-1" />Сохранить</>}
         </Button>
         <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
-          className="h-7 px-2.5 text-xs flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white">
+          className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
           {isSaving
             ? <><i className="fas fa-spinner fa-spin mr-1" />…</>
             : <><i className="fas fa-play mr-1" /><span className="sm:hidden">Рестарт</span><span className="hidden sm:inline">Сохранить и перезапустить</span></>}
@@ -237,9 +237,9 @@ function JsonErrorVariant({ error, onReset, onDetails }: JsonErrorVariantProps) 
         </Button>
       </div>
       {/* Нижняя строка на мобилке / продолжение на десктопе: кнопка сброса */}
-      <div className="flex items-center gap-1.5 w-full sm:w-auto">
+      <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center">
         <Button size="sm" variant="ghost" onClick={onReset}
-          className="h-7 px-2 text-xs flex-1 sm:flex-none text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
           Сбросить
         </Button>
       </div>
