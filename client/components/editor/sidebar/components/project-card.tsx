@@ -294,11 +294,16 @@ function SheetAccordionContent({
                   if (onNodeFocus && node.id) onNodeFocus(node.id);
                 }}
               >
-                {/* Чекбокс — виден только при hover или если выбран */}
+                {/* Чекбокс выбора для массового перемещения */}
                 <input
                   type="checkbox"
                   checked={selected}
-                  className={`transition-opacity h-3.5 w-3.5 flex-shrink-0 cursor-pointer accent-blue-500 ${selected ? 'opacity-100' : 'opacity-0 group-hover/node:opacity-70'}`}
+                  className={cn(
+                    "h-4 w-4 flex-shrink-0 cursor-pointer rounded border-2 accent-blue-500 transition-all",
+                    selected
+                      ? 'opacity-100 border-blue-500'
+                      : 'opacity-40 group-hover/node:opacity-80 border-slate-400 dark:border-slate-500'
+                  )}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) => {
                     e.stopPropagation();
