@@ -138,11 +138,11 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
             <tr>
               <th className="w-8 p-2"><span className="sr-only">Выбрать</span></th>
               <th className="w-10 p-2"></th>
-              <th className="p-2 text-left font-medium">Название</th>
+              <th className="p-2 text-left font-medium">Название файла</th>
               <th className="p-2 text-left font-medium w-20">Тип</th>
               <th className="p-2 text-left font-medium">file_id</th>
               <th className="p-2 text-right font-medium w-20">Размер</th>
-              <th className="p-2 text-left font-medium w-32">Дата</th>
+              <th className="p-2 text-left font-medium w-32">Дата загрузки</th>
               <th className="w-24 p-2"></th>
             </tr>
           </thead>
