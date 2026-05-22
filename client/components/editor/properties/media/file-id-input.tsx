@@ -98,39 +98,39 @@ export function FileIdInput({ projectId, mediaType, onMediaTypeChange, onAdd }: 
     <div className="space-y-4">
       <InfoBlock
         variant="info"
-        title="ℹ️ file_id привязан к конкретному боту"
-        description="Один и тот же файл имеет разный file_id для каждого бота. Заполните поля для нужных токенов."
+        title="ℹ️ file_id привязан к боту"
+        description="Один файл имеет разный file_id для каждого бота. Заполните поля для нужных токенов."
       />
 
       {/* Выбор типа медиа */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium">Тип медиа</Label>
+      <div className="space-y-1.5 sm:space-y-2">
+        <Label className="text-xs sm:text-sm font-medium">Тип медиа</Label>
         <RadioGroup
           value={mediaType}
           onValueChange={(v) => onMediaTypeChange(v as MediaType)}
-          className="flex flex-wrap gap-3"
+          className="flex flex-wrap gap-2 sm:gap-3"
         >
           {MEDIA_TYPES.map(({ value, label }) => (
-            <div key={value} className="flex items-center gap-1.5">
+            <div key={value} className="flex items-center gap-1 sm:gap-1.5">
               <RadioGroupItem value={value} id={`mt-${value}`} />
-              <Label htmlFor={`mt-${value}`} className="text-sm cursor-pointer">{label}</Label>
+              <Label htmlFor={`mt-${value}`} className="text-xs sm:text-sm cursor-pointer">{label}</Label>
             </div>
           ))}
         </RadioGroup>
       </div>
 
       {/* Поля ввода file_id для каждого токена */}
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         {tokens.map((token) => (
           <div key={token.id} className="space-y-1">
-            <Label className="text-xs text-muted-foreground flex items-center gap-1">
+            <Label className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1 truncate">
               🤖 {token.name}{token.botUsername ? ` (@${token.botUsername})` : ''}
             </Label>
             <Input
               value={fileIds[String(token.id)] ?? ''}
               onChange={(e) => handleFileIdChange(token.id, e.target.value)}
-              placeholder={`Введите file_id для этого бота...`}
-              className="h-9 text-sm font-mono"
+              placeholder="file_id..."
+              className="h-8 sm:h-9 text-xs sm:text-sm font-mono"
             />
           </div>
         ))}

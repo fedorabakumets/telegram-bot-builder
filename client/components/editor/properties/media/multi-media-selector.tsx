@@ -245,10 +245,10 @@ export function MultiMediaSelector({
               Выбрать или загрузить файл
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-5xl">
+          <DialogContent className="sm:max-w-5xl p-3 sm:p-6">
             <DialogHeader>
-              <DialogTitle>
-                <i className="fas fa-folder-open mr-2 text-blue-600"></i>
+              <DialogTitle className="text-sm sm:text-lg leading-tight">
+                <i className="fas fa-folder-open mr-1.5 sm:mr-2 text-blue-600"></i>
                 Управление медиафайлами
               </DialogTitle>
             </DialogHeader>
