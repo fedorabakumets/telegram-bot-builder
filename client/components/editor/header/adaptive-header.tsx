@@ -106,7 +106,7 @@ export function AdaptiveHeader({
   return (
     <>
       <header className={containerClasses}>
-        <div className="flex items-center gap-0 md:order-first flex-shrink-0">
+        <div className="flex items-center gap-0 md:order-first flex-1 min-w-0">
           {/* Переключатель проекта — без лого, лого живёт в сайдбаре */}
           {projects && projects.length > 0 && currentProjectId && onProjectChange && (
             <ProjectSwitcher
