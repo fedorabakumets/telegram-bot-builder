@@ -47,8 +47,8 @@ export function StagingBar(props: StagingBarProps) {
           </span>
         </div>
       )}
-      <div className={`flex items-center justify-center border-b shrink-0 py-1.5 px-3 ${barClass}`}>
-        <div className="flex items-center gap-1.5">
+      <div className={`flex flex-wrap items-center justify-center border-b shrink-0 py-1 px-2 sm:py-1.5 sm:px-3 ${barClass}`}>
+        <div className="flex flex-wrap items-center justify-center gap-1.5 w-full sm:w-auto">
           {variant === 'canvas' && (
             <CanvasVariant
               changesCount={changesCount}
@@ -114,31 +114,37 @@ interface CanvasVariantProps {
 function CanvasVariant({ changesCount, isSaving, onSave, onSaveAndRestart, onDiscard, onDetails }: CanvasVariantProps) {
   return (
     <>
-      <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
-        <i className="fas fa-pencil text-violet-500 dark:text-violet-400 mr-1.5" />
-        {changesCount > 0 ? `${changesCount} изменений` : 'Есть изменения'}
-      </span>
-      <div className="w-px h-4 bg-slate-300 dark:bg-slate-700" />
-      <Button size="sm" variant="ghost" onClick={onDetails}
-        className="h-7 px-2 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
-        Детали
-      </Button>
-      <Button size="sm" variant="ghost" onClick={onDiscard}
-        className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-        Сбросить
-      </Button>
-      <Button size="sm" onClick={onSave} disabled={isSaving}
-        className="h-7 px-2.5 text-xs bg-violet-600 hover:bg-violet-700 text-white">
-        {isSaving
-          ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
-          : <><i className="fas fa-floppy-disk mr-1" />Сохранить <kbd className="ml-1 opacity-60 text-[10px]">⇧+↵</kbd></>}
-      </Button>
-      <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
-        className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-        {isSaving
-          ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
-          : <><i className="fas fa-play mr-1" />Сохранить и перезапустить</>}
-      </Button>
+      {/* Верхняя строка: статус + детали */}
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
+          <i className="fas fa-pencil text-violet-500 dark:text-violet-400 mr-1.5" />
+          {changesCount > 0 ? `${changesCount} изменений` : 'Есть изменения'}
+        </span>
+        <div className="hidden sm:block w-px h-4 bg-slate-300 dark:bg-slate-700" />
+        <Button size="sm" variant="ghost" onClick={onDetails}
+          className="h-7 px-2 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+          Детали
+        </Button>
+      </div>
+      {/* Нижняя строка на мобилке / продолжение на десктопе: кнопки действий */}
+      <div className="flex items-center gap-1.5 w-full sm:w-auto">
+        <Button size="sm" variant="ghost" onClick={onDiscard}
+          className="h-7 px-2 text-xs flex-1 sm:flex-none text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          Сбросить
+        </Button>
+        <Button size="sm" onClick={onSave} disabled={isSaving}
+          className="h-7 px-2.5 text-xs flex-1 sm:flex-none bg-violet-600 hover:bg-violet-700 text-white">
+          {isSaving
+            ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
+            : <><i className="fas fa-floppy-disk mr-1" />Сохранить <kbd className="ml-1 opacity-60 text-[10px] hidden sm:inline">⇧+↵</kbd></>}
+        </Button>
+        <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
+          className="h-7 px-2.5 text-xs flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white">
+          {isSaving
+            ? <><i className="fas fa-spinner fa-spin mr-1" />…</>
+            : <><i className="fas fa-play mr-1" /><span className="sm:hidden">Рестарт</span><span className="hidden sm:inline">Сохранить и перезапустить</span></>}
+        </Button>
+      </div>
     </>
   );
 }
@@ -165,31 +171,37 @@ interface JsonDirtyVariantProps {
 function JsonDirtyVariant({ onReset, onDetails, onSave, onSaveAndRestart, isSaving }: JsonDirtyVariantProps) {
   return (
     <>
-      <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
-        <i className="fas fa-pencil-alt text-violet-500 dark:text-violet-400 mr-1.5" />
-        Есть изменения в JSON
-      </span>
-      <div className="w-px h-4 bg-slate-300 dark:bg-slate-700" />
-      <Button size="sm" variant="ghost" onClick={onDetails}
-        className="h-7 px-2 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
-        Детали
-      </Button>
-      <Button size="sm" variant="ghost" onClick={onReset}
-        className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-        Сбросить
-      </Button>
-      <Button size="sm" onClick={onSave} disabled={isSaving}
-        className="h-7 px-2.5 text-xs bg-violet-600 hover:bg-violet-700 text-white">
-        {isSaving
-          ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
-          : <><i className="fas fa-floppy-disk mr-1" />Сохранить</>}
-      </Button>
-      <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
-        className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
-        {isSaving
-          ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
-          : <><i className="fas fa-play mr-1" />Сохранить и перезапустить</>}
-      </Button>
+      {/* Верхняя строка: статус + детали */}
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
+          <i className="fas fa-pencil-alt text-violet-500 dark:text-violet-400 mr-1.5" />
+          Есть изменения в JSON
+        </span>
+        <div className="hidden sm:block w-px h-4 bg-slate-300 dark:bg-slate-700" />
+        <Button size="sm" variant="ghost" onClick={onDetails}
+          className="h-7 px-2 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+          Детали
+        </Button>
+      </div>
+      {/* Нижняя строка на мобилке / продолжение на десктопе: кнопки действий */}
+      <div className="flex items-center gap-1.5 w-full sm:w-auto">
+        <Button size="sm" variant="ghost" onClick={onReset}
+          className="h-7 px-2 text-xs flex-1 sm:flex-none text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          Сбросить
+        </Button>
+        <Button size="sm" onClick={onSave} disabled={isSaving}
+          className="h-7 px-2.5 text-xs flex-1 sm:flex-none bg-violet-600 hover:bg-violet-700 text-white">
+          {isSaving
+            ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
+            : <><i className="fas fa-floppy-disk mr-1" />Сохранить</>}
+        </Button>
+        <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
+          className="h-7 px-2.5 text-xs flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white">
+          {isSaving
+            ? <><i className="fas fa-spinner fa-spin mr-1" />…</>
+            : <><i className="fas fa-play mr-1" /><span className="sm:hidden">Рестарт</span><span className="hidden sm:inline">Сохранить и перезапустить</span></>}
+        </Button>
+      </div>
     </>
   );
 }
@@ -212,19 +224,25 @@ interface JsonErrorVariantProps {
 function JsonErrorVariant({ error, onReset, onDetails }: JsonErrorVariantProps) {
   return (
     <>
-      <span className="text-xs text-red-700 dark:text-red-300 px-1.5 max-w-xs truncate">
-        <i className="fas fa-exclamation-circle text-red-500 dark:text-red-400 mr-1.5" />
-        {error ?? 'Невалидный JSON'}
-      </span>
-      <div className="w-px h-4 bg-red-200 dark:bg-slate-700" />
-      <Button size="sm" variant="ghost" onClick={onDetails}
-        className="h-7 px-2 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
-        Детали
-      </Button>
-      <Button size="sm" variant="ghost" onClick={onReset}
-        className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
-        Сбросить
-      </Button>
+      {/* Верхняя строка: ошибка + детали */}
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-red-700 dark:text-red-300 px-1.5 max-w-xs truncate">
+          <i className="fas fa-exclamation-circle text-red-500 dark:text-red-400 mr-1.5" />
+          {error ?? 'Невалидный JSON'}
+        </span>
+        <div className="hidden sm:block w-px h-4 bg-red-200 dark:bg-slate-700" />
+        <Button size="sm" variant="ghost" onClick={onDetails}
+          className="h-7 px-2 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+          Детали
+        </Button>
+      </div>
+      {/* Нижняя строка на мобилке / продолжение на десктопе: кнопка сброса */}
+      <div className="flex items-center gap-1.5 w-full sm:w-auto">
+        <Button size="sm" variant="ghost" onClick={onReset}
+          className="h-7 px-2 text-xs flex-1 sm:flex-none text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          Сбросить
+        </Button>
+      </div>
     </>
   );
 }
