@@ -123,7 +123,8 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
     const wsUrl = `${protocol}//${window.location.host}/api/terminal?projectId=${projectIdRef.current}&tokenId=${tokenIdRef.current}`;
 
     try {
-      console.log(`Подключение к WebSocket: ${wsUrl}`);
+      console.log(`[WS-Terminal] Подключение к WebSocket: ${wsUrl}`);
+      console.log(`[WS-Terminal] projectId=${projectIdRef.current}, tokenId=${tokenIdRef.current}, key=${key}`);
       setStatus('connecting');
 
       const ws = new WebSocket(wsUrl);
@@ -134,7 +135,7 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       activeConnections.set(key, { ws, refCount: 1 });
 
       ws.onopen = () => {
-        console.log('Соединение с терминалом установлено');
+        console.log('[WS-Terminal] ✅ Соединение с терминалом установлено');
         setStatus('connected');
 
         // Keepalive ping каждые 30 сек — Railway proxy закрывает idle WebSocket
@@ -156,18 +157,21 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
           if ((message as any).command === 'pong') return;
 
           // Отправляем сообщение в терминал без отправки обратно на сервер
-          if (terminalRefRef.current?.current) {
-            // Для типа 'status' используем 'stdout', так как TerminalHandle.addLine принимает только 'stdout' или 'stderr'
-            const outputType = message.type === 'status' ? 'stdout' : message.type;
-            // Защита от undefined content
-            const content = message.content ?? '';
-            if (content) {
-              const ts = message.timestamp ? new Date(message.timestamp) : undefined;
-              terminalRefRef.current.current.addLineLocal(content, outputType, ts);
-            }
+          const hasRef = !!terminalRefRef.current?.current;
+          if (!hasRef) {
+            console.warn('[WS-Terminal] ⚠️ terminalRef.current недоступен, сообщение потеряно:', message.content?.slice(0, 80));
+            return;
+          }
+          // Для типа 'status' используем 'stdout', так как TerminalHandle.addLine принимает только 'stdout' или 'stderr'
+          const outputType = message.type === 'status' ? 'stdout' : message.type;
+          // Защита от undefined content
+          const content = message.content ?? '';
+          if (content) {
+            const ts = message.timestamp ? new Date(message.timestamp) : undefined;
+            terminalRefRef.current.current!.addLineLocal(content, outputType, ts);
           }
         } catch (error) {
-          console.error('Ошибка при обработке сообщения от терминала:', error);
+          console.error('[WS-Terminal] Ошибка при обработке сообщения от терминала:', error);
           if (terminalRefRef.current?.current) {
             terminalRefRef.current.current.addLineLocal(`[Ошибка] Некорректное сообщение от сервера: ${event.data}`, 'stderr');
           }
@@ -175,7 +179,7 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       };
 
       ws.onclose = (event) => {
-        console.log(`Соединение с терминалом закрыто: код ${event.code}, причина: ${event.reason}`);
+        console.log(`[WS-Terminal] ❌ Соединение закрыто: код ${event.code}, причина: "${event.reason}", wasClean: ${event.wasClean}`);
         // Очищаем keepalive ping
         if ((ws as any).__pingInterval) {
           clearInterval((ws as any).__pingInterval);
@@ -188,7 +192,8 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
       };
 
       ws.onerror = (error) => {
-        console.error('Ошибка WebSocket-соединения с терминалом:', error);
+        console.error('[WS-Terminal] ❌ Ошибка WebSocket:', error);
+        console.error('[WS-Terminal] readyState при ошибке:', ws.readyState, '(0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)');
         setStatus('error');
 
         if (terminalRefRef.current?.current) {

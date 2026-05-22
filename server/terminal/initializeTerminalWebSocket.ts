@@ -50,7 +50,7 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
   const wss = new WebSocketServer({ server, path: "/api/terminal" });
 
   wss.on("connection", (ws: WebSocket, request) => {
-    console.log("Новое WebSocket-соединение для терминала");
+    console.log("[Terminal WS] Новое WebSocket-соединение, URL:", request.url);
 
     // Прикрепляем Express-сессию к WS запросу чтобы получить userId
     const applySession = (): Promise<void> => new Promise((resolve, reject) => {
@@ -110,6 +110,7 @@ export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer
 
     const connectionKey = `${projectId}_${tokenId}`;
     registerConnection(connectionKey, ws);
+    console.log(`[Terminal WS] Зарегистрировано соединение: key=${connectionKey}, всего соединений для ключа: ${activeConnections.get(connectionKey)?.size ?? 0}`);
 
     // Сбрасываем буфер и отправляем историю асинхронно
     (async () => {

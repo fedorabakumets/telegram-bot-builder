@@ -46,6 +46,19 @@ export function sendOutputToTerminals(
     ? parseLogTimestamp(content)
     : new Date().toISOString();
 
+  // Диагностика: логируем каждые 10 секунд или при отсутствии подписчиков
+  const connCount = connections?.size ?? 0;
+  if (connCount === 0) {
+    // Логируем только первый раз для каждого ключа чтобы не спамить
+    const logThrottleKey = `no_conn_${connectionKey}`;
+    if (!(globalThis as any)[logThrottleKey]) {
+      console.warn(`[Terminal] ⚠️ Нет подписчиков для ${connectionKey}, лог потерян: ${content.slice(0, 60)}...`);
+      console.warn(`[Terminal] Все ключи activeConnections:`, Array.from(activeConnections.keys()));
+      (globalThis as any)[logThrottleKey] = true;
+      setTimeout(() => { delete (globalThis as any)[logThrottleKey]; }, 10000);
+    }
+  }
+
   if (connections) {
     const message: TerminalMessage = {
       type,
@@ -55,10 +68,15 @@ export function sendOutputToTerminals(
       timestamp,
     };
 
+    let sentCount = 0;
     for (const ws of connections) {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify(message));
+        sentCount++;
       }
+    }
+    if (sentCount === 0 && connections.size > 0) {
+      console.warn(`[Terminal] ⚠️ ${connections.size} соединений для ${connectionKey}, но ни одно не OPEN`);
     }
   }
 
