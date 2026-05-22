@@ -2038,7 +2038,11 @@ export default function Editor() {
               onSheetSelect={handleSheetSelect}
               isMobile={isMobile}
               onClose={() => setShowMobileSidebar(false)}
-              onNodeFocus={handleNodeFocus}
+              onNodeFocus={(nodeId, buttonId) => {
+                handleNodeFocus(nodeId, buttonId);
+                setShowMobileSidebar(false);
+                setShowMobileProperties(true);
+              }}
             />
           </div>
         </SheetContent>
