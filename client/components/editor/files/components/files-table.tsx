@@ -182,12 +182,12 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
                   onCheckedChange={(checked) => onSelectAll(checked as boolean)}
                 />
               </th>
-              <th className="w-10 p-2"></th>
+              <th className="w-10 p-2">Превью</th>
               <th className="p-2 text-left font-medium">Название файла</th>
               <th className="p-2 text-left font-medium w-14">Расш.</th>
               <th className="p-2 text-center font-medium w-12">Обл.</th>
               <th className="p-2 text-left font-medium w-20">Тип</th>
-              <th className="p-2 text-left font-medium">file_id</th>
+              <th className="p-2 text-left font-medium font-mono">file_id</th>
               <th className="p-2 text-right font-medium w-20">Размер</th>
               <th className="p-2 text-left font-medium w-32">Дата загрузки</th>
               <th className="w-24 p-2"></th>
@@ -275,6 +275,12 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
         >
           {showThumbnail ? (
             <img src={previewUrl} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          ) : file.thumbnailFileId ? (
+            <img
+              src={`/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(file.thumbnailFileId)}`}
+              alt="" className="w-full h-full object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
           ) : (
             <Icon className="h-4 w-4 text-muted-foreground" />
           )}
@@ -284,20 +290,29 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
       <td className="p-2 text-muted-foreground text-[10px] uppercase">{getExtension(file.fileName, file.mediaType)}</td>
       <td className="p-2 text-center">
         {file.thumbnailFileId ? (
-          <div className="relative group w-6 h-6 mx-auto">
-            <div className="w-6 h-6 rounded overflow-hidden bg-muted cursor-pointer hover:ring-1 hover:ring-primary/50"
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="relative group w-6 h-6">
+              <div className="w-6 h-6 rounded overflow-hidden bg-muted cursor-pointer hover:ring-1 hover:ring-primary/50"
+                onClick={() => onCopy(file.thumbnailFileId!)}
+                title="Копировать file_id обложки">
+                <img
+                  src={`/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(file.thumbnailFileId)}`}
+                  alt="Обл."
+                  className="w-full h-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Copy className="h-2.5 w-2.5 text-primary" />
+              </div>
+            </div>
+            <span
+              className="font-mono text-[8px] text-muted-foreground truncate max-w-[60px] cursor-pointer hover:text-primary transition-colors"
               onClick={() => onCopy(file.thumbnailFileId!)}
-              title="Копировать file_id обложки">
-              <img
-                src={`/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(file.thumbnailFileId)}`}
-                alt="Обл."
-                className="w-full h-full object-cover"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-              />
-            </div>
-            <div className="absolute -bottom-0.5 -right-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Copy className="h-2.5 w-2.5 text-primary" />
-            </div>
+              title={file.thumbnailFileId}
+            >
+              {file.thumbnailFileId.slice(0, 8)}…
+            </span>
           </div>
         ) : (
           <span className="text-muted-foreground text-[10px]">—</span>
@@ -308,7 +323,13 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
       </td>
       <td className="p-2 max-w-[140px]">
         {file.fileId ? (
-          <span className="font-mono text-[10px] truncate block">{file.fileId.slice(0, 20)}…</span>
+          <span
+            className="font-mono text-[10px] truncate block cursor-pointer hover:text-primary transition-colors"
+            onClick={() => onCopy(file.fileId!)}
+            title="Копировать file_id"
+          >
+            {file.fileId.slice(0, 20)}…
+          </span>
         ) : '—'}
       </td>
       <td className={cn('p-2 text-right font-mono', getSizeColor(file.fileSize))}>
