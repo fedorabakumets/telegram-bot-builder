@@ -186,7 +186,7 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
               <th className="p-2 text-left font-medium">Название файла</th>
               <th className="p-2 text-left font-medium w-14">Расш.</th>
               <th className="p-2 text-center font-medium w-12">Обл.</th>
-              <th className="p-2 text-left font-medium w-20">Тип</th>
+              <th className="p-2 text-center font-medium w-20">Тип</th>
               <th className="p-2 text-left font-medium font-mono">file_id</th>
               <th className="p-2 text-right font-medium w-20">Размер</th>
               <th className="p-2 text-left font-medium w-32">Дата загрузки</th>
@@ -320,7 +320,7 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
           <span className="text-muted-foreground text-[10px]">—</span>
         )}
       </td>
-      <td className="p-2">
+      <td className="p-2 text-center">
         <Badge variant="secondary" className="text-[10px]">{MEDIA_TYPE_LABELS[file.mediaType ?? ''] ?? file.mediaType ?? '?'}</Badge>
       </td>
       <td className="p-2">
