@@ -175,6 +175,7 @@ export function FilesTable({ files, projectId, selectedIds, onToggleSelect, onCo
               <th className="w-10 p-2"></th>
               <th className="p-2 text-left font-medium">Название файла</th>
               <th className="p-2 text-left font-medium w-14">Расш.</th>
+              <th className="p-2 text-center font-medium w-12">Обл.</th>
               <th className="p-2 text-left font-medium w-20">Тип</th>
               <th className="p-2 text-left font-medium">file_id</th>
               <th className="p-2 text-right font-medium w-20">Размер</th>
@@ -271,6 +272,21 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
       </td>
       <td className="p-2 max-w-[180px] truncate">{file.fileName ?? '—'}</td>
       <td className="p-2 text-muted-foreground text-[10px] uppercase">{getExtension(file.fileName)}</td>
+      <td className="p-2 text-center">
+        {file.thumbnailFileId ? (
+          <div className="w-6 h-6 mx-auto rounded overflow-hidden bg-muted cursor-pointer hover:ring-1 hover:ring-primary/50"
+            onClick={() => onPreviewClick()}>
+            <img
+              src={`/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(file.thumbnailFileId)}`}
+              alt="Обл."
+              className="w-full h-full object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          </div>
+        ) : (
+          <span className="text-muted-foreground text-[10px]">—</span>
+        )}
+      </td>
       <td className="p-2">
         <Badge variant="secondary" className="text-[10px]">{MEDIA_TYPE_LABELS[file.mediaType ?? ''] ?? file.mediaType ?? '?'}</Badge>
       </td>
@@ -336,6 +352,9 @@ function FileCard({ file, projectId, selected, onToggle, onCopy, onDelete, onPre
           <Badge variant="secondary" className="text-[10px]">{MEDIA_TYPE_LABELS[file.mediaType ?? ''] ?? file.mediaType ?? '?'}</Badge>
           <span className={getSizeColor(file.fileSize)}>{formatSize(file.fileSize)}</span>
           <span>{formatDate(file.createdAt)}</span>
+          {file.thumbnailFileId && (
+            <span className="text-[10px] text-muted-foreground">🖼 обл.</span>
+          )}
         </div>
         {file.fileId && (
           <p className="font-mono text-[10px] text-muted-foreground truncate">{file.fileId.slice(0, 24)}…</p>

@@ -33,6 +33,8 @@ export interface ProjectFile {
   userId?: number | null;
   /** ID токена бота */
   tokenId?: number | null;
+  /** file_id обложки (thumbnail) */
+  thumbnailFileId?: string | null;
   /** Дата создания */
   createdAt: string | null;
 }

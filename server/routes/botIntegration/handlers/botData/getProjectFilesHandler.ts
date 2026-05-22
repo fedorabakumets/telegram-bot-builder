@@ -49,15 +49,16 @@ const VALID_SOURCES = ["incoming", "outgoing", "uploaded"] as const;
 type FileSource = (typeof VALID_SOURCES)[number];
 
 /**
- * Извлекает тип медиа и данные из messageData (jsonb)
+ * Извлекает тип медиа, данные и file_id обложки из messageData (jsonb)
  * @param messageData - Данные сообщения из БД
- * @returns Объект с типом медиа и данными файла, или null
+ * @returns Объект с типом медиа, данными файла и thumbnailFileId, или null
  */
-function extractMediaInfo(messageData: any): { mediaType: MediaType; data: any } | null {
+function extractMediaInfo(messageData: any): { mediaType: MediaType; data: any; thumbnailFileId: string | null } | null {
   if (!messageData || typeof messageData !== "object") return null;
   for (const type of MEDIA_TYPES) {
     if (messageData[type]) {
-      return { mediaType: type, data: messageData[type] };
+      const thumbnailFileId = messageData[type]?.thumbnail?.file_id ?? null;
+      return { mediaType: type, data: messageData[type], thumbnailFileId };
     }
   }
   return null;
@@ -161,6 +162,7 @@ async function queryMessageFiles(projectId: number, source: "incoming" | "outgoi
       fileName: media?.data?.file_name ?? null,
       fileSize: media?.data?.file_size ?? null,
       duration: media?.data?.duration ?? null,
+      thumbnailFileId: media?.thumbnailFileId ?? null,
       userId: row.userId,
       tokenId: row.tokenId,
       telegramMessageId: row.telegramMessageId,
