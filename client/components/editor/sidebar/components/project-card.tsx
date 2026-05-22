@@ -741,7 +741,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               <div
                 className={cn(
                   'w-full flex items-center justify-between gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl',
-                  'bg-gradient-to-r from-slate-100/80 to-slate-50/40 dark:from-slate-800/60 dark:to-slate-900/40',
+                  'sticky top-0 z-10',
+                  'bg-gradient-to-r from-slate-100/95 to-slate-50/90 dark:from-slate-800/95 dark:to-slate-900/90 backdrop-blur-sm',
                   'hover:from-slate-200/60 hover:to-slate-100/30 dark:hover:from-slate-700/50 dark:hover:to-slate-800/30',
                   'transition-all duration-200 group/sheet border border-slate-200/40 dark:border-slate-700/40 hover:border-primary/30',
                   dragOverSheetIndex === index && draggingSheetIndex !== index
