@@ -108,20 +108,63 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
 
         # Проверяем наличие видео
         elif event.video:
+            _video_thumb = None
+            if event.video.thumbnail:
+                _video_thumb = {"file_id": event.video.thumbnail.file_id, "file_unique_id": event.video.thumbnail.file_unique_id, "width": event.video.thumbnail.width, "height": event.video.thumbnail.height}
             message_data["video"] = {
                 "file_id": event.video.file_id,
                 "file_unique_id": event.video.file_unique_id,
+                "file_name": event.video.file_name if hasattr(event.video, "file_name") else None,
                 "width": event.video.width,
                 "height": event.video.height,
                 "duration": event.video.duration,
                 "file_size": event.video.file_size if hasattr(event.video, "file_size") else None,
                 "mime_type": event.video.mime_type if hasattr(event.video, "mime_type") else None,
+                "thumbnail": _video_thumb,
             }
             if not message_text or message_text == "[медиа]":
                 message_text = "[Видео]"
 
+        # Проверяем наличие анимации (GIF)
+        elif event.animation:
+            _anim_thumb = None
+            if event.animation.thumbnail:
+                _anim_thumb = {"file_id": event.animation.thumbnail.file_id, "file_unique_id": event.animation.thumbnail.file_unique_id, "width": event.animation.thumbnail.width, "height": event.animation.thumbnail.height}
+            message_data["animation"] = {
+                "file_id": event.animation.file_id,
+                "file_unique_id": event.animation.file_unique_id,
+                "file_name": event.animation.file_name if hasattr(event.animation, "file_name") else None,
+                "width": event.animation.width,
+                "height": event.animation.height,
+                "duration": event.animation.duration,
+                "file_size": event.animation.file_size if hasattr(event.animation, "file_size") else None,
+                "mime_type": event.animation.mime_type if hasattr(event.animation, "mime_type") else None,
+                "thumbnail": _anim_thumb,
+            }
+            if not message_text or message_text == "[медиа]":
+                message_text = "[GIF]"
+
+        # Проверяем наличие видеокружка
+        elif event.video_note:
+            _vnote_thumb = None
+            if event.video_note.thumbnail:
+                _vnote_thumb = {"file_id": event.video_note.thumbnail.file_id, "file_unique_id": event.video_note.thumbnail.file_unique_id, "width": event.video_note.thumbnail.width, "height": event.video_note.thumbnail.height}
+            message_data["video_note"] = {
+                "file_id": event.video_note.file_id,
+                "file_unique_id": event.video_note.file_unique_id,
+                "length": event.video_note.length,
+                "duration": event.video_note.duration,
+                "file_size": event.video_note.file_size if hasattr(event.video_note, "file_size") else None,
+                "thumbnail": _vnote_thumb,
+            }
+            if not message_text or message_text == "[медиа]":
+                message_text = "[Кружок]"
+
         # Проверяем наличие аудио
         elif event.audio:
+            _audio_thumb = None
+            if event.audio.thumbnail:
+                _audio_thumb = {"file_id": event.audio.thumbnail.file_id, "file_unique_id": event.audio.thumbnail.file_unique_id}
             message_data["audio"] = {
                 "file_id": event.audio.file_id,
                 "file_unique_id": event.audio.file_unique_id,
@@ -130,6 +173,7 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
                 "mime_type": event.audio.mime_type if hasattr(event.audio, "mime_type") else None,
                 "title": event.audio.title if hasattr(event.audio, "title") else None,
                 "performer": event.audio.performer if hasattr(event.audio, "performer") else None,
+                "thumbnail": _audio_thumb,
             }
             if not message_text or message_text == "[медиа]":
                 message_text = "[Аудио]"
@@ -148,12 +192,16 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
 
         # Проверяем наличие документа
         elif event.document:
+            _doc_thumb = None
+            if event.document.thumbnail:
+                _doc_thumb = {"file_id": event.document.thumbnail.file_id, "file_unique_id": event.document.thumbnail.file_unique_id, "width": event.document.thumbnail.width, "height": event.document.thumbnail.height}
             message_data["document"] = {
                 "file_id": event.document.file_id,
                 "file_unique_id": event.document.file_unique_id,
                 "file_name": event.document.file_name if hasattr(event.document, "file_name") else None,
                 "file_size": event.document.file_size if hasattr(event.document, "file_size") else None,
                 "mime_type": event.document.mime_type if hasattr(event.document, "mime_type") else None,
+                "thumbnail": _doc_thumb,
             }
             if not message_text or message_text == "[медиа]":
                 message_text = "[Документ]"
