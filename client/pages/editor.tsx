@@ -174,11 +174,6 @@ export default function Editor() {
   /** Триггер для принудительного fitToContent после применения шаблона */
   const [fitTrigger, setFitTrigger] = useState(0);
 
-  /** Автоматически уместить в экран при переключении листа */
-  const [autoFitOnSheetChange, setAutoFitOnSheetChange] = useState(() => {
-    try { return localStorage.getItem('canvas-auto-fit-sheet') !== 'false'; } catch { return true; }
-  });
-
   /** ID узла для фокусировки на канвасе */
   const {
     focusNodeId,
@@ -894,7 +889,12 @@ export default function Editor() {
     currentNodeSizes,
     nodes,
     activeProjectId: activeProject?.id || null,
-    onAfterSelect: () => { if (autoFitOnSheetChange) setFitTrigger(t => t + 1); },
+    onAfterSelect: () => {
+      try {
+        if (localStorage.getItem('canvas-auto-fit-sheet') === 'false') return;
+      } catch {}
+      setFitTrigger(t => t + 1);
+    },
   });
 
   // Проверяем, есть ли выбранный сценарий при загрузке страницы
