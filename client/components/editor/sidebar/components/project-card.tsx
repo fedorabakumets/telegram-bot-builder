@@ -39,7 +39,7 @@ import {
   Trash2,
   Zap,
 } from 'lucide-react';
-import { getNodeTypeLabel } from '@/components/editor/properties/utils/node-formatters';
+import { getNodeIcon, getNodeColor, getNodeName } from '@/components/editor/shared/node-registry';
 import { SheetNodeSearch } from './sheet-node-search';
 import { useSheetNodeSearch } from '../hooks/use-sheet-node-search';
 import { useSheetSearchState } from '../hooks/use-sheet-search-state';
@@ -262,7 +262,7 @@ function SheetAccordionContent({
           {nodes.length === 0 ? 'Нет узлов' : 'Не найдено'}
         </div>
       ) : (
-        <div className="space-y-0.5">
+        <div className="space-y-1.5">
           {filtered.map((node: any) => {
             const shortContent = getShortContent(node);
             const isKeyboard = node.type === 'keyboard';
@@ -270,67 +270,74 @@ function SheetAccordionContent({
               ? (node.data?.buttons || []).filter((b: any) => b.text)
               : [];
             const selected = isSelected(node.id);
+            const nodeColor = getNodeColor(node.type);
+            const nodeIcon = getNodeIcon(node.type);
+            const nodeName = node.type === 'keyboard'
+              ? node.data?.keyboardType === 'reply' ? 'Reply кнопки' : 'Inline кнопки'
+              : getNodeName(node.type);
             return (
               <div
                 key={node.id}
-                className="group/node px-1.5 py-0.5 rounded text-xs text-muted-foreground cursor-pointer hover:bg-muted/40 transition-colors"
+                className="group/node flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30 hover:from-muted/70 hover:to-muted/40 rounded-lg sm:rounded-xl cursor-pointer border border-border/30 hover:border-primary/30 transition-all duration-200"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (onNodeFocus && node.id) onNodeFocus(node.id);
                 }}
               >
-                <div className="flex items-center gap-1.5">
-                  {/* Чекбокс — виден только при hover на строку или если выбран */}
-                  <input
-                    type="checkbox"
-                    checked={selected}
-                    className={`transition-opacity h-3.5 w-3.5 flex-shrink-0 cursor-pointer accent-blue-500 ${selected ? 'opacity-100' : 'opacity-0 group-hover/node:opacity-70'}`}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      toggleNode(node.id);
-                      if (e.target.checked) {
-                        onNodeFocus?.(node.id, undefined, true);
-                      } else {
-                        // сбрасываем подсветку вызовом с коротким таймаутом
-                        onNodeFocus?.(node.id, undefined, false);
-                      }
-                    }}
-                  />
-                  <NodeTypeIcon type={node.type} />
-                  <span className="font-medium flex-shrink-0">
-                    <HighlightText
-                      text={node.type === 'keyboard'
-                        ? node.data?.keyboardType === 'reply' ? 'Reply кнопки' : 'Inline кнопки'
-                        : getNodeTypeLabel(node.type)}
-                      query={searchQuery}
-                    />
-                  </span>
+                {/* Чекбокс — виден только при hover или если выбран */}
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  className={`transition-opacity h-3.5 w-3.5 flex-shrink-0 cursor-pointer accent-blue-500 ${selected ? 'opacity-100' : 'opacity-0 group-hover/node:opacity-70'}`}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    toggleNode(node.id);
+                    if (e.target.checked) {
+                      onNodeFocus?.(node.id, undefined, true);
+                    } else {
+                      onNodeFocus?.(node.id, undefined, false);
+                    }
+                  }}
+                />
+                {/* Цветная иконка */}
+                <div className={cn(
+                  "w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0",
+                  "transition-transform group-hover/node:scale-110",
+                  nodeColor
+                )}>
+                  <i className={`${nodeIcon} text-xs sm:text-sm`}></i>
+                </div>
+                {/* Название и описание */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                    <HighlightText text={nodeName} query={searchQuery} />
+                  </p>
                   {shortContent && (
-                    <span className="truncate opacity-70 min-w-0">
+                    <p className="text-xs text-muted-foreground line-clamp-1">
                       <HighlightText text={shortContent} query={searchQuery} />
-                    </span>
+                    </p>
+                  )}
+                  {isKeyboard && buttonObjects.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {buttonObjects.map((btn) => (
+                        <span
+                          key={btn.id}
+                          className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/50 text-xs opacity-80 truncate max-w-[80px] cursor-pointer hover:opacity-100"
+                          title={btn.text}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onNodeFocus && btn.id) {
+                              onNodeFocus(node.id, btn.id);
+                            }
+                          }}
+                        >
+                          <HighlightText text={btn.text} query={searchQuery} />
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
-                {isKeyboard && buttonObjects.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1 ml-4">
-                    {buttonObjects.map((btn) => (
-                      <span
-                        key={btn.id}
-                        className="px-1.5 py-0.5 rounded bg-muted/60 border border-border/50 text-xs opacity-80 truncate max-w-[80px] cursor-pointer hover:opacity-100"
-                        title={btn.text}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (onNodeFocus && btn.id) {
-                            onNodeFocus(node.id, btn.id);
-                          }
-                        }}
-                      >
-                        <HighlightText text={btn.text} query={searchQuery} />
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             );
           })}
