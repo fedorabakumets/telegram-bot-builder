@@ -77,10 +77,15 @@ export async function getTelegramFileHandler(req: Request, res: Response): Promi
     const contentRange = fileResp.headers.get("content-range");
     const acceptRanges = fileResp.headers.get("accept-ranges") || "bytes";
 
+    // Определяем имя файла из file_path или query-параметра
+    const filePath = fileData.result.file_path as string;
+    const fileName = (req.query.fileName as string) || filePath.split('/').pop() || 'file';
+
     res.status(fileResp.status);
     res.set("Content-Type", contentType);
     res.set("Accept-Ranges", acceptRanges);
     res.set("Cache-Control", "public, max-age=86400");
+    res.set("Content-Disposition", `inline; filename="${encodeURIComponent(fileName)}"`);
 
     if (contentLength) res.set("Content-Length", contentLength);
     if (contentRange) res.set("Content-Range", contentRange);

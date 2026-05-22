@@ -74,7 +74,16 @@ function getPreviewUrl(file: ProjectFile, projectId: number): string | null {
   return null;
 }
 
-/** Типы медиа для которых показываем миниатюру */
+/** Строит URL для скачивания файла (с именем) */
+function getDownloadUrl(file: ProjectFile, projectId: number): string | null {
+  const base = getPreviewUrl(file, projectId);
+  if (!base) return null;
+  // Для прокси-ссылок добавляем fileName в query
+  if (base.startsWith('/api/') && file.fileName) {
+    return `${base}&fileName=${encodeURIComponent(file.fileName)}`;
+  }
+  return base;
+}
 const PREVIEW_TYPES = new Set(['photo', 'video', 'sticker', 'animation']);
 
 /** Расширения файлов которые являются изображениями/видео (для document с расширением) */
@@ -256,7 +265,7 @@ function FileRow({ file, projectId, selected, onToggle, onCopy, onDelete, onPrev
       <td className="p-2">
         <div className="flex gap-1">
           {previewUrl && (
-            <a href={previewUrl} download={file.fileName ?? 'file'} target="_blank" rel="noopener noreferrer">
+            <a href={getDownloadUrl(file, projectId) ?? previewUrl} download={file.fileName ?? 'file'}>
               <Button variant="ghost" size="icon" className="h-6 w-6" title="Скачать">
                 <Download className="h-3 w-3" />
               </Button>
@@ -313,7 +322,7 @@ function FileCard({ file, projectId, selected, onToggle, onCopy, onDelete, onPre
       </div>
       <div className="flex flex-col gap-1 shrink-0">
         {previewUrl && (
-          <a href={previewUrl} download={file.fileName ?? 'file'} target="_blank" rel="noopener noreferrer">
+          <a href={getDownloadUrl(file, projectId) ?? previewUrl} download={file.fileName ?? 'file'}>
             <Button variant="ghost" size="icon" className="h-6 w-6" title="Скачать">
               <Download className="h-3 w-3" />
             </Button>
