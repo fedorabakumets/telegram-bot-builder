@@ -126,7 +126,7 @@ function CanvasVariant({ changesCount, isSaving, onSave, onSaveAndRestart, onDis
           Детали
         </Button>
       </div>
-      {/* Нижняя строка на мобилке / продолжение на десктопе: кнопки действий */}
+      {/* Кнопки действий — на мобилке в 2 строки, на десктопе в одну */}
       <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center">
         <Button size="sm" variant="ghost" onClick={onDiscard}
           className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
@@ -138,11 +138,22 @@ function CanvasVariant({ changesCount, isSaving, onSave, onSaveAndRestart, onDis
             ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
             : <><i className="fas fa-floppy-disk mr-1" />Сохранить <kbd className="ml-1 opacity-60 text-[10px] hidden sm:inline">⇧+↵</kbd></>}
         </Button>
+      </div>
+      <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center sm:hidden">
+        <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
+          className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white w-full">
+          {isSaving
+            ? <><i className="fas fa-spinner fa-spin mr-1" />…</>
+            : <><i className="fas fa-play mr-1" />Сохранить и перезапустить</>}
+        </Button>
+      </div>
+      {/* На десктопе — в той же строке */}
+      <div className="hidden sm:flex items-center">
         <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
           className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
           {isSaving
             ? <><i className="fas fa-spinner fa-spin mr-1" />…</>
-            : <><i className="fas fa-play mr-1" /><span className="sm:hidden">Рестарт</span><span className="hidden sm:inline">Сохранить и перезапустить</span></>}
+            : <><i className="fas fa-play mr-1" />Сохранить и перезапустить</>}
         </Button>
       </div>
     </>
@@ -183,7 +194,7 @@ function JsonDirtyVariant({ onReset, onDetails, onSave, onSaveAndRestart, isSavi
           Детали
         </Button>
       </div>
-      {/* Нижняя строка на мобилке / продолжение на десктопе: кнопки действий */}
+      {/* Кнопки действий — на мобилке в 2 строки, на десктопе в одну */}
       <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center">
         <Button size="sm" variant="ghost" onClick={onReset}
           className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
@@ -195,11 +206,21 @@ function JsonDirtyVariant({ onReset, onDetails, onSave, onSaveAndRestart, isSavi
             ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
             : <><i className="fas fa-floppy-disk mr-1" />Сохранить</>}
         </Button>
+      </div>
+      <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center sm:hidden">
+        <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
+          className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white w-full">
+          {isSaving
+            ? <><i className="fas fa-spinner fa-spin mr-1" />…</>
+            : <><i className="fas fa-play mr-1" />Сохранить и перезапустить</>}
+        </Button>
+      </div>
+      <div className="hidden sm:flex items-center">
         <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
           className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
           {isSaving
             ? <><i className="fas fa-spinner fa-spin mr-1" />…</>
-            : <><i className="fas fa-play mr-1" /><span className="sm:hidden">Рестарт</span><span className="hidden sm:inline">Сохранить и перезапустить</span></>}
+            : <><i className="fas fa-play mr-1" />Сохранить и перезапустить</>}
         </Button>
       </div>
     </>
