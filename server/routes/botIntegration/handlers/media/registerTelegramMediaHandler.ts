@@ -1,24 +1,22 @@
 /**
  * @fileoverview Хендлер регистрации медиафайла из Telegram
  *
- * Этот модуль предоставляет функцию для обработки запросов
- * на регистрацию медиафайла из Telegram и связывания его с сообщением.
+ * Сохраняет file_id в БД без скачивания файла.
+ * Превью доступно через проксирование /api/projects/:id/telegram-file.
  *
  * @module botIntegration/handlers/media/registerTelegramMediaHandler
  */
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
-import { downloadMediaFromTelegram } from "./utils/downloadMedia";
 import { getFileType } from "./utils/getFileType";
 
 /**
- * Обрабатывает запрос на регистрацию медиафайла
+ * Регистрирует медиафайл из Telegram — сохраняет file_id без скачивания.
+ * Файл доступен через проксирование Telegram CDN.
  *
- * @function registerTelegramMediaHandler
- * @param {Request} req - Объект запроса
- * @param {Response} res - Объект ответа
- * @returns {Promise<void>}
+ * @param req - Запрос с projectId, messageId, fileId, botToken, mediaType
+ * @param res - Ответ с созданной записью медиафайла
  */
 export async function registerTelegramMediaHandler(req: Request, res: Response): Promise<void> {
     try {
@@ -31,35 +29,28 @@ export async function registerTelegramMediaHandler(req: Request, res: Response):
 
         const { messageId, fileId, botToken, mediaType = 'photo', originalFileName } = req.body;
 
-        if (!messageId || !fileId || !botToken) {
+        if (!messageId || !fileId) {
             res.status(400).json({
-                message: "Отсутствуют обязательные поля: messageId, fileId, botToken"
+                message: "Отсутствуют обязательные поля: messageId, fileId"
             });
             return;
         }
 
-        const downloadedFile = await downloadMediaFromTelegram(
-            botToken,
-            fileId,
-            projectId,
-            mediaType,
-            originalFileName
-        );
-
-        const fileUrl = `/${downloadedFile.filePath}`;
         const fileType = getFileType(mediaType);
+        const fileName = originalFileName || `${mediaType}_${fileId.slice(0, 20)}`;
 
         const mediaFile = await storage.createMediaFile({
             projectId,
-            fileName: downloadedFile.fileName,
+            fileName,
             fileType,
-            filePath: downloadedFile.filePath,
-            fileSize: downloadedFile.fileSize,
-            mimeType: downloadedFile.mimeType,
-            url: fileUrl,
-            description: `Telegram ${mediaType} от пользователя`,
+            filePath: "",
+            fileSize: 0,
+            mimeType: mediaType === 'photo' ? 'image/jpeg' : mediaType === 'video' ? 'video/mp4' : 'application/octet-stream',
+            url: `/api/projects/${projectId}/telegram-file?fileId=${encodeURIComponent(fileId)}`,
+            description: `Telegram ${mediaType}`,
             tags: [],
             isPublic: 0,
+            telegramFileId: fileId,
         });
 
         await storage.createBotMessageMedia({
@@ -72,7 +63,7 @@ export async function registerTelegramMediaHandler(req: Request, res: Response):
         res.json({
             message: "Медиа успешно зарегистрировано",
             mediaFile,
-            url: fileUrl
+            url: mediaFile.url,
         });
     } catch (error) {
         console.error("Ошибка регистрации медиа из Telegram:", error);
