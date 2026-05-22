@@ -35,8 +35,8 @@ export function TabHeader({ icon, title, children, actions, className }: TabHead
         className,
       )}
     >
-      {/* Десктоп: одна строка */}
-      <div className="hidden sm:flex items-center gap-2">
+      {/* Десктоп: с переносом при нехватке места */}
+      <div className="hidden sm:flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2.5 shrink-0">
           <div className="rounded-lg bg-primary/10 p-2 shrink-0">
             {icon}
@@ -55,7 +55,7 @@ export function TabHeader({ icon, title, children, actions, className }: TabHead
 
       {/* Мобильный: 2 строки */}
       <div className="sm:hidden space-y-1.5">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 shrink-0">
             <div className="rounded-lg bg-primary/10 p-1.5 shrink-0">
               {icon}
@@ -65,7 +65,7 @@ export function TabHeader({ icon, title, children, actions, className }: TabHead
             </h2>
           </div>
           {actions && (
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2">
               {actions}
             </div>
           )}

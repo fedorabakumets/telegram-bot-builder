@@ -89,7 +89,7 @@ export function AllTablesActions({ projectId, onImportTable }: AllTablesActionsP
           title="Экспорт всех таблиц"
         >
           <Download className="h-3.5 w-3.5" />
-          Экспорт всех
+          <span className="hidden md:inline">Экспорт всех</span>
         </Button>
         <Button
           size="sm"
@@ -99,7 +99,7 @@ export function AllTablesActions({ projectId, onImportTable }: AllTablesActionsP
           title="Импорт таблиц из файла"
         >
           <Upload className="h-3.5 w-3.5" />
-          Импорт всех
+          <span className="hidden md:inline">Импорт всех</span>
         </Button>
       </div>
 
