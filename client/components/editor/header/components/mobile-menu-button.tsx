@@ -21,7 +21,7 @@ export interface MobileMenuButtonProps {
 export const MobileMenuButton = forwardRef<HTMLButtonElement, MobileMenuButtonProps>(
   ({ onClick }, ref) => {
     return (
-      <Button ref={ref} variant="outline" size="sm" className="p-1.5 sm:p-2 h-8 sm:h-9" onClick={onClick}>
+      <Button ref={ref} variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-muted/60" onClick={onClick}>
         <Menu className="h-4 w-4" />
       </Button>
     );
