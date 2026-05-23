@@ -51,11 +51,39 @@ async def main():
 
     # Click Купить BTC
     print("\n>>> Click Купить BTC")
-    updated = await click_btn(client, bot, msg_id, "Купить BTC", wait=4)
-    if updated:
-        print(f"  [{updated.id}] {(updated.text or '')[:300]}")
-        if updated.reply_markup and isinstance(updated.reply_markup, ReplyInlineMarkup):
-            btns = [[bb.text for bb in r.buttons] for r in updated.reply_markup.rows]
+    # Нажимаем и читаем ВСЕ последние сообщения (не только edit)
+    msg = await client.get_messages(bot, ids=msg_id)
+    if msg and msg.reply_markup and isinstance(msg.reply_markup, ReplyInlineMarkup):
+        for row in msg.reply_markup.rows:
+            for b in row.buttons:
+                if "Купить BTC" in b.text and hasattr(b, "data") and b.data:
+                    try:
+                        await client(GetBotCallbackAnswerRequest(peer=bot, msg_id=msg_id, data=b.data))
+                    except Exception:
+                        pass
+                    break
+    await asyncio.sleep(5)
+    # Читаем последние сообщения
+    all_msgs = await client.get_messages(bot, limit=5)
+    for m in all_msgs:
+        if m.out:
+            continue
+        print(f"  [{m.id}] {(m.text or '')[:200]}")
+        if m.reply_markup and isinstance(m.reply_markup, ReplyInlineMarkup):
+            btns = [[bb.text for bb in r.buttons] for r in m.reply_markup.rows]
+            print(f"  Buttons: {btns}")
+
+    # Отправляем сумму 10000
+    print("\n>>> Send: '10000'")
+    await client.send_message(bot, "10000")
+    await asyncio.sleep(5)
+    msgs = await client.get_messages(bot, limit=3)
+    for m in msgs:
+        if m.out:
+            continue
+        print(f"  [{m.id}] {(m.text or '')[:300]}")
+        if m.reply_markup and isinstance(m.reply_markup, ReplyInlineMarkup):
+            btns = [[bb.text for bb in r.buttons] for r in m.reply_markup.rows]
             print(f"  Buttons: {btns}")
 
     await client.disconnect()
