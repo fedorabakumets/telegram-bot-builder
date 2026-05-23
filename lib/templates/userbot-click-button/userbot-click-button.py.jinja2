@@ -126,6 +126,31 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         await set_user_var(user_id, "{{ saveAlertTo }}", _alert_text)
 {%- endif %}
 
+{%- if responseStrategy == 'new_message' %}
+        # Ждём НОВОЕ сообщение от бота (не edit)
+        _updated = None
+        _new_msg_future = asyncio.get_event_loop().create_future()
+
+        @userbot_client.on(events.NewMessage(chats=_target))
+        async def _on_new_msg_{{ nodeId | replace('-', '_') }}(event):
+            if event.message.id > _msg_id and not _new_msg_future.done():
+                _new_msg_future.set_result(event.message)
+
+        try:
+            _updated = await asyncio.wait_for(_new_msg_future, timeout=8)
+            logging.info(f"📖 [{{ nodeId }}] Получено новое сообщение id={_updated.id}")
+        except asyncio.TimeoutError:
+            logging.info(f"📖 [{{ nodeId }}] Таймаут ожидания нового сообщения, читаем историю")
+            # Fallback: читаем последние сообщения и ищем новое (id > _msg_id)
+            await asyncio.sleep(1)
+            _fresh_msgs = await userbot_client.get_messages(_target, limit=5)
+            _fresh_list = _fresh_msgs if isinstance(_fresh_msgs, list) else [_fresh_msgs]
+            _my_id_cb = (await userbot_client.get_me()).id
+            _bot_new = [m for m in _fresh_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb and m.id > _msg_id]
+            _updated = _bot_new[0] if _bot_new else None
+        finally:
+            userbot_client.remove_event_handler(_on_new_msg_{{ nodeId | replace('-', '_') }})
+{%- else %}
         # Ждём обновления сообщения через event (обходит кэш Telethon)
         _updated = None
         _edit_future = asyncio.get_event_loop().create_future()
@@ -148,6 +173,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _updated = _bot_fallback[0] if _bot_fallback else None
         finally:
             userbot_client.remove_event_handler(_on_edit_{{ nodeId | replace('-', '_') }})
+{%- endif %}
 
         logging.info(f"📖 [{{ nodeId }}] Результат: text={((_updated.text or '') if _updated else 'None')[:80]!r}")
 

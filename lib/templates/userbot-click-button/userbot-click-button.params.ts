@@ -27,6 +27,8 @@ export interface UserbotClickButtonTemplateParams {
   saveHasMediaTo?: string;
   /** Переменная для сохранения медиа-объекта */
   saveMediaTo?: string;
+  /** Стратегия ожидания ответа: 'edit' — ждать редактирование, 'new_message' — ждать новое сообщение */
+  responseStrategy?: 'edit' | 'new_message';
   /** ID узла для автоперехода */
   autoTransitionTo?: string;
   /** ID проекта (для get_content) */

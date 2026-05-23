@@ -42,6 +42,7 @@ export function generateUserbotClickButtonHandlers(nodes: Node[], projectId: num
       saveButtonsTo: data.saveButtonsTo || undefined,
       saveHasMediaTo: data.saveHasMediaTo || undefined,
       saveMediaTo: data.saveMediaTo || undefined,
+      responseStrategy: data.responseStrategy || 'edit',
       autoTransitionTo: data.autoTransitionTo || undefined,
       projectId,
     });

@@ -29,6 +29,8 @@ export const userbotClickButtonParamsSchema = z.object({
   saveHasMediaTo: z.string().optional(),
   /** Переменная для медиа-объекта */
   saveMediaTo: z.string().optional(),
+  /** Стратегия ожидания ответа: edit или new_message */
+  responseStrategy: z.enum(['edit', 'new_message']).optional().default('edit'),
   /** ID узла для автоперехода */
   autoTransitionTo: z.string().optional(),
   /** ID проекта */
