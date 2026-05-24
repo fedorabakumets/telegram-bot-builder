@@ -1693,35 +1693,24 @@ def build_map() -> dict:
             "enableAutoTransition": True,
         }))
 
-        # Атомарный UPDATE через psql_query — защита от race condition
-        # Обновляет ТОЛЬКО если flight_expires_at пустое (никто ещё не летит)
-        # RETURNING id — если вернул строку, значит update сработал
-        nodes.append(node(f"fly-do-{planet['id']}", "psql_query", 1800, y_pos, {
-            "query": (
-                "UPDATE bot_table_rows SET data = data "
-                "|| jsonb_build_object('231', (COALESCE((data->>'231')::int, 0) - {flight_fuel})::text) "
-                "|| jsonb_build_object('267', '{flight_expires_at}') "
-                f"|| jsonb_build_object('268', '{planet['id']}') "
-                f"|| jsonb_build_object('269', '{planet['full']}') "
-                "WHERE table_id = 31 "
-                "AND data->>'240' = '{user_id}' "
-                "AND (data->>'267' IS NULL OR data->>'267' = '') "
-                "RETURNING id"
-            ),
-            "saveResultTo": "fly_result",
-            "resultFormat": "first_row",
-            "connectionSource": "builtin",
-            "autoTransitionTo": f"fly-cond-updated-{planet['id']}",
-            "enableAutoTransition": True,
-        }))
-
-        # Проверяем сработал ли update (fly_result.id > 0 = обновлено, летим)
-        nodes.append(node(f"fly-cond-updated-{planet['id']}", "condition", 2100, y_pos, {
-            "variable": "fly_result.id",
-            "branches": [
-                branch(f"br-updated-{planet['id']}", "Обновлено", "greater_than", "0", f"fly-set-status-{planet['id']}"),
-                branch(f"br-not-updated-{planet['id']}", "Не обновлено", "else", "", f"fly-reread-inflight-{planet['id']}"),
+        # Атомарный UPDATE через bot_table — обновляет fuel, flight_expires, planet
+        # Используем bot_table вместо psql_query чтобы не зависеть от table_id/column_id
+        nodes.append(node(f"fly-do-{planet['id']}", "bot_table", 1800, y_pos, {
+            "tableName": "pilots",
+            "operation": "update",
+            "where": [
+                {"column": "telegram_id", "operator": "equals", "value": "{user_id}"},
+                {"column": "flight_expires_at", "operator": "equals", "value": ""},
             ],
+            "updates": [
+                {"column": "fuel", "op": "decrement", "value": "{flight_fuel}"},
+                {"column": "flight_expires_at", "op": "set", "value": "{flight_expires_at}"},
+                {"column": "flight_target_planet", "op": "set", "value": planet['id']},
+                {"column": "flight_target_name", "op": "set", "value": planet['full']},
+            ],
+            "saveResultTo": "fly_result",
+            "autoTransitionTo": f"fly-set-status-{planet['id']}",
+            "enableAutoTransition": True,
         }))
 
         # Обновляем status_text на "в полёте"
@@ -2084,10 +2073,14 @@ def build_pirates() -> dict:
         "enableAutoTransition": True,
     }))
 
-    # Удаляем записи с quantity <= 0
-    nodes.append(node("fight-lose-cleanup", "psql_query", 1900, -300, {
-        "query": "DELETE FROM bot_table_rows WHERE table_id = 35 AND data->>'263' = '{user_id}' AND (data->>'264')::int <= 0",
-        "connectionSource": "builtin",
+    # Удаляем записи с quantity <= 0 через bot_table (без захардкоженных ID)
+    nodes.append(node("fight-lose-cleanup", "bot_table", 1900, -300, {
+        "tableName": "pilot_cargo",
+        "operation": "delete",
+        "where": [
+            {"column": "pilot_id", "operator": "equals", "value": "{user_id}"},
+            {"column": "quantity", "operator": "less_than_or_equal", "value": "0"},
+        ],
         "autoTransitionTo": "msg-lose-stolen",
         "enableAutoTransition": True,
     }))
