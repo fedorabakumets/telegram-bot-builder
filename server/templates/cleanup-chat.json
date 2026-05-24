@@ -20,298 +20,352 @@
   "estimatedTime": 5,
   "data": {
     "sheets": [
-    {
-      "id": "sheet-cleanup",
-      "name": "Очистка чата",
-      "nodes": [
-        {
-          "id": "start-cmd",
-          "data": {
-            "buttons": [],
-            "command": "/start",
-            "markdown": false,
-            "adminOnly": false,
-            "showInMenu": true,
-            "description": "Запустить бота",
-            "messageText": "",
-            "keyboardType": "none",
-            "requiresAuth": false,
-            "isPrivateOnly": false,
-            "resizeKeyboard": true,
-            "oneTimeKeyboard": false,
-            "autoTransitionTo": "start-msg",
-            "enableStatistics": true
+      {
+        "id": "sheet-cleanup",
+        "name": "Чистка чата",
+        "nodes": [
+          {
+            "id": "start-cmd",
+            "type": "command_trigger",
+            "position": {
+              "x": 100,
+              "y": 100
+            },
+            "data": {
+              "command": "/start",
+              "description": "Справка по командам",
+              "showInMenu": true,
+              "autoTransitionTo": "start-msg",
+              "buttons": [],
+              "keyboardType": "none"
+            }
           },
-          "type": "command_trigger",
-          "position": {
-            "x": 100,
-            "y": 221
-          }
-        },
-        {
-          "id": "start-msg",
-          "data": {
-            "buttons": [],
-            "markdown": false,
-            "adminOnly": false,
-            "formatMode": "none",
-            "showInMenu": true,
-            "messageText": "🗑️ Бот-модератор для чистки чата.\n\nКоманды:\n• -смс — удалить сообщение (ответом)\n• -смс 50 — удалить последние 50\n• !пург — удалить всё от reply до текущего",
-            "keyboardType": "none",
-            "requiresAuth": false,
-            "isPrivateOnly": false,
-            "resizeKeyboard": true,
-            "oneTimeKeyboard": false,
-            "enableStatistics": true
+          {
+            "id": "start-msg",
+            "type": "message",
+            "position": {
+              "x": 400,
+              "y": 100
+            },
+            "data": {
+              "messageText": "<b>🗑️ Бот-модератор — Чистка чата</b>\n\n<b>Удаление сообщений:</b>\n• <code>-смс</code> — удалить сообщение (ответом)\n• <code>-смс 50</code> — удалить последние 50\n• <code>-смс 50 тихо</code> — то же, без уведомления\n\n<b>Пург (ответом на сообщение):</b>\n• <code>!пург</code> — удалить всё от отмеченного до текущего\n• <code>!пург 10</code> — удалить 10 сообщений ниже отмеченного\n• <code>!пург тихо</code> — то же, без уведомления\n\n<i>⚠️ Ограничения: до 48ч, бот должен быть админом</i>",
+              "buttons": [],
+              "keyboardType": "none",
+              "formatMode": "html"
+            }
           },
-          "type": "message",
-          "position": {
-            "x": 348,
-            "y": 100
-          }
-        },
-        {
-          "id": "trigger-sms-reply",
-          "data": {
-            "buttons": [],
-            "markdown": false,
-            "adminOnly": false,
-            "showInMenu": true,
-            "messageText": "",
-            "keyboardType": "none",
-            "requiresAuth": false,
-            "textSynonyms": [
-              "-смс"
-            ],
-            "isPrivateOnly": false,
-            "textMatchType": "exact",
-            "resizeKeyboard": true,
-            "oneTimeKeyboard": false,
-            "autoTransitionTo": "del-reply",
-            "enableStatistics": true
+          {
+            "id": "trigger-sms-exact",
+            "type": "text_trigger",
+            "position": {
+              "x": 100,
+              "y": 300
+            },
+            "data": {
+              "textSynonyms": [
+                "-смс"
+              ],
+              "textMatchType": "exact",
+              "autoTransitionTo": "del-reply",
+              "buttons": [],
+              "keyboardType": "none"
+            }
           },
-          "type": "text_trigger",
-          "position": {
-            "x": 100,
-            "y": 515
-          }
-        },
-        {
-          "id": "del-reply",
-          "data": {
-            "buttons": [],
-            "markdown": false,
-            "adminOnly": false,
-            "bulkDelete": false,
-            "lastNCount": "",
-            "showInMenu": true,
-            "messageText": "",
-            "chatIdManual": "",
-            "chatIdSource": "current_chat",
-            "ignoreErrors": true,
-            "keyboardType": "none",
-            "requiresAuth": false,
-            "isPrivateOnly": false,
-            "resizeKeyboard": true,
-            "messageIdManual": "",
-            "messageIdSource": "reply_message",
-            "oneTimeKeyboard": false,
-            "autoTransitionTo": "del-admin-cmd",
-            "enableStatistics": true,
-            "enableAutoTransition": true,
-            "bulkMessageIdsVariable": ""
+          {
+            "id": "del-reply",
+            "type": "delete_message",
+            "position": {
+              "x": 400,
+              "y": 300
+            },
+            "data": {
+              "messageIdSource": "reply_message",
+              "messageIdManual": "",
+              "lastNCount": "",
+              "chatIdSource": "current_chat",
+              "chatIdManual": "",
+              "ignoreErrors": true,
+              "bulkDelete": false,
+              "bulkMessageIdsVariable": "",
+              "enableAutoTransition": true,
+              "autoTransitionTo": "del-cmd-sms"
+            }
           },
-          "type": "delete_message",
-          "position": {
-            "x": 348,
-            "y": 470
-          }
-        },
-        {
-          "id": "del-admin-cmd",
-          "data": {
-            "buttons": [],
-            "markdown": false,
-            "adminOnly": false,
-            "bulkDelete": false,
-            "lastNCount": "",
-            "showInMenu": true,
-            "messageText": "",
-            "chatIdManual": "",
-            "chatIdSource": "current_chat",
-            "ignoreErrors": true,
-            "keyboardType": "none",
-            "requiresAuth": false,
-            "isPrivateOnly": false,
-            "resizeKeyboard": true,
-            "messageIdManual": "",
-            "messageIdSource": "current_message",
-            "oneTimeKeyboard": false,
-            "enableStatistics": true,
-            "bulkMessageIdsVariable": ""
+          {
+            "id": "del-cmd-sms",
+            "type": "delete_message",
+            "position": {
+              "x": 700,
+              "y": 300
+            },
+            "data": {
+              "messageIdSource": "current_message",
+              "messageIdManual": "",
+              "lastNCount": "",
+              "chatIdSource": "current_chat",
+              "chatIdManual": "",
+              "ignoreErrors": true,
+              "bulkDelete": false,
+              "bulkMessageIdsVariable": ""
+            }
           },
-          "type": "delete_message",
-          "position": {
-            "x": 768,
-            "y": 470
-          }
-        },
-        {
-          "id": "trigger-sms-n",
-          "data": {
-            "buttons": [],
-            "markdown": false,
-            "adminOnly": false,
-            "showInMenu": true,
-            "messageText": "",
-            "keyboardType": "none",
-            "requiresAuth": false,
-            "textSynonyms": [
-              "-смс "
-            ],
-            "isPrivateOnly": false,
-            "textMatchType": "contains",
-            "resizeKeyboard": true,
-            "oneTimeKeyboard": false,
-            "autoTransitionTo": "extract-count",
-            "enableStatistics": true
+          {
+            "id": "trigger-sms-n",
+            "type": "text_trigger",
+            "position": {
+              "x": 100,
+              "y": 500
+            },
+            "data": {
+              "textSynonyms": [
+                "-смс "
+              ],
+              "textMatchType": "contains",
+              "autoTransitionTo": "extract-count",
+              "buttons": [],
+              "keyboardType": "none"
+            }
           },
-          "type": "text_trigger",
-          "position": {
-            "x": 100,
-            "y": 953
-          }
-        },
-        {
-          "id": "extract-count",
-          "data": {
-            "buttons": [],
-            "markdown": false,
-            "adminOnly": false,
-            "regexGroup": 1,
-            "showInMenu": true,
-            "assignments": [
-              {
-                "id": "a1",
-                "mode": "regex_extract",
-                "value": "{message_text}",
-                "variable": "del_count"
-              }
-            ],
-            "messageText": "",
-            "keyboardType": "none",
-            "regexDefault": "1",
-            "regexPattern": "(\\d+)",
-            "requiresAuth": false,
-            "isPrivateOnly": false,
-            "resizeKeyboard": true,
-            "oneTimeKeyboard": false,
-            "autoTransitionTo": "del-last-n",
-            "enableStatistics": true,
-            "enableAutoTransition": true
+          {
+            "id": "extract-count",
+            "type": "set_variable",
+            "position": {
+              "x": 400,
+              "y": 500
+            },
+            "data": {
+              "assignments": [
+                {
+                  "id": "a1",
+                  "variable": "del_count",
+                  "value": "{message_text}",
+                  "mode": "regex_extract"
+                }
+              ],
+              "regexPattern": "(\\d+)",
+              "regexGroup": 1,
+              "regexDefault": "1",
+              "enableAutoTransition": true,
+              "autoTransitionTo": "del-last-n"
+            }
           },
-          "type": "set_variable",
-          "position": {
-            "x": 348,
-            "y": 911
-          }
-        },
-        {
-          "id": "del-last-n",
-          "data": {
-            "buttons": [],
-            "markdown": false,
-            "adminOnly": false,
-            "bulkDelete": false,
-            "lastNCount": "{del_count}",
-            "showInMenu": true,
-            "messageText": "",
-            "chatIdManual": "",
-            "chatIdSource": "current_chat",
-            "ignoreErrors": true,
-            "keyboardType": "none",
-            "requiresAuth": false,
-            "isPrivateOnly": false,
-            "resizeKeyboard": true,
-            "messageIdManual": "",
-            "messageIdSource": "last_n",
-            "oneTimeKeyboard": false,
-            "enableStatistics": true,
-            "bulkMessageIdsVariable": ""
+          {
+            "id": "del-last-n",
+            "type": "delete_message",
+            "position": {
+              "x": 700,
+              "y": 500
+            },
+            "data": {
+              "messageIdSource": "last_n",
+              "messageIdManual": "",
+              "lastNCount": "{del_count}",
+              "chatIdSource": "current_chat",
+              "chatIdManual": "",
+              "ignoreErrors": true,
+              "bulkDelete": false,
+              "bulkMessageIdsVariable": "",
+              "enableAutoTransition": true,
+              "autoTransitionTo": "check-silent-sms"
+            }
           },
-          "type": "delete_message",
-          "position": {
-            "x": 768,
-            "y": 909
-          }
-        },
-        {
-          "id": "trigger-purge",
-          "data": {
-            "buttons": [],
-            "markdown": false,
-            "adminOnly": false,
-            "showInMenu": true,
-            "messageText": "",
-            "keyboardType": "none",
-            "requiresAuth": false,
-            "textSynonyms": [
-              "!пург"
-            ],
-            "isPrivateOnly": false,
-            "textMatchType": "contains",
-            "resizeKeyboard": true,
-            "oneTimeKeyboard": false,
-            "autoTransitionTo": "del-purge",
-            "enableStatistics": true
+          {
+            "id": "check-silent-sms",
+            "type": "condition",
+            "position": {
+              "x": 1000,
+              "y": 500
+            },
+            "data": {
+              "variable": "{message_text}",
+              "branches": [
+                {
+                  "id": "br-silent",
+                  "label": "Тихо",
+                  "operator": "contains",
+                  "value": "тихо",
+                  "target": ""
+                },
+                {
+                  "id": "br-loud",
+                  "label": "Уведомить",
+                  "operator": "else",
+                  "value": "",
+                  "target": "msg-sms-done"
+                }
+              ],
+              "defaultTargetId": "msg-sms-done"
+            }
           },
-          "type": "text_trigger",
-          "position": {
-            "x": 100,
-            "y": 735
-          }
-        },
-        {
-          "id": "del-purge",
-          "data": {
-            "buttons": [],
-            "markdown": false,
-            "adminOnly": false,
-            "bulkDelete": false,
-            "lastNCount": "",
-            "showInMenu": true,
-            "messageText": "",
-            "chatIdManual": "",
-            "chatIdSource": "current_chat",
-            "ignoreErrors": true,
-            "keyboardType": "none",
-            "requiresAuth": false,
-            "isPrivateOnly": false,
-            "resizeKeyboard": true,
-            "messageIdManual": "",
-            "messageIdSource": "range_from_reply",
-            "oneTimeKeyboard": false,
-            "enableStatistics": true,
-            "bulkMessageIdsVariable": ""
+          {
+            "id": "msg-sms-done",
+            "type": "message",
+            "position": {
+              "x": 1300,
+              "y": 550
+            },
+            "data": {
+              "messageText": "🗑️ Удалено {del_count} сообщений",
+              "buttons": [],
+              "keyboardType": "none",
+              "formatMode": "none"
+            }
           },
-          "type": "delete_message",
-          "position": {
-            "x": 348,
-            "y": 690.296875
+          {
+            "id": "trigger-purge",
+            "type": "text_trigger",
+            "position": {
+              "x": 100,
+              "y": 750
+            },
+            "data": {
+              "textSynonyms": [
+                "!пург"
+              ],
+              "textMatchType": "contains",
+              "autoTransitionTo": "check-purge-mode",
+              "buttons": [],
+              "keyboardType": "none"
+            }
+          },
+          {
+            "id": "check-purge-mode",
+            "type": "condition",
+            "position": {
+              "x": 400,
+              "y": 750
+            },
+            "data": {
+              "variable": "{message_text}",
+              "branches": [
+                {
+                  "id": "br-purge-n",
+                  "label": "Есть число",
+                  "operator": "contains",
+                  "value": "\\d",
+                  "target": "extract-purge-count"
+                }
+              ],
+              "defaultTargetId": "del-purge-all"
+            }
+          },
+          {
+            "id": "del-purge-all",
+            "type": "delete_message",
+            "position": {
+              "x": 700,
+              "y": 850
+            },
+            "data": {
+              "messageIdSource": "range_from_reply",
+              "messageIdManual": "",
+              "lastNCount": "",
+              "chatIdSource": "current_chat",
+              "chatIdManual": "",
+              "ignoreErrors": true,
+              "bulkDelete": false,
+              "bulkMessageIdsVariable": "",
+              "enableAutoTransition": true,
+              "autoTransitionTo": "check-silent-purge"
+            }
+          },
+          {
+            "id": "extract-purge-count",
+            "type": "set_variable",
+            "position": {
+              "x": 700,
+              "y": 700
+            },
+            "data": {
+              "assignments": [
+                {
+                  "id": "a2",
+                  "variable": "purge_count",
+                  "value": "{message_text}",
+                  "mode": "regex_extract"
+                }
+              ],
+              "regexPattern": "(\\d+)",
+              "regexGroup": 1,
+              "regexDefault": "50",
+              "enableAutoTransition": true,
+              "autoTransitionTo": "del-purge-n"
+            }
+          },
+          {
+            "id": "del-purge-n",
+            "type": "delete_message",
+            "position": {
+              "x": 1000,
+              "y": 700
+            },
+            "data": {
+              "messageIdSource": "last_n",
+              "messageIdManual": "",
+              "lastNCount": "{purge_count}",
+              "chatIdSource": "current_chat",
+              "chatIdManual": "",
+              "ignoreErrors": true,
+              "bulkDelete": false,
+              "bulkMessageIdsVariable": "",
+              "enableAutoTransition": true,
+              "autoTransitionTo": "check-silent-purge"
+            }
+          },
+          {
+            "id": "check-silent-purge",
+            "type": "condition",
+            "position": {
+              "x": 1000,
+              "y": 850
+            },
+            "data": {
+              "variable": "{message_text}",
+              "branches": [
+                {
+                  "id": "br-silent-p",
+                  "label": "Тихо",
+                  "operator": "contains",
+                  "value": "тихо",
+                  "target": ""
+                },
+                {
+                  "id": "br-loud-p",
+                  "label": "Уведомить",
+                  "operator": "else",
+                  "value": "",
+                  "target": "msg-purge-done"
+                }
+              ],
+              "defaultTargetId": "msg-purge-done"
+            }
+          },
+          {
+            "id": "msg-purge-done",
+            "type": "message",
+            "position": {
+              "x": 1300,
+              "y": 900
+            },
+            "data": {
+              "messageText": "🗑️ Пург выполнен",
+              "buttons": [],
+              "keyboardType": "none",
+              "formatMode": "none"
+            }
           }
+        ],
+        "createdAt": "2026-05-24T22:38:57.722Z",
+        "updatedAt": "2026-05-24T22:38:57.722Z",
+        "viewState": {
+          "pan": {
+            "x": 0,
+            "y": 0
+          },
+          "zoom": 100
         }
-      ],
-      "createdAt": "2026-05-24T21:24:31.069Z",
-      "updatedAt": "2026-05-24T21:40:29.274Z",
-      "viewState": {
-        "pan": {
-          "x": 0,
-          "y": 0
-        },
-        "zoom": 100
       }
-    }
-  ],
+    ],
     "version": 2,
     "activeSheetId": "sheet-cleanup"
   }
