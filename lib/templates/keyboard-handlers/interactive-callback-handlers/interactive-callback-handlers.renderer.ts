@@ -37,6 +37,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'bot_table', // собственный обработчик генерируется шаблоном bot-table.py.jinja2
   'delay', // собственный обработчик генерируется шаблоном delay.py.jinja2
   'edit_message', // собственный обработчик генерируется шаблоном edit-message.py.jinja2
+  'delete_message', // собственный обработчик генерируется шаблоном delete-message.py.jinja2
   'userbot_message', // собственный обработчик генерируется шаблоном userbot-message.py.jinja2
   'userbot_click_button', // собственный обработчик генерируется шаблоном userbot-click-button.py.jinja2
   'userbot_inline_query', // собственный обработчик генерируется шаблоном userbot-inline-query.py.jinja2
