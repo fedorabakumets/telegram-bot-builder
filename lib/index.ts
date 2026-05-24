@@ -56,6 +56,11 @@ export { generateForwardMessage, generateForwardMessageFromNode, nodeToForwardMe
 /** Типы шаблона пересылки сообщений */
 export type { ForwardMessageTemplateParams, ForwardMessageTargetRecipient, ForwardMessageSourceMode, ForwardMessageTargetMode } from './templates/forward-message';
 
+/** Экспорт шаблона удаления сообщений */
+export { generateDeleteMessage, generateDeleteMessageHandlers, collectDeleteMessageEntries } from './templates/delete-message';
+/** Типы шаблона удаления сообщений */
+export type { DeleteMessageTemplateParams, DeleteMessageEntry, DeleteMessageIdSource, DeleteMessageChatIdSource } from './templates/delete-message';
+
 // Additional utilities
 export { addInputTargetNodes } from './bot-generator/core/add-input-target-nodes';
 

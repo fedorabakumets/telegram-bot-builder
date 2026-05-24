@@ -36,6 +36,7 @@ import { generateManagedBotUpdatedTriggerHandlers } from '../managed-bot-updated
 import { generateScheduleTriggerHandlers } from '../schedule-trigger/schedule-trigger.renderer';
 import { generateAnswerCallbackQuery, generateAnswerCallbackQueryHandlers } from '../answer-callback-query/answer-callback-query.renderer';
 import { generateEditMessageHandlers } from '../edit-message';
+import { generateDeleteMessageHandlers } from '../delete-message';
 import { generateSetVariableHandlers } from '../set-variable/set-variable.renderer';
 import { generatePsqlQueryHandlers } from '../psql-query/psql-query.renderer';
 import { generateBotTableHandlers } from '../bot-table';
@@ -357,7 +358,6 @@ export function generateNodeHandlers(
     contact: generateContactHandler,
     pin_message: generateMessageHandlerFromNode,
     unpin_message: generateMessageHandlerFromNode,
-    delete_message: generateMessageHandlerFromNode,
     /** Обработчик узла пересылки сообщений */
     forward_message: generateForwardMessageFromNode,
     /** Обработчик узла создания топика в форуме Telegram */
@@ -471,6 +471,13 @@ export function generateNodeHandlers(
   if (editMessageCode) {
     codeLines.push('\n# Обработчики узлов edit_message');
     editMessageCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
+  // --- Обработчики узлов delete_message ---
+  const deleteMessageCode = generateDeleteMessageHandlers(nodes);
+  if (deleteMessageCode) {
+    codeLines.push('\n# Обработчики узлов delete_message');
+    deleteMessageCode.split('\n').forEach(line => codeLines.push(line));
   }
 
   // --- Обработчики узлов set_variable ---
