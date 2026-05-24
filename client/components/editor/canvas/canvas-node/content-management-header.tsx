@@ -60,10 +60,10 @@ export function ContentManagementHeader({ node, type }: ContentManagementHeaderP
 
       {type === 'delete_message' && (
         <span className="flex flex-col gap-1.5 mt-0.5">
-          <span className="flex items-center gap-1.5 bg-red-900/10 border border-red-700/20 rounded-md px-2 py-1">
-            <i className="fas fa-crosshairs text-red-500/80 text-[10px]" />
+          <span className="flex items-center gap-1.5 bg-slate-800/40 border border-slate-600/20 rounded-md px-2 py-1">
+            <i className="fas fa-crosshairs text-red-400/70 text-[10px]" />
             <span className="text-[10px] text-slate-400">цель:</span>
-            <span className="text-[10px] text-red-300/90 font-mono">
+            <span className="text-[10px] text-slate-300/90 font-mono">
               {(() => {
                 const src = (node.data as any).messageIdSource ?? 'current_message';
                 if (src === 'current_message') return 'сообщение пользователя';
