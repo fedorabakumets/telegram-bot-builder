@@ -13,7 +13,7 @@ export const deleteMessage: ComponentDefinition = {
   color: 'bg-red-100 text-red-600',
   type: 'delete_message',
   defaultData: {
-    /** Источник ID сообщения: 'current_message' | 'last_bot_message' | 'reply_message' | 'last_n' | 'custom' */
+    /** Источник ID сообщения: 'current_message' | 'last_bot_message' | 'reply_message' | 'range_from_reply' | 'last_n' | 'custom' */
     messageIdSource: 'current_message',
     /** ID сообщения (число или {переменная}) — для режима custom */
     messageIdManual: '',

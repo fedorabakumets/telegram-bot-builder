@@ -895,7 +895,7 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 
 | Поле | Тип | Описание |
 |------|-----|----------|
-| `messageIdSource` | `"current_message"` / `"last_bot_message"` / `"reply_message"` / `"last_n"` / `"custom"` | Какое сообщение удалить |
+| `messageIdSource` | `"current_message"` / `"last_bot_message"` / `"reply_message"` / `"range_from_reply"` / `"last_n"` / `"custom"` | Какое сообщение удалить |
 | `messageIdManual` | string | ID или `{переменная}` — для режима `custom` |
 | `lastNCount` | string | Количество — для режима `last_n` (число или `{переменная}`) |
 | `chatIdSource` | `"current_chat"` / `"custom"` | В каком чате удалять |

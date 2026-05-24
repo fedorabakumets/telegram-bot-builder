@@ -86,6 +86,7 @@ export function DeleteMessageConfiguration({
             <SelectItem value="current_message">Текущее сообщение пользователя</SelectItem>
             <SelectItem value="last_bot_message">Последнее сообщение бота</SelectItem>
             <SelectItem value="reply_message">Сообщение из ответа (reply)</SelectItem>
+            <SelectItem value="range_from_reply">От reply до текущего (пург)</SelectItem>
             <SelectItem value="last_n">Последние N сообщений</SelectItem>
             <SelectItem value="custom">Указать ID</SelectItem>
           </SelectContent>

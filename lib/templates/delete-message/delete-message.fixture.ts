@@ -148,3 +148,21 @@ export const fixtureDeleteReplyMessage: DeleteMessageTemplateParams = {
     bulkMessageIdsVariable: '',
   }],
 };
+
+/** Фикстура: удаление от reply до текущего (пург) */
+export const fixtureDeleteRangeFromReply: DeleteMessageTemplateParams = {
+  entries: [{
+    nodeId: 'del_purge_1',
+    safeName: 'del_purge_1',
+    targetNodeId: '',
+    targetNodeType: '',
+    messageIdSource: 'range_from_reply',
+    messageIdManual: '',
+    lastNCount: '',
+    chatIdSource: 'current_chat',
+    chatIdManual: '',
+    ignoreErrors: true,
+    bulkDelete: false,
+    bulkMessageIdsVariable: '',
+  }],
+};

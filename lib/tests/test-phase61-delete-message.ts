@@ -256,6 +256,14 @@ test('A7', 'reply_message → содержит reply_to_message', () => {
   ok(code.includes('bot.delete_message'), 'bot.delete_message должен быть в коде');
 });
 
+test('A8', 'range_from_reply → содержит range( и reply_to_message', () => {
+  const p = makeCleanProject([makeDeleteNode('del1', { messageIdSource: 'range_from_reply' })]);
+  const code = gen(p, 'a8');
+  ok(code.includes('reply_to_message'), 'reply_to_message должен быть в коде');
+  ok(code.includes('range('), 'range( должен быть в коде');
+  ok(code.includes('bot.delete_messages'), 'bot.delete_messages должен быть в коде');
+});
+
 test('A6', 'все варианты генерируют валидный Python', () => {
   const variants = [
     makeDeleteNode('del_cm', { messageIdSource: 'current_message' }),
@@ -382,6 +390,12 @@ test('D5', 'reply_message → валидный Python', () => {
   const p = makeCleanProject([makeDeleteNode('del1', { messageIdSource: 'reply_message' })]);
   const code = gen(p, 'd5');
   syntax(code, 'd5');
+});
+
+test('D6', 'range_from_reply → валидный Python', () => {
+  const p = makeCleanProject([makeDeleteNode('del1', { messageIdSource: 'range_from_reply' })]);
+  const code = gen(p, 'd6');
+  syntax(code, 'd6');
 });
 
 test('D4', 'custom chat + custom message → валидный Python', () => {

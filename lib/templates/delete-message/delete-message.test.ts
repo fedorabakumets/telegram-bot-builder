@@ -18,6 +18,7 @@ import {
   fixtureDeleteBulk,
   fixtureDeleteCustomChat,
   fixtureDeleteReplyMessage,
+  fixtureDeleteRangeFromReply,
 } from './delete-message.fixture';
 import type { Node } from '@shared/schema';
 
@@ -95,6 +96,14 @@ describe('generateDeleteMessage()', () => {
     expect(r).toContain('reply_to_message');
     expect(r).toContain('bot.delete_message');
     expect(r).toContain('del_reply_1');
+  });
+
+  it('range_from_reply: генерирует пург от reply до текущего', () => {
+    const r = generateDeleteMessage(fixtureDeleteRangeFromReply);
+    expect(r).toContain('reply_to_message');
+    expect(r).toContain('range(');
+    expect(r).toContain('bot.delete_messages');
+    expect(r).toContain('del_purge_1');
   });
 });
 

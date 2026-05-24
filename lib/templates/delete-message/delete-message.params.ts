@@ -4,7 +4,7 @@
  */
 
 /** Режим определения ID сообщения для удаления */
-export type DeleteMessageIdSource = 'current_message' | 'last_bot_message' | 'reply_message' | 'last_n' | 'custom';
+export type DeleteMessageIdSource = 'current_message' | 'last_bot_message' | 'reply_message' | 'range_from_reply' | 'last_n' | 'custom';
 
 /** Режим определения ID чата */
 export type DeleteMessageChatIdSource = 'current_chat' | 'custom';

@@ -144,6 +144,29 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         else:
             logging.warning(f"delete_message {{ entry.nodeId }}: нет reply_to_message")
 
+        {% elif entry.messageIdSource == 'range_from_reply' %}
+        # Удаление всех сообщений от reply до текущего (пург)
+        _reply_msg = callback_query.message.reply_to_message if hasattr(callback_query.message, 'reply_to_message') else None
+        if _reply_msg:
+            _start_id = _reply_msg.message_id
+            _end_id = callback_query.message.message_id
+            _message_ids = list(range(_start_id, _end_id + 1))
+
+            for _i in range(0, len(_message_ids), 100):
+                _chunk = _message_ids[_i:_i + 100]
+                {% if entry.ignoreErrors %}
+                try:
+                    await bot.delete_messages(chat_id=_chat_id, message_ids=_chunk)
+                except Exception as _e:
+                    logging.warning(f"delete_message {{ entry.nodeId }}: batch purge failed: {_e}")
+                {% else %}
+                await bot.delete_messages(chat_id=_chat_id, message_ids=_chunk)
+                {% endif %}
+
+            logging.info(f"🗑️ delete_message {{ entry.nodeId }}: пург от {_start_id} до {_end_id}")
+        else:
+            logging.warning(f"delete_message {{ entry.nodeId }}: нет reply_to_message для пурга")
+
         {% elif entry.messageIdSource == 'last_bot_message' %}
         # Удаление последнего сообщения бота
         _msg_id = user_data.get(user_id, {}).get('last_bot_message_id')
