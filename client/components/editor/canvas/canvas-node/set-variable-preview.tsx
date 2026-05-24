@@ -102,6 +102,8 @@ export function SetVariablePreview({ node }: SetVariablePreviewProps) {
 function AssignmentRow({ assignment: a }: { assignment: Assignment }) {
   const mode = a.mode || 'text';
   const modeLabel = MODE_LABELS[mode] || null;
+  /** Не показываем бейдж в строке если ниже будет детальная строка с паттерном */
+  const showInlineBadge = modeLabel && !(mode === 'regex_extract' && a.pattern);
 
   return (
     <div className="flex flex-col">
@@ -113,7 +115,7 @@ function AssignmentRow({ assignment: a }: { assignment: Assignment }) {
         <span className="font-mono text-[11px] text-slate-300 truncate max-w-[110px]">
           {a.value || '""'}
         </span>
-        {modeLabel && (
+        {showInlineBadge && (
           <span className="text-[9px] text-slate-500 flex-shrink-0 ml-0.5">
             {modeLabel}
           </span>
