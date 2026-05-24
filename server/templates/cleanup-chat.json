@@ -244,6 +244,13 @@
                   "operator": "contains",
                   "value": "\\d",
                   "target": "extract-purge-count"
+                },
+                {
+                  "id": "br-purge-all",
+                  "label": "Без числа",
+                  "operator": "else",
+                  "value": "",
+                  "target": "del-purge-all"
                 }
               ],
               "defaultTargetId": "del-purge-all"
