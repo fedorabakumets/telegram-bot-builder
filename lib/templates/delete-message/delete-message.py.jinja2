@@ -24,7 +24,9 @@
 @dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
 async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
     """Удаление сообщения"""
-    {% if entry.ignoreErrors %}try:{% endif %}
+    {%- if entry.ignoreErrors %}
+    try:
+    {%- endif %}
 
         user_id = callback_query.from_user.id
         logging.info(f"🗑️ delete_message узел {{ entry.nodeId }} для пользователя {user_id}")
@@ -52,7 +54,9 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
 
         {% if entry.bulkDelete %}
         # Массовое удаление из переменной-массива
-        {% if entry.chatIdSource != 'custom' %}_all_vars = await init_all_user_vars(user_id){% endif %}
+        {%- if entry.chatIdSource != 'custom' %}
+        _all_vars = await init_all_user_vars(user_id)
+        {%- endif %}
         _raw_ids = _all_vars.get("{{ entry.bulkMessageIdsVariable }}", "[]")
         if isinstance(_raw_ids, str):
             import json as _json_del
@@ -81,7 +85,9 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
 
         {% elif entry.messageIdSource == 'last_n' %}
         # Удаление последних N сообщений по диапазону ID
-        {% if entry.chatIdSource != 'custom' %}_all_vars = await init_all_user_vars(user_id){% endif %}
+        {%- if entry.chatIdSource != 'custom' %}
+        _all_vars = await init_all_user_vars(user_id)
+        {%- endif %}
         {%- set _count_raw = entry.lastNCount | trim %}
         {%- if '{' in _count_raw %}
         _count_raw = replace_variables_in_text({{ _count_raw | format_python_text }}, _all_vars, {})
@@ -137,7 +143,9 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
 
         {% elif entry.messageIdSource == 'custom' %}
         # Удаление по указанному ID
-        {% if entry.chatIdSource != 'custom' %}_all_vars = await init_all_user_vars(user_id){% endif %}
+        {%- if entry.chatIdSource != 'custom' %}
+        _all_vars = await init_all_user_vars(user_id)
+        {%- endif %}
         {%- set _msg_raw = entry.messageIdManual | trim %}
         {%- if _msg_raw | int(-1) != -1 %}
         _msg_id = {{ _msg_raw | int }}
