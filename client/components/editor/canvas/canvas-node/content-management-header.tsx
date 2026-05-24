@@ -66,7 +66,7 @@ export function ContentManagementHeader({ node, type }: ContentManagementHeaderP
             <span className="text-[10px] text-red-300/90 font-mono">
               {(() => {
                 const src = (node.data as any).messageIdSource ?? 'current_message';
-                if (src === 'current_message') return 'текущее сообщение';
+                if (src === 'current_message') return 'сообщение пользователя';
                 if (src === 'last_bot_message') return 'последнее бота';
                 if (src === 'last_n') return `последние ${(node.data as any).lastNCount || 'N'}`;
                 if (src === 'custom') return (node.data as any).messageIdManual || 'ID';
