@@ -175,6 +175,9 @@ export function DeleteMessageConfiguration({
                 onSelect={(name) => update('chatIdManual', `{${name}}`)}
               />
             </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Можно с префиксом -100 (<span className="font-mono">-1001234567890</span>) или без (<span className="font-mono">1234567890</span>) — бот подставит автоматически.
+            </div>
           </div>
         )}
       </div>
