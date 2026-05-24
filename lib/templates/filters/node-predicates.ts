@@ -263,6 +263,15 @@ export function hasEditMessageNodes(nodes: Node[]): boolean {
 }
 
 /**
+ * Проверяет наличие узлов delete_message в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа delete_message
+ */
+export function hasDeleteMessageNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'delete_message');
+}
+
+/**
  * Проверяет наличие узлов psql_query в массиве узлов
  * @param nodes - Массив узлов для проверки
  * @returns true если есть хотя бы один узел типа psql_query
