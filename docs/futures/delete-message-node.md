@@ -20,9 +20,9 @@
 |-------|----------|
 | `current_message` | Удалить входящее сообщение пользователя |
 | `last_bot_message` | Удалить последнее сообщение бота |
+| `reply_message` | Удалить сообщение, на которое ответили (reply) |
 | `last_n` | Удалить последние N сообщений (диапазон ID назад от текущего) |
-| `variable` | Из переменной (например `{saved_msg_id}`) |
-| `manual` | Вручную, поддерживает `{переменные}` |
+| `custom` | Указать ID вручную (поддерживает `{переменные}`) |
 
 ### Источник Chat ID
 
@@ -155,12 +155,10 @@ group_message_trigger
 
 ```typescript
 {
-  messageIdSource: 'current_message', // 'current_message' | 'last_bot_message' | 'last_n' | 'variable' | 'manual'
-  messageIdVariable: '',
+  messageIdSource: 'current_message', // 'current_message' | 'last_bot_message' | 'reply_message' | 'last_n' | 'custom'
   messageIdManual: '',
   lastNCount: '',              // количество последних сообщений (число или {переменная})
-  chatIdSource: 'current_chat',
-  chatIdVariable: '',
+  chatIdSource: 'current_chat', // 'current_chat' | 'custom'
   chatIdManual: '',
   ignoreErrors: true,
   bulkDelete: false,
