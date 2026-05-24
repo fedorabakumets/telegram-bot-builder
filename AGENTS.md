@@ -94,10 +94,17 @@ export function MyComponent({ ... }: MyProps) { ... }
 
 ### Создание новой ноды
 
-1. Прочитать `docs/development/adding-new-trigger.md` — выполнить ВСЕ шаги
+1. **ОБЯЗАТЕЛЬНО** прочитать `docs/development/adding-new-trigger.md` **ПЕРЕД началом работы** — там полный чеклист всех файлов которые нужно обновить
 2. **Фронтенд первее lib** — сначала UI (сайдбар, панель свойств, канвас), потом генерация кода
 3. После обновления lib — обновить/создать фазовый тест в `lib/tests/`
 4. Протестировать фазу
 5. Обновить промт `docs/bot-json-prompt.md`
 6. Обновить документацию `docs/features/NODE_TYPES.md`
+
+> ⚠️ **Частая ошибка:** агенты пропускают файлы из чеклиста в `adding-new-trigger.md` и потом приходится доделывать. Не полагайся на поиск по коду — следуй инструкции пошагово. Ключевые файлы которые легко забыть:
+> - `shared/schema/tables/node-schema.ts` — типы полей data
+> - `lib/templates/filters/node-predicates.ts` — предикат `has*Nodes`
+> - `lib/templates/keyboard-handlers/interactive-callback-handlers/interactive-callback-handlers.renderer.ts` — `NODE_TYPES_WITH_DEDICATED_HANDLERS`
+> - `lib/templates/node-handlers/node-handlers.dispatcher.ts` — подключение генератора в пайплайн
+> - `lib/index.ts` — экспорт для внешнего использования
 
