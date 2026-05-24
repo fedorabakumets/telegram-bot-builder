@@ -11,7 +11,7 @@ import type { CommandPreset } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
 import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger, scheduleTrigger } from './massive/triggers';
 import { conditionNode, setVariableNode, loopNode, delayNode } from './massive/logic';
-import { forwardMessage, createForumTopicNode } from './massive/content-management';
+import { forwardMessage, createForumTopicNode, deleteMessage } from './massive/content-management';
 import { httpRequestNode } from './massive/http-request';
 import { psqlQueryNode } from './massive/psql-query';
 import { botTableNode } from './massive/bot-table';
@@ -32,7 +32,7 @@ export const componentCategories: Array<{
 }> = [
   {
     title: 'Сообщения',
-    components: [commandTrigger, textTrigger, anyMessageTrigger, outgoingMessageTrigger, textMessage, mediaMessage, saveAnswerNode, editMessageNode, forwardMessage]
+    components: [commandTrigger, textTrigger, anyMessageTrigger, outgoingMessageTrigger, textMessage, mediaMessage, saveAnswerNode, editMessageNode, deleteMessage, forwardMessage]
   },
   {
     title: 'Клавиатура',
