@@ -1,10 +1,10 @@
 /**
  * @fileoverview Фазовый тест для узла delete_message
  *
- * Блок A: Базовая генерация (6 тестов)
+ * Блок A: Базовая генерация (7 тестов)
  * Блок B: Chat ID (4 теста)
  * Блок C: Автопереход (4 теста)
- * Блок D: Синтаксис Python (4 теста)
+ * Блок D: Синтаксис Python (5 тестов)
  * Блок E: Интеграция с другими нодами (4 теста)
  * Блок F: Граничные случаи (4 теста)
  */
@@ -249,6 +249,13 @@ test('A5', 'bulkDelete=true → содержит json и батчи по 100', (
   ok(code.includes('100'), 'батч 100 должен быть в коде');
 });
 
+test('A7', 'reply_message → содержит reply_to_message', () => {
+  const p = makeCleanProject([makeDeleteNode('del1', { messageIdSource: 'reply_message' })]);
+  const code = gen(p, 'a7');
+  ok(code.includes('reply_to_message'), 'reply_to_message должен быть в коде');
+  ok(code.includes('bot.delete_message'), 'bot.delete_message должен быть в коде');
+});
+
 test('A6', 'все варианты генерируют валидный Python', () => {
   const variants = [
     makeDeleteNode('del_cm', { messageIdSource: 'current_message' }),
@@ -369,6 +376,12 @@ test('D3', 'bulkDelete → валидный Python', () => {
   const p = makeCleanProject([makeDeleteNode('del1', { bulkDelete: true, bulkMessageIdsVariable: 'msg_ids' })]);
   const code = gen(p, 'd3');
   syntax(code, 'd3');
+});
+
+test('D5', 'reply_message → валидный Python', () => {
+  const p = makeCleanProject([makeDeleteNode('del1', { messageIdSource: 'reply_message' })]);
+  const code = gen(p, 'd5');
+  syntax(code, 'd5');
 });
 
 test('D4', 'custom chat + custom message → валидный Python', () => {

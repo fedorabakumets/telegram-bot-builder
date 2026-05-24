@@ -17,6 +17,7 @@ import {
   fixtureDeleteCustomId,
   fixtureDeleteBulk,
   fixtureDeleteCustomChat,
+  fixtureDeleteReplyMessage,
 } from './delete-message.fixture';
 import type { Node } from '@shared/schema';
 
@@ -87,6 +88,13 @@ describe('generateDeleteMessage()', () => {
     const r = generateDeleteMessage(fixtureDeleteCurrentMessage);
     expect(r).toContain('try:');
     expect(r).toContain('except Exception');
+  });
+
+  it('reply_message: использует reply_to_message.message_id', () => {
+    const r = generateDeleteMessage(fixtureDeleteReplyMessage);
+    expect(r).toContain('reply_to_message');
+    expect(r).toContain('bot.delete_message');
+    expect(r).toContain('del_reply_1');
   });
 });
 

@@ -130,3 +130,21 @@ export const fixtureDeleteCustomChat: DeleteMessageTemplateParams = {
     bulkMessageIdsVariable: '',
   }],
 };
+
+/** Фикстура: удаление сообщения из ответа (reply) */
+export const fixtureDeleteReplyMessage: DeleteMessageTemplateParams = {
+  entries: [{
+    nodeId: 'del_reply_1',
+    safeName: 'del_reply_1',
+    targetNodeId: '',
+    targetNodeType: '',
+    messageIdSource: 'reply_message',
+    messageIdManual: '',
+    lastNCount: '',
+    chatIdSource: 'current_chat',
+    chatIdManual: '',
+    ignoreErrors: true,
+    bulkDelete: false,
+    bulkMessageIdsVariable: '',
+  }],
+};
