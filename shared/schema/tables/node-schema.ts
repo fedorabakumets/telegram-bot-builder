@@ -153,8 +153,22 @@ export const nodeSchema = z.object({
     targetMessageId: z.string().optional(),
     /** ID сообщения-источника для пересылки */
     sourceMessageId: z.string().optional(),
-    /** Источник ID сообщения: "manual" — вручную, "variable" — из переменной, "last_message" — последнее */
-    messageIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'),
+    /** Источник ID сообщения: "manual" — вручную, "variable" — из переменной, "last_message" — последнее, "current_message", "last_bot_message", "last_n", "custom" */
+    messageIdSource: z.enum(['manual', 'variable', 'last_message', 'current_message', 'last_bot_message', 'last_n', 'custom']).default('last_message'),
+    /** ID сообщения вручную или {переменная} (для delete_message custom) */
+    messageIdManual: z.string().optional(),
+    /** Количество последних сообщений для удаления (режим last_n) */
+    lastNCount: z.string().optional(),
+    /** Источник ID чата: "current_chat" | "custom" */
+    chatIdSource: z.enum(['current_chat', 'custom']).default('current_chat'),
+    /** ID чата вручную или {переменная} */
+    chatIdManual: z.string().optional(),
+    /** Не прерывать сценарий при ошибке удаления */
+    ignoreErrors: z.boolean().default(true),
+    /** Множественное удаление из переменной-массива */
+    bulkDelete: z.boolean().default(false),
+    /** Имя переменной с массивом message_id */
+    bulkMessageIdsVariable: z.string().optional(),
     /** Источник ID сообщения для пересылки: "current_message", "last_message", "manual", "variable" */
     sourceMessageIdSource: z.enum(['current_message', 'last_message', 'manual', 'variable']).default('current_message'),
     /** ID узла, от которого пришла связь к forward_message */
