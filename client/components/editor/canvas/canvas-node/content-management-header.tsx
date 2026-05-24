@@ -12,12 +12,12 @@ interface ContentManagementHeaderProps {
 }
 
 export function ContentManagementHeader({ node, type }: ContentManagementHeaderProps) {
-  const shouldShowCommandChip = type !== 'forward_message' && type !== 'create_forum_topic';
+  const shouldShowCommandChip = type !== 'forward_message' && type !== 'create_forum_topic' && type !== 'delete_message';
 
   const labels: Record<ContentManagementType, string> = {
     pin_message: 'Управление контентом',
     unpin_message: 'Управление контентом',
-    delete_message: 'Управление контентом',
+    delete_message: 'Удалить сообщение',
     forward_message: 'Переслать сообщение',
     create_forum_topic: 'Создать топик',
   };
@@ -57,6 +57,32 @@ export function ContentManagementHeader({ node, type }: ContentManagementHeaderP
       <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-tight">
         {labels[type]}
       </span>
+
+      {type === 'delete_message' && (
+        <span className="flex flex-col gap-1.5 mt-0.5">
+          <span className="flex items-center gap-1.5 bg-red-900/10 border border-red-700/20 rounded-md px-2 py-1">
+            <i className="fas fa-crosshairs text-red-500/80 text-[10px]" />
+            <span className="text-[10px] text-slate-400">цель:</span>
+            <span className="text-[10px] text-red-300/90 font-mono">
+              {(() => {
+                const src = (node.data as any).messageIdSource ?? 'current_message';
+                if (src === 'current_message') return 'текущее сообщение';
+                if (src === 'last_bot_message') return 'последнее бота';
+                if (src === 'last_n') return `последние ${(node.data as any).lastNCount || 'N'}`;
+                if (src === 'variable') return `{${(node.data as any).messageIdVariable || 'var'}}`;
+                if (src === 'manual') return (node.data as any).messageIdManual || 'ID';
+                return src;
+              })()}
+            </span>
+          </span>
+          {(node.data as any).bulkDelete && (
+            <span className="inline-flex items-center gap-1 text-[9px] bg-amber-800/20 border border-amber-600/30 rounded-full px-1.5 py-0.5 text-amber-400">
+              <i className="fas fa-layer-group text-[8px]" />
+              массовое удаление
+            </span>
+          )}
+        </span>
+      )}
 
       {type === 'forward_message' && (
         <span className="flex flex-col gap-1.5 mt-0.5">
