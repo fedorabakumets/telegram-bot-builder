@@ -128,6 +128,22 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         await bot.delete_message(chat_id=_chat_id, message_id=_msg_id)
         {% endif %}
 
+        {% elif entry.messageIdSource == 'reply_message' %}
+        # Удаление сообщения, на которое ответили (reply)
+        _reply_msg = callback_query.message.reply_to_message if hasattr(callback_query.message, 'reply_to_message') else None
+        if _reply_msg:
+            _msg_id = _reply_msg.message_id
+            {% if entry.ignoreErrors %}
+            try:
+                await bot.delete_message(chat_id=_chat_id, message_id=_msg_id)
+            except Exception as _e:
+                logging.warning(f"delete_message {{ entry.nodeId }}: {_e}")
+            {% else %}
+            await bot.delete_message(chat_id=_chat_id, message_id=_msg_id)
+            {% endif %}
+        else:
+            logging.warning(f"delete_message {{ entry.nodeId }}: нет reply_to_message")
+
         {% elif entry.messageIdSource == 'last_bot_message' %}
         # Удаление последнего сообщения бота
         _msg_id = user_data.get(user_id, {}).get('last_bot_message_id')

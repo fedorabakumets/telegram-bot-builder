@@ -154,7 +154,7 @@ export const nodeSchema = z.object({
     /** ID сообщения-источника для пересылки */
     sourceMessageId: z.string().optional(),
     /** Источник ID сообщения: "manual" — вручную, "variable" — из переменной, "last_message" — последнее, "current_message", "last_bot_message", "last_n", "custom" */
-    messageIdSource: z.enum(['manual', 'variable', 'last_message', 'current_message', 'last_bot_message', 'last_n', 'custom']).default('last_message'),
+    messageIdSource: z.enum(['manual', 'variable', 'last_message', 'current_message', 'last_bot_message', 'reply_message', 'last_n', 'custom']).default('last_message'),
     /** ID сообщения вручную или {переменная} (для delete_message custom) */
     messageIdManual: z.string().optional(),
     /** Количество последних сообщений для удаления (режим last_n) */

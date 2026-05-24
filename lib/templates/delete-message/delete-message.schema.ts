@@ -6,7 +6,7 @@
 import { z } from 'zod';
 
 /** Режим определения ID сообщения */
-export const deleteMessageIdSourceSchema = z.enum(['current_message', 'last_bot_message', 'last_n', 'custom']);
+export const deleteMessageIdSourceSchema = z.enum(['current_message', 'last_bot_message', 'reply_message', 'last_n', 'custom']);
 
 /** Режим определения ID чата */
 export const deleteMessageChatIdSourceSchema = z.enum(['current_chat', 'custom']);
