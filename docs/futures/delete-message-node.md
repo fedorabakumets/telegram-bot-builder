@@ -20,6 +20,7 @@
 |-------|----------|
 | `current_message` | Удалить входящее сообщение пользователя |
 | `last_bot_message` | Удалить последнее сообщение бота |
+| `last_n` | Удалить последние N сообщений (диапазон ID назад от текущего) |
 | `variable` | Из переменной (например `{saved_msg_id}`) |
 | `manual` | Вручную, поддерживает `{переменные}` |
 
@@ -39,6 +40,8 @@
 | `bulkDelete` | switch | `false` | Множественное удаление (массив ID) |
 | `bulkMessageIdsVariable` | text | `''` | Переменная с массивом message_id (до 100 штук) |
 
+> **Режим `last_n`:** при выборе `messageIdSource: 'last_n'` появляется поле `lastNCount` — количество последних сообщений для удаления (число или `{переменная}`). Генерирует диапазон ID от текущего `message_id` назад.
+
 ### Автопереход
 
 Стандартный выбор следующего узла.
@@ -56,29 +59,68 @@
 
 ## Типичные паттерны
 
-### Самоуничтожающееся сообщение
+### 1. Самоуничтожающееся сообщение
 ```
-message (сохранить ID) → delay (30 сек) → delete_message (по сохранённому ID)
+message (сохранить ID) → delay (30 сек) → delete_message (messageIdSource: variable)
+```
+Бот отправляет временное сообщение, через 30 секунд удаляет его.
+
+### 2. Антиспам в группе
+```
+incoming_message_trigger → condition (спам?) → delete_message (current_message) → mute_user
+```
+Если сообщение содержит запрещённые слова — удалить и замутить.
+
+### 3. Обновление меню (замена сообщения)
+```
+callback_trigger → delete_message (last_bot_message) → message (новое меню)
+```
+Пользователь нажал кнопку — старое меню удаляется, отправляется новое.
+
+### 4. "Удалить 50" — быстрый режим (last_n)
+```
+text_trigger ("удалить", contains)
+  → set_variable (regex: извлечь число → count)
+  → delete_message (messageIdSource: last_n, lastNCount: {count})
+```
+Админ пишет "удалить 50" — бот берёт текущий message_id, генерирует диапазон [id-1, id-2, ..., id-50] и вызывает `deleteMessages`.
+
+**Плюсы:** просто, не требует подготовки.
+**Минусы:** может промахнуться мимо удалённых/сервисных сообщений (они просто проигнорируются).
+
+### 5. "Удалить 50" — точный режим (через таблицу)
+```
+# Подготовка (работает постоянно):
+incoming_message_trigger → bot_table (insert: chat_id, message_id, user_id, timestamp)
+
+# Команда удаления:
+text_trigger ("удалить", contains)
+  → set_variable (regex: извлечь число → count)
+  → bot_table (чтение: последние {count} записей из этого чата → msg_ids)
+  → delete_message (bulkDelete: true, bulkMessageIdsVariable: msg_ids)
+```
+Бот заранее логирует все message_id в таблицу. При команде "удалить 50" — достаёт точные ID из базы.
+
+**Плюсы:** 100% точность, можно фильтровать (по юзеру, по времени, по типу).
+**Минусы:** нужна предварительная настройка, занимает место в БД.
+
+### 6. Чистка по расписанию
+```
+schedule_trigger (каждый день в 03:00)
+  → bot_table (сообщения старше 24ч → old_ids)
+  → delete_message (bulkDelete: true, bulkMessageIdsVariable: old_ids)
+  → bot_table (удалить записи из лога)
 ```
 
-### Антиспам
+### 7. Модерация — удалить и предупредить
 ```
-incoming_message_trigger → condition (спам?) → delete_message → mute_user
-```
-
-### Обновление меню
-```
-callback_trigger → delete_message (старое меню) → message (новое меню)
-```
-
-### Чистка по расписанию
-```
-schedule_trigger → bot_table (старые ID) → loop → delete_message
-```
-
-### Модерация в группе
-```
-group_message_trigger → condition (запрещённые слова) → delete_message → message ("Удалено за нарушение")
+group_message_trigger
+  → condition (запрещённые слова?)
+  → delete_message (current_message)
+  → message ("⚠️ {first_name}, сообщение удалено за нарушение правил")
+  → bot_table (upsert: warnings +1)
+  → condition (warnings >= 3?)
+    → ban_user
 ```
 
 ## Взаимодействие с другими нодами
@@ -113,9 +155,10 @@ group_message_trigger → condition (запрещённые слова) → dele
 
 ```typescript
 {
-  messageIdSource: 'current_message',
+  messageIdSource: 'current_message', // 'current_message' | 'last_bot_message' | 'last_n' | 'variable' | 'manual'
   messageIdVariable: '',
   messageIdManual: '',
+  lastNCount: '',              // количество последних сообщений (число или {переменная})
   chatIdSource: 'current_chat',
   chatIdVariable: '',
   chatIdManual: '',
