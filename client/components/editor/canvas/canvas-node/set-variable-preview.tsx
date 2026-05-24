@@ -1,8 +1,10 @@
 /**
- * @fileoverview Превью узла переменных на холсте
+ * @fileoverview Превью узла set_variable на канвасе
  *
- * Отображает список присваиваний в формате: переменная = значение
- * с иконкой режима. Показывает до 4 строк, остальные за счётчиком.
+ * Отображает список присваиваний с режимом и ключевыми деталями.
+ * Формат: переменная = значение [режим-бейдж]
+ * Для regex_extract дополнительно показывает паттерн.
+ * Максимум 3 строки, остальные за "+N".
  *
  * @module components/editor/canvas/canvas-node/set-variable-preview
  */
@@ -19,19 +21,36 @@ interface Assignment {
   value: string;
   /** Режим присваивания */
   mode?: string;
+  /** Регулярное выражение (mode=regex_extract) */
+  pattern?: string;
 }
 
-/** Иконки режимов для канваса */
-const MODE_ICONS: Record<string, string> = {
-  text: 'T',
-  expression: '=',
-  random: '🎲',
-  random_item: '🎯',
-  timestamp: '⏱',
-  format_duration: '⏳',
-  array_item: '[]',
-  lookup: '🔍',
-  str_replace: '✂️',
+/**
+ * Маппинг режимов в компактные бейджи для канваса.
+ * text — дефолт, не показывается.
+ */
+const MODE_LABELS: Record<string, string> = {
+  expression: '📐 выражение',
+  random: '🎲 random',
+  random_item: '🎲 из списка',
+  array_item: '📋 элемент',
+  timestamp: '⏱ timestamp',
+  format_duration: '⏱ MM:SS',
+  format_number: '#️⃣ число',
+  regex_extract: '🔍 regex',
+  extract_number: '🔢 число',
+  split_get: '✂️ split',
+  json_get: '📦 json',
+  substring: '✂️ substr',
+  conditional: '❓ если',
+  lowercase: '⬇️ lower',
+  uppercase: '⬆️ upper',
+  trim: '🧹 trim',
+  length: '📏 length',
+  lookup: '🔎 lookup',
+  str_replace: '🔄 replace',
+  json_push: '➕ push',
+  json_format: '📝 format',
 };
 
 /** Пропсы компонента SetVariablePreview */
@@ -40,17 +59,17 @@ interface SetVariablePreviewProps {
   node: Node;
 }
 
+/** Максимум видимых присваиваний */
+const MAX_VISIBLE = 3;
+
 /**
- * Превью узла переменных на канвасе
- * @param props - Пропсы компонента
+ * Превью узла set_variable на канвасе.
+ * Показывает переменную = значение с бейджем режима.
+ * @param props - Свойства компонента
  * @returns JSX-элемент превью
  */
 export function SetVariablePreview({ node }: SetVariablePreviewProps) {
   const assignments: Assignment[] = (node.data as any)?.assignments || [];
-
-  /** Показываем максимум 4 присваивания */
-  const visible = assignments.slice(0, 4);
-  const hidden = assignments.length - visible.length;
 
   if (assignments.length === 0) {
     return (
@@ -58,23 +77,16 @@ export function SetVariablePreview({ node }: SetVariablePreviewProps) {
     );
   }
 
+  const visible = assignments.slice(0, MAX_VISIBLE);
+  const hidden = assignments.length - visible.length;
+
   return (
-    <div className="flex flex-col gap-0.5 w-full">
+    <div className="flex flex-col gap-1 w-full">
       {visible.map((a) => (
-        <div key={a.id} className="flex items-center gap-1 text-[11px] leading-tight">
-          <code className="text-emerald-300 font-mono truncate max-w-[100px]">
-            {a.variable || '…'}
-          </code>
-          <span className="text-slate-500 flex-shrink-0">
-            {MODE_ICONS[a.mode || 'text'] === '=' ? '=' : '←'}
-          </span>
-          <span className="text-slate-400 truncate max-w-[120px] font-mono">
-            {formatValue(a)}
-          </span>
-        </div>
+        <AssignmentRow key={a.id} assignment={a} />
       ))}
       {hidden > 0 && (
-        <span className="text-[10px] text-slate-500 mt-0.5">
+        <span className="text-[10px] text-slate-500">
           +{hidden} ещё
         </span>
       )}
@@ -83,29 +95,35 @@ export function SetVariablePreview({ node }: SetVariablePreviewProps) {
 }
 
 /**
- * Форматирует значение для отображения на канвасе
- * @param a - присваивание
- * @returns отформатированная строка
+ * Строка одного присваивания с режимом и деталями
+ * @param props - Присваивание
+ * @returns JSX-элемент строки
  */
-function formatValue(a: Assignment): string {
-  switch (a.mode) {
-    case 'expression':
-      return a.value || '0';
-    case 'random':
-      return `rand(${a.value || '?'}…${(a as any).maxValue || '?'})`;
-    case 'random_item':
-      return a.value ? a.value.split(',').length + ' вар.' : '…';
-    case 'timestamp':
-      return a.value === '0' ? 'now()' : `now()+${a.value}s`;
-    case 'format_duration':
-      return 'MM:SS';
-    case 'lookup':
-      return `${(a as any).lookupTable || '?'}.${(a as any).lookupField || '?'}`;
-    case 'str_replace':
-      return `replace(…)`;
-    case 'array_item':
-      return `${a.value || '?'}[${(a as any).maxValue || '0'}]`;
-    default:
-      return a.value || '""';
-  }
+function AssignmentRow({ assignment: a }: { assignment: Assignment }) {
+  const mode = a.mode || 'text';
+  const modeLabel = MODE_LABELS[mode] || null;
+
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center gap-1 leading-tight">
+        <span className="font-mono text-[11px] text-emerald-400 truncate max-w-[90px]">
+          {a.variable || '…'}
+        </span>
+        <span className="text-[11px] text-slate-500 flex-shrink-0">=</span>
+        <span className="font-mono text-[11px] text-slate-300 truncate max-w-[110px]">
+          {a.value || '""'}
+        </span>
+        {modeLabel && (
+          <span className="text-[9px] text-slate-500 flex-shrink-0 ml-0.5">
+            {modeLabel}
+          </span>
+        )}
+      </div>
+      {mode === 'regex_extract' && a.pattern && (
+        <span className="font-mono text-[9px] text-purple-400/70 pl-2 truncate max-w-[200px]">
+          🔍 regex: {a.pattern}
+        </span>
+      )}
+    </div>
+  );
 }
