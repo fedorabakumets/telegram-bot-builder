@@ -139,12 +139,11 @@
                   "id": "a1",
                   "variable": "del_count",
                   "value": "{message_text}",
-                  "mode": "regex_extract"
+                  "mode": "regex_extract",
+                  "pattern": "(\\d+)",
+                  "regexGroup": "1"
                 }
               ],
-              "regexPattern": "(\\d+)",
-              "regexGroup": 1,
-              "regexDefault": "1",
               "enableAutoTransition": true,
               "autoTransitionTo": "del-last-n"
             }
@@ -289,12 +288,11 @@
                   "id": "a2",
                   "variable": "purge_count",
                   "value": "{message_text}",
-                  "mode": "regex_extract"
+                  "mode": "regex_extract",
+                  "pattern": "(\\d+)",
+                  "regexGroup": "1"
                 }
               ],
-              "regexPattern": "(\\d+)",
-              "regexGroup": 1,
-              "regexDefault": "50",
               "enableAutoTransition": true,
               "autoTransitionTo": "del-purge-n"
             }
