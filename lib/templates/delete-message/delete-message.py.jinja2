@@ -1,0 +1,183 @@
+{#
+  Шаблон обработчиков действия delete_message.
+  Удаляет одно или несколько сообщений в чате.
+
+  @param {array} entries - Массив DeleteMessageEntry:
+    - nodeId: string                — ID узла
+    - safeName: string              — безопасное имя функции
+    - targetNodeId: string          — ID следующего узла
+    - messageIdSource: string       — 'current_message' | 'last_bot_message' | 'last_n' | 'custom'
+    - messageIdManual: string       — ID или {переменная}
+    - lastNCount: string            — количество для last_n
+    - chatIdSource: string          — 'current_chat' | 'custom'
+    - chatIdManual: string          — ID чата или {переменная}
+    - ignoreErrors: boolean         — игнорировать ошибки
+    - bulkDelete: boolean           — массовое удаление
+    - bulkMessageIdsVariable: string — переменная с массивом ID
+#}
+
+# Обработчики узлов delete_message
+{% for entry in entries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Удаление сообщения"""
+    {% if entry.ignoreErrors %}try:{% endif %}
+
+        user_id = callback_query.from_user.id
+        logging.info(f"🗑️ delete_message узел {{ entry.nodeId }} для пользователя {user_id}")
+
+        # Определяем chat_id
+        {% if entry.chatIdSource == 'custom' %}
+        _all_vars = await init_all_user_vars(user_id)
+        {%- set _chat_raw = entry.chatIdManual | trim %}
+        {%- if '{' in _chat_raw %}
+        _chat_id_raw = replace_variables_in_text({{ _chat_raw | format_python_text }}, _all_vars, {})
+        {%- else %}
+        _chat_id_raw = {{ _chat_raw | escape_python_string }}
+        {%- endif %}
+        _chat_id_str = str(_chat_id_raw).strip()
+        try:
+            _chat_id = int(_chat_id_str)
+            # Автоматически добавляем -100 для групп если ID положительный и длинный
+            if _chat_id > 0 and len(_chat_id_str) >= 10:
+                _chat_id = int(f"-100{_chat_id}")
+        except (ValueError, TypeError):
+            _chat_id = _chat_id_str
+        {% else %}
+        _chat_id = callback_query.message.chat.id
+        {% endif %}
+
+        {% if entry.bulkDelete %}
+        # Массовое удаление из переменной-массива
+        {% if entry.chatIdSource != 'custom' %}_all_vars = await init_all_user_vars(user_id){% endif %}
+        _raw_ids = _all_vars.get("{{ entry.bulkMessageIdsVariable }}", "[]")
+        if isinstance(_raw_ids, str):
+            import json as _json_del
+            try:
+                _raw_ids = _json_del.loads(_raw_ids)
+            except Exception:
+                _raw_ids = []
+        if isinstance(_raw_ids, list):
+            _message_ids = [int(x) for x in _raw_ids if str(x).strip().isdigit()]
+        else:
+            _message_ids = []
+
+        # Удаляем батчами по 100
+        for _i in range(0, len(_message_ids), 100):
+            _chunk = _message_ids[_i:_i + 100]
+            {% if entry.ignoreErrors %}
+            try:
+                await bot.delete_messages(chat_id=_chat_id, message_ids=_chunk)
+            except Exception as _e:
+                logging.warning(f"delete_message {{ entry.nodeId }}: batch delete failed: {_e}")
+            {% else %}
+            await bot.delete_messages(chat_id=_chat_id, message_ids=_chunk)
+            {% endif %}
+
+        logging.info(f"🗑️ delete_message {{ entry.nodeId }}: удалено {len(_message_ids)} сообщений")
+
+        {% elif entry.messageIdSource == 'last_n' %}
+        # Удаление последних N сообщений по диапазону ID
+        {% if entry.chatIdSource != 'custom' %}_all_vars = await init_all_user_vars(user_id){% endif %}
+        {%- set _count_raw = entry.lastNCount | trim %}
+        {%- if '{' in _count_raw %}
+        _count_raw = replace_variables_in_text({{ _count_raw | format_python_text }}, _all_vars, {})
+        {%- else %}
+        _count_raw = {{ _count_raw | escape_python_string }}
+        {%- endif %}
+        try:
+            _count = int(str(_count_raw).strip())
+        except (ValueError, TypeError):
+            _count = 0
+
+        if _count > 0:
+            _current_msg_id = callback_query.message.message_id
+            _message_ids = list(range(_current_msg_id, _current_msg_id - _count - 1, -1))
+
+            for _i in range(0, len(_message_ids), 100):
+                _chunk = _message_ids[_i:_i + 100]
+                {% if entry.ignoreErrors %}
+                try:
+                    await bot.delete_messages(chat_id=_chat_id, message_ids=_chunk)
+                except Exception as _e:
+                    logging.warning(f"delete_message {{ entry.nodeId }}: batch delete failed: {_e}")
+                {% else %}
+                await bot.delete_messages(chat_id=_chat_id, message_ids=_chunk)
+                {% endif %}
+
+            logging.info(f"🗑️ delete_message {{ entry.nodeId }}: удалено последних {_count} сообщений")
+
+        {% elif entry.messageIdSource == 'current_message' %}
+        # Удаление текущего сообщения пользователя
+        _msg_id = callback_query.message.message_id
+        {% if entry.ignoreErrors %}
+        try:
+            await bot.delete_message(chat_id=_chat_id, message_id=_msg_id)
+        except Exception as _e:
+            logging.warning(f"delete_message {{ entry.nodeId }}: {_e}")
+        {% else %}
+        await bot.delete_message(chat_id=_chat_id, message_id=_msg_id)
+        {% endif %}
+
+        {% elif entry.messageIdSource == 'last_bot_message' %}
+        # Удаление последнего сообщения бота
+        _msg_id = user_data.get(user_id, {}).get('last_bot_message_id')
+        if _msg_id:
+            {% if entry.ignoreErrors %}
+            try:
+                await bot.delete_message(chat_id=_chat_id, message_id=int(_msg_id))
+            except Exception as _e:
+                logging.warning(f"delete_message {{ entry.nodeId }}: {_e}")
+            {% else %}
+            await bot.delete_message(chat_id=_chat_id, message_id=int(_msg_id))
+            {% endif %}
+
+        {% elif entry.messageIdSource == 'custom' %}
+        # Удаление по указанному ID
+        {% if entry.chatIdSource != 'custom' %}_all_vars = await init_all_user_vars(user_id){% endif %}
+        {%- set _msg_raw = entry.messageIdManual | trim %}
+        {%- if _msg_raw | int(-1) != -1 %}
+        _msg_id = {{ _msg_raw | int }}
+        {%- elif '{' in _msg_raw %}
+        _msg_id_raw = replace_variables_in_text({{ _msg_raw | format_python_text }}, _all_vars, {})
+        try:
+            _msg_id = int(str(_msg_id_raw).strip())
+        except (ValueError, TypeError):
+            _msg_id = None
+            logging.warning(f"delete_message {{ entry.nodeId }}: не удалось получить message_id из '{{ _msg_raw }}'")
+        {%- else %}
+        _msg_id_str = str(_all_vars.get("{{ _msg_raw }}", ""))
+        try:
+            _msg_id = int(_msg_id_str)
+        except (ValueError, TypeError):
+            _msg_id = None
+            logging.warning(f"delete_message {{ entry.nodeId }}: не удалось получить message_id из переменной '{{ _msg_raw }}'")
+        {%- endif %}
+
+        if _msg_id:
+            {% if entry.ignoreErrors %}
+            try:
+                await bot.delete_message(chat_id=_chat_id, message_id=_msg_id)
+            except Exception as _e:
+                logging.warning(f"delete_message {{ entry.nodeId }}: {_e}")
+            {% else %}
+            await bot.delete_message(chat_id=_chat_id, message_id=_msg_id)
+            {% endif %}
+        {% endif %}
+
+        {% if entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query, state=None)
+        {% endif %}
+
+    {% if entry.ignoreErrors %}
+    except Exception as _e:
+        logging.error(f"Ошибка в delete_message {{ entry.nodeId }}: {_e}")
+        {% if entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query, state=None)
+        {% endif %}
+    {% endif %}
+
+{% endfor %}
