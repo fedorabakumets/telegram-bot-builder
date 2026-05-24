@@ -30,27 +30,27 @@ interface Assignment {
  * text — дефолт, не показывается.
  */
 const MODE_LABELS: Record<string, string> = {
-  expression: '📐 выражение',
-  random: '🎲 random',
-  random_item: '🎲 из списка',
-  array_item: '📋 элемент',
-  timestamp: '⏱ timestamp',
-  format_duration: '⏱ MM:SS',
-  format_number: '#️⃣ число',
-  regex_extract: '🔍 regex',
-  extract_number: '🔢 число',
-  split_get: '✂️ split',
-  json_get: '📦 json',
-  substring: '✂️ substr',
-  conditional: '❓ если',
-  lowercase: '⬇️ lower',
-  uppercase: '⬆️ upper',
-  trim: '🧹 trim',
-  length: '📏 length',
-  lookup: '🔎 lookup',
-  str_replace: '🔄 replace',
-  json_push: '➕ push',
-  json_format: '📝 format',
+  expression: 'ƒ(x)',
+  random: 'rand',
+  random_item: 'pick',
+  array_item: 'arr[i]',
+  timestamp: 'time',
+  format_duration: 'mm:ss',
+  format_number: 'num',
+  regex_extract: 'regex',
+  extract_number: 'int',
+  split_get: 'split',
+  json_get: 'json',
+  substring: 'slice',
+  conditional: 'if/else',
+  lowercase: 'lower',
+  uppercase: 'UPPER',
+  trim: 'trim',
+  length: 'len',
+  lookup: 'lookup',
+  str_replace: 'replace',
+  json_push: 'push',
+  json_format: 'format',
 };
 
 /** Пропсы компонента SetVariablePreview */
@@ -123,7 +123,7 @@ function AssignmentRow({ assignment: a }: { assignment: Assignment }) {
       </div>
       {mode === 'regex_extract' && a.pattern && (
         <span className="font-mono text-[9px] text-purple-400/70 pl-2 truncate max-w-[200px]">
-          🔍 regex: {a.pattern}
+          /{a.pattern}/
         </span>
       )}
     </div>
