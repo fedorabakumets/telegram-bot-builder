@@ -147,11 +147,9 @@ export function getNodeDefaults(type: Node['type']): any {
     },
     delete_message: {
       messageIdSource: 'current_message',
-      messageIdVariable: '',
       messageIdManual: '',
       lastNCount: '',
       chatIdSource: 'current_chat',
-      chatIdVariable: '',
       chatIdManual: '',
       ignoreErrors: true,
       bulkDelete: false,

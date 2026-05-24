@@ -78,8 +78,7 @@ export function DeleteMessageConfiguration({
             <SelectItem value="current_message">Текущее сообщение пользователя</SelectItem>
             <SelectItem value="last_bot_message">Последнее сообщение бота</SelectItem>
             <SelectItem value="last_n">Последние N сообщений</SelectItem>
-            <SelectItem value="variable">Из переменной</SelectItem>
-            <SelectItem value="manual">Вручную</SelectItem>
+            <SelectItem value="custom">Указать ID</SelectItem>
           </SelectContent>
         </Select>
 
@@ -107,32 +106,11 @@ export function DeleteMessageConfiguration({
           </div>
         )}
 
-        {/* Режим variable */}
-        {messageIdSource === 'variable' && (
+        {/* Режим custom — указать ID вручную или через переменную */}
+        {messageIdSource === 'custom' && (
           <div className="space-y-2">
             <Label className="text-xs font-medium text-red-700 dark:text-red-300">
-              Имя переменной с ID сообщения
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                value={data.messageIdVariable ?? ''}
-                onChange={(e) => update('messageIdVariable', e.target.value)}
-                placeholder="saved_msg_id"
-                className="bg-white/60 dark:bg-slate-950/60 border-red-200/50 dark:border-red-800/50 flex-1"
-              />
-              <VariableSelector
-                availableVariables={textVariables}
-                onSelect={(name) => update('messageIdVariable', name)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Режим manual */}
-        {messageIdSource === 'manual' && (
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-red-700 dark:text-red-300">
-              ID сообщения
+              ID сообщения или переменная
             </Label>
             <div className="flex gap-2">
               <Input
@@ -168,35 +146,14 @@ export function DeleteMessageConfiguration({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="current_chat">Текущий чат</SelectItem>
-            <SelectItem value="variable">Из переменной</SelectItem>
-            <SelectItem value="manual">Вручную</SelectItem>
+            <SelectItem value="custom">Указать ID</SelectItem>
           </SelectContent>
         </Select>
 
-        {chatIdSource === 'variable' && (
+        {chatIdSource === 'custom' && (
           <div className="space-y-2">
             <Label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-              Имя переменной с ID чата
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                value={data.chatIdVariable ?? ''}
-                onChange={(e) => update('chatIdVariable', e.target.value)}
-                placeholder="target_chat_id"
-                className="bg-white/60 dark:bg-slate-950/60 flex-1"
-              />
-              <VariableSelector
-                availableVariables={textVariables}
-                onSelect={(name) => update('chatIdVariable', name)}
-              />
-            </div>
-          </div>
-        )}
-
-        {chatIdSource === 'manual' && (
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-              ID чата
+              ID чата или переменная
             </Label>
             <div className="flex gap-2">
               <Input
