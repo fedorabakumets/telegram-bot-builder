@@ -92,7 +92,7 @@ export function NodeTypeConfigurations({
     return <ContactConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />;
   }
 
-  if (nodeType === 'pin_message' || nodeType === 'unpin_message' || nodeType === 'delete_message') {
+  if (nodeType === 'pin_message' || nodeType === 'unpin_message') {
     return <ContentManagementConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />;
   }
 

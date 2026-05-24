@@ -146,11 +146,16 @@ export function getNodeDefaults(type: Node['type']): any {
       variableName: ''
     },
     delete_message: {
-      command: '/delete_message',
-      synonyms: ['удалить', 'стереть', 'убрать сообщение'],
-      targetMessageId: '',
-      messageIdSource: 'last_message',
-      variableName: ''
+      messageIdSource: 'current_message',
+      messageIdVariable: '',
+      messageIdManual: '',
+      lastNCount: '',
+      chatIdSource: 'current_chat',
+      chatIdVariable: '',
+      chatIdManual: '',
+      ignoreErrors: true,
+      bulkDelete: false,
+      bulkMessageIdsVariable: '',
     },
     forward_message: {
       command: '',
