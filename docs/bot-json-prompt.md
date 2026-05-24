@@ -886,6 +886,7 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
     "ignoreErrors": true,
     "bulkDelete": false,
     "bulkMessageIdsVariable": "",
+    "enableAutoTransition": true,
     "autoTransitionTo": "next-node-id"
   }
 }
@@ -1149,6 +1150,8 @@ HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет отве
 - `data.buttons[].target: "nodeId"` — переход по кнопке
 - `data.branches[].target: "nodeId"` — переход по ветке условия
 - `data.afterLoopTo: "nodeId"` — переход после завершения цикла
+
+> ⚠️ **Важно:** для нетриггерных нод (message, set_variable, bot_table, delete_message, delay, psql_query, convert_file, http_request и др.) при использовании `autoTransitionTo` **обязательно** добавлять `"enableAutoTransition": true`. Без этого флага связь не отрисуется на канвасе. Триггеры (command_trigger, text_trigger, schedule_trigger и др.) не нуждаются в этом флаге — их связи обрабатываются отдельно.
 
 ---
 
