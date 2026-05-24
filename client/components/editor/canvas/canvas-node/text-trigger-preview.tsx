@@ -26,32 +26,38 @@ interface TextTriggerPreviewProps {
  */
 export function TextTriggerPreview({ node }: TextTriggerPreviewProps) {
   const texts: string[] = (node.data as any)?.textSynonyms || [];
+  const matchType: string = (node.data as any)?.textMatchType || 'exact';
 
   /** Показываем максимум 4 тега, остальные скрываем */
   const visible = texts.slice(0, 4);
   const hidden = texts.length - visible.length;
 
   return (
-    <div className="flex flex-wrap gap-1 items-center min-h-[24px]">
-      {texts.length === 0 ? (
-        <span className="text-xs text-slate-400 italic">Нет текстов</span>
-      ) : (
-        <>
-          {visible.map((text, i) => (
-            <span
-              key={i}
-              className="inline-block px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-medium"
-            >
-              {text}
-            </span>
-          ))}
-          {hidden > 0 && (
-            <span className="inline-block px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-400 text-xs">
-              +{hidden}
-            </span>
-          )}
-        </>
-      )}
+    <div className="flex flex-col gap-1.5 min-h-[24px]">
+      <div className="flex flex-wrap gap-1 items-center">
+        {texts.length === 0 ? (
+          <span className="text-xs text-slate-400 italic">Нет текстов</span>
+        ) : (
+          <>
+            {visible.map((text, i) => (
+              <span
+                key={i}
+                className="inline-block px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-medium"
+              >
+                {text}
+              </span>
+            ))}
+            {hidden > 0 && (
+              <span className="inline-block px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-400 text-xs">
+                +{hidden}
+              </span>
+            )}
+          </>
+        )}
+      </div>
+      <span className="text-[9px] text-slate-500">
+        {matchType === 'exact' ? '= точное' : '≈ содержит'}
+      </span>
     </div>
   );
 }
