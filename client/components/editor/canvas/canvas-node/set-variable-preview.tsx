@@ -23,6 +23,8 @@ interface Assignment {
   mode?: string;
   /** Регулярное выражение (mode=regex_extract) */
   pattern?: string;
+  /** Номер группы захвата (mode=regex_extract) */
+  regexGroup?: string;
 }
 
 /**
@@ -123,7 +125,7 @@ function AssignmentRow({ assignment: a }: { assignment: Assignment }) {
       </div>
       {mode === 'regex_extract' && a.pattern && (
         <span className="font-mono text-[9px] text-purple-400/70 pl-2 truncate max-w-[200px]">
-          /{a.pattern}/
+          /{a.pattern}/{a.regexGroup && a.regexGroup !== '0' ? ` [${a.regexGroup}]` : ''}
         </span>
       )}
     </div>
