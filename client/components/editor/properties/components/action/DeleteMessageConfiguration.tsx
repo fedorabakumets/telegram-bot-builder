@@ -58,6 +58,14 @@ export function DeleteMessageConfiguration({
   return (
     <div className="space-y-4 p-4">
 
+      {/* Ограничения Telegram */}
+      <div className="bg-gradient-to-br from-yellow-50/50 to-amber-50/30 dark:from-yellow-950/20 dark:to-amber-950/10 border border-yellow-200/30 dark:border-yellow-800/30 rounded-lg p-3">
+        <div className="text-xs text-yellow-700 dark:text-yellow-300 leading-relaxed">
+          <i className="fas fa-exclamation-triangle mr-1"></i>
+          <span className="font-medium">Ограничения Telegram:</span> бот может удалять чужие сообщения только в группах (нужны права админа). Сообщения старше 48 часов удалить нельзя. В личных чатах бот удаляет только свои сообщения.
+        </div>
+      </div>
+
       {/* Секция: Источник сообщения */}
       <div className="bg-gradient-to-br from-red-50/50 to-orange-50/30 dark:from-red-950/20 dark:to-orange-950/10 border border-red-200/30 dark:border-red-800/30 rounded-lg p-4 space-y-3">
         <div className="flex items-center space-x-2">
@@ -101,7 +109,7 @@ export function DeleteMessageConfiguration({
               />
             </div>
             <div className="text-xs text-red-600/70 dark:text-red-400/70 leading-relaxed">
-              Удалит N сообщений назад от текущего по диапазону ID. Несуществующие ID будут проигнорированы.
+              Удалит N сообщений назад от текущего по диапазону ID. Пропуски в нумерации (удалённые/сервисные) будут проигнорированы.
             </div>
           </div>
         )}
