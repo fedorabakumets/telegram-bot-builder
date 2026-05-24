@@ -31,6 +31,7 @@ const SYSTEM_TEMPLATE_FILES: readonly TemplateFile[] = [
   { fileName: "vprogulke-admin-panel.json", label: "ВПрогулке + Админ панель" },
   { fileName: "kotik-simple-anketa.json", label: "Котик - Простая анкета" },
   { fileName: "bot-manager.json", label: "Менеджер ботов" },
+  { fileName: "cleanup-chat.json", label: "Чистка чата — Модерация" },
 ] as const;
 
 /**
