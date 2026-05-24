@@ -92,6 +92,28 @@ export function DeleteMessageConfiguration({
           </SelectContent>
         </Select>
 
+        {/* Подсказка по выбранному режиму */}
+        {messageIdSource === 'current_message' && (
+          <div className="text-xs text-red-600/70 dark:text-red-400/70 leading-relaxed">
+            Удалит сообщение, которое вызвало триггер (сообщение пользователя).
+          </div>
+        )}
+        {messageIdSource === 'last_bot_message' && (
+          <div className="text-xs text-red-600/70 dark:text-red-400/70 leading-relaxed">
+            Удалит последнее сообщение, отправленное ботом этому пользователю (например, предыдущее меню).
+          </div>
+        )}
+        {messageIdSource === 'reply_message' && (
+          <div className="text-xs text-red-600/70 dark:text-red-400/70 leading-relaxed">
+            Удалит сообщение, на которое пользователь ответил (reply). Если reply нет — пропустит.
+          </div>
+        )}
+        {messageIdSource === 'range_from_reply' && (
+          <div className="text-xs text-red-600/70 dark:text-red-400/70 leading-relaxed">
+            Удалит все сообщения от отмеченного (reply) до текущего включительно. Аналог команды «!пург».
+          </div>
+        )}
+
         {/* Режим last_n — количество */}
         {messageIdSource === 'last_n' && (
           <div className="space-y-2">
