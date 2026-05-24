@@ -45,3 +45,27 @@ URL: `fedorabakumets.github.io/telegram-bot-builder/`
 - Деплой: GitHub Actions → gh-pages branch
 - Контент: markdown файлы в `docs-site/docs/`
 - Сайдбар: автогенерация из структуры папок
+
+## Что такое Docusaurus
+
+Генератор статических сайтов документации от Meta (Facebook). Пишешь markdown — получаешь сайт с навигацией, поиском, тёмной темой. Используют React, Redux, Jest, Babel и сотни других проектов.
+
+Чистая статика — `npm run build` → HTML/CSS/JS → хостинг бесплатно на GitHub Pages. Никакого сервера или БД.
+
+## Формат файлов
+
+Тот же markdown что уже есть в `docs/`. Единственное отличие — front-matter в начале:
+
+```md
+---
+sidebar_position: 5
+title: Удалить сообщение
+description: Action-нода для удаления сообщений
+---
+
+# Удалить сообщение
+
+Обычный markdown дальше...
+```
+
+Существующие `.md` файлы переносятся почти без изменений — добавляется только 3 строки метаданных сверху.
