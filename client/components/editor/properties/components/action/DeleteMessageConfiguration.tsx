@@ -62,7 +62,7 @@ export function DeleteMessageConfiguration({
       <div className="bg-gradient-to-br from-yellow-50/50 to-amber-50/30 dark:from-yellow-950/20 dark:to-amber-950/10 border border-yellow-200/30 dark:border-yellow-800/30 rounded-lg p-3">
         <div className="text-xs text-yellow-700 dark:text-yellow-300 leading-relaxed">
           <i className="fas fa-exclamation-triangle mr-1"></i>
-          <span className="font-medium">Ограничения Telegram:</span> бот может удалять чужие сообщения в группах (нужны права админа) и в личных чатах (до 48 часов). Сообщения старше 48 часов удалить нельзя.
+          <span className="font-medium">Ограничения Telegram:</span> бот может удалять чужие сообщения в группах (нужны права админа) и в личных чатах (до 48 часов). Сообщения старше 48 часов удалить нельзя. В каналах — без ограничений по времени.
         </div>
       </div>
 
