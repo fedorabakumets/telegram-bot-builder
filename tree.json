@@ -60,81 +60,6 @@
     "author": ""
   },
   {
-    "path": "analysis/ANALYSIS_SUMMARY",
-    "title": "📋 Краткая сводка анализа проекта",
-    "excerpt": "- Современный стек (React, TypeScript, Express, PostgreSQL)",
-    "parts": [
-      "analysis",
-      "ANALYSIS_SUMMARY"
-    ],
-    "folder_titles": {
-      "analysis": "Analysis"
-    },
-    "updated_at": "2026-02-18T04:39:41+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "analysis/INFRASTRUCTURE_ANALYSIS",
-    "title": "- Deploy (staging/production)",
-    "excerpt": "**Дата анализа:** 25 января 2026",
-    "parts": [
-      "analysis",
-      "INFRASTRUCTURE_ANALYSIS"
-    ],
-    "folder_titles": {
-      "analysis": "Analysis"
-    },
-    "updated_at": "2026-01-25T21:46:11+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "analysis/PROJECT_STRUCTURE_ANALYSIS",
-    "title": "🔍 Критический анализ структуры проекта Telegram Bot Builder",
-    "excerpt": "**Дата анализа:** 25 января 2026",
-    "parts": [
-      "analysis",
-      "PROJECT_STRUCTURE_ANALYSIS"
-    ],
-    "folder_titles": {
-      "analysis": "Analysis"
-    },
-    "updated_at": "2026-02-18T04:39:41+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "analysis/PROJECT_STRUCTURE_DIAGRAM",
-    "title": "🏗️ Диаграмма структуры проекта",
-    "excerpt": "```",
-    "parts": [
-      "analysis",
-      "PROJECT_STRUCTURE_DIAGRAM"
-    ],
-    "folder_titles": {
-      "analysis": "Analysis"
-    },
-    "updated_at": "2026-02-18T04:39:41+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "analysis/bot-generator-fixes",
-    "title": "Bot generator fixes",
-    "excerpt": "/**",
-    "parts": [
-      "analysis",
-      "bot-generator-fixes"
-    ],
-    "folder_titles": {
-      "analysis": "Analysis"
-    },
-    "updated_at": "2026-03-09T10:22:01+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
     "path": "bots/referral-funnel-analysis",
     "title": "опционально — нужен только при webhook-режиме",
     "excerpt": "> Задача: Разработать Telegram-бота с воронкой, реферальной системой и сбором базы.",
@@ -775,7 +700,7 @@
     "folder_titles": {
       "futures": "Futures"
     },
-    "updated_at": "2026-05-25T02:57:28+03:00",
+    "updated_at": "2026-05-25T03:13:36+03:00",
     "tags": [],
     "author": ""
   },
