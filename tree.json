@@ -1,7 +1,7 @@
 [
   {
     "path": "CLIENT-README",
-    "title": "Порт (по умолчанию 5000)",
+    "title": "🚀 Конструктор Telegram-ботов — Быстрый старт",
     "excerpt": "- **Docker Desktop** (скачать: https://www.docker.com/products/docker-desktop/)",
     "parts": [
       "CLIENT-README"
@@ -13,7 +13,7 @@
   },
   {
     "path": "JSDOC_STANDARDS",
-    "title": "Проверка качества документации",
+    "title": "JSDoc Standards & Guidelines",
     "excerpt": "Стандарты документирования кода с помощью JSDoc для обеспечения консистентности и качества документации.",
     "parts": [
       "JSDOC_STANDARDS"
@@ -43,7 +43,7 @@
       "home"
     ],
     "folder_titles": {},
-    "updated_at": "2026-05-25T05:11:36+03:00",
+    "updated_at": "2026-05-25T05:25:09+03:00",
     "tags": [],
     "author": ""
   },
@@ -64,7 +64,7 @@
   },
   {
     "path": "deployment/RAILWAY_TROUBLESHOOTING",
-    "title": "Сборка проекта",
+    "title": "Railway Troubleshooting Guide",
     "excerpt": "Руководство по устранению проблем при развертывании на Railway.",
     "parts": [
       "deployment",
@@ -109,7 +109,7 @@
   },
   {
     "path": "development/HOW_TO_UPDATE",
-    "title": "Обновить проект",
+    "title": "🔄 Как обновить проект с GitHub",
     "excerpt": "Руководство по обновлению локальной копии проекта из удалённого репозитория GitHub.",
     "parts": [
       "development",
@@ -124,7 +124,7 @@
   },
   {
     "path": "development/INSTALLATION.en",
-    "title": "Redis (Memurai on Windows, redis on Linux/macOS)",
+    "title": "Installation Guide",
     "excerpt": "[🇷🇺 Русский](INSTALLATION.md) | **🇬🇧 English**",
     "parts": [
       "development",
@@ -139,7 +139,7 @@
   },
   {
     "path": "development/INSTALLATION",
-    "title": "Redis (Memurai на Windows, redis на Linux/macOS)",
+    "title": "Руководство по установке",
     "excerpt": "**🇷🇺 Русский** | [🇬🇧 English](INSTALLATION.en.md)",
     "parts": [
       "development",
@@ -154,7 +154,7 @@
   },
   {
     "path": "development/TROUBLESHOOTING_RU",
-    "title": "Удалить node_modules и переустановить",
+    "title": "Руководство по устранению неполадок при запуске Telegram Bot Builder",
     "excerpt": "При запуске приложения команда `npm run dev` завершается ошибкой:",
     "parts": [
       "development",
@@ -169,7 +169,7 @@
   },
   {
     "path": "development/adding-new-trigger",
-    "title": "Подключаем новый клиент",
+    "title": "Добавление нового триггера на фронтенде",
     "excerpt": "Этот документ описывает все файлы, которые нужно создать или обновить при добавлении нового типа триггера в редактор сценариев.",
     "parts": [
       "development",
@@ -259,7 +259,7 @@
   },
   {
     "path": "features/incoming-callback-trigger",
-    "title": "НЕ вызываем callback_query.answer() — это делает основной обработчик",
+    "title": "Фича: incoming_callback_trigger",
     "excerpt": "> Дата создания: 4 апреля 2026",
     "parts": [
       "features",
@@ -274,7 +274,7 @@
   },
   {
     "path": "features/telegram-buttons-new-features",
-    "title": "Используется только с bot.send_invoice(...)",
+    "title": "План новых фич кнопок для Telegram бот-редактора",
     "excerpt": "> Дата обновления: 4 апреля 2026",
     "parts": [
       "features",
@@ -289,7 +289,7 @@
   },
   {
     "path": "futures/BOT_SYSTEM_API",
-    "title": "Один aiohttp app, два типа роутов:",
+    "title": "Системный API бота (скрытые эндпоинты)",
     "excerpt": "Документ описывает архитектуру внутреннего HTTP API генерируемого бота.",
     "parts": [
       "futures",
@@ -304,7 +304,7 @@
   },
   {
     "path": "futures/FUTURE_NODES",
-    "title": "Читает из bot_data.json или SQLite",
+    "title": "Будущие ноды конструктора",
     "excerpt": "Документ описывает планируемые ноды и расширения для добавления в конструктор.",
     "parts": [
       "futures",
@@ -364,7 +364,7 @@
   },
   {
     "path": "futures/bot-execution-modes",
-    "title": "Polling режим — по умолчанию",
+    "title": "Bot Execution Modes — архитектура режимов запуска ботов",
     "excerpt": "Единая концепция управления режимами запуска ботов через переменную окружения `BOT_MODE`.",
     "parts": [
       "futures",
@@ -394,7 +394,7 @@
   },
   {
     "path": "futures/bot-table-node",
-    "title": "Инвалидация кеша",
+    "title": "Узел `bot_table` — работа с внутренними таблицами конструктора",
     "excerpt": "Сейчас для хранения пользовательских данных (профили, баланс, репутация, отношения) нужно использовать `psql_query` и писать SQL вручную. Эт",
     "parts": [
       "futures",
@@ -439,7 +439,7 @@
   },
   {
     "path": "futures/charts-roadmap",
-    "title": "В сгенерированном боте — после записи в таблицу:",
+    "title": "Фича: Кастомные графики на основе таблиц",
     "excerpt": "Владелец бота создаёт графики/дашборды на основе данных из пользовательских таблиц (bot_tables) и системных данных (bot_users, bot_messages)",
     "parts": [
       "futures",
@@ -454,7 +454,7 @@
   },
   {
     "path": "futures/code-node",
-    "title": "10000 → \"10 000\"",
+    "title": "Нода `code` — произвольный Python-код",
     "excerpt": "Пользователь пишет Python-код прямо в редакторе конструктора. Код имеет доступ к переменным пользователя, может их читать и менять. Аналог б",
     "parts": [
       "futures",
@@ -499,7 +499,7 @@
   },
   {
     "path": "futures/deep-link-analytics",
-    "title": "При сохранении в БД",
+    "title": "Deep Link Analytics — Roadmap",
     "excerpt": "- ✅ **Deep link routing** — параметры `?start=` корректно обрабатываются",
     "parts": [
       "futures",
@@ -514,7 +514,7 @@
   },
   {
     "path": "futures/delete-message-node",
-    "title": "Команда удаления:",
+    "title": "Нода `delete_message` — полноценное удаление сообщений",
     "excerpt": "Сейчас `delete_message` существует только как часть шаблона `synonyms` — работает исключительно в группах через ответ на сообщение словом-си",
     "parts": [
       "futures",
@@ -529,7 +529,7 @@
   },
   {
     "path": "futures/docusaurus-docs-site",
-    "title": "Удалить сообщение",
+    "title": "Документация-сайт на Docusaurus",
     "excerpt": "Создать красивый сайт документации на Docusaurus с автодеплоем на GitHub Pages.",
     "parts": [
       "futures",
@@ -544,7 +544,7 @@
   },
   {
     "path": "futures/exchange-rate-aggregation",
-    "title": "Извлечение по пути",
+    "title": "Агрегация курсов обменников — план доработок",
     "excerpt": "Бот сравнивает курсы обменников, но:",
     "parts": [
       "futures",
@@ -574,7 +574,7 @@
   },
   {
     "path": "futures/file-variable-type",
-    "title": "Пропустить стандартную логику resolve",
+    "title": "Тип переменной `file` для медиа-ноды",
     "excerpt": "<!-- @fileoverview Концепция нового типа переменной `file` для медиа-ноды в BotCraft Studio.",
     "parts": [
       "futures",
@@ -589,7 +589,7 @@
   },
   {
     "path": "futures/fsm-state-middleware",
-    "title": "Проверяем блокировки для оставшихся активных действий",
+    "title": "FSM State Middleware — глобальные состояния с автовосстановлением",
     "excerpt": "Сейчас `delay` (background mode) использует `asyncio.create_task()` — при перезапуске бота все активные таймеры теряются. Если бот перезапус",
     "parts": [
       "futures",
@@ -604,7 +604,7 @@
   },
   {
     "path": "futures/inline-expressions",
-    "title": "Запрос к PostgreSQL:                  ~5-50 мс",
+    "title": "🧮 Формулы в тексте сообщения (Inline Expressions)",
     "excerpt": "**Проблема:** Чтобы показать вычисленное значение в тексте сообщения, нужна отдельная нода `set_variable` перед `message`. Это добавляет лиш",
     "parts": [
       "futures",
@@ -619,7 +619,7 @@
   },
   {
     "path": "futures/loop-node",
-    "title": "После цикла",
+    "title": "Узел `loop` — цикл по массиву",
     "excerpt": "<!-- @fileoverview Концепция узла `loop` для BotCraft Studio.",
     "parts": [
       "futures",
@@ -664,7 +664,7 @@
   },
   {
     "path": "futures/psql-query-node",
-    "title": "Подставляем переменные в запрос",
+    "title": "Узел `psql_query` — прямой SQL-запрос к базе данных",
     "excerpt": "<!-- @fileoverview План реализации нового типа узла `psql_query` для BotCraft Studio.",
     "parts": [
       "futures",
@@ -679,7 +679,7 @@
   },
   {
     "path": "futures/redis-events-improvements",
-    "title": "В cleanup_user_data() если len(user_data) > порога",
+    "title": "Redis Events — Улучшения",
     "excerpt": "| Канал | Когда | Данные |",
     "parts": [
       "futures",
@@ -694,7 +694,7 @@
   },
   {
     "path": "futures/redis-roadmap",
-    "title": "Вместо user_data.get(user_id, {})",
+    "title": "Redis — Roadmap улучшений платформы",
     "excerpt": "Документ описывает все возможные улучшения платформы с использованием Redis (Memurai на Windows, Redis на Linux/Railway).",
     "parts": [
       "futures",
@@ -709,7 +709,7 @@
   },
   {
     "path": "futures/schedule-trigger",
-    "title": "Задачи регистрируются автоматически при загрузке модуля",
+    "title": "Нода `schedule_trigger` — запуск по расписанию",
     "excerpt": "Фоновая задача, которая запускает цепочку нод по таймеру без участия пользователя. Аналог Schedule Trigger в n8n — визуальный конструктор ра",
     "parts": [
       "futures",
@@ -739,7 +739,7 @@
   },
   {
     "path": "futures/set-variable-node",
-    "title": "→ \"Товар 1\"",
+    "title": "Узел `set_variable` — установка переменных без HTTP-запроса",
     "excerpt": "<!-- @fileoverview План реализации нового типа узла `set_variable` для BotCraft Studio.",
     "parts": [
       "futures",
@@ -769,7 +769,7 @@
   },
   {
     "path": "futures/start-param-rules",
-    "title": "Правила парсинга",
+    "title": "Start Param Rules — Универсальный парсинг параметра /start",
     "excerpt": "Сейчас в узле `command_trigger` парсинг параметра `/start` работает так:",
     "parts": [
       "futures",
@@ -799,7 +799,7 @@
   },
   {
     "path": "futures/typed-columns-and-table-math",
-    "title": "Создаём новую запись",
+    "title": "📊 Типизированные колонки + Математика в таблицах",
     "excerpt": "**Статус:** Планирование",
     "parts": [
       "futures",
@@ -829,7 +829,7 @@
   },
   {
     "path": "futures/webhook-mode",
-    "title": "WEBHOOK_URL=https://abc123.ngrok.io",
+    "title": "Webhook режим для ботов",
     "excerpt": "Документ описывает переход с polling на webhook для генерируемых Python ботов.",
     "parts": [
       "futures",
@@ -844,7 +844,7 @@
   },
   {
     "path": "releases/RELEASE_NOTES_v1.5.0",
-    "title": "Запустите проект",
+    "title": "📦 Telegram Bot Builder v1.5.0",
     "excerpt": "**Дата выпуска:** 23 февраля 2026 г.",
     "parts": [
       "releases",
@@ -859,7 +859,7 @@
   },
   {
     "path": "releases/RELEASE_NOTES_v1.5.1",
-    "title": "Запустите",
+    "title": "📦 Telegram Bot Builder v1.5.1",
     "excerpt": "**Дата выпуска:** 25 февраля 2026 г.",
     "parts": [
       "releases",
@@ -874,7 +874,7 @@
   },
   {
     "path": "releases/RELEASE_NOTES_v1.5.2",
-    "title": "python-dotenv теперь устанавливается автоматически",
+    "title": "📦 Telegram Bot Builder v1.5.2",
     "excerpt": "**Дата выпуска:** 10 марта 2026 г.",
     "parts": [
       "releases",
@@ -889,7 +889,7 @@
   },
   {
     "path": "releases/RELEASE_NOTES_v2.0.0",
-    "title": "Запустите",
+    "title": "📦 Release Notes v2.0.0",
     "excerpt": "**Дата выпуска:** 10 марта 2026 г.",
     "parts": [
       "releases",
@@ -904,7 +904,7 @@
   },
   {
     "path": "releases/RELEASE_NOTES_v2.0.1",
-    "title": "Применение миграций (если требуется)",
+    "title": "📦 Release Notes v2.0.1",
     "excerpt": "**Дата выпуска:** 11 марта 2026 г.",
     "parts": [
       "releases",
@@ -919,7 +919,7 @@
   },
   {
     "path": "releases/RELEASE_NOTES_v2.0.2",
-    "title": "Запустите",
+    "title": "📦 Release Notes v2.0.2",
     "excerpt": "**Дата выпуска:** 11 марта 2026 г.",
     "parts": [
       "releases",

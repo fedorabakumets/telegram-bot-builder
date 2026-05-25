@@ -66,10 +66,12 @@ for root, dirs, files in os.walk(docs_dir):
 
         title = parts[-1].replace('-', ' ').replace('_', ' ').capitalize()
         excerpt = ''
+        title_found = False
         for line in body.splitlines():
             line = line.strip()
-            if line.startswith('# '):
+            if line.startswith('# ') and not title_found:
                 title = line[2:].strip()
+                title_found = True
             elif line and not line.startswith('#') and not excerpt:
                 excerpt = line[:140]
 
