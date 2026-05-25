@@ -1,0 +1,1217 @@
+[
+  {
+    "path": "CLIENT-README",
+    "title": "Порт (по умолчанию 5000)",
+    "excerpt": "/**",
+    "parts": [
+      "CLIENT-README"
+    ],
+    "folder_titles": {},
+    "updated_at": "2026-02-23T09:53:34+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "COMPONENTS",
+    "title": "Документация компонентов",
+    "excerpt": "Полная документация всех компонентов библиотеки с примерами использования.",
+    "parts": [
+      "COMPONENTS"
+    ],
+    "folder_titles": {},
+    "updated_at": "2026-01-25T09:25:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "JSDOC_STANDARDS",
+    "title": "Проверка качества документации",
+    "excerpt": "Стандарты документирования кода с помощью JSDoc для обеспечения консистентности и качества документации.",
+    "parts": [
+      "JSDOC_STANDARDS"
+    ],
+    "folder_titles": {},
+    "updated_at": "2026-01-25T09:25:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "README",
+    "title": "📚 Документация проекта",
+    "excerpt": "- [Vercel Deploy](deployment/VERCEL_DEPLOY.md) - Развертывание на Vercel",
+    "parts": [
+      "README"
+    ],
+    "folder_titles": {},
+    "updated_at": "2026-05-19T22:42:02+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "bot-json-prompt",
+    "title": "Промт для ИИ: редактирование JSON сценария бота",
+    "excerpt": "Ты редактируешь JSON-структуру Telegram-бота. Ниже — полное описание формата.",
+    "parts": [
+      "bot-json-prompt"
+    ],
+    "folder_titles": {},
+    "updated_at": "2026-05-25T00:37:03+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "analysis/ANALYSIS_SUMMARY",
+    "title": "📋 Краткая сводка анализа проекта",
+    "excerpt": "- Современный стек (React, TypeScript, Express, PostgreSQL)",
+    "parts": [
+      "analysis",
+      "ANALYSIS_SUMMARY"
+    ],
+    "folder_titles": {
+      "analysis": "Analysis"
+    },
+    "updated_at": "2026-02-18T04:39:41+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "analysis/INFRASTRUCTURE_ANALYSIS",
+    "title": "- Deploy (staging/production)",
+    "excerpt": "**Дата анализа:** 25 января 2026",
+    "parts": [
+      "analysis",
+      "INFRASTRUCTURE_ANALYSIS"
+    ],
+    "folder_titles": {
+      "analysis": "Analysis"
+    },
+    "updated_at": "2026-01-25T21:46:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "analysis/PROJECT_STRUCTURE_ANALYSIS",
+    "title": "🔍 Критический анализ структуры проекта Telegram Bot Builder",
+    "excerpt": "**Дата анализа:** 25 января 2026",
+    "parts": [
+      "analysis",
+      "PROJECT_STRUCTURE_ANALYSIS"
+    ],
+    "folder_titles": {
+      "analysis": "Analysis"
+    },
+    "updated_at": "2026-02-18T04:39:41+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "analysis/PROJECT_STRUCTURE_DIAGRAM",
+    "title": "🏗️ Диаграмма структуры проекта",
+    "excerpt": "```",
+    "parts": [
+      "analysis",
+      "PROJECT_STRUCTURE_DIAGRAM"
+    ],
+    "folder_titles": {
+      "analysis": "Analysis"
+    },
+    "updated_at": "2026-02-18T04:39:41+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "analysis/bot-generator-fixes",
+    "title": "Bot generator fixes",
+    "excerpt": "/**",
+    "parts": [
+      "analysis",
+      "bot-generator-fixes"
+    ],
+    "folder_titles": {
+      "analysis": "Analysis"
+    },
+    "updated_at": "2026-03-09T10:22:01+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "bots/referral-funnel-analysis",
+    "title": "опционально — нужен только при webhook-режиме",
+    "excerpt": "> Задача: Разработать Telegram-бота с воронкой, реферальной системой и сбором базы.",
+    "parts": [
+      "bots",
+      "referral-funnel-analysis"
+    ],
+    "folder_titles": {
+      "bots": "Bots"
+    },
+    "updated_at": "2026-05-08T03:18:23+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/RAILWAY_CLI_GUIDE",
+    "title": "Проверь статус",
+    "excerpt": "```bash",
+    "parts": [
+      "deployment",
+      "RAILWAY_CLI_GUIDE"
+    ],
+    "folder_titles": {
+      "deployment": "Deployment"
+    },
+    "updated_at": "2026-01-25T21:46:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/RAILWAY_DATABASE_SETUP",
+    "title": "Railway database setup",
+    "excerpt": "",
+    "parts": [
+      "deployment",
+      "RAILWAY_DATABASE_SETUP"
+    ],
+    "folder_titles": {
+      "deployment": "Deployment"
+    },
+    "updated_at": "2026-01-26T22:08:53+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/RAILWAY_DEPLOY",
+    "title": "🚀 Деплой Telegram Bot Builder на Railway",
+    "excerpt": "1. Создайте аккаунт на [Railway.app](https://railway.app/)",
+    "parts": [
+      "deployment",
+      "RAILWAY_DEPLOY"
+    ],
+    "folder_titles": {
+      "deployment": "Deployment"
+    },
+    "updated_at": "2026-01-25T21:46:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/RAILWAY_QUICK_DEPLOY",
+    "title": "🚀 Быстрый деплой на Railway",
+    "excerpt": "1. Иди на [railway.app](https://railway.app)",
+    "parts": [
+      "deployment",
+      "RAILWAY_QUICK_DEPLOY"
+    ],
+    "folder_titles": {
+      "deployment": "Deployment"
+    },
+    "updated_at": "2026-01-25T21:46:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/RAILWAY_TROUBLESHOOTING",
+    "title": "Сборка проекта",
+    "excerpt": "Руководство по устранению проблем при развертывании на Railway.",
+    "parts": [
+      "deployment",
+      "RAILWAY_TROUBLESHOOTING"
+    ],
+    "folder_titles": {
+      "deployment": "Deployment"
+    },
+    "updated_at": "2026-01-26T22:01:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/README_RAILWAY",
+    "title": "Открой http://localhost:5000",
+    "excerpt": "Визуальный конструктор Telegram ботов с полным функционалом.",
+    "parts": [
+      "deployment",
+      "README_RAILWAY"
+    ],
+    "folder_titles": {
+      "deployment": "Deployment"
+    },
+    "updated_at": "2026-01-25T21:46:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/VERCEL_DEPLOY",
+    "title": "🚀 Деплой Telegram Bot Builder на Vercel",
+    "excerpt": "1. Создайте аккаунт на [Vercel](https://vercel.com/)",
+    "parts": [
+      "deployment",
+      "VERCEL_DEPLOY"
+    ],
+    "folder_titles": {
+      "deployment": "Deployment"
+    },
+    "updated_at": "2026-01-25T21:46:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/replit",
+    "title": "Telegram Bot Builder Platform - Multi-User with Full Ownership Isolation",
+    "excerpt": "A web-based Telegram bot builder platform with **full multi-tenant security**:",
+    "parts": [
+      "deployment",
+      "replit"
+    ],
+    "folder_titles": {
+      "deployment": "Deployment"
+    },
+    "updated_at": "2026-02-18T04:39:41+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/CONTRIBUTING",
+    "title": "🤝 Как внести вклад в проект",
+    "excerpt": "Спасибо за интерес к развитию Telegram Bot Builder! Мы рады любой помощи.",
+    "parts": [
+      "development",
+      "CONTRIBUTING"
+    ],
+    "folder_titles": {
+      "development": "Development"
+    },
+    "updated_at": "2026-05-19T23:05:57+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/GITHUB_SYNC",
+    "title": "Разрешите конфликты, затем:",
+    "excerpt": "🔗 https://github.com/fedorabakumets/telegram-bot-builder",
+    "parts": [
+      "development",
+      "GITHUB_SYNC"
+    ],
+    "folder_titles": {
+      "development": "Development"
+    },
+    "updated_at": "2026-01-25T21:46:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/GITHUB_TOPICS",
+    "title": "Рекомендуемые GitHub Topics для репозитория",
+    "excerpt": "Добавь эти теги в настройках репозитория на GitHub для лучшей видимости:",
+    "parts": [
+      "development",
+      "GITHUB_TOPICS"
+    ],
+    "folder_titles": {
+      "development": "Development"
+    },
+    "updated_at": "2026-01-25T21:46:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/HOW_TO_UPDATE",
+    "title": "Обновить проект",
+    "excerpt": "Руководство по обновлению локальной копии проекта из удалённого репозитория GitHub.",
+    "parts": [
+      "development",
+      "HOW_TO_UPDATE"
+    ],
+    "folder_titles": {
+      "development": "Development"
+    },
+    "updated_at": "2026-03-10T20:36:22+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/INSTALLATION.en",
+    "title": "Redis (Memurai on Windows, redis on Linux/macOS)",
+    "excerpt": "[🇷🇺 Русский](INSTALLATION.md) | **🇬🇧 English**",
+    "parts": [
+      "development",
+      "INSTALLATION.en"
+    ],
+    "folder_titles": {
+      "development": "Development"
+    },
+    "updated_at": "2026-05-19T23:20:23+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/INSTALLATION",
+    "title": "Redis (Memurai на Windows, redis на Linux/macOS)",
+    "excerpt": "**🇷🇺 Русский** | [🇬🇧 English](INSTALLATION.en.md)",
+    "parts": [
+      "development",
+      "INSTALLATION"
+    ],
+    "folder_titles": {
+      "development": "Development"
+    },
+    "updated_at": "2026-05-19T23:20:23+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/REAL_IMPLEMENTATION_GUIDE",
+    "title": "Затем создайте тестового бота в браузере",
+    "excerpt": "Вместо создания заглушек, теперь у вас есть скрипты для создания **реальных модулей** с извлеченным кодом из `generatePythonCode`.",
+    "parts": [
+      "development",
+      "REAL_IMPLEMENTATION_GUIDE"
+    ],
+    "folder_titles": {
+      "development": "Development"
+    },
+    "updated_at": "2026-01-25T21:46:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/REQUIREMENTS_SPECIFICATION",
+    "title": "Техническое задание: Рефакторинг bot-generator.ts",
+    "excerpt": "**Проект:** Telegram Bot Builder",
+    "parts": [
+      "development",
+      "REQUIREMENTS_SPECIFICATION"
+    ],
+    "folder_titles": {
+      "development": "Development"
+    },
+    "updated_at": "2026-02-18T04:39:41+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/TROUBLESHOOTING_RU",
+    "title": "Удалить node_modules и переустановить",
+    "excerpt": "При запуске приложения команда `npm run dev` завершается ошибкой:",
+    "parts": [
+      "development",
+      "TROUBLESHOOTING_RU"
+    ],
+    "folder_titles": {
+      "development": "Development"
+    },
+    "updated_at": "2026-05-19T22:58:04+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "development/adding-new-trigger",
+    "title": "Подключаем новый клиент",
+    "excerpt": "Этот документ описывает все файлы, которые нужно создать или обновить при добавлении нового типа триггера в редактор сценариев.",
+    "parts": [
+      "development",
+      "adding-new-trigger"
+    ],
+    "folder_titles": {
+      "development": "Development"
+    },
+    "updated_at": "2026-05-20T14:52:13+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/NODE_TYPES",
+    "title": "🧩 Типы узлов (блоков)",
+    "excerpt": "Полный справочник всех доступных узлов в конструкторе Telegram Bot Builder.",
+    "parts": [
+      "features",
+      "NODE_TYPES"
+    ],
+    "folder_titles": {
+      "features": "Features"
+    },
+    "updated_at": "2026-05-25T00:19:41+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/POSSIBLE_TRIGGERS_AND_ACTIONS",
+    "title": "Возможные Триггеры И Действия",
+    "excerpt": "Этот документ фиксирует возможный продуктовый список триггеров и действий для редактора сценариев.",
+    "parts": [
+      "features",
+      "POSSIBLE_TRIGGERS_AND_ACTIONS"
+    ],
+    "folder_titles": {
+      "features": "Features"
+    },
+    "updated_at": "2026-03-31T00:42:01+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/TELEGRAM_CLIENT_API_TRIGGERS_AND_ACTIONS",
+    "title": "Telegram Client API: Триггеры И Действия",
+    "excerpt": "Этот документ описывает отдельный продуктовый слой для работы через Telegram Client API, а не через обычный Bot API.",
+    "parts": [
+      "features",
+      "TELEGRAM_CLIENT_API_TRIGGERS_AND_ACTIONS"
+    ],
+    "folder_titles": {
+      "features": "Features"
+    },
+    "updated_at": "2026-03-31T01:13:02+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/buttons-roadmap",
+    "title": "Roadmap: Улучшение системы кнопок",
+    "excerpt": "| Задача | Статус |",
+    "parts": [
+      "features",
+      "buttons-roadmap"
+    ],
+    "folder_titles": {
+      "features": "Features"
+    },
+    "updated_at": "2026-04-04T08:01:13+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/flow-input-architecture-plan",
+    "title": "План: Новая Flow-модель для ввода и сохранения данных",
+    "excerpt": "Текущая модель смешивает в одной ноде несколько разных ролей:",
+    "parts": [
+      "features",
+      "flow-input-architecture-plan"
+    ],
+    "folder_titles": {
+      "features": "Features"
+    },
+    "updated_at": "2026-03-27T03:14:35+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/incoming-callback-trigger",
+    "title": "НЕ вызываем callback_query.answer() — это делает основной обработчик",
+    "excerpt": "> Дата создания: 4 апреля 2026",
+    "parts": [
+      "features",
+      "incoming-callback-trigger"
+    ],
+    "folder_titles": {
+      "features": "Features"
+    },
+    "updated_at": "2026-05-08T02:16:09+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/telegram-buttons-new-features",
+    "title": "Используется только с bot.send_invoice(...)",
+    "excerpt": "> Дата обновления: 4 апреля 2026",
+    "parts": [
+      "features",
+      "telegram-buttons-new-features"
+    ],
+    "folder_titles": {
+      "features": "Features"
+    },
+    "updated_at": "2026-04-04T18:35:48+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/BOT_SYSTEM_API",
+    "title": "Один aiohttp app, два типа роутов:",
+    "excerpt": "Документ описывает архитектуру внутреннего HTTP API генерируемого бота.",
+    "parts": [
+      "futures",
+      "BOT_SYSTEM_API"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-14T21:27:17+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/FUTURE_NODES",
+    "title": "Читает из bot_data.json или SQLite",
+    "excerpt": "Документ описывает планируемые ноды и расширения для добавления в конструктор.",
+    "parts": [
+      "futures",
+      "FUTURE_NODES"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-17T17:43:15+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/analytics-dashboard",
+    "title": "Analytics Dashboard — Roadmap",
+    "excerpt": "Полноценная аналитика для Telegram-ботов прямо в редакторе.",
+    "parts": [
+      "futures",
+      "analytics-dashboard"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-05T02:27:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/attribution-model",
+    "title": "Attribution Model — Модель атрибуции источников",
+    "excerpt": "Каждый пользователь приходит откуда-то. Нужно знать не только откуда,",
+    "parts": [
+      "futures",
+      "attribution-model"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-05T03:03:43+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/auth-and-isolation",
+    "title": "Авторизация и изоляция данных — дальнейшие улучшения",
+    "excerpt": "Без этой переменной Mini App авторизация не верифицирует initData в продакшене — работает только в dev-режиме.",
+    "parts": [
+      "futures",
+      "auth-and-isolation"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-04-29T04:51:37+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/bot-execution-modes",
+    "title": "Polling режим — по умолчанию",
+    "excerpt": "Единая концепция управления режимами запуска ботов через переменную окружения `BOT_MODE`.",
+    "parts": [
+      "futures",
+      "bot-execution-modes"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-04-14T08:32:24+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/bot-manager-scenario-roadmap",
+    "title": "Сценарий управляющего бота — Roadmap улучшений",
+    "excerpt": "Документ описывает будущие улучшения сценария `bots/новый/новый.json` с учётом",
+    "parts": [
+      "futures",
+      "bot-manager-scenario-roadmap"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-04-13T06:23:48+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/bot-table-node",
+    "title": "Инвалидация кеша",
+    "excerpt": "Сейчас для хранения пользовательских данных (профили, баланс, репутация, отношения) нужно использовать `psql_query` и писать SQL вручную. Эт",
+    "parts": [
+      "futures",
+      "bot-table-node"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-18T10:13:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/bot-worker-pool",
+    "title": "Bot Worker Pool — масштабируемый запуск ботов",
+    "excerpt": "Текущая архитектура запускает каждого Telegram-бота как отдельный Python процесс (`spawn python3 bot.py`).",
+    "parts": [
+      "futures",
+      "bot-worker-pool"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-16T01:49:03+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/broadcast-panel",
+    "title": "Broadcast Panel — Рассылки",
+    "excerpt": "> Массовая отправка сообщений пользователям бота с фильтрацией аудитории, live-прогрессом и историей.",
+    "parts": [
+      "futures",
+      "broadcast-panel"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-08T15:46:41+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/charts-roadmap",
+    "title": "В сгенерированном боте — после записи в таблицу:",
+    "excerpt": "Владелец бота создаёт графики/дашборды на основе данных из пользовательских таблиц (bot_tables) и системных данных (bot_users, bot_messages)",
+    "parts": [
+      "futures",
+      "charts-roadmap"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-18T17:04:17+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/code-node",
+    "title": "10000 → \"10 000\"",
+    "excerpt": "Пользователь пишет Python-код прямо в редакторе конструктора. Код имеет доступ к переменным пользователя, может их читать и менять. Аналог б",
+    "parts": [
+      "futures",
+      "code-node"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-17T15:55:51+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/content-table",
+    "title": "Фича: Таблица контента (_content)",
+    "excerpt": "| Компонент | Статус | Описание |",
+    "parts": [
+      "futures",
+      "content-table"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-18T22:51:22+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/convert-file-node",
+    "title": "Узел `convert_file` — конвертер данных в файл и обратно",
+    "excerpt": "<!-- @fileoverview Концепция узла `convert_file` для BotCraft Studio.",
+    "parts": [
+      "futures",
+      "convert-file-node"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-08T03:38:33+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/deep-link-analytics",
+    "title": "При сохранении в БД",
+    "excerpt": "- ✅ **Deep link routing** — параметры `?start=` корректно обрабатываются",
+    "parts": [
+      "futures",
+      "deep-link-analytics"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-03T01:40:55+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/delete-message-node",
+    "title": "Команда удаления:",
+    "excerpt": "Сейчас `delete_message` существует только как часть шаблона `synonyms` — работает исключительно в группах через ответ на сообщение словом-си",
+    "parts": [
+      "futures",
+      "delete-message-node"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-25T00:19:41+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/docusaurus-docs-site",
+    "title": "Удалить сообщение",
+    "excerpt": "Создать красивый сайт документации на Docusaurus с автодеплоем на GitHub Pages.",
+    "parts": [
+      "futures",
+      "docusaurus-docs-site"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-25T02:57:28+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/exchange-rate-aggregation",
+    "title": "Извлечение по пути",
+    "excerpt": "Бот сравнивает курсы обменников, но:",
+    "parts": [
+      "futures",
+      "exchange-rate-aggregation"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-17T13:14:41+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/file-storage",
+    "title": "Файловое хранилище (File Storage)",
+    "excerpt": "Централизованное управление всеми медиафайлами проекта — входящими, исходящими и загруженными вручную. Основной принцип: **не скачивать файл",
+    "parts": [
+      "futures",
+      "file-storage"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-22T22:01:05+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/file-variable-type",
+    "title": "Пропустить стандартную логику resolve",
+    "excerpt": "<!-- @fileoverview Концепция нового типа переменной `file` для медиа-ноды в BotCraft Studio.",
+    "parts": [
+      "futures",
+      "file-variable-type"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-04-27T03:12:12+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/fsm-state-middleware",
+    "title": "Проверяем блокировки для оставшихся активных действий",
+    "excerpt": "Сейчас `delay` (background mode) использует `asyncio.create_task()` — при перезапуске бота все активные таймеры теряются. Если бот перезапус",
+    "parts": [
+      "futures",
+      "fsm-state-middleware"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-20T02:03:47+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/inline-expressions",
+    "title": "Запрос к PostgreSQL:                  ~5-50 мс",
+    "excerpt": "**Проблема:** Чтобы показать вычисленное значение в тексте сообщения, нужна отдельная нода `set_variable` перед `message`. Это добавляет лиш",
+    "parts": [
+      "futures",
+      "inline-expressions"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-20T10:12:35+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/loop-node",
+    "title": "После цикла",
+    "excerpt": "<!-- @fileoverview Концепция узла `loop` для BotCraft Studio.",
+    "parts": [
+      "futures",
+      "loop-node"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-14T23:24:20+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/new-navigation",
+    "title": "New Navigation — Redesign Roadmap",
+    "excerpt": "> Переход от редактора с вкладками к полноценной платформе управления ботами.",
+    "parts": [
+      "futures",
+      "new-navigation"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-05T09:46:36+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/project-collaborators",
+    "title": "Совместный доступ к проекту",
+    "excerpt": "<!--",
+    "parts": [
+      "futures",
+      "project-collaborators"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-04-23T01:02:06+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/psql-query-node",
+    "title": "Подставляем переменные в запрос",
+    "excerpt": "<!-- @fileoverview План реализации нового типа узла `psql_query` для BotCraft Studio.",
+    "parts": [
+      "futures",
+      "psql-query-node"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-08T01:06:00+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/redis-events-improvements",
+    "title": "В cleanup_user_data() если len(user_data) > порога",
+    "excerpt": "| Канал | Когда | Данные |",
+    "parts": [
+      "futures",
+      "redis-events-improvements"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-05T04:37:28+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/redis-roadmap",
+    "title": "Вместо user_data.get(user_id, {})",
+    "excerpt": "Документ описывает все возможные улучшения платформы с использованием Redis (Memurai на Windows, Redis на Linux/Railway).",
+    "parts": [
+      "futures",
+      "redis-roadmap"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-04-14T07:42:10+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/schedule-trigger",
+    "title": "Задачи регистрируются автоматически при загрузке модуля",
+    "excerpt": "Фоновая задача, которая запускает цепочку нод по таймеру без участия пользователя. Аналог Schedule Trigger в n8n — визуальный конструктор ра",
+    "parts": [
+      "futures",
+      "schedule-trigger"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-17T17:29:22+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/set-variable-modes",
+    "title": "🧮 Узел «Переменные» — все режимы (modes)",
+    "excerpt": "Отражает суть — узел не просто \"устанавливает переменные\", а вычисляет, форматирует, ищет, генерирует, трансформирует.",
+    "parts": [
+      "futures",
+      "set-variable-modes"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-20T16:20:22+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/set-variable-node",
+    "title": "→ \"Товар 1\"",
+    "excerpt": "<!-- @fileoverview План реализации нового типа узла `set_variable` для BotCraft Studio.",
+    "parts": [
+      "futures",
+      "set-variable-node"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-04-27T05:00:02+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/setup-wizard-app-settings",
+    "title": "Setup Wizard + хранение настроек приложения в PostgreSQL",
+    "excerpt": "<!--",
+    "parts": [
+      "futures",
+      "setup-wizard-app-settings"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-04-25T22:42:03+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/start-param-rules",
+    "title": "Правила парсинга",
+    "excerpt": "Сейчас в узле `command_trigger` парсинг параметра `/start` работает так:",
+    "parts": [
+      "futures",
+      "start-param-rules"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-05T02:55:06+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/token-card-improvements",
+    "title": "Идеи улучшений карточки токена бота",
+    "excerpt": "<!--",
+    "parts": [
+      "futures",
+      "token-card-improvements"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-04-22T23:14:25+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/typed-columns-and-table-math",
+    "title": "Создаём новую запись",
+    "excerpt": "**Статус:** Планирование",
+    "parts": [
+      "futures",
+      "typed-columns-and-table-math"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-20T12:35:56+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/user-profile",
+    "title": "User Profile — Roadmap",
+    "excerpt": "> Профиль пользователя в шапке приложения. Дропдаун `👤 Иван ▼` с настройками,",
+    "parts": [
+      "futures",
+      "user-profile"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-05-05T10:01:02+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/webhook-mode",
+    "title": "WEBHOOK_URL=https://abc123.ngrok.io",
+    "excerpt": "Документ описывает переход с polling на webhook для генерируемых Python ботов.",
+    "parts": [
+      "futures",
+      "webhook-mode"
+    ],
+    "folder_titles": {
+      "futures": "Futures"
+    },
+    "updated_at": "2026-04-21T11:08:55+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "releases/RELEASE_NOTES_v1.5.0",
+    "title": "Запустите проект",
+    "excerpt": "**Дата выпуска:** 23 февраля 2026 г.",
+    "parts": [
+      "releases",
+      "RELEASE_NOTES_v1.5.0"
+    ],
+    "folder_titles": {
+      "releases": "Releases"
+    },
+    "updated_at": "2026-03-10T20:42:29+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "releases/RELEASE_NOTES_v1.5.1",
+    "title": "Запустите",
+    "excerpt": "**Дата выпуска:** 25 февраля 2026 г.",
+    "parts": [
+      "releases",
+      "RELEASE_NOTES_v1.5.1"
+    ],
+    "folder_titles": {
+      "releases": "Releases"
+    },
+    "updated_at": "2026-02-25T13:04:56+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "releases/RELEASE_NOTES_v1.5.2",
+    "title": "python-dotenv теперь устанавливается автоматически",
+    "excerpt": "**Дата выпуска:** 10 марта 2026 г.",
+    "parts": [
+      "releases",
+      "RELEASE_NOTES_v1.5.2"
+    ],
+    "folder_titles": {
+      "releases": "Releases"
+    },
+    "updated_at": "2026-03-10T14:50:38+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "releases/RELEASE_NOTES_v2.0.0",
+    "title": "Запустите",
+    "excerpt": "**Дата выпуска:** 10 марта 2026 г.",
+    "parts": [
+      "releases",
+      "RELEASE_NOTES_v2.0.0"
+    ],
+    "folder_titles": {
+      "releases": "Releases"
+    },
+    "updated_at": "2026-03-10T21:48:09+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "releases/RELEASE_NOTES_v2.0.1",
+    "title": "Применение миграций (если требуется)",
+    "excerpt": "**Дата выпуска:** 11 марта 2026 г.",
+    "parts": [
+      "releases",
+      "RELEASE_NOTES_v2.0.1"
+    ],
+    "folder_titles": {
+      "releases": "Releases"
+    },
+    "updated_at": "2026-03-11T19:55:16+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "releases/RELEASE_NOTES_v2.0.2",
+    "title": "Запустите",
+    "excerpt": "**Дата выпуска:** 11 марта 2026 г.",
+    "parts": [
+      "releases",
+      "RELEASE_NOTES_v2.0.2"
+    ],
+    "folder_titles": {
+      "releases": "Releases"
+    },
+    "updated_at": "2026-03-11T23:18:49+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "releases/RELEASE_NOTES_v2.1.9.6",
+    "title": "📋 Release Notes v2.1.9.6",
+    "excerpt": "**Дата выпуска:** 19 мая 2026 г.",
+    "parts": [
+      "releases",
+      "RELEASE_NOTES_v2.1.9.6"
+    ],
+    "folder_titles": {
+      "releases": "Releases"
+    },
+    "updated_at": "2026-05-19T23:32:30+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "releases/RELEASE_NOTES_v2.1.9.8",
+    "title": "📋 Release Notes v2.1.9.8",
+    "excerpt": "**Дата выпуска:** 25 мая 2026 г.",
+    "parts": [
+      "releases",
+      "RELEASE_NOTES_v2.1.9.8"
+    ],
+    "folder_titles": {
+      "releases": "Releases"
+    },
+    "updated_at": "2026-05-25T01:20:14+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "smm/post-style-guide",
+    "title": "Гайд по стилистике постов для Telegram-канала @botcraft_studio",
+    "excerpt": "- Пишем на русском языке",
+    "parts": [
+      "smm",
+      "post-style-guide"
+    ],
+    "folder_titles": {
+      "smm": "Smm"
+    },
+    "updated_at": "2026-05-15T12:44:42+03:00",
+    "tags": [],
+    "author": ""
+  }
+]

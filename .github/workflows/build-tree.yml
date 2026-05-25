@@ -1,0 +1,33 @@
+name: Build tree
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build-tree:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Pull latest
+        run: git pull origin main
+
+      - name: Generate tree.json and search.json
+        run: python3 tools/generate_tree_json.py
+
+      - name: Commit tree.json and search.json
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tree.json search.json
+          git diff --staged --quiet || git commit -m "chore: update tree.json"
+          git push
