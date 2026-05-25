@@ -6,6 +6,7 @@
 
 import type { Node } from '@shared/schema';
 import { CommandTriggerConfiguration } from '../trigger/CommandTriggerConfiguration';
+import { KickUserConfiguration } from '../action/KickUserConfiguration';
 
 /** Пропсы компонента конфигурации узлов */
 interface NodeTypeConfigurationsProps {
@@ -37,6 +38,8 @@ interface NodeTypeConfigurationsProps {
   UserManagementConfiguration: React.ComponentType<{ selectedNode: Node; onNodeUpdate: (nodeId: string, updates: Partial<any>) => void }>;
   /** Компонент информации о правах администратора */
   AdminRightsInfo: React.ComponentType<{}>;
+  /** Все узлы из всех листов (для извлечения переменных) */
+  getAllNodesFromAllSheets?: Array<{ node: Node; sheetId?: string; sheetName?: string }>;
 }
 
 /**
@@ -61,7 +64,8 @@ export function NodeTypeConfigurations({
   ForwardMessageConfiguration,
   CreateForumTopicConfiguration,
   UserManagementConfiguration,
-  AdminRightsInfo
+  AdminRightsInfo,
+  getAllNodesFromAllSheets = []
 }: NodeTypeConfigurationsProps) {
   const nodeType = selectedNode.type as string;
 
@@ -104,8 +108,12 @@ export function NodeTypeConfigurations({
     return <CreateForumTopicConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />;
   }
 
+  if (nodeType === 'kick_user') {
+    return <KickUserConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} getAllNodesFromAllSheets={getAllNodesFromAllSheets} />;
+  }
+
   if (nodeType === 'ban_user' || nodeType === 'unban_user' || nodeType === 'mute_user' ||
-      nodeType === 'unmute_user' || nodeType === 'kick_user' || nodeType === 'promote_user' ||
+      nodeType === 'unmute_user' || nodeType === 'promote_user' ||
       nodeType === 'demote_user') {
     return <UserManagementConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />;
   }

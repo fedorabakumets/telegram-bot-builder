@@ -36,7 +36,6 @@ export function ManagementCommandSection({
       unban_user: '/unban_user',
       mute_user: '/mute_user',
       unmute_user: '/unmute_user',
-      kick_user: '/kick_user',
       promote_user: '/promote_user',
       demote_user: '/demote_user',
       admin_rights: '/admin_rights'

@@ -54,7 +54,6 @@ export function useCommandValidation({
       selectedNode.type === 'unban_user' ||
       selectedNode.type === 'mute_user' ||
       selectedNode.type === 'unmute_user' ||
-      selectedNode.type === 'kick_user' ||
       selectedNode.type === 'promote_user' ||
       selectedNode.type === 'demote_user'
     )) {

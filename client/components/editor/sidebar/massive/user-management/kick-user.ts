@@ -13,9 +13,11 @@ export const kickUser: ComponentDefinition = {
   color: 'bg-red-100 text-red-600',
   type: 'kick_user',
   defaultData: {
-    targetUserId: '',
-    userIdSource: 'last_message',
+    userIdSource: 'reply_user',
+    userIdManual: '',
     userVariableName: '',
-    reason: 'Нарушение правил группы'
+    chatIdSource: 'current_chat',
+    chatIdManual: '',
+    ignoreErrors: true,
   }
 };
