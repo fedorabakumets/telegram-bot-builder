@@ -19,6 +19,7 @@ import { convertFileNode } from './massive/convert-file';
 import { getManagedBotTokenNode } from './massive/managed-bots';
 import { answerCallbackQueryNode, editMessageNode } from './massive/actions';
 import { userbotMessage, userbotClickButton, userbotInlineQuery, userbotEditTrigger } from './massive/userbot';
+import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from './massive/user-management';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -40,7 +41,7 @@ export const componentCategories: Array<{
   },
   {
     title: 'Группы',
-    components: [groupMessageTrigger, createForumTopicNode]
+    components: [groupMessageTrigger, createForumTopicNode, kickUser, banUser, unbanUser, muteUser, unmuteUser, promoteUser, demoteUser, adminRights]
   },
   {
     title: 'Автоматизация',
