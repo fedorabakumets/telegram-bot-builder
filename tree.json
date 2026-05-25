@@ -12,18 +12,6 @@
     "author": ""
   },
   {
-    "path": "COMPONENTS",
-    "title": "Документация компонентов",
-    "excerpt": "Полная документация всех компонентов библиотеки с примерами использования.",
-    "parts": [
-      "COMPONENTS"
-    ],
-    "folder_titles": {},
-    "updated_at": "2026-01-25T09:25:11+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
     "path": "JSDOC_STANDARDS",
     "title": "Проверка качества документации",
     "excerpt": "Стандарты документирования кода с помощью JSDoc для обеспечения консистентности и качества документации.",
@@ -56,21 +44,6 @@
     ],
     "folder_titles": {},
     "updated_at": "2026-05-25T00:37:03+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "bots/referral-funnel-analysis",
-    "title": "опционально — нужен только при webhook-режиме",
-    "excerpt": "> Задача: Разработать Telegram-бота с воронкой, реферальной системой и сбором базы.",
-    "parts": [
-      "bots",
-      "referral-funnel-analysis"
-    ],
-    "folder_titles": {
-      "bots": "Bots"
-    },
-    "updated_at": "2026-05-08T03:18:23+03:00",
     "tags": [],
     "author": ""
   },
