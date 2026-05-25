@@ -88,3 +88,6 @@ archive/
 
 "coverage/"  
 "*.tmp/"  
+
+# Private docs
+docs/bots/referral-funnel-analysis.md
