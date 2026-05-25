@@ -168,6 +168,21 @@
     "author": ""
   },
   {
+    "path": "development/WIKI_DOCS_GUIDE",
+    "title": "Работа с документацией (WikiNest)",
+    "excerpt": "Документация проекта доступна онлайн: https://fedorabakumets.github.io/wikinest/",
+    "parts": [
+      "development",
+      "WIKI_DOCS_GUIDE"
+    ],
+    "folder_titles": {
+      "development": "🛠️ Разработка"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "development/adding-new-trigger",
     "title": "Добавление нового триггера на фронтенде",
     "excerpt": "Этот документ описывает все файлы, которые нужно создать или обновить при добавлении нового типа триггера в редактор сценариев.",
