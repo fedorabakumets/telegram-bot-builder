@@ -2,7 +2,7 @@
   {
     "path": "CLIENT-README",
     "title": "Порт (по умолчанию 5000)",
-    "excerpt": "/**",
+    "excerpt": "- **Docker Desktop** (скачать: https://www.docker.com/products/docker-desktop/)",
     "parts": [
       "CLIENT-README"
     ],

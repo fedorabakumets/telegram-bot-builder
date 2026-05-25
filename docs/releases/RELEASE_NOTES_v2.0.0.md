@@ -1,3 +1,5 @@
+# 📦 Release Notes v2.0.0
+
 **Дата выпуска:** 10 марта 2026 г.
 
 **Сравнение версий:** [v1.5.2...v2.0.0](https://github.com/fedorabakumets/telegram-bot-builder/compare/v1.5.2...v2.0.0)
