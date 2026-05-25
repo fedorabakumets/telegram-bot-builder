@@ -43,7 +43,7 @@
       "home"
     ],
     "folder_titles": {},
-    "updated_at": "2026-05-25T05:07:01+03:00",
+    "updated_at": "2026-05-25T05:11:36+03:00",
     "tags": [],
     "author": ""
   },
@@ -56,7 +56,7 @@
       "RAILWAY_QUICK_DEPLOY"
     ],
     "folder_titles": {
-      "deployment": "Deployment"
+      "deployment": "🚀 Деплой"
     },
     "updated_at": "2026-01-25T21:46:11+03:00",
     "tags": [],
@@ -71,7 +71,7 @@
       "RAILWAY_TROUBLESHOOTING"
     ],
     "folder_titles": {
-      "deployment": "Deployment"
+      "deployment": "🚀 Деплой"
     },
     "updated_at": "2026-01-26T22:01:11+03:00",
     "tags": [],
@@ -86,7 +86,7 @@
       "VERCEL_DEPLOY"
     ],
     "folder_titles": {
-      "deployment": "Deployment"
+      "deployment": "🚀 Деплой"
     },
     "updated_at": "2026-01-25T21:46:11+03:00",
     "tags": [],
@@ -101,7 +101,7 @@
       "CONTRIBUTING"
     ],
     "folder_titles": {
-      "development": "Development"
+      "development": "🛠️ Разработка"
     },
     "updated_at": "2026-05-19T23:05:57+03:00",
     "tags": [],
@@ -116,7 +116,7 @@
       "HOW_TO_UPDATE"
     ],
     "folder_titles": {
-      "development": "Development"
+      "development": "🛠️ Разработка"
     },
     "updated_at": "2026-03-10T20:36:22+03:00",
     "tags": [],
@@ -131,7 +131,7 @@
       "INSTALLATION.en"
     ],
     "folder_titles": {
-      "development": "Development"
+      "development": "🛠️ Разработка"
     },
     "updated_at": "2026-05-19T23:20:23+03:00",
     "tags": [],
@@ -146,7 +146,7 @@
       "INSTALLATION"
     ],
     "folder_titles": {
-      "development": "Development"
+      "development": "🛠️ Разработка"
     },
     "updated_at": "2026-05-19T23:20:23+03:00",
     "tags": [],
@@ -161,7 +161,7 @@
       "TROUBLESHOOTING_RU"
     ],
     "folder_titles": {
-      "development": "Development"
+      "development": "🛠️ Разработка"
     },
     "updated_at": "2026-05-19T22:58:04+03:00",
     "tags": [],
@@ -176,7 +176,7 @@
       "adding-new-trigger"
     ],
     "folder_titles": {
-      "development": "Development"
+      "development": "🛠️ Разработка"
     },
     "updated_at": "2026-05-20T14:52:13+03:00",
     "tags": [],
@@ -191,7 +191,7 @@
       "NODE_TYPES"
     ],
     "folder_titles": {
-      "features": "Features"
+      "features": "🧩 Возможности"
     },
     "updated_at": "2026-05-25T00:19:41+03:00",
     "tags": [],
@@ -206,7 +206,7 @@
       "POSSIBLE_TRIGGERS_AND_ACTIONS"
     ],
     "folder_titles": {
-      "features": "Features"
+      "features": "🧩 Возможности"
     },
     "updated_at": "2026-03-31T00:42:01+03:00",
     "tags": [],
@@ -221,7 +221,7 @@
       "TELEGRAM_CLIENT_API_TRIGGERS_AND_ACTIONS"
     ],
     "folder_titles": {
-      "features": "Features"
+      "features": "🧩 Возможности"
     },
     "updated_at": "2026-03-31T01:13:02+03:00",
     "tags": [],
@@ -236,7 +236,7 @@
       "buttons-roadmap"
     ],
     "folder_titles": {
-      "features": "Features"
+      "features": "🧩 Возможности"
     },
     "updated_at": "2026-04-04T08:01:13+03:00",
     "tags": [],
@@ -251,7 +251,7 @@
       "flow-input-architecture-plan"
     ],
     "folder_titles": {
-      "features": "Features"
+      "features": "🧩 Возможности"
     },
     "updated_at": "2026-03-27T03:14:35+03:00",
     "tags": [],
@@ -266,7 +266,7 @@
       "incoming-callback-trigger"
     ],
     "folder_titles": {
-      "features": "Features"
+      "features": "🧩 Возможности"
     },
     "updated_at": "2026-05-08T02:16:09+03:00",
     "tags": [],
@@ -281,7 +281,7 @@
       "telegram-buttons-new-features"
     ],
     "folder_titles": {
-      "features": "Features"
+      "features": "🧩 Возможности"
     },
     "updated_at": "2026-04-04T18:35:48+03:00",
     "tags": [],
@@ -296,7 +296,7 @@
       "BOT_SYSTEM_API"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-14T21:27:17+03:00",
     "tags": [],
@@ -311,7 +311,7 @@
       "FUTURE_NODES"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-17T17:43:15+03:00",
     "tags": [],
@@ -326,7 +326,7 @@
       "analytics-dashboard"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-05T02:27:11+03:00",
     "tags": [],
@@ -341,7 +341,7 @@
       "attribution-model"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-05T03:03:43+03:00",
     "tags": [],
@@ -356,7 +356,7 @@
       "auth-and-isolation"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-29T04:51:37+03:00",
     "tags": [],
@@ -371,7 +371,7 @@
       "bot-execution-modes"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-14T08:32:24+03:00",
     "tags": [],
@@ -386,7 +386,7 @@
       "bot-manager-scenario-roadmap"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-13T06:23:48+03:00",
     "tags": [],
@@ -401,7 +401,7 @@
       "bot-table-node"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-18T10:13:54+03:00",
     "tags": [],
@@ -416,7 +416,7 @@
       "bot-worker-pool"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-16T01:49:03+03:00",
     "tags": [],
@@ -431,7 +431,7 @@
       "broadcast-panel"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-08T15:46:41+03:00",
     "tags": [],
@@ -446,7 +446,7 @@
       "charts-roadmap"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-18T17:04:17+03:00",
     "tags": [],
@@ -461,7 +461,7 @@
       "code-node"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-17T15:55:51+03:00",
     "tags": [],
@@ -476,7 +476,7 @@
       "content-table"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-18T22:51:22+03:00",
     "tags": [],
@@ -491,7 +491,7 @@
       "convert-file-node"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-08T03:38:33+03:00",
     "tags": [],
@@ -506,7 +506,7 @@
       "deep-link-analytics"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-03T01:40:55+03:00",
     "tags": [],
@@ -521,7 +521,7 @@
       "delete-message-node"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-25T00:19:41+03:00",
     "tags": [],
@@ -536,7 +536,7 @@
       "docusaurus-docs-site"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-25T03:13:36+03:00",
     "tags": [],
@@ -551,7 +551,7 @@
       "exchange-rate-aggregation"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-17T13:14:41+03:00",
     "tags": [],
@@ -566,7 +566,7 @@
       "file-storage"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-22T22:01:05+03:00",
     "tags": [],
@@ -581,7 +581,7 @@
       "file-variable-type"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-27T03:12:12+03:00",
     "tags": [],
@@ -596,7 +596,7 @@
       "fsm-state-middleware"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-20T02:03:47+03:00",
     "tags": [],
@@ -611,7 +611,7 @@
       "inline-expressions"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-20T10:12:35+03:00",
     "tags": [],
@@ -626,7 +626,7 @@
       "loop-node"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-14T23:24:20+03:00",
     "tags": [],
@@ -641,7 +641,7 @@
       "new-navigation"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-05T09:46:36+03:00",
     "tags": [],
@@ -656,7 +656,7 @@
       "project-collaborators"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-23T01:02:06+03:00",
     "tags": [],
@@ -671,7 +671,7 @@
       "psql-query-node"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-08T01:06:00+03:00",
     "tags": [],
@@ -686,7 +686,7 @@
       "redis-events-improvements"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-05T04:37:28+03:00",
     "tags": [],
@@ -701,7 +701,7 @@
       "redis-roadmap"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-14T07:42:10+03:00",
     "tags": [],
@@ -716,7 +716,7 @@
       "schedule-trigger"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-17T17:29:22+03:00",
     "tags": [],
@@ -731,7 +731,7 @@
       "set-variable-modes"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-20T16:20:22+03:00",
     "tags": [],
@@ -746,7 +746,7 @@
       "set-variable-node"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-27T05:00:02+03:00",
     "tags": [],
@@ -761,7 +761,7 @@
       "setup-wizard-app-settings"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-25T22:42:03+03:00",
     "tags": [],
@@ -776,7 +776,7 @@
       "start-param-rules"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-05T02:55:06+03:00",
     "tags": [],
@@ -791,7 +791,7 @@
       "token-card-improvements"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-22T23:14:25+03:00",
     "tags": [],
@@ -806,7 +806,7 @@
       "typed-columns-and-table-math"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-20T12:35:56+03:00",
     "tags": [],
@@ -821,7 +821,7 @@
       "user-profile"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-05T10:01:02+03:00",
     "tags": [],
@@ -836,7 +836,7 @@
       "webhook-mode"
     ],
     "folder_titles": {
-      "futures": "Futures"
+      "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-21T11:08:55+03:00",
     "tags": [],
@@ -851,7 +851,7 @@
       "RELEASE_NOTES_v1.5.0"
     ],
     "folder_titles": {
-      "releases": "Releases"
+      "releases": "📝 Релизы"
     },
     "updated_at": "2026-03-10T20:42:29+03:00",
     "tags": [],
@@ -866,7 +866,7 @@
       "RELEASE_NOTES_v1.5.1"
     ],
     "folder_titles": {
-      "releases": "Releases"
+      "releases": "📝 Релизы"
     },
     "updated_at": "2026-02-25T13:04:56+03:00",
     "tags": [],
@@ -881,7 +881,7 @@
       "RELEASE_NOTES_v1.5.2"
     ],
     "folder_titles": {
-      "releases": "Releases"
+      "releases": "📝 Релизы"
     },
     "updated_at": "2026-03-10T14:50:38+03:00",
     "tags": [],
@@ -896,7 +896,7 @@
       "RELEASE_NOTES_v2.0.0"
     ],
     "folder_titles": {
-      "releases": "Releases"
+      "releases": "📝 Релизы"
     },
     "updated_at": "2026-03-10T21:48:09+03:00",
     "tags": [],
@@ -911,7 +911,7 @@
       "RELEASE_NOTES_v2.0.1"
     ],
     "folder_titles": {
-      "releases": "Releases"
+      "releases": "📝 Релизы"
     },
     "updated_at": "2026-03-11T19:55:16+03:00",
     "tags": [],
@@ -926,7 +926,7 @@
       "RELEASE_NOTES_v2.0.2"
     ],
     "folder_titles": {
-      "releases": "Releases"
+      "releases": "📝 Релизы"
     },
     "updated_at": "2026-03-11T23:18:49+03:00",
     "tags": [],
@@ -941,7 +941,7 @@
       "RELEASE_NOTES_v2.1.9.6"
     ],
     "folder_titles": {
-      "releases": "Releases"
+      "releases": "📝 Релизы"
     },
     "updated_at": "2026-05-19T23:32:30+03:00",
     "tags": [],
@@ -956,7 +956,7 @@
       "RELEASE_NOTES_v2.1.9.8"
     ],
     "folder_titles": {
-      "releases": "Releases"
+      "releases": "📝 Релизы"
     },
     "updated_at": "2026-05-25T01:20:14+03:00",
     "tags": [],
@@ -971,7 +971,7 @@
       "post-style-guide"
     ],
     "folder_titles": {
-      "smm": "Smm"
+      "smm": "📢 SMM"
     },
     "updated_at": "2026-05-15T12:44:42+03:00",
     "tags": [],
