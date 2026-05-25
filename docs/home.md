@@ -3,32 +3,32 @@
 Визуальный конструктор Telegram-ботов без программирования.
 
 ## 🚀 Деплой и развертывание
-- [[deployment/RAILWAY_QUICK_DEPLOY]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/deployment/RAILWAY_QUICK_DEPLOY.md) - Быстрое развертывание на Railway
-- [[deployment/RAILWAY_TROUBLESHOOTING]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/deployment/RAILWAY_TROUBLESHOOTING.md) - Устранение проблем на Railway
-- [[deployment/VERCEL_DEPLOY]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/deployment/VERCEL_DEPLOY.md) - Развертывание на Vercel
+- [Быстрый деплой на Railway](deployment/RAILWAY_QUICK_DEPLOY.md)
+- [Устранение проблем Railway](deployment/RAILWAY_TROUBLESHOOTING.md)
+- [Деплой на Vercel](deployment/VERCEL_DEPLOY.md)
 
 ## 🛠️ Разработка
-- [[development/INSTALLATION]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/development/INSTALLATION.md) - Руководство по установке
-- [[development/INSTALLATION.en]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/development/INSTALLATION.en.md) - Installation guide (EN)
-- [[development/TROUBLESHOOTING_RU]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/development/TROUBLESHOOTING_RU.md) - Решение типичных проблем
-- [[development/CONTRIBUTING]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/development/CONTRIBUTING.md) - Руководство для контрибьюторов
-- [[development/HOW_TO_UPDATE]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/development/HOW_TO_UPDATE.md) - Обновление с GitHub
-- [[development/WIKI_DOCS_GUIDE]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/development/WIKI_DOCS_GUIDE.md) - Работа с документацией (WikiNest)
+- [Руководство по установке](development/INSTALLATION.md)
+- [Installation Guide (EN)](development/INSTALLATION.en.md)
+- [Устранение неполадок](development/TROUBLESHOOTING_RU.md)
+- [Как внести вклад](development/CONTRIBUTING.md)
+- [Как обновить проект](development/HOW_TO_UPDATE.md)
+- [Работа с документацией (WikiNest)](development/WIKI_DOCS_GUIDE.md)
 
 ## 🧩 Разработка нод
-- [[development/adding-new-trigger]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/development/adding-new-trigger.md) - Полный чеклист создания новой ноды
-- [[features/NODE_TYPES]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/features/NODE_TYPES.md) - Полный список доступных блоков
-- [[features/POSSIBLE_TRIGGERS_AND_ACTIONS]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/features/POSSIBLE_TRIGGERS_AND_ACTIONS.md) - Справочник триггеров
-- [[features/buttons-roadmap]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/features/buttons-roadmap.md) - Роадмап по кнопкам
+- [Добавление нового триггера](development/adding-new-trigger.md)
+- [Типы узлов (блоков)](features/NODE_TYPES.md)
+- [Триггеры и действия](features/POSSIBLE_TRIGGERS_AND_ACTIONS.md)
+- [Роадмап по кнопкам](features/buttons-roadmap.md)
 
 ## 📋 Стандарты
-- [[JSDOC_STANDARDS]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/JSDOC_STANDARDS.md) - Стандарты документации JSDoc
+- [JSDoc Standards](JSDOC_STANDARDS.md)
 
 ## 🤖 ИИ и автоматизация
-- [[bot-json-prompt]] | [GitHub](https://github.com/fedorabakumets/telegram-bot-builder/blob/main/docs/bot-json-prompt.md) - Промт для генерации ботов через ИИ
+- [Промт для генерации ботов](bot-json-prompt.md)
 
 ## 🔮 Планы развития
-Все планируемые фичи находятся в папке [futures/](https://github.com/fedorabakumets/telegram-bot-builder/tree/main/docs/futures)
+Все планируемые фичи находятся в папке [futures/](futures/)
 
 ## 📝 Релизы
-История версий находится в папке [releases/](https://github.com/fedorabakumets/telegram-bot-builder/tree/main/docs/releases)
+История версий находится в папке [releases/](releases/)
