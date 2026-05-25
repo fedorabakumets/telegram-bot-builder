@@ -75,51 +75,6 @@
     "author": ""
   },
   {
-    "path": "deployment/RAILWAY_CLI_GUIDE",
-    "title": "Проверь статус",
-    "excerpt": "```bash",
-    "parts": [
-      "deployment",
-      "RAILWAY_CLI_GUIDE"
-    ],
-    "folder_titles": {
-      "deployment": "Deployment"
-    },
-    "updated_at": "2026-01-25T21:46:11+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "deployment/RAILWAY_DATABASE_SETUP",
-    "title": "Railway database setup",
-    "excerpt": "",
-    "parts": [
-      "deployment",
-      "RAILWAY_DATABASE_SETUP"
-    ],
-    "folder_titles": {
-      "deployment": "Deployment"
-    },
-    "updated_at": "2026-01-26T22:08:53+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "deployment/RAILWAY_DEPLOY",
-    "title": "🚀 Деплой Telegram Bot Builder на Railway",
-    "excerpt": "1. Создайте аккаунт на [Railway.app](https://railway.app/)",
-    "parts": [
-      "deployment",
-      "RAILWAY_DEPLOY"
-    ],
-    "folder_titles": {
-      "deployment": "Deployment"
-    },
-    "updated_at": "2026-01-25T21:46:11+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
     "path": "deployment/RAILWAY_QUICK_DEPLOY",
     "title": "🚀 Быстрый деплой на Railway",
     "excerpt": "1. Иди на [railway.app](https://railway.app)",
@@ -150,21 +105,6 @@
     "author": ""
   },
   {
-    "path": "deployment/README_RAILWAY",
-    "title": "Открой http://localhost:5000",
-    "excerpt": "Визуальный конструктор Telegram ботов с полным функционалом.",
-    "parts": [
-      "deployment",
-      "README_RAILWAY"
-    ],
-    "folder_titles": {
-      "deployment": "Deployment"
-    },
-    "updated_at": "2026-01-25T21:46:11+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
     "path": "deployment/VERCEL_DEPLOY",
     "title": "🚀 Деплой Telegram Bot Builder на Vercel",
     "excerpt": "1. Создайте аккаунт на [Vercel](https://vercel.com/)",
@@ -180,21 +120,6 @@
     "author": ""
   },
   {
-    "path": "deployment/replit",
-    "title": "Telegram Bot Builder Platform - Multi-User with Full Ownership Isolation",
-    "excerpt": "A web-based Telegram bot builder platform with **full multi-tenant security**:",
-    "parts": [
-      "deployment",
-      "replit"
-    ],
-    "folder_titles": {
-      "deployment": "Deployment"
-    },
-    "updated_at": "2026-02-18T04:39:41+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
     "path": "development/CONTRIBUTING",
     "title": "🤝 Как внести вклад в проект",
     "excerpt": "Спасибо за интерес к развитию Telegram Bot Builder! Мы рады любой помощи.",
@@ -206,36 +131,6 @@
       "development": "Development"
     },
     "updated_at": "2026-05-19T23:05:57+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "development/GITHUB_SYNC",
-    "title": "Разрешите конфликты, затем:",
-    "excerpt": "🔗 https://github.com/fedorabakumets/telegram-bot-builder",
-    "parts": [
-      "development",
-      "GITHUB_SYNC"
-    ],
-    "folder_titles": {
-      "development": "Development"
-    },
-    "updated_at": "2026-01-25T21:46:11+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "development/GITHUB_TOPICS",
-    "title": "Рекомендуемые GitHub Topics для репозитория",
-    "excerpt": "Добавь эти теги в настройках репозитория на GitHub для лучшей видимости:",
-    "parts": [
-      "development",
-      "GITHUB_TOPICS"
-    ],
-    "folder_titles": {
-      "development": "Development"
-    },
-    "updated_at": "2026-01-25T21:46:11+03:00",
     "tags": [],
     "author": ""
   },
@@ -281,36 +176,6 @@
       "development": "Development"
     },
     "updated_at": "2026-05-19T23:20:23+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "development/REAL_IMPLEMENTATION_GUIDE",
-    "title": "Затем создайте тестового бота в браузере",
-    "excerpt": "Вместо создания заглушек, теперь у вас есть скрипты для создания **реальных модулей** с извлеченным кодом из `generatePythonCode`.",
-    "parts": [
-      "development",
-      "REAL_IMPLEMENTATION_GUIDE"
-    ],
-    "folder_titles": {
-      "development": "Development"
-    },
-    "updated_at": "2026-01-25T21:46:11+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "development/REQUIREMENTS_SPECIFICATION",
-    "title": "Техническое задание: Рефакторинг bot-generator.ts",
-    "excerpt": "**Проект:** Telegram Bot Builder",
-    "parts": [
-      "development",
-      "REQUIREMENTS_SPECIFICATION"
-    ],
-    "folder_titles": {
-      "development": "Development"
-    },
-    "updated_at": "2026-02-18T04:39:41+03:00",
     "tags": [],
     "author": ""
   },
