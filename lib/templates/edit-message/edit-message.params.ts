@@ -59,6 +59,8 @@ export interface EditMessageEntry {
   } | null;
   /** Включены ли динамические кнопки */
   keyboardEnableDynamicButtons?: boolean;
+  /** Раскладка клавиатуры (группировка кнопок по рядам) */
+  keyboardLayout?: { rows: { buttonIds: string[] }[]; columns: number; autoLayout: boolean } | null;
 }
 
 /**

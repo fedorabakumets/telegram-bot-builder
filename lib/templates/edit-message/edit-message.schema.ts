@@ -50,6 +50,14 @@ const editMessageEntrySchema = z.object({
   }).nullable().optional(),
   /** Включены ли динамические кнопки */
   keyboardEnableDynamicButtons: z.boolean().optional().default(false),
+  /** Раскладка клавиатуры (группировка кнопок по рядам) */
+  keyboardLayout: z.object({
+    rows: z.array(z.object({
+      buttonIds: z.array(z.string()),
+    })),
+    columns: z.number(),
+    autoLayout: z.boolean(),
+  }).nullable().optional(),
 });
 
 /**
