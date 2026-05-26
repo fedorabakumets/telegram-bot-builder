@@ -47,7 +47,7 @@ export function KickUserConfiguration({
   const update = (field: string, value: any) =>
     onNodeUpdate(selectedNode.id, { [field]: value });
 
-  const userIdSource = data.userIdSource ?? 'reply_user';
+  const userIdSource = data.userIdSource ?? 'current_user';
   const chatIdSource = data.chatIdSource ?? 'current_chat';
 
   return (

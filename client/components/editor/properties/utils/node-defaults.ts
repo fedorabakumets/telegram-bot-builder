@@ -209,7 +209,7 @@ export function getNodeDefaults(type: Node['type']): any {
       userVariableName: ''
     },
     kick_user: {
-      userIdSource: 'reply_user',
+      userIdSource: 'current_user',
       userIdManual: '',
       userVariableName: '',
       chatIdSource: 'current_chat',
