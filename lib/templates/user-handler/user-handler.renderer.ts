@@ -32,7 +32,6 @@ export function nodeToUserHandlerParams(node: Node): UserHandlerTemplateParams {
   const defaults: Record<string, string[]> = {
     ban_user:    ['забанить', 'бан', 'заблокировать'],
     unban_user:  ['разбанить', 'разблокировать', 'unban'],
-    kick_user:   ['кикнуть', 'кик', 'исключить'],
     mute_user:   ['замутить', 'мут', 'заткнуть'],
     unmute_user: ['размутить', 'размут', 'освободить'],
     promote_user: ['повысить', 'админ', 'назначить'],
