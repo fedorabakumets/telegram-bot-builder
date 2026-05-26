@@ -60,10 +60,10 @@ export function UserManagementHeader({ node, type }: UserManagementHeaderProps) 
   /** Для kick_user отображаем источник пользователя вместо команды */
   const getKickUserLabel = (): string => {
     const source = node.data.userIdSource;
-    if (source === 'reply_user') return '👤 Автор reply';
-    if (source === 'current_user') return '👤 Текущий пользователь';
+    if (source === 'reply_user') return '👤 reply';
+    if (source === 'current_user') return '👤 отправитель';
     if (source === 'custom') return `👤 ${node.data.userIdManual || '...'}`;
-    return '👤 Автор reply';
+    return '👤 отправитель';
   };
 
   if (type === 'kick_user') {
