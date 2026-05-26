@@ -55,14 +55,28 @@ async def handle_callback_ub_click_1(callback_query, state=None):
     _click_val = replace_variables_in_text(get_content("ub-click-1.click_val", "Играть"), all_user_vars, {})
 
     _msg = await userbot_client.get_messages(_target, ids=_msg_id)
-    _click_result = await _msg.click(text=_click_val)
 
-    # Alert
-    user_data[user_id]["alert_text"] = getattr(_click_result, 'message', '') or ''
+    # Поиск кнопки вручную
+    _click_btn = None
+    for _row in _msg.reply_markup.rows:
+        for _btn in _row.buttons:
+            if hasattr(_btn, 'text') and _click_val in _btn.text:
+                _click_btn = _btn
+                break
 
-    # Перечитываем сообщение
-    await asyncio.sleep(1.5)
-    _updated = await userbot_client.get_messages(_target, ids=_msg_id)
+    # Регистрируем event handler ДО нажатия
+    _edit_future = asyncio.get_event_loop().create_future()
+    @userbot_client.on(events.MessageEdited(chats=_target))
+    async def _on_edit(event):
+        if event.message.id == _msg_id and not _edit_future.done():
+            _edit_future.set_result(event.message)
+
+    # Fire-and-forget: отправляем callback без ожидания ответа
+    if _click_btn and _click_btn.data:
+        asyncio.create_task(userbot_client(GetBotCallbackAnswerRequest(...)))
+
+    # Ждём edit/new_message event
+    _updated = await asyncio.wait_for(_edit_future, timeout=5)
 
     # Текст, кнопки, медиа
     user_data[user_id]["new_text"] = _updated.text or ''
@@ -91,9 +105,12 @@ const allCode = generateUserbotClickButtonHandlers(nodes, projectId);
 
 ## Особенности
 
+- **Fire-and-forget нажатие:** callback отправляется через `asyncio.create_task()` без ожидания `answerCallbackQuery` от бота — это устраняет блокировку на 15+ секунд для медленных ботов
+- **Порядок: event handler → click:** event handler регистрируется ДО нажатия кнопки, чтобы не пропустить быстрый ответ бота
 - **Три режима поиска:** по тексту кнопки, по callback_data, по индексу (row, col)
 - **get_content** — entity, messageId, clickValue берутся из таблицы `_content` с фоллбеком
-- **Задержка 1.5 сек** — после нажатия ждём обновления сообщения ботом
+- **Event-based ожидание** — после fire-and-forget ждём MessageEdited или NewMessage event (с fallback на чтение истории)
 - **Медиа-объект** — сохраняется в памяти, можно переслать через `userbot_message`
 - **FloodWait** — автоматический retry при ошибке
 - **Кнопки JSON** — формат: `[{"text": "Назад", "data": "back"}, {"text": "Ссылка", "url": "https://..."}]`
+- **Alert недоступен** — при fire-and-forget подходе alert от бота не сохраняется (переменная будет пустой)

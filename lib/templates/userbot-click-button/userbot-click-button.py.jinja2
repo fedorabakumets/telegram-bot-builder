@@ -98,36 +98,62 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             return
 {%- endif %}
 
-        # Нажимаем кнопку
-        _click_result = None
+        # Нажимаем кнопку (fire-and-forget — не ждём answerCallbackQuery)
+        from telethon.tl.functions.messages import GetBotCallbackAnswerRequest
+
+        _click_btn = None
 {%- if clickMode == 'text' %}
-        _click_result = await _msg.click(text=_click_val)
+        # Поиск кнопки по тексту
+        if _msg.reply_markup:
+            for _row in _msg.reply_markup.rows:
+                for _btn in _row.buttons:
+                    if hasattr(_btn, 'text') and _click_val in _btn.text:
+                        _click_btn = _btn
+                        break
+                if _click_btn:
+                    break
 {%- elif clickMode == 'data' %}
-        _click_result = await _msg.click(data=_click_val.encode('utf-8') if _click_val else b'')
+        # Поиск кнопки по callback_data
+        if _msg.reply_markup:
+            for _row in _msg.reply_markup.rows:
+                for _btn in _row.buttons:
+                    if hasattr(_btn, 'data') and _btn.data and _click_val.encode('utf-8') in _btn.data:
+                        _click_btn = _btn
+                        break
+                if _click_btn:
+                    break
 {%- elif clickMode == 'index' %}
-        # Парсим индекс: "row, col" или просто "index"
+        # Поиск кнопки по индексу
         _idx_parts = [int(x.strip()) for x in _click_val.split(',') if x.strip().isdigit()]
-        if len(_idx_parts) >= 2:
-            _click_result = await _msg.click(_idx_parts[0], _idx_parts[1])
-        elif len(_idx_parts) == 1:
-            _click_result = await _msg.click(_idx_parts[0])
-        else:
-            logging.error(f"❌ Узел {{ nodeId }}: невалидный индекс '{_click_val}'")
+        if _msg.reply_markup:
+            _all_btns = [btn for row in _msg.reply_markup.rows for btn in row.buttons]
+            if len(_idx_parts) >= 2:
+                # row, col
+                _r, _c = _idx_parts[0], _idx_parts[1]
+                if _r < len(_msg.reply_markup.rows) and _c < len(_msg.reply_markup.rows[_r].buttons):
+                    _click_btn = _msg.reply_markup.rows[_r].buttons[_c]
+            elif len(_idx_parts) == 1 and _idx_parts[0] < len(_all_btns):
+                _click_btn = _all_btns[_idx_parts[0]]
 {%- else %}
-        _click_result = await _msg.click(text=_click_val)
+        # Поиск по тексту (default)
+        if _msg.reply_markup:
+            for _row in _msg.reply_markup.rows:
+                for _btn in _row.buttons:
+                    if hasattr(_btn, 'text') and _click_val in _btn.text:
+                        _click_btn = _btn
+                        break
+                if _click_btn:
+                    break
 {%- endif %}
 
-        logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }})")
-
 {%- if saveAlertTo %}
-        # Сохраняем alert
-        _alert_text = getattr(_click_result, 'message', '') or ''
-        user_data[user_id]["{{ saveAlertTo }}"] = _alert_text
-        await set_user_var(user_id, "{{ saveAlertTo }}", _alert_text)
+        # Переменная для alert (при fire-and-forget alert недоступен)
+        user_data[user_id]["{{ saveAlertTo }}"] = ''
+        await set_user_var(user_id, "{{ saveAlertTo }}", '')
 {%- endif %}
 
 {%- if responseStrategy == 'new_message' %}
-        # Ждём НОВОЕ сообщение от бота (не edit)
+        # Регистрируем event handler ДО нажатия кнопки (чтобы не пропустить быстрый ответ)
         _updated = None
         _new_msg_future = asyncio.get_event_loop().create_future()
 
@@ -135,7 +161,44 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         async def _on_new_msg_{{ nodeId | replace('-', '_') }}(event):
             if event.message.id > _msg_id and not _new_msg_future.done():
                 _new_msg_future.set_result(event.message)
+{%- else %}
+        # Регистрируем event handler ДО нажатия кнопки (чтобы не пропустить быстрый ответ)
+        _updated = None
+        _edit_future = asyncio.get_event_loop().create_future()
 
+        @userbot_client.on(events.MessageEdited(chats=_target))
+        async def _on_edit_{{ nodeId | replace('-', '_') }}(event):
+            if event.message.id == _msg_id and not _edit_future.done():
+                _edit_future.set_result(event.message)
+{%- endif %}
+
+        # Отправляем callback (fire-and-forget)
+        if _click_btn and hasattr(_click_btn, 'data') and _click_btn.data:
+            async def _fire_click():
+                try:
+                    await userbot_client(GetBotCallbackAnswerRequest(
+                        peer=_target,
+                        msg_id=_msg.id,
+                        data=_click_btn.data
+                    ))
+                except Exception as _click_err:
+                    if "TimeoutError" not in type(_click_err).__name__:
+                        logging.warning(f"⚠️ [{{ nodeId }}] callback answer error (ignored): {_click_err}")
+
+            asyncio.create_task(_fire_click())
+            logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }}) [fire-and-forget]")
+        elif _click_btn:
+            # Кнопка без data (например URL) — используем обычный click
+            try:
+                await _msg.click(text=_click_val)
+            except Exception:
+                pass
+            logging.info(f"✅ Userbot нажал кнопку (non-callback) в {_entity} msg={_msg_id} (узел {{ nodeId }})")
+        else:
+            logging.warning(f"⚠️ Узел {{ nodeId }}: кнопка не найдена (mode={{ clickMode }}, value={_click_val!r})")
+
+{%- if responseStrategy == 'new_message' %}
+        # Ждём НОВОЕ сообщение от бота (не edit)
         try:
             _updated = await asyncio.wait_for(_new_msg_future, timeout=8)
             logging.info(f"📖 [{{ nodeId }}] Получено новое сообщение id={_updated.id}")
@@ -152,14 +215,6 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             userbot_client.remove_event_handler(_on_new_msg_{{ nodeId | replace('-', '_') }})
 {%- else %}
         # Ждём обновления сообщения через event (обходит кэш Telethon)
-        _updated = None
-        _edit_future = asyncio.get_event_loop().create_future()
-
-        @userbot_client.on(events.MessageEdited(chats=_target))
-        async def _on_edit_{{ nodeId | replace('-', '_') }}(event):
-            if event.message.id == _msg_id and not _edit_future.done():
-                _edit_future.set_result(event.message)
-
         try:
             _updated = await asyncio.wait_for(_edit_future, timeout=5)
             logging.info(f"📖 [{{ nodeId }}] Получено событие редактирования msg={_msg_id}")
