@@ -62,8 +62,7 @@ export function UserManagementHeader({ node, type }: UserManagementHeaderProps) 
     const source = node.data.userIdSource;
     if (source === 'reply_user') return '👤 Автор reply';
     if (source === 'current_user') return '👤 Текущий пользователь';
-    if (source === 'variable') return `👤 {${node.data.userVariableName || '...'}}`;
-    if (source === 'manual') return `👤 ID: ${node.data.userIdManual || '...'}`;
+    if (source === 'custom') return `👤 ${node.data.userIdManual || '...'}`;
     return '👤 Автор reply';
   };
 

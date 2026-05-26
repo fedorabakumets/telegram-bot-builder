@@ -77,8 +77,7 @@ export function KickUserConfiguration({
           <SelectContent>
             <SelectItem value="current_user">Текущего пользователя (отправителя)</SelectItem>
             <SelectItem value="reply_user">Автора сообщения (reply)</SelectItem>
-            <SelectItem value="variable">Из переменной</SelectItem>
-            <SelectItem value="manual">Указать ID вручную</SelectItem>
+            <SelectItem value="custom">Указать вручную</SelectItem>
           </SelectContent>
         </Select>
 
@@ -93,24 +92,9 @@ export function KickUserConfiguration({
           </div>
         )}
 
-        {userIdSource === 'variable' && (
+        {userIdSource === 'custom' && (
           <div className="space-y-2">
-            <Label className="text-xs font-medium text-rose-700 dark:text-rose-300">Имя переменной</Label>
-            <div className="flex gap-2">
-              <Input
-                value={data.userVariableName ?? ''}
-                onChange={(e) => update('userVariableName', e.target.value)}
-                placeholder="user_id_to_kick"
-                className="bg-white/60 dark:bg-slate-950/60 border-rose-200/50 dark:border-rose-800/50 flex-1"
-              />
-              <VariableSelector availableVariables={textVariables} onSelect={(name) => update('userVariableName', name)} />
-            </div>
-          </div>
-        )}
-
-        {userIdSource === 'manual' && (
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-rose-700 dark:text-rose-300">ID пользователя</Label>
+            <Label className="text-xs font-medium text-rose-700 dark:text-rose-300">ID пользователя или переменная</Label>
             <div className="flex gap-2">
               <Input
                 value={data.userIdManual ?? ''}
