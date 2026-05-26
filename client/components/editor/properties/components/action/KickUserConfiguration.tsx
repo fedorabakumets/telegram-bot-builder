@@ -139,6 +139,9 @@ export function KickUserConfiguration({
               />
               <VariableSelector availableVariables={textVariables} onSelect={(name) => update('chatIdManual', `{${name}}`)} />
             </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Поддерживается формат с префиксом (<span className="font-mono">-1001234567890</span>) и без (<span className="font-mono">1234567890</span>).
+            </div>
           </div>
         )}
       </div>
