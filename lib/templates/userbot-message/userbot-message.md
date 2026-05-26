@@ -16,6 +16,11 @@
 | `userbotEntity` | string | — | Получатель: @username, ID, {переменная}, 'me' |
 | `attachedMedia` | string[] | — | Медиафайлы (/uploads/... или URL) |
 | `saveMessageIdTo` | string | — | Переменная для сохранения ID сообщения |
+| `saveResponseIdTo` | string | — | Переменная для сохранения ID ответа от получателя |
+| `saveResponseTextTo` | string | — | Переменная для сохранения текста ответа |
+| `responseWaitSeconds` | number | — | Таймаут ожидания ответа в секундах (по умолчанию 3) |
+| `responseStrategy` | 'first' \| 'longest' \| 'regex_match' | — | Стратегия выбора ответа (по умолчанию 'longest') |
+| `responseFilterRegex` | string | — | Regex для фильтрации (при strategy=regex_match) |
 | `autoTransitionTo` | string | — | ID узла для автоперехода |
 | `projectId` | number \| null | — | ID проекта (для get_content) |
 
@@ -92,6 +97,21 @@ const code = generateUserbotMessage({
 const allCode = generateUserbotMessageHandlers(nodes, projectId);
 ```
 
+## Ожидание ответа (saveResponseIdTo)
+
+При указании `saveResponseIdTo` шаблон ожидает ответ от получателя через **event listener** (аналогично `userbot-click-button`):
+
+1. Регистрируется обработчик `events.NewMessage(chats=entity)`
+2. Ожидание через `asyncio.wait_for(future, timeout=responseWaitSeconds)`
+3. Если ответ получен до таймаута — сразу сохраняется (без лишнего ожидания)
+4. При таймауте — fallback на `get_messages(limit=5)` с фильтрацией по стратегии
+5. Обработчик всегда снимается в блоке `finally`
+
+Стратегии выбора ответа (при fallback):
+- `first` — первое сообщение от бота
+- `longest` (по умолчанию) — самое длинное сообщение
+- `regex_match` — первое совпадение по regex
+
 ## Особенности
 
 - **get_content** — текст и entity берутся из таблицы `_content` с фоллбеком на значение из JSON
@@ -100,3 +120,4 @@ const allCode = generateUserbotMessageHandlers(nodes, projectId);
 - **FloodWait** — автоматический retry при ошибке FloodWaitError
 - **Альбомы** — несколько файлов отправляются через `send_file(entity, [file1, file2])`
 - **Кнопки** — НЕ поддерживаются (ограничение Telegram для user-аккаунтов)
+- **Event listener** — ожидание ответа через Telethon events вместо фиксированного sleep (быстрее при раннем ответе бота)
