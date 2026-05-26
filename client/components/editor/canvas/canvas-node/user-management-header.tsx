@@ -67,14 +67,23 @@ export function UserManagementHeader({ node, type }: UserManagementHeaderProps) 
     return '👤 Автор reply';
   };
 
-  const displayValue = type === 'kick_user'
-    ? getKickUserLabel()
-    : (node.data.command || `/${type}`);
+  if (type === 'kick_user') {
+    return (
+      <span className="flex flex-col gap-2">
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-tight">
+          {HEADER_TEXTS[type]}
+        </span>
+        <span className="text-rose-600 dark:text-rose-400 font-mono text-sm bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-800 inline-block w-fit">
+          {getKickUserLabel()}
+        </span>
+      </span>
+    );
+  }
 
   return (
     <span className="flex flex-col gap-2">
       <span className="text-rose-600 dark:text-rose-400 font-mono text-sm bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-800 inline-block w-fit">
-        {displayValue}
+        {node.data.command || `/${type}`}
       </span>
       <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-tight">
         {HEADER_TEXTS[type]}
