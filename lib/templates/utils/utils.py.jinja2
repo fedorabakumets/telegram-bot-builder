@@ -340,6 +340,7 @@ def _eval_expr(template: str, user_vars: dict):
             _ast_expr.Attribute, _ast_expr.Subscript, _ast_expr.Index, _ast_expr.Slice,
             _ast_expr.IfExp, _ast_expr.Compare,
             _ast_expr.Gt, _ast_expr.GtE, _ast_expr.Lt, _ast_expr.LtE, _ast_expr.Eq, _ast_expr.NotEq,
+            _ast_expr.List, _ast_expr.Dict, _ast_expr.Tuple,
         )
         _safe_funcs = {'round': round, 'abs': abs, 'int': int, 'float': float, 'min': min, 'max': max, 'str': str, 'thousands': lambda n: f"{int(float(n)):,}".replace(",", " ")}
         _safe_methods = {'replace', 'strip', 'lstrip', 'rstrip', 'lower', 'upper', 'startswith', 'endswith', 'split', 'join', 'count', 'find', 'format'}
