@@ -374,12 +374,20 @@ function renderValueInput(
             onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
             className={`flex-1 ${inputClass}`}
           />
+          <VariableSelector
+            availableVariables={textVariables}
+            onSelect={handleInsertVariable}
+          />
           <span className="text-muted-foreground text-[10px]">+</span>
           <Input
             placeholder="второй массив"
             value={assignment.concatWith || ''}
             onChange={(e) => onChange(assignment.id, 'concatWith', e.target.value)}
             className={`flex-1 ${inputClass}`}
+          />
+          <VariableSelector
+            availableVariables={textVariables}
+            onSelect={(varName) => onChange(assignment.id, 'concatWith', (assignment.concatWith || '') + varName)}
           />
         </div>
       );
