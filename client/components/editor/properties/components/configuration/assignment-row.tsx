@@ -37,6 +37,8 @@ export interface Assignment {
   replaceWith?: string;
   /** Максимальное значение для mode=random, индекс для array_item */
   maxValue?: string;
+  /** Имя второго массива для объединения (только array_concat) */
+  concatWith?: string;
 }
 
 /** Все доступные режимы присваивания */
@@ -48,6 +50,7 @@ type AssignmentMode =
   | 'random'
   | 'random_item'
   | 'array_item'
+  | 'array_concat'
   | 'timestamp'
   | 'format_duration'
   | 'format_number'
@@ -123,6 +126,12 @@ const MODE_CONFIGS: Record<AssignmentMode, ModeConfig> = {
     label: 'Элемент массива',
     hint: 'По индексу или dot-notation ключу',
     borderClass: 'border-emerald-400 dark:border-emerald-600',
+  },
+  array_concat: {
+    icon: '🔗',
+    label: 'Объединить массивы',
+    hint: 'Склеить два массива в один',
+    borderClass: 'border-pink-400 dark:border-pink-600',
   },
   lookup: {
     icon: '🔍',
@@ -353,6 +362,25 @@ function renderValueInput(
             className={`flex-1 ${inputClass}`}
           />
           <span className="text-muted-foreground text-[10px]">]</span>
+        </div>
+      );
+
+    case 'array_concat':
+      return (
+        <div className="flex items-center gap-1">
+          <Input
+            placeholder="первый массив"
+            value={assignment.value || ''}
+            onChange={(e) => onChange(assignment.id, 'value', e.target.value)}
+            className={`flex-1 ${inputClass}`}
+          />
+          <span className="text-muted-foreground text-[10px]">+</span>
+          <Input
+            placeholder="второй массив"
+            value={assignment.concatWith || ''}
+            onChange={(e) => onChange(assignment.id, 'concatWith', e.target.value)}
+            className={`flex-1 ${inputClass}`}
+          />
         </div>
       );
 

@@ -53,6 +53,7 @@ const MODE_LABELS: Record<string, string> = {
   str_replace: 'replace',
   json_push: 'push',
   json_format: 'format',
+  array_concat: 'concat',
 };
 
 /** Пропсы компонента SetVariablePreview */
