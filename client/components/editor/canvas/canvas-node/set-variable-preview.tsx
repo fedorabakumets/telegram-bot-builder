@@ -25,6 +25,8 @@ interface Assignment {
   pattern?: string;
   /** Номер группы захвата (mode=regex_extract) */
   regexGroup?: string;
+  /** Имя второго массива (mode=array_concat) */
+  concatWith?: string;
 }
 
 /**
@@ -116,7 +118,7 @@ function AssignmentRow({ assignment: a }: { assignment: Assignment }) {
         </span>
         <span className="text-[11px] text-slate-500 flex-shrink-0">=</span>
         <span className="font-mono text-[11px] text-slate-300 truncate max-w-[110px]">
-          {a.value || '""'}
+          {mode === 'array_concat' ? `${a.value || '?'} + ${(a as any).concatWith || '?'}` : (a.value || '""')}
         </span>
         {showInlineBadge && (
           <span className="text-[9px] text-slate-500 flex-shrink-0 ml-0.5">
