@@ -353,6 +353,33 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         except (Exception):
             user_data[user_id]["{{ safe_var }}"] = str(len(str(_sv_source_{{ loop.index }})))
         logging.info(f"📝 set_variable [{{ nodeId }}]: length «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r}")
+        {%- elif assignment.mode == 'array_concat' %}
+        # Объединение двух массивов
+        import json as _json_ac
+        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+        _sv_arr1_raw_{{ loop.index }} = replace_variables_in_text({{ assignment.value | tojson }}, _sv_vars_{{ loop.index }})
+        _sv_arr2_raw_{{ loop.index }} = replace_variables_in_text({{ assignment.concatWith | tojson }}, _sv_vars_{{ loop.index }})
+        # Парсим первый массив
+        _sv_arr1_{{ loop.index }} = _sv_arr1_raw_{{ loop.index }}
+        if isinstance(_sv_arr1_{{ loop.index }}, str):
+            try:
+                _sv_arr1_{{ loop.index }} = _json_ac.loads(_sv_arr1_{{ loop.index }})
+            except Exception:
+                _sv_arr1_{{ loop.index }} = []
+        if not isinstance(_sv_arr1_{{ loop.index }}, list):
+            _sv_arr1_{{ loop.index }} = []
+        # Парсим второй массив
+        _sv_arr2_{{ loop.index }} = _sv_arr2_raw_{{ loop.index }}
+        if isinstance(_sv_arr2_{{ loop.index }}, str):
+            try:
+                _sv_arr2_{{ loop.index }} = _json_ac.loads(_sv_arr2_{{ loop.index }})
+            except Exception:
+                _sv_arr2_{{ loop.index }} = []
+        if not isinstance(_sv_arr2_{{ loop.index }}, list):
+            _sv_arr2_{{ loop.index }} = []
+        # Объединяем
+        user_data[user_id]["{{ safe_var }}"] = _sv_arr1_{{ loop.index }} + _sv_arr2_{{ loop.index }}
+        logging.info(f"📝 set_variable [{{ nodeId }}]: array_concat «{{ safe_var }}» ({len(_sv_arr1_{{ loop.index }})} + {len(_sv_arr2_{{ loop.index }})} = {len(user_data[user_id]['{{ safe_var }}'])} элементов)")
         {%- else %}
         # Устанавливаем переменную через шаблон
         _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)

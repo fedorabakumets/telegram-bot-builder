@@ -311,6 +311,7 @@
 | `uppercase` | В верхний регистр | `"{user_input}"` |
 | `trim` | Убрать пробелы по краям | `"{user_input}"` |
 | `length` | Длина строки или массива | `"{inventory}"` → "3" |
+| `array_concat` | Объединить два массива в один. Поля: `value` (первый массив), `concatWith` (второй массив). Результат: склеенный массив. | `value: "{arr1}"`, `concatWith: "{arr2}"` |
 
 #### Примеры
 
@@ -378,6 +379,11 @@
 Вложенный доступ через dot-notation:
 ```json
 { "id": "a0", "variable": "user_name", "value": "{api_response}", "maxValue": "data.users.0.name", "mode": "array_item" }
+```
+
+Объединение двух массивов:
+```json
+{ "id": "a0", "variable": "all_items", "value": "{active_items}", "mode": "array_concat", "concatWith": "{archived_items}" }
 ```
 
 #### Lookup (поиск в таблице)
