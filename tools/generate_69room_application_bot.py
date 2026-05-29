@@ -141,11 +141,11 @@ def build_nodes() -> list[dict]:
 
     # === 5. Вопрос: Семейное положение (кнопки) ===
     status_buttons = [
-        make_button("btn-status-1", "Холост", "goto", target="save-status"),
-        make_button("btn-status-2", "Женат/Замужем", "goto", target="save-status"),
-        make_button("btn-status-3", "Разведён", "goto", target="save-status"),
-        make_button("btn-status-4", "В активном поиске", "goto", target="save-status"),
-        make_button("btn-status-5", "Всё сложно", "goto", target="save-status"),
+        make_button("btn-status-1", "Холост", "goto", target="input-bio", customCallbackData="status_single"),
+        make_button("btn-status-2", "Женат/Замужем", "goto", target="input-bio", customCallbackData="status_married"),
+        make_button("btn-status-3", "Разведён", "goto", target="input-bio", customCallbackData="status_divorced"),
+        make_button("btn-status-4", "В активном поиске", "goto", target="input-bio", customCallbackData="status_searching"),
+        make_button("btn-status-5", "Всё сложно", "goto", target="input-bio", customCallbackData="status_complicated"),
     ]
     nodes.append(make_node("input-status", "message", 1300, 300, {
         **msg_defaults(),
@@ -162,17 +162,12 @@ def build_nodes() -> list[dict]:
             "columns": 2,
             "autoLayout": False,
         },
+        "collectUserInput": True,
+        "enableTextInput": False,
+        "inputVariable": "user_status",
     }))
 
-    # === 6. Сохранить статус из button_text ===
-    nodes.append(make_node("save-status", "set_variable", 1450, 300, {
-        "assignments": [
-            {"id": "a1", "variable": "user_status", "value": "{button_text}", "mode": "text"},
-        ],
-        "autoTransitionTo": "input-bio",
-    }))
-
-    # === 7. Вопрос: О себе ===
+    # === 6. Вопрос: О себе ===
     nodes.append(make_node("input-bio", "message", 1600, 300, {
         **msg_defaults(),
         "messageText": "✏️ Расскажи о себе: хобби, род деятельности (до 300 символов):",
@@ -206,10 +201,10 @@ def build_nodes() -> list[dict]:
         "saveMediaMetadata": True,
     }))
 
-    # === 9. Вопрос: Готовы к интервью (кнопки) ===
+    # === 8. Вопрос: Готовы к интервью (кнопки) ===
     interview_buttons = [
-        make_button("btn-interview-yes", "✅ Да", "goto", target="save-interview"),
-        make_button("btn-interview-no", "❌ Нет", "goto", target="save-interview"),
+        make_button("btn-interview-yes", "✅ Да", "goto", target="input-telegram", customCallbackData="interview_yes"),
+        make_button("btn-interview-no", "❌ Нет", "goto", target="input-telegram", customCallbackData="interview_no"),
     ]
     nodes.append(make_node("input-interview", "message", 2200, 300, {
         **msg_defaults(),
@@ -224,14 +219,9 @@ def build_nodes() -> list[dict]:
             "columns": 2,
             "autoLayout": False,
         },
-    }))
-
-    # === 10. Сохранить ответ интервью ===
-    nodes.append(make_node("save-interview", "set_variable", 2350, 300, {
-        "assignments": [
-            {"id": "a2", "variable": "user_interview", "value": "{button_text}", "mode": "text"},
-        ],
-        "autoTransitionTo": "input-telegram",
+        "collectUserInput": True,
+        "enableTextInput": False,
+        "inputVariable": "user_interview",
     }))
 
     # === 9. Вопрос: Телеграм ===
