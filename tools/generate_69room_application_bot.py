@@ -141,11 +141,11 @@ def build_nodes() -> list[dict]:
 
     # === 5. Вопрос: Семейное положение (кнопки) ===
     status_buttons = [
-        make_button("btn-status-1", "Холост", "goto", target="input-bio", callbackData="status_single"),
-        make_button("btn-status-2", "Женат/Замужем", "goto", target="input-bio", callbackData="status_married"),
-        make_button("btn-status-3", "Разведён", "goto", target="input-bio", callbackData="status_divorced"),
-        make_button("btn-status-4", "В активном поиске", "goto", target="input-bio", callbackData="status_searching"),
-        make_button("btn-status-5", "Всё сложно", "goto", target="input-bio", callbackData="status_complicated"),
+        make_button("btn-status-1", "Холост", "goto", target="input-bio", customCallbackData="status_single"),
+        make_button("btn-status-2", "Женат/Замужем", "goto", target="input-bio", customCallbackData="status_married"),
+        make_button("btn-status-3", "Разведён", "goto", target="input-bio", customCallbackData="status_divorced"),
+        make_button("btn-status-4", "В активном поиске", "goto", target="input-bio", customCallbackData="status_searching"),
+        make_button("btn-status-5", "Всё сложно", "goto", target="input-bio", customCallbackData="status_complicated"),
     ]
     nodes.append(make_node("input-status", "message", 1300, 300, {
         **msg_defaults(),
@@ -203,8 +203,8 @@ def build_nodes() -> list[dict]:
 
     # === 8. Вопрос: Готовы к интервью (кнопки) ===
     interview_buttons = [
-        make_button("btn-interview-yes", "✅ Да", "goto", target="input-telegram", callbackData="interview_yes"),
-        make_button("btn-interview-no", "❌ Нет", "goto", target="input-telegram", callbackData="interview_no"),
+        make_button("btn-interview-yes", "✅ Да", "goto", target="input-telegram", customCallbackData="interview_yes"),
+        make_button("btn-interview-no", "❌ Нет", "goto", target="input-telegram", customCallbackData="interview_no"),
     ]
     nodes.append(make_node("input-interview", "message", 2200, 300, {
         **msg_defaults(),
