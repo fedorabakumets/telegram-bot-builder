@@ -253,7 +253,6 @@ def build_nodes() -> list[dict]:
             "✏️ О себе: {user_bio}"
         ),
         "formatMode": "html",
-        "imageUrl": "{user_photo}",
         "attachedMedia": ["{user_photo}"],
         "keyboardType": "inline",
         "buttons": [
