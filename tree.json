@@ -363,6 +363,36 @@
     "author": ""
   },
   {
+    "path": "futures/api-security-audit",
+    "title": "Аудит безопасности API — Проблемы и план исправлений",
+    "excerpt": "---",
+    "parts": [
+      "futures",
+      "api-security-audit"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-05-30T01:26:14+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/api-security-ideal-architecture",
+    "title": "Идеальная архитектура безопасности API",
+    "excerpt": "Как должна выглядеть серверная часть с точки зрения безопасности, валидации и контроля доступа — эталонная модель для нашего проекта.",
+    "parts": [
+      "futures",
+      "api-security-ideal-architecture"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-05-30T01:26:14+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "futures/attribution-model",
     "title": "Attribution Model — Модель атрибуции источников",
     "excerpt": "Каждый пользователь приходит откуда-то. Нужно знать не только откуда,",
