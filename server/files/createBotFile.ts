@@ -164,6 +164,11 @@ export async function createCompleteBotFiles(
     customVariables.push({ key: 'DATABASE_URL', value: process.env.DATABASE_URL });
   }
 
+  // Добавляем REDIS_URL из окружения сервера если не задан пользователем
+  if (!customVariables.some(v => v.key === 'REDIS_URL') && process.env.REDIS_URL) {
+    customVariables.push({ key: 'REDIS_URL', value: process.env.REDIS_URL });
+  }
+
   // Добавляем Telethon userbot переменные из токена (если включён)
   if (tokenRecord?.userbotEnabled === 1) {
     if (tokenRecord.userbotApiId) {
