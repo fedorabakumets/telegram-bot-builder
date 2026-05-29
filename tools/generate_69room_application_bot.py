@@ -166,10 +166,9 @@ def build_nodes() -> list[dict]:
 
     # === 6. Сохранить статус из button_text ===
     nodes.append(make_node("save-status", "set_variable", 1450, 300, {
-        "variable": "user_status",
-        "mode": "text",
-        "value": "{button_text}",
-        "enableAutoTransition": True,
+        "assignments": [
+            {"id": "a1", "variable": "user_status", "value": "{button_text}", "mode": "text"},
+        ],
         "autoTransitionTo": "input-bio",
     }))
 
@@ -229,10 +228,9 @@ def build_nodes() -> list[dict]:
 
     # === 10. Сохранить ответ интервью ===
     nodes.append(make_node("save-interview", "set_variable", 2350, 300, {
-        "variable": "user_interview",
-        "mode": "text",
-        "value": "{button_text}",
-        "enableAutoTransition": True,
+        "assignments": [
+            {"id": "a2", "variable": "user_interview", "value": "{button_text}", "mode": "text"},
+        ],
         "autoTransitionTo": "input-telegram",
     }))
 
