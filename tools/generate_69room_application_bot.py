@@ -85,17 +85,19 @@ def build_nodes() -> list[dict]:
 
     # === 1. Триггер /start ===
     nodes.append(make_node("trigger-start", "command_trigger", 100, 300, {
+        **msg_defaults(),
         "command": "/start",
         "description": "Подать заявку в 69 ROOM",
         "showInMenu": True,
+        "enableAutoTransition": True,
         "autoTransitionTo": "msg-welcome",
         "buttons": [],
         "keyboardType": "none",
-        **msg_defaults(),
     }))
 
     # === 2. Приветствие ===
     nodes.append(make_node("msg-welcome", "message", 400, 300, {
+        **msg_defaults(),
         "messageText": (
             "👋 Привет! Добро пожаловать в систему заявок <b>69 ROOM</b>.\n\n"
             "69 ROOM — это digital-экосистема для общения, знакомств, "
@@ -107,33 +109,34 @@ def build_nodes() -> list[dict]:
         "buttons": [
             make_button("btn-start-form", "📝 Заполнить анкету", "goto", target="input-name"),
         ],
-        **msg_defaults(),
     }))
 
     # === 3. Вопрос: Имя ===
     nodes.append(make_node("input-name", "message", 700, 300, {
+        **msg_defaults(),
         "messageText": "👤 Как тебя зовут?",
         "formatMode": "none",
         "keyboardType": "none",
         "buttons": [],
+        "enableAutoTransition": True,
         "autoTransitionTo": "input-age",
         "collectUserInput": True,
         "enableTextInput": True,
         "inputVariable": "user_name",
-        **{k: v for k, v in msg_defaults().items() if k not in ("autoTransitionTo", "collectUserInput", "enableTextInput")},
     }))
 
     # === 4. Вопрос: Возраст ===
     nodes.append(make_node("input-age", "message", 1000, 300, {
+        **msg_defaults(),
         "messageText": "🎂 Сколько тебе лет?",
         "formatMode": "none",
         "keyboardType": "none",
         "buttons": [],
+        "enableAutoTransition": True,
         "autoTransitionTo": "input-status",
         "collectUserInput": True,
         "enableTextInput": True,
         "inputVariable": "user_age",
-        **{k: v for k, v in msg_defaults().items() if k not in ("autoTransitionTo", "collectUserInput", "enableTextInput")},
     }))
 
     # === 5. Вопрос: Семейное положение (кнопки) ===
@@ -145,6 +148,7 @@ def build_nodes() -> list[dict]:
         make_button("btn-status-5", "Всё сложно", "goto", target="input-bio", callbackData="status_complicated"),
     ]
     nodes.append(make_node("input-status", "message", 1300, 300, {
+        **msg_defaults(),
         "messageText": "💍 Семейное положение:",
         "formatMode": "none",
         "keyboardType": "inline",
@@ -161,31 +165,33 @@ def build_nodes() -> list[dict]:
         "collectUserInput": True,
         "enableTextInput": False,
         "inputVariable": "user_status",
-        **{k: v for k, v in msg_defaults().items() if k not in ("collectUserInput", "enableTextInput")},
     }))
 
     # === 6. Вопрос: О себе ===
     nodes.append(make_node("input-bio", "message", 1600, 300, {
+        **msg_defaults(),
         "messageText": "✏️ Расскажи о себе: хобби, род деятельности (до 300 символов):",
         "formatMode": "none",
         "keyboardType": "none",
         "buttons": [],
+        "enableAutoTransition": True,
         "autoTransitionTo": "input-photo",
         "collectUserInput": True,
         "enableTextInput": True,
         "inputVariable": "user_bio",
         "maxLength": 300,
-        **{k: v for k, v in msg_defaults().items() if k not in ("autoTransitionTo", "collectUserInput", "enableTextInput")},
     }))
 
     # === 7. Вопрос: Фото (можно пропустить) ===
     nodes.append(make_node("input-photo", "message", 1900, 300, {
+        **msg_defaults(),
         "messageText": "📸 Отправь своё фото (или нажми «Пропустить»):",
         "formatMode": "none",
         "keyboardType": "inline",
         "buttons": [
             make_button("btn-skip-photo", "⏭ Пропустить", "goto", target="input-interview"),
         ],
+        "enableAutoTransition": True,
         "autoTransitionTo": "input-interview",
         "collectUserInput": True,
         "enableTextInput": False,
@@ -193,7 +199,6 @@ def build_nodes() -> list[dict]:
         "inputVariable": "user_photo",
         "photoInputVariable": "user_photo",
         "saveMediaMetadata": True,
-        **{k: v for k, v in msg_defaults().items() if k not in ("autoTransitionTo", "collectUserInput", "enableTextInput", "enablePhotoInput")},
     }))
 
     # === 8. Вопрос: Готовы к интервью (кнопки) ===
@@ -202,6 +207,7 @@ def build_nodes() -> list[dict]:
         make_button("btn-interview-no", "❌ Нет", "goto", target="input-telegram", callbackData="interview_no"),
     ]
     nodes.append(make_node("input-interview", "message", 2200, 300, {
+        **msg_defaults(),
         "messageText": "🎙 Готов(а) ли ты к короткому онлайн-интервью?",
         "formatMode": "none",
         "keyboardType": "inline",
@@ -216,26 +222,27 @@ def build_nodes() -> list[dict]:
         "collectUserInput": True,
         "enableTextInput": False,
         "inputVariable": "user_interview",
-        **{k: v for k, v in msg_defaults().items() if k not in ("collectUserInput", "enableTextInput")},
     }))
 
     # === 9. Вопрос: Телеграм ===
     nodes.append(make_node("input-telegram", "message", 2500, 300, {
+        **msg_defaults(),
         "messageText": "📱 Укажи свой Telegram (или нажми «Использовать текущий»):",
         "formatMode": "none",
         "keyboardType": "inline",
         "buttons": [
             make_button("btn-use-current-tg", "📎 Использовать @{username}", "goto", target="msg-thanks"),
         ],
+        "enableAutoTransition": True,
         "autoTransitionTo": "msg-thanks",
         "collectUserInput": True,
         "enableTextInput": True,
         "inputVariable": "user_telegram",
-        **{k: v for k, v in msg_defaults().items() if k not in ("autoTransitionTo", "collectUserInput", "enableTextInput")},
     }))
 
     # === 10. Спасибо, заявка на рассмотрении ===
     nodes.append(make_node("msg-thanks", "message", 2800, 300, {
+        **msg_defaults(),
         "messageText": (
             "✅ Спасибо! Твоя заявка отправлена на рассмотрение.\n\n"
             "Мы свяжемся с тобой, когда администратор примет решение. "
@@ -246,11 +253,11 @@ def build_nodes() -> list[dict]:
         "buttons": [],
         "enableAutoTransition": True,
         "autoTransitionTo": "msg-admin-notify",
-        **{k: v for k, v in msg_defaults().items() if k not in ("enableAutoTransition", "autoTransitionTo")},
     }))
 
     # === 11. Уведомление админу (с фото если есть) ===
     nodes.append(make_node("msg-admin-notify", "message", 3100, 300, {
+        **msg_defaults(),
         "messageText": (
             "📋 <b>Новая заявка в 69 ROOM</b>\n\n"
             "👤 Имя: {user_name}\n"
@@ -288,11 +295,11 @@ def build_nodes() -> list[dict]:
                 "chatId": "406719727",
             },
         ],
-        **{k: v for k, v in msg_defaults().items()},
     }))
 
     # === 12. Одобрено → юзеру ссылка ===
     nodes.append(make_node("msg-approved", "message", 3400, 150, {
+        **msg_defaults(),
         "messageText": (
             "🎉 <b>Твоя заявка одобрена!</b>\n\n"
             "Добро пожаловать в 69 ROOM! 🏠\n\n"
@@ -310,11 +317,11 @@ def build_nodes() -> list[dict]:
                 "chatId": "{user_id}",
             }
         ],
-        **{k: v for k, v in msg_defaults().items()},
     }))
 
     # === 13. Отклонено → юзеру отказ ===
     nodes.append(make_node("msg-rejected", "message", 3400, 450, {
+        **msg_defaults(),
         "messageText": (
             "😔 К сожалению, твоя заявка отклонена.\n\n"
             "Ты можешь попробовать подать заявку повторно чуть позже.\n"
@@ -330,7 +337,6 @@ def build_nodes() -> list[dict]:
                 "chatId": "{user_id}",
             }
         ],
-        **{k: v for k, v in msg_defaults().items()},
     }))
 
     return nodes
