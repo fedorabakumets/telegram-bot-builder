@@ -388,9 +388,14 @@ def build_nodes() -> list[dict]:
 
     # === 9b. set_variable: записать @{username} в user_telegram ===
     nodes.append(make_node("set-tg-from-username", "set_variable", 5700, 2500, {
-        "variable": "user_telegram",
-        "mode": "text",
-        "value": "@{username}",
+        "assignments": [
+            {
+                "id": "assign_1",
+                "variable": "user_telegram",
+                "value": "@{username}",
+                "mode": "text",
+            }
+        ],
         "enableAutoTransition": True,
         "autoTransitionTo": "msg-thanks",
     }))
