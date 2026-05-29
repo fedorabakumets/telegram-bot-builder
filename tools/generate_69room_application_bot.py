@@ -253,7 +253,8 @@ def build_nodes() -> list[dict]:
             "✏️ О себе: {user_bio}"
         ),
         "formatMode": "html",
-        "attachedMedia": ["{user_photo}"],
+        "imageUrl": "{user_photo}",
+        "attachedMedia": [],
         "keyboardType": "inline",
         "buttons": [
             make_button("btn-approve", "✅ Подтвердить", "goto",
