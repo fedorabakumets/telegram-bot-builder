@@ -107,7 +107,7 @@ def build_nodes() -> list[dict]:
         "enableConditionalMessages": False,
     }))
 
-    # === 3. Вопрос 1: Фото ===
+    # === 3. Вопрос 1: Фото (сохраняет file_id) ===
     nodes.append(make_node("input-photo", "message", 700, 300, {
         "messageText": "📸 Отправь своё фото (селфи или аватарка):",
         "formatMode": "none",
@@ -130,6 +130,7 @@ def build_nodes() -> list[dict]:
         "enableDocumentInput": False,
         "inputVariable": "user_photo",
         "photoInputVariable": "user_photo",
+        "saveMediaMetadata": True,
         "conditionalMessages": [],
         "enableConditionalMessages": False,
     }))
@@ -241,7 +242,7 @@ def build_nodes() -> list[dict]:
         "enableConditionalMessages": False,
     }))
 
-    # === 8. Уведомление админу ===
+    # === 8. Уведомление админу (с фото через attachedMedia) ===
     nodes.append(make_node("msg-admin-notify", "message", 2200, 300, {
         "messageText": (
             "📋 <b>Новая заявка в 69 ROOM</b>\n\n"
@@ -252,6 +253,8 @@ def build_nodes() -> list[dict]:
             "✏️ О себе: {user_bio}"
         ),
         "formatMode": "html",
+        "imageUrl": "{user_photo}",
+        "attachedMedia": ["{user_photo}"],
         "keyboardType": "inline",
         "buttons": [
             make_button("btn-approve", "✅ Подтвердить", "goto",
