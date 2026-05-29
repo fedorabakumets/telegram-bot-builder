@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-05-25T00:37:03+03:00",
+    "updated_at": "2026-05-29T16:05:18+03:00",
     "tags": [],
     "author": ""
   },
@@ -208,7 +208,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-05-25T00:19:41+03:00",
+    "updated_at": "2026-05-29T16:05:18+03:00",
     "tags": [],
     "author": ""
   },
@@ -329,6 +329,21 @@
       "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-17T17:43:15+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/activity-tracking-for-mass-kick",
+    "title": "Трекинг активности для массового кика",
+    "excerpt": "Все сообщения уже записываются в таблицу `bot_messages` (хардкорно, на уровне сервера). Таблица содержит `user_id`, `chat_id`, `created_at`,",
+    "parts": [
+      "futures",
+      "activity-tracking-for-mass-kick"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-05-29T16:05:18+03:00",
     "tags": [],
     "author": ""
   },
@@ -644,6 +659,21 @@
       "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-14T23:24:20+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/merge-node",
+    "title": "Merge Node — нода объединения данных",
+    "excerpt": "Нода с **двумя входными портами** (как в n8n). Принимает данные из двух веток, объединяет по выбранному режиму, отдаёт результат дальше.",
+    "parts": [
+      "futures",
+      "merge-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-05-29T16:05:18+03:00",
     "tags": [],
     "author": ""
   },
