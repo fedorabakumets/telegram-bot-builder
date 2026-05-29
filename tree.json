@@ -588,6 +588,21 @@
     "author": ""
   },
   {
+    "path": "futures/docs-restructuring-plan",
+    "title": "Реструктуризация документации: идеальная структура docs/",
+    "excerpt": "| Проблема | Описание | Влияние |",
+    "parts": [
+      "futures",
+      "docs-restructuring-plan"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-05-30T01:44:05+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "futures/docusaurus-docs-site",
     "title": "Документация-сайт на Docusaurus",
     "excerpt": "Создать красивый сайт документации на Docusaurus с автодеплоем на GitHub Pages.",
