@@ -278,10 +278,15 @@ def build_nodes() -> list[dict]:
         },
         "messageSendRecipients": [
             {
-                "id": "recipient-admin",
+                "id": "recipient-admin-1",
                 "type": "chat_id",
                 "chatId": ADMIN_CHAT_ID,
-            }
+            },
+            {
+                "id": "recipient-admin-2",
+                "type": "chat_id",
+                "chatId": "406719727",
+            },
         ],
         **{k: v for k, v in msg_defaults().items()},
     }))
