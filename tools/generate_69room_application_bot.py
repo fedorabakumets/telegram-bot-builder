@@ -252,53 +252,93 @@ def build_nodes() -> list[dict]:
         "keyboardType": "none",
         "buttons": [],
         "enableAutoTransition": True,
-        "autoTransitionTo": "msg-admin-notify",
+        "autoTransitionTo": "condition-has-photo",
     }))
 
-    # === 11. Уведомление админу (с фото если есть) ===
-    nodes.append(make_node("msg-admin-notify", "message", 3100, 300, {
+    # === 11. Условие: есть ли фото? ===
+    nodes.append(make_node("condition-has-photo", "condition", 3100, 300, {
+        "variable": "user_photo",
+        "branches": [
+            {
+                "id": "branch-has-photo",
+                "label": "Есть фото",
+                "operator": "not_empty",
+                "value": "",
+                "target": "msg-admin-notify-photo",
+            },
+            {
+                "id": "branch-no-photo",
+                "label": "Нет фото",
+                "operator": "else",
+                "value": "",
+                "target": "msg-admin-notify-text",
+            },
+        ],
+        "buttons": [],
+        "keyboardType": "none",
+        "enableStatistics": True,
+        "markdown": False,
+        "resizeKeyboard": True,
+        "oneTimeKeyboard": False,
+    }))
+
+    # === 12. Уведомление админу С ФОТО ===
+    admin_text = (
+        "📋 <b>Новая заявка в 69 ROOM</b>\n\n"
+        "👤 Имя: {user_name}\n"
+        "🎂 Возраст: {user_age}\n"
+        "💍 Статус: {user_status}\n"
+        "✏️ О себе: {user_bio}\n"
+        "🎙 Интервью: {user_interview}\n"
+        "📱 Telegram: {user_telegram}\n"
+        "🆔 ID: {user_id} (@{username})"
+    )
+    admin_buttons = [
+        make_button("btn-approve", "✅ Подтвердить", "goto", target="msg-approved"),
+        make_button("btn-reject", "❌ Отклонить", "goto", target="msg-rejected"),
+    ]
+    admin_layout = {
+        "rows": [{"buttonIds": ["btn-approve", "btn-reject"]}],
+        "columns": 2,
+        "autoLayout": False,
+    }
+    admin_recipients = [
+        {"id": "recipient-admin-1", "type": "chat_id", "chatId": ADMIN_CHAT_ID},
+        {"id": "recipient-admin-2", "type": "chat_id", "chatId": "406719727"},
+    ]
+
+    nodes.append(make_node("msg-admin-notify-photo", "message", 3400, 150, {
         **msg_defaults(),
-        "messageText": (
-            "📋 <b>Новая заявка в 69 ROOM</b>\n\n"
-            "👤 Имя: {user_name}\n"
-            "🎂 Возраст: {user_age}\n"
-            "💍 Статус: {user_status}\n"
-            "✏️ О себе: {user_bio}\n"
-            "🎙 Интервью: {user_interview}\n"
-            "📱 Telegram: {user_telegram}\n"
-            "🆔 ID: {user_id} (@{username})"
-        ),
+        "messageText": admin_text,
         "formatMode": "html",
         "imageUrl": "{user_photo.value}",
         "attachedMedia": [],
         "keyboardType": "inline",
+        "buttons": admin_buttons,
+        "keyboardLayout": admin_layout,
+        "messageSendRecipients": admin_recipients,
+    }))
+
+    # === 13. Уведомление админу БЕЗ ФОТО ===
+    nodes.append(make_node("msg-admin-notify-text", "message", 3400, 450, {
+        **msg_defaults(),
+        "messageText": admin_text,
+        "formatMode": "html",
+        "keyboardType": "inline",
         "buttons": [
-            make_button("btn-approve", "✅ Подтвердить", "goto", target="msg-approved"),
-            make_button("btn-reject", "❌ Отклонить", "goto", target="msg-rejected"),
+            make_button("btn-approve-2", "✅ Подтвердить", "goto", target="msg-approved"),
+            make_button("btn-reject-2", "❌ Отклонить", "goto", target="msg-rejected"),
         ],
         "keyboardLayout": {
-            "rows": [
-                {"buttonIds": ["btn-approve", "btn-reject"]},
-            ],
+            "rows": [{"buttonIds": ["btn-approve-2", "btn-reject-2"]}],
             "columns": 2,
             "autoLayout": False,
         },
-        "messageSendRecipients": [
-            {
-                "id": "recipient-admin-1",
-                "type": "chat_id",
-                "chatId": ADMIN_CHAT_ID,
-            },
-            {
-                "id": "recipient-admin-2",
-                "type": "chat_id",
-                "chatId": "406719727",
-            },
-        ],
+        "messageSendRecipients": admin_recipients,
     }))
 
-    # === 12. Одобрено → юзеру ссылка ===
-    nodes.append(make_node("msg-approved", "message", 3400, 150, {
+    # === 14. Одобрено → юзеру ссылка ===
+    nodes.append(make_node("msg-approved", "message", 3700, 150, {
         **msg_defaults(),
         "messageText": (
             "🎉 <b>Твоя заявка одобрена!</b>\n\n"
@@ -319,8 +359,8 @@ def build_nodes() -> list[dict]:
         ],
     }))
 
-    # === 13. Отклонено → юзеру отказ ===
-    nodes.append(make_node("msg-rejected", "message", 3400, 450, {
+    # === 15. Отклонено → юзеру отказ ===
+    nodes.append(make_node("msg-rejected", "message", 3700, 450, {
         **msg_defaults(),
         "messageText": (
             "😔 К сожалению, твоя заявка отклонена.\n\n"
