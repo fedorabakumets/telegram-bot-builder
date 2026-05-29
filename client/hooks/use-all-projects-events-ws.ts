@@ -7,6 +7,7 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
+import { useActiveTerminals } from '@/components/editor/bot/contexts/ActiveTerminalsContext';
 
 /**
  * Структура события проекта, получаемого по WebSocket
@@ -91,6 +92,7 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
   const { onTokenCreated, onBotStarted } = options ?? {};
   const queryClient = useQueryClient();
   const { addLog } = useBotLogs();
+  const { terminals, addTerminal } = useActiveTerminals();
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onTokenCreatedRef = useRef(onTokenCreated);
@@ -101,6 +103,11 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
   const isFirstConnectRef = useRef(true);
   /** Счётчик логов для диагностики */
   const logCountRef = useRef(0);
+  /** Актуальный список терминалов для проверки наличия вкладки */
+  const terminalsRef = useRef(terminals);
+  terminalsRef.current = terminals;
+  /** Множество ключей для которых уже создана вкладка (избегаем повторных вызовов addTerminal) */
+  const createdTabsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     let destroyed = false;
@@ -140,6 +147,23 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
               type: msg.type,
               timestamp: ts,
             });
+
+            // Создаём вкладку терминала если её ещё нет
+            const tabKey = `${msg.projectId}_${msg.tokenId}`;
+            if (!createdTabsRef.current.has(tabKey)) {
+              const hasTab = terminalsRef.current.some(
+                t => t.projectId === msg.projectId && t.tokenId === msg.tokenId && t.tabType !== 'history'
+              );
+              if (!hasTab) {
+                addTerminal({
+                  projectId: msg.projectId,
+                  tokenId: msg.tokenId,
+                  botName: `Bot #${msg.tokenId}`,
+                  isRunning: true,
+                });
+              }
+              createdTabsRef.current.add(tabKey);
+            }
             return;
           }
 
