@@ -1,6 +1,6 @@
 """
 @fileoverview Генератор project.json для бота-анкеты 69 ROOM.
-Сценарий: /start → вопросы (фото, возраст, статус, о себе) → уведомление админу с кнопками → ответ юзеру.
+Сценарий: /start → имя → возраст → сем.положение (кнопки) → о себе → фото (пропуск) → интервью (кнопки) → телеграм → уведомление админу.
 @module tools/generate_69room_application_bot
 """
 
@@ -50,9 +50,35 @@ def make_button(btn_id: str, text: str, action: str, **kwargs) -> dict:
     return btn
 
 
+def msg_defaults() -> dict:
+    """
+    Возвращает дефолтные поля для message-ноды.
+    @returns словарь дефолтных полей
+    """
+    return {
+        "markdown": False,
+        "adminOnly": False,
+        "requiresAuth": False,
+        "isPrivateOnly": False,
+        "enableStatistics": True,
+        "resizeKeyboard": True,
+        "oneTimeKeyboard": False,
+        "enableAutoTransition": False,
+        "autoTransitionTo": "",
+        "collectUserInput": False,
+        "enableTextInput": False,
+        "enablePhotoInput": False,
+        "enableVideoInput": False,
+        "enableAudioInput": False,
+        "enableDocumentInput": False,
+        "conditionalMessages": [],
+        "enableConditionalMessages": False,
+    }
+
+
 def build_nodes() -> list[dict]:
     """
-    Строит все узлы сценария бота-анкеты.
+    Строит все узлы сценария бота-анкеты 69 ROOM.
     @returns список узлов
     """
     nodes = []
@@ -62,159 +88,154 @@ def build_nodes() -> list[dict]:
         "command": "/start",
         "description": "Подать заявку в 69 ROOM",
         "showInMenu": True,
-        "adminOnly": False,
-        "requiresAuth": False,
-        "isPrivateOnly": False,
         "autoTransitionTo": "msg-welcome",
-        "enableStatistics": True,
         "buttons": [],
         "keyboardType": "none",
-        "markdown": False,
-        "resizeKeyboard": True,
-        "oneTimeKeyboard": False,
+        **msg_defaults(),
     }))
 
-    # === 2. Приветственное сообщение ===
+    # === 2. Приветствие ===
     nodes.append(make_node("msg-welcome", "message", 400, 300, {
         "messageText": (
             "👋 Привет! Добро пожаловать в систему заявок <b>69 ROOM</b>.\n\n"
-            "69 ROOM — это digital-экосистема для общения, знакомств, мероприятий "
-            "и взаимодействия между участниками.\n\n"
-            "Чтобы попасть в сообщество, заполни короткую анкету. "
-            "Это займёт пару минут ⏱"
+            "69 ROOM — это digital-экосистема для общения, знакомств, "
+            "мероприятий и взаимодействия между участниками.\n\n"
+            "Чтобы попасть в сообщество, заполни короткую анкету ⏱"
         ),
         "formatMode": "html",
         "keyboardType": "inline",
         "buttons": [
-            make_button("btn-start-form", "📝 Заполнить анкету", "goto", target="input-photo"),
+            make_button("btn-start-form", "📝 Заполнить анкету", "goto", target="input-name"),
         ],
-        "markdown": False,
-        "adminOnly": False,
-        "requiresAuth": False,
-        "isPrivateOnly": False,
-        "enableStatistics": True,
-        "resizeKeyboard": True,
-        "oneTimeKeyboard": False,
-        "enableAutoTransition": False,
-        "autoTransitionTo": "",
-        "collectUserInput": False,
-        "enableTextInput": False,
-        "enablePhotoInput": False,
-        "enableVideoInput": False,
-        "enableAudioInput": False,
-        "enableDocumentInput": False,
-        "conditionalMessages": [],
-        "enableConditionalMessages": False,
+        **msg_defaults(),
     }))
 
-    # === 3. Вопрос 1: Фото (сохраняет file_id) ===
-    nodes.append(make_node("input-photo", "message", 700, 300, {
-        "messageText": "📸 Отправь своё фото (селфи или аватарка):",
+    # === 3. Вопрос: Имя ===
+    nodes.append(make_node("input-name", "message", 700, 300, {
+        "messageText": "👤 Как тебя зовут?",
         "formatMode": "none",
         "keyboardType": "none",
         "buttons": [],
-        "markdown": False,
-        "adminOnly": False,
-        "requiresAuth": False,
-        "isPrivateOnly": False,
-        "enableStatistics": True,
-        "resizeKeyboard": True,
-        "oneTimeKeyboard": False,
-        "enableAutoTransition": False,
         "autoTransitionTo": "input-age",
         "collectUserInput": True,
-        "enableTextInput": False,
-        "enablePhotoInput": True,
-        "enableVideoInput": False,
-        "enableAudioInput": False,
-        "enableDocumentInput": False,
-        "inputVariable": "user_photo",
-        "photoInputVariable": "user_photo",
-        "saveMediaMetadata": True,
-        "conditionalMessages": [],
-        "enableConditionalMessages": False,
+        "enableTextInput": True,
+        "inputVariable": "user_name",
+        **{k: v for k, v in msg_defaults().items() if k not in ("autoTransitionTo", "collectUserInput", "enableTextInput")},
     }))
 
-    # === 4. Вопрос 2: Возраст ===
+    # === 4. Вопрос: Возраст ===
     nodes.append(make_node("input-age", "message", 1000, 300, {
         "messageText": "🎂 Сколько тебе лет?",
         "formatMode": "none",
         "keyboardType": "none",
         "buttons": [],
-        "markdown": False,
-        "adminOnly": False,
-        "requiresAuth": False,
-        "isPrivateOnly": False,
-        "enableStatistics": True,
-        "resizeKeyboard": True,
-        "oneTimeKeyboard": False,
-        "enableAutoTransition": False,
         "autoTransitionTo": "input-status",
         "collectUserInput": True,
         "enableTextInput": True,
-        "enablePhotoInput": False,
-        "enableVideoInput": False,
-        "enableAudioInput": False,
-        "enableDocumentInput": False,
         "inputVariable": "user_age",
-        "conditionalMessages": [],
-        "enableConditionalMessages": False,
+        **{k: v for k, v in msg_defaults().items() if k not in ("autoTransitionTo", "collectUserInput", "enableTextInput")},
     }))
 
-    # === 5. Вопрос 3: Семейное положение ===
+    # === 5. Вопрос: Семейное положение (кнопки) ===
+    status_buttons = [
+        make_button("btn-status-1", "Холост", "goto", target="input-bio", callbackData="status_single"),
+        make_button("btn-status-2", "Женат/Замужем", "goto", target="input-bio", callbackData="status_married"),
+        make_button("btn-status-3", "Разведён", "goto", target="input-bio", callbackData="status_divorced"),
+        make_button("btn-status-4", "В активном поиске", "goto", target="input-bio", callbackData="status_searching"),
+        make_button("btn-status-5", "Всё сложно", "goto", target="input-bio", callbackData="status_complicated"),
+    ]
     nodes.append(make_node("input-status", "message", 1300, 300, {
-        "messageText": "💍 Семейное положение?",
+        "messageText": "💍 Семейное положение:",
+        "formatMode": "none",
+        "keyboardType": "inline",
+        "buttons": status_buttons,
+        "keyboardLayout": {
+            "rows": [
+                {"buttonIds": ["btn-status-1", "btn-status-2"]},
+                {"buttonIds": ["btn-status-3", "btn-status-4"]},
+                {"buttonIds": ["btn-status-5"]},
+            ],
+            "columns": 2,
+            "autoLayout": False,
+        },
+        "collectUserInput": True,
+        "enableTextInput": False,
+        "inputVariable": "user_status",
+        **{k: v for k, v in msg_defaults().items() if k not in ("collectUserInput", "enableTextInput")},
+    }))
+
+    # === 6. Вопрос: О себе ===
+    nodes.append(make_node("input-bio", "message", 1600, 300, {
+        "messageText": "✏️ Расскажи о себе: хобби, род деятельности (до 300 символов):",
         "formatMode": "none",
         "keyboardType": "none",
         "buttons": [],
-        "markdown": False,
-        "adminOnly": False,
-        "requiresAuth": False,
-        "isPrivateOnly": False,
-        "enableStatistics": True,
-        "resizeKeyboard": True,
-        "oneTimeKeyboard": False,
-        "enableAutoTransition": False,
-        "autoTransitionTo": "input-bio",
+        "autoTransitionTo": "input-photo",
         "collectUserInput": True,
         "enableTextInput": True,
-        "enablePhotoInput": False,
-        "enableVideoInput": False,
-        "enableAudioInput": False,
-        "enableDocumentInput": False,
-        "inputVariable": "user_status",
-        "conditionalMessages": [],
-        "enableConditionalMessages": False,
+        "inputVariable": "user_bio",
+        "maxLength": 300,
+        **{k: v for k, v in msg_defaults().items() if k not in ("autoTransitionTo", "collectUserInput", "enableTextInput")},
     }))
 
-    # === 6. Вопрос 4: О себе ===
-    nodes.append(make_node("input-bio", "message", 1600, 300, {
-        "messageText": "✏️ Расскажи немного о себе (до 300 символов):",
+    # === 7. Вопрос: Фото (можно пропустить) ===
+    nodes.append(make_node("input-photo", "message", 1900, 300, {
+        "messageText": "📸 Отправь своё фото (или нажми «Пропустить»):",
         "formatMode": "none",
-        "keyboardType": "none",
-        "buttons": [],
-        "markdown": False,
-        "adminOnly": False,
-        "requiresAuth": False,
-        "isPrivateOnly": False,
-        "enableStatistics": True,
-        "resizeKeyboard": True,
-        "oneTimeKeyboard": False,
-        "enableAutoTransition": False,
+        "keyboardType": "inline",
+        "buttons": [
+            make_button("btn-skip-photo", "⏭ Пропустить", "goto", target="input-interview"),
+        ],
+        "autoTransitionTo": "input-interview",
+        "collectUserInput": True,
+        "enableTextInput": False,
+        "enablePhotoInput": True,
+        "inputVariable": "user_photo",
+        "photoInputVariable": "user_photo",
+        "saveMediaMetadata": True,
+        **{k: v for k, v in msg_defaults().items() if k not in ("autoTransitionTo", "collectUserInput", "enableTextInput", "enablePhotoInput")},
+    }))
+
+    # === 8. Вопрос: Готовы к интервью (кнопки) ===
+    interview_buttons = [
+        make_button("btn-interview-yes", "✅ Да", "goto", target="input-telegram", callbackData="interview_yes"),
+        make_button("btn-interview-no", "❌ Нет", "goto", target="input-telegram", callbackData="interview_no"),
+    ]
+    nodes.append(make_node("input-interview", "message", 2200, 300, {
+        "messageText": "🎙 Готов(а) ли ты к короткому онлайн-интервью?",
+        "formatMode": "none",
+        "keyboardType": "inline",
+        "buttons": interview_buttons,
+        "keyboardLayout": {
+            "rows": [
+                {"buttonIds": ["btn-interview-yes", "btn-interview-no"]},
+            ],
+            "columns": 2,
+            "autoLayout": False,
+        },
+        "collectUserInput": True,
+        "enableTextInput": False,
+        "inputVariable": "user_interview",
+        **{k: v for k, v in msg_defaults().items() if k not in ("collectUserInput", "enableTextInput")},
+    }))
+
+    # === 9. Вопрос: Телеграм ===
+    nodes.append(make_node("input-telegram", "message", 2500, 300, {
+        "messageText": "📱 Укажи свой Telegram (или нажми «Использовать текущий»):",
+        "formatMode": "none",
+        "keyboardType": "inline",
+        "buttons": [
+            make_button("btn-use-current-tg", "📎 Использовать @{username}", "goto", target="msg-thanks"),
+        ],
         "autoTransitionTo": "msg-thanks",
         "collectUserInput": True,
         "enableTextInput": True,
-        "enablePhotoInput": False,
-        "enableVideoInput": False,
-        "enableAudioInput": False,
-        "enableDocumentInput": False,
-        "inputVariable": "user_bio",
-        "conditionalMessages": [],
-        "enableConditionalMessages": False,
+        "inputVariable": "user_telegram",
+        **{k: v for k, v in msg_defaults().items() if k not in ("autoTransitionTo", "collectUserInput", "enableTextInput")},
     }))
 
-    # === 7. Сообщение юзеру: заявка принята ===
-    nodes.append(make_node("msg-thanks", "message", 1900, 300, {
+    # === 10. Спасибо, заявка на рассмотрении ===
+    nodes.append(make_node("msg-thanks", "message", 2800, 300, {
         "messageText": (
             "✅ Спасибо! Твоя заявка отправлена на рассмотрение.\n\n"
             "Мы свяжемся с тобой, когда администратор примет решение. "
@@ -223,46 +244,30 @@ def build_nodes() -> list[dict]:
         "formatMode": "none",
         "keyboardType": "none",
         "buttons": [],
-        "markdown": False,
-        "adminOnly": False,
-        "requiresAuth": False,
-        "isPrivateOnly": False,
-        "enableStatistics": True,
-        "resizeKeyboard": True,
-        "oneTimeKeyboard": False,
         "enableAutoTransition": True,
         "autoTransitionTo": "msg-admin-notify",
-        "collectUserInput": False,
-        "enableTextInput": False,
-        "enablePhotoInput": False,
-        "enableVideoInput": False,
-        "enableAudioInput": False,
-        "enableDocumentInput": False,
-        "conditionalMessages": [],
-        "enableConditionalMessages": False,
+        **{k: v for k, v in msg_defaults().items() if k not in ("enableAutoTransition", "autoTransitionTo")},
     }))
 
-    # === 8. Уведомление админу (с фото через attachedMedia) ===
-    nodes.append(make_node("msg-admin-notify", "message", 2200, 300, {
+    # === 11. Уведомление админу (с фото если есть) ===
+    nodes.append(make_node("msg-admin-notify", "message", 3100, 300, {
         "messageText": (
             "📋 <b>Новая заявка в 69 ROOM</b>\n\n"
-            "👤 Имя: {first_name} (@{username})\n"
-            "🆔 ID: {user_id}\n"
+            "👤 Имя: {user_name}\n"
             "🎂 Возраст: {user_age}\n"
             "💍 Статус: {user_status}\n"
-            "✏️ О себе: {user_bio}"
+            "✏️ О себе: {user_bio}\n"
+            "🎙 Интервью: {user_interview}\n"
+            "📱 Telegram: {user_telegram}\n"
+            "🆔 ID: {user_id} (@{username})"
         ),
         "formatMode": "html",
         "imageUrl": "{user_photo.value}",
         "attachedMedia": [],
         "keyboardType": "inline",
         "buttons": [
-            make_button("btn-approve", "✅ Подтвердить", "goto",
-                        target="msg-approved",
-                        callbackData="approve_{user_id}"),
-            make_button("btn-reject", "❌ Отклонить", "goto",
-                        target="msg-rejected",
-                        callbackData="reject_{user_id}"),
+            make_button("btn-approve", "✅ Подтвердить", "goto", target="msg-approved"),
+            make_button("btn-reject", "❌ Отклонить", "goto", target="msg-rejected"),
         ],
         "keyboardLayout": {
             "rows": [
@@ -271,23 +276,6 @@ def build_nodes() -> list[dict]:
             "columns": 2,
             "autoLayout": False,
         },
-        "markdown": False,
-        "adminOnly": False,
-        "requiresAuth": False,
-        "isPrivateOnly": False,
-        "enableStatistics": True,
-        "resizeKeyboard": True,
-        "oneTimeKeyboard": False,
-        "enableAutoTransition": False,
-        "autoTransitionTo": "",
-        "collectUserInput": False,
-        "enableTextInput": False,
-        "enablePhotoInput": False,
-        "enableVideoInput": False,
-        "enableAudioInput": False,
-        "enableDocumentInput": False,
-        "conditionalMessages": [],
-        "enableConditionalMessages": False,
         "messageSendRecipients": [
             {
                 "id": "recipient-admin",
@@ -295,37 +283,21 @@ def build_nodes() -> list[dict]:
                 "chatId": ADMIN_CHAT_ID,
             }
         ],
+        **{k: v for k, v in msg_defaults().items()},
     }))
 
-    # === 9. Сообщение юзеру: одобрено ===
-    nodes.append(make_node("msg-approved", "message", 2500, 150, {
+    # === 12. Одобрено → юзеру ссылка ===
+    nodes.append(make_node("msg-approved", "message", 3400, 150, {
         "messageText": (
             "🎉 <b>Твоя заявка одобрена!</b>\n\n"
             "Добро пожаловать в 69 ROOM! 🏠\n\n"
-            "Вот ссылка для вступления в сообщество:\n"
+            "Вот ссылка для вступления:\n"
             "👉 https://t.me/+XXXXXXXXXXXXXX\n\n"
             "Перед началом общения ознакомься с правилами. Увидимся внутри! 🙌"
         ),
         "formatMode": "html",
         "keyboardType": "none",
         "buttons": [],
-        "markdown": False,
-        "adminOnly": False,
-        "requiresAuth": False,
-        "isPrivateOnly": False,
-        "enableStatistics": True,
-        "resizeKeyboard": True,
-        "oneTimeKeyboard": False,
-        "enableAutoTransition": False,
-        "autoTransitionTo": "",
-        "collectUserInput": False,
-        "enableTextInput": False,
-        "enablePhotoInput": False,
-        "enableVideoInput": False,
-        "enableAudioInput": False,
-        "enableDocumentInput": False,
-        "conditionalMessages": [],
-        "enableConditionalMessages": False,
         "messageSendRecipients": [
             {
                 "id": "recipient-user-approve",
@@ -333,35 +305,19 @@ def build_nodes() -> list[dict]:
                 "chatId": "{user_id}",
             }
         ],
+        **{k: v for k, v in msg_defaults().items()},
     }))
 
-    # === 10. Сообщение юзеру: отклонено ===
-    nodes.append(make_node("msg-rejected", "message", 2500, 450, {
+    # === 13. Отклонено → юзеру отказ ===
+    nodes.append(make_node("msg-rejected", "message", 3400, 450, {
         "messageText": (
             "😔 К сожалению, твоя заявка отклонена.\n\n"
-            "Ты можешь попробовать подать заявку повторно позже.\n"
+            "Ты можешь попробовать подать заявку повторно чуть позже.\n"
             "Если есть вопросы — пиши @r_kkkkk"
         ),
         "formatMode": "none",
         "keyboardType": "none",
         "buttons": [],
-        "markdown": False,
-        "adminOnly": False,
-        "requiresAuth": False,
-        "isPrivateOnly": False,
-        "enableStatistics": True,
-        "resizeKeyboard": True,
-        "oneTimeKeyboard": False,
-        "enableAutoTransition": False,
-        "autoTransitionTo": "",
-        "collectUserInput": False,
-        "enableTextInput": False,
-        "enablePhotoInput": False,
-        "enableVideoInput": False,
-        "enableAudioInput": False,
-        "enableDocumentInput": False,
-        "conditionalMessages": [],
-        "enableConditionalMessages": False,
         "messageSendRecipients": [
             {
                 "id": "recipient-user-reject",
@@ -369,6 +325,7 @@ def build_nodes() -> list[dict]:
                 "chatId": "{user_id}",
             }
         ],
+        **{k: v for k, v in msg_defaults().items()},
     }))
 
     return nodes
@@ -382,7 +339,7 @@ def build_project() -> dict:
     nodes = build_nodes()
     sheet = {
         "id": "sheet-application",
-        "name": "📋 Анкета",
+        "name": "📋 Анкета 69 ROOM",
         "nodes": nodes,
         "viewState": {"pan": {"x": 0, "y": 0}, "zoom": 100},
     }
@@ -410,7 +367,7 @@ def print_report(project: dict) -> None:
     Выводит отчёт о сгенерированных узлах.
     @param project - данные проекта
     """
-    print("=== 69 ROOM — Бот-анкета — Отчёт ===\n")
+    print("=== 69 ROOM — Бот-анкета v2 — Отчёт ===\n")
     for sheet in project.get("sheets", []):
         print(f"Лист: [{sheet['id']}] {sheet['name']}")
         print(f"Узлов: {len(sheet['nodes'])}\n")
@@ -422,9 +379,10 @@ def print_report(project: dict) -> None:
             print(f"  ✓ {nid:<25} тип={ntype:<20} pos=({x}, {y})")
     print()
     print("Сценарий:")
-    print("  /start → Приветствие → Фото → Возраст → Статус → О себе")
-    print("  → «Заявка на рассмотрении» → Уведомление админу (кнопки ✅/❌)")
-    print("  → ✅ Одобрено: юзеру ссылка | ❌ Отклонено: юзеру отказ")
+    print("  /start → Приветствие → Имя → Возраст → Сем.положение (кнопки)")
+    print("  → О себе → Фото (пропуск) → Интервью (да/нет) → Telegram")
+    print("  → «Заявка на рассмотрении» → Админу (фото + данные + ✅/❌)")
+    print("  → ✅ Одобрено: юзеру ссылка | ❌ Отклонено: попробуй позже")
     print(f"\n  Admin chat_id: {ADMIN_CHAT_ID}")
     print()
 
