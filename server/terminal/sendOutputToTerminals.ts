@@ -46,18 +46,9 @@ export function sendOutputToTerminals(
     ? parseLogTimestamp(content)
     : new Date().toISOString();
 
-  // Диагностика: логируем каждые 10 секунд или при отсутствии подписчиков
+  // Проверяем наличие прямого подписчика (projectId_tokenId)
+  // Если нет — лог всё равно уйдёт через user_* подписки ниже
   const connCount = connections?.size ?? 0;
-  if (connCount === 0) {
-    // Логируем только первый раз для каждого ключа чтобы не спамить
-    const logThrottleKey = `no_conn_${connectionKey}`;
-    if (!(globalThis as any)[logThrottleKey]) {
-      console.warn(`[Terminal] ⚠️ Нет подписчиков для ${connectionKey}, лог потерян: ${content.slice(0, 60)}...`);
-      console.warn(`[Terminal] Все ключи activeConnections:`, Array.from(activeConnections.keys()));
-      (globalThis as any)[logThrottleKey] = true;
-      setTimeout(() => { delete (globalThis as any)[logThrottleKey]; }, 10000);
-    }
-  }
 
   const message: TerminalMessage = {
     type,
