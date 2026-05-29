@@ -31,7 +31,9 @@
 
 - Узел **не пропускается** при отсутствии `autoTransitionTo` — может быть конечным.
 - Регистрируется как `@dp.callback_query(lambda c: c.data == "<nodeId>")`.
-- При `editKeyboardMode === 'node'` передаётся `reply_markup=None` как заглушка.
+- При `editKeyboardMode === 'node'` кнопки берутся из привязанного keyboard-узла.
+- Если keyboard-узел содержит `keyboardLayout` с `autoLayout: false`, кнопки группируются по рядам согласно layout (используется `InlineKeyboardMarkup` напрямую).
+- Если `keyboardLayout` отсутствует или `autoLayout: true`, используется `InlineKeyboardBuilder` с `adjust(columns)` для автоматической раскладки.
 
 ## Использование
 

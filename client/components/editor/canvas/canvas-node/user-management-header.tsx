@@ -57,6 +57,28 @@ interface UserManagementHeaderProps {
  * @returns {JSX.Element} Компонент заголовка
  */
 export function UserManagementHeader({ node, type }: UserManagementHeaderProps) {
+  /** Для kick_user отображаем источник пользователя вместо команды */
+  const getKickUserLabel = (): string => {
+    const source = node.data.userIdSource;
+    if (source === 'reply_user') return '👤 reply';
+    if (source === 'current_user') return '👤 отправитель';
+    if (source === 'custom') return `👤 ${node.data.userIdManual || '...'}`;
+    return '👤 отправитель';
+  };
+
+  if (type === 'kick_user') {
+    return (
+      <span className="flex flex-col gap-2">
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-tight">
+          {HEADER_TEXTS[type]}
+        </span>
+        <span className="text-rose-600 dark:text-rose-400 font-mono text-sm bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-800 inline-block w-fit">
+          {getKickUserLabel()}
+        </span>
+      </span>
+    );
+  }
+
   return (
     <span className="flex flex-col gap-2">
       <span className="text-rose-600 dark:text-rose-400 font-mono text-sm bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-800 inline-block w-fit">

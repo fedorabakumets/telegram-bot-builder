@@ -19,20 +19,22 @@ describe('generateUserbotClickButton()', () => {
     expect(code).toContain('userbot_client.get_messages');
   });
 
-  it('clickMode=text → msg.click(text=...)', () => {
+  it('clickMode=text → поиск кнопки по тексту', () => {
     const code = generateUserbotClickButton({ nodeId: 'ub-c3', clickMode: 'text', clickValue: 'Играть' });
-    expect(code).toContain('_msg.click(text=');
+    expect(code).toContain('_click_val in _btn.text');
+    expect(code).toContain('GetBotCallbackAnswerRequest');
   });
 
-  it('clickMode=data → msg.click(data=...)', () => {
+  it('clickMode=data → поиск кнопки по callback_data', () => {
     const code = generateUserbotClickButton({ nodeId: 'ub-c4', clickMode: 'data', clickValue: 'menu_games' });
-    expect(code).toContain("_msg.click(data=");
+    expect(code).toContain("_click_val.encode('utf-8') in _btn.data");
+    expect(code).toContain('GetBotCallbackAnswerRequest');
   });
 
   it('clickMode=index → парсинг индекса', () => {
     const code = generateUserbotClickButton({ nodeId: 'ub-c5', clickMode: 'index', clickValue: '0, 1' });
     expect(code).toContain('_idx_parts');
-    expect(code).toContain('_msg.click(_idx_parts[0], _idx_parts[1])');
+    expect(code).toContain('_msg.reply_markup.rows[_r].buttons[_c]');
   });
 
   it('saveAlertTo → сохраняет alert', () => {
@@ -89,9 +91,10 @@ describe('generateUserbotClickButton()', () => {
     expect(code).toContain('FloodWaitError');
   });
 
-  it('содержит asyncio.sleep(1.5) для ожидания обновления', () => {
+  it('содержит fire-and-forget через create_task', () => {
     const code = generateUserbotClickButton({ nodeId: 'ub-c15', saveResultTo: 'txt' });
-    expect(code).toContain('asyncio.sleep(1.5)');
+    expect(code).toContain('asyncio.create_task(_fire_click())');
+    expect(code).toContain('fire-and-forget');
   });
 });
 

@@ -343,3 +343,13 @@ export function hasUserbotMessageNodes(nodes: Node[]): boolean {
 export function hasUserbotEditTriggerNodes(nodes: Node[]): boolean {
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'userbot_edit_trigger');
 }
+
+/**
+ * Проверяет наличие узлов kick_user в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа kick_user
+ */
+export function hasKickUserNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'kick_user');
+}

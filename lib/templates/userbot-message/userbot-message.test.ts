@@ -136,6 +136,82 @@ describe('generateUserbotMessage()', () => {
     expect(code).toContain('FloodWaitError');
     expect(code).toContain('asyncio.sleep');
   });
+
+  it('генерирует event listener для saveResponseIdTo', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-13',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveResponseIdTo: 'resp_id',
+    });
+    expect(code).toContain('events.NewMessage(chats=_resp_entity)');
+    expect(code).toContain('_on_resp_ub_13');
+    expect(code).toContain('asyncio.wait_for(_resp_future');
+    expect(code).toContain('remove_event_handler(_on_resp_ub_13');
+    expect(code).toContain('resp_id');
+    expect(code).not.toContain('await asyncio.sleep(3)\n    _resp_msgs');
+  });
+
+  it('генерирует saveResponseTextTo вместе с saveResponseIdTo', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-14',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveResponseIdTo: 'resp_id',
+      saveResponseTextTo: 'resp_text',
+    });
+    expect(code).toContain('resp_text');
+    expect(code).toContain('_resp_msg.text');
+    expect(code).toContain('set_user_var(user_id, "resp_text"');
+  });
+
+  it('использует стратегию first в fallback', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-15',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveResponseIdTo: 'resp_id',
+      responseStrategy: 'first',
+    });
+    expect(code).toContain('_bot_msgs[0] if _bot_msgs else None');
+    expect(code).not.toContain('_max_len');
+  });
+
+  it('использует стратегию longest в fallback по умолчанию', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-16',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveResponseIdTo: 'resp_id',
+      responseStrategy: 'longest',
+    });
+    expect(code).toContain('_max_len');
+    expect(code).toContain('longest');
+  });
+
+  it('использует стратегию regex_match в fallback', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-17',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveResponseIdTo: 'resp_id',
+      responseStrategy: 'regex_match',
+      responseFilterRegex: '\\d+\\.\\d+',
+    });
+    expect(code).toContain('import re as _re_resp');
+    expect(code).toContain('_re_resp.search');
+  });
+
+  it('использует кастомный таймаут responseWaitSeconds', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-18',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveResponseIdTo: 'resp_id',
+      responseWaitSeconds: 10,
+    });
+    expect(code).toContain('timeout=10');
+  });
 });
 
 describe('userbotMessageParamsSchema', () => {

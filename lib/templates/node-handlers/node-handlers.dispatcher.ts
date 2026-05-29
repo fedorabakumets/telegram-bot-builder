@@ -37,6 +37,7 @@ import { generateScheduleTriggerHandlers } from '../schedule-trigger/schedule-tr
 import { generateAnswerCallbackQuery, generateAnswerCallbackQueryHandlers } from '../answer-callback-query/answer-callback-query.renderer';
 import { generateEditMessageHandlers } from '../edit-message';
 import { generateDeleteMessageHandlers } from '../delete-message';
+import { generateKickUserHandlers } from '../kick-user/kick-user.renderer';
 import { generateSetVariableHandlers } from '../set-variable/set-variable.renderer';
 import { generatePsqlQueryHandlers } from '../psql-query/psql-query.renderer';
 import { generateBotTableHandlers } from '../bot-table';
@@ -368,7 +369,7 @@ export function generateNodeHandlers(
     unban_user: generateUserHandlerFromNode,
     mute_user: generateUserHandlerFromNode,
     unmute_user: generateUserHandlerFromNode,
-    kick_user: generateUserHandlerFromNode,
+
     promote_user: generateUserHandlerFromNode,
     demote_user: generateUserHandlerFromNode,
     admin_rights: generateAdminRightsFromNode,
@@ -480,6 +481,13 @@ export function generateNodeHandlers(
     deleteMessageCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Обработчики узлов kick_user ---
+  const kickUserCode = generateKickUserHandlers(nodes);
+  if (kickUserCode) {
+    codeLines.push('\n# Обработчики узлов kick_user');
+    kickUserCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   // --- Обработчики узлов set_variable ---
   const setVariableCode = generateSetVariableHandlers(nodes);
   if (setVariableCode) {
@@ -566,7 +574,7 @@ export function generateNodeHandlers(
 
   nodes.forEach((node: Node) => {
     // Пропускаем триггеры — они уже обработаны выше
-    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message' || (node.type as any) === 'set_variable' || (node.type as any) === 'psql_query' || (node.type as any) === 'bot_table' || (node.type as any) === 'convert_file' || (node.type as any) === 'loop' || (node.type as any) === 'delay' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'answer_callback_query' || (node.type as any) === 'userbot_message' || (node.type as any) === 'userbot_click_button' || (node.type as any) === 'userbot_inline_query' || (node.type as any) === 'userbot_edit_trigger') {
+    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message' || (node.type as any) === 'set_variable' || (node.type as any) === 'psql_query' || (node.type as any) === 'bot_table' || (node.type as any) === 'convert_file' || (node.type as any) === 'loop' || (node.type as any) === 'delay' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'answer_callback_query' || (node.type as any) === 'userbot_message' || (node.type as any) === 'userbot_click_button' || (node.type as any) === 'userbot_inline_query' || (node.type as any) === 'userbot_edit_trigger' || (node.type as any) === 'kick_user') {
       return;
     }
 

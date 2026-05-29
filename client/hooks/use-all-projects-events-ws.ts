@@ -7,6 +7,7 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
+import { useActiveTerminals } from '@/components/editor/bot/contexts/ActiveTerminalsContext';
 
 /**
  * Структура события проекта, получаемого по WebSocket
@@ -91,6 +92,7 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
   const { onTokenCreated, onBotStarted } = options ?? {};
   const queryClient = useQueryClient();
   const { addLog } = useBotLogs();
+  const { terminals } = useActiveTerminals();
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onTokenCreatedRef = useRef(onTokenCreated);
@@ -101,6 +103,9 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
   const isFirstConnectRef = useRef(true);
   /** Счётчик логов для диагностики */
   const logCountRef = useRef(0);
+  /** Актуальный список терминалов для проверки внутри onmessage */
+  const terminalsRef = useRef(terminals);
+  terminalsRef.current = terminals;
 
   useEffect(() => {
     let destroyed = false;
@@ -130,7 +135,13 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
           const msg: ProjectEvent = JSON.parse(event.data);
 
           // Логи бота (stdout/stderr) — записываем в BotLogsContext
+          // только если для этого бота НЕ открыт live-терминал (иначе будет дубль)
           if ((msg.type === 'stdout' || msg.type === 'stderr') && msg.projectId && msg.tokenId && msg.content) {
+            const hasLiveTerminal = terminalsRef.current.some(
+              t => t.projectId === msg.projectId && t.tokenId === msg.tokenId && t.tabType !== 'history'
+            );
+            if (hasLiveTerminal) return;
+
             const logKey = `${msg.projectId}-${msg.tokenId}`;
             const ts = msg.timestamp ? new Date(msg.timestamp) : new Date();
             addLog(logKey, {

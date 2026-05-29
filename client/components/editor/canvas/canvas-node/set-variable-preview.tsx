@@ -25,6 +25,8 @@ interface Assignment {
   pattern?: string;
   /** Номер группы захвата (mode=regex_extract) */
   regexGroup?: string;
+  /** Имя второго массива (mode=array_concat) */
+  concatWith?: string;
 }
 
 /**
@@ -53,6 +55,7 @@ const MODE_LABELS: Record<string, string> = {
   str_replace: 'replace',
   json_push: 'push',
   json_format: 'format',
+  array_concat: 'concat',
 };
 
 /** Пропсы компонента SetVariablePreview */
@@ -115,7 +118,7 @@ function AssignmentRow({ assignment: a }: { assignment: Assignment }) {
         </span>
         <span className="text-[11px] text-slate-500 flex-shrink-0">=</span>
         <span className="font-mono text-[11px] text-slate-300 truncate max-w-[110px]">
-          {a.value || '""'}
+          {mode === 'array_concat' ? `${a.value || '?'} + ${(a as any).concatWith || '?'}` : (a.value || '""')}
         </span>
         {showInlineBadge && (
           <span className="text-[9px] text-slate-500 flex-shrink-0 ml-0.5">

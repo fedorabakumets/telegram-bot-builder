@@ -61,6 +61,7 @@ export function collectEditMessageEntries(nodes: Node[]): EditMessageEntry[] {
       keyboardButtons,
       keyboardEnableDynamicButtons,
       keyboardDynamicButtons,
+      keyboardLayout: kbNode ? ((kbNode.data as any)?.keyboardLayout ?? null) : null,
     });
   }
 

@@ -27,7 +27,6 @@ const COMMAND_NODE_TYPES = [
   'unban_user',
   'mute_user',
   'unmute_user',
-  'kick_user',
   'promote_user',
   'demote_user'
 ] as const;

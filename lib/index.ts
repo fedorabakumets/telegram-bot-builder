@@ -61,6 +61,11 @@ export { generateDeleteMessage, generateDeleteMessageHandlers, collectDeleteMess
 /** Типы шаблона удаления сообщений */
 export type { DeleteMessageTemplateParams, DeleteMessageEntry, DeleteMessageIdSource, DeleteMessageChatIdSource } from './templates/delete-message';
 
+/** Экспорт шаблона исключения пользователя */
+export { generateKickUser, generateKickUserHandlers, collectKickUserEntries } from './templates/kick-user';
+/** Типы шаблона исключения пользователя */
+export type { KickUserTemplateParams, KickUserEntry, KickUserIdSource, KickUserChatIdSource } from './templates/kick-user';
+
 // Additional utilities
 export { addInputTargetNodes } from './bot-generator/core/add-input-target-nodes';
 

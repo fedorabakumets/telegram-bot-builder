@@ -209,12 +209,12 @@ export function getNodeDefaults(type: Node['type']): any {
       userVariableName: ''
     },
     kick_user: {
-      command: '/kick_user',
-      synonyms: ['кикнуть', 'исключить', 'выгнать'],
-      reason: 'Нарушение правил группы',
-      targetUserId: '',
-      userIdSource: 'last_message',
-      userVariableName: ''
+      userIdSource: 'current_user',
+      userIdManual: '',
+      userVariableName: '',
+      chatIdSource: 'current_chat',
+      chatIdManual: '',
+      ignoreErrors: true,
     },
     promote_user: {
       command: '/promote_user',

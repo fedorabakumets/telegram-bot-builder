@@ -13,6 +13,7 @@
  * Блок J: Полные реальные сценарии (8 тестов)
  * Блок K: keyboardNodeId и динамические кнопки (8 тестов)
  * Блок L: Отсутствие дублирующихся обработчиков (8 тестов)
+ * Блок M: keyboardLayout — группировка кнопок по рядам (6 тестов)
  */
 
 import fs from 'fs';
@@ -1697,6 +1698,190 @@ test('L08', 'три edit_message каждый со своей keyboard-нодо�
   ok(kbBDefs === 0, `async def handle_callback_kb_b не должна быть определена, найдено: ${kbBDefs}`);
   ok(kbCDefs === 0, `async def handle_callback_kb_c не должна быть определена, найдено: ${kbCDefs}`);
   syntax(code, 'l08');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК M: keyboardLayout — группировка кнопок по рядам
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок M: keyboardLayout — группировка кнопок по рядам ──────────');
+
+test('M01', 'editKeyboardMode=node + keyboardLayout (autoLayout=false) → InlineKeyboardMarkup в коде → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_layout'),
+    makeEditMessageNode('em_layout', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_layout',
+    }),
+    makeKeyboardNode('kb_layout', {
+      buttons: [
+        { id: 'btn1', text: 'Кнопка 1', action: 'goto', target: 'msg1' },
+        { id: 'btn2', text: 'Кнопка 2', action: 'goto', target: 'msg1' },
+        { id: 'btn3', text: 'Кнопка 3', action: 'goto', target: 'msg1' },
+      ],
+      keyboardLayout: {
+        rows: [
+          { buttonIds: ['btn1', 'btn2'] },
+          { buttonIds: ['btn3'] },
+        ],
+        columns: 2,
+        autoLayout: false,
+      },
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'm01');
+  ok(code.includes('InlineKeyboardMarkup'), 'InlineKeyboardMarkup должен быть в коде (ручная раскладка)');
+  ok(code.includes('_edit_btn_map'), '_edit_btn_map должен быть в коде');
+  ok(code.includes('_edit_rows'), '_edit_rows должен быть в коде');
+  syntax(code, 'm01');
+});
+
+test('M02', 'editKeyboardMode=node + keyboardLayout (autoLayout=true) → InlineKeyboardBuilder + adjust → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_auto'),
+    makeEditMessageNode('em_auto', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_auto',
+    }),
+    makeKeyboardNode('kb_auto', {
+      buttons: [
+        { id: 'btn1', text: 'Кнопка 1', action: 'goto', target: 'msg1' },
+        { id: 'btn2', text: 'Кнопка 2', action: 'goto', target: 'msg1' },
+      ],
+      keyboardLayout: {
+        rows: [{ buttonIds: ['btn1', 'btn2'] }],
+        columns: 2,
+        autoLayout: true,
+      },
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'm02');
+  ok(code.includes('InlineKeyboardBuilder'), 'InlineKeyboardBuilder должен быть в коде (autoLayout)');
+  ok(code.includes('_edit_builder.adjust(2)'), '_edit_builder.adjust(2) должен быть в коде');
+  syntax(code, 'm02');
+});
+
+test('M03', 'editMode=both + keyboardLayout (autoLayout=false) → InlineKeyboardMarkup + edit_message_text → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_both_layout'),
+    makeEditMessageNode('em_both_layout', 'msg1', {
+      editMode: 'both',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_both_layout',
+      editMessageText: 'Обновлённый текст',
+    }),
+    makeKeyboardNode('kb_both_layout', {
+      buttons: [
+        { id: 'btn_a', text: 'A', action: 'goto', target: 'msg1' },
+        { id: 'btn_b', text: 'B', action: 'url', url: 'https://example.com' },
+        { id: 'btn_c', text: 'C', action: 'goto', target: 'msg1' },
+      ],
+      keyboardLayout: {
+        rows: [
+          { buttonIds: ['btn_a', 'btn_b'] },
+          { buttonIds: ['btn_c'] },
+        ],
+        columns: 2,
+        autoLayout: false,
+      },
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'm03');
+  ok(code.includes('InlineKeyboardMarkup'), 'InlineKeyboardMarkup должен быть в коде');
+  ok(code.includes('edit_message_text'), 'edit_message_text должен быть в коде');
+  ok(code.includes('_edit_btn_map'), '_edit_btn_map должен быть в коде');
+  syntax(code, 'm03');
+});
+
+test('M04', 'editKeyboardMode=node + keyboardLayout (autoLayout=false) + url-кнопка → url= в _edit_btn_map → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_url_layout'),
+    makeEditMessageNode('em_url_layout', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_url_layout',
+    }),
+    makeKeyboardNode('kb_url_layout', {
+      buttons: [
+        { id: 'btn_url', text: '🌐 Сайт', action: 'url', url: 'https://example.com' },
+        { id: 'btn_back', text: '⬅️ Назад', action: 'goto', target: 'msg1' },
+      ],
+      keyboardLayout: {
+        rows: [
+          { buttonIds: ['btn_url'] },
+          { buttonIds: ['btn_back'] },
+        ],
+        columns: 1,
+        autoLayout: false,
+      },
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'm04');
+  ok(code.includes('url='), 'url= должен быть в коде');
+  ok(code.includes('InlineKeyboardMarkup'), 'InlineKeyboardMarkup должен быть в коде');
+  syntax(code, 'm04');
+});
+
+test('M05', 'без keyboardLayout (null) → fallback на InlineKeyboardBuilder → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_no_layout'),
+    makeEditMessageNode('em_no_layout', 'msg1', {
+      editMode: 'markup',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_no_layout',
+    }),
+    makeKeyboardNode('kb_no_layout', {
+      buttons: [
+        { id: 'btn1', text: 'Кнопка', action: 'goto', target: 'msg1' },
+      ],
+      // keyboardLayout не задан → null
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'm05');
+  ok(code.includes('InlineKeyboardBuilder'), 'InlineKeyboardBuilder должен быть в коде (fallback)');
+  syntax(code, 'm05');
+});
+
+test('M06', 'keyboardLayout с 3 рядами по 1 кнопке → 3 ряда в _edit_rows → синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCallbackTriggerNode('cb1', 'em_3rows'),
+    makeEditMessageNode('em_3rows', 'msg1', {
+      editMode: 'both',
+      editKeyboardMode: 'node',
+      editKeyboardNodeId: 'kb_3rows',
+      editMessageText: 'Три ряда',
+    }),
+    makeKeyboardNode('kb_3rows', {
+      buttons: [
+        { id: 'r1', text: 'Ряд 1', action: 'goto', target: 'msg1' },
+        { id: 'r2', text: 'Ряд 2', action: 'goto', target: 'msg1' },
+        { id: 'r3', text: 'Ряд 3', action: 'goto', target: 'msg1' },
+      ],
+      keyboardLayout: {
+        rows: [
+          { buttonIds: ['r1'] },
+          { buttonIds: ['r2'] },
+          { buttonIds: ['r3'] },
+        ],
+        columns: 1,
+        autoLayout: false,
+      },
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  const code = gen(p, 'm06');
+  ok(code.includes('InlineKeyboardMarkup'), 'InlineKeyboardMarkup должен быть в коде');
+  // Проверяем что есть 3 итерации по рядам
+  const rowMatches = code.match(/_edit_row = \[_edit_btn_map\[bid\]/g) || [];
+  ok(rowMatches.length >= 3, `должно быть минимум 3 итерации по рядам, найдено: ${rowMatches.length}`);
+  syntax(code, 'm06');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

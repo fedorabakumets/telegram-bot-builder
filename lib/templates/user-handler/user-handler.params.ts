@@ -6,7 +6,6 @@
 export type UserHandlerNodeType =
   | 'ban_user'
   | 'unban_user'
-  | 'kick_user'
   | 'mute_user'
   | 'unmute_user'
   | 'promote_user'

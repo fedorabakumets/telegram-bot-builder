@@ -9,6 +9,7 @@
  * Блок E: Режим timestamp (E01–E04)
  * Блок F: Автопереход (F01–F02)
  * Блок G: Синтаксис Python (G01–G04)
+ * Блок O: Режим array_concat (O01–O05)
  */
 
 import fs from 'fs';
@@ -625,6 +626,63 @@ test('N05', 'все 4 режима → синтаксис OK', () => {
     makeMsg('msg1'),
   ]);
   syntax(gen(p, 'N05'), 'N05');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК O: array_concat
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок O: array_concat ──────────────────────────────────────────');
+
+test('O01', 'array_concat → содержит json.loads', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'all_items', value: '{arr1}', mode: 'array_concat', concatWith: '{arr2}' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'O01');
+  ok(code.includes('json') && code.includes('loads'), 'json.loads должен быть в коде');
+});
+
+test('O02', 'array_concat → содержит конкатенацию через +', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'merged', value: '{list_a}', mode: 'array_concat', concatWith: '{list_b}' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'O02');
+  ok(code.includes('_sv_arr1_') && code.includes('_sv_arr2_'), 'Должны быть переменные arr1 и arr2');
+});
+
+test('O03', 'array_concat → содержит array_concat в логе', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'combined', value: '{first}', mode: 'array_concat', concatWith: '{second}' }], 'msg1'),
+    makeMsg('msg1'),
+  ]);
+  const code = gen(p, 'O03');
+  ok(code.includes('array_concat'), 'array_concat должен быть в логе');
+});
+
+test('O04', 'array_concat → синтаксис Python OK', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/merge', 'sv1'),
+    makeSV('sv1', [{ id: 'a1', variable: 'all_users', value: '{active_users}', mode: 'array_concat', concatWith: '{inactive_users}' }], 'msg1'),
+    makeMsg('msg1', 'Всего: {all_users}'),
+  ]);
+  syntax(gen(p, 'O04'), 'O04');
+});
+
+test('O05', 'array_concat → с другими modes синтаксис OK', () => {
+  const p = makeCleanProject([
+    makeCmd('cmd1', '/start', 'sv1'),
+    makeSV('sv1', [
+      { id: 'a1', variable: 'merged', value: '{arr1}', mode: 'array_concat', concatWith: '{arr2}' },
+      { id: 'a2', variable: 'count', value: '{merged}', mode: 'length' },
+    ], 'msg1'),
+    makeMsg('msg1', 'Элементов: {count}'),
+  ]);
+  syntax(gen(p, 'O05'), 'O05');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

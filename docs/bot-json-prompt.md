@@ -311,6 +311,7 @@
 | `uppercase` | В верхний регистр | `"{user_input}"` |
 | `trim` | Убрать пробелы по краям | `"{user_input}"` |
 | `length` | Длина строки или массива | `"{inventory}"` → "3" |
+| `array_concat` | Объединить два массива в один. Поля: `value` (первый массив), `concatWith` (второй массив). Результат: склеенный массив. | `value: "{arr1}"`, `concatWith: "{arr2}"` |
 
 #### Примеры
 
@@ -378,6 +379,11 @@
 Вложенный доступ через dot-notation:
 ```json
 { "id": "a0", "variable": "user_name", "value": "{api_response}", "maxValue": "data.users.0.name", "mode": "array_item" }
+```
+
+Объединение двух массивов:
+```json
+{ "id": "a0", "variable": "all_items", "value": "{active_items}", "mode": "array_concat", "concatWith": "{archived_items}" }
 ```
 
 #### Lookup (поиск в таблице)
@@ -935,10 +941,40 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 | `unban_user` | Разбанить |
 | `mute_user` | Замутить |
 | `unmute_user` | Размутить |
-| `kick_user` | Кикнуть |
+| `kick_user` | Исключить пользователя из группы |
 | `promote_user` | Назначить администратором |
 | `demote_user` | Снять права администратора |
 | `admin_rights` | Установить конкретные права |
+
+### kick_user — Исключить пользователя
+
+Исключает пользователя из группы (может вернуться по ссылке). Использует `unbanChatMember(only_if_banned=False)`.
+
+```json
+{
+  "id": "kick-1",
+  "type": "kick_user",
+  "position": { "x": 400, "y": 300 },
+  "data": {
+    "userIdSource": "current_user",
+    "userIdManual": "",
+    "chatIdSource": "current_chat",
+    "chatIdManual": "",
+    "ignoreErrors": true,
+    "enableAutoTransition": true,
+    "autoTransitionTo": "msg-done"
+  }
+}
+```
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `userIdSource` | "current_user" \| "reply_user" \| "custom" | Откуда брать ID пользователя |
+| `userIdManual` | string | ID или {переменная} (для режима custom) |
+| `chatIdSource` | "current_chat" \| "custom" | Откуда брать ID чата |
+| `chatIdManual` | string | ID чата или {переменная} (для режима custom) |
+| `ignoreErrors` | boolean | Не прерывать сценарий при ошибке |
+| `autoTransitionTo` | string | ID узла для автоперехода |
 
 ---
 

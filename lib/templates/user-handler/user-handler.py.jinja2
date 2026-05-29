@@ -1,7 +1,7 @@
 {#
   Шаблон обработчиков управления пользователями
 
-  @fileoverview Генерирует Python обработчики для ban/unban/kick/mute/unmute/promote/demote
+  @fileoverview Генерирует Python обработчики для ban/unban/mute/unmute/promote/demote
   @param {string} nodeType     — тип узла
   @param {string} nodeId       — ID узла
   @param {string} safeName     — безопасное имя функции (safe_name от nodeId)
@@ -11,9 +11,6 @@
   ban_user:
     @param {string} reason     — причина бана
     @param {number} untilDate  — unix timestamp окончания бана (0 = навсегда)
-
-  kick_user:
-    @param {string} reason     — причина кика
 
   mute_user:
     @param {number} duration           — длительность в секундах
@@ -113,19 +110,6 @@ async def {{ nodeType }}_{{ safeName }}_command_handler(message: types.Message):
         else:
             await message.answer(f"❌ Ошибка: {e}")
         logging.error(f"Ошибка разблокировки пользователя: {e}")
-{% elif nodeType == 'kick_user' %}
-{% set reason = reason if reason else 'Нарушение правил группы' %}
-        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id, revoke_messages=False)
-        import asyncio
-        await asyncio.sleep(0.5)
-        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
-        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: {{ reason }}")
-        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id} из группы {chat_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для исключения пользователя")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
         logging.error(f"Ошибка исключения пользователя: {e}")
 {% elif nodeType == 'mute_user' %}
 {% set duration = duration if duration else 3600 %}
@@ -292,19 +276,6 @@ async def {{ nodeType }}_{{ safeName }}_handler(message: types.Message):
         else:
             await message.answer(f"❌ Ошибка: {e}")
         logging.error(f"Ошибка разблокировки пользователя: {e}")
-{% elif nodeType == 'kick_user' %}
-{% set reason = reason if reason else 'Нарушение правил группы' %}
-        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id, revoke_messages=False)
-        import asyncio
-        await asyncio.sleep(0.5)
-        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)
-        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\nПричина: {{ reason }}")
-        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id} из группы {chat_id}")
-    except TelegramBadRequest as e:
-        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):
-            await message.answer("❌ Недостаточно прав для исключения пользователя")
-        else:
-            await message.answer(f"❌ Ошибка: {e}")
         logging.error(f"Ошибка исключения пользователя: {e}")
 {% elif nodeType == 'mute_user' %}
 {% set duration = duration if duration else 3600 %}
