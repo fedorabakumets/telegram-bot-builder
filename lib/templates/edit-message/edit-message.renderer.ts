@@ -28,6 +28,19 @@ export function collectEditMessageEntries(nodes: Node[]): EditMessageEntry[] {
     const targetNode = nodeMap.get(targetNodeId);
     const targetNodeType = targetNode?.type ?? 'message';
 
+    // Ищем customCallbackData среди кнопок, ведущих к этому узлу
+    let callbackPattern: string | undefined;
+    for (const n of validNodes) {
+      const buttons: any[] = (n.data as any)?.buttons || [];
+      for (const btn of buttons) {
+        if (btn.target === node.id && (btn.action === 'goto' || btn.action === 'command') && btn.customCallbackData) {
+          callbackPattern = btn.customCallbackData;
+          break;
+        }
+      }
+      if (callbackPattern) break;
+    }
+
     // Поддерживаем оба имени поля: editKeyboardNodeId (новое) и keyboardNodeId (legacy)
     const editKeyboardNodeId: string =
       (node.data as any)?.editKeyboardNodeId ||
@@ -51,6 +64,7 @@ export function collectEditMessageEntries(nodes: Node[]): EditMessageEntry[] {
       nodeId: node.id,
       targetNodeId,
       targetNodeType,
+      callbackPattern,
       editMode: (node.data as any)?.editMode ?? 'text',
       editMessageText: (node.data as any)?.editMessageText ?? '',
       editFormatMode: (node.data as any)?.editFormatMode ?? 'none',

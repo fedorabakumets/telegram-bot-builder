@@ -16,6 +16,8 @@ const editMessageEntrySchema = z.object({
   targetNodeId: z.string(),
   /** Тип следующего узла */
   targetNodeType: z.string(),
+  /** Паттерн callback_data (customCallbackData от кнопок, ведущих к этому узлу) */
+  callbackPattern: z.string().optional(),
   /** Режим редактирования: 'text' | 'markup' | 'both' */
   editMode: z.string(),
   /** Новый текст сообщения */
