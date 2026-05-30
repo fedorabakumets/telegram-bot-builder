@@ -347,7 +347,7 @@ def _eval_expr(template: str, user_vars: dict):
         for _node in _ast_expr.walk(tree):
             if not isinstance(_node, _allowed):
                 return template
-            if isinstance(_node, _ast_expr.Name) and _node.id not in _safe_funcs:
+            if isinstance(_node, _ast_expr.Name) and _node.id not in _safe_funcs and _node.id not in user_vars:
                 return template
             if isinstance(_node, _ast_expr.Attribute) and _node.attr not in _safe_methods:
                 return template
@@ -356,7 +356,16 @@ def _eval_expr(template: str, user_vars: dict):
                     return template
                 if isinstance(_node.func, _ast_expr.Attribute) and _node.func.attr not in _safe_methods:
                     return template
-        return eval(compile(tree, '<expr>', 'eval'), {"__builtins__": {}}, _safe_funcs)
+        # Собираем namespace: функции + переменные пользователя (приведённые к числам где возможно)
+        _eval_ns = dict(_safe_funcs)
+        for _vk, _vv in user_vars.items():
+            if _vk in _safe_funcs:
+                continue
+            try:
+                _eval_ns[_vk] = float(_vv) if '.' in str(_vv) else int(_vv)
+            except (ValueError, TypeError):
+                _eval_ns[_vk] = str(_vv) if _vv is not None else 0
+        return eval(compile(tree, '<expr>', 'eval'), {"__builtins__": {}}, _eval_ns)
     except Exception:
         return template
 
@@ -458,6 +467,18 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
     while _prev != result:
         _prev = result
         result = _each_pattern.sub(_expand_each, result)
+
+    # ─── Обработка inline-выражений {=...} ─────────────────────────────────────
+    def _inline_expr_replacer(_m_expr):
+        """Вычисляет inline-выражение {=expr} через _eval_expr."""
+        _expr_body = _m_expr.group(1)
+        _expr_result = _eval_expr(_expr_body, variables)
+        # Если _eval_expr вернул исходный шаблон (ошибка/невалидное) — оставляем как есть
+        if str(_expr_result) == _expr_body:
+            return _m_expr.group(0)
+        return str(_expr_result)
+
+    result = _re.sub(r'\{=([^}]+)\}', _inline_expr_replacer, result)
 
     # ─── Основная замена переменных {var} ─────────────────────────────────────
 

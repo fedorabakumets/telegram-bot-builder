@@ -388,6 +388,8 @@
 { "id": "a1", "variable": "order_id", "value": "{text}", "mode": "regex_extract", "pattern": "#(\\d+)", "regexGroup": "1" }
 ```
 
+> ⚠️ **ВАЖНО для regex_extract:** `value` — это ИСТОЧНИК текста (откуда извлекать), `pattern` — это REGEX паттерн. НЕ путать! Поле `regexSource` НЕ существует — используй только `value` + `pattern`.
+
 Списать 50 🍪:
 ```json
 { "id": "a2", "variable": "balance", "value": "{balance} - 50", "mode": "expression" }
@@ -1232,6 +1234,23 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 Переменные используются в `messageText`, `httpRequestUrl`, `httpRequestBody`, `query` и других полях через синтаксис `{имя_переменной}`.
 
 Вложенные поля из HTTP-ответа: `{response.data.user.name}`
+
+### Inline-выражения {=...}
+
+В любом текстовом поле (messageText, mediaCaption, button text, httpRequestUrl и т.д.) поддерживается синтаксис `{=выражение}` для вычисления формул прямо в тексте:
+
+| Синтаксис | Результат | Описание |
+|-----------|-----------|----------|
+| `{=credits - price}` | `3800` | Арифметика |
+| `{=thousands(credits)}` | `5 000` | Форматирование числа |
+| `{=round(score / games, 2)}` | `70.58` | Округление |
+| `{=max(hp - damage, 0)}` | `0` | Функции min/max |
+
+Доступные функции: `round`, `abs`, `int`, `float`, `min`, `max`, `str`, `thousands`.
+
+Переменные внутри `{=...}` пишутся **без** фигурных скобок: `{=thousands(user_amount)}`, не `{=thousands({user_amount})}`.
+
+Выражения вычисляются через `_eval_expr` — безопасный вычислитель на основе AST. При ошибке или невалидном выражении текст `{=...}` остаётся без изменений.
 
 ### Системные переменные
 
