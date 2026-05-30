@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-05-30T17:51:35+03:00",
+    "updated_at": "2026-05-30T21:11:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -208,7 +208,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-05-30T17:51:35+03:00",
+    "updated_at": "2026-05-30T21:11:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -695,7 +695,7 @@
   {
     "path": "futures/inline-expressions",
     "title": "🧮 Формулы в тексте сообщения (Inline Expressions)",
-    "excerpt": "**Проблема:** Чтобы показать вычисленное значение в тексте сообщения, нужна отдельная нода `set_variable` перед `message`. Это добавляет лиш",
+    "excerpt": "| Фаза | Статус | Описание |",
     "parts": [
       "futures",
       "inline-expressions"
@@ -703,7 +703,7 @@
     "folder_titles": {
       "futures": "🔮 Планы развития"
     },
-    "updated_at": "2026-05-20T10:12:35+03:00",
+    "updated_at": "2026-05-30T21:11:45+03:00",
     "tags": [],
     "author": ""
   },
@@ -959,6 +959,21 @@
       "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-30T17:51:35+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/user-data-persistence-after-redeploy",
+    "title": "Персистентность user_data после редеплоя",
+    "excerpt": "При редеплое бота `user_data` (in-memory dict) полностью очищается. Если пользователь после редеплоя нажимает кнопку, которая ведёт на узел ",
+    "parts": [
+      "futures",
+      "user-data-persistence-after-redeploy"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-05-30T21:11:45+03:00",
     "tags": [],
     "author": ""
   },
