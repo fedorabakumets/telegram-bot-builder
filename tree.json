@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-05-29T16:05:18+03:00",
+    "updated_at": "2026-05-30T15:49:17+03:00",
     "tags": [],
     "author": ""
   },
@@ -208,7 +208,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-05-29T16:05:18+03:00",
+    "updated_at": "2026-05-30T15:49:17+03:00",
     "tags": [],
     "author": ""
   },
@@ -558,6 +558,21 @@
     "author": ""
   },
   {
+    "path": "futures/cross-user-target-variables",
+    "title": "Кросс-пользовательские переменные через {target.*}",
+    "excerpt": "Когда админ нажимает кнопку с `customCallbackData: \"approve_{user_id}\"`, обработчик работает в контексте админа. Переменные заявителя (`{nam",
+    "parts": [
+      "futures",
+      "cross-user-target-variables"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-05-30T15:49:17+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "futures/deep-link-analytics",
     "title": "Deep Link Analytics — Roadmap",
     "excerpt": "- ✅ **Deep link routing** — параметры `?start=` корректно обрабатываются",
@@ -719,6 +734,36 @@
       "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-29T16:05:18+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/migrate-collectUserInput-to-input-node",
+    "title": "Миграция collectUserInput → отдельная нода input",
+    "excerpt": "Message-ноды исторически поддерживают `collectUserInput: true` с полями `inputVariable`, `enableTextInput/Photo/Video/Audio/Document` и т.д.",
+    "parts": [
+      "futures",
+      "migrate-collectUserInput-to-input-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-05-30T15:49:17+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/multi-recipient-edit-message",
+    "title": "Multi-recipient edit_message",
+    "excerpt": "Когда сообщение отправляется нескольким получателям через `messageSendRecipients`, каждый получатель получает своё сообщение с уникальным `m",
+    "parts": [
+      "futures",
+      "multi-recipient-edit-message"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-05-30T15:49:17+03:00",
     "tags": [],
     "author": ""
   },
