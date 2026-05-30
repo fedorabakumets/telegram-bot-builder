@@ -388,6 +388,8 @@
 { "id": "a1", "variable": "order_id", "value": "{text}", "mode": "regex_extract", "pattern": "#(\\d+)", "regexGroup": "1" }
 ```
 
+> ⚠️ **ВАЖНО для regex_extract:** `value` — это ИСТОЧНИК текста (откуда извлекать), `pattern` — это REGEX паттерн. НЕ путать! Поле `regexSource` НЕ существует — используй только `value` + `pattern`.
+
 Списать 50 🍪:
 ```json
 { "id": "a2", "variable": "balance", "value": "{balance} - 50", "mode": "expression" }
