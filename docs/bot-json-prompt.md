@@ -902,6 +902,22 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 | `forward_message` | Переслать сообщение |
 | `answer_callback_query` | Ответить на callback (всплывающее уведомление) |
 
+#### customCallbackData для edit_message
+
+Кнопки, ведущие к `edit_message`, поддерживают `customCallbackData` с переменными. Это позволяет передать данные (например ID пользователя) через callback:
+
+```json
+{
+  "id": "btn-approve",
+  "text": "✅ Подтвердить",
+  "action": "goto",
+  "target": "edit-status-node",
+  "customCallbackData": "approve_{user_id}"
+}
+```
+
+При нажатии кнопки динамическая часть (после префикса) сохраняется в переменную `{_cb_dynamic_id}`. Это полезно для кросс-пользовательских сценариев (админ одобряет заявку другого пользователя).
+
 ---
 
 ### delete_message — Удалить сообщение

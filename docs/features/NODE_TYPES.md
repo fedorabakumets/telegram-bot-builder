@@ -153,6 +153,10 @@
 | `editKeyboardMode: 'node'` | Берёт клавиатуру из привязанного keyboard-узла |
 | `keyboardLayout` | Если задан в keyboard-узле и `autoLayout: false` — кнопки группируются по рядам согласно layout |
 
+#### Динамический callback (customCallbackData)
+
+Кнопки, ведущие к `edit_message`, могут содержать `customCallbackData` с переменными (например `"approve_{user_id}"`). При нажатии динамическая часть извлекается в переменную `{_cb_dynamic_id}`, доступную в тексте редактирования и последующих узлах.
+
 ---
 
 ### ↗️ Переслать сообщение (`forward_message`)
