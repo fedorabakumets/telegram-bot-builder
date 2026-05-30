@@ -459,6 +459,18 @@ def replace_variables_in_text(text: str, variables: dict, filters: dict = None) 
         _prev = result
         result = _each_pattern.sub(_expand_each, result)
 
+    # ─── Обработка inline-выражений {=...} ─────────────────────────────────────
+    def _inline_expr_replacer(_m_expr):
+        """Вычисляет inline-выражение {=expr} через _eval_expr."""
+        _expr_body = _m_expr.group(1)
+        _expr_result = _eval_expr(_expr_body, variables)
+        # Если _eval_expr вернул исходный шаблон (ошибка/невалидное) — оставляем как есть
+        if str(_expr_result) == _expr_body:
+            return _m_expr.group(0)
+        return str(_expr_result)
+
+    result = _re.sub(r'\{=([^}]+)\}', _inline_expr_replacer, result)
+
     # ─── Основная замена переменных {var} ─────────────────────────────────────
 
     def _resolve(var_path: str) -> str | None:
