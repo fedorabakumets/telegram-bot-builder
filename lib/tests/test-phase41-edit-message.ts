@@ -14,6 +14,7 @@
  * Блок K: keyboardNodeId и динамические кнопки (8 тестов)
  * Блок L: Отсутствие дублирующихся обработчиков (8 тестов)
  * Блок M: keyboardLayout — группировка кнопок по рядам (6 тестов)
+ * Блок N: Динамический callbackPattern (customCallbackData с переменными) (5 тестов)
  */
 
 import fs from 'fs';
@@ -1882,6 +1883,111 @@ test('M06', 'keyboardLayout с 3 рядами по 1 кнопке → 3 ряда
   const rowMatches = code.match(/_edit_row = \[_edit_btn_map\[bid\]/g) || [];
   ok(rowMatches.length >= 3, `должно быть минимум 3 итерации по рядам, найдено: ${rowMatches.length}`);
   syntax(code, 'm06');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК N: Динамический callbackPattern (customCallbackData с переменными)
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок N: Динамический callbackPattern ──────────────────────────');
+
+test('N01', 'customCallbackData с {variable} → генерирует startsWith', () => {
+  const p = makeCleanProject([
+    makeMessageNode('msg_menu', 'Выберите:', undefined),
+    {
+      id: 'kb_dyn', type: 'keyboard',
+      position: { x: 0, y: 0 },
+      data: {
+        buttons: [
+          { id: 'btn_approve', text: 'Одобрить', action: 'goto', target: 'em_dyn', customCallbackData: 'approve_{user_id}' },
+        ],
+        keyboardType: 'inline',
+      },
+    },
+    makeEditMessageNode('em_dyn', 'msg_done', { editMode: 'text', editMessageText: 'Одобрено!' }),
+    makeMessageNode('msg_done', 'Готово'),
+  ]);
+  const code = gen(p, 'n01');
+  ok(code.includes('startswith("approve_")'), 'startswith("approve_") должен быть в коде');
+});
+
+test('N02', 'customCallbackData с {variable} → извлекает _cb_dynamic_id', () => {
+  const p = makeCleanProject([
+    makeMessageNode('msg_menu', 'Выберите:', undefined),
+    {
+      id: 'kb_dyn', type: 'keyboard',
+      position: { x: 0, y: 0 },
+      data: {
+        buttons: [
+          { id: 'btn_approve', text: 'Одобрить', action: 'goto', target: 'em_dyn2', customCallbackData: 'approve_{user_id}' },
+        ],
+        keyboardType: 'inline',
+      },
+    },
+    makeEditMessageNode('em_dyn2', 'msg_done', { editMode: 'text', editMessageText: 'Одобрено!' }),
+    makeMessageNode('msg_done', 'Готово'),
+  ]);
+  const code = gen(p, 'n02');
+  ok(code.includes('_cb_dynamic_id'), '_cb_dynamic_id должен быть в коде');
+  ok(code.includes('set_user_var'), 'set_user_var должен быть в коде');
+});
+
+test('N03', 'без customCallbackData → exact match по nodeId', () => {
+  const p = makeCleanProject([
+    makeEditMessageNode('em_plain', 'msg_done', { editMode: 'text', editMessageText: 'Обновлено' }),
+    makeMessageNode('msg_done', 'Готово'),
+  ]);
+  const code = gen(p, 'n03');
+  ok(code.includes('c.data == "em_plain"'), 'c.data == "em_plain" должен быть в коде');
+  ok(!code.includes('c.data.startswith'), 'c.data.startswith НЕ должен быть в коде');
+});
+
+test('N04', 'статический customCallbackData → exact match', () => {
+  const p = makeCleanProject([
+    makeMessageNode('msg_menu', 'Выберите:', undefined),
+    {
+      id: 'kb_static', type: 'keyboard',
+      position: { x: 0, y: 0 },
+      data: {
+        buttons: [
+          { id: 'btn_static', text: 'Нажми', action: 'goto', target: 'em_static', customCallbackData: 'my_static' },
+        ],
+        keyboardType: 'inline',
+      },
+    },
+    makeEditMessageNode('em_static', 'msg_done', { editMode: 'text', editMessageText: 'Статический' }),
+    makeMessageNode('msg_done', 'Готово'),
+  ]);
+  const code = gen(p, 'n04');
+  ok(code.includes('c.data == "my_static"'), 'c.data == "my_static" должен быть в коде');
+  ok(!code.includes('c.data.startswith'), 'c.data.startswith НЕ должен быть в коде');
+});
+
+test('N05', 'синтаксис Python OK с динамическим callbackPattern', () => {
+  const p = makeCleanProject([
+    makeCommandTriggerNode('cmd_start', '/start', 'msg_menu'),
+    makeMessageNode('msg_menu', 'Заявки:', undefined),
+    {
+      id: 'kb_dynamic_full', type: 'keyboard',
+      position: { x: 0, y: 0 },
+      data: {
+        buttons: [
+          { id: 'btn_dyn', text: '✅ Одобрить', action: 'goto', target: 'em_full_dyn', customCallbackData: 'edit_approve_{user_id}' },
+        ],
+        keyboardType: 'inline',
+      },
+    },
+    makeEditMessageNode('em_full_dyn', 'msg_final', {
+      editMode: 'text',
+      editMessageText: '✅ Заявка одобрена для {_cb_dynamic_id}',
+      editFormatMode: 'none',
+    }),
+    makeMessageNode('msg_final', 'Готово'),
+  ]);
+  const code = gen(p, 'n05');
+  ok(code.includes('startswith("edit_approve_")'), 'startswith("edit_approve_") должен быть в коде');
+  ok(code.includes('_cb_dynamic_id'), '_cb_dynamic_id должен быть в коде');
+  syntax(code, 'n05');
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────
