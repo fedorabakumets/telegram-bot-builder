@@ -6,6 +6,9 @@ __pycache__/
 .upm/
 uv.lock
 
+# Bot-specific one-off scripts (not tracked in git)
+tools/bot-scripts/
+
 # Development files
 .cache/
 .config/
