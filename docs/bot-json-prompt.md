@@ -1246,6 +1246,8 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 
 Доступные функции: `round`, `abs`, `int`, `float`, `min`, `max`, `str`, `thousands`.
 
+Переменные внутри `{=...}` пишутся **без** фигурных скобок: `{=thousands(user_amount)}`, не `{=thousands({user_amount})}`.
+
 Выражения вычисляются через `_eval_expr` — безопасный вычислитель на основе AST. При ошибке или невалидном выражении текст `{=...}` остаётся без изменений.
 
 ### Системные переменные
