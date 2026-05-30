@@ -39,13 +39,14 @@ async def deep_link_router(message: types.Message, command: CommandObject, state
     else:
         logging.info(f"🔗 [DeepLink] utm_source уже есть: '{existing_utm}' — не перезаписываем")
 
-    # Сохраняем deep_link_param только при первом визите
+    # Сохраняем deep_link_param только при первом визите (если пусто — записываем 'direct')
     existing_dlp = user_data.get(user_id, {}).get("deep_link_param")
-    if not existing_dlp and args:
-        await set_user_var(user_id, "deep_link_param", args)
-        logging.info(f"🔗 [DeepLink] deep_link_param записан: '{args}' для {user_id}")
+    if not existing_dlp:
+        _dlp_value = args if args else "direct"
+        await set_user_var(user_id, "deep_link_param", _dlp_value)
+        logging.info(f"🔗 [DeepLink] deep_link_param записан: '{_dlp_value}' для {user_id}")
         # Если args начинается с "ref_" — парсим referrer_id
-        if args.startswith("ref_"):
+        if args and args.startswith("ref_"):
             _referrer_id = args[4:]
             await set_user_var(user_id, "referrer_id", _referrer_id)
             logging.info(f"🔗 [DeepLink] referrer_id записан: '{_referrer_id}' для {user_id}")

@@ -250,7 +250,7 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
                 is_premium=getattr(event.from_user, 'is_premium', None) or False,
                 is_bot=getattr(event.from_user, 'is_bot', None) or False,
                 language_code=getattr(event.from_user, 'language_code', None) or None,
-                deep_link_param=user_data.get(int(user_id), {}).get("deep_link_param"),
+                deep_link_param=user_data.get(int(user_id), {}).get("deep_link_param") or "direct",
                 referrer_id=user_data.get(int(user_id), {}).get("referrer_id"),
             ))
 {% if saveIncomingMedia %}
