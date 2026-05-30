@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-05-30T15:49:17+03:00",
+    "updated_at": "2026-05-30T17:51:35+03:00",
     "tags": [],
     "author": ""
   },
@@ -208,7 +208,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-05-30T15:49:17+03:00",
+    "updated_at": "2026-05-30T17:51:35+03:00",
     "tags": [],
     "author": ""
   },
@@ -944,6 +944,21 @@
       "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-20T12:35:56+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/universal-dynamic-callback-pattern",
+    "title": "Универсальная поддержка динамического callbackPattern",
+    "excerpt": "Когда кнопка имеет `customCallbackData` с переменной (например `\"approve_{user_id}\"`), callback_data в рантайме становится `\"approve_6591857",
+    "parts": [
+      "futures",
+      "universal-dynamic-callback-pattern"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-05-30T17:51:35+03:00",
     "tags": [],
     "author": ""
   },
