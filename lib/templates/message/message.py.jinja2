@@ -38,11 +38,26 @@
 {# Обработчик callback для навигации к узлу #}
 {# Если задан callbackPattern (customCallbackData) — декоратор слушает его, иначе nodeId #}
 {%- set _cb_pattern = callbackPattern if callbackPattern else nodeId %}
+{%- set _cb_is_dynamic = callbackPattern and '{' in callbackPattern %}
+{%- if _cb_is_dynamic %}
+{%- set _cb_static_prefix = callbackPattern.split('{')[0] %}
+@dp.callback_query(lambda c: c.data and c.data.startswith("{{ _cb_static_prefix }}"))
+{%- else %}
 @dp.callback_query(lambda c: c.data == "{{ _cb_pattern }}"{% if not callbackPattern %} or c.data.startswith("{{ nodeId }}_btn_"){% endif %})
+{%- endif %}
 async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.CallbackQuery, state: FSMContext = None):
     """Обработчик перехода к узлу {{ nodeId }}"""
     user_id = callback_query.from_user.id
     logging.info(f"🔵 Переход к узлу {{ nodeId }} для пользователя {user_id}")
+    {%- if _cb_is_dynamic %}
+    # Извлекаем динамическую часть callback_data (суффикс после статичного префикса)
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    _cb_suffix = (callback_query.data or "").replace("{{ _cb_static_prefix }}", "", 1)
+    if _cb_suffix:
+        user_data[user_id]["_cb_dynamic_id"] = _cb_suffix
+        await set_user_var(user_id, "_cb_dynamic_id", _cb_suffix)
+    {%- endif %}
     {# Лог нажатия кнопки пользователем #}
     _pressed_cb = getattr(callback_query, 'data', None)
     if _pressed_cb and not getattr(callback_query, '_is_fake', False):
