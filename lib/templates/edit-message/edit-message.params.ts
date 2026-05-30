@@ -13,6 +13,8 @@ export interface EditMessageEntry {
   targetNodeId: string;
   /** Тип следующего узла */
   targetNodeType: string;
+  /** Паттерн callback_data (customCallbackData от кнопок, ведущих к этому узлу) */
+  callbackPattern?: string;
   /** Режим редактирования: 'text' | 'markup' | 'both' */
   editMode: string;
   /** Новый текст сообщения (поддерживает {var}) */

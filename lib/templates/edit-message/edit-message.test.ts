@@ -148,3 +148,48 @@ describe('generateEditMessageHandlers()', () => {
     expect(generateEditMessageHandlers(nodesWithoutNodes)).toBe('');
   });
 });
+
+// ─── dynamic callbackPattern (customCallbackData с переменными) ───────────────
+
+describe('dynamic callbackPattern (customCallbackData with variables)', () => {
+  it('generates startsWith when customCallbackData contains {variable}', () => {
+    const nodes = [
+      makeNode('edit_approve', 'edit_message', { editMode: 'text', editMessageText: 'Одобрено', editFormatMode: 'html', autoTransitionTo: 'msg_next' }),
+      makeNode('kb1', 'keyboard', { buttons: [{ id: 'b1', text: 'OK', action: 'goto', target: 'edit_approve', customCallbackData: 'edit_approve_{user_id}' }], keyboardType: 'inline' }),
+      makeNode('msg_next', 'message', { messageText: 'Done' }),
+    ];
+    const code = generateEditMessageHandlers(nodes);
+    expect(code).toContain('c.data.startswith("edit_approve_")');
+    expect(code).not.toContain('c.data == "edit_approve"');
+  });
+
+  it('extracts _cb_dynamic_id from callback suffix', () => {
+    const nodes = [
+      makeNode('edit_reject', 'edit_message', { editMode: 'text', editMessageText: 'Отклонено', editFormatMode: 'none', autoTransitionTo: '' }),
+      makeNode('kb1', 'keyboard', { buttons: [{ id: 'b1', text: 'No', action: 'goto', target: 'edit_reject', customCallbackData: 'edit_reject_{user_id}' }], keyboardType: 'inline' }),
+    ];
+    const code = generateEditMessageHandlers(nodes);
+    expect(code).toContain('_cb_dynamic_id');
+    expect(code).toContain('set_user_var');
+  });
+
+  it('uses exact match when no customCallbackData targets the node', () => {
+    const nodes = [
+      makeNode('edit_plain', 'edit_message', { editMode: 'text', editMessageText: 'Plain', editFormatMode: 'none', autoTransitionTo: 'msg1' }),
+      makeNode('msg1', 'message', { messageText: 'Next' }),
+    ];
+    const code = generateEditMessageHandlers(nodes);
+    expect(code).toContain('c.data == "edit_plain"');
+    expect(code).not.toContain('startswith');
+  });
+
+  it('uses exact match when customCallbackData has no variables', () => {
+    const nodes = [
+      makeNode('edit_static', 'edit_message', { editMode: 'text', editMessageText: 'Static', editFormatMode: 'none', autoTransitionTo: '' }),
+      makeNode('kb1', 'keyboard', { buttons: [{ id: 'b1', text: 'Go', action: 'goto', target: 'edit_static', customCallbackData: 'my_static_cb' }], keyboardType: 'inline' }),
+    ];
+    const code = generateEditMessageHandlers(nodes);
+    expect(code).toContain('c.data == "my_static_cb"');
+    expect(code).not.toContain('startswith');
+  });
+});

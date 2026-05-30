@@ -158,13 +158,6 @@
     "markdown": false,
     "keyboardType": "none",
     "buttons": [],
-    "collectUserInput": false,
-    "inputVariable": "имя_переменной",
-    "enableTextInput": true,
-    "enablePhotoInput": false,
-    "enableVideoInput": false,
-    "enableAudioInput": false,
-    "enableDocumentInput": false,
     "conditionalMessages": [],
     "enableConditionalMessages": false,
     "adminOnly": false,
@@ -174,6 +167,8 @@
   }
 }
 ```
+
+> ⛔ **Запрещено** использовать `collectUserInput`, `inputVariable`, `enableTextInput`, `enablePhotoInput` и другие поля сбора ввода в message-ноде. Для сбора ввода используйте **только** отдельную ноду `input`.
 
 #### Форматирование текста (formatMode)
 
@@ -779,7 +774,11 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 
 ### input — ожидать ввод пользователя
 
-⚠️ **Предпочтительный способ сбора ввода.** Поле `collectUserInput` в message-ноде — устаревшее. Используйте отдельную ноду `input` вместо него.
+**Единственный способ сбора ввода.** Message-нода отправляет вопрос, input-нода ожидает и сохраняет ответ.
+
+Типичная цепочка: `message` (вопрос) → `input` (сохранение ответа) → следующий узел.
+
+Для кнопочного ввода: `message` (вопрос) → `keyboard` (кнопки) → `input` (сохранение нажатия).
 
 ```json
 {
@@ -788,7 +787,38 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
     "inputVariable": "user_answer",
     "inputPrompt": "Введите ваш ответ:",
     "inputType": "text",
-    "autoTransitionTo": "next_node_id"
+    "inputTargetNodeId": "next_node_id"
+  }
+}
+```
+
+#### Поля input-ноды
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `inputVariable` | string | Имя переменной для сохранения ответа |
+| `inputType` | string | Тип ввода: `text`, `photo`, `video`, `audio`, `document`, `location`, `contact`, `any`, `callback` |
+| `inputTargetNodeId` | string | ID следующего узла после получения ответа |
+| `inputPrompt` | string | Подсказка (не отправляется пользователю, для UI) |
+| `appendVariable` | boolean | `true` — добавить к существующему значению, `false` — заменить |
+| `saveToDatabase` | boolean | Сохранять в БД |
+| `inputRequired` | boolean | Ввод обязателен |
+| `maxLength` | number | Максимальная длина текста (0 = без ограничений) |
+| `minLength` | number | Минимальная длина текста (0 = без ограничений) |
+| `validationType` | string | Валидация: `none`, `email`, `phone`, `number` |
+| `retryMessage` | string | Сообщение при ошибке валидации |
+
+#### inputType: "callback"
+
+Для сохранения нажатия inline-кнопки. Кнопки на keyboard-ноде ведут к input-ноде с `inputType: "callback"` — текст нажатой кнопки сохраняется в переменную.
+
+```json
+{
+  "type": "input",
+  "data": {
+    "inputVariable": "user_choice",
+    "inputType": "callback",
+    "inputTargetNodeId": "next_node_id"
   }
 }
 ```
@@ -871,6 +901,22 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 | `unpin_message` | Открепить сообщение |
 | `forward_message` | Переслать сообщение |
 | `answer_callback_query` | Ответить на callback (всплывающее уведомление) |
+
+#### customCallbackData для edit_message
+
+Кнопки, ведущие к `edit_message`, поддерживают `customCallbackData` с переменными. Это позволяет передать данные (например ID пользователя) через callback:
+
+```json
+{
+  "id": "btn-approve",
+  "text": "✅ Подтвердить",
+  "action": "goto",
+  "target": "edit-status-node",
+  "customCallbackData": "approve_{user_id}"
+}
+```
+
+При нажатии кнопки динамическая часть (после префикса) сохраняется в переменную `{_cb_dynamic_id}`. Это полезно для кросс-пользовательских сценариев (админ одобряет заявку другого пользователя).
 
 ---
 
