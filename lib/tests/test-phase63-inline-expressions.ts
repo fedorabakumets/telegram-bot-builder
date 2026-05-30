@@ -88,6 +88,29 @@ test('06', 'Fallback: если _eval_expr вернул исходное — ос
   ok(fnBody.includes('_m_expr.group(0)'), 'Должен возвращать исходный match при ошибке');
 });
 
+test('07', 'Runtime: thousands(10000) вычисляется корректно', () => {
+  const code = renderUtils();
+  // Проверяем что _eval_expr содержит thousands в whitelist
+  ok(code.includes('thousands'), 'Должен содержать функцию thousands в коде');
+  // Проверяем что thousands форматирует числа с пробелами
+  const thousandsImpl = code.includes("replace(\",\", \" \")") || code.includes('.replace(",", " ")');
+  ok(thousandsImpl, 'thousands должен заменять запятые на пробелы');
+});
+
+test('08', 'Regex не матчит обычные переменные {var}', () => {
+  const code = renderUtils();
+  // Regex \{=([^}]+)\} требует = после {, обычные {var} не матчатся
+  ok(code.includes('\\{=([^}]+)\\}'), 'Regex должен требовать = после открывающей скобки');
+});
+
+test('09', '_eval_expr определён до _inline_expr_replacer', () => {
+  const code = renderUtils();
+  const evalPos = code.indexOf('def _eval_expr(');
+  const inlinePos = code.indexOf('def _inline_expr_replacer');
+  ok(evalPos > -1, '_eval_expr должен быть определён');
+  ok(evalPos < inlinePos, '_eval_expr должен быть определён до _inline_expr_replacer');
+});
+
 // ─── Итоги ───────────────────────────────────────────────────────────────────
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
