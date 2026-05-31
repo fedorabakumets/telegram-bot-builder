@@ -169,7 +169,7 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
 
         {% elif entry.messageIdSource == 'last_bot_message' %}
         # Удаление последнего сообщения бота
-        _msg_id = user_data.get(user_id, {}).get('last_bot_message_id')
+        _msg_id = user_data.get(user_id, {}).get('_last_sent_msg_id') or user_data.get(user_id, {}).get('last_bot_message_id')
         if _msg_id:
             {% if entry.ignoreErrors %}
             try:

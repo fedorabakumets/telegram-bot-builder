@@ -853,6 +853,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         await set_user_var(user_id, "{{ saveMessageIdTo }}", sent_message.message_id)
         logging.info(f"💾 ID сообщения сохранён в переменную '{{ saveMessageIdTo }}': {sent_message.message_id}")
     {%- endif %}
+    # Системная переменная: ID последнего отправленного сообщения бота (для edit/delete)
+    if sent_message and hasattr(sent_message, 'message_id'):
+        user_data[user_id]["_last_sent_msg_id"] = str(sent_message.message_id)
 
     {# Лог отправленных кнопок #}
     {%- if buttons and buttons|length > 0 and keyboardType == 'inline' %}
