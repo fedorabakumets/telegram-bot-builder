@@ -86,7 +86,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         _msg = _msgs[0] if _msgs else None
         if not _msg:
             logging.error(f"❌ Узел {{ nodeId }}: нет сообщений в {_entity}")
-            return
+            raise Exception(f"Нет сообщений в {_entity}")
         _msg_id = _msg.id
 {%- else %}
         _msg_id = int(_msg_id_str)
@@ -95,7 +95,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         _msg = await userbot_client.get_messages(_target, ids=_msg_id)
         if not _msg:
             logging.error(f"❌ Узел {{ nodeId }}: сообщение {_msg_id} не найдено в {_entity}")
-            return
+            raise Exception(f"Сообщение {_msg_id} не найдено в {_entity}")
 {%- endif %}
 
         # Нажимаем кнопку (fire-and-forget — не ждём answerCallbackQuery)
