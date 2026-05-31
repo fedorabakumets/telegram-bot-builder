@@ -202,5 +202,12 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         {% endif %}
     except Exception as e:
         logging.error(f"Ошибка в edit_message {{ entry.nodeId }}: {e}")
+        {% if entry.targetNodeId %}
+        # При ошибке редактирования всё равно переходим к следующему узлу
+        try:
+            await handle_callback_{{ sanitized_target_id }}(callback_query, state=None)
+        except Exception:
+            pass
+        {% endif %}
 
 {% endfor %}
