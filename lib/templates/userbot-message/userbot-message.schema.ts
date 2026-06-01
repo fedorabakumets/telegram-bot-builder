@@ -27,6 +27,8 @@ export const userbotMessageParamsSchema = z.object({
   saveResponseIdTo: z.string().optional(),
   /** Переменная для сохранения текста ответа от получателя */
   saveResponseTextTo: z.string().optional(),
+  /** Переменная для сохранения кнопок ответа (JSON) */
+  saveButtonsTo: z.string().optional(),
   /** Время ожидания ответа в секундах */
   responseWaitSeconds: z.number().optional().default(3),
   /** Стратегия выбора ответа */

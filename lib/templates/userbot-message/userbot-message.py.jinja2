@@ -234,6 +234,35 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         await set_user_var(user_id, "{{ saveResponseTextTo }}", _resp_text)
         logging.info(f"💾 Текст ответа сохранён: {{ saveResponseTextTo }} = {_resp_text[:80]!r}")
 {%- endif %}
+{%- if saveButtonsTo %}
+        # Сохраняем кнопки ответа как JSON
+        _btns_list = []
+        if _resp_msg and _resp_msg.reply_markup:
+            for _row in _resp_msg.reply_markup.rows:
+                for _btn in _row.buttons:
+                    _btn_entry = {"text": _btn.text}
+                    _btn_type = type(_btn).__name__
+                    if hasattr(_btn, 'data') and _btn.data:
+                        _btn_entry["data"] = _btn.data.decode('utf-8', errors='replace')
+                        _btn_entry["type"] = "callback"
+                    elif hasattr(_btn, 'url') and _btn.url:
+                        _btn_entry["url"] = _btn.url
+                        _btn_entry["type"] = "url"
+                    elif _btn_type == 'KeyboardButtonSwitchInline':
+                        _btn_entry["query"] = getattr(_btn, 'query', '')
+                        _btn_entry["type"] = "switch_inline"
+                    elif _btn_type == 'KeyboardButtonWebView':
+                        _btn_entry["url"] = getattr(_btn, 'url', '')
+                        _btn_entry["type"] = "web_app"
+                    else:
+                        _btn_entry["type"] = "text"
+                    _btns_list.append(_btn_entry)
+        import json as _json_btns
+        _btns_json = _json_btns.dumps(_btns_list, ensure_ascii=False)
+        user_data[user_id]["{{ saveButtonsTo }}"] = _btns_json
+        await set_user_var(user_id, "{{ saveButtonsTo }}", _btns_json)
+        logging.info(f"💾 Кнопки ответа сохранены: {{ saveButtonsTo }} ({len(_btns_list)} кнопок)")
+{%- endif %}
 {%- endif %}
 
 {%- if autoTransitionTo %}

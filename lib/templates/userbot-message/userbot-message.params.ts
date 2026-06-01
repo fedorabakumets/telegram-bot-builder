@@ -25,6 +25,8 @@ export interface UserbotMessageTemplateParams {
   saveResponseIdTo?: string;
   /** Имя переменной для сохранения текста ответа от получателя */
   saveResponseTextTo?: string;
+  /** Переменная для сохранения кнопок ответа (JSON) */
+  saveButtonsTo?: string;
   /** Время ожидания ответа в секундах (по умолчанию 3) */
   responseWaitSeconds?: number;
   /** Стратегия выбора ответа: 'first' | 'longest' | 'regex_match' */

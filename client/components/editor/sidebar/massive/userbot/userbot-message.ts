@@ -22,5 +22,6 @@ export const userbotMessage: ComponentDefinition = {
     responseWaitSeconds: 3,
     responseStrategy: 'longest',
     responseFilterRegex: '',
+    saveButtonsTo: '',
   }
 };
