@@ -212,6 +212,33 @@ describe('generateUserbotMessage()', () => {
     });
     expect(code).toContain('timeout=10');
   });
+
+  it('генерирует saveButtonsTo вместе с saveResponseIdTo', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-19',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveResponseIdTo: 'resp_id',
+      saveButtonsTo: 'buttons_json',
+    });
+    expect(code).toContain('buttons_json');
+    // Шаблон использует `import json as _json_btns`, поэтому проверяем оба варианта
+    const hasDumps = code.includes('json.dumps') || code.includes('_json_btns.dumps');
+    expect(hasDumps).toBe(true);
+    expect(code).toContain('reply_markup');
+    expect(code).toContain('set_user_var(user_id, "buttons_json"');
+  });
+
+  it('не генерирует saveButtonsTo без saveResponseIdTo', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-20',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveButtonsTo: 'buttons_json',
+    });
+    // Без saveResponseIdTo кнопки не сохраняются (нет ответа для парсинга)
+    expect(code).not.toContain('reply_markup');
+  });
 });
 
 describe('userbotMessageParamsSchema', () => {

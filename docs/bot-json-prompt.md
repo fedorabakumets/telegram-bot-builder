@@ -1100,6 +1100,9 @@ SELECT balance, reputation FROM profiles WHERE telegram_id = {user_id}
 | `attachedMedia` | string[] | Медиафайлы (/uploads/... или URL) |
 | `disableLinkPreview` | boolean | Отключить превью ссылок |
 | `saveMessageIdTo` | string | Переменная для сохранения ID сообщения |
+| `saveResponseIdTo` | string | Переменная для сохранения ID ответного сообщения от получателя |
+| `saveResponseTextTo` | string | Переменная для сохранения текста ответного сообщения |
+| `saveButtonsTo` | string | Переменная для сохранения кнопок ответа как JSON-массив `[{text, type, data?, url?}]` |
 | `autoTransitionTo` | string | ID узла для автоперехода |
 
 **Примечания:**
