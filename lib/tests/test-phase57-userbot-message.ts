@@ -58,6 +58,11 @@ function makeUserbotMessageNode(id: string, opts: any = {}) {
       attachedMedia: opts.attachedMedia || [],
       disableLinkPreview: opts.disableLinkPreview || false,
       saveMessageIdTo: opts.saveMessageIdTo || '',
+      saveResponseIdTo: opts.saveResponseIdTo || '',
+      saveResponseTextTo: opts.saveResponseTextTo || '',
+      saveButtonsTo: opts.saveButtonsTo || '',
+      responseStrategy: opts.responseStrategy || 'longest',
+      responseWaitSeconds: opts.responseWaitSeconds ?? 3,
       autoTransitionTo: opts.autoTransitionTo || '',
       enableAutoTransition: !!opts.autoTransitionTo,
     },
@@ -404,6 +409,29 @@ test('G03', 'содержит logging.error', () => {
   const p = makeCleanProject([makeUserbotMessageNode('ub1')]);
   const code = gen(p, 'g03');
   ok(code.includes('logging.error'), 'logging.error должен быть в коде');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК H: saveButtonsTo — кнопки из соседних сообщений
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок H: saveButtonsTo ─────────────────────────────────────────');
+
+test('H01', 'saveButtonsTo ищет кнопки в других сообщениях при longest', () => {
+  const p = makeCleanProject([
+    makeUserbotMessageNode('ub1', {
+      userbotEntity: '@litebitbit_bot',
+      saveResponseIdTo: 'resp_id',
+      saveResponseTextTo: 'resp_text',
+      saveButtonsTo: 'buttons_json',
+      responseStrategy: 'longest',
+    }),
+  ]);
+  const code = gen(p, 'h01');
+  syntax(code, 'h01');
+  ok(code.includes('_btns_src_msg'), '_btns_src_msg должен быть в коде');
+  ok(code.includes('Кнопки взяты из сообщения'), 'fallback поиск кнопок должен логироваться');
+  ok(code.includes('set_user_var(user_id, "buttons_json"'), 'buttons_json должен сохраняться');
 });
 
 // ════════════════════════════════════════════════════════════════════════════

@@ -235,10 +235,28 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         logging.info(f"💾 Текст ответа сохранён: {{ saveResponseTextTo }} = {_resp_text[:80]!r}")
 {%- endif %}
 {%- if saveButtonsTo %}
-        # Сохраняем кнопки ответа как JSON
+        # Сохраняем кнопки ответа как JSON (ищем в других сообщениях, если longest выбрал только текст)
+        _btns_src_msg = _resp_msg
+        if not (_resp_msg and _resp_msg.reply_markup):
+            try:
+                _btns_recent = await userbot_client.get_messages(_resp_entity, limit=5)
+                _btns_recent_list = _btns_recent if isinstance(_btns_recent, list) else [_btns_recent]
+                for _btns_cand in _btns_recent_list:
+                    if (
+                        _btns_cand
+                        and hasattr(_btns_cand, 'sender_id')
+                        and _btns_cand.sender_id != _my_id
+                        and _btns_cand.id > _sent_id
+                        and _btns_cand.reply_markup
+                    ):
+                        _btns_src_msg = _btns_cand
+                        logging.info(f"💾 [{{ nodeId }}] Кнопки взяты из сообщения id={_btns_cand.id} (не из основного ответа)")
+                        break
+            except Exception as _btns_err:
+                logging.warning(f"⚠️ [{{ nodeId }}] Не удалось найти сообщение с кнопками: {_btns_err}")
         _btns_list = []
-        if _resp_msg and _resp_msg.reply_markup:
-            for _row in _resp_msg.reply_markup.rows:
+        if _btns_src_msg and _btns_src_msg.reply_markup:
+            for _row in _btns_src_msg.reply_markup.rows:
                 for _btn in _row.buttons:
                     _btn_entry = {"text": _btn.text}
                     _btn_type = type(_btn).__name__

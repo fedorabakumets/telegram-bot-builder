@@ -227,6 +227,8 @@ describe('generateUserbotMessage()', () => {
     expect(hasDumps).toBe(true);
     expect(code).toContain('reply_markup');
     expect(code).toContain('set_user_var(user_id, "buttons_json"');
+    expect(code).toContain('_btns_src_msg');
+    expect(code).toContain('Кнопки взяты из сообщения');
   });
 
   it('не генерирует saveButtonsTo без saveResponseIdTo', () => {
