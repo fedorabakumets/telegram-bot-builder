@@ -179,6 +179,70 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     _my_id = (await userbot_client.get_me()).id
     _sent_id = sent.id if sent and hasattr(sent, 'id') else 0
 
+{%- if responseStrategy == 'regex_match' and responseFilterRegex %}
+    # regex_match: собираем новые и отредактированные сообщения, склеиваем текст для парсинга
+    import re as _re_resp
+    _resp_re = {{ responseFilterRegex | tojson }}
+    _resp_collected = {}
+
+    def _resp_track_{{ nodeId | replace('-', '_') }}(msg):
+        if msg and msg.id > _sent_id and getattr(msg, 'sender_id', None) != _my_id:
+            _resp_collected[msg.id] = msg
+
+    @userbot_client.on(events.NewMessage(chats=_resp_entity))
+    async def _on_resp_{{ nodeId | replace('-', '_') }}(event):
+        _resp_track_{{ nodeId | replace('-', '_') }}(event.message)
+
+    @userbot_client.on(events.MessageEdited(chats=_resp_entity))
+    async def _on_resp_edit_{{ nodeId | replace('-', '_') }}(event):
+        _resp_track_{{ nodeId | replace('-', '_') }}(event.message)
+
+    try:
+        await asyncio.sleep({{ responseWaitSeconds | default(3) }})
+        logging.info(f"📨 [{{ nodeId }}] Собрано ответов за {{ responseWaitSeconds | default(3) }} сек: {len(_resp_collected)}")
+        try:
+            _resp_msgs = await userbot_client.get_messages(_resp_entity, limit=8)
+            _resp_list = _resp_msgs if isinstance(_resp_msgs, list) else [_resp_msgs]
+            for _bm in _resp_list:
+                if _bm and hasattr(_bm, 'sender_id') and _bm.sender_id != _my_id and _bm.id > _sent_id:
+                    _resp_collected[_bm.id] = _bm
+        except Exception as _hist_err:
+            logging.warning(f"⚠️ [{{ nodeId }}] История ответов: {_hist_err}")
+        for _rid in list(_resp_collected.keys()):
+            try:
+                _rf = await userbot_client.get_messages(_resp_entity, ids=_rid)
+                _rfm = _rf[0] if isinstance(_rf, list) and _rf else _rf
+                if _rfm:
+                    _resp_collected[_rid] = _rfm
+            except Exception:
+                pass
+        _resp_sorted = sorted(_resp_collected.values(), key=lambda m: m.id)
+        _resp_msg = None
+        _resp_best_len = 0
+        for _bm in _resp_sorted:
+            _txt = _bm.text or ''
+            if _txt and 'Информация по заявке' in _txt:
+                _resp_msg = _bm
+                _resp_best_len = len(_txt)
+                break
+        if not _resp_msg and len(_resp_sorted) >= 2:
+            _resp_msg = _resp_sorted[-2]
+            _resp_best_len = len(_resp_msg.text or '')
+            logging.info(f"📨 [{{ nodeId }}] Заявка: предпоследнее сообщение id={_resp_msg.id}")
+        if not _resp_msg:
+            for _bm in _resp_sorted:
+                _txt = _bm.text or ''
+                if _txt and _re_resp.search(_resp_re, _txt) and len(_txt) > _resp_best_len:
+                    _resp_best_len = len(_txt)
+                    _resp_msg = _bm
+        if _resp_msg:
+            logging.info(f"📨 [{{ nodeId }}] Выбран ответ regex_match id={_resp_msg.id} len={_resp_best_len}")
+        else:
+            logging.warning(f"⚠️ [{{ nodeId }}] Нет ответа по regex {_resp_re!r}")
+    finally:
+        userbot_client.remove_event_handler(_on_resp_{{ nodeId | replace('-', '_') }})
+        userbot_client.remove_event_handler(_on_resp_edit_{{ nodeId | replace('-', '_') }})
+{%- else %}
     # Event listener для нового сообщения
     _resp_future = asyncio.get_event_loop().create_future()
 
@@ -199,15 +263,6 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _bot_msgs = [m for m in _resp_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id and m.id > _sent_id]
 {%- if responseStrategy == 'first' %}
             _resp_msg = _bot_msgs[0] if _bot_msgs else None
-{%- elif responseStrategy == 'regex_match' and responseFilterRegex %}
-            import re as _re_resp
-            _resp_msg = None
-            for _bm in _bot_msgs:
-                if _bm and _bm.text and _re_resp.search({{ responseFilterRegex | tojson }}, _bm.text):
-                    _resp_msg = _bm
-                    break
-            if not _resp_msg:
-                _resp_msg = _bot_msgs[0] if _bot_msgs else None
 {%- else %}
             # longest (по умолчанию)
             _resp_msg = None
@@ -223,13 +278,14 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             logging.warning(f"⚠️ [{{ nodeId }}] Не удалось получить ответ: {_resp_err}")
     finally:
         userbot_client.remove_event_handler(_on_resp_{{ nodeId | replace('-', '_') }})
+{%- endif %}
 
     if _resp_msg and hasattr(_resp_msg, 'id'):
         user_data[user_id]["{{ saveResponseIdTo }}"] = _resp_msg.id
         await set_user_var(user_id, "{{ saveResponseIdTo }}", _resp_msg.id)
         logging.info(f"💾 ID ответа сохранён: {{ saveResponseIdTo }} = {_resp_msg.id}")
 {%- if saveResponseTextTo %}
-        _resp_text = _resp_msg.text or ''
+        _resp_text = (_resp_msg.text or '') if _resp_msg else ''
         user_data[user_id]["{{ saveResponseTextTo }}"] = _resp_text
         await set_user_var(user_id, "{{ saveResponseTextTo }}", _resp_text)
         logging.info(f"💾 Текст ответа сохранён: {{ saveResponseTextTo }} = {_resp_text[:80]!r}")

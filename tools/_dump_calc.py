@@ -1,8 +1,10 @@
-"""@fileoverview Dump calc assignment ids"""
-import json
+"""
+@fileoverview Редирект на tools/compare_bots/check.py (раньше дамп calc id).
+"""
+import runpy
 from pathlib import Path
 
-d = json.loads(Path("bots/новый_бот_1_242_163/project.json").read_text(encoding="utf-8"))
-calc = next(n for n in next(s for s in d["sheets"] if s["id"] == "sheet-bots")["nodes"] if n["id"] == "bot-setv-calc")
-for a in calc["data"]["assignments"]:
-    print(a["id"], a.get("variable"), (a.get("value") or "")[:70])
+runpy.run_path(
+    str(Path(__file__).resolve().parent / "compare_bots" / "check.py"),
+    run_name="__main__",
+)

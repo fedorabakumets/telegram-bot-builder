@@ -189,17 +189,37 @@ describe('generateUserbotMessage()', () => {
     expect(code).toContain('longest');
   });
 
-  it('использует стратегию regex_match в fallback', () => {
+  it('использует стратегию regex_match: сбор сообщений за таймаут', () => {
     const code = generateUserbotMessage({
       nodeId: 'ub-17',
       messageText: 'Тест',
       userbotEntity: '@bot',
       saveResponseIdTo: 'resp_id',
       responseStrategy: 'regex_match',
-      responseFilterRegex: '\\d+\\.\\d+',
+      responseFilterRegex: 'К оплате',
+      responseWaitSeconds: 8,
     });
     expect(code).toContain('import re as _re_resp');
-    expect(code).toContain('_re_resp.search');
+    expect(code).toContain('_resp_collected');
+    expect(code).toContain('_resp_best_len');
+    expect(code).toContain('await asyncio.sleep(8)');
+    expect(code).toContain('events.MessageEdited(chats=_resp_entity)');
+  });
+
+  it('regex_match со saveResponseTextTo берёт текст выбранной заявки', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-17b',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveResponseIdTo: 'resp_id',
+      saveResponseTextTo: 'crazy_text',
+      responseStrategy: 'regex_match',
+      responseFilterRegex: 'К оплате',
+      responseWaitSeconds: 10,
+    });
+    expect(code).toContain('_resp_sorted[-2]');
+    expect(code).toContain('_resp_msg.text');
+    expect(code).toContain('Информация по заявке');
   });
 
   it('использует кастомный таймаут responseWaitSeconds', () => {
