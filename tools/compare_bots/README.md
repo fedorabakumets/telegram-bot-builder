@@ -18,6 +18,7 @@
 | `python tools/compare_bots/patch_love.py` | Love |
 | `python tools/compare_bots/patch_crazy.py` | CrazyBTC |
 | `python tools/compare_bots/patch_lucky.py` | Lucky |
+| `python tools/compare_bots/patch_inf.py` | INFINITY |
 
 ## Изоляция (тест одного бота)
 
@@ -29,6 +30,7 @@
 | `python tools/compare_bots/isolate_love.py` | Love |
 | `python tools/compare_bots/isolate_crazy.py` | CrazyBTC |
 | `python tools/compare_bots/isolate_lucky.py` | Lucky |
+| `python tools/compare_bots/isolate_inf.py` | INFINITY |
 
 После теста: `restore_all_bots.py`.
 
@@ -36,5 +38,6 @@
 
 - `bots/новый_бот_1_242_163/scrape_crazy.py`
 - `bots/новый_бот_1_242_163/scrape_lucky.py`
+- `bots/новый_бот_1_242_163/scrape_inf.py`
 
 `--sample` — проверка regex без Telethon.

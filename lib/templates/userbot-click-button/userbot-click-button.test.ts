@@ -96,6 +96,17 @@ describe('generateUserbotClickButton()', () => {
     expect(code).toContain('asyncio.create_task(_fire_click())');
     expect(code).toContain('fire-and-forget');
   });
+
+  it('messageIdSource=last → последнее сообщение бота с reply_markup', () => {
+    const code = generateUserbotClickButton({
+      nodeId: 'ub-c16',
+      messageIdSource: 'last',
+      clickValue: 'OK',
+    });
+    expect(code).toContain('limit=12');
+    expect(code).toContain('_cand.reply_markup');
+    expect(code).toContain('нет сообщений бота с кнопками');
+  });
 });
 
 describe('userbotClickButtonParamsSchema', () => {

@@ -180,26 +180,21 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     _sent_id = sent.id if sent and hasattr(sent, 'id') else 0
 
 {%- if responseStrategy == 'regex_match' and responseFilterRegex %}
-    # regex_match: собираем новые и отредактированные сообщения, склеиваем текст для парсинга
+    # regex_match: события + Future (как longest), сразу история после send (гонка с быстрым ответом)
     import re as _re_resp
+    import time as _time_resp
     _resp_re = {{ responseFilterRegex | tojson }}
     _resp_collected = {}
+    _resp_wait_sec = {{ responseWaitSeconds | default(3) }}
+    _resp_future = asyncio.get_event_loop().create_future()
+    _resp_best_len = 0
 
     def _resp_track_{{ nodeId | replace('-', '_') }}(msg):
         if msg and msg.id > _sent_id and getattr(msg, 'sender_id', None) != _my_id:
             _resp_collected[msg.id] = msg
 
-    @userbot_client.on(events.NewMessage(chats=_resp_entity))
-    async def _on_resp_{{ nodeId | replace('-', '_') }}(event):
-        _resp_track_{{ nodeId | replace('-', '_') }}(event.message)
-
-    @userbot_client.on(events.MessageEdited(chats=_resp_entity))
-    async def _on_resp_edit_{{ nodeId | replace('-', '_') }}(event):
-        _resp_track_{{ nodeId | replace('-', '_') }}(event.message)
-
-    try:
-        await asyncio.sleep({{ responseWaitSeconds | default(3) }})
-        logging.info(f"📨 [{{ nodeId }}] Собрано ответов за {{ responseWaitSeconds | default(3) }} сек: {len(_resp_collected)}")
+    async def _resp_pull_history_{{ nodeId | replace('-', '_') }}():
+        """Подтягивает свежие сообщения бота из истории чата."""
         try:
             _resp_msgs = await userbot_client.get_messages(_resp_entity, limit=8)
             _resp_list = _resp_msgs if isinstance(_resp_msgs, list) else [_resp_msgs]
@@ -216,25 +211,65 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     _resp_collected[_rid] = _rfm
             except Exception:
                 pass
+
+    def _resp_pick_{{ nodeId | replace('-', '_') }}():
+        """Выбирает лучшее сообщение для парсинга (Crazy / regex / предпоследнее)."""
+        _pick_msg = None
+        _pick_len = 0
         _resp_sorted = sorted(_resp_collected.values(), key=lambda m: m.id)
-        _resp_msg = None
-        _resp_best_len = 0
         for _bm in _resp_sorted:
             _txt = _bm.text or ''
             if _txt and 'Информация по заявке' in _txt:
-                _resp_msg = _bm
-                _resp_best_len = len(_txt)
-                break
-        if not _resp_msg and len(_resp_sorted) >= 2:
-            _resp_msg = _resp_sorted[-2]
-            _resp_best_len = len(_resp_msg.text or '')
-            logging.info(f"📨 [{{ nodeId }}] Заявка: предпоследнее сообщение id={_resp_msg.id}")
-        if not _resp_msg:
-            for _bm in _resp_sorted:
-                _txt = _bm.text or ''
-                if _txt and _re_resp.search(_resp_re, _txt) and len(_txt) > _resp_best_len:
-                    _resp_best_len = len(_txt)
-                    _resp_msg = _bm
+                return _bm, len(_txt)
+        if len(_resp_sorted) >= 2:
+            _cand = _resp_sorted[-2]
+            return _cand, len(_cand.text or '')
+        for _bm in _resp_sorted:
+            _txt = _bm.text or ''
+            if _txt and _re_resp.search(_resp_re, _txt) and len(_txt) > _pick_len:
+                _pick_len = len(_txt)
+                _pick_msg = _bm
+        return _pick_msg, _pick_len
+
+    def _resp_try_finish_{{ nodeId | replace('-', '_') }}():
+        """Завершает ожидание, если в буфере есть подходящее сообщение."""
+        nonlocal _resp_best_len
+        _pick_msg, _pick_len = _resp_pick_{{ nodeId | replace('-', '_') }}()
+        if _pick_msg and not _resp_future.done():
+            _resp_best_len = _pick_len
+            _resp_future.set_result(_pick_msg)
+
+    @userbot_client.on(events.NewMessage(chats=_resp_entity))
+    async def _on_resp_{{ nodeId | replace('-', '_') }}(event):
+        _resp_track_{{ nodeId | replace('-', '_') }}(event.message)
+        _resp_try_finish_{{ nodeId | replace('-', '_') }}()
+
+    @userbot_client.on(events.MessageEdited(chats=_resp_entity))
+    async def _on_resp_edit_{{ nodeId | replace('-', '_') }}(event):
+        _resp_track_{{ nodeId | replace('-', '_') }}(event.message)
+        _resp_try_finish_{{ nodeId | replace('-', '_') }}()
+
+    try:
+        _resp_t0 = _time_resp.monotonic()
+        # Ответ мог прийти до подключения handlers — сразу читаем историю
+        await _resp_pull_history_{{ nodeId | replace('-', '_') }}()
+        _resp_try_finish_{{ nodeId | replace('-', '_') }}()
+        if not _resp_future.done():
+            try:
+                _resp_msg = await asyncio.wait_for(_resp_future, timeout=_resp_wait_sec)
+                logging.info(
+                    f"📨 [{{ nodeId }}] regex_match (event) за {_time_resp.monotonic() - _resp_t0:.1f} сек, "
+                    f"собрано {len(_resp_collected)}"
+                )
+            except asyncio.TimeoutError:
+                await _resp_pull_history_{{ nodeId | replace('-', '_') }}()
+                _resp_msg, _resp_best_len = _resp_pick_{{ nodeId | replace('-', '_') }}()
+                logging.info(
+                    f"📨 [{{ nodeId }}] regex_match (fallback) за {_time_resp.monotonic() - _resp_t0:.1f} сек: "
+                    f"{len(_resp_collected)}"
+                )
+        else:
+            _resp_msg = _resp_future.result()
         if _resp_msg:
             logging.info(f"📨 [{{ nodeId }}] Выбран ответ regex_match id={_resp_msg.id} len={_resp_best_len}")
         else:

@@ -202,7 +202,9 @@ describe('generateUserbotMessage()', () => {
     expect(code).toContain('import re as _re_resp');
     expect(code).toContain('_resp_collected');
     expect(code).toContain('_resp_best_len');
-    expect(code).toContain('await asyncio.sleep(8)');
+    expect(code).toContain('_resp_future');
+    expect(code).toContain('await asyncio.wait_for(_resp_future');
+    expect(code).toContain('regex_match (event)');
     expect(code).toContain('events.MessageEdited(chats=_resp_entity)');
   });
 

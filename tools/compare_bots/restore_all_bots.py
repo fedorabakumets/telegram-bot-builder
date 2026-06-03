@@ -19,17 +19,17 @@ REAL_BOTS = {
     "Love",
     "CrazyBTC",
     "Lucky",
+    "INFINITY",
 }
 
-# crazy_btc, love_btc, lucky_btc считаются в parse-нодах
+# btc с комиссией считаются в parse-нодах
 RATE_CALC_IDS = {
     "calc3": "crypto24",
     "calc4": "shaxta",
     "calc5": "sanchez",
     "calc_cf": "cf",
     "calc_vortex": "vortex",
-    "calc_inf": "inf",
-        "calc_casper": "casper",
+    "calc_casper": "casper",
 }
 
 PUSH_BOTS = [
@@ -66,9 +66,9 @@ PUSH_BOTS = [
 ]
 
 LEGEND = (
-    "✅ <b>С комиссией</b> (реальный пересчёт): ScoobyChange, LiteBit, Capitalist, 24Crypto, Love, CrazyBTC, Lucky\n"
+    "✅ <b>С комиссией</b> (реальный пересчёт): ScoobyChange, LiteBit, Capitalist, 24Crypto, Love, CrazyBTC, Lucky, INFINITY\n"
     "⚠️ <b>Базовый курс</b> (комиссия может не учтена): Shaxta, Sanchez, BitMixer, CryptoFlow, "
-    "Vortex, INFINITY, CASPER, Monopoly"
+    "Vortex, CASPER, Monopoly"
 )
 
 
@@ -185,6 +185,10 @@ def main() -> None:
     nodes["bot-setv-parse-love"]["data"]["enableAutoTransition"] = True
     nodes["bot-setv-parse-crazy"]["data"]["autoTransitionTo"] = "bot-ub-inf-start"
     nodes["bot-setv-parse-crazy"]["data"]["enableAutoTransition"] = True
+    nodes["bot-setv-parse-inf"]["data"]["autoTransitionTo"] = "bot-ub-lucky-start"
+    nodes["bot-setv-parse-inf"]["data"]["enableAutoTransition"] = True
+    nodes["bot-setv-parse-lucky"]["data"]["autoTransitionTo"] = "bot-ub-love-start"
+    nodes["bot-setv-parse-lucky"]["data"]["enableAutoTransition"] = True
     nodes["bot-setv-parse-monopoly"]["data"]["autoTransitionTo"] = "bot-setv-calc"
     nodes["bot-setv-parse-monopoly"]["data"]["enableAutoTransition"] = True
 
