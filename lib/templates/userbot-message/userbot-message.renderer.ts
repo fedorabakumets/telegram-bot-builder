@@ -44,9 +44,11 @@ export function generateUserbotMessageHandlers(nodes: Node[], projectId: number 
       saveMessageIdTo: data.saveMessageIdTo || undefined,
       saveResponseIdTo: data.saveResponseIdTo || undefined,
       saveResponseTextTo: data.saveResponseTextTo || undefined,
+      saveButtonsTo: data.saveButtonsTo || undefined,
       responseWaitSeconds: data.responseWaitSeconds || 3,
       responseStrategy: data.responseStrategy || 'longest',
       responseFilterRegex: data.responseFilterRegex || '',
+      responseFloorMessageIdVar: data.responseFloorMessageIdVar || undefined,
       autoTransitionTo: data.autoTransitionTo || undefined,
       projectId,
     });

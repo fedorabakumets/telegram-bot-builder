@@ -58,6 +58,12 @@ function makeUserbotMessageNode(id: string, opts: any = {}) {
       attachedMedia: opts.attachedMedia || [],
       disableLinkPreview: opts.disableLinkPreview || false,
       saveMessageIdTo: opts.saveMessageIdTo || '',
+      saveResponseIdTo: opts.saveResponseIdTo || '',
+      saveResponseTextTo: opts.saveResponseTextTo || '',
+      saveButtonsTo: opts.saveButtonsTo || '',
+      responseStrategy: opts.responseStrategy || 'longest',
+      responseFilterRegex: opts.responseFilterRegex || '',
+      responseWaitSeconds: opts.responseWaitSeconds ?? 3,
       autoTransitionTo: opts.autoTransitionTo || '',
       enableAutoTransition: !!opts.autoTransitionTo,
     },
@@ -404,6 +410,70 @@ test('G03', 'содержит logging.error', () => {
   const p = makeCleanProject([makeUserbotMessageNode('ub1')]);
   const code = gen(p, 'g03');
   ok(code.includes('logging.error'), 'logging.error должен быть в коде');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// БЛОК H: saveButtonsTo — кнопки из соседних сообщений
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок H: saveButtonsTo ─────────────────────────────────────────');
+
+test('H01', 'saveButtonsTo ищет кнопки в других сообщениях при longest', () => {
+  const p = makeCleanProject([
+    makeUserbotMessageNode('ub1', {
+      userbotEntity: '@litebitbit_bot',
+      saveResponseIdTo: 'resp_id',
+      saveResponseTextTo: 'resp_text',
+      saveButtonsTo: 'buttons_json',
+      responseStrategy: 'longest',
+    }),
+  ]);
+  const code = gen(p, 'h01');
+  syntax(code, 'h01');
+  ok(code.includes('_btns_src_msg'), '_btns_src_msg должен быть в коде');
+  ok(code.includes('Кнопки взяты из сообщения'), 'fallback поиск кнопок должен логироваться');
+  ok(code.includes('set_user_var(user_id, "buttons_json"'), 'buttons_json должен сохраняться');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// Блок I: regex_match — правки и склейка текста
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок I: regex_match ───────────────────────────────────────────');
+
+test('I01', 'regex_match собирает MessageEdited и склеивает saveResponseTextTo', () => {
+  const p = makeCleanProject([
+    makeUserbotMessageNode('ub_crazy_addr', {
+      userbotEntity: '@BTCrzyBOT',
+      saveResponseIdTo: 'crazy_resp5',
+      saveResponseTextTo: 'crazy_text',
+      responseStrategy: 'regex_match',
+      responseFilterRegex: 'К оплате',
+      responseWaitSeconds: 10,
+    }),
+  ]);
+  const code = gen(p, 'i01');
+  syntax(code, 'i01');
+  ok(code.includes('events.MessageEdited(chats=_resp_entity)'), 'MessageEdited для regex_match');
+  ok(code.includes('_resp_sorted[-2]'), 'предпоследнее сообщение как заявка');
+  ok(code.includes('Информация по заявке'), 'приоритет сообщения заявки');
+});
+
+test('I02', 'regex_match учитывает edit меню (id <= sent) при совпадении regex', () => {
+  const p = makeCleanProject([
+    makeUserbotMessageNode('ub_cf_amount', {
+      userbotEntity: '@Crypto_Flow_exchange_bot',
+      saveResponseIdTo: 'cf_resp2',
+      saveResponseTextTo: 'cf_text',
+      responseStrategy: 'regex_match',
+      responseFilterRegex: '[Пп]олучите|Предварительный',
+      responseWaitSeconds: 4,
+    }),
+  ]);
+  const code = gen(p, 'i02');
+  syntax(code, 'i02');
+  ok(code.includes('msg.id > _sent_id'), 'новые сообщения после send');
+  ok(code.includes('_re_resp.search(_resp_re, _txt)'), 'edit меню с regex при id <= sent');
 });
 
 // ════════════════════════════════════════════════════════════════════════════

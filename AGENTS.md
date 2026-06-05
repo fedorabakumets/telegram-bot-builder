@@ -108,3 +108,55 @@ export function MyComponent({ ... }: MyProps) { ... }
 > - `lib/templates/node-handlers/node-handlers.dispatcher.ts` — подключение генератора в пайплайн
 > - `lib/index.ts` — экспорт для внешнего использования
 
+## Правила редактирования project.json (ноды ботов)
+
+### Condition-нода (type: "condition")
+
+**НИКОГДА** не использовать формат `conditions` + `defaultTarget`. Это несуществующий формат.
+
+Правильный формат condition-ноды:
+
+```json
+{
+  "id": "my-condition-node",
+  "type": "condition",
+  "position": {"x": 0, "y": 0},
+  "data": {
+    "buttons": [],
+    "variable": "имя_переменной_для_проверки",
+    "branches": [
+      {
+        "id": "branch_1",
+        "value": "",
+        "target": "id-целевой-ноды-если-условие-true",
+        "operator": "filled"
+      },
+      {
+        "id": "branch_else",
+        "value": "",
+        "target": "id-целевой-ноды-по-умолчанию",
+        "operator": "else"
+      }
+    ],
+    "markdown": false,
+    "adminOnly": false,
+    "showInMenu": false,
+    "messageText": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "isPrivateOnly": false,
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "enableStatistics": false
+  }
+}
+```
+
+**Допустимые операторы:** `filled`, `empty`, `equals`, `contains`, `greater_than`, `less_than`, `between`, `else`, `is_private`, `is_group`, `is_channel`, `is_admin`, `is_premium`, `is_bot`, `is_subscribed`, `is_not_subscribed`.
+
+**НЕ существуют операторы:** `not_empty`, `not_equals`, `not_contains` и любые другие не из списка выше.
+
+### Перед созданием/изменением нод
+
+Всегда сверяться с существующими нодами того же типа в project.json — копировать формат `data` из рабочих нод, а не выдумывать свой.
+

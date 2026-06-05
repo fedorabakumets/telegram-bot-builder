@@ -54,6 +54,12 @@ try {
 > `deep_link_param` и `referrer_id` не перезаписываются при повторных визитах —
 > используется `COALESCE(bot_users.field, EXCLUDED.field)` для сохранения первого значения.
 
+### sync_user_attribution_to_db
+
+Отдельная функция для записи источника в колонки `bot_users` без полного upsert профиля.
+Вызывается из `set_user_var` при ключах `deep_link_param` / `referrer_id` — сразу после `/start`,
+до `save_user_to_db` в middleware.
+
 ### Redis событие new-user
 
 При первом визите публикуется в канал `bot:user:{PROJECT_ID}:{TOKEN_ID}`:

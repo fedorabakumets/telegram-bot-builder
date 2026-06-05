@@ -258,6 +258,25 @@ export function UserbotMessageConfiguration({
             />
           </div>
         )}
+
+        {/* Сохранить кнопки ответа (JSON) */}
+        {data.saveResponseIdTo && (
+          <div className="space-y-1 pt-2 border-t border-violet-200/20 dark:border-violet-800/20">
+            <Label className="text-xs text-muted-foreground">Сохранить кнопки ответа (JSON)</Label>
+            <div className="flex gap-1">
+              <Input
+                value={data.saveButtonsTo ?? ''}
+                onChange={(e) => onNodeUpdate(selectedNode.id, { saveButtonsTo: e.target.value })}
+                placeholder="buttons_json (необязательно)"
+                className="h-8 text-sm flex-1"
+              />
+              <VariableSelector
+                availableVariables={availableVariables as Variable[]}
+                onSelect={(v) => onNodeUpdate(selectedNode.id, { saveButtonsTo: v })}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Информация о режиме */}

@@ -589,6 +589,17 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
         });
       }
     }
+    if (data.saveButtonsTo?.trim()) {
+      const key = `ub_msg_buttons__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.saveButtonsTo,
+          nodeId: node.id,
+          nodeType: 'userbot_message' as any,
+          description: 'Кнопки ответа (JSON)',
+        });
+      }
+    }
   });
 
   // Добавляем переменные от userbot_inline_query-узлов

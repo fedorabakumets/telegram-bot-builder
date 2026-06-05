@@ -35,8 +35,11 @@ const code = generateMessageLoggingCode(true, false, projectId, true, true);
 При первом обращении любого пользователя (через любой триггер, команду или кнопку):
 1. Проверяет `user_id not in user_data`
 2. Инициализирует `user_data[user_id]` с `username`, `first_name`, `last_name`, `user_name`, `user_id`, `language_code`, `is_premium`, `is_bot`
-3. Если `userDatabaseEnabled` — вызывает `save_user_to_db()`
-4. Логирует событие
+3. Логирует событие
+
+Запись в БД (`save_user_to_db`) выполняется в `message_logging_middleware` **после** handler.
+Если источник не задан (нет deep link) — в колонку пишется `"direct"`.
+До handler дефолт не подставляется — иначе метки вроде `oldLink` затирались бы.
 
 Регистрируется в `main()` через `dp.message.middleware(register_user_middleware)` — всегда, независимо от БД.
 
@@ -71,7 +74,8 @@ async def register_user_middleware(handler, event: types.Message, data: dict):
 
 ### autoRegisterUsers=true, userDatabaseEnabled=true
 
-Дополнительно вызывает `save_user_to_db()` при регистрации.
+Дополнительно **не** вызывает `save_user_to_db()` — только инициализация `user_data` в памяти.
+Профиль и источник трафика пишет `message_logging_middleware` после handler.
 
 ## Регистрация в main()
 

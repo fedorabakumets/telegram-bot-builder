@@ -179,6 +179,114 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     _my_id = (await userbot_client.get_me()).id
     _sent_id = sent.id if sent and hasattr(sent, 'id') else 0
 
+{%- if responseStrategy == 'regex_match' and responseFilterRegex %}
+    # regex_match: события + Future (как longest), сразу история после send (гонка с быстрым ответом)
+    import re as _re_resp
+    import time as _time_resp
+    _resp_re = {{ responseFilterRegex | tojson }}
+    _resp_collected = {}
+    _resp_wait_sec = {{ responseWaitSeconds | default(3) }}
+    _resp_future = asyncio.get_event_loop().create_future()
+    _resp_best_len = 0
+
+    def _resp_track_{{ nodeId | replace('-', '_') }}(msg):
+        """Новое сообщение после send или edit меню с regex (id <= sent)."""
+        if not msg or getattr(msg, 'sender_id', None) == _my_id:
+            return
+        _txt = msg.text or ''
+        if msg.id > _sent_id:
+            _resp_collected[msg.id] = msg
+        elif _txt and _re_resp.search(_resp_re, _txt):
+            _resp_collected[msg.id] = msg
+
+    async def _resp_pull_history_{{ nodeId | replace('-', '_') }}():
+        """Подтягивает свежие сообщения бота из истории чата."""
+        try:
+            _resp_msgs = await userbot_client.get_messages(_resp_entity, limit=8)
+            _resp_list = _resp_msgs if isinstance(_resp_msgs, list) else [_resp_msgs]
+            for _bm in _resp_list:
+                if not _bm or not hasattr(_bm, 'sender_id') or _bm.sender_id == _my_id:
+                    continue
+                _txt = _bm.text or ''
+                if _bm.id > _sent_id or (_txt and _re_resp.search(_resp_re, _txt)):
+                    _resp_collected[_bm.id] = _bm
+        except Exception as _hist_err:
+            logging.warning(f"⚠️ [{{ nodeId }}] История ответов: {_hist_err}")
+        for _rid in list(_resp_collected.keys()):
+            try:
+                _rf = await userbot_client.get_messages(_resp_entity, ids=_rid)
+                _rfm = _rf[0] if isinstance(_rf, list) and _rf else _rf
+                if _rfm:
+                    _resp_collected[_rid] = _rfm
+            except Exception:
+                pass
+
+    def _resp_pick_{{ nodeId | replace('-', '_') }}():
+        """Выбирает лучшее сообщение для парсинга (Crazy / regex / предпоследнее)."""
+        _pick_msg = None
+        _pick_len = 0
+        _resp_sorted = sorted(_resp_collected.values(), key=lambda m: m.id)
+        for _bm in _resp_sorted:
+            _txt = _bm.text or ''
+            if _txt and 'Информация по заявке' in _txt:
+                return _bm, len(_txt)
+        if len(_resp_sorted) >= 2:
+            _cand = _resp_sorted[-2]
+            return _cand, len(_cand.text or '')
+        for _bm in _resp_sorted:
+            _txt = _bm.text or ''
+            if _txt and _re_resp.search(_resp_re, _txt) and len(_txt) > _pick_len:
+                _pick_len = len(_txt)
+                _pick_msg = _bm
+        return _pick_msg, _pick_len
+
+    def _resp_try_finish_{{ nodeId | replace('-', '_') }}():
+        """Завершает ожидание, если в буфере есть подходящее сообщение."""
+        nonlocal _resp_best_len
+        _pick_msg, _pick_len = _resp_pick_{{ nodeId | replace('-', '_') }}()
+        if _pick_msg and not _resp_future.done():
+            _resp_best_len = _pick_len
+            _resp_future.set_result(_pick_msg)
+
+    @userbot_client.on(events.NewMessage(chats=_resp_entity))
+    async def _on_resp_{{ nodeId | replace('-', '_') }}(event):
+        _resp_track_{{ nodeId | replace('-', '_') }}(event.message)
+        _resp_try_finish_{{ nodeId | replace('-', '_') }}()
+
+    @userbot_client.on(events.MessageEdited(chats=_resp_entity))
+    async def _on_resp_edit_{{ nodeId | replace('-', '_') }}(event):
+        _resp_track_{{ nodeId | replace('-', '_') }}(event.message)
+        _resp_try_finish_{{ nodeId | replace('-', '_') }}()
+
+    try:
+        _resp_t0 = _time_resp.monotonic()
+        # Ответ мог прийти до подключения handlers — сразу читаем историю
+        await _resp_pull_history_{{ nodeId | replace('-', '_') }}()
+        _resp_try_finish_{{ nodeId | replace('-', '_') }}()
+        if not _resp_future.done():
+            try:
+                _resp_msg = await asyncio.wait_for(_resp_future, timeout=_resp_wait_sec)
+                logging.info(
+                    f"📨 [{{ nodeId }}] regex_match (event) за {_time_resp.monotonic() - _resp_t0:.1f} сек, "
+                    f"собрано {len(_resp_collected)}"
+                )
+            except asyncio.TimeoutError:
+                await _resp_pull_history_{{ nodeId | replace('-', '_') }}()
+                _resp_msg, _resp_best_len = _resp_pick_{{ nodeId | replace('-', '_') }}()
+                logging.info(
+                    f"📨 [{{ nodeId }}] regex_match (fallback) за {_time_resp.monotonic() - _resp_t0:.1f} сек: "
+                    f"{len(_resp_collected)}"
+                )
+        else:
+            _resp_msg = _resp_future.result()
+        if _resp_msg:
+            logging.info(f"📨 [{{ nodeId }}] Выбран ответ regex_match id={_resp_msg.id} len={_resp_best_len}")
+        else:
+            logging.warning(f"⚠️ [{{ nodeId }}] Нет ответа по regex {_resp_re!r}")
+    finally:
+        userbot_client.remove_event_handler(_on_resp_{{ nodeId | replace('-', '_') }})
+        userbot_client.remove_event_handler(_on_resp_edit_{{ nodeId | replace('-', '_') }})
+{%- else %}
     # Event listener для нового сообщения
     _resp_future = asyncio.get_event_loop().create_future()
 
@@ -199,15 +307,6 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _bot_msgs = [m for m in _resp_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id and m.id > _sent_id]
 {%- if responseStrategy == 'first' %}
             _resp_msg = _bot_msgs[0] if _bot_msgs else None
-{%- elif responseStrategy == 'regex_match' and responseFilterRegex %}
-            import re as _re_resp
-            _resp_msg = None
-            for _bm in _bot_msgs:
-                if _bm and _bm.text and _re_resp.search({{ responseFilterRegex | tojson }}, _bm.text):
-                    _resp_msg = _bm
-                    break
-            if not _resp_msg:
-                _resp_msg = _bot_msgs[0] if _bot_msgs else None
 {%- else %}
             # longest (по умолчанию)
             _resp_msg = None
@@ -223,16 +322,64 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             logging.warning(f"⚠️ [{{ nodeId }}] Не удалось получить ответ: {_resp_err}")
     finally:
         userbot_client.remove_event_handler(_on_resp_{{ nodeId | replace('-', '_') }})
+{%- endif %}
 
     if _resp_msg and hasattr(_resp_msg, 'id'):
         user_data[user_id]["{{ saveResponseIdTo }}"] = _resp_msg.id
         await set_user_var(user_id, "{{ saveResponseIdTo }}", _resp_msg.id)
         logging.info(f"💾 ID ответа сохранён: {{ saveResponseIdTo }} = {_resp_msg.id}")
 {%- if saveResponseTextTo %}
-        _resp_text = _resp_msg.text or ''
+        _resp_text = (_resp_msg.text or '') if _resp_msg else ''
         user_data[user_id]["{{ saveResponseTextTo }}"] = _resp_text
         await set_user_var(user_id, "{{ saveResponseTextTo }}", _resp_text)
         logging.info(f"💾 Текст ответа сохранён: {{ saveResponseTextTo }} = {_resp_text[:80]!r}")
+{%- endif %}
+{%- if saveButtonsTo %}
+        # Сохраняем кнопки ответа как JSON (ищем в других сообщениях, если longest выбрал только текст)
+        _btns_src_msg = _resp_msg
+        if not (_resp_msg and _resp_msg.reply_markup):
+            try:
+                _btns_recent = await userbot_client.get_messages(_resp_entity, limit=5)
+                _btns_recent_list = _btns_recent if isinstance(_btns_recent, list) else [_btns_recent]
+                for _btns_cand in _btns_recent_list:
+                    if (
+                        _btns_cand
+                        and hasattr(_btns_cand, 'sender_id')
+                        and _btns_cand.sender_id != _my_id
+                        and _btns_cand.id > _sent_id
+                        and _btns_cand.reply_markup
+                    ):
+                        _btns_src_msg = _btns_cand
+                        logging.info(f"💾 [{{ nodeId }}] Кнопки взяты из сообщения id={_btns_cand.id} (не из основного ответа)")
+                        break
+            except Exception as _btns_err:
+                logging.warning(f"⚠️ [{{ nodeId }}] Не удалось найти сообщение с кнопками: {_btns_err}")
+        _btns_list = []
+        if _btns_src_msg and _btns_src_msg.reply_markup:
+            for _row in _btns_src_msg.reply_markup.rows:
+                for _btn in _row.buttons:
+                    _btn_entry = {"text": _btn.text}
+                    _btn_type = type(_btn).__name__
+                    if hasattr(_btn, 'data') and _btn.data:
+                        _btn_entry["data"] = _btn.data.decode('utf-8', errors='replace')
+                        _btn_entry["type"] = "callback"
+                    elif hasattr(_btn, 'url') and _btn.url:
+                        _btn_entry["url"] = _btn.url
+                        _btn_entry["type"] = "url"
+                    elif _btn_type == 'KeyboardButtonSwitchInline':
+                        _btn_entry["query"] = getattr(_btn, 'query', '')
+                        _btn_entry["type"] = "switch_inline"
+                    elif _btn_type == 'KeyboardButtonWebView':
+                        _btn_entry["url"] = getattr(_btn, 'url', '')
+                        _btn_entry["type"] = "web_app"
+                    else:
+                        _btn_entry["type"] = "text"
+                    _btns_list.append(_btn_entry)
+        import json as _json_btns
+        _btns_json = _json_btns.dumps(_btns_list, ensure_ascii=False)
+        user_data[user_id]["{{ saveButtonsTo }}"] = _btns_json
+        await set_user_var(user_id, "{{ saveButtonsTo }}", _btns_json)
+        logging.info(f"💾 Кнопки ответа сохранены: {{ saveButtonsTo }} ({len(_btns_list)} кнопок)")
 {%- endif %}
 {%- endif %}
 

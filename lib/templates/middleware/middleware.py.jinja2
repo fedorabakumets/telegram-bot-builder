@@ -43,26 +43,6 @@ async def register_user_middleware(handler, event: types.Message, data: dict):
                     'is_premium': user.is_premium or False,
                     'is_bot': user.is_bot or False,
                 }
-{%- if userDatabaseEnabled %}
-                # Получаем file_id аватарки пользователя (не URL — он временный)
-                _avatar_url = None
-                try:
-                    _photos = await bot.get_user_profile_photos(user_id, limit=1)
-                    if _photos and _photos.photos:
-                        # Сохраняем file_id — он постоянный, в отличие от file_path
-                        _avatar_url = _photos.photos[0][-1].file_id
-                        logging.info(f"✅ Аватарка (file_id) получена для {user_id}")
-                    else:
-                        logging.info(f"ℹ️ У пользователя {user_id} нет аватарки")
-                except Exception as _e:
-                    logging.warning(f"⚠️ Не удалось получить аватарку для {user_id}: {_e}")
-                await save_user_to_db(
-                    user_id, user.username, user.first_name, user.last_name, _avatar_url,
-                    is_premium=user_data[user_id].get('is_premium', False),
-                    is_bot=user_data[user_id].get('is_bot', False),
-                    language_code=user_data[user_id].get('language_code'),
-                )
-{%- endif %}
                 logging.info(f"Новый пользователь зарегистрирован: {user_id}")
     except Exception as e:
         logging.error(f"Ошибка в register_user_middleware: {e}")
@@ -239,20 +219,6 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
             chat_id=_evt_chat_id,
         )
 
-        # Обновляем last_interaction в bot_users при каждом входящем сообщении
-        # (fire-and-forget — не блокирует обработку)
-        if event.from_user:
-            asyncio.create_task(save_user_to_db(
-                int(user_id),
-                event.from_user.username,
-                event.from_user.first_name,
-                event.from_user.last_name,
-                is_premium=getattr(event.from_user, 'is_premium', None) or False,
-                is_bot=getattr(event.from_user, 'is_bot', None) or False,
-                language_code=getattr(event.from_user, 'language_code', None) or None,
-                deep_link_param=user_data.get(int(user_id), {}).get("deep_link_param") or "direct",
-                referrer_id=user_data.get(int(user_id), {}).get("referrer_id"),
-            ))
 {% if saveIncomingMedia %}
         # Если включено сохранение фото — скачиваем и сохраняем в фоне (fire-and-forget)
         if photo_file_id:
@@ -262,8 +228,29 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
     except Exception as e:
         logging.error(f"Ошибка в middleware сохранения сообщений: {e}")
 
-    # Продолжаем обработку сообщения
-    return await handler(event, data)
+    # Сначала handler (/start, deep link) — потом профиль в БД с актуальным источником
+    result = await handler(event, data)
+
+    try:
+        if event.from_user:
+            _uid = int(event.from_user.id)
+            _ud = user_data.get(_uid, {})
+            asyncio.create_task(save_user_to_db(
+                _uid,
+                event.from_user.username,
+                event.from_user.first_name,
+                event.from_user.last_name,
+                is_premium=getattr(event.from_user, 'is_premium', None) or False,
+                is_bot=getattr(event.from_user, 'is_bot', None) or False,
+                language_code=getattr(event.from_user, 'language_code', None) or None,
+                # После handler: метка из /start или "direct" если источник не задан
+                deep_link_param=_ud.get("deep_link_param") or "direct",
+                referrer_id=_ud.get("referrer_id"),
+            ))
+    except Exception as e:
+        logging.error(f"Ошибка обновления профиля пользователя в middleware: {e}")
+
+    return result
 
 {% endif %}
 

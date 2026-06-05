@@ -264,7 +264,12 @@ async def set_user_var(user_id: int, key: str, value) -> None:
         user_data[user_id] = {}
     user_data[user_id][key] = value
 {%- if userDatabaseEnabled %}
-    # Fire-and-forget: запись в БД идёт в фоне, не блокируя ответ пользователю
+    # Источник трафика — в отдельные колонки bot_users (для аналитики)
+    if key == "deep_link_param":
+        asyncio.create_task(sync_user_attribution_to_db(user_id, deep_link_param=value))
+    elif key == "referrer_id":
+        asyncio.create_task(sync_user_attribution_to_db(user_id, referrer_id=value))
+    # Fire-and-forget: user_data JSON в фоне, не блокируя ответ пользователю
     asyncio.create_task(_persist_user_var(user_id, key, value))
 {%- endif %}
 

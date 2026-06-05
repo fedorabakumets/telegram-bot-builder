@@ -81,12 +81,22 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     try:
         _target = int(_entity) if _entity.lstrip('-').isdigit() else _entity
 {%- if messageIdSource == 'last' %}
-        # Режим: последнее сообщение в чате
-        _msgs = await userbot_client.get_messages(_target, limit=1)
-        _msg = _msgs[0] if _msgs else None
+        # Режим: последнее сообщение бота с inline-кнопками (не исходящее userbot)
+        _msgs = await userbot_client.get_messages(_target, limit=12)
+        _msg_list = _msgs if isinstance(_msgs, list) else [_msgs]
+        _my_id_last = (await userbot_client.get_me()).id
+        _msg = None
+        for _cand in _msg_list:
+            if (
+                _cand
+                and getattr(_cand, 'sender_id', None) != _my_id_last
+                and _cand.reply_markup
+            ):
+                _msg = _cand
+                break
         if not _msg:
-            logging.error(f"❌ Узел {{ nodeId }}: нет сообщений в {_entity}")
-            raise Exception(f"Нет сообщений в {_entity}")
+            logging.error(f"❌ Узел {{ nodeId }}: нет сообщений бота с кнопками в {_entity}")
+            raise Exception(f"Нет сообщений бота с кнопками в {_entity}")
         _msg_id = _msg.id
 {%- else %}
         _msg_id = int(_msg_id_str)

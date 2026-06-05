@@ -189,17 +189,39 @@ describe('generateUserbotMessage()', () => {
     expect(code).toContain('longest');
   });
 
-  it('использует стратегию regex_match в fallback', () => {
+  it('использует стратегию regex_match: сбор сообщений за таймаут', () => {
     const code = generateUserbotMessage({
       nodeId: 'ub-17',
       messageText: 'Тест',
       userbotEntity: '@bot',
       saveResponseIdTo: 'resp_id',
       responseStrategy: 'regex_match',
-      responseFilterRegex: '\\d+\\.\\d+',
+      responseFilterRegex: 'К оплате',
+      responseWaitSeconds: 8,
     });
     expect(code).toContain('import re as _re_resp');
-    expect(code).toContain('_re_resp.search');
+    expect(code).toContain('_resp_collected');
+    expect(code).toContain('_resp_best_len');
+    expect(code).toContain('_resp_future');
+    expect(code).toContain('await asyncio.wait_for(_resp_future');
+    expect(code).toContain('regex_match (event)');
+    expect(code).toContain('events.MessageEdited(chats=_resp_entity)');
+  });
+
+  it('regex_match со saveResponseTextTo берёт текст выбранной заявки', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-17b',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveResponseIdTo: 'resp_id',
+      saveResponseTextTo: 'crazy_text',
+      responseStrategy: 'regex_match',
+      responseFilterRegex: 'К оплате',
+      responseWaitSeconds: 10,
+    });
+    expect(code).toContain('_resp_sorted[-2]');
+    expect(code).toContain('_resp_msg.text');
+    expect(code).toContain('Информация по заявке');
   });
 
   it('использует кастомный таймаут responseWaitSeconds', () => {
@@ -211,6 +233,35 @@ describe('generateUserbotMessage()', () => {
       responseWaitSeconds: 10,
     });
     expect(code).toContain('timeout=10');
+  });
+
+  it('генерирует saveButtonsTo вместе с saveResponseIdTo', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-19',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveResponseIdTo: 'resp_id',
+      saveButtonsTo: 'buttons_json',
+    });
+    expect(code).toContain('buttons_json');
+    // Шаблон использует `import json as _json_btns`, поэтому проверяем оба варианта
+    const hasDumps = code.includes('json.dumps') || code.includes('_json_btns.dumps');
+    expect(hasDumps).toBe(true);
+    expect(code).toContain('reply_markup');
+    expect(code).toContain('set_user_var(user_id, "buttons_json"');
+    expect(code).toContain('_btns_src_msg');
+    expect(code).toContain('Кнопки взяты из сообщения');
+  });
+
+  it('не генерирует saveButtonsTo без saveResponseIdTo', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-20',
+      messageText: 'Тест',
+      userbotEntity: '@bot',
+      saveButtonsTo: 'buttons_json',
+    });
+    // Без saveResponseIdTo кнопки не сохраняются (нет ответа для парсинга)
+    expect(code).not.toContain('reply_markup');
   });
 });
 

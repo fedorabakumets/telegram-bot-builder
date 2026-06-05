@@ -43,7 +43,9 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         {%- endif %}
 
         {% if entry.editMessageIdSource == 'last_bot_message' %}
-        _msg_id = user_data.get(user_id, {}).get('last_bot_message_id')
+        _msg_id = user_data.get(user_id, {}).get('_last_sent_msg_id')
+        if _msg_id:
+            _msg_id = int(_msg_id)
         if not _msg_id and hasattr(callback_query, 'message') and callback_query.message:
             _msg_id = callback_query.message.message_id
         {% else %}
