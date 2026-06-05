@@ -16,6 +16,7 @@ describe('database.py.jinja2 шаблон', () => {
 
         assert.ok(result.includes('async def init_database()'));
         assert.ok(result.includes('async def save_user_to_db'));
+        assert.ok(result.includes('async def sync_user_attribution_to_db'));
         assert.ok(result.includes('async def get_user_from_db'));
         assert.ok(result.includes('async def update_user_data_in_db'));
       });

@@ -11,6 +11,7 @@
  *   A06: deep_link_param не перезаписывается при повторном визите (COALESCE)
  *   A07: referrer_id не перезаписывается при повторном визите (COALESCE)
  *   A08: синтаксис Python OK
+ *   A09: sync_user_attribution_to_db для колонок deep_link_param/referrer_id
  */
 
 import fs from 'fs';
@@ -121,6 +122,18 @@ test('A07', 'referrer_id не перезаписывается при повто
 test('A08', 'синтаксис Python OK', () => {
   const r = checkSyntax(dbCode, 'a08');
   ok(r.ok, `Синтаксическая ошибка в database.py:\n${r.error}`);
+});
+
+test('A09', 'sync_user_attribution_to_db записывает deep_link_param/referrer_id в колонки', () => {
+  ok(dbCode.includes('async def sync_user_attribution_to_db'), 'функция sync_user_attribution_to_db должна быть в коде');
+  ok(
+    dbCode.includes('COALESCE(bot_users.deep_link_param, EXCLUDED.deep_link_param)'),
+    'COALESCE для deep_link_param должен быть в sync_user_attribution_to_db'
+  );
+  ok(
+    dbCode.includes('COALESCE(bot_users.referrer_id, EXCLUDED.referrer_id)'),
+    'COALESCE для referrer_id должен быть в sync_user_attribution_to_db'
+  );
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

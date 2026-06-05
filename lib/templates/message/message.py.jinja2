@@ -140,7 +140,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         elif _has_avatar_in_db:
             _avatar_url = _has_avatar_in_db
         # Fire-and-forget: сохранение профиля не блокирует отправку сообщения
-        # Передаём deep_link_param и referrer_id из user_data — они уже записаны set_user_var до вызова save_user_to_db
+        # deep_link_param/referrer_id — из user_data; без метки → direct для аналитики
         asyncio.create_task(save_user_to_db(
             user_id, username, first_name, last_name, _avatar_url,
             deep_link_param=user_data.get(user_id, {}).get("deep_link_param") or "direct",

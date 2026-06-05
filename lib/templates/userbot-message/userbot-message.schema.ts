@@ -35,6 +35,8 @@ export const userbotMessageParamsSchema = z.object({
   responseStrategy: z.enum(['first', 'longest', 'regex_match']).optional().default('longest'),
   /** Regex для фильтрации ответа */
   responseFilterRegex: z.string().optional().default(''),
+  /** Переменная с id сообщения бота — учитывать edit этого msg (Vortex и др.) */
+  responseFloorMessageIdVar: z.string().optional().default(''),
   /** ID узла для автоперехода */
   autoTransitionTo: z.string().optional(),
   /** ID проекта */

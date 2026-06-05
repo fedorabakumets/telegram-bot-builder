@@ -8,6 +8,9 @@ uv.lock
 
 # Bot-specific one-off scripts (not tracked in git)
 tools/bot-scripts/
+tools/compare_bots/
+tools/_*.txt
+*_nodes.txt
 
 # Development files
 .cache/

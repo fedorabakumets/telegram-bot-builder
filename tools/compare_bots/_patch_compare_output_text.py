@@ -35,7 +35,7 @@ RESULT_MESSAGE = """{compare_title_short}
 
 ℹ️ <b>Как читать</b>
 • <b>BTC</b> — сколько bitcoin получите за ваши {user_amount_fmt} ₽
-• <b>(… ₽/BTC)</b> — курс: {user_amount_fmt} ÷ BTC (чем ниже — выгоднее)
+• <b>(… ₽ за BTC)</b> — курс: {user_amount_fmt} ÷ BTC (чем ниже — выгоднее)
 • Сортировка: больше BTC = лучше
 
 ✅ <b>С комиссией</b> (реальный пересчёт): ScoobyChange, LiteBit
@@ -46,8 +46,8 @@ RESULT_MESSAGE = """{compare_title_short}
 👆 <i>Нажми на название для перехода</i>"""
 
 FORMAT_LINE = (
-    '{item.marker} <a href="{item.url}">{item.name}</a>: '
-    '<b>{item.rate} BTC</b> ({item.raw_rate} ₽/BTC)\n'
+    '🔸 {item.marker} <a href="{item.url}">{item.name}</a>: '
+    '<b>{item.rate} BTC</b> ({item.raw_rate} ₽ за BTC)\n'
 )
 
 
@@ -92,7 +92,7 @@ def main() -> None:
         json.dump(project, f, ensure_ascii=False, indent=2)
 
     print("OK: bot-msg-result — пояснения")
-    print("OK: формат строки — ✅/⚠️ и ₽/BTC")
+    print("OK: формат строки — ✅/⚠️ и ₽ за BTC")
     print(f"OK: маркеры в {len(BOT_MARKERS)} json_push")
 
 

@@ -33,6 +33,8 @@ export interface UserbotMessageTemplateParams {
   responseStrategy?: 'first' | 'longest' | 'regex_match';
   /** Regex для фильтрации ответа (только при strategy=regex_match) */
   responseFilterRegex?: string;
+  /** ID сообщения бота с которого ждём ответ (включая edit того же msg) */
+  responseFloorMessageIdVar?: string;
   /** ID узла для автоперехода */
   autoTransitionTo?: string;
   /** ID проекта (для get_content) */

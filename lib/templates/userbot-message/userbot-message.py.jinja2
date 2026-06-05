@@ -190,7 +190,13 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     _resp_best_len = 0
 
     def _resp_track_{{ nodeId | replace('-', '_') }}(msg):
-        if msg and msg.id > _sent_id and getattr(msg, 'sender_id', None) != _my_id:
+        """Новое сообщение после send или edit меню с regex (id <= sent)."""
+        if not msg or getattr(msg, 'sender_id', None) == _my_id:
+            return
+        _txt = msg.text or ''
+        if msg.id > _sent_id:
+            _resp_collected[msg.id] = msg
+        elif _txt and _re_resp.search(_resp_re, _txt):
             _resp_collected[msg.id] = msg
 
     async def _resp_pull_history_{{ nodeId | replace('-', '_') }}():
@@ -199,7 +205,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _resp_msgs = await userbot_client.get_messages(_resp_entity, limit=8)
             _resp_list = _resp_msgs if isinstance(_resp_msgs, list) else [_resp_msgs]
             for _bm in _resp_list:
-                if _bm and hasattr(_bm, 'sender_id') and _bm.sender_id != _my_id and _bm.id > _sent_id:
+                if not _bm or not hasattr(_bm, 'sender_id') or _bm.sender_id == _my_id:
+                    continue
+                _txt = _bm.text or ''
+                if _bm.id > _sent_id or (_txt and _re_resp.search(_resp_re, _txt)):
                     _resp_collected[_bm.id] = _bm
         except Exception as _hist_err:
             logging.warning(f"⚠️ [{{ nodeId }}] История ответов: {_hist_err}")

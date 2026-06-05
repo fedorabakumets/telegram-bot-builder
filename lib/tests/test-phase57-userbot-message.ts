@@ -459,6 +459,23 @@ test('I01', 'regex_match собирает MessageEdited и склеивает sa
   ok(code.includes('Информация по заявке'), 'приоритет сообщения заявки');
 });
 
+test('I02', 'regex_match учитывает edit меню (id <= sent) при совпадении regex', () => {
+  const p = makeCleanProject([
+    makeUserbotMessageNode('ub_cf_amount', {
+      userbotEntity: '@Crypto_Flow_exchange_bot',
+      saveResponseIdTo: 'cf_resp2',
+      saveResponseTextTo: 'cf_text',
+      responseStrategy: 'regex_match',
+      responseFilterRegex: '[Пп]олучите|Предварительный',
+      responseWaitSeconds: 4,
+    }),
+  ]);
+  const code = gen(p, 'i02');
+  syntax(code, 'i02');
+  ok(code.includes('msg.id > _sent_id'), 'новые сообщения после send');
+  ok(code.includes('_re_resp.search(_resp_re, _txt)'), 'edit меню с regex при id <= sent');
+});
+
 // ════════════════════════════════════════════════════════════════════════════
 // Итоги
 // ════════════════════════════════════════════════════════════════════════════

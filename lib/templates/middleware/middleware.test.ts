@@ -82,9 +82,17 @@ describe('register_user_middleware', () => {
     expect(r).toContain('is_bot');
   });
 
-  it('вызывает save_user_to_db при БД включена', () => {
+  it('не вызывает save_user_to_db — профиль пишет message_logging_middleware', () => {
     const r = generateMiddleware(validParamsEnabled);
-    expect(r).toContain('save_user_to_db');
+    const registerBlock = r.split('async def register_user_middleware')[1]?.split('async def message_logging_middleware')[0] ?? '';
+    expect(registerBlock).not.toContain('save_user_to_db');
+  });
+
+  it('message_logging_middleware сохраняет профиль после handler с fallback direct', () => {
+    const r = generateMiddleware(validParamsEnabled);
+    const loggingBlock = r.split('async def message_logging_middleware')[1]?.split('async def callback_query_logging_middleware')[0] ?? r;
+    expect(loggingBlock).toContain('result = await handler(event, data)');
+    expect(loggingBlock).toMatch(/deep_link_param=.*or "direct"/);
   });
 
   it('не вызывает save_user_to_db без БД', () => {

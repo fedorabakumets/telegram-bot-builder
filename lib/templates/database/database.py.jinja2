@@ -276,6 +276,31 @@ async def save_user_to_db(user_id: int, username: str = None, first_name: str = 
         return False
 
 
+async def sync_user_attribution_to_db(user_id: int, deep_link_param: str = None, referrer_id: str = None):
+    """Записывает deep_link_param и referrer_id в колонки bot_users (только первое касание).
+
+    Используется из set_user_var — до того как middleware вызовет save_user_to_db,
+    чтобы аналитика получила источник сразу после /start обработчика.
+    """
+    if not db_pool:
+        return False
+    if deep_link_param is None and referrer_id is None:
+        return False
+    try:
+        async with db_pool.acquire() as conn:
+            await conn.execute("""
+                INSERT INTO bot_users (user_id, project_id, token_id, deep_link_param, referrer_id)
+                VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (user_id, project_id, token_id) DO UPDATE SET
+                    deep_link_param = COALESCE(bot_users.deep_link_param, EXCLUDED.deep_link_param),
+                    referrer_id = COALESCE(bot_users.referrer_id, EXCLUDED.referrer_id)
+            """, user_id, PROJECT_ID, TOKEN_ID, deep_link_param, referrer_id)
+        return True
+    except Exception as e:
+        logging.error(f"Ошибка записи источника пользователя в БД: {e}")
+        return False
+
+
 async def get_user_from_db(user_id: int):
     """Получает данные пользователя из базы данных"""
     if not db_pool:
