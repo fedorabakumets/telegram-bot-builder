@@ -476,6 +476,23 @@ describe('message.py.jinja2 шаблон', () => {
 
         assert.ok(result.includes('❌ Ошибка отправки получателю'));
       });
+
+      it('должен передавать parse_mode при отправке администраторам (admin_ids)', () => {
+        const result = generateMessage({
+          nodeId: 'msg_admin_notify',
+          messageText: '<b>Новая заявка</b>',
+          formatMode: 'html',
+          messageSendRecipients: [
+            { id: 'admins', type: 'admin_ids' },
+          ],
+        });
+
+        assert.ok(result.includes('for _admin_id in ADMIN_IDS:'));
+        assert.ok(
+          result.includes('await bot.send_message(_admin_id, text, reply_markup=keyboard, parse_mode="HTML")'),
+          'admin_ids должен использовать parse_mode как обычная отправка',
+        );
+      });
     });
 
     describe('saveMessageIdTo', () => {

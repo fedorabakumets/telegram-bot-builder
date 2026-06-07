@@ -838,7 +838,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     # Отправка администраторам (получатель {{ loop.index }})
     for _admin_id in ADMIN_IDS:
         try:
-            await bot.send_message(_admin_id, text, reply_markup=keyboard)
+            await bot.send_message(_admin_id, text, reply_markup=keyboard{{ parse_mode_arg }})
             logging.info(f"📤 Сообщение отправлено администратору {_admin_id}")
         except Exception as _e_admin_{{ loop.index }}:
             logging.error(f"❌ Ошибка отправки администратору {_admin_id}: {_e_admin_{{ loop.index }}}")
