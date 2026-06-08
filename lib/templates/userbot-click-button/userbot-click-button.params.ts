@@ -29,6 +29,8 @@ export interface UserbotClickButtonTemplateParams {
   saveMediaTo?: string;
   /** Стратегия ожидания ответа: 'edit' — ждать редактирование, 'new_message' — ждать новое сообщение */
   responseStrategy?: 'edit' | 'new_message';
+  /** Способ отправки клика: 'fire_and_forget' — в фоне, 'await' — msg.click() с ожиданием */
+  clickDelivery?: 'fire_and_forget' | 'await';
   /** ID узла для автоперехода */
   autoTransitionTo?: string;
   /** ID проекта (для get_content) */

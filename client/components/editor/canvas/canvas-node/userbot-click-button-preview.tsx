@@ -20,8 +20,10 @@ export function UserbotClickButtonPreview({ node }: UserbotClickButtonPreviewPro
   const entity = data.userbotEntity || '';
   const clickValue = data.clickValue || '';
   const clickMode = data.clickMode || 'text';
+  const clickDelivery = data.clickDelivery || 'fire_and_forget';
 
   const modeLabel = clickMode === 'text' ? '📝' : clickMode === 'data' ? '🔗' : '🔢';
+  const deliveryLabel = clickDelivery === 'await' ? '⏳' : '⚡';
 
   return (
     <div className="mb-3">
@@ -41,6 +43,7 @@ export function UserbotClickButtonPreview({ node }: UserbotClickButtonPreviewPro
       {clickValue && (
         <div className="rounded-lg p-2 bg-violet-100/50 dark:bg-violet-900/20 border border-violet-200/50 dark:border-violet-800/30">
           <div className="flex items-center gap-1.5">
+            <span className="text-xs" title={clickDelivery === 'await' ? 'С ожиданием' : 'Без ожидания'}>{deliveryLabel}</span>
             <span className="text-xs">{modeLabel}</span>
             <span className="text-xs font-mono text-violet-700 dark:text-violet-300 truncate">
               {clickValue}

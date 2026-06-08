@@ -91,10 +91,22 @@ describe('generateUserbotClickButton()', () => {
     expect(code).toContain('FloodWaitError');
   });
 
-  it('содержит fire-and-forget через create_task', () => {
+  it('clickDelivery по умолчанию — fire-and-forget через create_task', () => {
     const code = generateUserbotClickButton({ nodeId: 'ub-c15', saveResultTo: 'txt' });
     expect(code).toContain('asyncio.create_task(_fire_click())');
     expect(code).toContain('fire-and-forget');
+  });
+
+  it('clickDelivery=await → await _msg.click без create_task', () => {
+    const code = generateUserbotClickButton({
+      nodeId: 'ub-c15a',
+      clickDelivery: 'await',
+      clickMode: 'text',
+      clickValue: 'Карта',
+    });
+    expect(code).toContain('await _msg.click');
+    expect(code).toContain('[await]');
+    expect(code).not.toContain('asyncio.create_task(_fire_click())');
   });
 
   it('messageIdSource=last → последнее сообщение бота с reply_markup', () => {
@@ -137,6 +149,11 @@ describe('userbotClickButtonParamsSchema', () => {
 
   it('отклоняет невалидный clickMode', () => {
     expect(() => userbotClickButtonParamsSchema.parse({ nodeId: 'x', clickMode: 'invalid' })).toThrow();
+  });
+
+  it('clickDelivery по умолчанию fire_and_forget', () => {
+    const result = userbotClickButtonParamsSchema.parse({ nodeId: 'test' });
+    expect(result.clickDelivery).toBe('fire_and_forget');
   });
 });
 

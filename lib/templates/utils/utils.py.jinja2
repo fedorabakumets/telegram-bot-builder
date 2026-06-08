@@ -293,7 +293,8 @@ async def _persist_user_var(user_id: int, key: str, value) -> None:
 def _eval_expr(template: str, user_vars: dict):
     """Вычисляет выражение с подстановкой переменных из user_vars.
 
-    Поддерживает арифметику (+, -, *, /, //, %, **), безопасные функции
+    Поддерживает арифметику (+, -, *, /, //, %, **), логику (and, or, not),
+    тернарный if/else, сравнения, безопасные функции
     (round, abs, int, float, min, max) и строковые методы
     (replace, strip, lower, upper, startswith, endswith, split, join).
     При любой ошибке возвращает исходный шаблон без изменений.
@@ -345,6 +346,7 @@ def _eval_expr(template: str, user_vars: dict):
             _ast_expr.Attribute, _ast_expr.Subscript, _ast_expr.Index, _ast_expr.Slice,
             _ast_expr.IfExp, _ast_expr.Compare,
             _ast_expr.Gt, _ast_expr.GtE, _ast_expr.Lt, _ast_expr.LtE, _ast_expr.Eq, _ast_expr.NotEq,
+            _ast_expr.BoolOp, _ast_expr.And, _ast_expr.Or, _ast_expr.Not,
             _ast_expr.List, _ast_expr.Dict, _ast_expr.Tuple,
         )
         _safe_funcs = {'round': round, 'abs': abs, 'int': int, 'float': float, 'min': min, 'max': max, 'str': str, 'thousands': lambda n: f"{int(float(n)):,}".replace(",", " ")}

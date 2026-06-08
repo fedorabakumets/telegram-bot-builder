@@ -31,6 +31,8 @@ export const userbotClickButtonParamsSchema = z.object({
   saveMediaTo: z.string().optional(),
   /** Стратегия ожидания ответа: edit или new_message */
   responseStrategy: z.enum(['edit', 'new_message']).optional().default('edit'),
+  /** Способ отправки клика: fire_and_forget — в фоне, await — ждать ответ Telegram */
+  clickDelivery: z.enum(['fire_and_forget', 'await']).optional().default('fire_and_forget'),
   /** ID узла для автоперехода */
   autoTransitionTo: z.string().optional(),
   /** ID проекта */

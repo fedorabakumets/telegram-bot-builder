@@ -64,6 +64,7 @@ function makeUserbotMessageNode(id: string, opts: any = {}) {
       responseStrategy: opts.responseStrategy || 'longest',
       responseFilterRegex: opts.responseFilterRegex || '',
       responseWaitSeconds: opts.responseWaitSeconds ?? 3,
+      responseFloorMessageIdVar: opts.responseFloorMessageIdVar || '',
       autoTransitionTo: opts.autoTransitionTo || '',
       enableAutoTransition: !!opts.autoTransitionTo,
     },
@@ -455,7 +456,7 @@ test('I01', 'regex_match собирает MessageEdited и склеивает sa
   const code = gen(p, 'i01');
   syntax(code, 'i01');
   ok(code.includes('events.MessageEdited(chats=_resp_entity)'), 'MessageEdited для regex_match');
-  ok(code.includes('_resp_sorted[-2]'), 'предпоследнее сообщение как заявка');
+  ok(code.includes('_pool[-2]'), 'предпоследнее сообщение как заявка');
   ok(code.includes('Информация по заявке'), 'приоритет сообщения заявки');
 });
 
@@ -472,8 +473,29 @@ test('I02', 'regex_match учитывает edit меню (id <= sent) при с
   ]);
   const code = gen(p, 'i02');
   syntax(code, 'i02');
-  ok(code.includes('msg.id > _sent_id'), 'новые сообщения после send');
-  ok(code.includes('_re_resp.search(_resp_re, _txt)'), 'edit меню с regex при id <= sent');
+  ok(code.includes('_resp_accept_'), 'функция _resp_accept для фильтрации');
+  ok(code.includes('_floor_id < _mid <= _sent_id'), 'edit меню только в диапазоне floor..sent');
+  ok(code.includes('_best_id'), 'выбор самого нового regex-совпадения');
+});
+
+test('I03', 'responseFloorMessageIdVar задаёт нижнюю границу _floor_id', () => {
+  const p = makeCleanProject([
+    makeUserbotMessageNode('ub_sanchez_amt', {
+      userbotEntity: '@Sanchez_exchange_bot',
+      saveMessageIdTo: 'ub_sent_msg_id',
+      saveResponseIdTo: 'sanchez_deal_resp',
+      saveResponseTextTo: 'sanchez_deal_text',
+      responseStrategy: 'regex_match',
+      responseFilterRegex: '[Пп]олучаете.*BTC',
+      responseWaitSeconds: 16,
+      responseFloorMessageIdVar: 'ub_sent_msg_id',
+    }),
+  ]);
+  const code = gen(p, 'i03');
+  syntax(code, 'i03');
+  ok(code.includes('_floor_id = _sent_id'), 'базовая граница = sent_id');
+  ok(code.includes('ub_sent_msg_id'), 'чтение переменной floor');
+  ok(code.includes('_floor_id = min(_sent_id, _floor_candidate)'), 'floor не выше sent');
 });
 
 // ════════════════════════════════════════════════════════════════════════════

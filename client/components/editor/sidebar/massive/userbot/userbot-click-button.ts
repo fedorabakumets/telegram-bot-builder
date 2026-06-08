@@ -16,6 +16,7 @@ export const userbotClickButton: ComponentDefinition = {
     messageId: '',
     messageIdSource: 'last',
     clickMode: 'text',
+    clickDelivery: 'fire_and_forget',
     clickValue: '',
     saveAlertTo: '',
     saveResultTo: '',

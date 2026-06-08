@@ -178,6 +178,19 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     _resp_msg = None
     _my_id = (await userbot_client.get_me()).id
     _sent_id = sent.id if sent and hasattr(sent, 'id') else 0
+    _floor_id = _sent_id
+{%- if responseFloorMessageIdVar %}
+    try:
+        _floor_raw = all_user_vars.get("{{ responseFloorMessageIdVar }}")
+        if _floor_raw is None:
+            _floor_raw = user_data.get(user_id, {}).get("{{ responseFloorMessageIdVar }}")
+        if _floor_raw is not None and str(_floor_raw).strip().lstrip('-').isdigit():
+            _floor_candidate = int(_floor_raw)
+            if _floor_candidate > 0:
+                _floor_id = min(_sent_id, _floor_candidate)
+    except Exception:
+        _floor_id = _sent_id
+{%- endif %}
 
 {%- if responseStrategy == 'regex_match' and responseFilterRegex %}
     # regex_match: события + Future (как longest), сразу история после send (гонка с быстрым ответом)
@@ -189,14 +202,23 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     _resp_future = asyncio.get_event_loop().create_future()
     _resp_best_len = 0
 
+    def _resp_accept_{{ nodeId | replace('-', '_') }}(msg):
+        """Проверяет, подходит ли сообщение: новое после send или edit в диапазоне floor..sent."""
+        if not msg:
+            return False
+        _mid = msg.id
+        if _mid > _sent_id:
+            return True
+        if _floor_id < _mid <= _sent_id:
+            _txt = msg.text or ''
+            return bool(_txt and _re_resp.search(_resp_re, _txt))
+        return False
+
     def _resp_track_{{ nodeId | replace('-', '_') }}(msg):
-        """Новое сообщение после send или edit меню с regex (id <= sent)."""
+        """Новое сообщение после send или edit меню в диапазоне floor..sent."""
         if not msg or getattr(msg, 'sender_id', None) == _my_id:
             return
-        _txt = msg.text or ''
-        if msg.id > _sent_id:
-            _resp_collected[msg.id] = msg
-        elif _txt and _re_resp.search(_resp_re, _txt):
+        if _resp_accept_{{ nodeId | replace('-', '_') }}(msg):
             _resp_collected[msg.id] = msg
 
     async def _resp_pull_history_{{ nodeId | replace('-', '_') }}():
@@ -207,8 +229,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             for _bm in _resp_list:
                 if not _bm or not hasattr(_bm, 'sender_id') or _bm.sender_id == _my_id:
                     continue
-                _txt = _bm.text or ''
-                if _bm.id > _sent_id or (_txt and _re_resp.search(_resp_re, _txt)):
+                if _resp_accept_{{ nodeId | replace('-', '_') }}(_bm):
                     _resp_collected[_bm.id] = _bm
         except Exception as _hist_err:
             logging.warning(f"⚠️ [{{ nodeId }}] История ответов: {_hist_err}")
@@ -222,22 +243,30 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 pass
 
     def _resp_pick_{{ nodeId | replace('-', '_') }}():
-        """Выбирает лучшее сообщение для парсинга (Crazy / regex / предпоследнее)."""
+        """Выбирает лучшее сообщение: приоритет свежим (id > sent), затем edit; среди regex — самое новое."""
         _pick_msg = None
         _pick_len = 0
         _resp_sorted = sorted(_resp_collected.values(), key=lambda m: m.id)
-        for _bm in _resp_sorted:
+        _fresh = [m for m in _resp_sorted if m.id > _sent_id]
+        _edit_pool = [m for m in _resp_sorted if _floor_id < m.id <= _sent_id]
+        _pool = _fresh if _fresh else _edit_pool
+        for _bm in _pool:
             _txt = _bm.text or ''
             if _txt and 'Информация по заявке' in _txt:
                 return _bm, len(_txt)
-        if len(_resp_sorted) >= 2:
-            _cand = _resp_sorted[-2]
-            return _cand, len(_cand.text or '')
-        for _bm in _resp_sorted:
+        _best_id = -1
+        for _bm in _pool:
             _txt = _bm.text or ''
-            if _txt and _re_resp.search(_resp_re, _txt) and len(_txt) > _pick_len:
-                _pick_len = len(_txt)
-                _pick_msg = _bm
+            if _txt and _re_resp.search(_resp_re, _txt):
+                if _bm.id > _best_id or (_bm.id == _best_id and len(_txt) > _pick_len):
+                    _best_id = _bm.id
+                    _pick_len = len(_txt)
+                    _pick_msg = _bm
+        if _pick_msg:
+            return _pick_msg, _pick_len
+        if len(_pool) >= 2:
+            _cand = _pool[-2]
+            return _cand, len(_cand.text or '')
         return _pick_msg, _pick_len
 
     def _resp_try_finish_{{ nodeId | replace('-', '_') }}():
