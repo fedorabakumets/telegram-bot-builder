@@ -8,7 +8,7 @@ import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { StatBarItem } from './stat-bar-card';
 
 /**
- * Палитра цветов для сегментов Donut-диаграммы (до 8 цветов)
+ * Базовая палитра цветов для сегментов Donut-диаграммы
  */
 const DONUT_COLORS = [
   '#3b82f6', // blue
@@ -22,6 +22,17 @@ const DONUT_COLORS = [
 ];
 
 /**
+ * Возвращает цвет сегмента по индексу; при нехватке базовых цветов генерирует HSL
+ * @param index - Порядковый номер сегмента
+ * @returns CSS-цвет сегмента
+ */
+function getDonutColor(index: number): string {
+  if (index < DONUT_COLORS.length) return DONUT_COLORS[index];
+  const hue = (index * 47) % 360;
+  return `hsl(${hue}, 65%, 55%)`;
+}
+
+/**
  * Пропсы компонента StatDonutCard
  */
 export interface StatDonutCardProps {
@@ -29,8 +40,8 @@ export interface StatDonutCardProps {
   title: string;
   /** Список элементов диаграммы */
   items: StatBarItem[];
-  /** Максимальное количество отображаемых элементов, по умолчанию 8 */
-  maxItems?: number;
+  /** Максимальное количество элементов; null — показать все, по умолчанию 8 */
+  maxItems?: number | null;
   /** Обработчик клика по элементу легенды */
   onItemClick?: (label: string) => void;
   /** Дополнительные CSS классы для корневого элемента */
@@ -72,8 +83,10 @@ function DonutTooltip({ active, payload }: DonutTooltipProps): React.JSX.Element
 export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
   const { title, items, maxItems = 8, onItemClick, className } = props;
 
-  const visible = (items ?? []).slice(0, maxItems);
+  const allItems = items ?? [];
+  const visible = maxItems == null ? allItems : allItems.slice(0, maxItems);
   const isEmpty = visible.length === 0;
+  const legendScrollable = visible.length > 8;
 
   /** Общая сумма всех count для отображения в центре дырки (приводим к числу) */
   const total = visible.reduce((sum, item) => sum + Number(item.count), 0);
@@ -106,7 +119,7 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
                 {visible.map((item, index) => (
                   <Cell
                     key={item.label}
-                    fill={DONUT_COLORS[index % DONUT_COLORS.length]}
+                    fill={getDonutColor(index)}
                   />
                 ))}
               </Pie>
@@ -118,8 +131,13 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
             </div>
           </div>
 
-          {/* Легенда: цветная точка, метка, count, percentage */}
-          <div className="flex flex-col gap-1 min-w-0 flex-1">
+          {/* Легенда: цветная точка, метка, count, percentage; скролл при большом списке */}
+          <div
+            className={[
+              'flex flex-col gap-1 min-w-0 flex-1',
+              legendScrollable ? 'max-h-[220px] overflow-y-auto pr-1' : '',
+            ].join(' ')}
+          >
             {visible.map((item, index) => (
               <div
                 key={item.label}
@@ -134,7 +152,7 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
                 {/* Цветная точка */}
                 <span
                   className="flex-shrink-0 w-2 h-2 rounded-full"
-                  style={{ backgroundColor: DONUT_COLORS[index % DONUT_COLORS.length] }}
+                  style={{ backgroundColor: getDonutColor(index) }}
                 />
                 {/* Метка */}
                 <span className="text-xs text-foreground truncate flex-1 min-w-0">

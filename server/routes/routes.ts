@@ -2623,7 +2623,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           AND ($2::integer IS NULL OR token_id = $2)
         GROUP BY COALESCE(deep_link_param, 'direct')
         ORDER BY count DESC
-        LIMIT 20
       `, [projectId, tokenId]);
 
       // Запрос распределения по языкам
