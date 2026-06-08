@@ -102,7 +102,7 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
   }, [liveContext, projectId, selectedTokenId, queryClient]);
 
   const { points, isLoading } = useGrowthBySource({ projectId, selectedTokenId, granularity });
-  const multiLineData = aggregateTopSources(points, 6);
+  const multiLineData = aggregateTopSources(points, 10);
 
   /** Суммарное число пользователей за период по всем источникам */
   const totalForPeriod = multiLineData.reduce((sum, line) => sum + line.data.reduce((s, p) => s + p.count, 0), 0);
