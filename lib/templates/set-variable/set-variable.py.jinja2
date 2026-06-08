@@ -106,8 +106,14 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
             _sv_arr_{{ loop.index }} = []
         {%- if assignment.lookupField %}
         # Сортировка по полю {{ assignment.lookupField }} (по убыванию)
+        def _sv_sort_key_{{ loop.index }}(x):
+            """Безопасный ключ сортировки: невалидные значения уходят в конец."""
+            try:
+                return float(x.get("{{ assignment.lookupField }}", 0) or 0)
+            except (ValueError, TypeError):
+                return -1
         try:
-            _sv_arr_{{ loop.index }}.sort(key=lambda x: float(x.get("{{ assignment.lookupField }}", 0) or 0), reverse=True)
+            _sv_arr_{{ loop.index }}.sort(key=_sv_sort_key_{{ loop.index }}, reverse=True)
         except Exception:
             pass
         {%- endif %}

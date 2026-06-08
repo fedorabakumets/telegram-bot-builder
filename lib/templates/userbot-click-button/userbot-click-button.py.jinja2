@@ -15,6 +15,7 @@
   @param {string} saveButtonsTo - Переменная для кнопок
   @param {string} saveHasMediaTo - Переменная для флага медиа
   @param {string} saveMediaTo - Переменная для медиа-объекта
+  @param {string} clickDelivery - fire_and_forget | await
   @param {string} autoTransitionTo - ID узла для автоперехода
   @param {number|null} projectId - ID проекта (для get_content)
 #}
@@ -182,7 +183,33 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 _edit_future.set_result(event.message)
 {%- endif %}
 
-        # Отправляем callback (fire-and-forget)
+{%- if clickDelivery == 'await' %}
+        # await: msg.click() — ждём ответ Telegram (как в scrape-скриптах)
+        if _click_btn:
+            try:
+                _click_row, _click_col = None, None
+                if _msg.reply_markup:
+                    for _ri, _row in enumerate(_msg.reply_markup.rows):
+                        for _ci, _btn in enumerate(_row.buttons):
+                            if _btn is _click_btn:
+                                _click_row, _click_col = _ri, _ci
+                                break
+                        if _click_row is not None:
+                            break
+                if _click_row is not None:
+                    await _msg.click(i=_click_row, j=_click_col)
+                elif hasattr(_click_btn, 'text') and _click_btn.text:
+                    await _msg.click(text=_click_btn.text)
+                else:
+                    await _msg.click(text=_click_val)
+                logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }}) [await]")
+            except Exception as _click_err:
+                if "TimeoutError" not in type(_click_err).__name__:
+                    logging.warning(f"⚠️ [{{ nodeId }}] await click error: {_click_err}")
+        else:
+            logging.warning(f"⚠️ Узел {{ nodeId }}: кнопка не найдена (mode={{ clickMode }}, value={_click_val!r})")
+{%- else %}
+        # fire-and-forget: callback в фоне (для медленных ботов)
         if _click_btn and hasattr(_click_btn, 'data') and _click_btn.data:
             async def _fire_click():
                 try:
@@ -206,6 +233,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             logging.info(f"✅ Userbot нажал кнопку (non-callback) в {_entity} msg={_msg_id} (узел {{ nodeId }})")
         else:
             logging.warning(f"⚠️ Узел {{ nodeId }}: кнопка не найдена (mode={{ clickMode }}, value={_click_val!r})")
+{%- endif %}
 
 {%- if responseStrategy == 'new_message' %}
         # Ждём НОВОЕ сообщение от бота (не edit)

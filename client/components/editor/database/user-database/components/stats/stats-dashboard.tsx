@@ -194,6 +194,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
         <StatDonutCard
           title="Источники трафика"
           items={sourceItems}
+          maxItems={null}
           onItemClick={onSourceClick}
         />
       </div>

@@ -222,7 +222,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               projectId={projectId}
               selectedTokenId={selectedTokenId}
             />
-            <StatDonutCard title="Источники трафика" items={sourceItems} className="h-full" />
+            <StatDonutCard title="Источники трафика" items={sourceItems} maxItems={null} className="h-full" />
           </div>
 
           {/* Строка 3: Premium + языки */}

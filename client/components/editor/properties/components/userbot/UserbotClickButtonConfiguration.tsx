@@ -104,6 +104,26 @@ export function UserbotClickButtonConfiguration({
               )}
             </div>
 
+            {/* Способ отправки клика */}
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Отправка клика</Label>
+              <Select
+                value={data.clickDelivery ?? 'fire_and_forget'}
+                onValueChange={(v) => onNodeUpdate(selectedNode.id, { clickDelivery: v })}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fire_and_forget">Без ожидания (быстро)</SelectItem>
+                  <SelectItem value="await">С ожиданием (надёжно)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground/60">
+                «С ожиданием» — await msg.click(), для ботов вроде Vortex, где fire-and-forget не срабатывает
+              </p>
+            </div>
+
             {/* Способ поиска */}
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Способ поиска кнопки</Label>

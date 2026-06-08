@@ -20,6 +20,7 @@
 | `saveButtonsTo` | string | — | Переменная для JSON массива кнопок |
 | `saveHasMediaTo` | string | — | Переменная для флага наличия медиа |
 | `saveMediaTo` | string | — | Переменная для медиа-объекта (пересылка) |
+| `clickDelivery` | 'fire_and_forget' \| 'await' | — | Способ отправки клика (по умолчанию fire_and_forget) |
 | `autoTransitionTo` | string | — | ID узла для автоперехода |
 | `projectId` | number \| null | — | ID проекта (для get_content) |
 
@@ -105,7 +106,8 @@ const allCode = generateUserbotClickButtonHandlers(nodes, projectId);
 
 ## Особенности
 
-- **Fire-and-forget нажатие:** callback отправляется через `asyncio.create_task()` без ожидания `answerCallbackQuery` от бота — это устраняет блокировку на 15+ секунд для медленных ботов
+- **clickDelivery:** `fire_and_forget` (по умолчанию) — callback в фоне через `create_task`; `await` — `await msg.click()` с ожиданием ответа Telegram (для ботов вроде Vortex)
+- **Fire-and-forget нажатие:** при `fire_and_forget` callback отправляется без ожидания — устраняет блокировку на 15+ секунд для медленных ботов
 - **Порядок: event handler → click:** event handler регистрируется ДО нажатия кнопки, чтобы не пропустить быстрый ответ бота
 - **Три режима поиска:** по тексту кнопки, по callback_data, по индексу (row, col)
 - **get_content** — entity, messageId, clickValue берутся из таблицы `_content` с фоллбеком

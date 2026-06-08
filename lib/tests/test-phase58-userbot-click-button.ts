@@ -54,6 +54,7 @@ function makeUserbotClickButtonNode(id: string, opts: any = {}) {
       userbotEntity: opts.userbotEntity || '@bot',
       messageId: opts.messageId || '123',
       clickMode: opts.clickMode || 'text',
+      clickDelivery: opts.clickDelivery || 'fire_and_forget',
       clickValue: opts.clickValue || 'Играть',
       saveAlertTo: opts.saveAlertTo || '',
       saveResultTo: opts.saveResultTo || '',
@@ -153,6 +154,20 @@ test('A07', 'содержит Telethon импорт и StringSession', () => {
   const code = gen(p, 'a07');
   ok(code.includes('from telethon') || code.includes('TelegramClient'), 'Импорт Telethon должен быть в коде');
   ok(code.includes('StringSession'), 'StringSession должен быть в коде');
+});
+
+test('A08', 'clickDelivery=await → await _msg.click, без create_task', () => {
+  const p = makeCleanProject([
+    makeUserbotClickButtonNode('ucb_await', { clickDelivery: 'await', clickValue: 'Карта' }),
+  ]);
+  const code = gen(p, 'a08');
+  ok(code.includes('await _msg.click'), 'await _msg.click должен быть в коде');
+  ok(
+    code.includes('# await:') || code.includes('[await]'),
+    'маркер await-режима (# await: или [await]) должен быть в коде',
+  );
+  ok(!code.includes('asyncio.create_task(_fire_click())'), 'create_task не должен быть в await-режиме');
+  syntax(code, 'a08');
 });
 
 // ════════════════════════════════════════════════════════════════════════════

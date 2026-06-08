@@ -87,6 +87,10 @@ config/google-auth/token.json
 # Test output
 test-results/
 test-output.txt
+terminal-output-*.txt
+
+# Standalone telegram-moderator (local tool, not part of builder)
+telegram-moderator/
 
 # Archive folder (backup files)
 archive/
