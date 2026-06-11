@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-06-05T11:13:26+03:00",
+    "updated_at": "2026-06-12T01:56:10+03:00",
     "tags": [],
     "author": ""
   },
@@ -208,7 +208,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-06-05T11:13:26+03:00",
+    "updated_at": "2026-06-12T01:56:10+03:00",
     "tags": [],
     "author": ""
   },
@@ -779,6 +779,21 @@
       "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-05-05T09:46:36+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/parallel-split-node",
+    "title": "Узел `parallel_split` — параллельный запуск веток",
+    "excerpt": "<!-- @fileoverview Концепция узла `parallel_split` для BotCraft Studio.",
+    "parts": [
+      "futures",
+      "parallel-split-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-06-12T01:56:10+03:00",
     "tags": [],
     "author": ""
   },
