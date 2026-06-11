@@ -62,7 +62,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'schedule_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query', 'convert_file', 'loop', 'bot_table', 'delay', 'userbot_message', 'userbot_click_button', 'userbot_inline_query', 'userbot_edit_trigger']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'schedule_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query', 'convert_file', 'loop', 'bot_table', 'delay', 'userbot_message', 'userbot_click_button', 'userbot_inline_query', 'userbot_edit_trigger', 'parallel_split']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -652,6 +652,23 @@ export const nodeSchema = z.object({
       /** ID целевого узла для перехода по этой ветке */
       target: z.string().optional(),
     })).default([]),
+    /** Ветки узла параллельного запуска (parallel_split) */
+    parallelBranches: z.array(z.object({
+      /** Уникальный идентификатор ветки (порта) */
+      id: z.string(),
+      /** Подпись порта на холсте */
+      label: z.string().default(''),
+      /** ID стартовой ноды ветки */
+      target: z.string().optional(),
+      /** ID ноды, запускаемой при ошибке ветки (фоллбек для паттерна сбора) */
+      onErrorTarget: z.string().optional(),
+    })).optional().default([]),
+    /** Лимит одновременных веток parallel_split (0 = без лимита) */
+    maxConcurrent: z.number().optional().default(5),
+    /** Ждать завершения всех веток parallel_split перед выходом из обработчика */
+    awaitAll: z.boolean().optional().default(false),
+    /** Не запускать parallel_split повторно, пока предыдущий прогон пользователя не завершён */
+    skipIfRunning: z.boolean().optional().default(true),
     /** Список получателей сообщения (для узлов message и media) */
     messageSendRecipients: z.array(z.object({
       /** Уникальный ID получателя */

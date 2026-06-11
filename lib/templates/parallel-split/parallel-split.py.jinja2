@@ -1,0 +1,85 @@
+{#
+  @fileoverview Шаблон узла parallel_split — параллельный запуск веток (fan-out).
+  Генерирует callback-обработчик, который запускает каждую ветку как отдельную
+  asyncio-задачу. Точки сбора (join) нет — сбор собирается из set_variable + condition.
+
+  @param {string}  nodeId        — ID узла
+  @param {string}  safeName      — безопасное имя для Python функции
+  @param {array}   branches      — ветки [{id, label, targetSafe, onErrorTargetExists, onErrorTargetSafe}]
+  @param {number}  semaphoreLimit — размер семафора (maxConcurrent или число веток)
+  @param {boolean} awaitAll      — ждать завершения всех веток
+  @param {boolean} skipIfRunning — защита от двойного запуска
+#}
+
+# Обработчик параллельного запуска: {{ nodeId }}
+@dp.callback_query(lambda c: c.data == "{{ nodeId }}")
+async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Параллельный запуск {{ branches | length }} веток (fan-out)."""
+    user_id = callback_query.from_user.id
+    await init_user_variables(user_id, callback_query.from_user)
+{% if branches | length == 0 %}
+    logging.warning(f"⚡ parallel_split [{{ nodeId }}]: нет веток с целевыми нодами — пропуск")
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+    return
+{% else %}
+{% if skipIfRunning %}
+    # skipIfRunning: защита от двойного запуска
+    _split_key = (user_id, "{{ nodeId }}")
+    if _split_key in _active_splits:
+        logging.info(f"⚡ parallel_split [{{ nodeId }}]: уже выполняется для {user_id} — пропуск повторного запуска")
+        try:
+            await callback_query.answer("⏳ Уже выполняется")
+        except Exception:
+            pass
+        return
+    _active_splits.add(_split_key)
+{% endif %}
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    logging.info(f"⚡ parallel_split [{{ nodeId }}]: запуск {{ branches | length }} веток для {user_id}")
+
+    _semaphore = asyncio.Semaphore({{ semaphoreLimit }})
+
+    async def _run_branch(_handler, _label, _on_error=None):
+        """Выполняет одну ветку под семафором, при ошибке запускает фоллбек."""
+        async with _semaphore:
+            try:
+                await _handler(callback_query, state=state)
+                logging.info(f"⚡ parallel_split [{{ nodeId }}]: ветка '{_label}' завершена")
+            except Exception as _br_err:
+                logging.error(f"❌ parallel_split [{{ nodeId }}]: ветка '{_label}': {_br_err}")
+                if _on_error is not None:
+                    try:
+                        await _on_error(callback_query, state=state)
+                    except Exception as _fb_err:
+                        logging.error(f"❌ parallel_split [{{ nodeId }}]: фоллбек '{_label}': {_fb_err}")
+
+    async def _run_all():
+        """Супервизор: ждёт все ветки и снимает ключ повторного запуска."""
+        try:
+            await asyncio.gather(
+{%- for b in branches %}
+                _run_branch(handle_callback_{{ b.targetSafe }}, {{ b.label | tojson }}{% if b.onErrorTargetExists %}, handle_callback_{{ b.onErrorTargetSafe }}{% endif %}),
+{%- endfor %}
+                return_exceptions=True,
+            )
+        finally:
+{% if skipIfRunning %}
+            _active_splits.discard(_split_key)
+{% endif %}
+            logging.info(f"⚡ parallel_split [{{ nodeId }}]: все ветки завершены для {user_id}")
+
+{% if awaitAll %}
+    # awaitAll=true: ждём завершения всех веток
+    await _run_all()
+{% else %}
+    # awaitAll=false: fire-and-forget, обработчик завершается сразу
+    asyncio.create_task(_run_all())
+{% endif %}
+{% endif %}

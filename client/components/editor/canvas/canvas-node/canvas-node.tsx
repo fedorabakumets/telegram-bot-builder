@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @fileoverview ������ ����� ������ ��������� � �� ������ �����.
  */
 
@@ -39,6 +39,7 @@ import { OutgoingMessageTriggerPreview } from './outgoing-message-trigger-previe
 import { ManagedBotUpdatedTriggerPreview } from './managed-bot-updated-trigger-preview';
 import { ScheduleTriggerPreview } from './schedule-trigger-preview';
 import { ConditionNodePreview } from './condition-node-preview';
+import { ParallelSplitPreview } from './parallel-split-preview';
 import { MediaNodePreview } from './media-node-preview';
 import { HttpRequestPreview } from './http-request-preview';
 import { GetManagedBotTokenPreview } from './get-managed-bot-token-preview';
@@ -526,7 +527,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       {/* Узел loop имеет два порта (тело + далее) внутри превью */}
       {(node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'userbot_edit_trigger') ? (
         <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
-      ) : node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'loop' ? (
+      ) : node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'loop' && (node.type as any) !== 'parallel_split' ? (
         <OutputPort portType={node.type === 'input' ? 'input-target' : 'auto-transition'} onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : null}
 
@@ -540,7 +541,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
           node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'userbot_edit_trigger' || (node.type as any) === 'bot_table' || (node.type as any) === 'delay'
             ? "p-3 w-52"
             : (node.type as any) === 'callback_trigger' || (node.type as any) === 'answer_callback_query'
-            ? "p-3 w-52"            : node.type === 'condition'
+            ? "p-3 w-52"            : node.type === 'condition' || (node.type as any) === 'parallel_split'
             ? "p-4 w-64"
             : node.type === 'message'
             ? "p-4 w-80"
@@ -578,7 +579,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         }}
       >
         {/* Заголовок узла — скрыт для триггеров, узла сообщения и узла условия */}
-        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'schedule_trigger' && (node.type as any) !== 'userbot_edit_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && (node.type as any) !== 'edit_message' && (node.type as any) !== 'set_variable' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (node.type as any) !== 'loop' && (node.type as any) !== 'delay' && (node.type as any) !== 'userbot_message' && (node.type as any) !== 'userbot_click_button' && (node.type as any) !== 'userbot_inline_query' && (
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'schedule_trigger' && (node.type as any) !== 'userbot_edit_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && (node.type as any) !== 'edit_message' && (node.type as any) !== 'set_variable' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (node.type as any) !== 'loop' && (node.type as any) !== 'delay' && (node.type as any) !== 'userbot_message' && (node.type as any) !== 'userbot_click_button' && (node.type as any) !== 'userbot_inline_query' && (node.type as any) !== 'parallel_split' && (
           <NodeHeader node={node} onMove={!!onMove} />
         )}
 
@@ -700,6 +701,16 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         {/* Condition Node Preview */}
         {node.type === 'condition' && (
           <ConditionNodePreview
+            node={node}
+            onPortMouseDown={handlePortMouseDown}
+            isConnectionSource={isConnectionSource}
+            onButtonPortMount={onButtonPortMount}
+          />
+        )}
+
+        {/* Parallel Split Preview */}
+        {(node.type as any) === 'parallel_split' && (
+          <ParallelSplitPreview
             node={node}
             onPortMouseDown={handlePortMouseDown}
             isConnectionSource={isConnectionSource}

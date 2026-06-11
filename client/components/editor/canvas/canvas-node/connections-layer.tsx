@@ -295,6 +295,21 @@ export function collectConnections(nodes: Node[]): Connection[] {
       });
     }
 
+    // 5.1 Ветки узла параллельного запуска
+    if ((node.type as any) === 'parallel_split') {
+      const parallelBranches: any[] = (node.data as any)?.parallelBranches || [];
+      parallelBranches.forEach((branch: any) => {
+        if (branch.target && existingIds.has(branch.target)) {
+          connections.push({
+            fromId: node.id,
+            toId: branch.target,
+            type: 'button-goto',
+            buttonId: branch.id,
+          });
+        }
+      });
+    }
+
     // 6. Соединение исходного узла с узлом condition (sourceNodeId → condition)
     if (node.type === 'condition') {
       const sourceNodeId = (node.data as any)?.sourceNodeId;

@@ -453,6 +453,13 @@ export function Canvas({
               b.id === buttonId ? { ...b, target: targetNodeId } : b
             );
           }
+          /** Ветки узла параллельного запуска — порты работают как у condition */
+          const parallelBranches = (data.parallelBranches as any[] | undefined) ?? [];
+          if (parallelBranches.length > 0) {
+            data.parallelBranches = parallelBranches.map((b: any) =>
+              b.id === buttonId ? { ...b, target: targetNodeId } : b
+            );
+          }
           return { ...n, data };
         }
 
@@ -513,6 +520,13 @@ export function Canvas({
           const branches = (data.branches as any[] | undefined) ?? [];
           if (branches.length > 0) {
             data.branches = branches.map((b: any) =>
+              b.target === toId ? { ...b, target: undefined } : b
+            );
+          }
+          /** Разрыв связи ветки параллельного запуска */
+          const parallelBranches = (data.parallelBranches as any[] | undefined) ?? [];
+          if (parallelBranches.length > 0) {
+            data.parallelBranches = parallelBranches.map((b: any) =>
               b.target === toId ? { ...b, target: undefined } : b
             );
           }

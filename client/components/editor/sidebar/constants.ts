@@ -10,7 +10,7 @@ import { allCommandPresets } from './massive/commands';
 import type { CommandPreset } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
 import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger, scheduleTrigger } from './massive/triggers';
-import { conditionNode, setVariableNode, loopNode, delayNode } from './massive/logic';
+import { conditionNode, setVariableNode, loopNode, delayNode, parallelSplitNode } from './massive/logic';
 import { forwardMessage, createForumTopicNode, deleteMessage } from './massive/content-management';
 import { httpRequestNode } from './massive/http-request';
 import { psqlQueryNode } from './massive/psql-query';
@@ -49,7 +49,7 @@ export const componentCategories: Array<{
   },
   {
     title: 'Интеграции',
-    components: [httpRequestNode, psqlQueryNode, botTableNode, convertFileNode, conditionNode, setVariableNode, loopNode, delayNode]
+    components: [httpRequestNode, psqlQueryNode, botTableNode, convertFileNode, conditionNode, setVariableNode, loopNode, delayNode, parallelSplitNode]
   },
   {
     title: 'Юзербот',

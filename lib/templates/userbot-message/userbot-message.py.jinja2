@@ -209,7 +209,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         _mid = msg.id
         if _mid > _sent_id:
             return True
-        if _floor_id < _mid <= _sent_id:
+        if _floor_id <= _mid <= _sent_id:
             _txt = msg.text or ''
             return bool(_txt and _re_resp.search(_resp_re, _txt))
         return False
@@ -248,7 +248,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         _pick_len = 0
         _resp_sorted = sorted(_resp_collected.values(), key=lambda m: m.id)
         _fresh = [m for m in _resp_sorted if m.id > _sent_id]
-        _edit_pool = [m for m in _resp_sorted if _floor_id < m.id <= _sent_id]
+        _edit_pool = [m for m in _resp_sorted if _floor_id <= m.id <= _sent_id]
         _pool = _fresh if _fresh else _edit_pool
         for _bm in _pool:
             _txt = _bm.text or ''
@@ -357,6 +357,23 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         user_data[user_id]["{{ saveResponseIdTo }}"] = _resp_msg.id
         await set_user_var(user_id, "{{ saveResponseIdTo }}", _resp_msg.id)
         logging.info(f"💾 ID ответа сохранён: {{ saveResponseIdTo }} = {_resp_msg.id}")
+        # [TEMP DEBUG] Кнопки бота в ответе — по одной строке (WorkerPool режет stdout ~200 симв.)
+        _temp_resp_btn_count = 0
+        if getattr(_resp_msg, 'reply_markup', None):
+            for _temp_ri, _temp_row in enumerate(_resp_msg.reply_markup.rows):
+                for _temp_ci, _temp_btn in enumerate(_temp_row.buttons):
+                    _temp_lbl = getattr(_temp_btn, 'text', '') or ''
+                    logging.info(
+                        f"🔘 [TEMP {{ nodeId }}] Ответ бота msg={_resp_msg.id} "
+                        f"btn[{_temp_resp_btn_count}] r{_temp_ri}c{_temp_ci}={_temp_lbl!r}"
+                    )
+                    _temp_resp_btn_count += 1
+        if _temp_resp_btn_count == 0:
+            logging.info(f"🔘 [TEMP {{ nodeId }}] Ответ бота msg={_resp_msg.id}: (нет кнопок)")
+        else:
+            logging.info(
+                f"🔘 [TEMP {{ nodeId }}] Ответ бота msg={_resp_msg.id}: всего {_temp_resp_btn_count} кнопок"
+            )
 {%- if saveResponseTextTo %}
         _resp_text = (_resp_msg.text or '') if _resp_msg else ''
         user_data[user_id]["{{ saveResponseTextTo }}"] = _resp_text

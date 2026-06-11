@@ -446,6 +446,19 @@ export function getNodeDefaults(type: Node['type']): any {
       /** Текст сообщения (для совместимости) */
       messageText: '',
     },
+    parallel_split: {
+      /** Ветки параллельного запуска */
+      parallelBranches: [
+        { id: 'pbranch_1', label: 'Ветка 1', target: '' },
+        { id: 'pbranch_2', label: 'Ветка 2', target: '' },
+      ],
+      /** Лимит одновременных веток */
+      maxConcurrent: 5,
+      /** Не ждать завершения веток */
+      awaitAll: false,
+      /** Защита от двойного запуска */
+      skipIfRunning: true,
+    },
     bot_table: {
       /** Имя таблицы */
       tableName: '',

@@ -311,6 +311,20 @@ function inferConnectionsFromNodes(
       }
     }
 
+    /** Ветки узла параллельного запуска — связи как у condition */
+    if ((node.type as any) === 'parallel_split' && Array.isArray(data.parallelBranches)) {
+      for (const branch of data.parallelBranches as any[]) {
+        if (branch?.target) {
+          pushConnection({
+            fromId: node.id,
+            toId: branch.target,
+            type: 'button-goto',
+            buttonId: branch.id,
+          });
+        }
+      }
+    }
+
     const buttonsToUse = node.type === 'message' && linkedKeyboard && keyboardButtons.length > 0
       ? []
       : nodeButtons;

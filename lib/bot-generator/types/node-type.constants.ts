@@ -36,6 +36,7 @@ export const NODE_TYPES = {
   CLIENT_AUTH: 'client_auth',
   MEDIA: 'media',
   HTTP_REQUEST: 'http_request',
+  PARALLEL_SPLIT: 'parallel_split',
 } as const;
 
 export type NodeType = typeof NODE_TYPES[keyof typeof NODE_TYPES];
