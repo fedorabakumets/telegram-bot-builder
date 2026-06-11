@@ -320,6 +320,13 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     color: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
     canvasColor: 'bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 text-violet-600 dark:text-violet-400 border-2 border-violet-300 dark:border-violet-700/50 shadow-lg shadow-violet-500/20',
   },
+  // Логика — параллельный запуск веток (fan-out)
+  parallel_split: {
+    name: 'Параллельная группа',
+    icon: 'fas fa-sitemap',
+    color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400',
+    canvasColor: 'bg-gradient-to-br from-rose-50 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30 text-rose-600 dark:text-rose-400 border-2 border-rose-300 dark:border-rose-700/50 shadow-lg shadow-rose-500/20',
+  },
   // Логика — задержка
   delay: {
     name: 'Задержка',

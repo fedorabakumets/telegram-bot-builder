@@ -66,6 +66,11 @@ export { generateKickUser, generateKickUserHandlers, collectKickUserEntries } fr
 /** Типы шаблона исключения пользователя */
 export type { KickUserTemplateParams, KickUserEntry, KickUserIdSource, KickUserChatIdSource } from './templates/kick-user';
 
+/** Экспорт шаблона параллельного запуска веток */
+export { generateParallelSplit, generateParallelSplitHandlers, collectParallelSplitEntries } from './templates/parallel-split';
+/** Типы шаблона параллельного запуска веток */
+export type { ParallelSplitTemplateParams, ParallelSplitEntry, ParallelSplitBranchEntry } from './templates/parallel-split';
+
 // Additional utilities
 export { addInputTargetNodes } from './bot-generator/core/add-input-target-nodes';
 

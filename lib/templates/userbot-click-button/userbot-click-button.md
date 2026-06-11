@@ -106,7 +106,7 @@ const allCode = generateUserbotClickButtonHandlers(nodes, projectId);
 
 ## Особенности
 
-- **clickDelivery:** `fire_and_forget` (по умолчанию) — callback в фоне через `create_task`; `await` — `await msg.click()` с ожиданием ответа Telegram (для ботов вроде Vortex)
+- **clickDelivery:** `fire_and_forget` (по умолчанию) — callback в фоне через `create_task`; `await` — callback в фоне с таймаутом 2с на `answerCallbackQuery` (ответ бота ловится по edit/new handlers, без блокировки 10–20с на `msg.click()`)
 - **Fire-and-forget нажатие:** при `fire_and_forget` callback отправляется без ожидания — устраняет блокировку на 15+ секунд для медленных ботов
 - **Порядок: event handler → click:** event handler регистрируется ДО нажатия кнопки, чтобы не пропустить быстрый ответ бота
 - **Три режима поиска:** по тексту кнопки, по callback_data, по индексу (row, col)

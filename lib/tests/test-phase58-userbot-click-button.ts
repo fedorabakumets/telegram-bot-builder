@@ -156,17 +156,23 @@ test('A07', 'содержит Telethon импорт и StringSession', () => {
   ok(code.includes('StringSession'), 'StringSession должен быть в коде');
 });
 
-test('A08', 'clickDelivery=await → await _msg.click, без create_task', () => {
+test('A08', 'clickDelivery=await → await dispatch callback с timeout 2с', () => {
   const p = makeCleanProject([
-    makeUserbotClickButtonNode('ucb_await', { clickDelivery: 'await', clickValue: 'Карта' }),
+    makeUserbotClickButtonNode('ucb_await', {
+      clickDelivery: 'await',
+      clickValue: 'Карта',
+      autoTransitionTo: 'msg1',
+    }),
+    makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'a08');
-  ok(code.includes('await _msg.click'), 'await _msg.click должен быть в коде');
+  ok(code.includes('await _dispatch_callback_click_'), 'callback await должен выполняться до ожидания edit');
+  ok(code.includes('timeout=2.0'), 'короткий таймаут answerCallbackQuery');
   ok(
     code.includes('# await:') || code.includes('[await]'),
     'маркер await-режима (# await: или [await]) должен быть в коде',
   );
-  ok(!code.includes('asyncio.create_task(_fire_click())'), 'create_task не должен быть в await-режиме');
+  ok(code.includes('автопереход') && code.includes('отменён'), 'без ответа бота автопереход отменяется');
   syntax(code, 'a08');
 });
 
@@ -182,10 +188,14 @@ test('B01', 'clickMode=text → msg.click(text=...)', () => {
   ok(code.includes('msg.click(text=') || code.includes('_msg.click(text='), 'msg.click(text=...) должен быть в коде');
 });
 
-test('B02', 'clickMode=data → msg.click(data=...)', () => {
+test('B02', 'clickMode=data → поиск по callback_data + GetBotCallbackAnswerRequest', () => {
   const p = makeCleanProject([makeUserbotClickButtonNode('ucb1', { clickMode: 'data', clickValue: 'play_game' })]);
   const code = gen(p, 'b02');
-  ok(code.includes('msg.click(data=') || code.includes('_msg.click(data='), 'msg.click(data=...) должен быть в коде');
+  ok(
+    code.includes("_click_val.encode('utf-8') in _btn.data"),
+    'поиск кнопки по callback_data должен быть в коде',
+  );
+  ok(code.includes('GetBotCallbackAnswerRequest'), 'GetBotCallbackAnswerRequest должен быть в коде');
 });
 
 test('B03', 'clickMode=index → _idx_parts и msg.click(row, col)', () => {
@@ -304,10 +314,14 @@ test('E02', 'содержит FloodWaitError обработку', () => {
   ok(code.includes('FloodWait'), 'FloodWait обработка должна быть в коде');
 });
 
-test('E03', 'содержит asyncio.sleep(1.5) для ожидания обновления', () => {
+test('E03', 'ожидание ответа через MessageEdited event + fallback истории', () => {
   const p = makeCleanProject([makeUserbotClickButtonNode('ucb1', { saveResultTo: 'res' })]);
   const code = gen(p, 'e03');
-  ok(code.includes('asyncio.sleep(1.5)'), 'asyncio.sleep(1.5) должен быть в коде');
+  ok(code.includes('events.MessageEdited'), 'MessageEdited handler должен быть в коде');
+  ok(
+    code.includes('asyncio.wait_for(_edit_future') || code.includes('asyncio.sleep(1)'),
+    'ожидание edit (wait_for или sleep fallback) должно быть в коде',
+  );
 });
 
 test('E04', 'синтаксис OK (полный сценарий с автопереходом)', () => {
@@ -367,6 +381,29 @@ test('F03', 'userbot_click_button с saveButtonsTo содержит type в JSON
   const p = makeCleanProject([makeUserbotClickButtonNode('ucb1', { saveButtonsTo: 'btns_data' })]);
   const code = gen(p, 'f03');
   ok(code.includes('"type"'), '"type" должен быть в JSON парсинге кнопок');
+});
+
+test('F06', 'responseFilterRegex → edit poll с regex (как scrape)', () => {
+  const p = makeCleanProject([
+    makeUserbotClickButtonNode('ucb1', {
+      saveResultTo: 'res',
+      clickDelivery: 'await',
+    }),
+  ]);
+  (p.sheets[0].nodes[0].data as Record<string, unknown>).responseFilterRegex = 'сумм|введите';
+  (p.sheets[0].nodes[0].data as Record<string, unknown>).responseWaitSeconds = 14;
+  const code = gen(p, 'f06');
+  ok(code.includes('_re_edit_ok_ucb1'), 'должна быть функция проверки regex edit');
+  ok(code.includes('timeout=14'), 'таймаут edit 14 сек');
+});
+
+test('F05', 'временный лог кнопок бота до и после клика (по строке на кнопку)', () => {
+  const p = makeCleanProject([makeUserbotClickButtonNode('ucb1')]);
+  const code = gen(p, 'f05');
+  ok(code.includes('[TEMP ucb1] До клика'), 'должен логировать кнопки до клика');
+  ok(code.includes('btn[') && code.includes('] r'), 'каждая кнопка — отдельная строка btn[i] rNcM');
+  ok(code.includes('[TEMP ucb1] После ответа'), 'должен логировать кнопки после ответа');
+  ok(code.includes('всего'), 'должен логировать итоговое число кнопок');
 });
 
 test('F04', 'содержит KeyboardButtonSwitchInline в парсинге типов', () => {

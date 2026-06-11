@@ -97,16 +97,17 @@ describe('generateUserbotClickButton()', () => {
     expect(code).toContain('fire-and-forget');
   });
 
-  it('clickDelivery=await → await _msg.click без create_task', () => {
+  it('clickDelivery=await → await dispatch callback с timeout 2с, без блокирующего msg.click', () => {
     const code = generateUserbotClickButton({
       nodeId: 'ub-c15a',
       clickDelivery: 'await',
       clickMode: 'text',
       clickValue: 'Карта',
     });
-    expect(code).toContain('await _msg.click');
+    expect(code).toContain('await _dispatch_callback_click_');
+    expect(code).toContain('timeout=2.0');
     expect(code).toContain('[await]');
-    expect(code).not.toContain('asyncio.create_task(_fire_click())');
+    expect(code).not.toContain('await _msg.click(i=');
   });
 
   it('messageIdSource=last → последнее сообщение бота с reply_markup', () => {

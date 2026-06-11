@@ -474,7 +474,7 @@ test('I02', 'regex_match учитывает edit меню (id <= sent) при с
   const code = gen(p, 'i02');
   syntax(code, 'i02');
   ok(code.includes('_resp_accept_'), 'функция _resp_accept для фильтрации');
-  ok(code.includes('_floor_id < _mid <= _sent_id'), 'edit меню только в диапазоне floor..sent');
+  ok(code.includes('_floor_id <= _mid <= _sent_id'), 'edit меню включая id==floor в диапазоне floor..sent');
   ok(code.includes('_best_id'), 'выбор самого нового regex-совпадения');
 });
 

@@ -18,11 +18,12 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         {% for assignment in assignments %}
         {%- set safe_var = assignment.variable %}
         {%- if assignment.mode == 'expression' %}
-        # Вычисляем арифметическое выражение
-        _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
-        _sv_old_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}")
-        _sv_expr_{{ loop.index }} = {{ assignment.value | tojson }}
-        user_data[user_id]["{{ safe_var }}"] = _eval_expr(_sv_expr_{{ loop.index }}, _sv_vars_{{ loop.index }})
+        # Вычисляем арифметическое выражение (атомарно — Lock на пользователя для параллельных веток)
+        async with _get_user_var_lock(user_id):
+            _sv_vars_{{ loop.index }} = await init_all_user_vars(user_id)
+            _sv_old_{{ loop.index }} = user_data[user_id].get("{{ safe_var }}")
+            _sv_expr_{{ loop.index }} = {{ assignment.value | tojson }}
+            user_data[user_id]["{{ safe_var }}"] = _eval_expr(_sv_expr_{{ loop.index }}, _sv_vars_{{ loop.index }})
         logging.info(f"📝 set_variable [{{ nodeId }}]: «{{ safe_var }}» = {user_data[user_id]['{{ safe_var }}']!r} (было: {_sv_old_{{ loop.index }}!r}, выражение: {_sv_expr_{{ loop.index }}!r})")
         {%- elif assignment.mode == 'lookup' %}
         # Поиск в таблице {{ assignment.lookupTable }}

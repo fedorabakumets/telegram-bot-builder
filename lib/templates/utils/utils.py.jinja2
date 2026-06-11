@@ -249,6 +249,25 @@ async def save_message_to_api(user_id, message_type: str, message_text: str = No
 {%- endif %}
 
 
+_user_var_locks: dict = {}
+
+def _get_user_var_lock(user_id: int) -> asyncio.Lock:
+    """Возвращает asyncio.Lock пользователя для атомарных операций с переменными.
+
+    Используется set_variable (mode=expression) чтобы инкремент счётчика
+    из параллельных веток (parallel_split) не терял значения.
+
+    Args:
+        user_id (int): ID пользователя Telegram
+
+    Returns:
+        asyncio.Lock: Лок пользователя (создаётся при первом обращении)
+    """
+    if user_id not in _user_var_locks:
+        _user_var_locks[user_id] = asyncio.Lock()
+    return _user_var_locks[user_id]
+
+
 async def set_user_var(user_id: int, key: str, value) -> None:
     """Сохраняет переменную пользователя в память и БД (fire-and-forget).
 
