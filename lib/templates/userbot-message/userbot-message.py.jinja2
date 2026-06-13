@@ -337,6 +337,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     @userbot_client.on(events.NewMessage(chats=_resp_entity))
     async def _on_resp_{{ nodeId | replace('-', '_') }}(event):
         if event.message.id > _sent_id and event.sender_id != _my_id and not _resp_future.done():
+            logging.info(f"📨 [{{ nodeId }}] event NewMessage id={event.message.id} text={( event.message.text or '')[:80]!r}")
             _resp_future.set_result(event.message)
 
     try:
@@ -349,6 +350,9 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _resp_msgs = await userbot_client.get_messages(_resp_entity, limit=5)
             _resp_list = _resp_msgs if isinstance(_resp_msgs, list) else [_resp_msgs]
             _bot_msgs = [m for m in _resp_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id and m.id > _sent_id]
+            logging.info(f"📨 [{{ nodeId }}] fallback: {len(_bot_msgs)} сообщений бота после id={_sent_id}, стратегия={{ responseStrategy | default('longest') }}")
+            for _dbg_m in _bot_msgs[:5]:
+                logging.info(f"📨 [{{ nodeId }}] fallback msg id={_dbg_m.id} text={(_dbg_m.text or '')[:60]!r} has_markup={bool(getattr(_dbg_m, 'reply_markup', None))}")
 {%- if responseStrategy == 'first' %}
             _resp_msg = _bot_msgs[0] if _bot_msgs else None
 {%- elif responseStrategy == 'last' %}
@@ -364,6 +368,7 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             if not _resp_msg:
                 _resp_msg = _bot_msgs[0] if _bot_msgs else None
 {%- endif %}
+            logging.info(f"📨 [{{ nodeId }}] fallback выбрано: id={_resp_msg.id if _resp_msg else None}")
         except Exception as _resp_err:
             logging.warning(f"⚠️ [{{ nodeId }}] Не удалось получить ответ: {_resp_err}")
     finally:
