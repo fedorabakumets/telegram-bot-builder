@@ -19,7 +19,7 @@
 | `saveResponseIdTo` | string | — | Переменная для сохранения ID ответа от получателя |
 | `saveResponseTextTo` | string | — | Переменная для сохранения текста ответа |
 | `responseWaitSeconds` | number | — | Таймаут ожидания ответа в секундах (по умолчанию 3) |
-| `responseStrategy` | 'first' \| 'longest' \| 'regex_match' | — | Стратегия выбора ответа (по умолчанию 'longest') |
+| `responseStrategy` | 'first' \| 'longest' \| 'regex_match' \| 'last' | — | Стратегия выбора ответа (по умолчанию 'longest') |
 | `responseFilterRegex` | string | — | Regex для фильтрации (при strategy=regex_match) |
 | `autoTransitionTo` | string | — | ID узла для автоперехода |
 | `projectId` | number \| null | — | ID проекта (для get_content) |
@@ -109,6 +109,7 @@ const allCode = generateUserbotMessageHandlers(nodes, projectId);
 
 Стратегии выбора ответа (при fallback):
 - `first` — первое сообщение от бота
+- `last` — последнее сообщение от бота (самое новое по ID)
 - `longest` (по умолчанию) — самое длинное сообщение
 - `regex_match` — первое совпадение по regex
 

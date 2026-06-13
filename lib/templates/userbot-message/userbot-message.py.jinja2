@@ -351,6 +351,8 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _bot_msgs = [m for m in _resp_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id and m.id > _sent_id]
 {%- if responseStrategy == 'first' %}
             _resp_msg = _bot_msgs[0] if _bot_msgs else None
+{%- elif responseStrategy == 'last' %}
+            _resp_msg = _bot_msgs[-1] if _bot_msgs else None
 {%- else %}
             # longest (по умолчанию)
             _resp_msg = None

@@ -29,8 +29,8 @@ export interface UserbotMessageTemplateParams {
   saveButtonsTo?: string;
   /** Время ожидания ответа в секундах (по умолчанию 3) */
   responseWaitSeconds?: number;
-  /** Стратегия выбора ответа: 'first' | 'longest' | 'regex_match' */
-  responseStrategy?: 'first' | 'longest' | 'regex_match';
+  /** Стратегия выбора ответа: 'first' | 'longest' | 'regex_match' | 'last' */
+  responseStrategy?: 'first' | 'longest' | 'regex_match' | 'last';
   /** Regex для фильтрации ответа (только при strategy=regex_match) */
   responseFilterRegex?: string;
   /** ID сообщения бота с которого ждём ответ (включая edit того же msg) */

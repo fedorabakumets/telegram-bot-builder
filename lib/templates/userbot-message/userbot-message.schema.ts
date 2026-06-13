@@ -32,7 +32,7 @@ export const userbotMessageParamsSchema = z.object({
   /** Время ожидания ответа в секундах */
   responseWaitSeconds: z.number().optional().default(3),
   /** Стратегия выбора ответа */
-  responseStrategy: z.enum(['first', 'longest', 'regex_match']).optional().default('longest'),
+  responseStrategy: z.enum(['first', 'longest', 'regex_match', 'last']).optional().default('longest'),
   /** Regex для фильтрации ответа */
   responseFilterRegex: z.string().optional().default(''),
   /** Переменная с id сообщения бота — учитывать edit этого msg (Vortex и др.) */

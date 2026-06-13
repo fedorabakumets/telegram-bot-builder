@@ -177,6 +177,18 @@ describe('generateUserbotMessage()', () => {
     expect(code).not.toContain('_max_len');
   });
 
+  it('использует стратегию last в fallback', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'test-last',
+      messageText: '/start',
+      userbotEntity: '@bot',
+      saveResponseIdTo: 'resp_id',
+      responseStrategy: 'last',
+    });
+    expect(code).toContain('_bot_msgs[-1] if _bot_msgs else None');
+    expect(code).not.toContain('_max_len');
+  });
+
   it('использует стратегию longest в fallback по умолчанию', () => {
     const code = generateUserbotMessage({
       nodeId: 'ub-16',
