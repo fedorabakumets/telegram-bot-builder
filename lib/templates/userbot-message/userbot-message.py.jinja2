@@ -330,8 +330,32 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     finally:
         userbot_client.remove_event_handler(_on_resp_{{ nodeId | replace('-', '_') }})
         userbot_client.remove_event_handler(_on_resp_edit_{{ nodeId | replace('-', '_') }})
+{%- elif responseStrategy == 'last' %}
+    # last: собираем все сообщения за responseWaitSeconds, берём последнее по ID
+    _resp_collected_msgs = []
+
+    @userbot_client.on(events.NewMessage(chats=_resp_entity))
+    async def _on_resp_{{ nodeId | replace('-', '_') }}(event):
+        if event.message.id > _sent_id and event.sender_id != _my_id:
+            _resp_collected_msgs.append(event.message)
+            logging.info(f"📨 [{{ nodeId }}] event NewMessage id={event.message.id} text={(event.message.text or '')[:80]!r}")
+
+    try:
+        await asyncio.sleep({{ responseWaitSeconds | default(3) }})
+        _resp_msg = _resp_collected_msgs[-1] if _resp_collected_msgs else None
+        if not _resp_msg:
+            # Fallback: читаем историю
+            _resp_msgs = await userbot_client.get_messages(_resp_entity, limit=5)
+            _resp_list = _resp_msgs if isinstance(_resp_msgs, list) else [_resp_msgs]
+            _bot_msgs = [m for m in _resp_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id and m.id > _sent_id]
+            _resp_msg = _bot_msgs[-1] if _bot_msgs else None
+            logging.info(f"📨 [{{ nodeId }}] last fallback: {len(_bot_msgs)} msgs, выбрано id={_resp_msg.id if _resp_msg else None}")
+        else:
+            logging.info(f"📨 [{{ nodeId }}] last: собрано {len(_resp_collected_msgs)} за {{ responseWaitSeconds | default(3) }}с, выбрано id={_resp_msg.id}")
+    finally:
+        userbot_client.remove_event_handler(_on_resp_{{ nodeId | replace('-', '_') }})
 {%- else %}
-    # Event listener для нового сообщения
+    # Event listener для нового сообщения (first/longest)
     _resp_future = asyncio.get_event_loop().create_future()
 
     @userbot_client.on(events.NewMessage(chats=_resp_entity))
@@ -355,8 +379,6 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                 logging.info(f"📨 [{{ nodeId }}] fallback msg id={_dbg_m.id} text={(_dbg_m.text or '')[:60]!r} has_markup={bool(getattr(_dbg_m, 'reply_markup', None))}")
 {%- if responseStrategy == 'first' %}
             _resp_msg = _bot_msgs[0] if _bot_msgs else None
-{%- elif responseStrategy == 'last' %}
-            _resp_msg = _bot_msgs[-1] if _bot_msgs else None
 {%- else %}
             # longest (по умолчанию)
             _resp_msg = None

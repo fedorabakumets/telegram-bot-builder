@@ -177,7 +177,7 @@ describe('generateUserbotMessage()', () => {
     expect(code).not.toContain('_max_len');
   });
 
-  it('использует стратегию last в fallback', () => {
+  it('использует стратегию last: собирает все сообщения за таймаут', () => {
     const code = generateUserbotMessage({
       nodeId: 'test-last',
       messageText: '/start',
@@ -185,7 +185,11 @@ describe('generateUserbotMessage()', () => {
       saveResponseIdTo: 'resp_id',
       responseStrategy: 'last',
     });
+    expect(code).toContain('_resp_collected_msgs');
+    expect(code).toContain('asyncio.sleep');
+    expect(code).toContain('_resp_collected_msgs[-1]');
     expect(code).toContain('_bot_msgs[-1] if _bot_msgs else None');
+    expect(code).not.toContain('asyncio.wait_for(_resp_future');
     expect(code).not.toContain('_max_len');
   });
 

@@ -504,7 +504,7 @@ test('I03', 'responseFloorMessageIdVar задаёт нижнюю границу 
 
 console.log('── Блок J: responseStrategy = last ─────────────────────────────────');
 
-test('J01', 'responseStrategy=last → содержит _bot_msgs[-1]', () => {
+test('J01', 'responseStrategy=last → содержит _resp_collected_msgs и asyncio.sleep вместо Future', () => {
   const p = makeCleanProject([
     makeUserbotMessageNode('ub_lucky_start', {
       userbotEntity: '@LuckyExchange_Bot',
@@ -514,7 +514,11 @@ test('J01', 'responseStrategy=last → содержит _bot_msgs[-1]', () => {
     }),
   ]);
   const code = gen(p, 'j01');
-  ok(code.includes('_bot_msgs[-1] if _bot_msgs else None'), '_bot_msgs[-1] должен быть в коде для стратегии last');
+  ok(code.includes('_resp_collected_msgs'), '_resp_collected_msgs должен быть в коде для стратегии last');
+  ok(code.includes('asyncio.sleep(10)'), 'asyncio.sleep(10) должен быть в коде для стратегии last');
+  ok(code.includes('_resp_collected_msgs[-1]'), '_resp_collected_msgs[-1] должен быть в коде для стратегии last');
+  ok(code.includes('_bot_msgs[-1] if _bot_msgs else None'), '_bot_msgs[-1] fallback должен быть в коде для стратегии last');
+  ok(!code.includes('asyncio.wait_for(_resp_future'), 'asyncio.wait_for(_resp_future) НЕ должен быть в коде для стратегии last');
 });
 
 test('J02', 'синтаксис OK (responseStrategy=last)', () => {
