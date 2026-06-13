@@ -1,0 +1,643 @@
+{
+  "id": "bot-cond-lucky-input",
+  "type": "condition",
+  "data": {
+    "buttons": [],
+    "branches": [
+      {
+        "id": "br_btc",
+        "value": "btc",
+        "target": "bot-ub-lucky-btc-input",
+        "operator": "equals"
+      },
+      {
+        "id": "br_else",
+        "value": "",
+        "target": "bot-ub-lucky-rub",
+        "operator": "else"
+      }
+    ],
+    "markdown": false,
+    "variable": "compare_input_mode",
+    "adminOnly": false,
+    "showInMenu": false,
+    "messageText": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "isPrivateOnly": false,
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "enableStatistics": false
+  }
+}
+
+{
+  "id": "bot-cond-lucky-payment-ok",
+  "type": "condition",
+  "data": {
+    "buttons": [],
+    "branches": [
+      {
+        "id": "br_lucky_ok",
+        "value": "0",
+        "target": "bot-cond-btc-after-lucky",
+        "operator": "greater_than"
+      },
+      {
+        "id": "br_lucky_fail",
+        "value": "",
+        "target": "bot-setv-btc-fail-lucky",
+        "operator": "else"
+      }
+    ],
+    "markdown": false,
+    "variable": "lucky_payment",
+    "adminOnly": false,
+    "showInMenu": false,
+    "messageText": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "isPrivateOnly": false,
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "enableStatistics": false
+  }
+}
+
+{
+  "id": "bot-setv-btc-fail-lucky",
+  "type": "set_variable",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "showInMenu": false,
+    "assignments": [
+      {
+        "id": "flag",
+        "mode": "text",
+        "value": "⚠️",
+        "variable": "btc_flag_lucky"
+      }
+    ],
+    "messageText": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "isPrivateOnly": false,
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "autoTransitionTo": "bot-setv-btc-done",
+    "enableStatistics": false,
+    "enableAutoTransition": true
+  }
+}
+
+{
+  "id": "bot-setv-parse-lucky",
+  "type": "set_variable",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "showInMenu": false,
+    "assignments": [
+      {
+        "id": "pl_btc_raw",
+        "mode": "regex_extract",
+        "value": "{lucky_parse_source}",
+        "pattern": "Получите[^0-9]*([\\d.]+)\\s*BTC",
+        "variable": "lucky_btc_raw",
+        "regexGroup": "1"
+      },
+      {
+        "id": "pl_total_raw",
+        "mode": "regex_extract",
+        "value": "{lucky_parse_source}",
+        "pattern": "Итого[^0-9]*([\\d][\\d\\s]*)",
+        "variable": "lucky_total_raw",
+        "regexGroup": "1"
+      },
+      {
+        "id": "pl_sum_raw",
+        "mode": "regex_extract",
+        "value": "{lucky_parse_source}",
+        "pattern": "Сумма[^0-9]*([\\d][\\d\\s]*)",
+        "variable": "lucky_sum_raw",
+        "regexGroup": "1"
+      },
+      {
+        "id": "pl_fee_pct_raw",
+        "mode": "regex_extract",
+        "value": "{lucky_parse_source}",
+        "pattern": "Комиссия сервиса[^0-9]*([\\d]+)",
+        "variable": "lucky_fee_pct_raw",
+        "regexGroup": "1"
+      },
+      {
+        "id": "pl_fee_rub_raw",
+        "mode": "regex_extract",
+        "value": "{lucky_parse_source}",
+        "pattern": "Комиссия сервиса:.*?-\\s*(\\d+)\\s*RUB",
+        "variable": "lucky_fee_rub_raw",
+        "regexGroup": "1"
+      },
+      {
+        "id": "pl_net_raw",
+        "mode": "regex_extract",
+        "value": "{lucky_parse_source}",
+        "pattern": "Комиссия сети[^0-9]*([\\d]+)",
+        "variable": "lucky_fee_net_raw",
+        "regexGroup": "1"
+      },
+      {
+        "id": "pl_btc",
+        "mode": "expression",
+        "value": "round(float('{lucky_btc_raw}'), 8) if '{lucky_btc_raw}' else 0",
+        "variable": "lucky_btc"
+      },
+      {
+        "id": "pl_payment",
+        "mode": "expression",
+        "value": "int('{lucky_total_raw}'.replace(' ', '')) if '{lucky_total_raw}'.strip() and '{lucky_total_raw}'.strip() != '0' else (int('{lucky_sum_raw}'.replace(' ', '')) if '{lucky_sum_raw}'.strip() and '{lucky_sum_raw}'.strip() != '0' else (int('{lucky_pay_raw}'.replace(' ', '')) if '{lucky_pay_raw}'.strip() and '{lucky_pay_raw}'.strip() != '0' else (int('{lucky_rub_raw}'.replace(' ', '')) if '{lucky_rub_raw}'.strip() and '{lucky_rub_raw}'.strip() != '0' else 0))))",
+        "variable": "lucky_payment"
+      },
+      {
+        "id": "pl_fee_pct",
+        "mode": "expression",
+        "value": "int(float('{lucky_fee_pct_raw}')) if '{lucky_fee_pct_raw}'.strip() and '{lucky_fee_pct_raw}'.strip() != '0' else 0",
+        "variable": "lucky_fee_pct"
+      },
+      {
+        "id": "pl_rate",
+        "mode": "expression",
+        "value": "round(float({lucky_payment}) / float({lucky_btc}), 0) if float({lucky_btc}) > 0 else 0",
+        "variable": "lucky_rate"
+      },
+      {
+        "id": "pl_source",
+        "mode": "expression",
+        "value": "'{lucky_text}\\n{lucky_amount_text}'.strip()",
+        "variable": "lucky_parse_source"
+      },
+      {
+        "id": "pl_pay_raw",
+        "mode": "regex_extract",
+        "value": "{lucky_parse_source}",
+        "pattern": "К оплате[^0-9]*([\\d][\\d\\s]*)",
+        "variable": "lucky_pay_raw",
+        "regexGroup": "1"
+      },
+      {
+        "id": "pl_rub_raw",
+        "mode": "regex_extract",
+        "value": "{lucky_parse_source}",
+        "pattern": "([\\d][\\d\\s]*)\\s*₽",
+        "variable": "lucky_rub_raw",
+        "regexGroup": "1"
+      }
+    ],
+    "messageText": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "isPrivateOnly": false,
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "autoTransitionTo": "bot-cond-lucky-payment-ok",
+    "enableStatistics": false,
+    "conditionalMessages": [],
+    "enableAutoTransition": true,
+    "enableConditionalMessages": false
+  }
+}
+
+{
+  "id": "bot-ub-lucky-address",
+  "type": "userbot_message",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "formatMode": "none",
+    "showInMenu": true,
+    "messageText": "bc1q5at58r5qlwuclpvk4hv0c0wughe69evxle068q",
+    "waitSeconds": 10,
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "attachedMedia": [],
+    "isPrivateOnly": false,
+    "userbotEntity": "@LuckyExchange_Bot",
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "saveMessageIdTo": "ub_sent_msg_id",
+    "autoTransitionTo": "bot-setv-parse-lucky",
+    "enableStatistics": true,
+    "responseStrategy": "regex_match",
+    "saveResponseIdTo": "lucky_resp3",
+    "disableLinkPreview": false,
+    "saveResponseTextTo": "lucky_text",
+    "responseFilterRegex": "Подтверждение заказа|Получите|Итого|Комиссия|к оплате|К оплате|Сумма",
+    "responseWaitSeconds": 20,
+    "enableAutoTransition": true,
+    "responseFloorMessageIdVar": "ub_sent_msg_id"
+  }
+}
+
+{
+  "id": "bot-ub-lucky-amount",
+  "type": "userbot_message",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "formatMode": "none",
+    "showInMenu": true,
+    "messageText": "{user_amount}",
+    "waitSeconds": 3,
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "attachedMedia": [],
+    "isPrivateOnly": false,
+    "userbotEntity": "@LuckyExchange_Bot",
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "saveMessageIdTo": "ub_sent_msg_id",
+    "autoTransitionTo": "bot-ub-lucky-address",
+    "enableStatistics": true,
+    "responseStrategy": "first",
+    "saveResponseIdTo": "lucky_resp2",
+    "disableLinkPreview": false,
+    "enableAutoTransition": true
+  }
+}
+
+{
+  "id": "bot-ub-lucky-amount-btc",
+  "type": "userbot_message",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "formatMode": "none",
+    "showInMenu": true,
+    "messageText": "{user_btc}",
+    "waitSeconds": 3,
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "attachedMedia": [],
+    "isPrivateOnly": false,
+    "userbotEntity": "@LuckyExchange_Bot",
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "saveMessageIdTo": "ub_sent_msg_id",
+    "autoTransitionTo": "bot-cond-lucky-goto-address",
+    "enableStatistics": true,
+    "responseStrategy": "regex_match",
+    "saveResponseIdTo": "lucky_resp2_btc",
+    "disableLinkPreview": false,
+    "saveResponseTextTo": "lucky_amount_text",
+    "responseFilterRegex": "кошел|адрес|wallet|bc1|Получите|Подтверждение|укажите|Введите|токен|BTC|Минимальная|рублях|Итого|Комиссия",
+    "responseWaitSeconds": 22,
+    "enableAutoTransition": true,
+    "responseFloorMessageIdVar": "ub_sent_msg_id"
+  }
+}
+
+{
+  "id": "bot-ub-lucky-btc",
+  "type": "userbot_click_button",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "clickMode": "index",
+    "messageId": "",
+    "clickValue": "0",
+    "showInMenu": true,
+    "messageText": "",
+    "saveAlertTo": "",
+    "saveMediaTo": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "saveResultTo": "",
+    "clickDelivery": "await",
+    "isPrivateOnly": false,
+    "saveButtonsTo": "",
+    "userbotEntity": "@LuckyExchange_Bot",
+    "resizeKeyboard": true,
+    "saveHasMediaTo": "",
+    "messageIdSource": "last",
+    "oneTimeKeyboard": false,
+    "autoTransitionTo": "bot-ub-lucky-token",
+    "enableStatistics": true,
+    "responseStrategy": "new_message",
+    "responseFilterRegex": "криптовалют|BTC|USDT",
+    "responseWaitSeconds": 10,
+    "enableAutoTransition": true
+  }
+}
+
+{
+  "id": "bot-ub-lucky-btc-input",
+  "type": "userbot_click_button",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "clickMode": "text",
+    "messageId": "",
+    "clickValue": "токен",
+    "showInMenu": true,
+    "messageText": "",
+    "saveAlertTo": "",
+    "saveMediaTo": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "saveResultTo": "",
+    "clickDelivery": "await",
+    "isPrivateOnly": false,
+    "saveButtonsTo": "",
+    "userbotEntity": "@LuckyExchange_Bot",
+    "resizeKeyboard": true,
+    "saveHasMediaTo": "",
+    "messageIdSource": "last",
+    "oneTimeKeyboard": false,
+    "autoTransitionTo": "bot-ub-lucky-amount-btc",
+    "enableStatistics": true,
+    "responseStrategy": "edit",
+    "responseFilterRegex": "способ ввода|рублях|токенах|сумм|BTC|Введите",
+    "responseWaitSeconds": 14,
+    "enableAutoTransition": true
+  }
+}
+
+{
+  "id": "bot-ub-lucky-buy",
+  "type": "userbot_click_button",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "clickMode": "index",
+    "messageId": "{lucky_resp1}",
+    "clickValue": "0",
+    "showInMenu": true,
+    "messageText": "",
+    "saveAlertTo": "",
+    "saveMediaTo": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "saveResultTo": "",
+    "clickDelivery": "await",
+    "isPrivateOnly": false,
+    "saveButtonsTo": "",
+    "userbotEntity": "@LuckyExchange_Bot",
+    "resizeKeyboard": true,
+    "saveHasMediaTo": "",
+    "messageIdSource": "manual",
+    "oneTimeKeyboard": false,
+    "autoTransitionTo": "bot-ub-lucky-btc",
+    "enableStatistics": true,
+    "responseStrategy": "new_message",
+    "responseFilterRegex": "Купить|криптовалют|меню",
+    "responseWaitSeconds": 10,
+    "enableAutoTransition": true
+  }
+}
+
+{
+  "id": "bot-ub-lucky-card",
+  "type": "userbot_click_button",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "clickMode": "text",
+    "messageId": "",
+    "clickValue": "токен",
+    "showInMenu": true,
+    "messageText": "",
+    "saveAlertTo": "",
+    "saveMediaTo": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "saveResultTo": "",
+    "clickDelivery": "await",
+    "isPrivateOnly": false,
+    "saveButtonsTo": "",
+    "userbotEntity": "@LuckyExchange_Bot",
+    "resizeKeyboard": true,
+    "saveHasMediaTo": "",
+    "messageIdSource": "last",
+    "oneTimeKeyboard": false,
+    "autoTransitionTo": "bot-ub-lucky-amount-btc",
+    "enableStatistics": true,
+    "responseStrategy": "edit",
+    "responseFilterRegex": "способ ввода|рублях|токенах|сумм|BTC|Введите",
+    "responseWaitSeconds": 12,
+    "enableAutoTransition": true
+  }
+}
+
+{
+  "id": "bot-ub-lucky-rub",
+  "type": "userbot_click_button",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "clickMode": "index",
+    "messageId": "",
+    "clickValue": "0",
+    "showInMenu": true,
+    "messageText": "",
+    "saveAlertTo": "",
+    "saveMediaTo": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "saveResultTo": "",
+    "clickDelivery": "await",
+    "isPrivateOnly": false,
+    "saveButtonsTo": "",
+    "userbotEntity": "@LuckyExchange_Bot",
+    "resizeKeyboard": true,
+    "saveHasMediaTo": "",
+    "messageIdSource": "last",
+    "oneTimeKeyboard": false,
+    "autoTransitionTo": "bot-ub-lucky-amount",
+    "enableStatistics": true,
+    "responseStrategy": "new_message",
+    "responseFilterRegex": "сумм|руб|введите|Введите|укажите",
+    "responseWaitSeconds": 12,
+    "enableAutoTransition": true
+  }
+}
+
+{
+  "id": "bot-ub-lucky-start",
+  "type": "userbot_message",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "formatMode": "none",
+    "showInMenu": true,
+    "messageText": "/start",
+    "waitSeconds": 8,
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "attachedMedia": [],
+    "isPrivateOnly": false,
+    "userbotEntity": "@LuckyExchange_Bot",
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "saveMessageIdTo": "ub_sent_msg_id",
+    "autoTransitionTo": "bot-ub-lucky-buy",
+    "enableStatistics": true,
+    "responseStrategy": "longest",
+    "saveResponseIdTo": "lucky_resp1",
+    "disableLinkPreview": false,
+    "responseFilterRegex": "Купить|Главное|меню|криптовалют",
+    "responseWaitSeconds": 10,
+    "enableAutoTransition": true
+  }
+}
+
+{
+  "id": "bot-ub-lucky-token",
+  "type": "userbot_click_button",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "clickMode": "index",
+    "messageId": "",
+    "clickValue": "0",
+    "showInMenu": true,
+    "messageText": "",
+    "saveAlertTo": "",
+    "saveMediaTo": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "saveResultTo": "",
+    "clickDelivery": "await",
+    "isPrivateOnly": false,
+    "saveButtonsTo": "",
+    "userbotEntity": "@LuckyExchange_Bot",
+    "resizeKeyboard": true,
+    "saveHasMediaTo": "",
+    "messageIdSource": "last",
+    "oneTimeKeyboard": false,
+    "autoTransitionTo": "bot-cond-lucky-input",
+    "enableStatistics": true,
+    "responseStrategy": "new_message",
+    "responseFilterRegex": "метод оплаты|оплат|Альфа|банк|способ",
+    "responseWaitSeconds": 12,
+    "enableAutoTransition": true
+  }
+}
+
+{
+  "id": "bot-cond-lucky-goto-address",
+  "type": "condition",
+  "data": {
+    "buttons": [],
+    "branches": [
+      {
+        "id": "br_min_err",
+        "value": "Минимальная",
+        "target": "bot-setv-btc-fail-lucky",
+        "operator": "contains"
+      },
+      {
+        "id": "br_zero_err",
+        "value": "0.00",
+        "target": "bot-setv-btc-fail-lucky",
+        "operator": "contains"
+      },
+      {
+        "id": "br_rub_err",
+        "value": "рублях",
+        "target": "bot-setv-btc-fail-lucky",
+        "operator": "contains"
+      },
+      {
+        "id": "br_ok",
+        "value": "",
+        "target": "bot-ub-lucky-address",
+        "operator": "else"
+      }
+    ],
+    "markdown": false,
+    "variable": "lucky_amount_text",
+    "adminOnly": false,
+    "showInMenu": false,
+    "messageText": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "isPrivateOnly": false,
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "enableStatistics": false
+  }
+}
+
+{
+  "id": "bot-cond-btc-after-lucky",
+  "type": "condition",
+  "data": {
+    "buttons": [],
+    "branches": [
+      {
+        "id": "br_btc",
+        "value": "btc",
+        "target": "bot-setv-btc-flag-lucky",
+        "operator": "equals"
+      },
+      {
+        "id": "br_else",
+        "value": "",
+        "target": "bot-setv-progress-13",
+        "operator": "else"
+      }
+    ],
+    "markdown": false,
+    "variable": "compare_input_mode",
+    "adminOnly": false,
+    "showInMenu": false,
+    "messageText": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "isPrivateOnly": false,
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "enableStatistics": false
+  }
+}
+
+{
+  "id": "bot-setv-btc-flag-lucky",
+  "type": "set_variable",
+  "data": {
+    "buttons": [],
+    "markdown": false,
+    "adminOnly": false,
+    "showInMenu": false,
+    "assignments": [
+      {
+        "id": "flag",
+        "mode": "text",
+        "value": "✅",
+        "variable": "btc_flag_lucky"
+      }
+    ],
+    "messageText": "",
+    "keyboardType": "none",
+    "requiresAuth": false,
+    "isPrivateOnly": false,
+    "resizeKeyboard": true,
+    "oneTimeKeyboard": false,
+    "autoTransitionTo": "bot-setv-btc-done",
+    "enableStatistics": false,
+    "enableAutoTransition": true
+  }
+}

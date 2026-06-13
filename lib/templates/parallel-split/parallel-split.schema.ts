@@ -37,6 +37,8 @@ export const parallelSplitEntrySchema = z.object({
   awaitAll: z.boolean(),
   /** Защита от двойного запуска */
   skipIfRunning: z.boolean(),
+  /** ID узла для автоперехода после запуска веток */
+  autoTransitionTo: z.string().optional(),
 });
 
 /** Тип параметров, выведенный из схемы */

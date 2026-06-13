@@ -4,6 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { storage } from '../server/storages/storage';
+import { syncContentToTable } from '../server/services/content-table';
 
 /**
  * Находит папку бота по ID проекта и токена
@@ -36,6 +37,16 @@ async function pushProjectJson(projectId: number, tokenId?: number): Promise<voi
   const updated = await storage.updateBotProject(projectId, { data });
   if (!updated) {
     throw new Error(`Проект ${projectId} не найден в БД`);
+  }
+  await syncContentToTable(projectId, data);
+  try {
+    const { getRedisPublisher } = await import('../server/redis/redisClient');
+    const pub = getRedisPublisher();
+    if (pub) {
+      await pub.publish(`bot:table_updated:${projectId}`, 'reload');
+    }
+  } catch {
+    /* Redis опционален при локальном push */
   }
   console.log(`OK: project ${projectId} обновлён из ${jsonPath}`);
 }

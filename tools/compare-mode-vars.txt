@@ -1,0 +1,149 @@
+=== setv-compare-init ===
+{'id': 'cmp1', 'mode': 'text', 'value': '[]', 'variable': 'compare_results'}
+{'id': 'sites_amt', 'mode': 'expression', 'value': "int(float({user_amount})) if '{compare_input_mode}' != 'btc' else (int(round(float({user_btc}) * float(str({btc_rub}).replace(' ', '')))) if float(str({btc_rub}).replace(' ', '')) > 0 else int(round(float({user_btc}) * 6000000)))", 'variable': 'sites_user_amount'}
+autoTransitionTo: fetch-compare-rate
+=== fetch-compare-rate ===
+autoTransitionTo: setv-compare-best
+=== cond-after-sites ===
+var: compare_mode branches: [{'id': 'cas_all', 'value': 'all', 'target': 'bot-setv-sites-skip', 'operator': 'equals'}, {'id': 'cas_else', 'value': '', 'target': 'delete-loading-sites', 'operator': 'else'}]
+=== sites-set-mode ===
+{'id': 'sm_sites', 'mode': 'text', 'value': 'sites', 'variable': 'compare_mode'}
+autoTransitionTo: msg-compare-ask-amount
+=== setv-parse-refresh ===
+{'id': 'parse_mode', 'mode': 'regex_extract', 'value': '{refresh_payload}', 'pattern': '^([^:]+)', 'variable': 'compare_mode', 'regexGroup': '1'}
+{'id': 'parse_input_mode', 'mode': 'regex_extract', 'value': '{refresh_payload}', 'pattern': '^[^:]+:([^:]+)', 'variable': 'compare_input_mode', 'regexGroup': '1'}
+{'id': 'parse_amount_raw', 'mode': 'regex_extract', 'value': '{refresh_payload}', 'pattern': ':([^:]+)$', 'variable': 'compare_refresh_amount', 'regexGroup': '1'}
+{'id': 'parse_user_btc', 'mode': 'conditional', 'value': '', 'variable': 'user_btc', 'trueValue': '{compare_refresh_amount}', 'falseValue': '{user_btc}', 'conditionValue': 'btc', 'conditionOperator': 'equals', 'conditionVariable': '{compare_input_mode}'}
+{'id': 'parse_user_amount', 'mode': 'conditional', 'value': '', 'variable': 'user_amount', 'trueValue': '{compare_refresh_amount}', 'falseValue': '{user_amount}', 'conditionValue': 'rub', 'conditionOperator': 'equals', 'conditionVariable': '{compare_input_mode}'}
+{'id': 'set_title_bots', 'mode': 'text', 'value': '💱 <b>Сравнение курсов</b>', 'variable': 'compare_title'}
+{'id': 'set_title_short', 'mode': 'text', 'value': '💱 <b>Сравнение курсов</b>', 'variable': 'compare_title_short'}
+{'id': 'set_refresh_flag', 'mode': 'text', 'value': '1', 'variable': 'compare_is_refresh'}
+{'id': 'cmp_req_hdr_refresh', 'mode': 'conditional', 'value': '', 'variable': 'compare_request_header', 'trueValue': '₿ Запрос: <b>{user_btc} BTC</b>', 'falseValue': '💰 Сумма: <b>{=thousands(user_amount)}</b> ₽', 'conditionValue': 'btc', 'conditionOperator': 'equals', 'conditionVariable': '{compare_input_mode}'}
+=== cond-refresh-route ===
+var: compare_mode branches: [{'id': 'br_sites', 'value': 'sites', 'target': 'edit-ask-amount-loading-sites', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-cond-in-progress-refresh', 'operator': 'else'}]
+=== bot-setv-compare-start ===
+{'id': 'cp_msg_id', 'mode': 'conditional', 'value': '', 'variable': 'compare_progress_msg_id', 'trueValue': '{compare_result_msg_id}', 'falseValue': '{ask_amount_msg_id}', 'conditionValue': '1', 'conditionOperator': 'equals', 'conditionVariable': '{compare_is_refresh}'}
+{'id': 'cs_start', 'mode': 'timestamp', 'value': '0', 'variable': 'compare_started_at'}
+{'id': 'cp_now', 'mode': 'timestamp', 'value': '0', 'variable': 'compare_now_ts'}
+{'id': 'cp_elapsed_sec', 'mode': 'expression', 'value': 'int({compare_now_ts}) - int({compare_started_at}) if int({compare_started_at}) > 1000000000 else 0', 'variable': 'compare_elapsed_sec'}
+{'id': 'cp_elapsed', 'mode': 'format_duration', 'value': '{compare_elapsed_sec}', 'variable': 'compare_elapsed'}
+{'id': 'cp_remaining', 'mode': 'format_duration', 'value': "( 3 if '{compare_input_mode}' == 'btc' else 15 ) * 9", 'variable': 'compare_remaining'}
+=== bot-cond-all-sites-gate ===
+var: compare_mode branches: [{'id': 'br_all', 'value': 'all', 'target': 'setv-compare-init', 'operator': 'equals'}, {'id': 'br_skip', 'value': '', 'target': 'bot-setv-sites-skip', 'operator': 'else'}]
+=== all-set-mode ===
+{'id': 'sm1', 'mode': 'text', 'value': 'all', 'variable': 'compare_mode'}
+{'id': 'set_title', 'mode': 'text', 'value': '💱 <b>Сравнение курсов сайтов и ботов</b>', 'variable': 'compare_title'}
+{'id': 'title_short', 'mode': 'text', 'value': '💱 <b>Сравнение курсов сайтов и ботов</b>', 'variable': 'compare_title_short'}
+=== bot-cond-route-amount-screen ===
+var: compare_input_mode branches: [{'id': 'br_amt_btc', 'value': 'btc', 'target': 'bot-msg-ask-amount-btc', 'operator': 'equals'}, {'id': 'br_amt_rub', 'value': '', 'target': 'bot-msg-ask-amount', 'operator': 'else'}]
+=== bot-cond-route-first-bot ===
+var: compare_input_mode branches: [{'id': 'br_btc_mode', 'value': 'btc', 'target': 'bot-split-btc', 'operator': 'equals'}, {'id': 'br_check_btc_amt', 'value': '', 'target': 'bot-http-coingecko-rate', 'operator': 'else'}]
+=== bot-cond-route-loading ===
+var: compare_input_mode branches: [{'id': 'br_load_btc', 'value': 'btc', 'target': 'edit-ask-amount-loading-btc', 'operator': 'equals'}, {'id': 'br_load_rub', 'value': '', 'target': 'edit-ask-amount-loading', 'operator': 'else'}]
+=== bot-setv-amt-10000 ===
+{'id': 'sa-10000-mode', 'mode': 'text', 'value': 'rub', 'variable': 'compare_input_mode'}
+=== bot-setv-amt-100000 ===
+{'id': 'sa-100000-mode', 'mode': 'text', 'value': 'rub', 'variable': 'compare_input_mode'}
+=== bot-setv-amt-5000 ===
+{'id': 'sa-5000-mode', 'mode': 'text', 'value': 'rub', 'variable': 'compare_input_mode'}
+=== bot-setv-amt-50000 ===
+{'id': 'sa-50000-mode', 'mode': 'text', 'value': 'rub', 'variable': 'compare_input_mode'}
+=== bot-setv-amt-500000 ===
+{'id': 'sa-500000-mode', 'mode': 'text', 'value': 'rub', 'variable': 'compare_input_mode'}
+=== bot-setv-init ===
+{'id': 'clear_result_msg', 'mode': 'text', 'value': '0', 'variable': 'compare_result_msg_id'}
+{'id': 'set_in_progress', 'mode': 'text', 'value': '1', 'variable': 'compare_in_progress'}
+{'id': 'cmp_started_at', 'mode': 'timestamp', 'value': '0', 'variable': 'compare_started_at'}
+{'id': 'bi1', 'mode': 'expression', 'value': '[]', 'variable': 'compare_bot_results'}
+{'id': 'cmp_req_hdr', 'mode': 'conditional', 'value': '', 'variable': 'compare_request_header', 'trueValue': '₿ Запрос: <b>{user_btc} BTC</b>', 'falseValue': '💰 Запрос: <b>{user_amount_fmt} ₽</b> с карты', 'conditionValue': 'btc', 'conditionOperator': 'equals', 'conditionVariable': '{compare_input_mode}'}
+{'id': 'cmp_fee_note', 'mode': 'conditional', 'value': '', 'variable': 'compare_fee_note', 'trueValue': '\n\nℹ️ Комиссия и итоговая сумма могут отличаться в зависимости от способа оплаты.', 'falseValue': '\n\nℹ️ Комиссия и итоговая сумма могут отличаться в зависимости от способа оплаты.', 'conditionValue': 'btc', 'conditionOperator': 'equals', 'conditionVariable': '{compare_input_mode}'}
+{'id': 'cmp_read_help', 'mode': 'conditional', 'value': '', 'variable': 'compare_read_help', 'trueValue': 'ℹ️ Цена — сколько ₽ заплатить за {user_btc} BTC. Меньше — выгоднее.', 'falseValue': 'ℹ️ Цена — сколько ₽ заплатить за {user_btc} BTC. Меньше — выгоднее.', 'conditionValue': 'btc', 'conditionOperator': 'equals', 'conditionVariable': '{compare_input_mode}'}
+{'id': 'cmp_legend', 'mode': 'conditional', 'value': '', 'variable': 'compare_legend_lists', 'trueValue': '', 'falseValue': '', 'conditionValue': 'btc', 'conditionOperator': 'equals', 'conditionVariable': '{compare_input_mode}'}
+{'id': 'init_btc_rate_line', 'mode': 'text', 'value': '₿ Сумма: <b>{user_btc} BTC</b>', 'variable': 'compare_btc_rate_line'}
+=== bot-setv-input-btc ===
+{'id': 'set-input-btc', 'mode': 'text', 'value': 'btc', 'variable': 'compare_input_mode'}
+=== bot-setv-input-rub ===
+{'id': 'set-input-rub', 'mode': 'text', 'value': 'rub', 'variable': 'compare_input_mode'}
+=== bot-setv-prepare-compare ===
+{'id': 'prep_clear_refresh', 'mode': 'text', 'value': '0', 'variable': 'compare_is_refresh'}
+{'id': 'prep_clear_result', 'mode': 'text', 'value': '0', 'variable': 'compare_result_msg_id'}
+{'id': 'compare_input_mode_btc_guard', 'mode': 'conditional', 'value': '', 'variable': 'compare_input_mode', 'trueValue': 'btc', 'falseValue': '{compare_input_mode}', 'conditionValue': '0', 'conditionOperator': 'greater_than', 'conditionVariable': '{user_btc}'}
+{'id': 'cmp_req_hdr_btc', 'mode': 'conditional', 'value': '', 'variable': 'compare_request_header', 'trueValue': '₿ Запрос: <b>{user_btc} BTC</b>', 'falseValue': '💰 Сумма: <b>{=thousands(user_amount)}</b> ₽', 'conditionValue': 'btc', 'conditionOperator': 'equals', 'conditionVariable': '{compare_input_mode}'}
+autoTransitionTo: bot-setv-compare-start
+=== bot-setv-rub-reset-input ===
+{'id': 'rri-mode', 'mode': 'text', 'value': 'rub', 'variable': 'compare_input_mode'}
+=== bots-set-mode ===
+{'id': 'sm2', 'mode': 'text', 'value': 'bots', 'variable': 'compare_mode'}
+{'id': 'set_title', 'mode': 'text', 'value': '💱 <b>Сравнение курсов ботов</b>', 'variable': 'compare_title'}
+{'id': 'title_short', 'mode': 'text', 'value': '💱 <b>Сравнение курсов ботов</b>', 'variable': 'compare_title_short'}
+=== bot-cond-capitalist-input ===
+var: compare_input_mode branches: [{'id': 'capitalist_in_btc', 'value': 'btc', 'target': 'bot-ub-capitalist-amount-btc', 'operator': 'equals'}, {'id': 'capitalist_in_rub', 'value': '', 'target': 'bot-ub-capitalist-amount', 'operator': 'else'}]
+=== bot-cond-litebit-input ===
+var: compare_input_mode branches: [{'id': 'litebit_in_btc', 'value': 'btc', 'target': 'bot-ub-litebit-amount-btc', 'operator': 'equals'}, {'id': 'litebit_in_rub', 'value': '', 'target': 'bot-ub-litebit-amount', 'operator': 'else'}]
+=== bot-cond-sanchez-input ===
+var: compare_input_mode branches: [{'id': 'sanchez_in_btc', 'value': 'btc', 'target': 'bot-ub-sanchez-amount-btc', 'operator': 'equals'}, {'id': 'sanchez_in_rub', 'value': '', 'target': 'bot-ub-sanchez-amount', 'operator': 'else'}]
+=== bot-cond-casper-input ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-ub-casper-amount-btc', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-ub-casper-amount', 'operator': 'else'}]
+=== bot-cond-monopoly-input ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-ub-monopoly-amount-btc', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-ub-monopoly-amount', 'operator': 'else'}]
+=== bot-cond-lucky-input ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-ub-lucky-btc-input', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-ub-lucky-rub', 'operator': 'else'}]
+=== bot-cond-inf-input ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-ub-inf-amount-btc', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-ub-inf-amount', 'operator': 'else'}]
+=== bot-cond-crazy-input ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-ub-crazy-amount-btc', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-ub-crazy-amount', 'operator': 'else'}]
+=== bot-cond-love-input ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-ub-love-amount-btc', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-ub-love-amount', 'operator': 'else'}]
+=== bot-cond-viron-input ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-ub-viron-amount-btc', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-ub-viron-amount', 'operator': 'else'}]
+=== bot-cond-cf-input ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-ub-cf-amount-btc', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-ub-cf-amount', 'operator': 'else'}]
+=== bot-cond-shaxta-route ===
+var: compare_input_mode branches: [{'id': 'br_shaxta_btc', 'value': 'btc', 'target': 'bot-ub-shaxta-buy', 'operator': 'equals'}, {'id': 'br_shaxta_rub', 'value': '', 'target': 'bot-ub-shaxta-click', 'operator': 'else'}]
+=== bot-cond-after-bots ===
+var: compare_mode branches: [{'id': 'br_all', 'value': 'all', 'target': 'bot-cond-all-sites-ready', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-delete-loading', 'operator': 'else'}]
+=== bot-cond-btc-after-capitalist ===
+var: compare_input_mode branches: [{'id': 'capitalist_after_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-cap', 'operator': 'equals'}, {'id': 'capitalist_after_rub', 'value': '', 'target': 'bot-setv-progress-2', 'operator': 'else'}]
+=== bot-cond-btc-after-casper ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-casper', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-setv-progress-15', 'operator': 'else'}]
+=== bot-cond-btc-after-cf ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-cf', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-setv-progress-9', 'operator': 'else'}]
+=== bot-cond-btc-after-crazy ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-crazy', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-setv-progress-11', 'operator': 'else'}]
+=== bot-cond-btc-after-inf ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-inf', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-setv-progress-12', 'operator': 'else'}]
+=== bot-cond-btc-after-litebit ===
+var: compare_input_mode branches: [{'id': 'litebit_after_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-lite', 'operator': 'equals'}, {'id': 'litebit_after_rub', 'value': '', 'target': 'bot-setv-progress-6', 'operator': 'else'}]
+=== bot-cond-btc-after-love ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-love', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-setv-progress-14', 'operator': 'else'}]
+=== bot-cond-btc-after-lucky ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-lucky', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-setv-progress-13', 'operator': 'else'}]
+=== bot-cond-btc-after-monopoly ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-monopoly', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-setv-calc', 'operator': 'else'}]
+=== bot-cond-btc-after-sanchez ===
+var: compare_input_mode branches: [{'id': 'sanchez_after_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-san', 'operator': 'equals'}, {'id': 'sanchez_after_rub', 'value': '', 'target': 'bot-setv-progress-7', 'operator': 'else'}]
+=== bot-cond-btc-after-shaxta ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-shaxta', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-setv-progress-4', 'operator': 'else'}]
+=== bot-cond-btc-after-viron ===
+var: compare_input_mode branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-viron', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-setv-progress-8', 'operator': 'else'}]
+=== bot-setv-calc-user-btc ===
+{'id': 'calc_read_help', 'mode': 'text', 'value': 'ℹ️ Цена — сколько ₽ заплатить за {user_btc} BTC. Меньше — выгоднее.', 'variable': 'compare_read_help'}
+{'id': 'set_mode_btc', 'mode': 'text', 'value': 'btc', 'variable': 'compare_input_mode'}
+{'id': 'calc_btc_rate_line', 'mode': 'text', 'value': '💰 {=thousands(user_amount)} ₽ → ₿ <b>{user_btc} BTC</b>\n📈 Курс CoinGecko: <b>{=thousands(btc_rub)}</b> ₽ за BTC · курс актуален на момент запроса', 'variable': 'compare_btc_rate_line'}
+=== bot-cond-after-sanchez-parse ===
+var: compare_input_mode branches: [{'id': 'br_parse_btc', 'value': 'btc', 'target': 'bot-setv-calc-btc-sanchez', 'operator': 'equals'}, {'id': 'br_parse_rub', 'value': '', 'target': 'bot-setv-progress-7', 'operator': 'else'}]
+=== bots-set-mode-btc ===
+{'id': 'btc_sm_mode', 'mode': 'text', 'value': 'bots', 'variable': 'compare_mode'}
+{'id': 'btc_sm_input', 'mode': 'text', 'value': 'btc', 'variable': 'compare_input_mode'}
+{'id': 'btc_sm_title', 'mode': 'text', 'value': '💱 <b>Сравнение курсов ботов (BTC)</b>', 'variable': 'compare_title'}
+{'id': 'btc_sm_title_short', 'mode': 'text', 'value': '💱 <b>Сравнение курсов ботов (BTC)</b>', 'variable': 'compare_title_short'}
+=== bot-setv-btc-0005 ===
+{'id': 'bot-setv-btc-0005_mode', 'mode': 'text', 'value': 'btc', 'variable': 'compare_input_mode'}
+=== bot-setv-btc-001 ===
+{'id': 'bot-setv-btc-001_mode', 'mode': 'text', 'value': 'btc', 'variable': 'compare_input_mode'}
+=== bot-setv-btc-002 ===
+{'id': 'bot-setv-btc-002_mode', 'mode': 'text', 'value': 'btc', 'variable': 'compare_input_mode'}
+=== bot-setv-btc-005 ===
+{'id': 'bot-setv-btc-005_mode', 'mode': 'text', 'value': 'btc', 'variable': 'compare_input_mode'}
+=== bot-setv-btc-01 ===
+{'id': 'bot-setv-btc-01_mode', 'mode': 'text', 'value': 'btc', 'variable': 'compare_input_mode'}

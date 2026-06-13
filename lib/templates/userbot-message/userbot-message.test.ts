@@ -219,9 +219,23 @@ describe('generateUserbotMessage()', () => {
       responseFilterRegex: 'К оплате',
       responseWaitSeconds: 10,
     });
-    expect(code).toContain('_resp_sorted[-2]');
+    expect(code).toContain('_pool[-2]');
     expect(code).toContain('_resp_msg.text');
     expect(code).toContain('Информация по заявке');
+  });
+
+  it('regex_match учитывает текст inline-кнопки (GIF без подписи)', () => {
+    const code = generateUserbotMessage({
+      nodeId: 'ub-17c',
+      messageText: '/start',
+      userbotEntity: '@LuckyExchange_Bot',
+      saveResponseIdTo: 'lucky_resp1',
+      responseStrategy: 'regex_match',
+      responseFilterRegex: 'Купить',
+      responseWaitSeconds: 12,
+    });
+    expect(code).toContain('Inline-кнопка: текст кнопки совпадает с regex');
+    expect(code).toContain('_btn_best_id');
   });
 
   it('использует кастомный таймаут responseWaitSeconds', () => {

@@ -50,6 +50,7 @@ export function collectParallelSplitEntries(nodes: Node[]): ParallelSplitEntry[]
             onErrorTargetExists,
           };
         });
+      const autoTransitionTo = typeof data?.autoTransitionTo === 'string' ? data.autoTransitionTo : '';
       return {
         nodeId: node.id,
         safeName: safeName(node.id),
@@ -57,6 +58,7 @@ export function collectParallelSplitEntries(nodes: Node[]): ParallelSplitEntry[]
         maxConcurrent: typeof data?.maxConcurrent === 'number' ? data.maxConcurrent : 5,
         awaitAll: Boolean(data?.awaitAll),
         skipIfRunning: data?.skipIfRunning !== false,
+        autoTransitionTo,
       };
     });
 }

@@ -198,6 +198,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     break
 {%- endif %}
 
+        # Telethon click(text=) — только точное совпадение; click_val часто подстрока («Купить» в «💎 Купить 💎»)
+        _btn_click_data = getattr(_click_btn, 'data', None) if _click_btn else None
+        _btn_click_text = (getattr(_click_btn, 'text', '') or _click_val) if _click_btn else _click_val
+
 {%- if saveAlertTo %}
         # Переменная для alert (при fire-and-forget alert недоступен)
         user_data[user_id]["{{ saveAlertTo }}"] = ''
@@ -208,11 +212,40 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
         # Регистрируем event handler ДО нажатия кнопки (чтобы не пропустить быстрый ответ)
         _updated = None
         _new_msg_future = asyncio.get_event_loop().create_future()
+{%- if responseFilterRegex %}
+        import re as _re_new_{{ nodeId | replace('-', '_') }}
+        _new_resp_re = {{ responseFilterRegex | tojson }}
+{%- endif %}
 
         @userbot_client.on(events.NewMessage(chats=_target))
         async def _on_new_msg_{{ nodeId | replace('-', '_') }}(event):
-            if event.message.id > _msg_id and not _new_msg_future.done():
-                _new_msg_future.set_result(event.message)
+            if event.message.id <= _msg_id or _new_msg_future.done():
+                return
+{%- if responseFilterRegex %}
+            _new_txt = event.message.text or ''
+            if not _re_new_{{ nodeId | replace('-', '_') }}.search(_new_resp_re, _new_txt, _re_new_{{ nodeId | replace('-', '_') }}.I):
+{%- if nodeId == 'bot-ub-lucky-buy' %}
+                # #region agent log
+                _dbg_lucky_buy("H5", "new_msg rejected by regex", {"id": event.message.id, "text": _new_txt[:120]})
+                # #endregion
+{%- endif %}
+                return
+{%- endif %}
+{%- if nodeId == 'bot-ub-lucky-buy' %}
+            # #region agent log
+            _dbg_lucky_buy("H4", "new_msg accepted", {"id": event.message.id, "text": (event.message.text or '')[:120]})
+            # #endregion
+{%- endif %}
+            _new_msg_future.set_result(event.message)
+
+{%- if nodeId == 'bot-ub-lucky-buy' %}
+        @userbot_client.on(events.MessageEdited(chats=_target))
+        async def _on_edit_dbg_bot_ub_lucky_buy(event):
+            if event.message.id == _msg_id:
+                # #region agent log
+                _dbg_lucky_buy("H4", "message edited same id", {"id": event.message.id, "text": (event.message.text or '')[:120]})
+                # #endregion
+{%- endif %}
 {%- else %}
         # Регистрируем event handler ДО нажатия кнопки (чтобы не пропустить быстрый ответ)
         _updated = None
@@ -279,33 +312,95 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     logging.warning(f"⚠️ [{{ nodeId }}] callback click error: {_click_err}")
 
 {%- if clickDelivery == 'await' %}
-        # await: дожидаемся отправки callback (до 2с), затем ловим edit/new handlers
-        if _click_btn and hasattr(_click_btn, 'data') and _click_btn.data:
-            await _dispatch_callback_click_{{ nodeId | replace('-', '_') }}()
-            logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }}) [await]")
-        elif _click_btn:
+        # await: Telethon msg.click (как scrape_lucky.py; надёжнее GetBotCallbackAnswerRequest)
+        if _click_btn:
             try:
-                await asyncio.wait_for(_msg.click(text=_click_val), timeout=2.0)
+{%- if nodeId == 'bot-ub-lucky-buy' %}
+                # #region agent log
+                _dbg_lucky_buy("H3", "await_click start", {
+                    "msg_id": _msg.id if _msg else None,
+                    "via": "data" if _btn_click_data else "text",
+                    "click_text": (_btn_click_text or '')[:40],
+                })
+                # #endregion
+{%- endif %}
+{%- if clickMode == 'index' %}
+                _idx_click = [int(x.strip()) for x in _click_val.split(',') if x.strip().isdigit()]
+                if len(_idx_click) >= 2:
+                    await asyncio.wait_for(_msg.click(_idx_click[0], _idx_click[1]), timeout=5.0)
+                elif len(_idx_click) == 1:
+                    await asyncio.wait_for(_msg.click(i=_idx_click[0]), timeout=5.0)
+                else:
+                    await asyncio.wait_for(_msg.click(i=0), timeout=5.0)
+{%- elif clickMode == 'data' %}
+                await asyncio.wait_for(_msg.click(data=_click_btn.data), timeout=5.0)
+{%- else %}
+                if _btn_click_data:
+                    await asyncio.wait_for(_msg.click(data=_btn_click_data), timeout=5.0)
+                else:
+                    await asyncio.wait_for(_msg.click(text=_btn_click_text), timeout=5.0)
+{%- endif %}
             except asyncio.TimeoutError:
-                logging.info(f"ℹ️ [{{ nodeId }}] click timeout 2с (ждём edit/new)")
+                logging.info(f"ℹ️ [{{ nodeId }}] click timeout 5с (ждём edit/new)")
             except Exception as _click_err:
                 if "TimeoutError" not in type(_click_err).__name__:
                     logging.warning(f"⚠️ [{{ nodeId }}] await click error: {_click_err}")
-            logging.info(f"✅ Userbot нажал кнопку (non-callback) в {_entity} msg={_msg_id} (узел {{ nodeId }}) [await]")
+{%- if nodeId == 'bot-ub-lucky-buy' %}
+            # #region agent log
+            _dbg_lucky_buy("H3", "await_click done", {"msg_id": _msg.id if _msg else None})
+            # #endregion
+{%- endif %}
+            logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }}) [await]")
         else:
             logging.warning(f"⚠️ Узел {{ nodeId }}: кнопка не найдена (mode={{ clickMode }}, value={_click_val!r})")
 {%- else %}
-        # fire-and-forget: callback тоже await до 2с — иначе в parallel клик не успевает уйти
-        if _click_btn and hasattr(_click_btn, 'data') and _click_btn.data:
-            await _dispatch_callback_click_{{ nodeId | replace('-', '_') }}()
-            logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }}) [fire-and-forget]")
-        elif _click_btn:
-            # Кнопка без data (например URL) — используем обычный click
+        # fire-and-forget: msg.click в фоне (как scrape), не блокируем на answerCallbackQuery
+        async def _fire_click_{{ nodeId | replace('-', '_') }}():
+            """Фоновый клик через Telethon msg.click."""
             try:
-                await _msg.click(text=_click_val)
-            except Exception:
-                pass
-            logging.info(f"✅ Userbot нажал кнопку (non-callback) в {_entity} msg={_msg_id} (узел {{ nodeId }})")
+{%- if nodeId == 'bot-ub-lucky-buy' %}
+                # #region agent log
+                _dbg_lucky_buy("H3", "fire_click start", {
+                    "msg_id": _msg.id if _msg else None,
+                    "via": "data" if _btn_click_data else "text",
+                    "click_text": (_btn_click_text or '')[:40],
+                })
+                # #endregion
+{%- endif %}
+{%- if clickMode == 'index' %}
+                _idx_fire = [int(x.strip()) for x in _click_val.split(',') if x.strip().isdigit()]
+                if len(_idx_fire) >= 2:
+                    await _msg.click(_idx_fire[0], _idx_fire[1])
+                elif len(_idx_fire) == 1:
+                    await _msg.click(i=_idx_fire[0])
+                else:
+                    await _msg.click(i=0)
+{%- elif clickMode == 'data' %}
+                if _click_btn and getattr(_click_btn, 'data', None):
+                    await _msg.click(data=_click_btn.data)
+{%- else %}
+                if _btn_click_data:
+                    await _msg.click(data=_btn_click_data)
+                else:
+                    await _msg.click(text=_btn_click_text)
+{%- endif %}
+{%- if nodeId == 'bot-ub-lucky-buy' %}
+                # #region agent log
+                _dbg_lucky_buy("H3", "fire_click done", {"msg_id": _msg.id if _msg else None})
+                # #endregion
+{%- endif %}
+            except Exception as _fire_err:
+                if "TimeoutError" not in type(_fire_err).__name__:
+                    logging.warning(f"⚠️ [{{ nodeId }}] fire click error: {_fire_err}")
+{%- if nodeId == 'bot-ub-lucky-buy' %}
+                # #region agent log
+                _dbg_lucky_buy("H3", "fire_click error", {"err": type(_fire_err).__name__, "detail": str(_fire_err)[:200]})
+                # #endregion
+{%- endif %}
+
+        if _click_btn:
+            asyncio.create_task(_fire_click_{{ nodeId | replace('-', '_') }}())
+            logging.info(f"✅ Userbot нажал кнопку в {_entity} msg={_msg_id} (узел {{ nodeId }}) [fire-and-forget]")
         else:
             logging.warning(f"⚠️ Узел {{ nodeId }}: кнопка не найдена (mode={{ clickMode }}, value={_click_val!r})")
 {%- endif %}
@@ -313,19 +408,47 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- if responseStrategy == 'new_message' %}
         # Ждём НОВОЕ сообщение от бота (не edit)
         try:
-            _updated = await asyncio.wait_for(_new_msg_future, timeout=8)
+            _updated = await asyncio.wait_for(
+                _new_msg_future, timeout={{ responseWaitSeconds | default(14) }}
+            )
             logging.info(f"📖 [{{ nodeId }}] Получено новое сообщение id={_updated.id}")
         except asyncio.TimeoutError:
             logging.info(f"📖 [{{ nodeId }}] Таймаут ожидания нового сообщения, читаем историю")
             # Fallback: читаем последние сообщения и ищем новое (id > _msg_id)
             await asyncio.sleep(1)
-            _fresh_msgs = await userbot_client.get_messages(_target, limit=5)
+            _fresh_msgs = await userbot_client.get_messages(_target, limit=8)
             _fresh_list = _fresh_msgs if isinstance(_fresh_msgs, list) else [_fresh_msgs]
             _my_id_cb = (await userbot_client.get_me()).id
-            _bot_new = [m for m in _fresh_list if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb and m.id > _msg_id]
+            _bot_new = [
+                m for m in _fresh_list
+                if m and hasattr(m, 'sender_id') and m.sender_id != _my_id_cb and m.id > _msg_id
+            ]
+{%- if responseFilterRegex %}
+            _bot_new = [
+                m for m in _bot_new
+                if _re_new_{{ nodeId | replace('-', '_') }}.search(
+                    _new_resp_re, m.text or '', _re_new_{{ nodeId | replace('-', '_') }}.I
+                )
+            ]
+{%- endif %}
             _updated = _bot_new[0] if _bot_new else None
+{%- if nodeId == 'bot-ub-lucky-buy' %}
+            # #region agent log
+            _hist_dbg = []
+            for _hm in _fresh_list:
+                if _hm and not getattr(_hm, 'out', False):
+                    _hist_dbg.append({"id": _hm.id, "text": (_hm.text or '')[:80]})
+            _dbg_lucky_buy("H6", "timeout fallback history", {"msg_id": _msg_id, "matched": len(_bot_new), "history": _hist_dbg[:8]})
+            # #endregion
+{%- endif %}
         finally:
             userbot_client.remove_event_handler(_on_new_msg_{{ nodeId | replace('-', '_') }})
+{%- if nodeId == 'bot-ub-lucky-buy' %}
+            try:
+                userbot_client.remove_event_handler(_on_edit_dbg_bot_ub_lucky_buy)
+            except Exception:
+                pass
+{%- endif %}
 {%- else %}
         # Ждём edit того же msg (как scrape poll_need same_id)
 {%- if responseFilterRegex %}

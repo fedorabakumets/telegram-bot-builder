@@ -1,0 +1,72 @@
+=== bot-ub-lucky-address ===
+responseStrategy: regex_match
+responseFilterRegex: Подтверждение заказа|Получите|Итого|Комиссия|к оплате|К оплате|Сумма
+autoTransitionTo: bot-setv-parse-lucky
+responseWaitSeconds: 20
+=== bot-ub-lucky-amount ===
+responseStrategy: first
+autoTransitionTo: bot-ub-lucky-address
+=== bot-ub-lucky-amount-btc ===
+responseStrategy: regex_match
+responseFilterRegex: кошел|адрес|wallet|bc1|Получите|Подтверждение|укажите|Введите|Минимальная|рублях|Итого|Комиссия
+autoTransitionTo: bot-cond-lucky-goto-address
+responseWaitSeconds: 22
+=== bot-ub-lucky-btc ===
+clickMode: index
+clickValue: 0
+messageId: 
+messageIdSource: last
+responseStrategy: new_message
+responseFilterRegex: криптовалют|BTC|USDT
+autoTransitionTo: bot-ub-lucky-token
+responseWaitSeconds: 10
+=== bot-ub-lucky-btc-input ===
+clickMode: index
+clickValue: 1
+messageId: 
+messageIdSource: last
+responseStrategy: edit
+responseFilterRegex: способ ввода|рублях|токенах|Введите|укажите|сумм
+autoTransitionTo: bot-ub-lucky-amount-btc
+responseWaitSeconds: 14
+=== bot-ub-lucky-buy ===
+clickMode: index
+clickValue: 0
+messageId: {lucky_resp1}
+messageIdSource: manual
+responseStrategy: new_message
+responseFilterRegex: Купить|криптовалют|меню
+autoTransitionTo: bot-ub-lucky-btc
+responseWaitSeconds: 10
+=== bot-ub-lucky-card ===
+clickMode: text
+clickValue: токен
+messageId: 
+messageIdSource: last
+responseStrategy: edit
+responseFilterRegex: способ ввода|рублях|токенах|сумм|BTC|Введите
+autoTransitionTo: bot-ub-lucky-amount-btc
+responseWaitSeconds: 12
+=== bot-ub-lucky-rub ===
+clickMode: index
+clickValue: 0
+messageId: 
+messageIdSource: last
+responseStrategy: new_message
+responseFilterRegex: сумм|руб|введите|Введите|укажите
+autoTransitionTo: bot-ub-lucky-amount
+responseWaitSeconds: 12
+=== bot-ub-lucky-start ===
+responseStrategy: longest
+responseFilterRegex: Купить|Главное|меню|криптовалют
+autoTransitionTo: bot-ub-lucky-buy
+responseWaitSeconds: 10
+=== bot-ub-lucky-token ===
+clickMode: index
+clickValue: 0
+messageId: 
+messageIdSource: last
+responseStrategy: edit
+responseFilterRegex: способ ввода|рублях|токенах|Введите|укажите
+autoTransitionTo: bot-cond-lucky-input
+responseWaitSeconds: 14

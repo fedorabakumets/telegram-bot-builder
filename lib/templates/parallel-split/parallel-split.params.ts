@@ -35,6 +35,8 @@ export interface ParallelSplitEntry {
   awaitAll: boolean;
   /** Не запускать повторно, пока предыдущий прогон пользователя не завершён */
   skipIfRunning: boolean;
+  /** ID узла для автоперехода после запуска веток (пустая строка — без перехода) */
+  autoTransitionTo?: string;
 }
 
 /** Параметры шаблона parallel_split */

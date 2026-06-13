@@ -1,0 +1,120 @@
+=== all-merge-format type=set_variable ===
+  assign: {'id': 'merge_arrays', 'mode': 'array_concat', 'value': '{bot_compare_results_arr}', 'variable': 'all_compare_results', 'concatWith': '{compare_results_arr}'}
+  assign: {'id': 'format_all', 'mode': 'json_format', 'value': '🔸 {item.type} <a href="{item.url}">{item.name}</a>: к оплате <b>{item.payment_label}</b>\n', 'variable': 'all_compare_results', 'lookupField': 'sort_key'}
+  assign: {'id': 'save_text', 'mode': 'text', 'value': '{all_compare_results}', 'variable': 'bot_rates_text'}
+  autoTransitionTo: bot-delete-loading
+  messageText: 
+=== bot-msg-choose-currency type=message ===
+  messageText: {compare_title}
+
+📊 <b>СБП/Карта → Bitcoin</b>
+
+💱 <b>В какой валюте указать сумму?</b>
+
+• <b>₽</b> — сколько рублей готовы потратить
+• <b>BTC</b> — сколько bitcoin хотите получить
+
+<i>Обе валюты запуск
+=== bot-setv-init type=set_variable ===
+  assign: {'id': 'clear_result_msg', 'mode': 'text', 'value': '0', 'variable': 'compare_result_msg_id'}
+  assign: {'id': 'set_in_progress', 'mode': 'text', 'value': '1', 'variable': 'compare_in_progress'}
+  assign: {'id': 'cmp_started_at', 'mode': 'timestamp', 'value': '0', 'variable': 'compare_started_at'}
+  assign: {'id': 'bi1', 'mode': 'expression', 'value': '[]', 'variable': 'compare_bot_results'}
+  assign: {'id': 'bi2', 'mode': 'text', 'value': '{user_amount}', 'variable': 'user_amount_fmt'}
+  assign: {'id': 'cmp_req_hdr', 'mode': 'conditional', 'value': '', 'variable': 'compare_request_header', 'trueValue': '₿ Запрос: <b>{user_btc} BTC</b>', 'falseValue': '💰 Запрос: <b>{user_amount_fmt} ₽</b> с карты', 'conditionValue': 'btc', 'conditionOperator': 'equals', 'conditionVariable': '{compare_input_m
+  assign: {'id': 'cmp_fee_note', 'mode': 'conditional', 'value': '', 'variable': 'compare_fee_note', 'trueValue': '\n\nℹ️ Комиссия и итоговая сумма могут отличаться в зависимости от способа оплаты.', 'falseValue': '\n\nℹ️ Комиссия и итоговая сумма могут отличаться в зависимости от способа оплаты.', 'condition
+  assign: {'id': 'cmp_read_help', 'mode': 'conditional', 'value': '', 'variable': 'compare_read_help', 'trueValue': 'ℹ️ Цена — сколько ₽ заплатить за {user_btc} BTC. Меньше — выгоднее.', 'falseValue': 'ℹ️ Цена — сколько ₽ заплатить за {user_btc} BTC. Меньше — выгоднее.', 'conditionValue': 'btc', 'conditionOpe
+  assign: {'id': 'cmp_legend', 'mode': 'conditional', 'value': '', 'variable': 'compare_legend_lists', 'trueValue': '', 'falseValue': '', 'conditionValue': 'btc', 'conditionOperator': 'equals', 'conditionVariable': '{compare_input_mode}'}
+  assign: {'id': 'clr_capitalist_payment', 'mode': 'text', 'value': '0', 'variable': 'capitalist_payment'}
+  assign: {'id': 'clr_capitalist_btc', 'mode': 'text', 'value': '0', 'variable': 'capitalist_btc'}
+  assign: {'id': 'clr_capitalist_rate', 'mode': 'text', 'value': '0', 'variable': 'capitalist_rate'}
+  assign: {'id': 'clr_capitalist_payment_sbp_raw', 'mode': 'text', 'value': '0', 'variable': 'capitalist_payment_sbp_raw'}
+  assign: {'id': 'clr_capitalist_payment_card_raw', 'mode': 'text', 'value': '0', 'variable': 'capitalist_payment_card_raw'}
+  assign: {'id': 'clr_litebit_payment', 'mode': 'text', 'value': '0', 'variable': 'litebit_payment'}
+  assign: {'id': 'clr_litebit_btc', 'mode': 'text', 'value': '0', 'variable': 'litebit_btc'}
+  assign: {'id': 'clr_litebit_rate', 'mode': 'text', 'value': '0', 'variable': 'litebit_rate'}
+  assign: {'id': 'clr_litebit_payment_raw', 'mode': 'text', 'value': '0', 'variable': 'litebit_payment_raw'}
+  assign: {'id': 'clr_sanchez_payment_rub', 'mode': 'text', 'value': '0', 'variable': 'sanchez_payment_rub'}
+  assign: {'id': 'clr_sanchez_btc', 'mode': 'text', 'value': '0', 'variable': 'sanchez_btc'}
+  assign: {'id': 'clr_sanchez_rate', 'mode': 'text', 'value': '0', 'variable': 'sanchez_rate'}
+  assign: {'id': 'clrt_sanchez_deal_text', 'mode': 'text', 'value': '', 'variable': 'sanchez_deal_text'}
+  assign: {'id': 'clrt_sanchez_sbp_text', 'mode': 'text', 'value': '', 'variable': 'sanchez_sbp_text'}
+  assign: {'id': 'clrt_sanchez_ready_text', 'mode': 'text', 'value': '', 'variable': 'sanchez_ready_text'}
+  assign: {'id': 'clrt_cap_result_text', 'mode': 'text', 'value': '', 'variable': 'cap_result_text'}
+  assign: {'id': 'clrt_cap_buttons', 'mode': 'text', 'value': '', 'variable': 'cap_buttons'}
+  assign: {'id': 'clrt_litebit_text', 'mode': 'text', 'value': '', 'variable': 'litebit_text'}
+  assign: {'id': 'clrt_litebit_buttons', 'mode': 'text', 'value': '', 'variable': 'litebit_buttons'}
+  assign: {'id': 'par_btc_done_count', 'mode': 'text', 'value': '0', 'variable': 'btc_done_count'}
+  assign: {'id': 'par_btc_flag_cap', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_cap'}
+  assign: {'id': 'par_btc_flag_lite', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_lite'}
+  assign: {'id': 'par_btc_flag_san', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_san'}
+  assign: {'id': 'par_btc_flag_casper', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_casper'}
+  assign: {'id': 'clr_casper_payment', 'mode': 'text', 'value': '0', 'variable': 'casper_payment'}
+  assign: {'id': 'clr_casper_btc', 'mode': 'text', 'value': '0', 'variable': 'casper_btc'}
+  assign: {'id': 'clr_casper_rate', 'mode': 'text', 'value': '0', 'variable': 'casper_rate'}
+  assign: {'id': 'clr_casper_text', 'mode': 'text', 'value': '', 'variable': 'casper_text'}
+  assign: {'id': 'clr_casper_buttons', 'mode': 'text', 'value': '', 'variable': 'casper_buttons'}
+  assign: {'id': 'par_btc_flag_monopoly', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_monopoly'}
+  assign: {'id': 'clr_monopoly_payment', 'mode': 'text', 'value': '0', 'variable': 'monopoly_payment'}
+  assign: {'id': 'clr_monopoly_btc', 'mode': 'text', 'value': '0', 'variable': 'monopoly_btc'}
+  assign: {'id': 'clr_monopoly_rate', 'mode': 'text', 'value': '0', 'variable': 'monopoly_rate'}
+  assign: {'id': 'clr_monopoly_text', 'mode': 'text', 'value': '', 'variable': 'monopoly_text'}
+  assign: {'id': 'clr_monopoly_buttons', 'mode': 'text', 'value': '', 'variable': 'monopoly_buttons'}
+  assign: {'id': 'par_btc_flag_lucky', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_lucky'}
+  assign: {'id': 'clr_lucky_payment', 'mode': 'text', 'value': '0', 'variable': 'lucky_payment'}
+  assign: {'id': 'clr_lucky_btc', 'mode': 'text', 'value': '0', 'variable': 'lucky_btc'}
+  assign: {'id': 'clr_lucky_rate', 'mode': 'text', 'value': '0', 'variable': 'lucky_rate'}
+  assign: {'id': 'clr_lucky_fee_pct', 'mode': 'text', 'value': '0', 'variable': 'lucky_fee_pct'}
+  assign: {'id': 'clr_lucky_text', 'mode': 'text', 'value': '', 'variable': 'lucky_text'}
+  assign: {'id': 'par_btc_flag_inf', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_inf'}
+  assign: {'id': 'clr_inf_payment', 'mode': 'text', 'value': '0', 'variable': 'inf_payment'}
+  assign: {'id': 'clr_inf_btc', 'mode': 'text', 'value': '0', 'variable': 'inf_btc'}
+  assign: {'id': 'clr_inf_rate', 'mode': 'text', 'value': '0', 'variable': 'inf_rate'}
+  assign: {'id': 'clr_inf_text', 'mode': 'text', 'value': '', 'variable': 'inf_text'}
+  assign: {'id': 'clr_inf_btc_equiv', 'mode': 'text', 'value': '0', 'variable': 'inf_btc_equiv'}
+  assign: {'id': 'par_btc_flag_crazy', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_crazy'}
+  assign: {'id': 'clr_crazy_payment', 'mode': 'text', 'value': '0', 'variable': 'crazy_payment'}
+  assign: {'id': 'clr_crazy_btc', 'mode': 'text', 'value': '0', 'variable': 'crazy_btc'}
+  assign: {'id': 'clr_crazy_rate', 'mode': 'text', 'value': '0', 'variable': 'crazy_rate'}
+  assign: {'id': 'clr_crazy_text', 'mode': 'text', 'value': '', 'variable': 'crazy_text'}
+  assign: {'id': 'par_btc_flag_love', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_love'}
+  assign: {'id': 'clr_love_payment', 'mode': 'text', 'value': '0', 'variable': 'love_payment'}
+  assign: {'id': 'clr_love_btc', 'mode': 'text', 'value': '0', 'variable': 'love_btc'}
+  assign: {'id': 'clr_love_rate', 'mode': 'text', 'value': '0', 'variable': 'love_rate'}
+  assign: {'id': 'clr_love_text', 'mode': 'text', 'value': '', 'variable': 'love_text'}
+  assign: {'id': 'clr_love_buttons', 'mode': 'text', 'value': '', 'variable': 'love_buttons'}
+  assign: {'id': 'clr_love_btc_input', 'mode': 'text', 'value': '', 'variable': 'love_btc_input_raw'}
+  assign: {'id': 'par_btc_flag_viron', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_viron'}
+  assign: {'id': 'clr_viron_payment', 'mode': 'text', 'value': '0', 'variable': 'viron_payment'}
+  assign: {'id': 'clr_viron_btc', 'mode': 'text', 'value': '0', 'variable': 'viron_btc'}
+  assign: {'id': 'clr_viron_rate', 'mode': 'text', 'value': '0', 'variable': 'viron_rate'}
+  assign: {'id': 'clr_viron_order', 'mode': 'text', 'value': '', 'variable': 'viron_order_text'}
+  assign: {'id': 'clr_viron_commission', 'mode': 'text', 'value': '0', 'variable': 'viron_commission_pct'}
+  assign: {'id': 'par_btc_flag_scooby', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_scooby'}
+  assign: {'id': 'clr_scooby_payment', 'mode': 'text', 'value': '0', 'variable': 'scooby_payment'}
+  assign: {'id': 'clr_scooby_btc', 'mode': 'text', 'value': '0', 'variable': 'scooby_btc'}
+  assign: {'id': 'clr_scooby_rate', 'mode': 'text', 'value': '0', 'variable': 'scooby_rate'}
+  assign: {'id': 'clr_ub_inline_title', 'mode': 'text', 'value': '', 'variable': 'ub_inline_title'}
+  assign: {'id': 'clr_ub_inline_desc', 'mode': 'text', 'value': '', 'variable': 'ub_inline_desc'}
+  assign: {'id': 'par_btc_flag_cf', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_cf'}
+  assign: {'id': 'clr_cf_payment', 'mode': 'text', 'value': '0', 'variable': 'cf_payment_rub'}
+  assign: {'id': 'clr_cf_btc', 'mode': 'text', 'value': '0', 'variable': 'cf_btc'}
+  assign: {'id': 'clr_cf_rate', 'mode': 'text', 'value': '0', 'variable': 'cf_rate'}
+  assign: {'id': 'clr_cf_text', 'mode': 'text', 'value': '', 'variable': 'cf_text'}
+  assign: {'id': 'clr_cf_btc_raw', 'mode': 'text', 'value': '', 'variable': 'cf_btc_raw'}
+  assign: {'id': 'init_btc_flag_shaxta', 'mode': 'text', 'value': '⏳', 'variable': 'btc_flag_shaxta'}
+  assign: {'id': 'init_shaxta_payment', 'mode': 'text', 'value': '0', 'variable': 'shaxta_payment'}
+  assign: {'id': 'init_shaxta_btc', 'mode': 'text', 'value': '0', 'variable': 'shaxta_btc'}
+  assign: {'id': 'init_shaxta_rate', 'mode': 'text', 'value': '0', 'variable': 'shaxta_rate'}
+  assign: {'id': 'init_shaxta_payment_raw', 'mode': 'text', 'value': '', 'variable': 'shaxta_payment_raw'}
+  assign: {'id': 'init_shaxta_btc_raw', 'mode': 'text', 'value': '', 'variable': 'shaxta_btc_raw'}
+  assign: {'id': 'init_btc_rate_line', 'mode': 'text', 'value': '₿ Сумма: <b>{user_btc} BTC</b>', 'variable': 'compare_btc_rate_line'}
+  assign: {'id': 'init_sites_done', 'mode': 'text', 'value': '0', 'variable': 'sites_fetch_done'}
+  autoTransitionTo: bot-cond-route-first-bot
+  messageText: 
+=== bot-split-btc type=parallel_split ===
+branches: 15
+  messageText: 
+=== bot-cond-after-bots type=condition ===
+  var compare_mode -> [('equals', 'all', 'bot-cond-all-sites-ready'), ('else', '', 'bot-delete-loading')]
+  messageText: 

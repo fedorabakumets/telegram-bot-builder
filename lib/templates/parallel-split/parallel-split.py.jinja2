@@ -82,4 +82,29 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
     # awaitAll=false: fire-and-forget, обработчик завершается сразу
     asyncio.create_task(_run_all())
 {% endif %}
+{% if autoTransitionTo %}
+    logging.info(f"⚡ parallel_split [{{ nodeId }}]: автопереход → {{ autoTransitionTo }}")
+    # #region agent log
+    try:
+        import json as _dbg_json, time as _dbg_time
+        with open(r"c:\Users\1\Desktop\telegram-bot-builder\debug-4863c5.log", "a", encoding="utf-8") as _dbg_f:
+            _dbg_f.write(_dbg_json.dumps({"sessionId": "4863c5", "hypothesisId": "A", "location": "parallel-split:{{ nodeId }}", "message": "auto_transition_after_split", "data": {"target": "{{ autoTransitionTo }}", "user_id": user_id}, "timestamp": int(_dbg_time.time() * 1000)}) + "\n")
+    except Exception:
+        pass
+    # #endregion
+    class FakeCallbackQuery:
+        def __init__(self, from_user, message, target_node_id):
+            self.from_user = from_user
+            self.message = message
+            self.data = target_node_id
+            self._is_fake = True
+        async def answer(self, *args, **kwargs):
+            pass
+
+    _fake_cb = FakeCallbackQuery(callback_query.from_user, callback_query.message, "{{ autoTransitionTo }}")
+    try:
+        await handle_callback_{{ autoTransitionTo|replace('-', '_') }}(_fake_cb, state=state)
+    except Exception as _at_err:
+        logging.error(f"❌ Ошибка автоперехода {{ nodeId }} → {{ autoTransitionTo }}: {_at_err}")
+{% endif %}
 {% endif %}

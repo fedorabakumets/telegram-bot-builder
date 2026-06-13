@@ -1,0 +1,84 @@
+=== bot-cond-lucky-input ===
+variable: compare_input_mode
+branches: [('br_btc', 'equals', 'btc', 'bot-ub-lucky-btc-input'), ('br_else', 'else', '', 'bot-ub-lucky-rub')]
+=== bot-setv-parse-lucky ===
+autoTransitionTo: bot-cond-lucky-payment-ok
+=== bot-ub-lucky-address ===
+responseStrategy: regex_match
+responseFilterRegex: Подтверждение заказа|Получите|Итого|Комиссия|к оплате|К оплате|Сумма
+autoTransitionTo: bot-setv-parse-lucky
+responseWaitSeconds: 20
+waitSeconds: 10
+=== bot-ub-lucky-amount ===
+responseStrategy: first
+autoTransitionTo: bot-ub-lucky-address
+waitSeconds: 3
+=== bot-ub-lucky-amount-btc ===
+responseStrategy: regex_match
+responseFilterRegex: кошел|адрес|wallet|bc1|Получите|Подтверждение|укажите|Введите|Минимальная|рублях|Итого|Комиссия
+autoTransitionTo: bot-cond-lucky-goto-address
+responseWaitSeconds: 22
+waitSeconds: 3
+=== bot-ub-lucky-btc ===
+clickMode: text
+clickValue: Купить BTC
+messageId: 
+messageIdSource: last
+responseStrategy: new_message
+responseFilterRegex: метод оплаты|оплат|Альфа|банк
+autoTransitionTo: bot-ub-lucky-token
+responseWaitSeconds: 14
+=== bot-ub-lucky-btc-input ===
+clickMode: index
+clickValue: 1
+messageId: 
+messageIdSource: last
+responseStrategy: edit
+responseFilterRegex: способ ввода|рублях|токенах|Введите|укажите|сумм
+autoTransitionTo: bot-ub-lucky-amount-btc
+responseWaitSeconds: 14
+=== bot-ub-lucky-buy ===
+clickMode: text
+clickValue: Купить
+messageId: {lucky_resp1}
+messageIdSource: manual
+responseStrategy: new_message
+responseFilterRegex: криптовалют|Купить BTC|Купить USDT
+autoTransitionTo: bot-ub-lucky-btc
+responseWaitSeconds: 14
+=== bot-ub-lucky-card ===
+clickMode: text
+clickValue: токен
+messageId: 
+messageIdSource: last
+responseStrategy: edit
+responseFilterRegex: способ ввода|рублях|токенах|сумм|BTC|Введите
+autoTransitionTo: bot-ub-lucky-amount-btc
+responseWaitSeconds: 12
+=== bot-ub-lucky-rub ===
+clickMode: index
+clickValue: 0
+messageId: 
+messageIdSource: last
+responseStrategy: new_message
+responseFilterRegex: сумм|руб|введите|Введите|укажите
+autoTransitionTo: bot-ub-lucky-amount
+responseWaitSeconds: 12
+=== bot-ub-lucky-start ===
+responseStrategy: regex_match
+responseFilterRegex: Купить|Продать|Чистка|криптовалют
+autoTransitionTo: bot-ub-lucky-buy
+responseWaitSeconds: 14
+waitSeconds: 2
+=== bot-ub-lucky-token ===
+clickMode: text
+clickValue: Альфа
+messageId: 
+messageIdSource: last
+responseStrategy: edit
+responseFilterRegex: способ ввода|рублях|токенах|Введите|укажите|сумм
+autoTransitionTo: bot-cond-lucky-input
+responseWaitSeconds: 16
+=== bot-cond-lucky-goto-address ===
+variable: lucky_amount_text
+branches: [('br_pay_screen', 'contains', 'метод оплаты', 'bot-setv-btc-fail-lucky'), ('br_cmd_err', 'contains', 'не распознана', 'bot-setv-btc-fail-lucky'), ('br_empty', 'empty', '', 'bot-setv-btc-fail-lucky'), ('br_min_err', 'contains', 'Минимальная', 'bot-setv-btc-fail-lucky'), ('br_zero_err', 'contains', '0.00', 'bot-setv-btc-fail-lucky'), ('br_rub_err', 'contains', 'рублях', 'bot-setv-btc-fail-lucky'), ('br_ok', 'else', '', 'bot-ub-lucky-address')]

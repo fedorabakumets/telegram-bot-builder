@@ -1,0 +1,8 @@
+=== bot-split-btc ===
+  parallelBranches: [{'id': 'br_scooby', 'label': 'ScoobyChange', 'target': 'bot-ub-scooby-btc', 'onErrorTarget': 'bot-setv-btc-fail-scooby'}, {'id': 'br_cap', 'label': 'Capitalist', 'target': 'bot-ub-capitalist-start', 'onErrorTarget': 'bot-setv-btc-fail-cap'}, {'id': 'br_lite', 'label': 'LiteBit', 'target': 'bot-ub-litebit-start', 'onErrorTarget': 'bot-setv-btc-fail-lite'}, {'id': 'br_san', 'label': 'Sanchez', 'target': 'bot-ub-sanchez-start', 'onErrorTarget': 'bot-setv-btc-fail-san'}, {'id': 'br_casper', 'label': 'CASPER', 'target': 'bot-ub-casper-start', 'onErrorTarget': 'bot-setv-btc-fail-casper'}, {'id': 'br_monopoly', 'label': 'Monopoly', 'target': 'bot-ub-monopoly-start', 'onErrorTarget': 'bot-setv-btc-fail-monopoly'}, {'id': 'br_lucky', 'label': 'Lucky', 'target': 'bot-ub-lucky-start', 'onErrorTarget
+=== bot-cond-lucky-input ===
+  branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-ub-lucky-btc-input', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-ub-lucky-rub', 'operator': 'else'}]
+=== bot-cond-lucky-payment-ok ===
+  branches: [{'id': 'br_lucky_ok', 'value': '0', 'target': 'bot-cond-btc-after-lucky', 'operator': 'greater_than'}, {'id': 'br_lucky_fail', 'value': '', 'target': 'bot-setv-btc-fail-lucky', 'operator': 'else'}]
+=== bot-cond-lucky-goto-address ===
+  branches: [{'id': 'br_min_err', 'value': 'Минимальная', 'target': 'bot-setv-btc-fail-lucky', 'operator': 'contains'}, {'id': 'br_zero_err', 'value': '0.00', 'target': 'bot-setv-btc-fail-lucky', 'operator': 'contains'}, {'id': 'br_rub_err', 'value': 'рублях', 'target': 'bot-setv-btc-fail-lucky', 'operator': 'contains'}, {'id': 'br_ok', 'value': '', 'target': 'bot-ub-lucky-address', 'operator': 'else'}]

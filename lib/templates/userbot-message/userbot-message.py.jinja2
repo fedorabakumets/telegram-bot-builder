@@ -264,6 +264,21 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
                     _pick_msg = _bm
         if _pick_msg:
             return _pick_msg, _pick_len
+        # Inline-кнопка: текст кнопки совпадает с regex (GIF/медиа без подписи)
+        _btn_best_id = -1
+        for _bm in _pool:
+            if not getattr(_bm, 'reply_markup', None):
+                continue
+            for _row in _bm.reply_markup.rows:
+                for _btn in _row.buttons:
+                    _bl = getattr(_btn, 'text', '') or ''
+                    if _bl and _re_resp.search(_resp_re, _bl):
+                        if _bm.id > _btn_best_id:
+                            _btn_best_id = _bm.id
+                            _pick_msg = _bm
+                            _pick_len = len(_bl)
+        if _pick_msg:
+            return _pick_msg, _pick_len
         if len(_pool) >= 2:
             _cand = _pool[-2]
             return _cand, len(_cand.text or '')

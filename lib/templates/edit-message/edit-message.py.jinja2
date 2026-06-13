@@ -145,6 +145,17 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         {% else %}
         await bot.edit_message_text(chat_id=_chat_id, message_id=_msg_id, text=_new_text, reply_markup=_edit_markup)
         {% endif %}
+        {% if entry.nodeId == 'edit-progress-btc-par' %}
+        # #region agent log
+        try:
+            import json as _dbg_json, time as _dbg_time
+            _dbg_vars = await init_all_user_vars(user_id)
+            with open(r"c:\Users\1\Desktop\telegram-bot-builder\debug-4863c5.log", "a", encoding="utf-8") as _dbg_f:
+                _dbg_f.write(_dbg_json.dumps({"sessionId": "4863c5", "hypothesisId": "C", "location": "edit-message:edit-progress-btc-par", "message": "progress_ui_updated", "data": {"btc_done_count": _dbg_vars.get("btc_done_count"), "btc_flag_lucky": _dbg_vars.get("btc_flag_lucky"), "compare_elapsed": _dbg_vars.get("compare_elapsed")}, "timestamp": int(_dbg_time.time() * 1000)}) + "\n")
+        except Exception:
+            pass
+        # #endregion
+        {% endif %}
 
         {% elif entry.editMode == 'text' %}
         _all_vars = await init_all_user_vars(user_id)

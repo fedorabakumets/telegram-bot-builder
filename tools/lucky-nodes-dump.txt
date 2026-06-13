@@ -1,0 +1,69 @@
+=== bot-cond-lucky-input type=condition sheet=💱 Боты · Lucky ===
+  messageText: 
+  variable: compare_input_mode
+  branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-ub-lucky-btc-input', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-ub-lucky-rub', 'operator': 'else'}]
+=== bot-cond-lucky-payment-ok type=condition sheet=💱 Боты · Lucky ===
+  messageText: 
+  variable: lucky_payment
+  branches: [{'id': 'br_lucky_ok', 'value': '0', 'target': 'bot-cond-btc-after-lucky', 'operator': 'greater_than'}, {'id': 'br_lucky_fail', 'value': '', 'target': 'bot-setv-btc-fail-lucky', 'operator': 'else'}]
+=== bot-setv-btc-fail-lucky type=set_variable sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-setv-btc-done
+  messageText: 
+=== bot-setv-parse-lucky type=set_variable sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-cond-lucky-payment-ok
+  messageText: 
+=== bot-ub-lucky-address type=userbot_message sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-setv-parse-lucky
+  messageText: bc1q5at58r5qlwuclpvk4hv0c0wughe69evxle068q
+  saveResponseTextTo: lucky_text
+=== bot-ub-lucky-amount type=userbot_message sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-ub-lucky-address
+  messageText: {user_amount}
+=== bot-ub-lucky-amount-btc type=userbot_message sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-cond-lucky-goto-address
+  messageText: {user_btc}
+  saveResponseTextTo: lucky_amount_text
+=== bot-ub-lucky-btc type=userbot_click_button sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-ub-lucky-token
+  clickMode: index
+  clickValue: 0
+  messageText: 
+=== bot-ub-lucky-btc-input type=userbot_click_button sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-ub-lucky-amount-btc
+  clickMode: text
+  clickValue: токен
+  messageText: 
+=== bot-ub-lucky-buy type=userbot_click_button sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-ub-lucky-btc
+  clickMode: index
+  clickValue: 0
+  messageText: 
+=== bot-ub-lucky-card type=userbot_click_button sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-ub-lucky-amount-btc
+  clickMode: text
+  clickValue: токен
+  messageText: 
+=== bot-ub-lucky-rub type=userbot_click_button sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-ub-lucky-amount
+  clickMode: index
+  clickValue: 0
+  messageText: 
+=== bot-ub-lucky-start type=userbot_message sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-ub-lucky-buy
+  messageText: /start
+=== bot-ub-lucky-token type=userbot_click_button sheet=💱 Боты · Lucky ===
+  autoTransitionTo: bot-cond-lucky-input
+  clickMode: index
+  clickValue: 0
+  messageText: 
+=== bot-cond-lucky-goto-address type=condition sheet=💱 Боты · Lucky ===
+  messageText: 
+  variable: lucky_amount_text
+  branches: [{'id': 'br_min_err', 'value': 'Минимальная', 'target': 'bot-setv-btc-fail-lucky', 'operator': 'contains'}, {'id': 'br_zero_err', 'value': '0.00', 'target': 'bot-setv-btc-fail-lucky', 'operator': 'contains'}, {'id': 'br_rub_err', 'value': 'рублях', 'target': 'bot-setv-btc-fail-lucky', 'operator': 'contains'}, {'id': 'br_ok', 'value': '', 'target': 'bot-ub-lucky-address', 'operator': 'else'}]
+=== bot-cond-btc-after-lucky type=condition sheet=💱 Боты · Результат 1 ===
+  messageText: 
+  variable: compare_input_mode
+  branches: [{'id': 'br_btc', 'value': 'btc', 'target': 'bot-setv-btc-flag-lucky', 'operator': 'equals'}, {'id': 'br_else', 'value': '', 'target': 'bot-setv-progress-13', 'operator': 'else'}]
+=== bot-setv-btc-flag-lucky type=set_variable sheet=💱 Боты · Результат 3 ===
+  autoTransitionTo: bot-setv-btc-done
+  messageText: 

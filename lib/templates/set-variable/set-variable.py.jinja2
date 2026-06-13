@@ -401,6 +401,17 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         {%- endif %}
         {% endfor %}
         logging.info(f"✅ set_variable [{{ nodeId }}]: установлено {{ assignments | length }} переменных для {user_id}")
+        {% if nodeId == 'bot-setv-btc-done' %}
+        # #region agent log
+        try:
+            import json as _dbg_json, time as _dbg_time
+            _dbg_done = int(user_data.get(user_id, {}).get('btc_done_count', 0) or 0)
+            with open(r"c:\Users\1\Desktop\telegram-bot-builder\debug-4863c5.log", "a", encoding="utf-8") as _dbg_f:
+                _dbg_f.write(_dbg_json.dumps({"sessionId": "4863c5", "hypothesisId": "B", "location": "set-variable:bot-setv-btc-done", "message": "branch_done", "data": {"btc_done_count": _dbg_done, "auto_to": {{ autoTransitionTo | tojson }}}, "timestamp": int(_dbg_time.time() * 1000)}) + "\n")
+        except Exception:
+            pass
+        # #endregion
+        {% endif %}
         {% if autoTransitionTo %}
         {%- set safe_target = autoTransitionTo | safe_name %}
         logging.info(f"⚡ set_variable [{{ nodeId }}]: автопереход → {{ autoTransitionTo }} для {user_id}")

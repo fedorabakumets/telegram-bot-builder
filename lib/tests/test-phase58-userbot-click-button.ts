@@ -156,7 +156,7 @@ test('A07', 'содержит Telethon импорт и StringSession', () => {
   ok(code.includes('StringSession'), 'StringSession должен быть в коде');
 });
 
-test('A08', 'clickDelivery=await → await dispatch callback с timeout 2с', () => {
+test('A08', 'clickDelivery=await → msg.click с timeout 5с', () => {
   const p = makeCleanProject([
     makeUserbotClickButtonNode('ucb_await', {
       clickDelivery: 'await',
@@ -166,11 +166,11 @@ test('A08', 'clickDelivery=await → await dispatch callback с timeout 2с', ()
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'a08');
-  ok(code.includes('await _dispatch_callback_click_'), 'callback await должен выполняться до ожидания edit');
-  ok(code.includes('timeout=2.0'), 'короткий таймаут answerCallbackQuery');
+  ok(code.includes('_msg.click(text=_click_val)'), 'await должен использовать msg.click');
+  ok(code.includes('timeout=5.0'), 'таймаут Telethon click 5с');
   ok(
-    code.includes('# await:') || code.includes('[await]'),
-    'маркер await-режима (# await: или [await]) должен быть в коде',
+    code.includes('Telethon msg.click') || code.includes('[await]'),
+    'маркер await-режима должен быть в коде',
   );
   ok(code.includes('автопереход') && code.includes('отменён'), 'без ответа бота автопереход отменяется');
   syntax(code, 'a08');
@@ -188,14 +188,14 @@ test('B01', 'clickMode=text → msg.click(text=...)', () => {
   ok(code.includes('msg.click(text=') || code.includes('_msg.click(text='), 'msg.click(text=...) должен быть в коде');
 });
 
-test('B02', 'clickMode=data → поиск по callback_data + GetBotCallbackAnswerRequest', () => {
+test('B02', 'clickMode=data → поиск по callback_data + fire msg.click', () => {
   const p = makeCleanProject([makeUserbotClickButtonNode('ucb1', { clickMode: 'data', clickValue: 'play_game' })]);
   const code = gen(p, 'b02');
   ok(
     code.includes("_click_val.encode('utf-8') in _btn.data"),
     'поиск кнопки по callback_data должен быть в коде',
   );
-  ok(code.includes('GetBotCallbackAnswerRequest'), 'GetBotCallbackAnswerRequest должен быть в коде');
+  ok(code.includes('_msg.click(data=_click_btn.data)'), 'fire click по data должен быть в коде');
 });
 
 test('B03', 'clickMode=index → _idx_parts и msg.click(row, col)', () => {

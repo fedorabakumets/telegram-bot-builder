@@ -91,23 +91,22 @@ describe('generateUserbotClickButton()', () => {
     expect(code).toContain('FloodWaitError');
   });
 
-  it('clickDelivery по умолчанию — fire-and-forget через create_task', () => {
+  it('clickDelivery по умолчанию — fire-and-forget через create_task msg.click', () => {
     const code = generateUserbotClickButton({ nodeId: 'ub-c15', saveResultTo: 'txt' });
-    expect(code).toContain('asyncio.create_task(_fire_click())');
+    expect(code).toContain('asyncio.create_task(_fire_click_ub_c15');
     expect(code).toContain('fire-and-forget');
   });
 
-  it('clickDelivery=await → await dispatch callback с timeout 2с, без блокирующего msg.click', () => {
+  it('clickDelivery=await → msg.click с timeout 5с (как scrape)', () => {
     const code = generateUserbotClickButton({
       nodeId: 'ub-c15a',
       clickDelivery: 'await',
       clickMode: 'text',
       clickValue: 'Карта',
     });
-    expect(code).toContain('await _dispatch_callback_click_');
-    expect(code).toContain('timeout=2.0');
+    expect(code).toContain('await asyncio.wait_for(_msg.click(text=_click_val), timeout=5.0)');
     expect(code).toContain('[await]');
-    expect(code).not.toContain('await _msg.click(i=');
+    expect(code).not.toContain('await _dispatch_callback_click_ub_c15a()');
   });
 
   it('messageIdSource=last → последнее сообщение бота с reply_markup', () => {
