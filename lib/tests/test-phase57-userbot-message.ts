@@ -499,6 +499,41 @@ test('I03', 'responseFloorMessageIdVar задаёт нижнюю границу 
 });
 
 // ════════════════════════════════════════════════════════════════════════════
+// Блок J: responseStrategy = 'last'
+// ════════════════════════════════════════════════════════════════════════════
+
+console.log('── Блок J: responseStrategy = last ─────────────────────────────────');
+
+test('J01', 'responseStrategy=last → содержит _bot_msgs[-1]', () => {
+  const p = makeCleanProject([
+    makeUserbotMessageNode('ub_lucky_start', {
+      userbotEntity: '@LuckyExchange_Bot',
+      saveResponseIdTo: 'lucky_resp1',
+      responseStrategy: 'last',
+      responseWaitSeconds: 10,
+    }),
+  ]);
+  const code = gen(p, 'j01');
+  ok(code.includes('_bot_msgs[-1] if _bot_msgs else None'), '_bot_msgs[-1] должен быть в коде для стратегии last');
+});
+
+test('J02', 'синтаксис OK (responseStrategy=last)', () => {
+  const p = makeCleanProject([
+    makeCommandTrigger('cmd1', '/start', 'ub_lucky'),
+    makeUserbotMessageNode('ub_lucky', {
+      messageText: '/start',
+      userbotEntity: '@LuckyExchange_Bot',
+      saveResponseIdTo: 'lucky_resp',
+      responseStrategy: 'last',
+      responseWaitSeconds: 10,
+      autoTransitionTo: 'msg1',
+    }),
+    makeMessageNode('msg1', 'Готово'),
+  ]);
+  syntax(gen(p, 'j02'), 'j02');
+});
+
+// ════════════════════════════════════════════════════════════════════════════
 // Итоги
 // ════════════════════════════════════════════════════════════════════════════
 
