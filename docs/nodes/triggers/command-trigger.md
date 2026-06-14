@@ -62,4 +62,4 @@
 
 ---
 
-*Техническая документация: [lib/templates/command-trigger](../../lib/templates/command-trigger/command-trigger.md)*
+*Техническая документация: [lib/templates/command-trigger](../../../lib/templates/command-trigger/command-trigger.md)*

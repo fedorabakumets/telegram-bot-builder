@@ -133,4 +133,4 @@
 
 ---
 
-*Техническая документация: [lib/templates/message](../../lib/templates/message/message.md)*
+*Техническая документация: [lib/templates/message](../../../lib/templates/message/message.md)*

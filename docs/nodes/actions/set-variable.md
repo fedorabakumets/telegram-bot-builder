@@ -92,4 +92,4 @@
 
 ---
 
-*Техническая документация: [lib/templates/set-variable](../../lib/templates/set-variable/set-variable.md)*
+*Техническая документация: [lib/templates/set-variable](../../../lib/templates/set-variable/set-variable.md)*

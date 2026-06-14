@@ -122,4 +122,4 @@
 
 ---
 
-*Техническая документация: [lib/templates/condition](../../lib/templates/condition/condition.md)*
+*Техническая документация: [lib/templates/condition](../../../lib/templates/condition/condition.md)*
