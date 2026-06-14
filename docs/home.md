@@ -15,6 +15,13 @@
 - [Как обновить проект](development/HOW_TO_UPDATE.md)
 - [Работа с документацией (WikiNest)](development/WIKI_DOCS_GUIDE.md)
 
+## 🧩 Справочник нод
+- [Обзор всех нод](nodes/overview.md)
+- [📨 Триггеры](nodes/triggers/)
+- [⚡ Действия](nodes/actions/)
+- [🔀 Логика](nodes/logic/)
+- [📝 Ввод данных](nodes/input/)
+
 ## 🧩 Разработка нод
 - [Добавление нового триггера](development/adding-new-trigger.md)
 - [Типы узлов (блоков)](features/NODE_TYPES.md)
