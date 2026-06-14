@@ -222,6 +222,7 @@ export function VariableListContent({
                     key={`${variable.nodeId}-${variable.name}-${index}`}
                     variable={variable}
                     onSelect={onSelect}
+                    highlight={search.trim()}
                   />
                 ))}
             </div>
