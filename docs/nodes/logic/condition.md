@@ -73,95 +73,23 @@
 
 ### Проверка подписки на канал
 
-Пользователь не получит доступ к контенту, пока не подпишется на канал.
+Пользователь не получит доступ к контенту, пока не подпишется на канал. Если подписан — переходит к контенту, если нет — к сообщению с просьбой подписаться.
 
-```json
-{
-  "id": "check_sub",
-  "type": "condition",
-  "data": {
-    "variable": "",
-    "branches": [
-      { "id": "b1", "label": "Подписан", "operator": "is_subscribed", "value": "@my_channel", "target": "access_granted" },
-      { "id": "b2", "label": "Иначе", "operator": "else", "value": "", "target": "subscribe_please" }
-    ]
-  }
-}
-```
+### Проверка подписки на несколько каналов
 
-### Проверка подписки на несколько каналов (режим all)
-
-Доступ открывается только после подписки на все три канала одновременно.
-
-```json
-{
-  "id": "check_multi_sub",
-  "type": "condition",
-  "data": {
-    "variable": "",
-    "branches": [
-      { "id": "b1", "label": "Подписан на все", "operator": "is_subscribed", "value": "@chan1,@chan2,@chan3", "subscriptionMode": "all", "target": "access_granted" },
-      { "id": "b2", "label": "Иначе", "operator": "else", "value": "", "target": "subscribe_please" }
-    ]
-  }
-}
-```
+Доступ открывается только после подписки на все три канала одновременно (режим `all`). Или хотя бы на один (режим `any`).
 
 ### Проверка роли пользователя
 
-Направляет в разные панели в зависимости от роли, сохранённой в переменной `user_role`.
+Переменная `user_role` проверяется на конкретные значения. Админ → панель админа, модератор → панель модератора, остальные → обычное меню.
 
-```json
-{
-  "id": "check_role",
-  "type": "condition",
-  "data": {
-    "variable": "user_role",
-    "branches": [
-      { "id": "b1", "label": "Админ", "operator": "equals", "value": "admin", "target": "admin_panel" },
-      { "id": "b2", "label": "Модератор", "operator": "contains", "value": "mod", "target": "mod_panel" },
-      { "id": "b3", "label": "Иначе", "operator": "else", "value": "", "target": "user_menu" }
-    ]
-  }
-}
-```
+### Проверка баланса
 
-### Проверка баланса (числовые операторы)
-
-Показывает баланс только если он больше нуля, иначе сообщает что баланс пуст.
-
-```json
-{
-  "id": "check_balance",
-  "type": "condition",
-  "data": {
-    "variable": "balance",
-    "branches": [
-      { "id": "b1", "label": "Больше 100", "operator": "greater_than", "value": "100", "target": "show_balance" },
-      { "id": "b2", "label": "Иначе", "operator": "else", "value": "", "target": "empty_balance" }
-    ]
-  }
-}
-```
+Числовой оператор `greater_than` — если баланс больше 0, показать информацию. Если нет — сообщить что пусто.
 
 ### Проверка типа чата
 
-Разный поток для личных сообщений и групповых чатов — полезно когда бот работает и там, и там.
-
-```json
-{
-  "id": "check_chat_type",
-  "type": "condition",
-  "data": {
-    "variable": "",
-    "branches": [
-      { "id": "b1", "label": "Личный чат", "operator": "is_private", "value": "", "target": "private_flow" },
-      { "id": "b2", "label": "Группа", "operator": "is_group", "value": "", "target": "group_flow" },
-      { "id": "b3", "label": "Иначе", "operator": "else", "value": "", "target": "other_flow" }
-    ]
-  }
-}
-```
+Разный поток для личных сообщений и групповых чатов. Полезно когда бот работает и там, и там — например, в группе отвечать коротко, а в личке разворачивать полный сценарий.
 
 ## Важно
 
