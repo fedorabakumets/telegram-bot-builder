@@ -34,7 +34,6 @@ interface NavItem {
 /** Список активных пунктов навигации */
 const NAV_ITEMS: NavItem[] = [
   { tab: 'editor',    label: 'Редактор',   icon: LayoutDashboard },
-  { tab: 'export',    label: 'Код',        icon: Code2 },
   { tab: 'bot',       label: 'Бот',        icon: Bot },
   { tab: 'terminal', label: 'Терминал',  icon: Terminal },
   { tab: 'users',     label: 'Пользователи', icon: Users },
@@ -43,6 +42,7 @@ const NAV_ITEMS: NavItem[] = [
   { tab: 'analytics', label: 'Аналитика',  icon: BarChart2 },
   { tab: 'tables',    label: 'Таблицы',    icon: Table2 },
   { tab: 'files',     label: 'Файлы',      icon: FileImage },
+  { tab: 'export',    label: 'Код',        icon: Code2 },
 ];
 
 /**
