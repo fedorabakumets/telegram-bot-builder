@@ -1,8 +1,9 @@
 /**
  * @fileoverview Переиспользуемое содержимое дропдауна выбора переменных
- * @description Рендерит поле поиска (при большом числе переменных) и
- * сгруппированный по типу список VariableMenuItem со сворачиваемыми секциями.
- * Вставляется внутрь любого DropdownMenuContent. Заголовок
+ * @description Рендерит поле поиска (при большом числе переменных), ряд
+ * вкладок-фильтров по типу и сгруппированный по типу список VariableMenuItem
+ * со сворачиваемыми секциями. Вкладки сужают список до одной группы поверх
+ * поиска. Вставляется внутрь любого DropdownMenuContent. Заголовок
  * ("📌 Доступные переменные") оставляется в местах вызова. Внутренний стейт
  * поиска и раскрытия секций сбрасывается автоматически, так как Radix
  * размонтирует содержимое дропдауна при закрытии.
@@ -13,13 +14,11 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { VariableMenuItem } from './variable-menu-item';
+import { VariableListTabs, type GroupKey, type TabKey, type TabDef } from './variable-list-tabs';
 import type { Variable } from '../types';
 
 /** Порог, начиная с которого показывается поле поиска */
 const SEARCH_THRESHOLD = 7;
-
-/** Идентификатор группы переменных */
-type GroupKey = 'custom' | 'system' | 'media' | 'tables';
 
 /** Описание секции группы переменных */
 interface GroupDef {
@@ -27,6 +26,8 @@ interface GroupDef {
   key: GroupKey;
   /** Заголовок секции с эмодзи */
   label: string;
+  /** Короткая подпись для вкладки-фильтра */
+  tabLabel: string;
 }
 
 /**
@@ -34,10 +35,10 @@ interface GroupDef {
  * Пользовательские идут первыми — свои переменные нужнее.
  */
 const GROUP_DEFS: GroupDef[] = [
-  { key: 'custom', label: '✏️ Пользовательские' },
-  { key: 'system', label: '⚙️ Системные' },
-  { key: 'media', label: '📎 Медиа' },
-  { key: 'tables', label: '📊 Таблицы' }
+  { key: 'custom', label: '✏️ Пользовательские', tabLabel: '✏️ Свои' },
+  { key: 'system', label: '⚙️ Системные', tabLabel: '⚙️ Системные' },
+  { key: 'media', label: '📎 Медиа', tabLabel: '📎 Медиа' },
+  { key: 'tables', label: '📊 Таблицы', tabLabel: '📊 Таблицы' }
 ];
 
 /**
@@ -104,8 +105,32 @@ export function VariableListContent({
   /** Свёрнутые секции (по умолчанию все развёрнуты, поэтому хранятся именно свёрнутые) */
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
+  /** Активная вкладка-фильтр по типу переменных */
+  const [activeTab, setActiveTab] = useState<TabKey>('all');
+
   /** Показывать поле поиска только когда переменных много */
   const showSearch = availableVariables.length > SEARCH_THRESHOLD;
+
+  /**
+   * Группировка ВСЕХ переменных (без учёта поиска) — нужна для определения
+   * непустых групп, чтобы набор вкладок не «прыгал» при вводе запроса.
+   */
+  const allGroups = groupVariables(availableVariables);
+
+  /** Ключи групп, в которых есть хотя бы одна переменная */
+  const nonEmptyGroupKeys = GROUP_DEFS.filter((g) => allGroups[g.key].length > 0).map((g) => g.key);
+
+  /** Вкладки показываем только когда заполнено больше одной группы */
+  const showTabs = nonEmptyGroupKeys.length > 1;
+
+  /** Набор вкладок: «Все» + по одной на каждую непустую группу */
+  const tabs: TabDef[] = [
+    { key: 'all', label: 'Все' },
+    ...GROUP_DEFS.filter((g) => nonEmptyGroupKeys.includes(g.key)).map((g) => ({
+      key: g.key,
+      label: g.tabLabel
+    }))
+  ];
 
   /** Отфильтрованный список переменных по подстроке в имени или описании */
   const query = search.trim().toLowerCase();
@@ -116,8 +141,17 @@ export function VariableListContent({
       )
     : availableVariables;
 
-  /** Сгруппированные отфильтрованные переменные */
+  /** Сгруппированные отфильтрованные (поиском) переменные */
   const groups = groupVariables(filteredVariables);
+
+  /** Группы, видимые с учётом активной вкладки (вкладка сужает до одной группы) */
+  const visibleGroupDefs =
+    showTabs && activeTab !== 'all'
+      ? GROUP_DEFS.filter((g) => g.key === activeTab)
+      : GROUP_DEFS;
+
+  /** Сколько переменных осталось после применения поиска и вкладки */
+  const visibleCount = visibleGroupDefs.reduce((sum, g) => sum + groups[g.key].length, 0);
 
   /**
    * Переключает свёрнутость секции, не закрывая дропдаун
@@ -143,16 +177,19 @@ export function VariableListContent({
           />
         </div>
       )}
+      {showTabs && availableVariables.length > 0 && (
+        <VariableListTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+      )}
       {availableVariables.length === 0 ? (
         <div className="px-3 py-4 text-xs text-muted-foreground text-center">
           {emptyText}
         </div>
-      ) : filteredVariables.length === 0 ? (
+      ) : visibleCount === 0 ? (
         <div className="px-3 py-4 text-xs text-muted-foreground text-center">
           Ничего не найдено
         </div>
       ) : (
-        GROUP_DEFS.map((group) => {
+        visibleGroupDefs.map((group) => {
           const items = groups[group.key];
           // Пустые группы не показываем вообще
           if (items.length === 0) return null;
