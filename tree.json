@@ -1023,6 +1023,89 @@
     "author": ""
   },
   {
+    "path": "nodes/overview",
+    "title": "Справочник нод",
+    "excerpt": "Ноды — строительные блоки бота. Каждая нода выполняет одну задачу: принимает событие, отправляет сообщение, проверяет условие или собирает д",
+    "parts": [
+      "nodes",
+      "overview"
+    ],
+    "folder_titles": {
+      "nodes": "🧩 Справочник нод"
+    },
+    "updated_at": "2026-06-14T18:18:37+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "nodes/actions/message",
+    "title": "Сообщение (message)",
+    "excerpt": "Отправляет текстовое сообщение пользователю. Основная рабочая нода — используется в 90% сценариев.",
+    "parts": [
+      "nodes",
+      "actions",
+      "message"
+    ],
+    "folder_titles": {
+      "nodes": "🧩 Справочник нод",
+      "actions": "⚡ Действия"
+    },
+    "updated_at": "2026-06-14T18:20:16+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "nodes/actions/set-variable",
+    "title": "Установить переменную (set_variable)",
+    "excerpt": "Сохраняет значение в пользовательскую переменную. Переменные хранятся per-user — у каждого пользователя свои значения.",
+    "parts": [
+      "nodes",
+      "actions",
+      "set-variable"
+    ],
+    "folder_titles": {
+      "nodes": "🧩 Справочник нод",
+      "actions": "⚡ Действия"
+    },
+    "updated_at": "2026-06-14T18:20:16+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "nodes/logic/condition",
+    "title": "Условие (condition)",
+    "excerpt": "Проверяет значение переменной или свойство пользователя и направляет по разным веткам. Аналог `if/else` в программировании.",
+    "parts": [
+      "nodes",
+      "logic",
+      "condition"
+    ],
+    "folder_titles": {
+      "nodes": "🧩 Справочник нод",
+      "logic": "🔀 Логика"
+    },
+    "updated_at": "2026-06-14T18:20:16+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "nodes/triggers/command-trigger",
+    "title": "Триггер команды (command_trigger)",
+    "excerpt": "Срабатывает когда пользователь отправляет команду боту — `/start`, `/help` или любую кастомную.",
+    "parts": [
+      "nodes",
+      "triggers",
+      "command-trigger"
+    ],
+    "folder_titles": {
+      "nodes": "🧩 Справочник нод",
+      "triggers": "📨 Триггеры"
+    },
+    "updated_at": "2026-06-14T18:20:16+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "releases/RELEASE_NOTES_v1.5.0",
     "title": "📦 Telegram Bot Builder v1.5.0",
     "excerpt": "**Дата выпуска:** 23 февраля 2026 г.",
