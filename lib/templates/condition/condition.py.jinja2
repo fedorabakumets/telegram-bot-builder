@@ -10,8 +10,8 @@
 
   Порядок веток в сгенерированном коде:
   0. Системные операторы (is_private, is_group, is_channel, is_admin, is_premium, is_bot, is_subscribed, is_not_subscribed)
-  1. Числовые операторы (greater_than, less_than, between) — всегда первыми среди переменных
-  2. Строковые операторы (equals, contains, filled, empty)
+  1. Числовые операторы (greater_than, less_than, between, is_even, is_odd, divisible_by) — всегда первыми среди переменных
+  2. Строковые операторы (equals, not_equals, contains, not_contains, starts_with, ends_with, matches_regex, filled, empty)
   3. else — всегда последней
 
   Для keyboard-узлов вызов генерируется без state=state (keyboard-нода не принимает state).
@@ -139,29 +139,29 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
 {%- endif %}
 {%- endif %}
 {%- endfor %}
-{#- Проход 1: числовые операторы (greater_than, less_than, between) #}
+{#- Проход 1: числовые операторы (greater_than, less_than, between, is_even, is_odd, divisible_by) #}
 {%- for branch in entry.branches %}
-{%- if branch.operator == 'greater_than' or branch.operator == 'less_than' or branch.operator == 'between' %}
+{%- if branch.operator == 'greater_than' or branch.operator == 'less_than' or branch.operator == 'between' or branch.operator == 'is_even' or branch.operator == 'is_odd' or branch.operator == 'divisible_by' %}
 {%- if branch.isFirstNumeric %}
-    if {% if branch.operator == 'greater_than' %}_num_val is not None and _num_val > float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0'){% elif branch.operator == 'less_than' %}_num_val is not None and _num_val < float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0'){% elif branch.operator == 'between' %}_num_val is not None and float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0') <= _num_val <= float(replace_variables_in_text("{{ branch.value2 if branch.value2 else '0' }}", _all_vars) or '0'){% endif %}:
+    if {% if branch.operator == 'greater_than' %}_num_val is not None and _num_val > float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0'){% elif branch.operator == 'less_than' %}_num_val is not None and _num_val < float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0'){% elif branch.operator == 'between' %}_num_val is not None and float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0') <= _num_val <= float(replace_variables_in_text("{{ branch.value2 if branch.value2 else '0' }}", _all_vars) or '0'){% elif branch.operator == 'is_even' %}_num_val is not None and int(_num_val) % 2 == 0{% elif branch.operator == 'is_odd' %}_num_val is not None and int(_num_val) % 2 != 0{% elif branch.operator == 'divisible_by' %}_num_val is not None and int(replace_variables_in_text("{{ branch.value if branch.value else '1' }}", _all_vars) or '1') != 0 and int(_num_val) % int(replace_variables_in_text("{{ branch.value if branch.value else '1' }}", _all_vars) or '1') == 0{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} {{ branch.value }}{% endif %}{% if branch.value2 %} {{ branch.value2 }}{% endif %}
         {{ branch_call(branch) }}
 {%- else %}
-    elif {% if branch.operator == 'greater_than' %}_num_val is not None and _num_val > float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0'){% elif branch.operator == 'less_than' %}_num_val is not None and _num_val < float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0'){% elif branch.operator == 'between' %}_num_val is not None and float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0') <= _num_val <= float(replace_variables_in_text("{{ branch.value2 if branch.value2 else '0' }}", _all_vars) or '0'){% endif %}:
+    elif {% if branch.operator == 'greater_than' %}_num_val is not None and _num_val > float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0'){% elif branch.operator == 'less_than' %}_num_val is not None and _num_val < float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0'){% elif branch.operator == 'between' %}_num_val is not None and float(replace_variables_in_text("{{ branch.value if branch.value else '0' }}", _all_vars) or '0') <= _num_val <= float(replace_variables_in_text("{{ branch.value2 if branch.value2 else '0' }}", _all_vars) or '0'){% elif branch.operator == 'is_even' %}_num_val is not None and int(_num_val) % 2 == 0{% elif branch.operator == 'is_odd' %}_num_val is not None and int(_num_val) % 2 != 0{% elif branch.operator == 'divisible_by' %}_num_val is not None and int(replace_variables_in_text("{{ branch.value if branch.value else '1' }}", _all_vars) or '1') != 0 and int(_num_val) % int(replace_variables_in_text("{{ branch.value if branch.value else '1' }}", _all_vars) or '1') == 0{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} {{ branch.value }}{% endif %}{% if branch.value2 %} {{ branch.value2 }}{% endif %}
         {{ branch_call(branch) }}
 {%- endif %}
 {%- endif %}
 {%- endfor %}
-{#- Проход 2: строковые операторы (filled, empty, equals, contains) #}
+{#- Проход 2: строковые операторы (filled, empty, equals, not_equals, contains, not_contains, starts_with, ends_with, matches_regex) #}
 {%- for branch in entry.branches %}
-{%- if branch.operator == 'filled' or branch.operator == 'empty' or branch.operator == 'equals' or branch.operator == 'contains' %}
+{%- if branch.operator == 'filled' or branch.operator == 'empty' or branch.operator == 'equals' or branch.operator == 'not_equals' or branch.operator == 'contains' or branch.operator == 'not_contains' or branch.operator == 'starts_with' or branch.operator == 'ends_with' or branch.operator == 'matches_regex' %}
 {%- if branch.isFirstString and not entry.hasNumericBranch and not entry.hasSystemBranch %}
-    if {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}str(val) == str(replace_variables_in_text("{{ branch.value }}", _all_vars)){% elif branch.operator == 'contains' %}str(replace_variables_in_text("{{ branch.value }}", _all_vars)) in str(val){% endif %}:
+    if {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}str(val) == str(replace_variables_in_text("{{ branch.value }}", _all_vars)){% elif branch.operator == 'not_equals' %}str(val) != str(replace_variables_in_text("{{ branch.value }}", _all_vars)){% elif branch.operator == 'contains' %}str(replace_variables_in_text("{{ branch.value }}", _all_vars)) in str(val){% elif branch.operator == 'not_contains' %}str(replace_variables_in_text("{{ branch.value }}", _all_vars)) not in str(val){% elif branch.operator == 'starts_with' %}str(val).startswith(str(replace_variables_in_text("{{ branch.value }}", _all_vars))){% elif branch.operator == 'ends_with' %}str(val).endswith(str(replace_variables_in_text("{{ branch.value }}", _all_vars))){% elif branch.operator == 'matches_regex' %}re.search(r"{{ branch.valueRegex }}", str(val)) is not None{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} == "{{ branch.value }}"{% endif %}
         {{ branch_call(branch) }}
 {%- else %}
-    elif {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}str(val) == str(replace_variables_in_text("{{ branch.value }}", _all_vars)){% elif branch.operator == 'contains' %}str(replace_variables_in_text("{{ branch.value }}", _all_vars)) in str(val){% endif %}:
+    elif {% if branch.operator == 'filled' %}val{% elif branch.operator == 'empty' %}not val{% elif branch.operator == 'equals' %}str(val) == str(replace_variables_in_text("{{ branch.value }}", _all_vars)){% elif branch.operator == 'not_equals' %}str(val) != str(replace_variables_in_text("{{ branch.value }}", _all_vars)){% elif branch.operator == 'contains' %}str(replace_variables_in_text("{{ branch.value }}", _all_vars)) in str(val){% elif branch.operator == 'not_contains' %}str(replace_variables_in_text("{{ branch.value }}", _all_vars)) not in str(val){% elif branch.operator == 'starts_with' %}str(val).startswith(str(replace_variables_in_text("{{ branch.value }}", _all_vars))){% elif branch.operator == 'ends_with' %}str(val).endswith(str(replace_variables_in_text("{{ branch.value }}", _all_vars))){% elif branch.operator == 'matches_regex' %}re.search(r"{{ branch.valueRegex }}", str(val)) is not None{% endif %}:
         # Ветка: {{ branch.operator }}{% if branch.value %} == "{{ branch.value }}"{% endif %}
         {{ branch_call(branch) }}
 {%- endif %}

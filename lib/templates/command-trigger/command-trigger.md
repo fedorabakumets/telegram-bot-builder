@@ -16,7 +16,6 @@
 | command | string | Команда, например "/start" | ✅ |
 | description | string | Описание команды для BotFather | нет |
 | showInMenu | boolean | Показывать команду в меню бота | нет |
-| isPrivateOnly | boolean | Только приватные чаты | нет |
 | targetNodeId | string | ID целевого узла | ✅ |
 | targetNodeType | string | Тип целевого узла | ✅ |
 
@@ -83,18 +82,6 @@ async def command_trigger_trigger_start_handler(message: types.Message):
 
     mock_callback = MockCallback("msg_welcome", message.from_user, message)
     await handle_callback_msg_welcome(mock_callback)
-```
-
-### С isPrivateOnly
-
-```python
-@dp.message(Command("secret"))
-async def command_trigger_trigger_secret_handler(message: types.Message):
-    ...
-    if message.chat.type != 'private':
-        await message.answer("❌ Эта команда доступна только в приватных чатах")
-        return
-    ...
 ```
 
 ## Использование

@@ -22,6 +22,10 @@
 - [🔀 Логика](nodes/logic/)
 - [📝 Ввод данных](nodes/input/)
 
+## 📊 Переменные и данные
+- [Переменные и данные](variables/overview.md)
+- [Селектор переменных](variables/variable-selector.md)
+
 ## 🧩 Разработка нод
 - [Добавление нового триггера](development/adding-new-trigger.md)
 - [Типы узлов (блоков)](features/NODE_TYPES.md)

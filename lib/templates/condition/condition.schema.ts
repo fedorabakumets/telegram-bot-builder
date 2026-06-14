@@ -10,11 +10,13 @@ export const conditionBranchEntrySchema = z.object({
   /** Уникальный идентификатор ветки */
   id: z.string(),
   /** Оператор ветки */
-  operator: z.enum(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed', 'else']),
+  operator: z.enum(['filled', 'empty', 'equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with', 'matches_regex', 'greater_than', 'less_than', 'between', 'is_even', 'is_odd', 'divisible_by', 'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed', 'else']),
   /** Значение для сравнения (для оператора "equals") */
   value: z.string(),
   /** Второе значение для оператора "between" */
   value2: z.string().optional(),
+  /** Значение для оператора "matches_regex" (raw-строка) */
+  valueRegex: z.string().optional(),
   /** ID целевого узла */
   target: z.string().optional(),
   /** Режим проверки нескольких каналов: "all" — все, "any" — хотя бы один */

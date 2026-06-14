@@ -152,9 +152,9 @@ export function MyComponent({ ... }: MyProps) { ... }
 }
 ```
 
-**Допустимые операторы:** `filled`, `empty`, `equals`, `contains`, `greater_than`, `less_than`, `between`, `else`, `is_private`, `is_group`, `is_channel`, `is_admin`, `is_premium`, `is_bot`, `is_subscribed`, `is_not_subscribed`.
+**Допустимые операторы:** `filled`, `empty`, `equals`, `not_equals`, `contains`, `not_contains`, `starts_with`, `ends_with`, `matches_regex`, `greater_than`, `less_than`, `between`, `is_even`, `is_odd`, `divisible_by`, `else`, `is_private`, `is_group`, `is_channel`, `is_admin`, `is_premium`, `is_bot`, `is_subscribed`, `is_not_subscribed`.
 
-**НЕ существуют операторы:** `not_empty`, `not_equals`, `not_contains` и любые другие не из списка выше.
+**НЕ существуют операторы:** `not_empty`, `is_empty`, `is_not_empty` и любые другие не из списка выше.
 
 ### Перед созданием/изменением нод
 

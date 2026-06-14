@@ -19,13 +19,18 @@ export const validParamsEmpty: CommandTriggerTemplateParams = {
   entries: [],
 };
 
-/** Один триггер /start */
+/**
+ * Один обычный командный триггер (/help).
+ * Используется для проверки ОБЩЕЙ логики генерации командных обработчиков
+ * (MockCallback, имя функции, удаление слэша). Команда /start обрабатывается
+ * особым образом (CommandStart), поэтому здесь используется не-/start команда.
+ */
 export const validParamsSingle: CommandTriggerTemplateParams = {
   entries: [
     {
       nodeId: 'trigger_start',
-      command: '/start',
-      description: 'Запустить бота',
+      command: '/help',
+      description: 'Помощь',
       showInMenu: true,
       targetNodeId: 'msg_welcome',
       targetNodeType: 'message',
@@ -33,21 +38,7 @@ export const validParamsSingle: CommandTriggerTemplateParams = {
   ],
 };
 
-/** Триггер с isPrivateOnly */
-export const validParamsPrivateOnly: CommandTriggerTemplateParams = {
-  entries: [
-    {
-      nodeId: 'trigger_secret',
-      command: '/secret',
-      description: 'Секретная команда',
-      isPrivateOnly: true,
-      targetNodeId: 'msg_secret',
-      targetNodeType: 'message',
-    },
-  ],
-};
-
-/** Несколько триггеров */
+/** Несколько триггеров (включая /start, который генерируется особым образом) */
 export const validParamsMultiple: CommandTriggerTemplateParams = {
   entries: [
     {

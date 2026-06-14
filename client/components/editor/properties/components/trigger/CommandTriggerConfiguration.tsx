@@ -1,10 +1,16 @@
 /**
  * @fileoverview Панель свойств узла триггера команды
  *
- * Позволяет редактировать команду, описание и флаги
+ * Позволяет редактировать команду, описание и флаги доступа
  * для узла типа command_trigger в панели свойств редактора.
  * Каждый узел — одна команда. Для нескольких команд
  * используйте несколько узлов на холсте.
+ *
+ * Флаги доступа:
+ * - `adminOnly` — команда доступна только администраторам бота
+ *   (генерирует проверку is_admin в Python-коде).
+ * - `requiresAuth` — команда доступна только пользователям,
+ *   которые уже запускали бота через /start (проверка check_auth).
  *
  * Поле «Следующий узел» задаёт `autoTransitionTo` — ID узла,
  * к которому будет нарисовано жёлтое соединение на холсте.
@@ -14,6 +20,7 @@
 import type { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { TriggerTargetSelector } from './TriggerTargetSelector';
 import { DeepLinkSection } from './DeepLinkSection';
 import { formatNodeDisplay as defaultFormatNodeDisplay } from '../../utils/node-formatters';
@@ -36,7 +43,9 @@ interface CommandTriggerConfigurationProps {
  * Компонент настройки узла триггера команды
  *
  * Отображает поля: команда, описание для BotFather,
- * блок Deep Link (только для /start) и выбор следующего узла.
+ * блок Deep Link (только для /start), флаги доступа
+ * (только для администраторов, требуется запуск бота)
+ * и выбор следующего узла.
  *
  * @param props - Свойства компонента
  * @returns JSX элемент панели настроек триггера
@@ -90,6 +99,35 @@ export function CommandTriggerConfiguration({
           onChange={handleDeepLinkChange}
         />
       )}
+
+      {/* Флаги доступа к команде */}
+      {/* Только для администраторов — генерирует проверку is_admin */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <Label>Только для администраторов</Label>
+          <Switch
+            checked={selectedNode.data?.adminOnly ?? false}
+            onCheckedChange={checked => onNodeUpdate(selectedNode.id, { adminOnly: checked })}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Команда доступна только администраторам бота.
+        </p>
+      </div>
+
+      {/* Требуется запуск бота — генерирует проверку check_auth */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <Label>Требуется запуск бота (/start)</Label>
+          <Switch
+            checked={selectedNode.data?.requiresAuth ?? false}
+            onCheckedChange={checked => onNodeUpdate(selectedNode.id, { requiresAuth: checked })}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Команда доступна только пользователям, которые уже запускали бота (/start).
+        </p>
+      </div>
 
       {/* Следующий узел — задаёт выходное соединение (жёлтая линия на холсте) */}
       <TriggerTargetSelector

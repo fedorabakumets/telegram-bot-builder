@@ -106,6 +106,7 @@ export function ConditionNodeConfiguration({ selectedNode, allNodes, getAllNodes
               onDelete={handleBranchDelete}
               onNodeUpdate={onNodeUpdate}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              textVariables={textVariables}
             />
           );
         })}

@@ -13,9 +13,16 @@
  * - "empty"   — переменная не заполнена (пустая)
  * - "equals"  — переменная равна указанному значению
  * - "contains" — переменная содержит указанную подстроку
+ * - "not_contains" — переменная НЕ содержит указанную подстроку
+ * - "starts_with" — переменная начинается с указанной подстроки
+ * - "ends_with" — переменная заканчивается на указанную подстроку
+ * - "matches_regex" — переменная соответствует регулярному выражению
+ * - "is_even" — числовое значение чётное
+ * - "is_odd" — числовое значение нечётное
+ * - "divisible_by" — числовое значение делится на указанное число
  * - "else"    — во всех остальных случаях (ветка по умолчанию)
  */
-export type ConditionOperator = 'filled' | 'empty' | 'equals' | 'contains' | 'greater_than' | 'less_than' | 'between' | 'is_private' | 'is_group' | 'is_channel' | 'is_admin' | 'is_premium' | 'is_bot' | 'is_subscribed' | 'is_not_subscribed' | 'else';
+export type ConditionOperator = 'filled' | 'empty' | 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | 'matches_regex' | 'greater_than' | 'less_than' | 'between' | 'is_even' | 'is_odd' | 'divisible_by' | 'is_private' | 'is_group' | 'is_channel' | 'is_admin' | 'is_premium' | 'is_bot' | 'is_subscribed' | 'is_not_subscribed' | 'else';
 
 /**
  * Одна ветка узла условия

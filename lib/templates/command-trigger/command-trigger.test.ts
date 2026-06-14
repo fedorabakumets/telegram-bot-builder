@@ -12,7 +12,6 @@ import {
 import {
   validParamsEmpty,
   validParamsSingle,
-  validParamsPrivateOnly,
   validParamsMultiple,
   invalidParamsMissingCommand,
   nodesWithCommandTrigger,
@@ -37,24 +36,13 @@ describe('generateCommandTriggers()', () => {
 
   it('генерирует @dp.message(Command(...))', () => {
     const r = generateCommandTriggers(validParamsSingle);
-    expect(r).toContain('@dp.message(Command("start"))');
+    expect(r).toContain('@dp.message(Command("help"))');
   });
 
   it('убирает слэш из команды', () => {
     const r = generateCommandTriggers(validParamsSingle);
-    expect(r).toContain('Command("start")');
-    expect(r).not.toContain('Command("/start")');
-  });
-
-  it('isPrivateOnly добавляет проверку типа чата', () => {
-    const r = generateCommandTriggers(validParamsPrivateOnly);
-    expect(r).toContain("message.chat.type != 'private'");
-    expect(r).toContain('Эта команда доступна только в приватных чатах');
-  });
-
-  it('без isPrivateOnly нет проверки типа чата', () => {
-    const r = generateCommandTriggers(validParamsSingle);
-    expect(r).not.toContain("message.chat.type != 'private'");
+    expect(r).toContain('Command("help")');
+    expect(r).not.toContain('Command("/help")');
   });
 
   it('adminOnly добавляет проверку прав администратора', () => {
@@ -83,7 +71,7 @@ describe('generateCommandTriggers()', () => {
     const r = generateCommandTriggers(validParamsSingle);
     expect(r).toContain('class MockCallback:');
     expect(r).toContain('mock_callback = MockCallback');
-    expect(r).toContain('await handle_callback_msg_welcome(mock_callback)');
+    expect(r).toContain('await handle_callback_msg_welcome(mock_callback, state=state)');
   });
 
   it('имя функции содержит nodeId', () => {
@@ -100,7 +88,9 @@ describe('generateCommandTriggers()', () => {
   it('несколько триггеров → несколько обработчиков', () => {
     const r = generateCommandTriggers(validParamsMultiple);
     const count = (r.match(/@dp\.message\(Command/g) || []).length;
-    expect(count).toBe(3);
+    // /start генерируется как два роутера (deep_link_router + start_command_handler),
+    // /help и /settings — по одному обычному обработчику. Итого 2 + 1 + 1 = 4.
+    expect(count).toBe(4);
   });
 
   it('синтаксически корректный Python — нет незакрытых скобок', () => {
@@ -124,10 +114,6 @@ describe('commandTriggerParamsSchema', () => {
 
   it('принимает несколько триггеров', () => {
     expect(commandTriggerParamsSchema.safeParse(validParamsMultiple).success).toBe(true);
-  });
-
-  it('принимает триггер с isPrivateOnly', () => {
-    expect(commandTriggerParamsSchema.safeParse(validParamsPrivateOnly).success).toBe(true);
   });
 
   it('отклоняет пустую команду', () => {
@@ -195,19 +181,21 @@ describe('generateCommandTriggerHandlers()', () => {
 
   it('генерирует код из узлов напрямую', () => {
     const r = generateCommandTriggerHandlers(nodesWithCommandTrigger);
-    expect(r).toContain('Command("start")');
+    // /start генерируется как CommandStart (deep_link router + start_command_handler)
+    expect(r).toContain('CommandStart(deep_link=');
     expect(r).toContain('handle_callback_msg_welcome');
   });
 
   it('несколько триггеров из узлов', () => {
     const r = generateCommandTriggerHandlers(nodesWithMultipleCommandTriggers);
-    expect(r).toContain('Command("start")');
+    // /start → CommandStart, /help → обычный Command
+    expect(r).toContain('CommandStart(deep_link=');
     expect(r).toContain('Command("help")');
   });
 
   it('фильтрует null узлы и не-триггеры', () => {
     const r = generateCommandTriggerHandlers(nodesWithNullAndMixed);
-    expect(r).toContain('Command("start")');
+    expect(r).toContain('CommandStart(deep_link=');
   });
 
   it('узлы без command_trigger → пустая строка', () => {

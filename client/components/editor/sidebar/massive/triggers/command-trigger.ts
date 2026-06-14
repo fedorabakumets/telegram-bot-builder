@@ -24,7 +24,5 @@ export const commandTrigger: ComponentDefinition = {
     description: 'Запустить бота',
     /** Показывать команду в меню бота */
     showInMenu: true,
-    /** Доступна только в приватных чатах */
-    isPrivateOnly: false,
   }
 };

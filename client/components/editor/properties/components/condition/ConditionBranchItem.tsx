@@ -10,8 +10,10 @@ import { Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Node } from '@shared/schema';
 import type { ConditionBranch, ConditionOperator } from '@shared/types/condition-node';
+import type { Variable } from '../../../inline-rich/types';
 import { formatNodeDisplay } from '../../utils/node-formatters';
 import { SubscriptionChannelsInput } from './SubscriptionChannelsInput';
+import { VariableSelector } from '../variables/variable-selector';
 
 interface ConditionBranchItemProps {
   /** Ветка условия */
@@ -28,6 +30,8 @@ interface ConditionBranchItemProps {
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
   /** Все узлы из всех листов для выбора цели перехода */
   getAllNodesFromAllSheets: Array<{ node: Node; sheetName: string }>;
+  /** Доступные переменные для вставки в поле значения */
+  textVariables: Variable[];
 }
 
 /** Метки операторов для отображения в выпадающем списке */
@@ -35,10 +39,18 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
   'filled': 'Если переменная введена',
   'empty': 'Если переменная не введена',
   'equals': 'Если переменная равна',
+  'not_equals': 'Не равно',
   'contains': 'Если переменная содержит',
+  'not_contains': 'Не содержит',
+  'starts_with': 'Начинается с',
+  'ends_with': 'Заканчивается на',
+  'matches_regex': 'Соответствует регулярке',
   'greater_than': 'Если переменная больше',
   'less_than': 'Если переменная меньше',
   'between': 'Если переменная в диапазоне',
+  'is_even': 'Чётное число',
+  'is_odd': 'Нечётное число',
+  'divisible_by': 'Делится на',
   'is_private': 'Если приватный чат',
   'is_group': 'Если групповой чат',
   'is_channel': 'Если канал',
@@ -52,7 +64,8 @@ const OPERATOR_LABELS: Record<ConditionOperator, string> = {
 
 /** Операторы, доступные для выбора пользователем */
 const SELECTABLE_OPERATORS: ConditionOperator[] = [
-  'filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between',
+  'filled', 'empty', 'equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with', 'matches_regex',
+  'greater_than', 'less_than', 'between', 'is_even', 'is_odd', 'divisible_by',
   'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed', 'else',
 ];
 
@@ -79,10 +92,18 @@ export function getSelectedLabel(
     case 'filled':       return `Если переменная "${varName}" введена`;
     case 'empty':        return `Если переменная "${varName}" не введена`;
     case 'equals':       return `Если переменная "${varName}" равна "${value || '...'}"`;
+    case 'not_equals':   return `Если переменная "${varName}" не равна "${value || '...'}"`;
     case 'contains':     return `Если переменная "${varName}" содержит "${value || '...'}"`;
+    case 'not_contains': return `Если переменная "${varName}" не содержит "${value || '...'}"`;
+    case 'starts_with':  return `Если переменная "${varName}" начинается с "${value || '...'}"`;
+    case 'ends_with':    return `Если переменная "${varName}" заканчивается на "${value || '...'}"`;
+    case 'matches_regex':return `Если переменная "${varName}" соответствует регулярке "${value || '...'}"`;
     case 'greater_than': return `Если переменная "${varName}" больше ${value || '...'}`;
     case 'less_than':    return `Если переменная "${varName}" меньше ${value || '...'}`;
     case 'between':      return `Если переменная "${varName}" от ${value || '...'} до ${value2 || '...'}`;
+    case 'is_even':      return `Если переменная "${varName}" — чётное число`;
+    case 'is_odd':       return `Если переменная "${varName}" — нечётное число`;
+    case 'divisible_by': return `Если переменная "${varName}" делится на ${value || '...'}`;
     case 'is_private':   return 'Если приватный чат';
     case 'is_group':     return 'Если групповой чат';
     case 'is_channel':   return 'Если канал';
@@ -129,9 +150,9 @@ function buildSubscriptionLabel(value: string, mode: 'all' | 'any' | undefined, 
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function ConditionBranchItem({ branch, variable, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets }: ConditionBranchItemProps) {
+export function ConditionBranchItem({ branch, variable, messageNode, onChange, onDelete, onNodeUpdate, getAllNodesFromAllSheets, textVariables }: ConditionBranchItemProps) {
   /** Операторы, которым требуется одно текстовое значение. */
-  const singleValueOperators = new Set<ConditionOperator>(['equals', 'contains', 'greater_than', 'less_than', 'is_subscribed', 'is_not_subscribed']);
+  const singleValueOperators = new Set<ConditionOperator>(['equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with', 'matches_regex', 'greater_than', 'less_than', 'divisible_by', 'is_subscribed', 'is_not_subscribed']);
   const needsValue = singleValueOperators.has(branch.operator) || branch.operator === 'between';
   const isBetween = branch.operator === 'between';
   const isSubscriptionOperator = branch.operator === 'is_subscribed' || branch.operator === 'is_not_subscribed';
@@ -190,20 +211,30 @@ export function ConditionBranchItem({ branch, variable, messageNode, onChange, o
 
       {/* Поля значений — только для не-subscription операторов */}
       {!isSubscriptionOperator && needsValue && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-1">
           <Input
             value={branch.value}
             onChange={e => onChange(branch.id, 'value', e.target.value)}
             placeholder={isBetween ? 'от (или {переменная})' : 'значение или {переменная}'}
             className="text-sm h-7 flex-1"
           />
+          <VariableSelector
+            availableVariables={textVariables}
+            onSelect={(v) => onChange(branch.id, 'value', `{${v}}`)}
+          />
           {isBetween && (
-            <Input
-              value={branch.value2 ?? ''}
-              onChange={e => onChange(branch.id, 'value2', e.target.value)}
-              placeholder="до (или {переменная})"
-              className="text-sm h-7 flex-1"
-            />
+            <>
+              <Input
+                value={branch.value2 ?? ''}
+                onChange={e => onChange(branch.id, 'value2', e.target.value)}
+                placeholder="до (или {переменная})"
+                className="text-sm h-7 flex-1"
+              />
+              <VariableSelector
+                availableVariables={textVariables}
+                onSelect={(v) => onChange(branch.id, 'value2', `{${v}}`)}
+              />
+            </>
           )}
         </div>
       )}

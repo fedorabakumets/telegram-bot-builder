@@ -9,8 +9,8 @@ import { conditionParamsSchema } from './condition.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
 const SYSTEM_OPS = new Set(['is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed']);
-const NUMERIC_OPS = new Set(['greater_than', 'less_than', 'between']);
-const STRING_OPS = new Set(['filled', 'empty', 'equals', 'contains']);
+const NUMERIC_OPS = new Set(['greater_than', 'less_than', 'between', 'is_even', 'is_odd', 'divisible_by']);
+const STRING_OPS = new Set(['filled', 'empty', 'equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with', 'matches_regex']);
 
 /**
  * Собирает ConditionEntry[] из массива узлов графа.
@@ -31,7 +31,7 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
     const branches: any[] = (node.data as any).branches ?? [];
     if (branches.length === 0) continue;
 
-    const validOperators = new Set(['filled', 'empty', 'equals', 'contains', 'greater_than', 'less_than', 'between', 'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed', 'else']);
+    const validOperators = new Set(['filled', 'empty', 'equals', 'not_equals', 'contains', 'not_contains', 'starts_with', 'ends_with', 'matches_regex', 'greater_than', 'less_than', 'between', 'is_even', 'is_odd', 'divisible_by', 'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium', 'is_bot', 'is_subscribed', 'is_not_subscribed', 'else']);
     const filteredBranches = branches.filter(b => validOperators.has(b.operator));
 
     const hasSystemBranch = filteredBranches.some(b => SYSTEM_OPS.has(b.operator));
@@ -58,6 +58,16 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
         .replace(/\n/g, '\\n')
         .replace(/\r/g, '');
 
+      /**
+       * Санитайзер для регулярных выражений: значение вставляется в Python raw-строку r"...".
+       * В отличие от sanitizeValue НЕ удваивает обратные слэши (иначе сломается regex),
+       * только экранирует двойные кавычки и убирает переводы строк.
+       */
+      const sanitizeRegex = (v: string) => (v ?? '')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, '');
+
       /** Тип целевого узла — нужен для корректной генерации вызова в шаблоне */
       const targetNode = b.target ? validNodes.find(n => n.id === b.target) : undefined;
       const targetNodeType = targetNode?.type ?? 'message';
@@ -72,6 +82,8 @@ export function collectConditionEntries(nodes: Node[]): ConditionEntry[] {
         operator: b.operator,
         value: sanitizeValue(b.value ?? ''),
         value2: sanitizeValue(b.value2 ?? ''),
+        /** Значение для оператора matches_regex (без удвоения слэшей) */
+        valueRegex: sanitizeRegex(b.value ?? ''),
         target: b.target,
         targetNodeType,
         isFirstNumeric,
@@ -137,6 +149,8 @@ function enrichEntries(entries: ConditionEntry[]): any[] {
         ...b,
         /** Тип целевого узла сохраняется из исходной ветки если уже есть */
         targetNodeType: b.targetNodeType ?? 'message',
+        /** Значение для matches_regex: используем готовое, либо исходное value */
+        valueRegex: b.valueRegex ?? (b.value ?? '').replace(/"/g, '\\"').replace(/\n/g, ' ').replace(/\r/g, ''),
         isFirstNumeric,
         isFirstString,
         isFirstSystem,
