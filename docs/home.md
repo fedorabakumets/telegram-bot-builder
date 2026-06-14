@@ -15,6 +15,10 @@
 - [Как обновить проект](development/HOW_TO_UPDATE.md)
 - [Работа с документацией (WikiNest)](development/WIKI_DOCS_GUIDE.md)
 
+## 🖥️ Интерфейс
+- [Обзор интерфейса](interface/overview.md)
+- [Вкладка «Редактор»](interface/editor.md)
+
 ## 🧩 Справочник нод
 - [Обзор всех нод](nodes/overview.md)
 - [📨 Триггеры](nodes/triggers/)
