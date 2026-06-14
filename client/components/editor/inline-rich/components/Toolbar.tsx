@@ -4,16 +4,9 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { RotateCcw, RotateCw, Copy, Plus } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel
-} from '@/components/ui/dropdown-menu';
+import { RotateCcw, RotateCw, Copy } from 'lucide-react';
 import { cn } from '@/utils/utils';
-import { VariableMenuItem } from './variable-menu-item';
+import { VariablesMenu } from './VariablesMenu';
 import type { FormatOption } from '../format-options';
 import type { Variable } from '../types';
 
@@ -147,26 +140,10 @@ export function Toolbar({
         </Button>
       </div>
       {availableVariables.length > 0 && insertVariable && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm"
-              className="h-8 sm:h-9 px-2.5 sm:px-3 gap-1.5 text-xs sm:text-sm font-medium bg-gradient-to-r from-blue-500/10 to-cyan-500/10 dark:from-blue-600/20 dark:to-cyan-600/15 hover:from-blue-500/20 hover:to-cyan-500/15 border border-blue-300/40 dark:border-blue-600/40 transition-all"
-              title="Вставить переменную">
-              <Plus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <span className="hidden sm:inline">Переменная</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 sm:w-64">
-            <DropdownMenuLabel className="text-xs sm:text-sm font-semibold">
-              📌 Доступные переменные
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {availableVariables.map((variable, index) => (
-              <VariableMenuItem key={`${variable.nodeId}-${variable.name}-${index}`}
-                variable={variable} onSelect={insertVariable} />
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <VariablesMenu
+          availableVariables={availableVariables}
+          insertVariable={insertVariable}
+        />
       )}
     </div>
   );

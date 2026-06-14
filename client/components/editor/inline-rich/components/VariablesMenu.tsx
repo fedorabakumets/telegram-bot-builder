@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { VariableMenuItem } from './variable-menu-item';
+import { VariableListContent } from './variable-list-content';
 import type { Variable } from '../types';
 
 /**
@@ -56,13 +56,10 @@ export function VariablesMenu({
           📌 Доступные переменные
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {availableVariables.map((variable, index) => (
-          <VariableMenuItem
-            key={`${variable.nodeId}-${variable.name}-${index}`}
-            variable={variable}
-            onSelect={(name) => insertVariable(name)}
-          />
-        ))}
+        <VariableListContent
+          availableVariables={availableVariables}
+          onSelect={(name) => insertVariable(name)}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );
