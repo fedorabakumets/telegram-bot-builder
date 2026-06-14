@@ -1,21 +1,82 @@
 /**
  * @fileoverview Переиспользуемое содержимое дропдауна выбора переменных
  * @description Рендерит поле поиска (при большом числе переменных) и
- * отфильтрованный список VariableMenuItem. Вставляется внутрь любого
- * DropdownMenuContent. Заголовок ("📌 Доступные переменные") оставляется
- * в местах вызова. Внутренний стейт поиска сбрасывается автоматически,
- * так как Radix размонтирует содержимое дропдауна при закрытии.
+ * сгруппированный по типу список VariableMenuItem со сворачиваемыми секциями.
+ * Вставляется внутрь любого DropdownMenuContent. Заголовок
+ * ("📌 Доступные переменные") оставляется в местах вызова. Внутренний стейт
+ * поиска и раскрытия секций сбрасывается автоматически, так как Radix
+ * размонтирует содержимое дропдауна при закрытии.
  * @module variable-list-content
  */
 
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { VariableMenuItem } from './variable-menu-item';
 import type { Variable } from '../types';
 
 /** Порог, начиная с которого показывается поле поиска */
 const SEARCH_THRESHOLD = 7;
+
+/** Идентификатор группы переменных */
+type GroupKey = 'custom' | 'system' | 'media' | 'tables';
+
+/** Описание секции группы переменных */
+interface GroupDef {
+  /** Ключ группы */
+  key: GroupKey;
+  /** Заголовок секции с эмодзи */
+  label: string;
+}
+
+/**
+ * Определения групп в порядке отображения.
+ * Пользовательские идут первыми — свои переменные нужнее.
+ */
+const GROUP_DEFS: GroupDef[] = [
+  { key: 'custom', label: '✏️ Пользовательские' },
+  { key: 'system', label: '⚙️ Системные' },
+  { key: 'media', label: '📎 Медиа' },
+  { key: 'tables', label: '📊 Таблицы' }
+];
+
+/**
+ * Определяет группу, к которой относится переменная
+ * @param variable - Переменная для классификации
+ * @returns Ключ группы
+ */
+function classifyVariable(variable: Variable): GroupKey {
+  // Сравниваем как строки: значения могут приходить шире типа NodeType
+  const nodeType = variable.nodeType as string;
+  if (variable.mediaType) return 'media';
+  if (
+    nodeType === 'bot_table' ||
+    nodeType === 'table' ||
+    variable.sourceTable === 'bot_tables'
+  ) {
+    return 'tables';
+  }
+  if (nodeType === 'system') return 'system';
+  return 'custom';
+}
+
+/**
+ * Группирует переменные по типу
+ * @param variables - Список переменных
+ * @returns Карта «ключ группы → переменные»
+ */
+function groupVariables(variables: Variable[]): Record<GroupKey, Variable[]> {
+  const groups: Record<GroupKey, Variable[]> = {
+    custom: [],
+    system: [],
+    media: [],
+    tables: []
+  };
+  for (const variable of variables) {
+    groups[classifyVariable(variable)].push(variable);
+  }
+  return groups;
+}
 
 /** Пропсы компонента VariableListContent */
 interface VariableListContentProps {
@@ -28,9 +89,9 @@ interface VariableListContentProps {
 }
 
 /**
- * Содержимое дропдауна: поиск + отфильтрованный список переменных
+ * Содержимое дропдауна: поиск + сгруппированный список переменных
  * @param props - Пропсы компонента
- * @returns JSX элемент с поиском и списком переменных
+ * @returns JSX элемент с поиском и сворачиваемыми секциями переменных
  */
 export function VariableListContent({
   availableVariables,
@@ -39,6 +100,9 @@ export function VariableListContent({
 }: VariableListContentProps) {
   /** Текущий поисковый запрос по имени/описанию переменной */
   const [search, setSearch] = useState('');
+
+  /** Свёрнутые секции (по умолчанию все развёрнуты, поэтому хранятся именно свёрнутые) */
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   /** Показывать поле поиска только когда переменных много */
   const showSearch = availableVariables.length > SEARCH_THRESHOLD;
@@ -51,6 +115,17 @@ export function VariableListContent({
         (variable.description?.toLowerCase().includes(query) ?? false)
       )
     : availableVariables;
+
+  /** Сгруппированные отфильтрованные переменные */
+  const groups = groupVariables(filteredVariables);
+
+  /**
+   * Переключает свёрнутость секции, не закрывая дропдаун
+   * @param key - Ключ группы
+   */
+  const toggle = (key: GroupKey) => {
+    setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   return (
     <>
@@ -77,13 +152,44 @@ export function VariableListContent({
           Ничего не найдено
         </div>
       ) : (
-        filteredVariables.map((variable, index) => (
-          <VariableMenuItem
-            key={`${variable.nodeId}-${variable.name}-${index}`}
-            variable={variable}
-            onSelect={onSelect}
-          />
-        ))
+        GROUP_DEFS.map((group) => {
+          const items = groups[group.key];
+          // Пустые группы не показываем вообще
+          if (items.length === 0) return null;
+
+          // При активном поиске секции принудительно развёрнуты
+          const isCollapsed = query ? false : Boolean(collapsed[group.key]);
+
+          return (
+            <div key={group.key}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggle(group.key);
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 w-full px-2 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground select-none"
+              >
+                {isCollapsed ? (
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span>{`${group.label} (${items.length})`}</span>
+              </button>
+              {!isCollapsed &&
+                items.map((variable, index) => (
+                  <VariableMenuItem
+                    key={`${variable.nodeId}-${variable.name}-${index}`}
+                    variable={variable}
+                    onSelect={onSelect}
+                  />
+                ))}
+            </div>
+          );
+        })
       )}
     </>
   );
