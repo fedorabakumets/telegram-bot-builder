@@ -37,16 +37,23 @@
 
 Системные операторы проверяют свойства пользователя или тип чата напрямую из контекста Telegram, без чтения пользовательской переменной.
 
-| Оператор | Описание |
-|----------|----------|
-| `is_private` | Приватный чат |
-| `is_group` | Групповой чат (включая супергруппы) |
-| `is_channel` | Канал |
-| `is_admin` | Пользователь — администратор бота (из списка ADMIN_IDS) |
-| `is_premium` | Пользователь с Telegram Premium |
-| `is_bot` | Пользователь — бот |
-| `is_subscribed` | Подписан на указанный канал/чат |
-| `is_not_subscribed` | Не подписан на указанный канал/чат |
+| Оператор | Описание | Откуда данные |
+|----------|----------|---------------|
+| `is_private` | Приватный чат | `callback_query.message.chat.type` |
+| `is_group` | Групповой чат (включая супергруппы) | `callback_query.message.chat.type` |
+| `is_channel` | Канал | `callback_query.message.chat.type` |
+| `is_admin` | Пользователь — администратор бота | Список `ADMIN_IDS` из .env |
+| `is_premium` | Пользователь с Telegram Premium | `callback_query.from_user.is_premium` (флаг Telegram) |
+| `is_bot` | Пользователь — бот | `callback_query.from_user.is_bot` (флаг Telegram) |
+| `is_subscribed` | Подписан на указанный канал/чат | API-вызов `getChatMember` к Telegram |
+| `is_not_subscribed` | Не подписан на указанный канал/чат | API-вызов `getChatMember` к Telegram |
+
+**Источники данных:**
+
+- **Тип чата** (`is_private`, `is_group`, `is_channel`) — берётся из объекта `chat` в текущем callback. Не ходит в базу.
+- **Флаги пользователя** (`is_premium`, `is_bot`) — берётся из объекта `from_user` в callback. Telegram не всегда передаёт эти поля, поэтому при отсутствии считается `false`.
+- **Администратор** (`is_admin`) — сравнение `user_id` со списком `ADMIN_IDS`, который задаётся в .env при настройке бота. Не ходит ни в какую базу.
+- **Подписка** (`is_subscribed`, `is_not_subscribed`) — единственный оператор, который делает API-запрос к Telegram (`getChatMember`). Проверяет в реальном времени, подписан ли пользователь на указанный канал/чат.
 
 ### Ветка по умолчанию
 
