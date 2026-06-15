@@ -38,6 +38,8 @@ interface CanvasContentProps {
   selectedNodeIds?: Set<string>;
   /** Колбэк при выборе узла */
   onNodeSelect: (nodeId: string) => void;
+  /** Колбэк при Shift+клике по узлу — переключение в мульти-выделении */
+  onShiftClick?: (nodeId: string) => void;
   /** Колбэк при удалении узла */
   onNodeDelete: (nodeId: string) => void;
   /** Колбэк при дублировании узла */
@@ -97,6 +99,7 @@ export function CanvasContent({
   selectedNodeId,
   selectedNodeIds,
   onNodeSelect,
+  onShiftClick,
   onNodeDelete,
   onNodeDuplicate,
   onNodeDuplicateAtPosition,
@@ -221,6 +224,7 @@ export function CanvasContent({
           sheets={sheets}
           projectId={projectId}
           onNodeSelect={onNodeSelect}
+          onShiftClick={onShiftClick}
           onNodeDelete={onNodeDelete}
           onNodeDuplicate={onNodeDuplicate}
           onNodeDuplicateAtPosition={onNodeDuplicateAtPosition}

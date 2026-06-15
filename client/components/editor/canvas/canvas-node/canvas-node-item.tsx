@@ -55,6 +55,8 @@ interface CanvasNodeItemProps {
   projectId?: number;
   /** Выбор узла (id-aware, стабильный) */
   onNodeSelect: (nodeId: string) => void;
+  /** Shift+клик по узлу — переключение в мульти-выделении (id-aware, стабильный) */
+  onShiftClick?: (nodeId: string) => void;
   /** Удаление узла (id-aware, стабильный) */
   onNodeDelete: (nodeId: string) => void;
   /** Дублирование узла (id-aware, стабильный) */
@@ -102,6 +104,7 @@ function CanvasNodeItemComponent({
   sheets,
   projectId,
   onNodeSelect,
+  onShiftClick,
   onNodeDelete,
   onNodeDuplicate,
   onNodeDuplicateAtPosition,
@@ -122,6 +125,7 @@ function CanvasNodeItemComponent({
       isSelected={isSelected}
       isMultiSelected={isMultiSelected}
       onClick={() => onNodeSelect(node.id)}
+      onShiftClick={onShiftClick ? () => onShiftClick(node.id) : undefined}
       onDelete={() => onNodeDelete(node.id)}
       onDuplicate={onNodeDuplicate ? (targetPosition) => onNodeDuplicate(node.id, targetPosition) : undefined}
       onDuplicateAtPosition={onNodeDuplicateAtPosition ? () => onNodeDuplicateAtPosition(node.id) : undefined}

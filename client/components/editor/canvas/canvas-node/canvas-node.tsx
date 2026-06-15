@@ -81,6 +81,8 @@ interface CanvasNodeProps {
   /** Узел выделен рамкой (мульти-выделение) — отдельная индиго-подсветка */
   isMultiSelected?: boolean;
   onClick?: () => void;
+  /** Обработчик Shift+клика — добавляет/убирает узел из мульти-выделения */
+  onShiftClick?: () => void;
   onDelete?: () => void;
   /** Обработчик дублирования узла с опциональной целевой позицией */
   onDuplicate?: ((targetPosition?: { x: number; y: number }) => void) | undefined;
@@ -153,7 +155,7 @@ interface CanvasNodeProps {
  * @param {CanvasNodeProps} props - Свойства компонента
  * @returns {JSX.Element} Компонент узла на холсте
  */
-export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoomRef, panRef, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, forceHover, onHover, onButtonPortMount, sheets, onMoveToSheet, projectId }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClick, onShiftClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoomRef, panRef, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, forceHover, onHover, onButtonPortMount, sheets, onMoveToSheet, projectId }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // Ref для dragOffset — позволяет читать актуальное значение в handleMouseMove
@@ -191,6 +193,23 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
    */
   const handlePortMouseDown = (e: React.MouseEvent, portType: PortType, buttonId?: string, portCenter?: { x: number; y: number }) => {
     onPortMouseDown?.(e, node.id, portType, buttonId, portCenter);
+  };
+
+  /**
+   * Обработчик клика по узлу.
+   * При зажатом Shift переключает узел в мульти-выделении (toggle), иначе —
+   * выполняет обычный выбор одного узла. Во время перетаскивания клик игнорируется.
+   *
+   * @param e - Событие мыши
+   */
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDragging) return;
+    if (e.shiftKey && onShiftClick) {
+      e.stopPropagation();
+      onShiftClick();
+      return;
+    }
+    onClick?.();
   };
 
   // Touch состояние для мобильного перемещения элементов
@@ -580,7 +599,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
           isHoveredByConnection && !effectiveHover && !isDragActive && !isConnectedToDragging ? "ring-2 ring-violet-400 border-violet-500" : "",
           onMove ? "cursor-grab" : "cursor-pointer"
         )}
-        onClick={!isDragging ? onClick : undefined}
+        onClick={handleClick}
         onMouseDown={handleMouseDown}
         onContextMenu={openContextMenu}
         style={{

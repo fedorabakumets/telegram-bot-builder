@@ -4,6 +4,7 @@
  */
 
 import { MultiSelectionSheetMenu } from './multi-selection-sheet-menu';
+import { MultiSelectionProjectMenu } from './multi-selection-project-menu';
 
 /**
  * Свойства плавающего бара групповых действий
@@ -13,6 +14,8 @@ interface MultiSelectionToolbarProps {
   count: number;
   /** Список листов проекта (без активного) */
   sheets: Array<{ id: string; name: string }>;
+  /** Список других проектов (без текущего) */
+  projects: Array<{ id: number; name: string; ownerId: number | null }>;
   /** Колбэк удаления всех выделенных узлов */
   onDelete: () => void;
   /** Колбэк копирования выделенных узлов в буфер */
@@ -21,6 +24,8 @@ interface MultiSelectionToolbarProps {
   onMoveToSheet: (sheetId: string) => void;
   /** Колбэк перемещения в новый лист */
   onMoveToNewSheet: () => void;
+  /** Колбэк переноса выделенных узлов в другой проект */
+  onMoveToProject: (targetProjectId: number) => void;
 }
 
 /**
@@ -32,10 +37,12 @@ interface MultiSelectionToolbarProps {
 export function MultiSelectionToolbar({
   count,
   sheets,
+  projects,
   onDelete,
   onCopy,
   onMoveToSheet,
   onMoveToNewSheet,
+  onMoveToProject,
 }: MultiSelectionToolbarProps) {
   if (count <= 1) return null;
 
@@ -75,17 +82,11 @@ export function MultiSelectionToolbar({
         onMoveToNewSheet={onMoveToNewSheet}
       />
 
-      {/* В проект ▾ — заглушка: межпроектный перенос пока через буфер обмена */}
-      {/* TODO: реализовать dropdown со списком проектов и прямым переносом */}
-      <button
-        disabled
-        className="h-8 px-3 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed flex items-center gap-1.5"
-        title="Перенос в другой проект скоро — пока используйте Копировать и вставьте в другом проекте"
-      >
-        <i className="fas fa-diagram-project text-xs" />
-        В проект
-        <i className="fas fa-caret-down text-[10px]" />
-      </button>
+      {/* В проект ▾ — перенос выделенных узлов в новый лист другого проекта */}
+      <MultiSelectionProjectMenu
+        projects={projects}
+        onMoveToProject={onMoveToProject}
+      />
     </div>
   );
 }

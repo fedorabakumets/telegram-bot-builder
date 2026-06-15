@@ -17,6 +17,7 @@ import { MobileCanvasFab } from './mobile-canvas-fab';
 import { useConnectionDrag } from './use-connection-drag';
 import { useMarqueeSelection } from './use-marquee-selection';
 import { useMoveNodesToSheet } from './use-move-nodes-to-sheet';
+import { useMoveNodesToProject } from './use-move-nodes-to-project';
 import { MarqueeOverlay } from './marquee-overlay';
 import { MultiSelectionToolbar } from './multi-selection-toolbar';
 import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-connection';
@@ -194,6 +195,8 @@ interface CanvasProps {
   suppressAutoFit?: boolean;
   /** ID проекта (для превью Telegram file_id через прокси) */
   projectId?: number;
+  /** Список всех проектов (для переноса узлов в другой проект) */
+  projects?: Array<{ id: number; name: string; ownerId: number | null; data?: unknown }>;
 }
 
 export function Canvas({
@@ -245,6 +248,7 @@ export function Canvas({
   onViewChange,
   suppressAutoFit,
   projectId,
+  projects = [],
   onOpenMobileSidebar,
   onOpenMobileProperties,
 }: CanvasProps) {
@@ -310,10 +314,20 @@ export function Canvas({
     updateMarquee,
     finishMarquee,
     clearSelection,
+    toggleNodeSelection,
   } = useMarqueeSelection();
 
   /** Групповое перемещение выделенных узлов в листы */
   const { moveNodesToSheet, moveNodesToNewSheet } = useMoveNodesToSheet(botData, onBotDataUpdate);
+
+  /** Список других проектов (без текущего) для меню "В проект" */
+  const otherProjects = useMemo(
+    () => projects.filter(p => p.id !== projectId).map(p => ({ id: p.id, name: p.name, ownerId: p.ownerId })),
+    [projects, projectId]
+  );
+
+  /** Групповой перенос выделенных узлов в другой проект (в новый лист) */
+  const { moveNodesToProject } = useMoveNodesToProject({ projectId, botData, onBotDataUpdate, projects });
 
   // Ref для отслеживания последнего набора узлов при autoFitOnLoad
   const lastAutoFitNodesKeyRef = useRef<string>('');
@@ -1673,6 +1687,12 @@ export function Canvas({
   }, [onNodeMoveEnd]);
 
   /**
+   * Стабильный обработчик Shift+клика по узлу.
+   * Добавляет или убирает узел из мульти-выделения через toggleNodeSelection.
+   */
+  const handleNodeShiftClick = useCallback((nodeId: string) => toggleNodeSelection(nodeId), [toggleNodeSelection]);
+
+  /**
    * Групповое удаление всех выделенных рамкой узлов.
    * Удаляет каждый узел через onNodeDelete и очищает выделение.
    */
@@ -1692,11 +1712,6 @@ export function Canvas({
 
   /** Групповое перемещение выделенных узлов в существующий лист */
   const handleGroupMoveToSheet = useCallback((sheetId: string) => {
-    if (selectedNodeIds.size === 0) return;
-    moveNodesToSheet(Array.from(selectedNodeIds), sheetId);
-    addAction('sheet_switch', `Перемещено узлов в лист: ${selectedNodeIds.size}`);
-    clearSelection();
-  }, [selectedNodeIds, moveNodesToSheet, addAction, clearSelection]);
 
   /** Групповое перемещение выделенных узлов в новый лист */
   const handleGroupMoveToNewSheet = useCallback(() => {
@@ -1764,6 +1779,7 @@ export function Canvas({
             selectedNodeId={selectedNodeId}
             selectedNodeIds={selectedNodeIds}
             onNodeSelect={onNodeSelect}
+            onShiftClick={handleNodeShiftClick}
             onNodeDelete={onNodeDelete}
             onNodeDuplicate={onNodeDuplicate}
             onNodeDuplicateAtPosition={onNodeDuplicate ? handleNodeDuplicateAtPosition : undefined}
