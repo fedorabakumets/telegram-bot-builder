@@ -1610,9 +1610,6 @@ export function Canvas({
           ref={canvasRef}
           className="min-h-full relative canvas-grid-modern"
           style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)',
-            backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px`,
-            backgroundPosition: `${pan.x}px ${pan.y}px`,
             width: '100%',
             height: '100%',
             cursor: isPanning ? 'grabbing' : 'grab',
@@ -1629,6 +1626,25 @@ export function Canvas({
           onMouseUp={handleMouseUp}
           onContextMenu={handleContextMenu}
         >
+          {/* Фон-сетка в отдельном слое, обрезанном по видимой области.
+              Сетка двигается через GPU-transform (translate по модулю шага),
+              а не через background-position — поэтому при панорамировании фон
+              НЕ перерисовывается (нет каскадной перерисовки нод) и не мерцает.
+              background-size меняется только при зуме, поэтому точки остаются
+              чёткими 1px, а внешний вид — прежним. */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div
+              className="absolute"
+              style={{
+                inset: '-60px',
+                backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)',
+                backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px`,
+                transform: `translate(${pan.x % (24 * zoom / 100)}px, ${pan.y % (24 * zoom / 100)}px)`,
+                willChange: 'transform',
+              }}
+            />
+          </div>
+
           {/* Transformable Canvas Content */}
           <CanvasContent
             botData={botData}
