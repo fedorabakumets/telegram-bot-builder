@@ -1014,6 +1014,27 @@ export function Canvas({
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
   useEffect(() => { panRef.current = pan; }, [pan]);
 
+  /**
+   * RAF-throttle: накапливаем pan/zoom изменения от быстрых событий колеса/
+   * touch и сбрасываем в React-state ровно один раз за анимационный кадр.
+   * Это убирает джанк при зуме: вместо N рендеров за кадр — всегда 1.
+   */
+  const rafIdRef = useRef<number | null>(null);
+  const pendingUpdateRef = useRef<{ pan: { x: number; y: number }; zoom: number } | null>(null);
+
+  /** Планирует обновление state на следующий кадр (если ещё не запланировано) */
+  const scheduleStateFlush = useCallback(() => {
+    if (rafIdRef.current !== null) return;
+    rafIdRef.current = requestAnimationFrame(() => {
+      rafIdRef.current = null;
+      const pending = pendingUpdateRef.current;
+      if (!pending) return;
+      pendingUpdateRef.current = null;
+      setPan(pending.pan);
+      setZoom(pending.zoom);
+    });
+  }, []);
+
   // Handle wheel zoom (native handler, registered with { passive: false })
   const handleWheel = useCallback((e: WheelEvent) => {
     // Всегда предотвращаем нативный скролл контейнера — управляем паном сами
@@ -1021,18 +1042,13 @@ export function Canvas({
 
     if (e.ctrlKey || e.metaKey) {
       // Зум (pinch на тачпаде или Ctrl+scroll)
-      // Шаг масштаба пропорционален deltaY; чувствительность подобрана так,
-      // чтобы зум тачпадом (мелкий deltaY) был заметным, а не «ползущим».
       const sensitivity = 0.01;
       const zoomFactor = Math.max(0.8, Math.min(1.25, 1 - e.deltaY * sensitivity));
 
-      // Берём актуальные значения из refs (не из stale-замыкания)
       const currentZoom = zoomRef.current;
       const currentPan = panRef.current;
       const newZoom = Math.max(Math.min(currentZoom * zoomFactor, 200), 1);
 
-      // Зум к точке под курсором: позиция курсора относительно холста
-      // остаётся неподвижной, поэтому изображение не «уносит» в сторону.
       const rect = canvasRef.current?.getBoundingClientRect();
       const pointerX = rect ? e.clientX - rect.left : 0;
       const pointerY = rect ? e.clientY - rect.top : 0;
@@ -1043,20 +1059,19 @@ export function Canvas({
         y: pointerY - (pointerY - currentPan.y) * zoomRatio,
       };
 
-      // Синхронно обновляем refs, чтобы следующее событие в том же кадре
-      // считало от уже изменённых значений.
       zoomRef.current = newZoom;
       panRef.current = newPan;
-      setPan(newPan);
-      setZoom(newZoom);
+      pendingUpdateRef.current = { pan: newPan, zoom: newZoom };
+      scheduleStateFlush();
     } else {
-      // Обычный скролл/тачпад без Ctrl — двигаем пан вместо скролла контейнера
+      // Обычный скролл/тачпад без Ctrl — двигаем пан
       const currentPan = panRef.current;
       const newPan = { x: currentPan.x - e.deltaX, y: currentPan.y - e.deltaY };
       panRef.current = newPan;
-      setPan(newPan);
+      pendingUpdateRef.current = { pan: newPan, zoom: zoomRef.current };
+      scheduleStateFlush();
     }
-  }, []);
+  }, [scheduleStateFlush]);
 
   // Handle panning
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -1097,6 +1112,10 @@ export function Canvas({
     zoom,
     panRef,
     zoomRef,
+    scheduleFlush: (newPan, newZoom) => {
+      pendingUpdateRef.current = { pan: newPan, zoom: newZoom };
+      scheduleStateFlush();
+    },
     setPan,
     setZoom,
     isTouchPanning,

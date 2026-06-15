@@ -23,6 +23,8 @@ interface UseTouchGesturesProps {
   zoomRef?: { current: number };
   /** Колбэк начала/продолжения интерактивного жеста (отключает CSS-переход) */
   onInteract?: () => void;
+  /** Колбэк планирования обновления pan/zoom через RAF (один рендер за кадр) */
+  scheduleFlush?: (pan: { x: number; y: number }, zoom: number) => void;
   /** Установщик состояния панорамирования */
   setPan: (pan: { x: number; y: number } | ((prev: { x: number; y: number }) => { x: number; y: number })) => void;
   /** Установщик состояния масштаба */
@@ -64,6 +66,7 @@ export function useTouchGestures({
   panRef,
   zoomRef,
   onInteract,
+  scheduleFlush,
   setPan,
   setZoom,
   isTouchPanning,
@@ -183,8 +186,12 @@ export function useTouchGestures({
 
           if (panRef) panRef.current = newPan;
           if (zoomRef) zoomRef.current = newZoom;
-          setPan(newPan);
-          setZoom(newZoom);
+          if (scheduleFlush) {
+            scheduleFlush(newPan, newZoom);
+          } else {
+            setPan(newPan);
+            setZoom(newZoom);
+          }
         }
       }
     }
@@ -199,6 +206,7 @@ export function useTouchGestures({
     panRef,
     zoomRef,
     onInteract,
+    scheduleFlush,
     isNodeBeingDragged,
     getTouchDistance,
     getTouchCenter,
