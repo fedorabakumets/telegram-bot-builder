@@ -214,7 +214,8 @@ export function CanvasContent({
           key={node.id}
           node={node}
           allNodes={allNodes}
-          isSelected={selectedNodeId === node.id || (selectedNodeIds?.has(node.id) ?? false)}
+          isSelected={selectedNodeId === node.id}
+          isMultiSelected={selectedNodeIds?.has(node.id) ?? false}
           zoomRef={zoomRef}
           panRef={panRef}
           sheets={sheets}

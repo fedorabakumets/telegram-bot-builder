@@ -78,6 +78,8 @@ interface CanvasNodeProps {
   node: Node;
   allNodes?: Node[];
   isSelected?: boolean;
+  /** Узел выделен рамкой (мульти-выделение) — отдельная индиго-подсветка */
+  isMultiSelected?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
   /** Обработчик дублирования узла с опциональной целевой позицией */
@@ -151,7 +153,7 @@ interface CanvasNodeProps {
  * @param {CanvasNodeProps} props - Свойства компонента
  * @returns {JSX.Element} Компонент узла на холсте
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoomRef, panRef, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, forceHover, onHover, onButtonPortMount, sheets, onMoveToSheet, projectId }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoomRef, panRef, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, forceHover, onHover, onButtonPortMount, sheets, onMoveToSheet, projectId }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // Ref для dragOffset — позволяет читать актуальное значение в handleMouseMove
@@ -531,7 +533,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
         position: 'absolute',
         left: node.position.x,
         top: node.position.y,
-        zIndex: isDragActive ? 1000 : isSelected ? 100 : 10,
+        zIndex: isDragActive ? 1000 : isSelected || isMultiSelected ? 100 : 10,
         overflow: 'visible',
       }}
       onMouseEnter={() => { setIsHovered(true); onHover?.(node.id); }}
@@ -570,6 +572,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
             : "p-6 w-80",
           isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-all duration-200",
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
+          /* Индиго-подсветка для нод, выделенных рамкой (мульти-выделение). Синее одиночное выделение в приоритете */
+          isMultiSelected && !isSelected && !isDragActive ? "ring-4 ring-indigo-500/30 shadow-2xl shadow-indigo-500/10 border-indigo-500" : "",
           isConnectionTarget ? "ring-4 ring-green-400/60 border-green-400 shadow-green-400/20" : "",
           isConnectedToDragging && !isDragActive ? "ring-2 ring-violet-400 border-violet-500 scale-[1.02]" : "",
           effectiveHover && !isDragActive && !isSelected && !isConnectionSource ? "ring-2 ring-sky-400 border-sky-400 scale-[1.02]" : "",

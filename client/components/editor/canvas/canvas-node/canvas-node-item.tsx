@@ -33,6 +33,8 @@ interface CanvasNodeItemProps {
   allNodes: Node[];
   /** Выделен ли узел */
   isSelected: boolean;
+  /** Узел выделен рамкой (мульти-выделение) — отдельная индиго-подсветка */
+  isMultiSelected?: boolean;
   /** Узел является целью активного drag-соединения */
   isConnectionTarget: boolean;
   /** Узел является источником активного drag-соединения */
@@ -89,6 +91,7 @@ function CanvasNodeItemComponent({
   node,
   allNodes,
   isSelected,
+  isMultiSelected,
   isConnectionTarget,
   isConnectionSource,
   isConnectedToDragging,
@@ -117,6 +120,7 @@ function CanvasNodeItemComponent({
       node={node}
       allNodes={allNodes}
       isSelected={isSelected}
+      isMultiSelected={isMultiSelected}
       onClick={() => onNodeSelect(node.id)}
       onDelete={() => onNodeDelete(node.id)}
       onDuplicate={onNodeDuplicate ? (targetPosition) => onNodeDuplicate(node.id, targetPosition) : undefined}
