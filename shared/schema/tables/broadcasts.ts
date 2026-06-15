@@ -42,6 +42,8 @@ export const broadcasts = pgTable("broadcasts", {
   finishedAt: timestamp("finished_at", { withTimezone: true }),
   /** URL медиафайлов для отправки вместе с сообщением */
   mediaUrls: json("media_urls").$type<string[]>().default([]),
+  /** Инлайн-кнопки сообщения рассылки */
+  buttons: json("buttons").$type<any[]>().default([]),
 });
 
 /**
@@ -94,6 +96,8 @@ export const insertBroadcastSchema = z.object({
   messageText: z.string().min(1),
   /** URL медиафайлов для отправки */
   mediaUrls: z.array(z.string()).default([]),
+  /** Инлайн-кнопки сообщения рассылки */
+  buttons: z.array(z.any()).default([]),
   /** Фильтры аудитории */
   filters: broadcastFiltersSchema.default({}),
   /** Статус рассылки */

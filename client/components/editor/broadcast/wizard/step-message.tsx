@@ -3,12 +3,15 @@
  * @module client/components/editor/broadcast/wizard/step-message
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 import { MultiMediaSelector } from '@/components/editor/properties/media/multi-media-selector';
 import { FileIdInput } from '@/components/editor/properties/media/file-id-input';
+import { DialogButtonsEditor } from '@/components/editor/database/dialog/components/dialog-buttons-editor';
+import { useProjectData } from '@/components/editor/database/dialog/hooks/use-project-data';
+import { collectNodesFromProjectData } from '@/components/editor/database/dialog/utils/node-utils';
 import type { NewBroadcastFormData } from '../types';
 
 /**
@@ -45,6 +48,15 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
   const [showFileId, setShowFileId] = useState(false);
   /** Тип медиа для file_id */
   const [fileIdMediaType, setFileIdMediaType] = useState<'photo' | 'video' | 'audio' | 'document'>('photo');
+
+  /** Данные проекта для извлечения узлов (нужны редактору кнопок для действия goto) */
+  const { project } = useProjectData(projectId);
+
+  /** Узлы проекта со всех листов для выбора цели действия goto в инлайн-кнопках */
+  const availableNodes = useMemo(
+    () => collectNodesFromProjectData((project?.data as Record<string, unknown>) ?? null),
+    [project?.data],
+  );
 
   /**
    * Вставляет переменную в конец текста сообщения
@@ -120,6 +132,18 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
               />
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Инлайн-кнопки — переиспользуем DialogButtonsEditor из диалога */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium">Инлайн-кнопки (необязательно)</p>
+        <div className="rounded-xl border border-blue-200/40 dark:border-blue-800/40 bg-gradient-to-br from-blue-50/40 to-violet-50/20 dark:from-blue-950/30 dark:to-violet-900/20 p-3">
+          <DialogButtonsEditor
+            buttons={formData.buttons ?? []}
+            onChange={(buttons) => onChange({ buttons })}
+            availableNodes={availableNodes}
+          />
         </div>
       </div>
 

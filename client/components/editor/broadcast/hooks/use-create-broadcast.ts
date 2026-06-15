@@ -67,6 +67,7 @@ export function useCreateBroadcast({
         name: formData.name,
         messageText: formData.messageText,
         mediaUrls: formData.mediaUrls ?? [],
+        buttons: formData.buttons ?? [],
         filters: filtersWithGroups,
       });
     },

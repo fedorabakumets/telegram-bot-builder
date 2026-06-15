@@ -8,6 +8,8 @@ import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEven
 import { replaceVariablesInText } from "../messages/replace-variables";
 import { sendTelegramMessage } from "../messages/send-telegram-message";
 import { buildMediaFiles } from "../messages/build-media-files";
+import { extractButtonsFromNode } from "../messages/extract-buttons";
+import type { InlineButton } from "../messages/extract-buttons";
 import type { SendMediaFile } from "../messages/extract-media";
 
 /** Размер батча пользователей для обработки */
@@ -41,6 +43,7 @@ function sleep(ms: number): Promise<void> {
  * @param userId - Telegram user_id получателя
  * @param text - Текст сообщения (HTML)
  * @param mediaFiles - Медиафайлы для отправки
+ * @param buttons - Инлайн-кнопки сообщения
  * @returns Объект с результатом: ok, retryAfter (при 429), errorCode
  */
 async function sendBroadcastMessage(
@@ -48,9 +51,10 @@ async function sendBroadcastMessage(
   userId: string,
   text: string,
   mediaFiles: SendMediaFile[],
+  buttons: InlineButton[],
 ): Promise<{ ok: boolean; messageId?: number; retryAfter?: number; errorCode?: number; description?: string }> {
   try {
-    const result = await sendTelegramMessage(token, userId, text, mediaFiles, [], true) as {
+    const result = await sendTelegramMessage(token, userId, text, mediaFiles, buttons, true) as {
       ok?: boolean;
       result?: { message_id?: number };
       error_code?: number;
@@ -139,6 +143,9 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     const { projectId, tokenId, messageText, filters } = broadcast;
     // Медиафайлы из поля mediaUrls рассылки — tokenId нужен для выбора правильного file_id
     const mediaFiles = buildMediaFiles((broadcast.mediaUrls as string[]) ?? [], tokenId);
+    // Инлайн-кнопки рассылки: сырой массив из БД и преобразование в формат Telegram
+    const rawButtons = (broadcast.buttons as any[]) ?? [];
+    const inlineButtons = extractButtonsFromNode({ buttons: rawButtons });
 
     const users = await storage.getUsersForBroadcast(projectId, tokenId, filters as Parameters<typeof storage.getUsersForBroadcast>[2]);
 
@@ -173,7 +180,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
         let sent = false;
 
         while (retries < 3 && !sent) {
-          const result = await sendBroadcastMessage(token, user.userId, text, mediaFiles);
+          const result = await sendBroadcastMessage(token, user.userId, text, mediaFiles, inlineButtons);
 
           if (result.ok) {
             deliveredCount++;
@@ -193,6 +200,8 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
                 ...(mediaFiles.length > 0
                   ? { broadcastMediaUrl: mediaFiles[0].url, broadcastMediaType: mediaFiles[0].type }
                   : {}),
+                // Инлайн-кнопки для отображения в истории диалога
+                ...(rawButtons.length > 0 ? { buttons: rawButtons } : {}),
               },
             });
             // Публикуем WS-событие чтобы диалог и список обновились в реальном времени
@@ -252,7 +261,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     if (groupIds && groupIds.length > 0 && activeBroadcasts.get(broadcastId) !== "stopped") {
       for (const groupId of groupIds) {
         try {
-          const groupResult = await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, [], true) as {
+          const groupResult = await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, inlineButtons, true) as {
             ok?: boolean;
             result?: { message_id?: number };
           };
@@ -276,6 +285,8 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
               sentFromBroadcast: true,
               broadcastId,
               chatId: groupId,
+              // Инлайн-кнопки для отображения в истории группового диалога
+              ...(rawButtons.length > 0 ? { buttons: rawButtons } : {}),
             },
           });
           // Публикуем WS-событие чтобы диалог группы обновился
