@@ -116,9 +116,9 @@ export function MessageBubble({
     : message.messageText;
 
   /** Показывать ли кнопку удаления */
-  const showDeleteButton = isBot && message.id > 0 && !!onDelete && (isHovered || isDeleting) && !isEditMode;
+  const showDeleteButton = isBot && message.id > 0 && !!message.telegramMessageId && !!onDelete && (isHovered || isDeleting) && !isEditMode;
   /** Показывать ли кнопку редактирования */
-  const showEditButton = isBot && message.id > 0 && !!onEdit && (isHovered || isEditing) && !isEditMode;
+  const showEditButton = isBot && message.id > 0 && !!message.telegramMessageId && !!onEdit && (isHovered || isEditing) && !isEditMode;
 
   /** Открывает режим редактирования — передаём HTML как есть в редактор */
   const handleOpenEdit = () => {
@@ -190,7 +190,7 @@ export function MessageBubble({
           )}
         </div>
 
-        <div className="flex flex-col gap-1 min-w-0" onDoubleClick={isBot && message.id > 0 && !!onEdit ? handleOpenEdit : undefined}>
+        <div className="flex flex-col gap-1 min-w-0" onDoubleClick={isBot && message.id > 0 && !!message.telegramMessageId && !!onEdit ? handleOpenEdit : undefined}>
           {/* Имя отправителя в групповом диалоге — показывается над сообщением пользователя */}
           {isGroupDialog && isUser && (
             <span className="text-[10px] font-medium text-violet-600 dark:text-violet-400 px-1">

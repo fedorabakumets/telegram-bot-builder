@@ -9,6 +9,8 @@ import { basename, join } from 'path';
 import type { SendMediaFile } from "./extract-media";
 import type { InlineButton } from "./extract-buttons";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
+import { isLocalPath, buildMultipartBody } from "./media-multipart";
+import { sendTelegramMediaGroup } from "./send-telegram-media-group";
 
 /**
  * Объект сообщения из ответа Telegram API
@@ -30,75 +32,6 @@ export interface TelegramSendResult {
   result?: TelegramMessage;
   /** Описание ошибки (при ok=false) */
   description?: string;
-}
-
-/** MIME-типы по расширению файла */
-const MIME_TYPES: Record<string, string> = {
-  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
-  gif: 'image/gif', webp: 'image/webp',
-  mp4: 'video/mp4', avi: 'video/x-msvideo', mov: 'video/quicktime', webm: 'video/webm',
-  mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', m4a: 'audio/mp4',
-  pdf: 'application/pdf', zip: 'application/zip',
-};
-
-/**
- * Определяет MIME-тип по имени файла
- * @param fileName - Имя файла
- * @returns MIME-тип
- */
-function getMimeType(fileName: string): string {
-  const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
-  return MIME_TYPES[ext] ?? 'application/octet-stream';
-}
-
-/**
- * Проверяет является ли URL локальным путём к файлу на сервере
- * @param url - URL или путь
- * @returns true если это локальный путь
- */
-function isLocalPath(url: string): boolean {
-  return url.startsWith('/uploads/') || url.startsWith('uploads/');
-}
-
-/**
- * Строит multipart/form-data тело запроса для отправки файла в Telegram
- * @param fields - Текстовые поля формы
- * @param fileField - Имя поля файла
- * @param fileName - Имя файла
- * @param fileBuffer - Содержимое файла
- * @returns Объект с body и boundary
- */
-function buildMultipartBody(
-  fields: Record<string, string | undefined>,
-  fileField: string,
-  fileName: string,
-  fileBuffer: Buffer,
-): { body: Buffer; boundary: string } {
-  const boundary = `----TelegramBotBoundary${Date.now()}`;
-  const CRLF = '\r\n';
-  const parts: Buffer[] = [];
-
-  // Текстовые поля
-  for (const [name, value] of Object.entries(fields)) {
-    if (value === undefined) continue;
-    parts.push(Buffer.from(
-      `--${boundary}${CRLF}` +
-      `Content-Disposition: form-data; name="${name}"${CRLF}${CRLF}` +
-      `${value}${CRLF}`
-    ));
-  }
-
-  // Файл
-  const mimeType = getMimeType(fileName);
-  parts.push(Buffer.from(
-    `--${boundary}${CRLF}` +
-    `Content-Disposition: form-data; name="${fileField}"; filename="${fileName}"${CRLF}` +
-    `Content-Type: ${mimeType}${CRLF}${CRLF}`
-  ));
-  parts.push(fileBuffer);
-  parts.push(Buffer.from(`${CRLF}--${boundary}--${CRLF}`));
-
-  return { body: Buffer.concat(parts), boundary };
 }
 
 /**
@@ -138,6 +71,12 @@ export async function sendTelegramMessage(
 
   if (!hasMedia) {
     return sendTextMessage(token, chatId, text, useHtml, replyMarkup);
+  }
+
+  // Несколько вложений без кнопок — отправляем альбомом (sendMediaGroup),
+  // т.к. альбомы Telegram не поддерживают inline-клавиатуру.
+  if (mediaFiles.length > 1 && !hasButtons) {
+    return sendTelegramMediaGroup(token, chatId, text, mediaFiles, useHtml);
   }
 
   // Отправляем первое медиа
@@ -254,7 +193,9 @@ async function sendMediaMessage(
         reply_markup: replyMarkup ? JSON.stringify(replyMarkup) : undefined,
       };
 
-      const { body, boundary } = buildMultipartBody(fields, media.type, fileName, fileBuffer);
+      const { body, boundary } = buildMultipartBody(fields, [
+        { field: media.type, fileName, buffer: fileBuffer },
+      ]);
 
       response = await fetchWithProxy(`https://api.telegram.org/bot${token}/${endpoint}`, {
         method: 'POST',
