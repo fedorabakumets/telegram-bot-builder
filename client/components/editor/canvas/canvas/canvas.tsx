@@ -994,14 +994,17 @@ export function Canvas({
 
       const newZoom = Math.max(Math.min(zoom * zoomFactor, 200), 1);
 
-      // Простой зум без пересчёта пана — масштабируем от текущей позиции
-      setPan(prev => {
-        const zoomRatio = newZoom / zoom;
-        return {
-          x: prev.x * zoomRatio,
-          y: prev.y * zoomRatio
-        };
-      });
+      // Зум к точке под курсором: позиция курсора относительно холста
+      // остаётся неподвижной, поэтому изображение не «уносит» в сторону.
+      const rect = canvasRef.current?.getBoundingClientRect();
+      const pointerX = rect ? e.clientX - rect.left : 0;
+      const pointerY = rect ? e.clientY - rect.top : 0;
+      const zoomRatio = newZoom / zoom;
+
+      setPan(prev => ({
+        x: pointerX - (pointerX - prev.x) * zoomRatio,
+        y: pointerY - (pointerY - prev.y) * zoomRatio
+      }));
 
       setZoom(newZoom);
     } else {
