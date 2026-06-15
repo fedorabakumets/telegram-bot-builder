@@ -189,16 +189,24 @@ export function CanvasContent({
     <div
       className={`relative origin-top-left ${disableTransition ? '' : 'transition-transform duration-200 ease-out'}`}
       style={{
-        // translate3d + will-change выносят холст на отдельный GPU-слой:
-        // браузер композитит трансформацию, а не перерисовывает содержимое
-        // на каждом шаге зума — это убирает мерцание при масштабировании.
-        transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom / 100})`,
+        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
         transformOrigin: '0 0',
-        willChange: 'transform',
-        backfaceVisibility: 'hidden',
-        WebkitBackfaceVisibility: 'hidden',
       }}
     >
+      {/* Фон-сетка внутри трансформируемого слоя — масштабируется вместе с
+          нодами тем же transform, поэтому не может рассинхронизироваться
+          (устраняет «вибрацию» при зуме). Размер 24px фиксирован. */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)',
+          backgroundSize: '24px 24px',
+          width: '200000px',
+          height: '200000px',
+          left: '-100000px',
+          top: '-100000px',
+        }}
+      />
       {/* SVG-слой соединений — рисуется под нодами */}
       <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} draggingNodeId={draftConnection ? null : (draggingNodeId ?? hoveredNodeId ?? highlightNodeId)} onConnectionHover={draftConnection ? undefined : handleConnectionHover} />
 
