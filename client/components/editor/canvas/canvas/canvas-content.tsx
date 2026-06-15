@@ -4,7 +4,7 @@
  * Содержит узлы на холсте редактора и SVG-слой соединений между ними.
  */
 
-import { CanvasNode } from '@/components/editor/canvas/canvas-node/canvas-node';
+import { CanvasNodeItem } from '@/components/editor/canvas/canvas-node/canvas-node-item';
 import { ConnectionsLayer } from '@/components/editor/canvas/canvas-node/connections-layer';
 import { DraftConnectionLayer } from '@/components/editor/canvas/canvas-node/draft-connection-layer';
 import { Node } from '@/types/bot';
@@ -26,6 +26,10 @@ interface CanvasContentProps {
   pan: { x: number; y: number };
   /** Масштаб холста (в процентах) */
   zoom: number;
+  /** Ref-зеркало масштаба — передаётся нодам, чтобы они не ре-рендерились на каждый кадр зума */
+  zoomRef: React.MutableRefObject<number>;
+  /** Ref-зеркало смещения холста (аналогично zoomRef) */
+  panRef: React.MutableRefObject<{ x: number; y: number }>;
   /** Отключить CSS-переход трансформации (на время интерактивного зума/пана) */
   disableTransition?: boolean;
   /** Идентификатор выбранного узла */
@@ -85,6 +89,8 @@ export function CanvasContent({
   nodes,
   pan,
   zoom,
+  zoomRef,
+  panRef,
   disableTransition,
   selectedNodeId,
   onNodeSelect,
@@ -108,18 +114,18 @@ export function CanvasContent({
   projectId,
 }: CanvasContentProps) {
   /**
-   * Получение всех узлов со всех листов для отображения связей
+   * Получение всех узлов со всех листов для отображения связей.
+   * Мемоизируем, чтобы ссылка на массив не менялась на каждый кадр зума —
+   * иначе мемоизированные ноды считали бы пропс изменённым и ре-рендерились.
    */
-  const getAllNodesFromAllSheets = (): Node[] => {
-    if (!botData?.sheets) return [];
-    const allNodes: Node[] = [];
+  const allNodes = useMemo<Node[]>(() => {
+    if (!botData?.sheets) return nodes;
+    const collected: Node[] = [];
     botData.sheets.forEach(sheet => {
-      if (sheet.nodes) allNodes.push(...sheet.nodes);
+      if (sheet.nodes) collected.push(...sheet.nodes);
     });
-    return allNodes;
-  };
-
-  const allNodes = botData ? getAllNodesFromAllSheets() : nodes;
+    return collected;
+  }, [botData, nodes]);
 
   /** Узлы, подсвечиваемые при наведении на линию соединения */
   const [hoveredConnectionNodes, setHoveredConnectionNodes] = useState<{ fromId: string | null; toId: string | null }>({ fromId: null, toId: null });
@@ -201,23 +207,28 @@ export function CanvasContent({
 
       {/* Узлы */}
       {nodes.map((node) => (
-        <CanvasNode
+        <CanvasNodeItem
           key={node.id}
           node={node}
           allNodes={allNodes}
           isSelected={selectedNodeId === node.id}
-          onClick={() => onNodeSelect(node.id)}
-          onDelete={() => onNodeDelete(node.id)}
-          onDuplicate={onNodeDuplicate ? (targetPosition) => onNodeDuplicate(node.id, targetPosition) : undefined}
-          onDuplicateAtPosition={onNodeDuplicateAtPosition ? () => onNodeDuplicateAtPosition(node.id) : undefined}
-          onMove={(position) => onNodeMove(node.id, position)}
-          onMoveStart={() => onNodeMoveStart?.(node.id)}
-          onMoveEnd={() => onNodeMoveEnd?.(node.id)}
-          zoom={zoom}
-          pan={pan}
+          zoomRef={zoomRef}
+          panRef={panRef}
+          sheets={sheets}
+          projectId={projectId}
+          onNodeSelect={onNodeSelect}
+          onNodeDelete={onNodeDelete}
+          onNodeDuplicate={onNodeDuplicate}
+          onNodeDuplicateAtPosition={onNodeDuplicateAtPosition}
+          onNodeMove={onNodeMove}
+          onNodeMoveStart={onNodeMoveStart}
+          onNodeMoveEnd={onNodeMoveEnd}
+          onMoveNodeToSheet={onMoveNodeToSheet}
           setIsNodeBeingDragged={setIsNodeBeingDragged}
           onSizeChange={onSizeChange}
           onPortMouseDown={onPortMouseDown}
+          onHover={draftConnection ? undefined : setHoveredNodeId}
+          onButtonPortMount={handleButtonPortMount}
           isConnectionTarget={hoveredTargetNodeId === node.id}
           isConnectionSource={draftConnection?.fromNodeId === node.id}
           isConnectedToDragging={!draftConnection && connectedTodragging.has(node.id)}
@@ -228,11 +239,6 @@ export function CanvasContent({
             (connectedToHighlighted.has(node.id) && node.id !== highlightNodeId)
           )}
           forceHover={!!highlightNodeId && node.id === highlightNodeId}
-          onHover={draftConnection ? undefined : setHoveredNodeId}
-          onButtonPortMount={handleButtonPortMount}
-          sheets={sheets}
-          onMoveToSheet={onMoveNodeToSheet ? (sheetId) => onMoveNodeToSheet(node.id, sheetId) : undefined}
-          projectId={projectId}
         />
       ))}
     </div>

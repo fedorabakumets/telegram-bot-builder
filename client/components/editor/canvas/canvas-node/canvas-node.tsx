@@ -69,8 +69,8 @@ import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
  * @property {Function} [onDuplicate] - Обработчик дублирования узла (опционально)
  * @property {Function} [onMove] - Обработчик перемещения узла (опционально)
  * @property {Function} [onMoveEnd] - Обработчик завершения перемещения узла (опционально)
- * @property {number} [zoom] - Уровень масштабирования (по умолчанию 100)
- * @property {{x: number, y: number}} [pan] - Позиция панорамирования (по умолчанию {x: 0, y: 0})
+ * @property {React.MutableRefObject<number>} [zoomRef] - Ref-зеркало масштаба (читается в drag-обработчиках по месту)
+ * @property {React.MutableRefObject<{x:number,y:number}>} [panRef] - Ref-зеркало смещения холста
  * @property {Function} [setIsNodeBeingDragged] - Обработчик установки состояния перетаскивания (опционально)
  * @property {Function} [onSizeChange] - Обработчик изменения размера узла (опционально)
  */
@@ -93,8 +93,13 @@ interface CanvasNodeProps {
   onMove?: (position: { x: number; y: number }) => void;
   onMoveStart?: () => void;
   onMoveEnd?: () => void;
-  zoom?: number;
-  pan?: { x: number; y: number };
+  /**
+   * Ref-зеркало масштаба. Передаётся вместо меняющегося `zoom`, чтобы drag-обработчики
+   * читали актуальное значение по месту, а нода не ре-рендерилась на каждый кадр зума.
+   */
+  zoomRef?: React.MutableRefObject<number>;
+  /** Ref-зеркало смещения холста (аналогично `zoomRef`) */
+  panRef?: React.MutableRefObject<{ x: number; y: number }>;
   setIsNodeBeingDragged?: ((isDragging: boolean) => void) | undefined;
   onSizeChange?: (nodeId: string, size: { width: number; height: number }) => void;
   /** Обработчик начала перетаскивания от порта выхода */
@@ -146,7 +151,7 @@ interface CanvasNodeProps {
  * @param {CanvasNodeProps} props - Свойства компонента
  * @returns {JSX.Element} Компонент узла на холсте
  */
-export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, forceHover, onHover, onButtonPortMount, sheets, onMoveToSheet, projectId }: CanvasNodeProps) {
+export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDuplicate, onDuplicateAtPosition, onMove, onMoveStart, onMoveEnd, zoomRef, panRef, setIsNodeBeingDragged, onSizeChange, onPortMouseDown, isConnectionTarget, isConnectionSource, isConnectedToDragging, isHoveredByConnection, forceHover, onHover, onButtonPortMount, sheets, onMoveToSheet, projectId }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   // Ref для dragOffset — позволяет читать актуальное значение в handleMouseMove
@@ -155,6 +160,11 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
   const dragOffsetRef = useRef(dragOffset);
   const nodeRef = useRef<HTMLDivElement>(null);
   const { menu, open: openContextMenu, close: closeContextMenu } = useNodeContextMenu();
+
+  /** Текущий масштаб из ref-зеркала (читается по месту в drag-обработчиках) */
+  const readZoom = () => zoomRef?.current ?? 100;
+  /** Текущее смещение холста из ref-зеркала */
+  const readPan = () => panRef?.current ?? { x: 0, y: 0 };
 
   /**
    * Переводит экранную точку в координаты canvas с учетом scroll контейнера.
@@ -169,7 +179,7 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     const canvas = transformedContainer?.parentElement;
     const viewport = getCanvasViewportMetrics(canvas);
     if (!viewport) return { x: screenX, y: screenY };
-    return screenPointToCanvasPoint(screenX, screenY, viewport, pan, zoom);
+    return screenPointToCanvasPoint(screenX, screenY, viewport, readPan(), readZoom());
   };
   void getCanvasPoint;
 
@@ -202,6 +212,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
     if (canvas) {
       const canvasRect = canvas.getBoundingClientRect();
+      const zoom = readZoom();
+      const pan = readPan();
       const zoomFactor = zoom / 100;
 
       // Рассчитываем смещение в канвасных координатах
@@ -248,6 +260,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
       const screenY = e.clientY - canvasRect.top;
 
       // Преобразуем экранные координаты в координаты канваса с учетом зума и панорамирования
+      const zoom = readZoom();
+      const pan = readPan();
       const zoomFactor = zoom / 100;
       const canvasX = (screenX - pan.x) / zoomFactor - dragOffsetRef.current.x;
       const canvasY = (screenY - pan.y) / zoomFactor - dragOffsetRef.current.y;
@@ -298,6 +312,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
 
       if (canvas) {
         const canvasRect = canvas.getBoundingClientRect();
+        const zoom = readZoom();
+        const pan = readPan();
         const zoomFactor = zoom / 100;
 
         // Рассчитываем смещение в канвасных координатах
@@ -352,6 +368,8 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
     const screenX = touch.clientX - canvasRect.left;
     const screenY = touch.clientY - canvasRect.top;
 
+    const zoom = readZoom();
+    const pan = readPan();
     const zoomFactor = zoom / 100;
     const canvasX = (screenX - pan.x) / zoomFactor - touchOffset.x;
     const canvasY = (screenY - pan.y) / zoomFactor - touchOffset.y;

@@ -1578,6 +1578,27 @@ export function Canvas({
     }
   }, [onNodeSelect, pan.x, pan.y, zoom]);
 
+  /**
+   * Стабильный обработчик дублирования узла через контекстное меню.
+   * Вынесен из инлайна в CanvasContent, чтобы пропсы мемоизированных нод
+   * не менялись на каждый кадр зума и ноды не ре-рендерились.
+   */
+  const handleNodeDuplicateAtPosition = useCallback((nodeId: string) => {
+    onNodeDuplicate?.(nodeId, getPastePosition());
+  }, [onNodeDuplicate, getPastePosition]);
+
+  /** Стабильный обработчик начала перемещения узла (фиксирует draggingNodeId) */
+  const handleNodeMoveStart = useCallback((nodeId: string) => {
+    setDraggingNodeId(nodeId);
+    onNodeMoveStart?.(nodeId);
+  }, [onNodeMoveStart]);
+
+  /** Стабильный обработчик окончания перемещения узла (сбрасывает draggingNodeId) */
+  const handleNodeMoveEnd = useCallback((nodeId: string) => {
+    setDraggingNodeId(null);
+    onNodeMoveEnd?.(nodeId);
+  }, [onNodeMoveEnd]);
+
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
       <div ref={scrollContainerRef} className="absolute inset-x-0 overflow-auto" style={{ top: 60, bottom: 60 }}>
@@ -1588,8 +1609,11 @@ export function Canvas({
           className="min-h-full relative canvas-grid-modern"
           style={{
             backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)',
-            backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px`,
-            backgroundPosition: `${pan.x}px ${pan.y}px`,
+            // Округляем до целых пикселей: дробные backgroundSize/backgroundPosition
+            // при нецелочисленном zoom заставляют CPU-слой родителя ре-растеризовать
+            // градиент каждый кадр зума, что вносит дополнительное мерцание.
+            backgroundSize: `${Math.round(24 * zoom / 100)}px ${Math.round(24 * zoom / 100)}px`,
+            backgroundPosition: `${Math.round(pan.x)}px ${Math.round(pan.y)}px`,
             width: '100%',
             height: '100%',
             cursor: isPanning ? 'grabbing' : 'grab',
@@ -1613,22 +1637,17 @@ export function Canvas({
             nodes={nodes}
             pan={pan}
             zoom={zoom}
+            zoomRef={zoomRef}
+            panRef={panRef}
             disableTransition={!animateTransform}
             selectedNodeId={selectedNodeId}
             onNodeSelect={onNodeSelect}
             onNodeDelete={onNodeDelete}
             onNodeDuplicate={onNodeDuplicate}
-            onNodeDuplicateAtPosition={onNodeDuplicate ? (nodeId) => {
-              /**
-               * Дублирование через контекстное меню: позиция вычисляется через
-               * getPastePosition() — ту же функцию, что использует Ctrl+V.
-               * Это гарантирует одинаковое поведение обоих способов дублирования.
-               */
-              onNodeDuplicate(nodeId, getPastePosition());
-            } : undefined}
+            onNodeDuplicateAtPosition={onNodeDuplicate ? handleNodeDuplicateAtPosition : undefined}
             onNodeMove={onNodeMove}
-            onNodeMoveStart={(nodeId) => { setDraggingNodeId(nodeId); onNodeMoveStart?.(nodeId); }}
-            onNodeMoveEnd={(nodeId) => { setDraggingNodeId(null); onNodeMoveEnd?.(nodeId); }}
+            onNodeMoveStart={handleNodeMoveStart}
+            onNodeMoveEnd={handleNodeMoveEnd}
             setIsNodeBeingDragged={setIsNodeBeingDragged}
             onSizeChange={handleNodeSizeChange}
             nodeSizes={nodeSizes}
