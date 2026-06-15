@@ -290,11 +290,21 @@ export function DialogPanel({
         ) : (
           <div className="space-y-3 py-2">
             {messages.map((message, index) => {
-              /** Применяем оптимистичные правки и WS-правки к тексту сообщения */
+              /** WS-запись с новым текстом, кнопками и раскладкой (если есть) */
+              const wsRec = wsEditedMessages.get(message.id);
+              /** Применяем оптимистичные правки и WS-правки к тексту и кнопкам сообщения */
               const displayMessage = editedMessages.has(message.id)
                 ? { ...message, messageText: editedMessages.get(message.id)! }
-                : wsEditedMessages.has(message.id)
-                ? { ...message, messageText: wsEditedMessages.get(message.id)! }
+                : wsRec
+                ? {
+                    ...message,
+                    messageText: wsRec.messageText,
+                    messageData: {
+                      ...(message.messageData as object),
+                      ...(wsRec.buttons !== undefined ? { buttons: wsRec.buttons } : {}),
+                      ...(wsRec.buttonsPerRow !== undefined ? { buttonsPerRow: wsRec.buttonsPerRow } : {}),
+                    },
+                  }
                 : message;
               return (
                 <MessageBubble

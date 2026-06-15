@@ -198,7 +198,7 @@ export async function editSingleMessageHandler(
       type: "message-edited",
       projectId,
       tokenId: message.tokenId,
-      data: { messageId, userId: message.userId, messageText },
+      data: { messageId, userId: message.userId, messageText, buttons, buttonsPerRow },
       timestamp: new Date().toISOString(),
     });
 

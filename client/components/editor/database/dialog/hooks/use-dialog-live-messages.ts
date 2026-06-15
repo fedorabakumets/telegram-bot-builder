@@ -28,8 +28,8 @@ export interface UseDialogLiveMessagesResult {
   removeOptimisticMessage: (tempId: number) => void;
   /** ID сообщений удалённых через WS другим оператором */
   wsDeletedIds: Set<number>;
-  /** Карта отредактированных через WS сообщений: messageId → новый текст */
-  wsEditedMessages: Map<number, string>;
+  /** Карта отредактированных через WS сообщений: messageId → новый текст, кнопки и раскладка */
+  wsEditedMessages: Map<number, { messageText: string; buttons?: unknown[]; buttonsPerRow?: number }>;
 }
 
 /**
@@ -79,8 +79,8 @@ export function useDialogLiveMessages(
   const [liveMessages, setLiveMessages] = useState<BotMessageWithMedia[]>([]);
   /** ID сообщений удалённых через WS другим оператором */
   const [wsDeletedIds, setWsDeletedIds] = useState<Set<number>>(new Set());
-  /** Карта отредактированных через WS сообщений: messageId → новый текст */
-  const [wsEditedMessages, setWsEditedMessages] = useState<Map<number, string>>(new Map());
+  /** Карта отредактированных через WS сообщений: messageId → новый текст, кнопки и раскладка */
+  const [wsEditedMessages, setWsEditedMessages] = useState<Map<number, { messageText: string; buttons?: unknown[]; buttonsPerRow?: number }>>(new Map());
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -132,7 +132,11 @@ export function useDialogLiveMessages(
         const edited = msg as MessageEditedLiveEvent;
         if (selectedTokenId && msg.tokenId && msg.tokenId !== selectedTokenId) return;
         if (String(edited.data.userId) !== userIdStr) return;
-        setWsEditedMessages((prev) => new Map(prev).set(edited.data.messageId, edited.data.messageText));
+        setWsEditedMessages((prev) => new Map(prev).set(edited.data.messageId, {
+          messageText: edited.data.messageText,
+          buttons: edited.data.buttons,
+          buttonsPerRow: edited.data.buttonsPerRow,
+        }));
         return;
       }
       // Обрабатываем только события new-message, new-user игнорируем
@@ -197,11 +201,15 @@ export function useDialogLiveMessages(
 
           // Обрабатываем событие редактирования сообщения
           if (msg.type === 'message-edited') {
-            const data = msg.data as { messageId: number; userId: string; messageText: string } | undefined;
+            const data = msg.data as { messageId: number; userId: string; messageText: string; buttons?: unknown[]; buttonsPerRow?: number } | undefined;
             if (!data) return;
             if (selectedTokenId && msg.tokenId && msg.tokenId !== selectedTokenId) return;
             if (String(data.userId) !== userIdStr) return;
-            setWsEditedMessages((prev) => new Map(prev).set(data.messageId, data.messageText));
+            setWsEditedMessages((prev) => new Map(prev).set(data.messageId, {
+              messageText: data.messageText,
+              buttons: data.buttons,
+              buttonsPerRow: data.buttonsPerRow,
+            }));
             return;
           }
 

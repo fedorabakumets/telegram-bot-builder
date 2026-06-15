@@ -100,6 +100,10 @@ export interface MessageEditedLiveEvent {
     userId: string;
     /** Новый текст сообщения */
     messageText: string;
+    /** Инлайн-кнопки сообщения (для live-обновления раскладки у всех клиентов) */
+    buttons?: unknown[];
+    /** Количество кнопок в одном ряду */
+    buttonsPerRow?: number;
   };
   /** Временная метка события */
   timestamp: string;
