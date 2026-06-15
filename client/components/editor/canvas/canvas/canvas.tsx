@@ -29,6 +29,7 @@ import { Node, ComponentDefinition } from '@/types/bot';
 import type { CommandPreset } from '@/components/editor/sidebar/massive/commands';
 import { BotDataWithSheets } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
+import { generateNextSheetName } from '@/utils/sheets/generate-next-sheet-name';
 import { nanoid } from 'nanoid';
 import { generateButtonId } from '@/utils/generate-button-id';
 
@@ -1729,12 +1730,12 @@ export function Canvas({
   /** Групповое перемещение выделенных узлов в новый лист */
   const handleGroupMoveToNewSheet = useCallback(() => {
     if (selectedNodeIds.size === 0) return;
-    const name = window.prompt('Название нового листа:', 'Новый лист');
-    if (!name) return;
+    // Автоматическое имя нового листа (как при нажатии кнопки "+")
+    const name = generateNextSheetName(botData?.sheets ?? []);
     moveNodesToNewSheet(Array.from(selectedNodeIds), name);
     addAction('sheet_add', `Создан лист "${name}" с узлами: ${selectedNodeIds.size}`);
     clearSelection();
-  }, [selectedNodeIds, moveNodesToNewSheet, addAction, clearSelection]);
+  }, [selectedNodeIds, moveNodesToNewSheet, addAction, clearSelection, botData]);
 
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
