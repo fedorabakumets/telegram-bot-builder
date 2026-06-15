@@ -10,6 +10,7 @@ import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import { BotMessageWithMedia } from '../types';
+import type { Button } from '@shared/schema';
 
 /**
  * Параметры хука useSendMessage
@@ -57,11 +58,14 @@ export function useSendMessage({
     mutationFn: async ({
       messageText,
       mediaUrls = [],
+      buttons = [],
     }: {
       /** Текст сообщения */
       messageText: string;
       /** Массив URL медиафайлов (опционально) */
       mediaUrls?: string[];
+      /** Массив инлайн-кнопок сообщения (опционально, бэкенд подключит позже) */
+      buttons?: Button[];
     }) => {
       if (!userId) {
         throw new Error('No user selected');
@@ -70,7 +74,7 @@ export function useSendMessage({
       return apiRequest(
         'POST',
         buildUsersApiUrl(`/api/projects/${projectId}/users/${userId}/send-message`, selectedTokenId),
-        { messageText, mediaUrls }
+        { messageText, mediaUrls, buttons }
       );
     },
 

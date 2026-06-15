@@ -6,6 +6,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
+import type { Button } from '@shared/schema';
 
 /**
  * Параметры хука useSendGroupMessage
@@ -36,13 +37,15 @@ export function useSendGroupMessage({
      * Отправляет сообщение в группу
      * @param messageText - Текст сообщения
      * @param mediaUrls - Массив URL медиафайлов (опционально)
+     * @param buttons - Массив инлайн-кнопок сообщения (опционально, бэкенд подключит позже)
      */
-    mutationFn: async ({ messageText, mediaUrls }: { messageText: string; mediaUrls?: string[] }) => {
+    mutationFn: async ({ messageText, mediaUrls, buttons }: { messageText: string; mediaUrls?: string[]; buttons?: Button[] }) => {
       if (!groupId) throw new Error('Не указан ID группы');
       return apiRequest('POST', `/api/projects/${projectId}/bot/send-group-message`, {
         groupId,
         message: messageText,
         mediaUrls: mediaUrls ?? [],
+        buttons: buttons ?? [],
       });
     },
 

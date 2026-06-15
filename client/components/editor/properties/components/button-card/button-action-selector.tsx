@@ -20,6 +20,8 @@ interface ButtonActionSelectorProps {
   allowMultipleSelection?: boolean;
   /** Тип клавиатуры */
   keyboardType?: string;
+  /** Белый список разрешённых действий (главный ограничитель, если задан) */
+  allowedActions?: ButtonActionType[];
 }
 
 /**
@@ -34,9 +36,22 @@ export function ButtonActionSelector({
   nodeId,
   allowMultipleSelection = false,
   keyboardType,
+  allowedActions,
 }: ButtonActionSelectorProps) {
   const config = ACTION_CONFIG[button.action as ButtonActionType] ?? ACTION_CONFIG['default'];
   const isReply = keyboardType === 'reply';
+
+  /**
+   * Проверяет, нужно ли отображать пункт действия в списке.
+   * Если задан allowedActions — он главный ограничитель.
+   * @param action - Тип действия
+   * @param extraCondition - Дополнительное условие отображения (isReply/allowMultipleSelection)
+   * @returns true, если пункт нужно показать
+   */
+  const canShow = (action: ButtonActionType, extraCondition: boolean): boolean => {
+    if (allowedActions) return allowedActions.includes(action);
+    return extraCondition;
+  };
 
   return (
     <div className="space-y-2">
@@ -53,28 +68,34 @@ export function ButtonActionSelector({
           </div>
         </SelectTrigger>
         <SelectContent className="bg-gradient-to-br from-teal-50/95 to-cyan-50/95 dark:from-slate-900/95 dark:to-slate-800/95 border border-teal-200/50 dark:border-teal-800/50 shadow-xl">
-          <SelectItem value="goto"><ButtonActionOption action="goto" /></SelectItem>
-          <SelectItem value="url"><ButtonActionOption action="url" /></SelectItem>
-          <SelectItem value="default"><ButtonActionOption action="default" /></SelectItem>
-          {isReply && (
+          {canShow('goto', true) && (
+            <SelectItem value="goto"><ButtonActionOption action="goto" /></SelectItem>
+          )}
+          {canShow('url', true) && (
+            <SelectItem value="url"><ButtonActionOption action="url" /></SelectItem>
+          )}
+          {canShow('default', true) && (
+            <SelectItem value="default"><ButtonActionOption action="default" /></SelectItem>
+          )}
+          {canShow('contact', isReply) && (
             <SelectItem value="contact"><ButtonActionOption action="contact" /></SelectItem>
           )}
-          {isReply && (
+          {canShow('location', isReply) && (
             <SelectItem value="location"><ButtonActionOption action="location" /></SelectItem>
           )}
-          {isReply && (
+          {canShow('request_managed_bot', isReply) && (
             <SelectItem value="request_managed_bot"><ButtonActionOption action="request_managed_bot" /></SelectItem>
           )}
-          {!isReply && (
+          {canShow('copy_text', !isReply) && (
             <SelectItem value="copy_text"><ButtonActionOption action="copy_text" /></SelectItem>
           )}
-          {!isReply && (
+          {canShow('web_app', !isReply) && (
             <SelectItem value="web_app"><ButtonActionOption action="web_app" /></SelectItem>
           )}
-          {allowMultipleSelection && (
+          {canShow('selection', allowMultipleSelection) && (
             <SelectItem value="selection"><ButtonActionOption action="selection" /></SelectItem>
           )}
-          {allowMultipleSelection && (
+          {canShow('complete', allowMultipleSelection) && (
             <SelectItem value="complete"><ButtonActionOption action="complete" /></SelectItem>
           )}
         </SelectContent>
