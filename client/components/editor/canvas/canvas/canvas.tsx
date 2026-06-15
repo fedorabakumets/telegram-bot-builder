@@ -1642,12 +1642,14 @@ export function Canvas({
     
     if (e.target === e.currentTarget) {
       onNodeSelect('');
-      // Клик по пустому холсту также снимает рамочное мульти-выделение.
-      if (selectedNodeIds.size > 0) {
+      // Клик по пустому холсту снимает мульти-выделение ТОЛЬКО в режиме курсора.
+      // В режиме рамки клик после рисования рамки не должен сбрасывать выделение
+      // (иначе из-за батчинга React выделение очищается сразу после установки).
+      if (tool === 'pointer' && selectedNodeIds.size > 0) {
         clearSelection();
       }
     }
-  }, [onNodeSelect, pan.x, pan.y, zoom, clearSelection, selectedNodeIds]);
+  }, [onNodeSelect, pan.x, pan.y, zoom, clearSelection, selectedNodeIds, tool]);
 
   /**
    * Стабильный обработчик дублирования узла через контекстное меню.
