@@ -1590,8 +1590,8 @@ export function Canvas({
             backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)',
             backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px`,
             backgroundPosition: `${pan.x}px ${pan.y}px`,
-            minHeight: '2000vh',
-            minWidth: '2000vw',
+            width: '100%',
+            height: '100%',
             cursor: isPanning ? 'grabbing' : 'grab',
             // Предотвращение масштабирования на сенсорных устройствах
             touchAction: 'none'
