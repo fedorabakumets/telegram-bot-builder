@@ -64,6 +64,8 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
     const rawButtons = Array.isArray(req.body.buttons) ? req.body.buttons : [];
     /** Инлайн-кнопки в формате Telegram API */
     const buttons = extractButtonsFromNode({ buttons: rawButtons });
+    /** Кол-во кнопок в ряду (0 = все в один ряд) */
+    const buttonsPerRow = Number.isFinite(Number(req.body.buttonsPerRow)) ? Number(req.body.buttonsPerRow) : 0;
 
     const userResult = await (await import("../../../../database/db")).pool.query(
       `SELECT user_id AS "userId", username AS "userName", first_name AS "firstName",
@@ -100,7 +102,8 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
       textWithVariables,
       mediaFiles,
       buttons,
-      true
+      true,
+      buttonsPerRow
     );
 
     /** ID отправленного сообщения в Telegram (из result.message_id) */
@@ -115,6 +118,10 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
     // Сохраняем кнопки для отображения в истории диалога
     if (rawButtons.length > 0) {
       mediaMessageData.buttons = rawButtons;
+    }
+    // Сохраняем раскладку кнопок по рядам (для возможного будущего отображения)
+    if (buttonsPerRow > 0) {
+      mediaMessageData.buttonsPerRow = buttonsPerRow;
     }
 
     const savedMessage = await storage.createBotMessage({

@@ -41,6 +41,8 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
         const rawButtons = Array.isArray(req.body.buttons) ? req.body.buttons : [];
         /** Инлайн-кнопки в формате Telegram API */
         const buttons = extractButtonsFromNode({ buttons: rawButtons });
+        /** Кол-во кнопок в ряду (0 = все в один ряд) */
+        const buttonsPerRow = Number.isFinite(Number(req.body.buttonsPerRow)) ? Number(req.body.buttonsPerRow) : 0;
 
         // Требуется ID группы и хотя бы текст, медиа или кнопки
         if (!groupId || (!message && mediaUrls.length === 0 && buttons.length === 0)) {
@@ -65,7 +67,8 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
             message ?? "",
             mediaFiles,
             buttons,
-            true
+            true,
+            buttonsPerRow
         );
 
         /** ID отправленного сообщения в Telegram */

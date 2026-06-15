@@ -42,8 +42,9 @@ export function useSendGroupMessage({
      * @param messageText - Текст сообщения
      * @param mediaUrls - Массив URL медиафайлов (опционально)
      * @param buttons - Массив инлайн-кнопок сообщения (опционально, бэкенд подключит позже)
+     * @param buttonsPerRow - Кол-во кнопок в ряду (0 = все в один ряд)
      */
-    mutationFn: async ({ messageText, mediaUrls, buttons }: { messageText: string; mediaUrls?: string[]; buttons?: Button[] }) => {
+    mutationFn: async ({ messageText, mediaUrls, buttons, buttonsPerRow }: { messageText: string; mediaUrls?: string[]; buttons?: Button[]; buttonsPerRow?: number }) => {
       if (!groupId) throw new Error('Не указан ID группы');
       // Добавляем tokenId выбранного бота, чтобы сообщение ушло от него, а не от бота по умолчанию
       const url = buildUsersApiUrl(
@@ -55,6 +56,7 @@ export function useSendGroupMessage({
         message: messageText,
         mediaUrls: mediaUrls ?? [],
         buttons: buttons ?? [],
+        buttonsPerRow: buttonsPerRow ?? 0,
       });
     },
 

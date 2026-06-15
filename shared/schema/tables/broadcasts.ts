@@ -44,6 +44,8 @@ export const broadcasts = pgTable("broadcasts", {
   mediaUrls: json("media_urls").$type<string[]>().default([]),
   /** Инлайн-кнопки сообщения рассылки */
   buttons: json("buttons").$type<any[]>().default([]),
+  /** Кол-во кнопок в ряду (0 = все в один ряд) */
+  buttonsPerRow: integer("buttons_per_row").default(0),
 });
 
 /**
@@ -98,6 +100,8 @@ export const insertBroadcastSchema = z.object({
   mediaUrls: z.array(z.string()).default([]),
   /** Инлайн-кнопки сообщения рассылки */
   buttons: z.array(z.any()).default([]),
+  /** Кол-во кнопок в ряду (0 = все в один ряд) */
+  buttonsPerRow: z.number().int().min(0).default(0),
   /** Фильтры аудитории */
   filters: broadcastFiltersSchema.default({}),
   /** Статус рассылки */

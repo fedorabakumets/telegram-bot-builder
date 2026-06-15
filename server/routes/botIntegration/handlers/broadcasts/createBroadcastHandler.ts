@@ -20,6 +20,8 @@ const createBroadcastBodySchema = z.object({
   mediaUrls: z.array(z.string()).default([]),
   /** Инлайн-кнопки сообщения рассылки */
   buttons: z.array(z.any()).default([]),
+  /** Кол-во кнопок в ряду (0 = все в один ряд) */
+  buttonsPerRow: z.number().int().min(0).default(0),
   /** Фильтры аудитории */
   filters: broadcastFiltersSchema.default({}),
   /** ID токена бота */
@@ -55,7 +57,7 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
       return;
     }
 
-    const { name, messageText, mediaUrls, buttons, filters } = validation.data;
+    const { name, messageText, mediaUrls, buttons, buttonsPerRow, filters } = validation.data;
 
     // Подсчитываем аудиторию
     const users = await storage.getUsersForBroadcast(projectId, effectiveTokenId, filters);
@@ -68,6 +70,7 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
       messageText,
       mediaUrls,
       buttons,
+      buttonsPerRow,
       filters,
       status: "running",
       totalCount,

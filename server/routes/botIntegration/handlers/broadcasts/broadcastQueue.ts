@@ -44,6 +44,7 @@ function sleep(ms: number): Promise<void> {
  * @param text - Текст сообщения (HTML)
  * @param mediaFiles - Медиафайлы для отправки
  * @param buttons - Инлайн-кнопки сообщения
+ * @param buttonsPerRow - Кол-во кнопок в ряду (0 = все в один ряд)
  * @returns Объект с результатом: ok, retryAfter (при 429), errorCode
  */
 async function sendBroadcastMessage(
@@ -52,9 +53,10 @@ async function sendBroadcastMessage(
   text: string,
   mediaFiles: SendMediaFile[],
   buttons: InlineButton[],
+  buttonsPerRow: number,
 ): Promise<{ ok: boolean; messageId?: number; retryAfter?: number; errorCode?: number; description?: string }> {
   try {
-    const result = await sendTelegramMessage(token, userId, text, mediaFiles, buttons, true) as {
+    const result = await sendTelegramMessage(token, userId, text, mediaFiles, buttons, true, buttonsPerRow) as {
       ok?: boolean;
       result?: { message_id?: number };
       error_code?: number;
@@ -146,6 +148,8 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     // Инлайн-кнопки рассылки: сырой массив из БД и преобразование в формат Telegram
     const rawButtons = (broadcast.buttons as any[]) ?? [];
     const inlineButtons = extractButtonsFromNode({ buttons: rawButtons });
+    /** Кол-во кнопок в ряду (0 = все в один ряд) */
+    const buttonsPerRow = (broadcast.buttonsPerRow as number) ?? 0;
 
     const users = await storage.getUsersForBroadcast(projectId, tokenId, filters as Parameters<typeof storage.getUsersForBroadcast>[2]);
 
@@ -180,7 +184,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
         let sent = false;
 
         while (retries < 3 && !sent) {
-          const result = await sendBroadcastMessage(token, user.userId, text, mediaFiles, inlineButtons);
+          const result = await sendBroadcastMessage(token, user.userId, text, mediaFiles, inlineButtons, buttonsPerRow);
 
           if (result.ok) {
             deliveredCount++;
@@ -261,7 +265,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     if (groupIds && groupIds.length > 0 && activeBroadcasts.get(broadcastId) !== "stopped") {
       for (const groupId of groupIds) {
         try {
-          const groupResult = await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, inlineButtons, true) as {
+          const groupResult = await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, inlineButtons, true, buttonsPerRow) as {
             ok?: boolean;
             result?: { message_id?: number };
           };

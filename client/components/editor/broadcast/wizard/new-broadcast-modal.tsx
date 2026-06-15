@@ -44,6 +44,7 @@ const INITIAL_FORM: NewBroadcastFormData = {
   messageText: '',
   mediaUrls: [],
   buttons: [],
+  buttonsPerRow: 0,
   filters: { audienceType: 'all' },
 };
 

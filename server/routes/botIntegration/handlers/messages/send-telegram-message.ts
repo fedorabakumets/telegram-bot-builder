@@ -35,6 +35,25 @@ export interface TelegramSendResult {
 }
 
 /**
+ * Разбивает массив кнопок Telegram на ряды.
+ * При buttonsPerRow >= 1 режет массив на чанки по N штук в каждом ряду,
+ * иначе возвращает все кнопки одним рядом (обратная совместимость).
+ * @param buttons - Массив кнопок в формате Telegram API
+ * @param buttonsPerRow - Кол-во кнопок в ряду (0 или отсутствует = один ряд)
+ * @returns Массив рядов кнопок для inline_keyboard
+ */
+function chunkButtons<T>(buttons: T[], buttonsPerRow?: number): T[][] {
+  if (!buttonsPerRow || buttonsPerRow < 1) {
+    return [buttons];
+  }
+  const rows: T[][] = [];
+  for (let i = 0; i < buttons.length; i += buttonsPerRow) {
+    rows.push(buttons.slice(i, i + buttonsPerRow));
+  }
+  return rows;
+}
+
+/**
  * Отправляет сообщение в Telegram с поддержкой медиа и кнопок
  * 
  * @param token - Токен бота
@@ -43,6 +62,7 @@ export interface TelegramSendResult {
  * @param mediaFiles - Медиафайлы
  * @param buttons - Кнопки
  * @param useHtml - Использовать HTML форматирование
+ * @param buttonsPerRow - Кол-во кнопок в ряду (0 или отсутствует = все в один ряд)
  * @returns Типизированный результат Telegram API с message_id
  */
 export async function sendTelegramMessage(
@@ -51,27 +71,36 @@ export async function sendTelegramMessage(
   text: string,
   mediaFiles: SendMediaFile[],
   buttons: InlineButton[],
-  useHtml: boolean
+  useHtml: boolean,
+  buttonsPerRow?: number
 ): Promise<TelegramSendResult> {
   const hasMedia = mediaFiles.length > 0;
   const hasButtons = buttons.length > 0;
 
-  // Формируем клавиатуру.
-  // Telegram API требует разные поля для разных типов кнопок:
-  // - url-кнопки: { text, url }
-  // - web_app-кнопки: { text, web_app: { url } }
-  // - copy_text-кнопки: { text, copy_text: { text } }
-  // - остальные: { text, callback_data }
+  /**
+   * Преобразует кнопку фронтенда в формат Telegram inline_keyboard.
+   * Telegram API требует разные поля для разных типов кнопок:
+   * - url-кнопки: { text, url }
+   * - web_app-кнопки: { text, web_app: { url } }
+   * - copy_text-кнопки: { text, copy_text: { text } }
+   * - остальные: { text, callback_data }
+   * @param b - Инлайн-кнопка во внутреннем формате
+   * @returns Объект кнопки в формате Telegram API
+   */
+  const buildButton = (b: InlineButton) => {
+    // Поле стиля (Bot API 9.4) добавляем к любой кнопке, если оно задано;
+    // Telegram игнорирует style для неподдерживаемых типов кнопок
+    const styleField = b.style ? { style: b.style } : {};
+    if (b.url) return { text: b.text, url: b.url, ...styleField };
+    if (b.webAppUrl) return { text: b.text, web_app: { url: b.webAppUrl }, ...styleField };
+    if (b.copyText) return { text: b.text, copy_text: { text: b.copyText }, ...styleField };
+    return { text: b.text, callback_data: b.callbackData ?? b.id, ...styleField };
+  };
+
+  // Строим ряды инлайн-кнопок: при buttonsPerRow >= 1 режем массив на чанки
+  // по N штук, иначе — все кнопки в один ряд (обратная совместимость).
   const replyMarkup = hasButtons ? {
-    inline_keyboard: [buttons.map(b => {
-      // Поле стиля (Bot API 9.4) добавляем к любой кнопке, если оно задано;
-      // Telegram игнорирует style для неподдерживаемых типов кнопок
-      const styleField = b.style ? { style: b.style } : {};
-      if (b.url) return { text: b.text, url: b.url, ...styleField };
-      if (b.webAppUrl) return { text: b.text, web_app: { url: b.webAppUrl }, ...styleField };
-      if (b.copyText) return { text: b.text, copy_text: { text: b.copyText }, ...styleField };
-      return { text: b.text, callback_data: b.callbackData ?? b.id, ...styleField };
-    })]
+    inline_keyboard: chunkButtons(buttons.map(buildButton), buttonsPerRow),
   } : undefined;
 
   if (!hasMedia) {

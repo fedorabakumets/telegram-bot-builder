@@ -28,8 +28,9 @@ interface DialogInputProps {
    * @param text - Текст сообщения
    * @param mediaUrls - Массив URL медиафайлов
    * @param buttons - Массив инлайн-кнопок сообщения
+   * @param buttonsPerRow - Кол-во кнопок в ряду (0 = все в один ряд)
    */
-  onSend: (text: string, mediaUrls: string[], buttons: MessageButton[]) => void;
+  onSend: (text: string, mediaUrls: string[], buttons: MessageButton[], buttonsPerRow: number) => void;
 }
 
 /**
@@ -50,6 +51,8 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
   const [fileIdMediaType, setFileIdMediaType] = useState<'photo' | 'video' | 'audio' | 'document'>('photo');
   /** Список инлайн-кнопок сообщения */
   const [buttons, setButtons] = useState<MessageButton[]>([]);
+  /** Кол-во кнопок в ряду (0 = все в один ряд) */
+  const [buttonsPerRow, setButtonsPerRow] = useState(0);
   /** Флаг видимости редактора инлайн-кнопок */
   const [showButtons, setShowButtons] = useState(false);
 
@@ -57,12 +60,13 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
     // Разрешаем отправку, если есть текст ИЛИ хотя бы один прикреплённый файл.
     // Кнопки сами по себе отправлять нельзя — они лишь дополнение к тексту/медиа.
     if ((messageText.trim() || mediaUrls.length > 0) && !isPending) {
-      onSend(messageText.trim(), mediaUrls, buttons);
+      onSend(messageText.trim(), mediaUrls, buttons, buttonsPerRow);
       setMessageText('');
       setMediaUrls([]);
       setShowMedia(false);
       setShowFileId(false);
       setButtons([]);
+      setButtonsPerRow(0);
       setShowButtons(false);
     }
   };
@@ -105,7 +109,13 @@ export function DialogInput({ isPending, projectId, availableNodes, onSend }: Di
       {/* Блок редактора инлайн-кнопок */}
       {showButtons && (
         <div className="border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60 max-h-64 overflow-y-auto">
-          <DialogButtonsEditor buttons={buttons} onChange={setButtons} availableNodes={availableNodes} />
+          <DialogButtonsEditor
+            buttons={buttons}
+            onChange={setButtons}
+            availableNodes={availableNodes}
+            buttonsPerRow={buttonsPerRow}
+            onButtonsPerRowChange={setButtonsPerRow}
+          />
         </div>
       )}
 

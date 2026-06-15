@@ -59,6 +59,7 @@ export function useSendMessage({
       messageText,
       mediaUrls = [],
       buttons = [],
+      buttonsPerRow = 0,
     }: {
       /** Текст сообщения */
       messageText: string;
@@ -66,6 +67,8 @@ export function useSendMessage({
       mediaUrls?: string[];
       /** Массив инлайн-кнопок сообщения (опционально, бэкенд подключит позже) */
       buttons?: Button[];
+      /** Кол-во кнопок в ряду (0 = все в один ряд) */
+      buttonsPerRow?: number;
     }) => {
       if (!userId) {
         throw new Error('No user selected');
@@ -74,7 +77,7 @@ export function useSendMessage({
       return apiRequest(
         'POST',
         buildUsersApiUrl(`/api/projects/${projectId}/users/${userId}/send-message`, selectedTokenId),
-        { messageText, mediaUrls, buttons }
+        { messageText, mediaUrls, buttons, buttonsPerRow }
       );
     },
 

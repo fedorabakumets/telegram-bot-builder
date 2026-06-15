@@ -68,6 +68,7 @@ export function useCreateBroadcast({
         messageText: formData.messageText,
         mediaUrls: formData.mediaUrls ?? [],
         buttons: formData.buttons ?? [],
+        buttonsPerRow: formData.buttonsPerRow ?? 0,
         filters: filtersWithGroups,
       });
     },

@@ -143,6 +143,8 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
             buttons={formData.buttons ?? []}
             onChange={(buttons) => onChange({ buttons })}
             availableNodes={availableNodes}
+            buttonsPerRow={formData.buttonsPerRow ?? 0}
+            onButtonsPerRowChange={(v) => onChange({ buttonsPerRow: v })}
           />
         </div>
       </div>

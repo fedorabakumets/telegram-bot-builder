@@ -61,6 +61,8 @@ export interface NewBroadcastFormData {
   mediaUrls: string[];
   /** Инлайн-кнопки сообщения рассылки */
   buttons?: Button[];
+  /** Кол-во кнопок в ряду (0 = все в один ряд) */
+  buttonsPerRow?: number;
   /** Фильтры аудитории */
   filters: {
     /** Тип аудитории */

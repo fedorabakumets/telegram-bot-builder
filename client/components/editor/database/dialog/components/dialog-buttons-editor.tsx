@@ -23,14 +23,27 @@ interface DialogButtonsEditorProps {
   onChange: (buttons: Button[]) => void;
   /** Узлы проекта для выбора цели действия goto */
   availableNodes?: NodeWithSheet[];
+  /** Кол-во кнопок в ряду (0 = все в один ряд) */
+  buttonsPerRow?: number;
+  /** Колбэк изменения кол-ва кнопок в ряду */
+  onButtonsPerRowChange?: (value: number) => void;
 }
+
+/** Доступные варианты раскладки кнопок по рядам */
+const ROW_OPTIONS = [
+  { value: 0, label: 'Авто' },
+  { value: 1, label: '1' },
+  { value: 2, label: '2' },
+  { value: 3, label: '3' },
+  { value: 4, label: '4' },
+];
 
 /**
  * Компонент редактирования инлайн-кнопок сообщения диалога.
  * @param props - Свойства компонента
  * @returns JSX элемент списка кнопок с возможностью добавления
  */
-export function DialogButtonsEditor({ buttons, onChange, availableNodes }: DialogButtonsEditorProps) {
+export function DialogButtonsEditor({ buttons, onChange, availableNodes, buttonsPerRow, onButtonsPerRowChange }: DialogButtonsEditorProps) {
   /** Виртуальный узел клавиатуры, необходимый ButtonCard */
   const virtualNode = {
     id: VIRTUAL_NODE_ID,
@@ -107,6 +120,27 @@ export function DialogButtonsEditor({ buttons, onChange, availableNodes }: Dialo
           Callback-кнопка сработает только если в боте настроен обработчик этого callback_data —
           иначе нажатие ничего не сделает.
         </p>
+      )}
+
+      {/* Селектор раскладки кнопок по рядам — показываем только при 2+ кнопках */}
+      {onButtonsPerRowChange && buttons.length >= 2 && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Кнопок в ряду:</span>
+          <div className="flex gap-1">
+            {ROW_OPTIONS.map((opt) => (
+              <UIButton
+                key={opt.value}
+                type="button"
+                variant={(buttonsPerRow ?? 0) === opt.value ? 'secondary' : 'outline'}
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => onButtonsPerRowChange(opt.value)}
+              >
+                {opt.label}
+              </UIButton>
+            ))}
+          </div>
+        </div>
       )}
 
       <UIButton variant="outline" size="sm" onClick={handleAdd} className="w-full">
