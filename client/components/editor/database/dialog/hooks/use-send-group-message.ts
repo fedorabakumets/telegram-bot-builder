@@ -6,6 +6,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
+import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import type { Button } from '@shared/schema';
 
 /**
@@ -16,6 +17,8 @@ interface UseSendGroupMessageParams {
   projectId: number;
   /** Telegram chat_id группы */
   groupId?: string | null;
+  /** Идентификатор выбранного в шапке диалога токена бота */
+  selectedTokenId?: number | null;
   /** Колбэк после успешной отправки */
   onSent?: () => void;
 }
@@ -28,6 +31,7 @@ interface UseSendGroupMessageParams {
 export function useSendGroupMessage({
   projectId,
   groupId,
+  selectedTokenId,
   onSent,
 }: UseSendGroupMessageParams) {
   const { toast } = useToast();
@@ -41,7 +45,12 @@ export function useSendGroupMessage({
      */
     mutationFn: async ({ messageText, mediaUrls, buttons }: { messageText: string; mediaUrls?: string[]; buttons?: Button[] }) => {
       if (!groupId) throw new Error('Не указан ID группы');
-      return apiRequest('POST', `/api/projects/${projectId}/bot/send-group-message`, {
+      // Добавляем tokenId выбранного бота, чтобы сообщение ушло от него, а не от бота по умолчанию
+      const url = buildUsersApiUrl(
+        `/api/projects/${projectId}/bot/send-group-message`,
+        selectedTokenId
+      );
+      return apiRequest('POST', url, {
         groupId,
         message: messageText,
         mediaUrls: mediaUrls ?? [],

@@ -18,6 +18,10 @@ import {
     analyzeTelegramError,
     getErrorStatusCode
 } from "../../../../utils/telegram-error-handler";
+import {
+    getRequestTokenId,
+    resolveEffectiveProjectToken,
+} from "../../../utils/resolve-request-token";
 
 /**
  * Обрабатывает запрос на отправку сообщения в группу
@@ -44,18 +48,19 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
             return;
         }
 
-        const defaultToken = await storage.getDefaultBotToken(projectId);
-        if (!defaultToken) {
-            res.status(400).json({ message: "Токен бота не найден. Добавьте токен." });
+        const requestedTokenId = getRequestTokenId(req);
+        const { selectedToken, effectiveTokenId } = await resolveEffectiveProjectToken(projectId, requestedTokenId);
+        if (!selectedToken || effectiveTokenId === null) {
+            res.status(400).json({ message: "Токен бота не найден для этого проекта" });
             return;
         }
 
         // Строим медиафайлы из mediaUrls (URL, локальные файлы, file_id)
-        const mediaFiles = buildMediaFiles(mediaUrls, defaultToken.id);
+        const mediaFiles = buildMediaFiles(mediaUrls, effectiveTokenId);
 
         // Отправляем через общий sendTelegramMessage (текст + медиа)
         const result = await sendTelegramMessage(
-            defaultToken.token,
+            selectedToken.token,
             groupId,
             message ?? "",
             mediaFiles,
@@ -80,7 +85,7 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
         // Записываем сообщение в БД для отображения в диалоге группы
         await storage.createBotMessage({
             projectId,
-            tokenId: defaultToken.id,
+            tokenId: effectiveTokenId,
             userId: groupId,
             chatId: groupId,
             messageType: "bot",
@@ -93,7 +98,7 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
         await broadcastProjectEvent(projectId, {
             type: "new-message",
             projectId,
-            tokenId: defaultToken.id,
+            tokenId: effectiveTokenId,
             data: {
                 id: 0,
                 userId: groupId,

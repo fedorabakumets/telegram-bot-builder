@@ -190,6 +190,7 @@ export function DialogPanel({
   const sendGroupMessageMutation = useSendGroupMessage({
     projectId,
     groupId: groupChatId,
+    selectedTokenId,
     onSent: refetchMessages,
   });
 
