@@ -12,6 +12,7 @@ import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 import { sendTelegramMessage } from "../messages/send-telegram-message";
+import { extractButtonsFromNode } from "../messages/extract-buttons";
 import { buildMediaFiles } from "../messages/build-media-files";
 import {
     analyzeTelegramError,
@@ -32,9 +33,13 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
         const { groupId, message } = req.body;
         /** Массив URL медиафайлов из тела запроса (опционально) */
         const mediaUrls: string[] = Array.isArray(req.body.mediaUrls) ? req.body.mediaUrls : [];
+        /** Сырые инлайн-кнопки из тела запроса (формат Button фронтенда) */
+        const rawButtons = Array.isArray(req.body.buttons) ? req.body.buttons : [];
+        /** Инлайн-кнопки в формате Telegram API */
+        const buttons = extractButtonsFromNode({ buttons: rawButtons });
 
-        // Требуется ID группы и хотя бы текст или один медиафайл
-        if (!groupId || (!message && mediaUrls.length === 0)) {
+        // Требуется ID группы и хотя бы текст, медиа или кнопки
+        if (!groupId || (!message && mediaUrls.length === 0 && buttons.length === 0)) {
             res.status(400).json({ message: "Требуется ID группы и сообщение" });
             return;
         }
@@ -54,7 +59,7 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
             groupId,
             message ?? "",
             mediaFiles,
-            [],
+            buttons,
             true
         );
 
@@ -66,6 +71,10 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
         if (mediaFiles.length > 0) {
             messageData.broadcastMediaUrl = mediaFiles[0].url;
             messageData.broadcastMediaType = mediaFiles[0].type;
+        }
+        // Сохраняем кнопки для отображения в истории диалога
+        if (rawButtons.length > 0) {
+            messageData.buttons = rawButtons;
         }
 
         // Записываем сообщение в БД для отображения в диалоге группы

@@ -11,6 +11,7 @@ import { MultiMediaSelector } from '@/components/editor/properties/media/multi-m
 import { FileIdInput } from '@/components/editor/properties/media/file-id-input';
 import { DialogButtonsEditor } from './dialog-buttons-editor';
 import type { Button as MessageButton } from '@shared/schema';
+import type { NodeWithSheet } from '../utils/node-utils';
 
 /**
  * Свойства компонента ввода сообщения
@@ -20,6 +21,8 @@ interface DialogInputProps {
   isPending: boolean;
   /** Идентификатор проекта для медиаселектора */
   projectId: number;
+  /** Узлы проекта для выбора цели действия goto в кнопках */
+  availableNodes?: NodeWithSheet[];
   /**
    * Функция отправки сообщения
    * @param text - Текст сообщения
@@ -35,7 +38,7 @@ interface DialogInputProps {
  * @param props - Свойства компонента
  * @returns JSX элемент поля ввода
  */
-export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) {
+export function DialogInput({ isPending, projectId, availableNodes, onSend }: DialogInputProps) {
   const [messageText, setMessageText] = useState('');
   /** Список URL выбранных медиафайлов */
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
@@ -102,7 +105,7 @@ export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) 
       {/* Блок редактора инлайн-кнопок */}
       {showButtons && (
         <div className="border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60 max-h-64 overflow-y-auto">
-          <DialogButtonsEditor buttons={buttons} onChange={setButtons} />
+          <DialogButtonsEditor buttons={buttons} onChange={setButtons} availableNodes={availableNodes} />
         </div>
       )}
 

@@ -2,7 +2,7 @@
  * @fileoverview Компоновщик инлайн-кнопок сообщения для диалога
  * @description Тонкий контейнер над ButtonCard из узла клавиатуры. Позволяет
  * добавлять, редактировать, удалять и дублировать инлайн-кнопки прямо в диалоге.
- * Допустимые действия ограничены url/web_app/copy_text.
+ * Допустимые действия ограничены url/web_app/copy_text/goto.
  */
 
 import { Plus } from 'lucide-react';
@@ -10,6 +10,7 @@ import { Button as UIButton } from '@/components/ui/button';
 import { ButtonCard } from '@/components/editor/properties/components/button-card/button-card';
 import { generateButtonId } from '@/utils/generate-button-id';
 import type { Button, Node } from '@shared/schema';
+import type { NodeWithSheet } from '../utils/node-utils';
 
 /** Идентификатор виртуального узла клавиатуры для ButtonCard */
 const VIRTUAL_NODE_ID = 'dialog-inline-keyboard';
@@ -20,6 +21,8 @@ interface DialogButtonsEditorProps {
   buttons: Button[];
   /** Колбэк изменения списка кнопок */
   onChange: (buttons: Button[]) => void;
+  /** Узлы проекта для выбора цели действия goto */
+  availableNodes?: NodeWithSheet[];
 }
 
 /**
@@ -27,7 +30,7 @@ interface DialogButtonsEditorProps {
  * @param props - Свойства компонента
  * @returns JSX элемент списка кнопок с возможностью добавления
  */
-export function DialogButtonsEditor({ buttons, onChange }: DialogButtonsEditorProps) {
+export function DialogButtonsEditor({ buttons, onChange, availableNodes }: DialogButtonsEditorProps) {
   /** Виртуальный узел клавиатуры, необходимый ButtonCard */
   const virtualNode = {
     id: VIRTUAL_NODE_ID,
@@ -83,14 +86,14 @@ export function DialogButtonsEditor({ buttons, onChange }: DialogButtonsEditorPr
           nodeId={VIRTUAL_NODE_ID}
           button={button}
           textVariables={[]}
-          getAllNodesFromAllSheets={[]}
+          getAllNodesFromAllSheets={availableNodes ?? []}
           onButtonUpdate={handleUpdate}
           onButtonDelete={handleDelete}
           onButtonDuplicate={handleDuplicate}
           selectedNode={virtualNode}
           keyboardType="inline"
           hideExtras
-          allowedActions={['url', 'web_app', 'copy_text']}
+          allowedActions={['url', 'web_app', 'copy_text', 'goto']}
         />
       ))}
 

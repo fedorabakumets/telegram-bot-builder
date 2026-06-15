@@ -17,6 +17,7 @@ import {
 import { replaceVariablesInText } from "./replace-variables";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 import { sendTelegramMessage } from "./send-telegram-message";
+import { extractButtonsFromNode } from "./extract-buttons";
 import { buildMediaFiles } from "./build-media-files";
 
 /**
@@ -59,6 +60,10 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
     const { messageText } = validationResult.data;
     /** Массив URL медиафайлов из тела запроса (опционально) */
     const mediaUrls: string[] = Array.isArray(req.body.mediaUrls) ? req.body.mediaUrls : [];
+    /** Сырые инлайн-кнопки из тела запроса (формат Button фронтенда) */
+    const rawButtons = Array.isArray(req.body.buttons) ? req.body.buttons : [];
+    /** Инлайн-кнопки в формате Telegram API */
+    const buttons = extractButtonsFromNode({ buttons: rawButtons });
 
     const userResult = await (await import("../../../../database/db")).pool.query(
       `SELECT user_id AS "userId", username AS "userName", first_name AS "firstName",
@@ -83,12 +88,18 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
 
     const mediaFiles = buildMediaFiles(mediaUrls, effectiveTokenId);
 
+    // Нечего отправлять: нет текста, нет медиа и нет кнопок
+    if (textWithVariables.trim() === "" && mediaFiles.length === 0 && buttons.length === 0) {
+      res.status(400).json({ message: "Нечего отправлять: добавьте текст, медиа или кнопки" });
+      return;
+    }
+
     const result = await sendTelegramMessage(
       selectedToken.token,
       userId,
       textWithVariables,
       mediaFiles,
-      [],
+      buttons,
       true
     );
 
@@ -100,6 +111,10 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
     if (mediaFiles.length > 0) {
       mediaMessageData.broadcastMediaUrl = mediaFiles[0].url;
       mediaMessageData.broadcastMediaType = mediaFiles[0].type;
+    }
+    // Сохраняем кнопки для отображения в истории диалога
+    if (rawButtons.length > 0) {
+      mediaMessageData.buttons = rawButtons;
     }
 
     const savedMessage = await storage.createBotMessage({

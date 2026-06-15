@@ -28,7 +28,7 @@ export interface ComponentDefinition {
 /** Схема для отправки сообщения пользователю из панели администратора */
 export const sendMessageSchema = z.object({
   /** Текст сообщения */
-  messageText: z.string().min(1, "Message text is required").max(4096, "Message text is too long"),
+  messageText: z.string().max(4096, "Message text is too long").optional().default(""),
   /** ID узла для отправки */
   nodeId: z.string().optional(),
   /** Данные пользователя для замены переменных */

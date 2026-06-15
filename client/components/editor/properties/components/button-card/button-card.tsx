@@ -39,7 +39,7 @@ interface ButtonCardProps {
   keyboardType?: string;
   /** Белый список разрешённых действий (пробрасывается в селектор) */
   allowedActions?: ButtonActionType[];
-  /** Скрыть дополнительные поля (стиль, goto, callback, hideAfterClick) */
+  /** Скрыть дополнительные поля (стиль, callback, hideAfterClick); цель goto остаётся видимой */
   hideExtras?: boolean;
 }
 
@@ -115,7 +115,7 @@ export function ButtonCard({
       </>
       )}
 
-      {!hideExtras && button.action === 'goto' && (
+      {button.action === 'goto' && (
         <>
           <div className="border-t border-border/20 my-3"></div>
           <GotoTargetSection

@@ -16,6 +16,8 @@ import { useSendGroupMessage } from './hooks/use-send-group-message';
 import { useDeleteMessage } from './hooks/use-delete-message';
 import { useEditMessage } from './hooks/use-edit-message';
 import { useBotData } from './hooks/use-bot-data';
+import { useProjectData } from './hooks/use-project-data';
+import { collectNodesFromProjectData } from './utils/node-utils';
 import { useDialogLiveMessages } from './hooks/use-dialog-live-messages';
 import { useUserList } from '@/components/editor/database/user-details/hooks/useUserList';
 import { MessageBubble } from './components/message-bubble';
@@ -94,6 +96,15 @@ export function DialogPanel({
 
   const { users } = useUserList(projectId, selectedTokenId);
   const { bot } = useBotData(projectId);
+
+  /** Данные проекта для извлечения узлов (нужны редактору кнопок для действия goto) */
+  const { project } = useProjectData(projectId);
+
+  /** Узлы проекта со всех листов для выбора цели действия goto в инлайн-кнопках */
+  const availableNodes = useMemo(
+    () => collectNodesFromProjectData((project?.data as Record<string, unknown>) ?? null),
+    [project?.data],
+  );
 
   // URL для загрузки сообщений: группа или личный диалог
   const requestUrl = isGroup
@@ -324,6 +335,7 @@ export function DialogPanel({
         <DialogInput
           isPending={isGroup ? sendGroupMessageMutation.isPending : sendMessageMutation.isPending}
           projectId={projectId}
+          availableNodes={availableNodes}
           onSend={(text, mediaUrls, buttons) => {
             if (isGroup) {
               sendGroupMessageMutation.mutate({ messageText: text, mediaUrls, buttons });

@@ -60,11 +60,13 @@ export async function sendTelegramMessage(
   // Telegram API требует разные поля для разных типов кнопок:
   // - url-кнопки: { text, url }
   // - web_app-кнопки: { text, web_app: { url } }
+  // - copy_text-кнопки: { text, copy_text: { text } }
   // - остальные: { text, callback_data }
   const replyMarkup = hasButtons ? {
     inline_keyboard: [buttons.map(b => {
       if (b.url) return { text: b.text, url: b.url };
       if (b.webAppUrl) return { text: b.text, web_app: { url: b.webAppUrl } };
+      if (b.copyText) return { text: b.text, copy_text: { text: b.copyText } };
       return { text: b.text, callback_data: b.callbackData ?? b.id };
     })]
   } : undefined;
