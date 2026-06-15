@@ -260,10 +260,12 @@ export function Canvas({
    */
   const zoomRef = useRef(zoom);
   const panRef = useRef(pan);
-  /** Флаг активного интерактивного зума/панорамирования — отключает CSS-переход */
-  const [isInteracting, setIsInteracting] = useState(false);
-  /** Таймер сброса флага интерактивности после паузы в жесте */
-  const interactTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Флаг плавной анимации трансформации — включается ТОЛЬКО для кнопочного
+   * зума (кнопки, «уместить», фокус). Интерактивный зум колесом/щипком идёт
+   * мгновенно без CSS-перехода, иначе при медленных шагах возникает мерцание. */
+  const [animateTransform, setAnimateTransform] = useState(false);
+  /** Таймер сброса флага анимации трансформации */
+  const animateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
@@ -345,12 +347,23 @@ export function Canvas({
   }, [autoFitOnLoad, nodes, nodeSizes, suppressAutoFit]);
 
   /**
+   * Запускает кратковременную плавную анимацию трансформации (для кнопочного
+   * зума). Сбрасывает флаг через 220мс — чуть дольше длительности перехода.
+   */
+  const triggerTransformAnimation = useCallback(() => {
+    setAnimateTransform(true);
+    if (animateTimerRef.current) clearTimeout(animateTimerRef.current);
+    animateTimerRef.current = setTimeout(() => setAnimateTransform(false), 220);
+  }, []);
+
+  /**
    * Центрирует холст на узле: выделяет узел и подбирает масштаб/смещение
    * @param nodeId - Идентификатор узла для фокусировки
    */
   const focusOnNode = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
+    triggerTransformAnimation();
     onNodeSelect(nodeId);
     const scrollContainer = canvasRef.current?.parentElement;
     if (!scrollContainer) return;
@@ -369,7 +382,7 @@ export function Canvas({
     const newPanX = containerWidth / 2 - (node.position.x + nodeW / 2) * (newZoom / 100);
     const newPanY = containerHeight / 2 - (node.position.y + nodeH / 2) * (newZoom / 100);
     setPan({ x: newPanX, y: newPanY });
-  }, [nodes, nodeSizes, onNodeSelect, setZoom, setPan]);
+  }, [nodes, nodeSizes, onNodeSelect, setZoom, setPan, triggerTransformAnimation]);
 
   /**
    * Фокусировка на узле: выделяет узел и центрирует его в видимой области
@@ -797,6 +810,7 @@ export function Canvas({
 
   // Масштабирование от центра
   const zoomFromCenter = useCallback((newZoom: number) => {
+    triggerTransformAnimation();
     const { width, height } = getContainerDimensions();
     const centerX = width / 2;
     const centerY = height / 2;
@@ -817,7 +831,7 @@ export function Canvas({
     });
 
     setZoom(newZoom);
-  }, [zoom, getContainerDimensions]);
+  }, [zoom, getContainerDimensions, triggerTransformAnimation]);
 
   // Zoom utility functions
   const zoomIn = useCallback(() => {
@@ -831,9 +845,10 @@ export function Canvas({
   }, [zoom, zoomFromCenter]);
 
   const resetZoom = useCallback(() => {
+    triggerTransformAnimation();
     setZoom(100);
     setPan({ x: 0, y: 0 });
-  }, []);
+  }, [triggerTransformAnimation]);
 
   const setZoomLevel = useCallback((level: number) => {
     const constrainedZoom = Math.max(Math.min(level, 200), 1);
@@ -970,12 +985,13 @@ export function Canvas({
 
     setZoom(newZoom);
     setPan({ x: newPanX, y: newPanY });
+    triggerTransformAnimation();
     // Сбрасываем scroll контейнера — pan управляет позицией через transform
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
       scrollContainerRef.current.scrollLeft = 0;
     }
-  }, [nodes, nodeSizes, zoom]);
+  }, [nodes, nodeSizes, zoom, triggerTransformAnimation]);
 
   // Держим ref актуальным чтобы autoFitOnLoad эффект не имел stale closure
   fitToContentRef.current = fitToContent;
@@ -998,27 +1014,17 @@ export function Canvas({
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
   useEffect(() => { panRef.current = pan; }, [pan]);
 
-  /**
-   * Помечает начало/продолжение интерактивного жеста: отключает CSS-переход
-   * трансформации и сбрасывает флаг через 160мс после последнего события.
-   */
-  const markInteracting = useCallback(() => {
-    setIsInteracting(true);
-    if (interactTimerRef.current) clearTimeout(interactTimerRef.current);
-    interactTimerRef.current = setTimeout(() => setIsInteracting(false), 160);
-  }, []);
-
   // Handle wheel zoom (native handler, registered with { passive: false })
   const handleWheel = useCallback((e: WheelEvent) => {
     // Всегда предотвращаем нативный скролл контейнера — управляем паном сами
     e.preventDefault();
-    markInteracting();
 
     if (e.ctrlKey || e.metaKey) {
       // Зум (pinch на тачпаде или Ctrl+scroll)
-      // Плавный шаг пропорционально deltaY
-      const sensitivity = 0.003;
-      const zoomFactor = Math.max(0.85, Math.min(1.15, 1 - e.deltaY * sensitivity));
+      // Шаг масштаба пропорционален deltaY; чувствительность подобрана так,
+      // чтобы зум тачпадом (мелкий deltaY) был заметным, а не «ползущим».
+      const sensitivity = 0.01;
+      const zoomFactor = Math.max(0.8, Math.min(1.25, 1 - e.deltaY * sensitivity));
 
       // Берём актуальные значения из refs (не из stale-замыкания)
       const currentZoom = zoomRef.current;
@@ -1050,7 +1056,7 @@ export function Canvas({
       panRef.current = newPan;
       setPan(newPan);
     }
-  }, [markInteracting]);
+  }, []);
 
   // Handle panning
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -1070,7 +1076,6 @@ export function Canvas({
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isPanning) {
-      markInteracting();
       const deltaX = e.clientX - panStart.x;
       const deltaY = e.clientY - panStart.y;
 
@@ -1092,7 +1097,6 @@ export function Canvas({
     zoom,
     panRef,
     zoomRef,
-    onInteract: markInteracting,
     setPan,
     setZoom,
     isTouchPanning,
@@ -1592,7 +1596,7 @@ export function Canvas({
             nodes={nodes}
             pan={pan}
             zoom={zoom}
-            disableTransition={isInteracting}
+            disableTransition={!animateTransform}
             selectedNodeId={selectedNodeId}
             onNodeSelect={onNodeSelect}
             onNodeDelete={onNodeDelete}
