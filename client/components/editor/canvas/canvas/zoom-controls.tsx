@@ -5,7 +5,7 @@
  * выпадающий список выбора масштаба и кнопку "Уместить всё".
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 /**
@@ -90,11 +90,38 @@ export function ZoomControls({
     setLocalAutoFit(value);
     onAutoFitOnSheetChangeToggle?.(value);
   };
+
+  /**
+   * Хелпер для long-press: при зажатии кнопки вызывает action повторно
+   * через интервал, ускоряясь со временем.
+   */
+  const repeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startRepeat = useCallback((action: () => void) => {
+    // Первый вызов сразу (через onClick), затем повтор через 300мс,
+    // потом через 80мс для ускорения
+    let delay = 300;
+    const tick = () => {
+      action();
+      delay = Math.max(delay * 0.7, 50);
+      repeatTimerRef.current = setTimeout(tick, delay) as any;
+    };
+    repeatTimerRef.current = setTimeout(tick, delay) as any;
+  }, []);
+  const stopRepeat = useCallback(() => {
+    if (repeatTimerRef.current) {
+      clearTimeout(repeatTimerRef.current);
+      repeatTimerRef.current = null;
+    }
+  }, []);
+
   return (
     <>
       {/* Кнопка уменьшения масштаба */}
       <button
         onClick={onZoomOut}
+        onPointerDown={() => startRepeat(onZoomOut)}
+        onPointerUp={stopRepeat}
+        onPointerLeave={stopRepeat}
         disabled={!canZoomOut}
         className={`${BUTTON_BASE_CLASSES} ${BUTTON_INACTIVE_CLASSES} ${!canZoomOut ? BUTTON_DISABLED_CLASSES : ''}`}
         title="Уменьшить масштаб (Ctrl + -)"
@@ -194,6 +221,9 @@ export function ZoomControls({
       {/* Кнопка увеличения масштаба */}
       <button
         onClick={onZoomIn}
+        onPointerDown={() => startRepeat(onZoomIn)}
+        onPointerUp={stopRepeat}
+        onPointerLeave={stopRepeat}
         disabled={!canZoomIn}
         className={`${BUTTON_BASE_CLASSES} ${BUTTON_INACTIVE_CLASSES} ${!canZoomIn ? BUTTON_DISABLED_CLASSES : ''} flex items-center justify-center`}
         title="Увеличить масштаб (Ctrl + +)"
