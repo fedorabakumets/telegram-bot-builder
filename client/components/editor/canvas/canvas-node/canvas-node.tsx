@@ -573,7 +573,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
           isDragActive ? "shadow-lg cursor-grabbing z-50 border-blue-500" : "shadow-xl hover:shadow-2xl border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-all duration-200",
           isSelected && !isDragActive ? "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10 border-blue-500" : "",
           /* Индиго-подсветка для нод, выделенных рамкой (мульти-выделение). Синее одиночное выделение в приоритете */
-          isMultiSelected && !isSelected && !isDragActive ? "ring-4 ring-indigo-500/30 shadow-2xl shadow-indigo-500/10 border-indigo-500" : "",
+          isMultiSelected && !isSelected && !isDragActive ? "ring-4 ring-indigo-500/50 shadow-2xl shadow-indigo-500/20 border-indigo-500" : "",
           isConnectionTarget ? "ring-4 ring-green-400/60 border-green-400 shadow-green-400/20" : "",
           isConnectedToDragging && !isDragActive ? "ring-2 ring-violet-400 border-violet-500 scale-[1.02]" : "",
           effectiveHover && !isDragActive && !isSelected && !isConnectionSource ? "ring-2 ring-sky-400 border-sky-400 scale-[1.02]" : "",
@@ -595,6 +595,9 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
             ? '0 0 0 2px #8b5cf6, 0 0 20px 4px rgba(139, 92, 246, 0.5), 0 0 40px 8px rgba(139, 92, 246, 0.2)'
             : effectiveHover && !isSelected && !isConnectionSource
             ? '0 0 0 2px #38bdf8, 0 0 16px 4px rgba(56, 189, 248, 0.45), 0 0 32px 6px rgba(56, 189, 248, 0.2)'
+            : // Яркое индиго-свечение для нод, выделенных рамкой (мульти-выделение), по интенсивности как при наведении
+            isMultiSelected && !isSelected && !isConnectionSource && !isDragActive
+            ? '0 0 0 2px #6366f1, 0 0 16px 4px rgba(99, 102, 241, 0.45), 0 0 32px 6px rgba(99, 102, 241, 0.2)'
             : isHoveredByConnection
             ? '0 0 0 2px #8b5cf6, 0 0 20px 4px rgba(139, 92, 246, 0.5), 0 0 40px 8px rgba(139, 92, 246, 0.2)'
             : undefined,
