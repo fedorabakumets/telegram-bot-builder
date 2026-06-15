@@ -17,6 +17,8 @@ import {
   getRequestTokenId,
 } from "../../../utils/resolve-request-token";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
+import { extractButtonsFromNode } from "./extract-buttons";
+import { buildInlineKeyboard } from "./send-telegram-message";
 
 /**
  * Проверяет наличие медиа-вложения в данных сообщения
@@ -38,6 +40,7 @@ function hasMediaAttachment(messageData: unknown): boolean {
  * @param telegramMessageId - ID сообщения в Telegram
  * @param messageText - Новый текст сообщения
  * @param isMedia - Редактировать подпись (caption) или текст
+ * @param replyMarkup - Встроенная клавиатура (inline_keyboard); пустой массив убирает кнопки
  * @returns Успех операции и возможная ошибка
  */
 async function callTelegramEditMessage(
@@ -45,7 +48,8 @@ async function callTelegramEditMessage(
   chatId: string,
   telegramMessageId: number,
   messageText: string,
-  isMedia: boolean
+  isMedia: boolean,
+  replyMarkup: { inline_keyboard: any[][] }
 ): Promise<{ success: boolean; error?: string }> {
   const method = isMedia ? "editMessageCaption" : "editMessageText";
   const textField = isMedia ? "caption" : "text";
@@ -59,6 +63,7 @@ async function callTelegramEditMessage(
       message_id: telegramMessageId,
       [textField]: messageText,
       parse_mode: "HTML",
+      reply_markup: replyMarkup,
     }),
   });
 
@@ -95,7 +100,11 @@ export async function editSingleMessageHandler(
   try {
     const projectId = parseInt(req.params.projectId);
     const messageId = parseInt(req.params.messageId);
-    const { messageText } = req.body as { messageText?: string };
+    const { messageText, buttons = [], buttonsPerRow = 0 } = req.body as {
+      messageText?: string;
+      buttons?: unknown[];
+      buttonsPerRow?: number;
+    };
 
     if (isNaN(projectId) || isNaN(messageId)) {
       res.status(400).json({ message: "Неверный ID проекта или сообщения" });
@@ -146,12 +155,20 @@ export async function editSingleMessageHandler(
     }
 
     const isMedia = hasMediaAttachment(message.messageData);
+
+    // Пересобираем inline-клавиатуру из переданных кнопок. Пустой массив кнопок
+    // даёт { inline_keyboard: [] } — это осознанно убирает клавиатуру у сообщения.
+    const replyMarkup = buttons.length > 0
+      ? buildInlineKeyboard(extractButtonsFromNode({ buttons }), buttonsPerRow)
+      : { inline_keyboard: [] as any[][] };
+
     const telegramResult = await callTelegramEditMessage(
       selectedToken.token,
       message.userId,
       message.telegramMessageId,
       messageText,
-      isMedia
+      isMedia,
+      replyMarkup
     );
 
     if (!telegramResult.success) {
@@ -162,10 +179,18 @@ export async function editSingleMessageHandler(
       return;
     }
 
-    // Telegram подтвердил — обновляем БД
+    // Telegram подтвердил — обновляем БД (текст и данные сообщения с новыми кнопками)
+    const updatedMessageData = {
+      ...(message.messageData && typeof message.messageData === "object"
+        ? (message.messageData as Record<string, unknown>)
+        : {}),
+      buttons,
+      buttonsPerRow,
+    };
+
     await db
       .update(botMessages)
-      .set({ messageText })
+      .set({ messageText, messageData: updatedMessageData })
       .where(eq(botMessages.id, messageId));
 
     // Рассылаем WS-событие всем подключённым клиентам проекта

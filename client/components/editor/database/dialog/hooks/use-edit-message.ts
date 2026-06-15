@@ -6,6 +6,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import type { Button } from '@shared/schema';
 
 /**
  * Параметры хука useEditMessage
@@ -33,6 +34,10 @@ interface EditMessageVariables {
   messageText: string;
   /** Оригинальный текст для отката при ошибке */
   originalText: string;
+  /** Инлайн-кнопки сообщения (для пересборки клавиатуры) */
+  buttons?: Button[];
+  /** Кол-во кнопок в ряду (0 = все в один ряд) */
+  buttonsPerRow?: number;
 }
 
 /**
@@ -69,7 +74,7 @@ export function useEditMessage({
      * @param variables - Параметры редактирования
      * @returns Ответ сервера
      */
-    mutationFn: async ({ messageId, messageText }: EditMessageVariables) => {
+    mutationFn: async ({ messageId, messageText, buttons, buttonsPerRow }: EditMessageVariables) => {
       const tokenParam = selectedTokenId != null ? `?tokenId=${selectedTokenId}` : '';
       const url = `/api/projects/${projectId}/messages/${messageId}${tokenParam}`;
 
@@ -77,7 +82,7 @@ export function useEditMessage({
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messageText }),
+        body: JSON.stringify({ messageText, buttons, buttonsPerRow }),
       });
 
       if (!response.ok) {

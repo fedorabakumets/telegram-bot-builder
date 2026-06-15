@@ -219,6 +219,7 @@ export function DialogPanel({
         next.set(messageId, originalText);
         return next;
       }),
+    onEdited: refetchMessages,
   });
 
   if (!user) {
@@ -315,9 +316,10 @@ export function DialogPanel({
                     deleteMessageMutation.isPending &&
                     deleteMessageMutation.variables === message.id
                   }
-                  onEdit={(messageId, newText, originalText) =>
-                    editMessageMutation.mutate({ messageId, messageText: newText, originalText })
+                  onEdit={(messageId, newText, originalText, buttons, buttonsPerRow) =>
+                    editMessageMutation.mutate({ messageId, messageText: newText, originalText, buttons, buttonsPerRow })
                   }
+                  availableNodes={availableNodes}
                   isEditing={
                     editMessageMutation.isPending &&
                     editMessageMutation.variables?.messageId === message.id

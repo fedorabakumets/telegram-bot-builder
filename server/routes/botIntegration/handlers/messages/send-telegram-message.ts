@@ -54,6 +54,42 @@ function chunkButtons<T>(buttons: T[], buttonsPerRow?: number): T[][] {
 }
 
 /**
+ * Преобразует кнопку фронтенда в формат Telegram inline_keyboard.
+ * Telegram API требует разные поля для разных типов кнопок:
+ * - url-кнопки: { text, url }
+ * - web_app-кнопки: { text, web_app: { url } }
+ * - copy_text-кнопки: { text, copy_text: { text } }
+ * - остальные: { text, callback_data }
+ * @param b - Инлайн-кнопка во внутреннем формате
+ * @returns Объект кнопки в формате Telegram API
+ */
+function buildButton(b: InlineButton): Record<string, unknown> {
+  // Поле стиля (Bot API 9.4) добавляем к любой кнопке, если оно задано;
+  // Telegram игнорирует style для неподдерживаемых типов кнопок
+  const styleField = b.style ? { style: b.style } : {};
+  if (b.url) return { text: b.text, url: b.url, ...styleField };
+  if (b.webAppUrl) return { text: b.text, web_app: { url: b.webAppUrl }, ...styleField };
+  if (b.copyText) return { text: b.text, copy_text: { text: b.copyText }, ...styleField };
+  return { text: b.text, callback_data: b.callbackData ?? b.id, ...styleField };
+}
+
+/**
+ * Собирает inline-клавиатуру Telegram из массива кнопок.
+ * Маппит каждую кнопку в формат Telegram и режет на ряды по buttonsPerRow.
+ * @param buttons - Кнопки во внутреннем формате InlineButton
+ * @param buttonsPerRow - Кол-во кнопок в ряду (0 или отсутствует = все в один ряд)
+ * @returns Объект reply_markup с полем inline_keyboard
+ */
+export function buildInlineKeyboard(
+  buttons: InlineButton[],
+  buttonsPerRow?: number
+): { inline_keyboard: any[][] } {
+  return {
+    inline_keyboard: chunkButtons(buttons.map(buildButton), buttonsPerRow),
+  };
+}
+
+/**
  * Отправляет сообщение в Telegram с поддержкой медиа и кнопок
  * 
  * @param token - Токен бота
@@ -77,31 +113,9 @@ export async function sendTelegramMessage(
   const hasMedia = mediaFiles.length > 0;
   const hasButtons = buttons.length > 0;
 
-  /**
-   * Преобразует кнопку фронтенда в формат Telegram inline_keyboard.
-   * Telegram API требует разные поля для разных типов кнопок:
-   * - url-кнопки: { text, url }
-   * - web_app-кнопки: { text, web_app: { url } }
-   * - copy_text-кнопки: { text, copy_text: { text } }
-   * - остальные: { text, callback_data }
-   * @param b - Инлайн-кнопка во внутреннем формате
-   * @returns Объект кнопки в формате Telegram API
-   */
-  const buildButton = (b: InlineButton) => {
-    // Поле стиля (Bot API 9.4) добавляем к любой кнопке, если оно задано;
-    // Telegram игнорирует style для неподдерживаемых типов кнопок
-    const styleField = b.style ? { style: b.style } : {};
-    if (b.url) return { text: b.text, url: b.url, ...styleField };
-    if (b.webAppUrl) return { text: b.text, web_app: { url: b.webAppUrl }, ...styleField };
-    if (b.copyText) return { text: b.text, copy_text: { text: b.copyText }, ...styleField };
-    return { text: b.text, callback_data: b.callbackData ?? b.id, ...styleField };
-  };
-
-  // Строим ряды инлайн-кнопок: при buttonsPerRow >= 1 режем массив на чанки
-  // по N штук, иначе — все кнопки в один ряд (обратная совместимость).
-  const replyMarkup = hasButtons ? {
-    inline_keyboard: chunkButtons(buttons.map(buildButton), buttonsPerRow),
-  } : undefined;
+  // Строим ряды инлайн-кнопок через переиспользуемый хелпер: при buttonsPerRow >= 1
+  // режем массив на чанки по N штук, иначе — все кнопки в один ряд.
+  const replyMarkup = hasButtons ? buildInlineKeyboard(buttons, buttonsPerRow) : undefined;
 
   if (!hasMedia) {
     return sendTextMessage(token, chatId, text, useHtml, replyMarkup);

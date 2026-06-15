@@ -8,14 +8,16 @@ import { Trash2, Loader2, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 import { BotMessageWithMedia } from '../types';
-import { UserBotData } from '@shared/schema';
+import { UserBotData, Button as ButtonType } from '@shared/schema';
 import { MessageAvatar } from './message-avatar';
 import { MessageMedia } from './message-media';
 import { FormattedText } from './formatted-text';
 import { MessageButtons } from './message-buttons';
 import { ButtonClickedInfo } from './button-clicked-info';
 import { MessageTimestamp } from './message-timestamp';
+import { DialogButtonsEditor } from './dialog-buttons-editor';
 import { hasButtons, getButtons, hasButtonClicked, getButtonText } from '../utils/message-utils';
+import type { NodeWithSheet } from '../utils/node-utils';
 
 /**
  * Свойства компонента сообщения
@@ -37,12 +39,20 @@ interface MessageBubbleProps {
   onDelete?: (messageId: number) => void;
   /** Идёт ли удаление этого сообщения */
   isDeleting?: boolean;
-  /** Колбэк сохранения отредактированного текста */
-  onEdit?: (messageId: number, newText: string, originalText: string) => void;
+  /** Колбэк сохранения отредактированного текста и кнопок */
+  onEdit?: (
+    messageId: number,
+    newText: string,
+    originalText: string,
+    buttons?: ButtonType[],
+    buttonsPerRow?: number,
+  ) => void;
   /** Идёт ли сохранение редактирования */
   isEditing?: boolean;
   /** Флаг группового диалога — показывает имя отправителя над сообщением */
   isGroupDialog?: boolean;
+  /** Узлы проекта для выбора цели действия goto в редакторе кнопок */
+  availableNodes?: NodeWithSheet[];
 }
 
 /**
@@ -92,7 +102,7 @@ function getSenderName(message: BotMessageWithMedia): string | null {
  */
 export function MessageBubble({
   message, index, user, bot, projectId, tokenId,
-  onDelete, isDeleting, onEdit, isEditing, isGroupDialog,
+  onDelete, isDeleting, onEdit, isEditing, isGroupDialog, availableNodes,
 }: MessageBubbleProps) {
   const isBot = message.messageType === 'bot';
   const isUser = message.messageType === 'user';
@@ -104,6 +114,10 @@ export function MessageBubble({
   const [isEditMode, setIsEditMode] = useState(false);
   /** Текущий текст в редакторе (HTML) */
   const [editText, setEditText] = useState('');
+  /** Локальное состояние инлайн-кнопок в режиме редактирования */
+  const [editButtons, setEditButtons] = useState<ButtonType[]>([]);
+  /** Локальное состояние раскладки кнопок по рядам (0 = авто) */
+  const [editButtonsPerRow, setEditButtonsPerRow] = useState(0);
 
   /** Сбрасываем режим редактирования при смене сообщения */
   useEffect(() => {
@@ -123,20 +137,37 @@ export function MessageBubble({
   /** Открывает режим редактирования — передаём HTML как есть в редактор */
   const handleOpenEdit = () => {
     setEditText(displayText ?? '');
+    // Инициализируем кнопки и раскладку из данных сообщения
+    setEditButtons(getButtons(message) as ButtonType[]);
+    const data = message.messageData as Record<string, unknown> | null;
+    setEditButtonsPerRow(typeof data?.buttonsPerRow === 'number' ? data.buttonsPerRow : 0);
     setIsEditMode(true);
   };
 
-  /** Сохраняет отредактированный текст */
+  /** Сохраняет отредактированный текст и кнопки */
   const handleSave = () => {
     if (!onEdit) return;
-    onEdit(message.id, editText, displayText ?? '');
+    onEdit(message.id, editText, displayText ?? '', editButtons, editButtonsPerRow);
     setIsEditMode(false);
   };
 
   /** Отменяет редактирование */
   const handleCancel = () => setIsEditMode(false);
 
-  const isSaveDisabled = editText.trim() === '' || editText === (displayText ?? '');
+  /** Исходные кнопки и раскладка сообщения для сравнения изменений */
+  const originalButtons = getButtons(message);
+  const originalButtonsPerRow =
+    typeof (message.messageData as Record<string, unknown> | null)?.buttonsPerRow === 'number'
+      ? ((message.messageData as Record<string, number>).buttonsPerRow)
+      : 0;
+  /** Изменились ли кнопки или раскладка по сравнению с исходными */
+  const buttonsChanged =
+    JSON.stringify(editButtons) !== JSON.stringify(originalButtons) ||
+    editButtonsPerRow !== originalButtonsPerRow;
+  /** Изменился ли текст по сравнению с исходным */
+  const textChanged = editText !== (displayText ?? '');
+  /** Сохранение запрещено, если текст пуст либо ничего не изменилось */
+  const isSaveDisabled = editText.trim() === '' || (!textChanged && !buttonsChanged);
 
   return (
     <div
@@ -211,6 +242,14 @@ export function MessageBubble({
                 value={editText}
                 onChange={setEditText}
                 placeholder="Введите текст сообщения..."
+              />
+              {/* Редактор инлайн-кнопок — позволяет менять клавиатуру при правке */}
+              <DialogButtonsEditor
+                buttons={editButtons}
+                onChange={setEditButtons}
+                availableNodes={availableNodes}
+                buttonsPerRow={editButtonsPerRow}
+                onButtonsPerRowChange={setEditButtonsPerRow}
               />
               <div className="flex gap-1 justify-end">
                 <Button
