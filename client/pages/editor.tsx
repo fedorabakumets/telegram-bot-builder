@@ -1502,6 +1502,7 @@ export default function Editor() {
                 canvasView={canvasView}
                 onViewChange={currentTab === 'editor' ? handleViewChange : undefined}
                 projectId={activeProject?.id}
+                projects={allProjects.map((p) => ({ id: p.id, name: p.name, ownerId: p.ownerId, data: p.data }))}
               />
             </div>
           )}
@@ -1909,6 +1910,7 @@ export default function Editor() {
                   highlightNodeId={highlightNodeId}
                   onAutoLayout={handleAutoLayout}
                   projectId={activeProject?.id}
+                  projects={allProjects.map((p) => ({ id: p.id, name: p.name, ownerId: p.ownerId, data: p.data }))}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">

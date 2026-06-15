@@ -1712,6 +1712,19 @@ export function Canvas({
 
   /** Групповое перемещение выделенных узлов в существующий лист */
   const handleGroupMoveToSheet = useCallback((sheetId: string) => {
+    if (selectedNodeIds.size === 0) return;
+    moveNodesToSheet(Array.from(selectedNodeIds), sheetId);
+    addAction('sheet_switch', `Перемещено узлов в лист: ${selectedNodeIds.size}`);
+    clearSelection();
+  }, [selectedNodeIds, moveNodesToSheet, addAction, clearSelection]);
+
+  /** Групповой перенос выделенных узлов в другой проект (в новый лист) */
+  const handleGroupMoveToProject = useCallback((targetProjectId: number) => {
+    if (selectedNodeIds.size === 0) return;
+    moveNodesToProject(Array.from(selectedNodeIds), targetProjectId);
+    addAction('sheet_switch', `Перенесено узлов в проект: ${selectedNodeIds.size}`);
+    clearSelection();
+  }, [selectedNodeIds, moveNodesToProject, addAction, clearSelection]);
 
   /** Групповое перемещение выделенных узлов в новый лист */
   const handleGroupMoveToNewSheet = useCallback(() => {
@@ -1871,10 +1884,12 @@ export function Canvas({
       <MultiSelectionToolbar
         count={selectedNodeIds.size}
         sheets={availableSheets}
+        projects={otherProjects}
         onDelete={handleGroupDelete}
         onCopy={handleGroupCopy}
         onMoveToSheet={handleGroupMoveToSheet}
         onMoveToNewSheet={handleGroupMoveToNewSheet}
+        onMoveToProject={handleGroupMoveToProject}
       />
 
       {/* Компонент листов холста - фиксированная панель внизу */}
