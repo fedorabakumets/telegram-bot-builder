@@ -6,14 +6,15 @@
 import { useCallback } from 'react';
 import { BotDataWithSheets } from '@shared/schema';
 import { createSheet } from '@/utils/sheets/sheet-crud';
+import { clearExternalNodeReferences } from '@/utils/sheets/clear-external-references';
 
 /**
  * Хук для перемещения группы узлов из активного листа в другой лист.
  *
- * ОГРАНИЧЕНИЕ: связи между перемещаемыми узлами сохраняются (узлы переносятся
- * как есть со своими data). Связи к узлам ВНЕ группы на этом этапе не
- * обрываются и не переносятся — целевые id остаются в данных, но указывают
- * на узлы, оставшиеся на исходном листе.
+ * Связи МЕЖДУ перемещаемыми узлами сохраняются. Связи, пересекающие границу
+ * группы, теперь ОБРЫВАЮТСЯ: у перемещаемых узлов очищаются ссылки на узлы,
+ * оставшиеся на исходном листе, а у оставшихся узлов очищаются ссылки на
+ * перемещённые узлы. Это исключает появление «висячих» ссылок.
  *
  * @param botData - Данные бота с листами
  * @param onBotDataUpdate - Колбэк обновления данных бота
@@ -38,7 +39,11 @@ export function useMoveNodesToSheet(
     const idSet = new Set(nodeIds);
     const movingNodes = activeSheet.nodes.filter(n => idSet.has(n.id));
     if (movingNodes.length === 0) return null;
-    return { activeSheetId, movingNodes, idSet };
+    // Идентификаторы узлов, остающихся на исходном листе после перемещения
+    const remainingIds = new Set(
+      activeSheet.nodes.filter(n => !idSet.has(n.id)).map(n => n.id)
+    );
+    return { activeSheetId, movingNodes, idSet, remainingIds };
   }, [botData, onBotDataUpdate]);
 
   /**
@@ -50,15 +55,25 @@ export function useMoveNodesToSheet(
   const moveNodesToSheet = useCallback((nodeIds: string[], targetSheetId: string) => {
     const extracted = extractNodes(nodeIds);
     if (!extracted || !botData || !onBotDataUpdate) return;
-    const { activeSheetId, movingNodes, idSet } = extracted;
+    const { activeSheetId, movingNodes, idSet, remainingIds } = extracted;
     if (activeSheetId === targetSheetId) return;
+
+    // У перемещаемых узлов обрываем ссылки на оставшиеся узлы (вне группы)
+    const cleanedMovingNodes = movingNodes.map(n => ({
+      ...n,
+      data: clearExternalNodeReferences(n.data, idSet)
+    }));
 
     const updatedSheets = botData.sheets.map(sheet => {
       if (sheet.id === activeSheetId) {
-        return { ...sheet, nodes: sheet.nodes.filter(n => !idSet.has(n.id)) };
+        // У оставшихся узлов обрываем ссылки на перемещённые узлы
+        const remainingNodes = sheet.nodes
+          .filter(n => !idSet.has(n.id))
+          .map(n => ({ ...n, data: clearExternalNodeReferences(n.data, remainingIds) }));
+        return { ...sheet, nodes: remainingNodes };
       }
       if (sheet.id === targetSheetId) {
-        return { ...sheet, nodes: [...sheet.nodes, ...movingNodes] };
+        return { ...sheet, nodes: [...sheet.nodes, ...cleanedMovingNodes] };
       }
       return sheet;
     });
@@ -75,12 +90,22 @@ export function useMoveNodesToSheet(
   const moveNodesToNewSheet = useCallback((nodeIds: string[], name: string) => {
     const extracted = extractNodes(nodeIds);
     if (!extracted || !botData || !onBotDataUpdate) return;
-    const { activeSheetId, movingNodes, idSet } = extracted;
+    const { activeSheetId, movingNodes, idSet, remainingIds } = extracted;
 
-    const newSheet = createSheet(name, movingNodes);
+    // У перемещаемых узлов обрываем ссылки на оставшиеся узлы (вне группы)
+    const cleanedMovingNodes = movingNodes.map(n => ({
+      ...n,
+      data: clearExternalNodeReferences(n.data, idSet)
+    }));
+
+    const newSheet = createSheet(name, cleanedMovingNodes);
     const updatedSheets = botData.sheets.map(sheet => {
       if (sheet.id === activeSheetId) {
-        return { ...sheet, nodes: sheet.nodes.filter(n => !idSet.has(n.id)) };
+        // У оставшихся узлов обрываем ссылки на перемещённые узлы
+        const remainingNodes = sheet.nodes
+          .filter(n => !idSet.has(n.id))
+          .map(n => ({ ...n, data: clearExternalNodeReferences(n.data, remainingIds) }));
+        return { ...sheet, nodes: remainingNodes };
       }
       return sheet;
     });
