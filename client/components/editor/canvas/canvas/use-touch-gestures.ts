@@ -157,10 +157,21 @@ export function useTouchGestures({
       const deltaX = touch.clientX - touchStart.x;
       const deltaY = touch.clientY - touchStart.y;
 
-      setPan({
+      const newPan = {
         x: lastTouchPosition.x + deltaX,
-        y: lastTouchPosition.y + deltaY
-      });
+        y: lastTouchPosition.y + deltaY,
+      };
+
+      // Панорамирование идёт через тот же RAF-throttle, что и зум:
+      // синхронно обновляем panRef и планируем единый flush за кадр.
+      // Иначе прямой setPan на каждое touch-событие даёт несколько
+      // ре-рендеров за кадр и вызывает мерцание холста.
+      if (panRef) panRef.current = newPan;
+      if (scheduleFlush) {
+        scheduleFlush(newPan, zoomRef?.current ?? zoom);
+      } else {
+        setPan(newPan);
+      }
     } else if (touches.length === 2) {
       const currentDistance = getTouchDistance(touches);
       const center = getTouchCenter(touches);

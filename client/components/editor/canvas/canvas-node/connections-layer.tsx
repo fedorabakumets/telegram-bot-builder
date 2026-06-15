@@ -18,7 +18,7 @@
  * @module ConnectionsLayer
  */
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Node } from '@/types/bot';
 import {
   KEYBOARD_LINK_PORT_TYPE,
@@ -419,7 +419,7 @@ export function getRenderableConnections(
  * @param props - Свойства компонента
  * @returns SVG элемент с линиями соединений или null если нет соединений
  */
-export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonPortYOffsets, draggingNodeId, onConnectionHover }: ConnectionsLayerProps) {
+function ConnectionsLayerComponent({ nodes, nodeSizes, onConnectionDelete, buttonPortYOffsets, draggingNodeId, onConnectionHover }: ConnectionsLayerProps) {
   /** Ширина узла по умолчанию если ResizeObserver ещё не сработал */
   const DEFAULT_WIDTH = 320;
   /** border-box высота узла по умолчанию (до первого срабатывания ResizeObserver) */
@@ -599,3 +599,17 @@ export function ConnectionsLayer({ nodes, nodeSizes, onConnectionDelete, buttonP
     </svg>
   );
 }
+
+/**
+ * Мемоизированный SVG-слой соединений.
+ *
+ * Обёрнут в React.memo, потому что его пропсы (`nodes`, `nodeSizes`,
+ * `onConnectionDelete`, `buttonPortYOffsets`, `draggingNodeId`,
+ * `onConnectionHover`) стабильны во время панорамирования и зума —
+ * эти жесты меняют только pan/zoom родителя, но не данные узлов.
+ * Без мемоизации слой пересобирал бы все пути соединений на каждый кадр
+ * жеста, что роняло FPS и проявлялось как мерцание холста.
+ *
+ * @returns Мемоизированный SVG-слой соединений
+ */
+export const ConnectionsLayer = memo(ConnectionsLayerComponent);

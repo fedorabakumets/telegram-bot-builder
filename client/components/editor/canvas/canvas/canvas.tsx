@@ -1094,18 +1094,6 @@ export function Canvas({
     }
   }, [pan]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (isPanning) {
-      const deltaX = e.clientX - panStart.x;
-      const deltaY = e.clientY - panStart.y;
-
-      setPan({
-        x: lastPanPosition.x + deltaX,
-        y: lastPanPosition.y + deltaY
-      });
-    }
-  }, [isPanning, panStart, lastPanPosition]);
-
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
   }, []);
@@ -1361,15 +1349,24 @@ export function Canvas({
 
   // Handle mouse events for panning
   useEffect(() => {
+    /**
+     * Глобальный обработчик движения мыши при панорамировании.
+     * Пишет новое смещение синхронно в panRef и планирует единый RAF-flush
+     * (как зум), чтобы за кадр был ровно один ре-рендер вместо нескольких
+     * прямых setPan — это убирает мерцание холста при панорамировании мышью.
+     */
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (isPanning) {
         const deltaX = e.clientX - panStart.x;
         const deltaY = e.clientY - panStart.y;
 
-        setPan({
+        const newPan = {
           x: lastPanPosition.x + deltaX,
-          y: lastPanPosition.y + deltaY
-        });
+          y: lastPanPosition.y + deltaY,
+        };
+        panRef.current = newPan;
+        pendingUpdateRef.current = { pan: newPan, zoom: zoomRef.current };
+        scheduleStateFlush();
       }
     };
 
@@ -1397,7 +1394,7 @@ export function Canvas({
       document.removeEventListener('mouseup', handleGlobalMouseUp);
       document.removeEventListener('wheel', preventPageZoom);
     };
-  }, [isPanning, panStart, lastPanPosition]);
+  }, [isPanning, panStart, lastPanPosition, scheduleStateFlush]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -1629,7 +1626,6 @@ export function Canvas({
           onDragLeave={handleDragLeave}
           onClick={handleCanvasClick}
           onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onContextMenu={handleContextMenu}
         >
