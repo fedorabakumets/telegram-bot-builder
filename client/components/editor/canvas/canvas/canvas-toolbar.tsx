@@ -14,6 +14,7 @@ import { ClipboardButtons } from './clipboard-buttons';
 import { InterfaceToggles } from './interface-toggles';
 import { KeyboardShortcutsHelp } from './keyboard-shortcuts-help';
 import { NodeSearchButton } from './node-search-button';
+import { MarqueeSelectButton } from './marquee-select-button';
 import { Action } from './canvas';
 import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
 import type { CanvasView } from '@/pages/editor/components/canvas-view-toggle';
@@ -100,6 +101,10 @@ interface CanvasToolbarProps {
   searchOpen?: boolean;
   /** Колбэк изменения состояния открытия поиска узлов */
   onSearchOpenChange?: (open: boolean) => void;
+  /** Активен ли инструмент рамочного выделения */
+  marqueeActive?: boolean;
+  /** Колбэк переключения инструмента рамочного выделения */
+  onToggleMarquee?: () => void;
 }
 
 /**
@@ -148,6 +153,8 @@ export function CanvasToolbar({
   onNodeFocus,
   searchOpen,
   onSearchOpenChange,
+  marqueeActive,
+  onToggleMarquee,
 }: CanvasToolbarProps) {
   return (
     <div data-canvas-toolbar className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{ left: 0, right: 0 }}>
@@ -207,6 +214,11 @@ export function CanvasToolbar({
                 open={searchOpen}
                 onOpenChange={onSearchOpenChange}
               />
+            )}
+
+            {/* Инструмент рамочного выделения нескольких узлов */}
+            {onToggleMarquee && (
+              <MarqueeSelectButton active={marqueeActive ?? false} onToggle={onToggleMarquee} />
             )}
 
             {/* Р Р°Р·РґРµР»РёС‚РµР»СЊ */}

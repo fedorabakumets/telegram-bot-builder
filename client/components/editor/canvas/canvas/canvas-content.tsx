@@ -34,6 +34,8 @@ interface CanvasContentProps {
   disableTransition?: boolean;
   /** Идентификатор выбранного узла */
   selectedNodeId: string | null;
+  /** Множество идентификаторов узлов, выделенных рамкой (мульти-выделение) */
+  selectedNodeIds?: Set<string>;
   /** Колбэк при выборе узла */
   onNodeSelect: (nodeId: string) => void;
   /** Колбэк при удалении узла */
@@ -93,6 +95,7 @@ export function CanvasContent({
   panRef,
   disableTransition,
   selectedNodeId,
+  selectedNodeIds,
   onNodeSelect,
   onNodeDelete,
   onNodeDuplicate,
@@ -211,7 +214,7 @@ export function CanvasContent({
           key={node.id}
           node={node}
           allNodes={allNodes}
-          isSelected={selectedNodeId === node.id}
+          isSelected={selectedNodeId === node.id || (selectedNodeIds?.has(node.id) ?? false)}
           zoomRef={zoomRef}
           panRef={panRef}
           sheets={sheets}

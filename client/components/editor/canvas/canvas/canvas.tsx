@@ -15,6 +15,10 @@ import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
 import { MobileCanvasFab } from './mobile-canvas-fab';
 import { useConnectionDrag } from './use-connection-drag';
+import { useMarqueeSelection } from './use-marquee-selection';
+import { useMoveNodesToSheet } from './use-move-nodes-to-sheet';
+import { MarqueeOverlay } from './marquee-overlay';
+import { MultiSelectionToolbar } from './multi-selection-toolbar';
 import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-connection';
 import { PortType } from '../canvas-node/port-colors';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from './utils/canvas-coordinate-utils';
@@ -294,6 +298,21 @@ export function Canvas({
       .filter(s => s.id !== botData.activeSheetId)
       .map(s => ({ id: s.id, name: s.name }));
   }, [botData]);
+
+  /** Состояние мульти-выделения узлов рамкой */
+  const {
+    tool,
+    toggleTool,
+    selectedNodeIds,
+    marqueeRect,
+    startMarquee,
+    updateMarquee,
+    finishMarquee,
+    clearSelection,
+  } = useMarqueeSelection();
+
+  /** Групповое перемещение выделенных узлов в листы */
+  const { moveNodesToSheet, moveNodesToNewSheet } = useMoveNodesToSheet(botData, onBotDataUpdate);
 
   // Ref для отслеживания последнего набора узлов при autoFitOnLoad
   const lastAutoFitNodesKeyRef = useRef<string>('');
@@ -1085,6 +1104,17 @@ export function Canvas({
     const isEmptyCanvas = target.classList.contains('canvas-grid-modern') ||
       target.closest('.canvas-grid-modern') === target;
 
+    // Инструмент рамки активен и ЛКМ по пустому холсту без Alt — начинаем рамку
+    if (tool === 'marquee' && e.button === 0 && !e.altKey && isEmptyCanvas) {
+      e.preventDefault();
+      const rect = canvasRef.current?.getBoundingClientRect();
+      const x = rect ? e.clientX - rect.left : e.clientX;
+      const y = rect ? e.clientY - rect.top : e.clientY;
+      clearSelection();
+      startMarquee(x, y);
+      return;
+    }
+
     if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey) ||
       (e.button === 0 && isEmptyCanvas)) { // Middle mouse, right mouse, Alt+click, or left-click on empty canvas
       e.preventDefault();
@@ -1092,7 +1122,7 @@ export function Canvas({
       setPanStart({ x: e.clientX, y: e.clientY });
       setLastPanPosition(pan);
     }
-  }, [pan]);
+  }, [pan, tool, clearSelection, startMarquee]);
 
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
@@ -1396,6 +1426,31 @@ export function Canvas({
     };
   }, [isPanning, panStart, lastPanPosition, scheduleStateFlush]);
 
+  // Глобальные обработчики рисования рамки выделения (marquee)
+  useEffect(() => {
+    if (!marqueeRect) return;
+
+    /** Обновляет рамку по координатам относительно холста */
+    const handleMarqueeMove = (e: MouseEvent) => {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      const x = rect ? e.clientX - rect.left : e.clientX;
+      const y = rect ? e.clientY - rect.top : e.clientY;
+      updateMarquee(x, y);
+    };
+
+    /** Завершает рамку и вычисляет попавшие узлы */
+    const handleMarqueeUp = () => {
+      finishMarquee({ nodes, nodeSizes, pan, zoom });
+    };
+
+    document.addEventListener('mousemove', handleMarqueeMove);
+    document.addEventListener('mouseup', handleMarqueeUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMarqueeMove);
+      document.removeEventListener('mouseup', handleMarqueeUp);
+    };
+  }, [marqueeRect, nodes, nodeSizes, pan, zoom, updateMarquee, finishMarquee]);
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -1601,6 +1656,42 @@ export function Canvas({
     onNodeMoveEnd?.(nodeId);
   }, [onNodeMoveEnd]);
 
+  /**
+   * Групповое удаление всех выделенных рамкой узлов.
+   * Удаляет каждый узел через onNodeDelete и очищает выделение.
+   */
+  const handleGroupDelete = useCallback(() => {
+    if (selectedNodeIds.size === 0 || !onNodeDelete) return;
+    addAction('delete', `Удалено узлов: ${selectedNodeIds.size}`);
+    selectedNodeIds.forEach(id => onNodeDelete(id));
+    clearSelection();
+  }, [selectedNodeIds, onNodeDelete, addAction, clearSelection]);
+
+  /** Групповое копирование выделенных узлов в буфер обмена */
+  const handleGroupCopy = useCallback(() => {
+    if (selectedNodeIds.size === 0 || !onCopyToClipboard) return;
+    onCopyToClipboard(Array.from(selectedNodeIds));
+    addAction('duplicate', `Скопировано узлов в буфер: ${selectedNodeIds.size}`);
+  }, [selectedNodeIds, onCopyToClipboard, addAction]);
+
+  /** Групповое перемещение выделенных узлов в существующий лист */
+  const handleGroupMoveToSheet = useCallback((sheetId: string) => {
+    if (selectedNodeIds.size === 0) return;
+    moveNodesToSheet(Array.from(selectedNodeIds), sheetId);
+    addAction('sheet_switch', `Перемещено узлов в лист: ${selectedNodeIds.size}`);
+    clearSelection();
+  }, [selectedNodeIds, moveNodesToSheet, addAction, clearSelection]);
+
+  /** Групповое перемещение выделенных узлов в новый лист */
+  const handleGroupMoveToNewSheet = useCallback(() => {
+    if (selectedNodeIds.size === 0) return;
+    const name = window.prompt('Название нового листа:', 'Новый лист');
+    if (!name) return;
+    moveNodesToNewSheet(Array.from(selectedNodeIds), name);
+    addAction('sheet_add', `Создан лист "${name}" с узлами: ${selectedNodeIds.size}`);
+    clearSelection();
+  }, [selectedNodeIds, moveNodesToNewSheet, addAction, clearSelection]);
+
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
       <div ref={scrollContainerRef} className="absolute inset-x-0 overflow-auto" style={{ top: 60, bottom: 60 }}>
@@ -1655,6 +1746,7 @@ export function Canvas({
             panRef={panRef}
             disableTransition={!animateTransform}
             selectedNodeId={selectedNodeId}
+            selectedNodeIds={selectedNodeIds}
             onNodeSelect={onNodeSelect}
             onNodeDelete={onNodeDelete}
             onNodeDuplicate={onNodeDuplicate}
@@ -1675,6 +1767,10 @@ export function Canvas({
             highlightNodeId={highlightNodeId}
             projectId={projectId}
           />
+
+          {/* Слой рамки выделения (marquee) — координаты в screen-пространстве холста,
+              поэтому рендерится вне трансформируемого CanvasContent */}
+          <MarqueeOverlay rect={marqueeRect} />
           {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-400/20 dark:via-purple-400/20 dark:to-pink-400/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-blue-200/50 dark:border-blue-600/30 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/20">
@@ -1728,6 +1824,8 @@ export function Canvas({
         onNodeFocus={focusOnNode}
         searchOpen={searchOpen}
         onSearchOpenChange={setSearchOpen}
+        marqueeActive={tool === 'marquee'}
+        onToggleMarquee={toggleTool}
       />
 
       {/* Плавающая панель для мобильных устройств */}
@@ -1735,6 +1833,16 @@ export function Canvas({
         onOpenMobileSidebar={onOpenMobileSidebar}
         onOpenMobileProperties={onOpenMobileProperties}
         selectedNodeId={selectedNodeId}
+      />
+
+      {/* Плавающий бар групповых действий над выделенными рамкой узлами */}
+      <MultiSelectionToolbar
+        count={selectedNodeIds.size}
+        sheets={availableSheets}
+        onDelete={handleGroupDelete}
+        onCopy={handleGroupCopy}
+        onMoveToSheet={handleGroupMoveToSheet}
+        onMoveToNewSheet={handleGroupMoveToNewSheet}
       />
 
       {/* Компонент листов холста - фиксированная панель внизу */}
