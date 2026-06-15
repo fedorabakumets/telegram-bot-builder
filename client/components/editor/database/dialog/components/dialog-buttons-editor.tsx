@@ -2,7 +2,7 @@
  * @fileoverview Компоновщик инлайн-кнопок сообщения для диалога
  * @description Тонкий контейнер над ButtonCard из узла клавиатуры. Позволяет
  * добавлять, редактировать, удалять и дублировать инлайн-кнопки прямо в диалоге.
- * Допустимые действия ограничены url/web_app/copy_text/goto.
+ * Допустимые действия ограничены url/web_app/copy_text/goto/default.
  */
 
 import { Plus } from 'lucide-react';
@@ -78,6 +78,9 @@ export function DialogButtonsEditor({ buttons, onChange, availableNodes }: Dialo
     ]);
   };
 
+  /** Признак наличия хотя бы одной callback-кнопки (action === 'default') */
+  const hasCallbackButton = buttons.some((b) => b.action === 'default');
+
   return (
     <div className="space-y-2">
       {buttons.map((button) => (
@@ -93,9 +96,17 @@ export function DialogButtonsEditor({ buttons, onChange, availableNodes }: Dialo
           selectedNode={virtualNode}
           keyboardType="inline"
           hideExtras
-          allowedActions={['url', 'web_app', 'copy_text', 'goto']}
+          allowedActions={['url', 'web_app', 'copy_text', 'goto', 'default']}
         />
       ))}
+
+      {/* Предупреждение для callback-кнопок: без обработчика callback_data нажатие не сработает */}
+      {hasCallbackButton && (
+        <p className="text-xs text-muted-foreground">
+          Callback-кнопка сработает только если в боте настроен обработчик этого callback_data —
+          иначе нажатие ничего не сделает.
+        </p>
+      )}
 
       <UIButton variant="outline" size="sm" onClick={handleAdd} className="w-full">
         <Plus className="w-4 h-4 mr-1" />

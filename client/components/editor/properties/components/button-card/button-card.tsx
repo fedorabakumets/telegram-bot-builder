@@ -127,7 +127,11 @@ export function ButtonCard({
         </>
       )}
 
-      {!hideExtras && !['url', 'contact', 'location', 'copy_text', 'web_app', 'request_managed_bot'].includes(button.action) && (
+      {/* Поле callback_data: скрыто для url/contact/location/copy_text/web_app/request_managed_bot.
+          В обычной панели (hideExtras=false) показывается как раньше; в диалоге (hideExtras=true)
+          появляется только для действия default — у goto уже есть селектор цели. */}
+      {!['url', 'contact', 'location', 'copy_text', 'web_app', 'request_managed_bot'].includes(button.action) &&
+        (!hideExtras || button.action === 'default') && (
         <>
           <div className="border-t border-border/20 my-3"></div>
           <ButtonCallbackField
