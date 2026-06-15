@@ -815,34 +815,39 @@ export function Canvas({
     const centerX = width / 2;
     const centerY = height / 2;
 
-    setPan(prevPan => {
-      const prevZoomPercent = zoom / 100;
-      const newZoomPercent = newZoom / 100;
+    // Берём актуальные pan/zoom из refs, а не из stale-замыкания. Иначе при
+    // удержании кнопок +/− (long-press) повторные вызовы считают от старого
+    // zoom, и холст «прыгает» из стороны в сторону.
+    const currentZoom = zoomRef.current;
+    const currentPan = panRef.current;
+    const prevZoomPercent = currentZoom / 100;
+    const newZoomPercent = newZoom / 100;
 
-      // Вычисляем координаты центра в canvas координатах
-      const centerCanvasX = (centerX - prevPan.x) / prevZoomPercent;
-      const centerCanvasY = (centerY - prevPan.y) / prevZoomPercent;
+    // Координаты центра экрана в canvas-координатах при текущем масштабе
+    const centerCanvasX = (centerX - currentPan.x) / prevZoomPercent;
+    const centerCanvasY = (centerY - currentPan.y) / prevZoomPercent;
 
-      // Вычисляем новый pan, чтобы центр остался на месте
-      return {
-        x: centerX - centerCanvasX * newZoomPercent,
-        y: centerY - centerCanvasY * newZoomPercent
-      };
-    });
+    // Новый pan, чтобы центр остался на месте
+    const newPan = {
+      x: centerX - centerCanvasX * newZoomPercent,
+      y: centerY - centerCanvasY * newZoomPercent,
+    };
 
+    // Синхронно обновляем refs — следующий тик long-press увидит свежие значения
+    zoomRef.current = newZoom;
+    panRef.current = newPan;
+    setPan(newPan);
     setZoom(newZoom);
-  }, [zoom, getContainerDimensions, triggerTransformAnimation]);
+  }, [getContainerDimensions, triggerTransformAnimation]);
 
   // Zoom utility functions
   const zoomIn = useCallback(() => {
-    const newZoom = Math.min(zoom * 1.05, 200);
-    zoomFromCenter(newZoom);
-  }, [zoom, zoomFromCenter]);
+    zoomFromCenter(Math.min(zoomRef.current * 1.05, 200));
+  }, [zoomFromCenter]);
 
   const zoomOut = useCallback(() => {
-    const newZoom = Math.max(zoom * 0.95, 1);
-    zoomFromCenter(newZoom);
-  }, [zoom, zoomFromCenter]);
+    zoomFromCenter(Math.max(zoomRef.current * 0.95, 1));
+  }, [zoomFromCenter]);
 
   const resetZoom = useCallback(() => {
     triggerTransformAnimation();
