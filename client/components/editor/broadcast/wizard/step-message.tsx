@@ -3,9 +3,12 @@
  * @module client/components/editor/broadcast/wizard/step-message
  */
 
+import { useState } from 'react';
+import { Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 import { MultiMediaSelector } from '@/components/editor/properties/media/multi-media-selector';
+import { FileIdInput } from '@/components/editor/properties/media/file-id-input';
 import type { NewBroadcastFormData } from '../types';
 
 /**
@@ -38,6 +41,11 @@ const VARIABLES = [
  * @returns JSX элемент шага редактора сообщения
  */
 export function StepMessage({ projectId, formData, onChange, onNext, onBack }: StepMessageProps) {
+  /** Флаг видимости блока ввода Telegram file_id */
+  const [showFileId, setShowFileId] = useState(false);
+  /** Тип медиа для file_id */
+  const [fileIdMediaType, setFileIdMediaType] = useState<'photo' | 'video' | 'audio' | 'document'>('photo');
+
   /**
    * Вставляет переменную в конец текста сообщения
    * @param variable - Переменная для вставки
@@ -86,6 +94,32 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
             label="Прикреплённые файлы"
             placeholder="Введите URL или выберите файл"
           />
+
+          {/* Кнопка переключения блока ввода Telegram file_id */}
+          <Button
+            variant={showFileId ? 'secondary' : 'outline'}
+            size="sm"
+            className="mt-2 h-7 text-xs"
+            onClick={() => setShowFileId((v) => !v)}
+          >
+            <Hash className="w-3.5 h-3.5 mr-1" />
+            Добавить Telegram file_id
+          </Button>
+
+          {/* Блок ввода Telegram file_id */}
+          {showFileId && (
+            <div className="mt-2 border rounded-md p-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200/60 dark:border-violet-700/60 max-h-64 overflow-y-auto">
+              <FileIdInput
+                projectId={projectId}
+                mediaType={fileIdMediaType}
+                onMediaTypeChange={setFileIdMediaType}
+                onAdd={(entry) => {
+                  onChange({ mediaUrls: [...formData.mediaUrls, entry] });
+                  setShowFileId(false);
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
