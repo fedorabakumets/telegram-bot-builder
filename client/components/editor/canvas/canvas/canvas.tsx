@@ -1614,11 +1614,8 @@ export function Canvas({
           className="min-h-full relative canvas-grid-modern"
           style={{
             backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0)',
-            // Округляем до целых пикселей: дробные backgroundSize/backgroundPosition
-            // при нецелочисленном zoom заставляют CPU-слой родителя ре-растеризовать
-            // градиент каждый кадр зума, что вносит дополнительное мерцание.
-            backgroundSize: `${Math.round(24 * zoom / 100)}px ${Math.round(24 * zoom / 100)}px`,
-            backgroundPosition: `${Math.round(pan.x)}px ${Math.round(pan.y)}px`,
+            backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px`,
+            backgroundPosition: `${pan.x}px ${pan.y}px`,
             width: '100%',
             height: '100%',
             cursor: isPanning ? 'grabbing' : 'grab',
