@@ -1042,8 +1042,8 @@ export function Canvas({
 
     if (e.ctrlKey || e.metaKey) {
       // Зум (pinch на тачпаде или Ctrl+scroll)
-      const sensitivity = 0.01;
-      const zoomFactor = Math.max(0.8, Math.min(1.25, 1 - e.deltaY * sensitivity));
+      const sensitivity = 0.015;
+      const zoomFactor = Math.max(0.7, Math.min(1.4, 1 - e.deltaY * sensitivity));
 
       const currentZoom = zoomRef.current;
       const currentPan = panRef.current;
