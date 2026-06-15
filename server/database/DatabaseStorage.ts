@@ -1590,7 +1590,11 @@ export class DatabaseStorage implements IStorage {
     ];
 
     // Фильтрация по конкретным userId (ручной выбор аудитории)
-    if (filters.userIds && filters.userIds.length > 0) {
+    if (filters.userIds) {
+      // Пустой список при ручном выборе — никого не рассылаем (иначе уйдёт всем)
+      if (filters.userIds.length === 0) {
+        return [];
+      }
       conditions.push(sql`${botUsers.userId}::text IN (${sql.join(filters.userIds.map(id => sql`${id}`), sql`, `)})`);
     }
 
