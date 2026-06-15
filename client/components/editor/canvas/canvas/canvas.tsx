@@ -332,19 +332,19 @@ export function Canvas({
   }, [autoFitOnLoad, nodes, nodeSizes, suppressAutoFit]);
 
   /**
-   * Фокусировка на узле: выделяет узел и центрирует его в видимой области
+   * Центрирует холст на узле: выделяет узел и подбирает масштаб/смещение
+   * @param nodeId - Идентификатор узла для фокусировки
    */
-  useEffect(() => {
-    if (!focusNodeId) return;
-    const node = nodes.find(n => n.id === focusNodeId);
+  const focusOnNode = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
-    onNodeSelect(focusNodeId);
+    onNodeSelect(nodeId);
     const scrollContainer = canvasRef.current?.parentElement;
     if (!scrollContainer) return;
     const containerWidth = scrollContainer.clientWidth;
     const containerHeight = scrollContainer.clientHeight;
-    const nodeW = nodeSizes.get(focusNodeId)?.width ?? 320;
-    const nodeH = nodeSizes.get(focusNodeId)?.height ?? 200;
+    const nodeW = nodeSizes.get(nodeId)?.width ?? 320;
+    const nodeH = nodeSizes.get(nodeId)?.height ?? 200;
 
     // Подбираем масштаб чтобы узел занимал ~60% экрана, но не больше 100%
     const scaleX = (containerWidth * 0.6) / nodeW;
@@ -356,8 +356,19 @@ export function Canvas({
     const newPanX = containerWidth / 2 - (node.position.x + nodeW / 2) * (newZoom / 100);
     const newPanY = containerHeight / 2 - (node.position.y + nodeH / 2) * (newZoom / 100);
     setPan({ x: newPanX, y: newPanY });
+  }, [nodes, nodeSizes, onNodeSelect, setZoom, setPan]);
+
+  /**
+   * Фокусировка на узле: выделяет узел и центрирует его в видимой области
+   */
+  useEffect(() => {
+    if (!focusNodeId) return;
+    focusOnNode(focusNodeId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusNodeId]);
+
+  // Состояние открытия поиска узлов (управляется кнопкой и горячей клавишей Ctrl+F)
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Система истории действий — используем внешнюю историю если передана, иначе локальную
   const [localActionHistory, setLocalActionHistory] = useState<Action[]>([]);
@@ -1110,6 +1121,13 @@ export function Canvas({
       }
 
       if (e.ctrlKey || e.metaKey) {
+        // Ctrl+F — открыть поиск узлов (e.code не зависит от раскладки клавиатуры)
+        if (e.code === 'KeyF' && !e.shiftKey) {
+          e.preventDefault();
+          setSearchOpen(true);
+          return;
+        }
+
         // Если фокус в поле ввода — пропускаем команды холста.
         // Исключение: Ctrl+S (сохранение) работает всегда.
         if (isInputField) {
@@ -1609,6 +1627,9 @@ export function Canvas({
         handleUndoSelected={handleUndoSelected}
         canvasView={canvasView}
         onViewChange={onViewChange}
+        onNodeFocus={focusOnNode}
+        searchOpen={searchOpen}
+        onSearchOpenChange={setSearchOpen}
       />
 
       {/* Плавающая панель для мобильных устройств */}

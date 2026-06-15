@@ -13,6 +13,7 @@ import { AutoLayoutButton } from './auto-layout-button';
 import { ClipboardButtons } from './clipboard-buttons';
 import { InterfaceToggles } from './interface-toggles';
 import { KeyboardShortcutsHelp } from './keyboard-shortcuts-help';
+import { NodeSearchButton } from './node-search-button';
 import { Action } from './canvas';
 import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
 import type { CanvasView } from '@/pages/editor/components/canvas-view-toggle';
@@ -93,6 +94,12 @@ interface CanvasToolbarProps {
   canvasView?: CanvasView;
   /** Колбэк смены режима просмотра */
   onViewChange?: (view: CanvasView) => void;
+  /** Колбэк центрирования холста на узле (включает кнопку поиска узлов) */
+  onNodeFocus?: (nodeId: string) => void;
+  /** Управляемое состояние открытия поиска узлов (для Ctrl+F) */
+  searchOpen?: boolean;
+  /** Колбэк изменения состояния открытия поиска узлов */
+  onSearchOpenChange?: (open: boolean) => void;
 }
 
 /**
@@ -138,6 +145,9 @@ export function CanvasToolbar({
   handleUndoSelected,
   canvasView,
   onViewChange,
+  onNodeFocus,
+  searchOpen,
+  onSearchOpenChange,
 }: CanvasToolbarProps) {
   return (
     <div data-canvas-toolbar className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{ left: 0, right: 0 }}>
@@ -188,6 +198,16 @@ export function CanvasToolbar({
               selectedNodeId={selectedNodeId}
               hasClipboardData={hasClipboardData}
             />
+
+            {/* Поиск узлов на текущем листе */}
+            {onNodeFocus && (
+              <NodeSearchButton
+                nodes={nodes}
+                onNodeFocus={onNodeFocus}
+                open={searchOpen}
+                onOpenChange={onSearchOpenChange}
+              />
+            )}
 
             {/* Р Р°Р·РґРµР»РёС‚РµР»СЊ */}
             <div className="h-6 w-px bg-slate-300/50 dark:bg-slate-600/50" />
