@@ -302,6 +302,7 @@ export function Canvas({
   /** Состояние мульти-выделения узлов рамкой */
   const {
     tool,
+    setTool,
     toggleTool,
     selectedNodeIds,
     marqueeRect,
@@ -1199,6 +1200,15 @@ export function Canvas({
         !!target.closest('[data-properties-panel]');
 
       if (!isInputField) {
+        // Escape — снимает рамочное мульти-выделение узлов и возвращает
+        // инструмент в режим курсора, если активен режим рамки.
+        if (e.key === 'Escape' && (selectedNodeIds.size > 0 || tool === 'marquee')) {
+          e.preventDefault();
+          clearSelection();
+          if (tool === 'marquee') setTool('pointer');
+          return;
+        }
+
         // Обработка клавиши Delete для удаления выбранного узла
         if (e.key === 'Delete' && selectedNodeId && onNodeDelete) {
           e.preventDefault();
@@ -1373,7 +1383,7 @@ export function Canvas({
       document.removeEventListener('gesturechange', handleGesture);
       document.removeEventListener('gestureend', handleGesture);
     };
-  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate, nodes, addAction, getPastePosition, onPasteFromClipboard, onCopyToClipboard, canvasView]);
+  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate, nodes, addAction, getPastePosition, onPasteFromClipboard, onCopyToClipboard, canvasView, clearSelection, selectedNodeIds, tool, setTool]);
 
 
 
@@ -1632,8 +1642,12 @@ export function Canvas({
     
     if (e.target === e.currentTarget) {
       onNodeSelect('');
+      // Клик по пустому холсту также снимает рамочное мульти-выделение.
+      if (selectedNodeIds.size > 0) {
+        clearSelection();
+      }
     }
-  }, [onNodeSelect, pan.x, pan.y, zoom]);
+  }, [onNodeSelect, pan.x, pan.y, zoom, clearSelection, selectedNodeIds]);
 
   /**
    * Стабильный обработчик дублирования узла через контекстное меню.
