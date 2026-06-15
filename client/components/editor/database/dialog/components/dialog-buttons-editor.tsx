@@ -96,6 +96,7 @@ export function DialogButtonsEditor({ buttons, onChange, availableNodes }: Dialo
           selectedNode={virtualNode}
           keyboardType="inline"
           hideExtras
+          showStyle
           allowedActions={['url', 'web_app', 'copy_text', 'goto', 'default']}
         />
       ))}

@@ -64,10 +64,13 @@ export async function sendTelegramMessage(
   // - остальные: { text, callback_data }
   const replyMarkup = hasButtons ? {
     inline_keyboard: [buttons.map(b => {
-      if (b.url) return { text: b.text, url: b.url };
-      if (b.webAppUrl) return { text: b.text, web_app: { url: b.webAppUrl } };
-      if (b.copyText) return { text: b.text, copy_text: { text: b.copyText } };
-      return { text: b.text, callback_data: b.callbackData ?? b.id };
+      // Поле стиля (Bot API 9.4) добавляем к любой кнопке, если оно задано;
+      // Telegram игнорирует style для неподдерживаемых типов кнопок
+      const styleField = b.style ? { style: b.style } : {};
+      if (b.url) return { text: b.text, url: b.url, ...styleField };
+      if (b.webAppUrl) return { text: b.text, web_app: { url: b.webAppUrl }, ...styleField };
+      if (b.copyText) return { text: b.text, copy_text: { text: b.copyText }, ...styleField };
+      return { text: b.text, callback_data: b.callbackData ?? b.id, ...styleField };
     })]
   } : undefined;
 

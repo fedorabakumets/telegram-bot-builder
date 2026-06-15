@@ -41,6 +41,8 @@ interface ButtonCardProps {
   allowedActions?: ButtonActionType[];
   /** Скрыть дополнительные поля (стиль, callback, hideAfterClick); цель goto остаётся видимой */
   hideExtras?: boolean;
+  /** Показывать селектор стиля даже при hideExtras */
+  showStyle?: boolean;
 }
 
 /**
@@ -61,6 +63,7 @@ export function ButtonCard({
   keyboardType,
   allowedActions,
   hideExtras = false,
+  showStyle = false,
 }: ButtonCardProps) {
   return (
     <div
@@ -88,7 +91,7 @@ export function ButtonCard({
       />
 
       {/* Селектор стиля кнопки (Bot API 9.4) */}
-      {!hideExtras && (
+      {(!hideExtras || showStyle) && (
       <>
       <div className="border-t border-border/20 my-3"></div>
       <div className="space-y-1.5">
