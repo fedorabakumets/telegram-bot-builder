@@ -3,14 +3,16 @@
  *
  * Этот модуль предоставляет функцию для обработки запросов
  * на отправку сообщения в группу через Telegram Bot API.
+ * Поддерживает текст и медиафайлы (URL, локальные файлы и file_id).
  *
  * @module botIntegration/handlers/telegramGroups/sendGroupMessageHandler
  */
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
-import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
+import { sendTelegramMessage } from "../messages/send-telegram-message";
+import { buildMediaFiles } from "../messages/build-media-files";
 import {
     analyzeTelegramError,
     getErrorStatusCode
@@ -28,8 +30,11 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
     try {
         const projectId = parseInt(req.params.projectId);
         const { groupId, message } = req.body;
+        /** Массив URL медиафайлов из тела запроса (опционально) */
+        const mediaUrls: string[] = Array.isArray(req.body.mediaUrls) ? req.body.mediaUrls : [];
 
-        if (!groupId || !message) {
+        // Требуется ID группы и хотя бы текст или один медиафайл
+        if (!groupId || (!message && mediaUrls.length === 0)) {
             res.status(400).json({ message: "Требуется ID группы и сообщение" });
             return;
         }
@@ -40,27 +45,27 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
             return;
         }
 
-        const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/sendMessage`;
-        const response = await fetchWithProxy(telegramApiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                chat_id: groupId,
-                text: message,
-                parse_mode: 'HTML'
-            })
-        });
+        // Строим медиафайлы из mediaUrls (URL, локальные файлы, file_id)
+        const mediaFiles = buildMediaFiles(mediaUrls, defaultToken.id);
 
-        const result = await response.json();
+        // Отправляем через общий sendTelegramMessage (текст + медиа)
+        const result = await sendTelegramMessage(
+            defaultToken.token,
+            groupId,
+            message ?? "",
+            mediaFiles,
+            [],
+            true
+        );
 
-        if (!response.ok) {
-            res.status(400).json({
-                message: "Не удалось отправить сообщение",
-                error: result.description || "Неизвестная ошибка"
-            });
-            return;
+        /** ID отправленного сообщения в Telegram */
+        const telegramMessageId = result.result?.message_id ?? null;
+
+        /** Данные сообщения для сохранения — с медиа для корректного отображения в диалоге */
+        const messageData: Record<string, unknown> = { sentFromAdmin: true };
+        if (mediaFiles.length > 0) {
+            messageData.broadcastMediaUrl = mediaFiles[0].url;
+            messageData.broadcastMediaType = mediaFiles[0].type;
         }
 
         // Записываем сообщение в БД для отображения в диалоге группы
@@ -70,9 +75,9 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
             userId: groupId,
             chatId: groupId,
             messageType: "bot",
-            messageText: message,
-            messageData: { sentFromAdmin: true },
-            telegramMessageId: result.result?.message_id ?? null,
+            messageText: message ?? "",
+            messageData,
+            telegramMessageId,
         });
 
         // Публикуем WS-событие чтобы диалог группы обновился в реальном времени
@@ -85,8 +90,8 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
                 userId: groupId,
                 chatId: groupId,
                 messageType: "bot",
-                messageText: message,
-                messageData: { sentFromAdmin: true },
+                messageText: message ?? "",
+                messageData,
                 nodeId: null,
                 createdAt: new Date().toISOString(),
             },
@@ -95,7 +100,7 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
 
         res.json({
             message: "Сообщение успешно отправлено",
-            messageId: result.result.message_id
+            messageId: telegramMessageId
         });
     } catch (error) {
         const errorInfo = analyzeTelegramError(error);

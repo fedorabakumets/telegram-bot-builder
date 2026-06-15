@@ -35,12 +35,14 @@ export function useSendGroupMessage({
     /**
      * Отправляет сообщение в группу
      * @param messageText - Текст сообщения
+     * @param mediaUrls - Массив URL медиафайлов (опционально)
      */
-    mutationFn: async ({ messageText }: { messageText: string }) => {
+    mutationFn: async ({ messageText, mediaUrls }: { messageText: string; mediaUrls?: string[] }) => {
       if (!groupId) throw new Error('Не указан ID группы');
       return apiRequest('POST', `/api/projects/${projectId}/bot/send-group-message`, {
         groupId,
         message: messageText,
+        mediaUrls: mediaUrls ?? [],
       });
     },
 

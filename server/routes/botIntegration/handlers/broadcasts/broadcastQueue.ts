@@ -7,6 +7,7 @@ import { storage } from "../../../../storages/storage";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 import { replaceVariablesInText } from "../messages/replace-variables";
 import { sendTelegramMessage } from "../messages/send-telegram-message";
+import { buildMediaFiles } from "../messages/build-media-files";
 import type { SendMediaFile } from "../messages/extract-media";
 
 /** Размер батча пользователей для обработки */
@@ -77,6 +78,63 @@ async function sendBroadcastMessage(
       description: typeof err?.message === "string" ? err.message : "Сетевая ошибка",
     };
   }
+}
+
+/**
+ * Преобразует массив URL медиафайлов в формат SendMediaFile для sendTelegramMessage.
+ * Поддерживает три формата:
+ * - обычный URL (/uploads/...) — тип определяется по расширению
+ * - JSON file_id запись {"__type":"file_id","mediaType":"...","fileIdsByToken":{...}} — берётся первый доступный file_id
+ * - прямой Telegram file_id (строка без протокола и без JSON) — передаётся как есть
+ * @param mediaUrls - Массив URL медиафайлов
+ * @param tokenId - ID токена бота для выбора нужного file_id из маппинга
+ * @returns Массив SendMediaFile
+ */
+function buildMediaFiles(mediaUrls: string[], tokenId: number): SendMediaFile[] {
+  const result: SendMediaFile[] = [];
+
+  for (let i = 0; i < mediaUrls.length; i++) {
+    const url = mediaUrls[i];
+
+    // Формат JSON file_id: {"__type":"file_id","mediaType":"photo","fileIdsByToken":{"42":"AgAC..."}}
+    if (url.startsWith('{"__type":"file_id"')) {
+      try {
+        const parsed = JSON.parse(url) as {
+          __type: string;
+          mediaType?: string;
+          fileIdsByToken?: Record<string, string>;
+        };
+        const fileIdsByToken = parsed.fileIdsByToken ?? {};
+        // Сначала ищем file_id для текущего токена, затем берём первый доступный
+        const fileId = fileIdsByToken[String(tokenId)]
+          ?? Object.values(fileIdsByToken)[0];
+
+        if (fileId) {
+          result.push({ id: i, url: fileId, type: parsed.mediaType ?? 'photo' });
+        }
+      } catch {
+        console.warn(`[broadcastQueue] Не удалось распарсить file_id запись: ${url.slice(0, 80)}`);
+      }
+      continue;
+    }
+
+    result.push({ id: i, url, type: resolveMediaType(url) });
+  }
+
+  return result;
+}
+
+/**
+ * Определяет тип медиа по расширению URL
+ * @param url - URL файла
+ * @returns Тип медиа для Telegram API
+ */
+function resolveMediaType(url: string): string {
+  const ext = url.split('.').pop()?.toLowerCase() ?? '';
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'photo';
+  if (['mp4', 'avi', 'mov', 'webm'].includes(ext)) return 'video';
+  if (['mp3', 'wav', 'ogg', 'm4a'].includes(ext)) return 'audio';
+  return 'document';
 }
 
 /**

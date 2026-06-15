@@ -324,11 +324,11 @@ export function DialogPanel({
         <DialogInput
           isPending={isGroup ? sendGroupMessageMutation.isPending : sendMessageMutation.isPending}
           projectId={projectId}
-          onSend={(text) => {
+          onSend={(text, mediaUrls) => {
             if (isGroup) {
-              sendGroupMessageMutation.mutate({ messageText: text });
+              sendGroupMessageMutation.mutate({ messageText: text, mediaUrls });
             } else {
-              sendMessageMutation.mutate({ messageText: text, mediaUrls: [] });
+              sendMessageMutation.mutate({ messageText: text, mediaUrls });
             }
           }}
         />

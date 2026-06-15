@@ -44,7 +44,8 @@ export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) 
   const [fileIdMediaType, setFileIdMediaType] = useState<'photo' | 'video' | 'audio' | 'document'>('photo');
 
   const handleSend = () => {
-    if (messageText.trim() && !isPending) {
+    // Разрешаем отправку, если есть текст ИЛИ хотя бы один прикреплённый файл
+    if ((messageText.trim() || mediaUrls.length > 0) && !isPending) {
       onSend(messageText.trim(), mediaUrls);
       setMessageText('');
       setMediaUrls([]);
@@ -120,7 +121,7 @@ export function DialogInput({ isPending, projectId, onSend }: DialogInputProps) 
         <Button
           data-testid="dialog-panel-button-send"
           onClick={handleSend}
-          disabled={!messageText.trim() || isPending}
+          disabled={(!messageText.trim() && mediaUrls.length === 0) || isPending}
           size="sm"
         >
           {isPending ? (
