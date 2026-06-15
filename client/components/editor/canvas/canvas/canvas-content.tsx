@@ -189,8 +189,14 @@ export function CanvasContent({
     <div
       className={`relative origin-top-left ${disableTransition ? '' : 'transition-transform duration-200 ease-out'}`}
       style={{
-        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
+        // translate3d + will-change выносят холст на отдельный GPU-слой:
+        // браузер композитит трансформацию, а не перерисовывает содержимое
+        // на каждом шаге зума — это убирает мерцание при масштабировании.
+        transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom / 100})`,
         transformOrigin: '0 0',
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
       }}
     >
       {/* SVG-слой соединений — рисуется под нодами */}
