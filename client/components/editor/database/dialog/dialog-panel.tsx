@@ -16,6 +16,8 @@ import { useSendGroupMessage } from './hooks/use-send-group-message';
 import { useDeleteMessage } from './hooks/use-delete-message';
 import { useEditMessage } from './hooks/use-edit-message';
 import { useBotData } from './hooks/use-bot-data';
+import { useProjectData } from './hooks/use-project-data';
+import { collectNodesFromProjectData } from './utils/node-utils';
 import { useDialogLiveMessages } from './hooks/use-dialog-live-messages';
 import { useUserList } from '@/components/editor/database/user-details/hooks/useUserList';
 import { MessageBubble } from './components/message-bubble';
@@ -94,6 +96,15 @@ export function DialogPanel({
 
   const { users } = useUserList(projectId, selectedTokenId);
   const { bot } = useBotData(projectId);
+
+  /** Данные проекта для извлечения узлов (нужны редактору кнопок для действия goto) */
+  const { project } = useProjectData(projectId);
+
+  /** Узлы проекта со всех листов для выбора цели действия goto в инлайн-кнопках */
+  const availableNodes = useMemo(
+    () => collectNodesFromProjectData((project?.data as Record<string, unknown>) ?? null),
+    [project?.data],
+  );
 
   // URL для загрузки сообщений: группа или личный диалог
   const requestUrl = isGroup
@@ -179,6 +190,7 @@ export function DialogPanel({
   const sendGroupMessageMutation = useSendGroupMessage({
     projectId,
     groupId: groupChatId,
+    selectedTokenId,
     onSent: refetchMessages,
   });
 
@@ -207,6 +219,7 @@ export function DialogPanel({
         next.set(messageId, originalText);
         return next;
       }),
+    onEdited: refetchMessages,
   });
 
   if (!user) {
@@ -277,11 +290,21 @@ export function DialogPanel({
         ) : (
           <div className="space-y-3 py-2">
             {messages.map((message, index) => {
-              /** Применяем оптимистичные правки и WS-правки к тексту сообщения */
+              /** WS-запись с новым текстом, кнопками и раскладкой (если есть) */
+              const wsRec = wsEditedMessages.get(message.id);
+              /** Применяем оптимистичные правки и WS-правки к тексту и кнопкам сообщения */
               const displayMessage = editedMessages.has(message.id)
                 ? { ...message, messageText: editedMessages.get(message.id)! }
-                : wsEditedMessages.has(message.id)
-                ? { ...message, messageText: wsEditedMessages.get(message.id)! }
+                : wsRec
+                ? {
+                    ...message,
+                    messageText: wsRec.messageText,
+                    messageData: {
+                      ...(message.messageData as object),
+                      ...(wsRec.buttons !== undefined ? { buttons: wsRec.buttons } : {}),
+                      ...(wsRec.buttonsPerRow !== undefined ? { buttonsPerRow: wsRec.buttonsPerRow } : {}),
+                    },
+                  }
                 : message;
               return (
                 <MessageBubble
@@ -303,9 +326,10 @@ export function DialogPanel({
                     deleteMessageMutation.isPending &&
                     deleteMessageMutation.variables === message.id
                   }
-                  onEdit={(messageId, newText, originalText) =>
-                    editMessageMutation.mutate({ messageId, messageText: newText, originalText })
+                  onEdit={(messageId, newText, originalText, buttons, buttonsPerRow) =>
+                    editMessageMutation.mutate({ messageId, messageText: newText, originalText, buttons, buttonsPerRow })
                   }
+                  availableNodes={availableNodes}
                   isEditing={
                     editMessageMutation.isPending &&
                     editMessageMutation.variables?.messageId === message.id
@@ -324,11 +348,12 @@ export function DialogPanel({
         <DialogInput
           isPending={isGroup ? sendGroupMessageMutation.isPending : sendMessageMutation.isPending}
           projectId={projectId}
-          onSend={(text) => {
+          availableNodes={availableNodes}
+          onSend={(text, mediaUrls, buttons, buttonsPerRow) => {
             if (isGroup) {
-              sendGroupMessageMutation.mutate({ messageText: text });
+              sendGroupMessageMutation.mutate({ messageText: text, mediaUrls, buttons, buttonsPerRow });
             } else {
-              sendMessageMutation.mutate({ messageText: text, mediaUrls: [] });
+              sendMessageMutation.mutate({ messageText: text, mediaUrls, buttons, buttonsPerRow });
             }
           }}
         />

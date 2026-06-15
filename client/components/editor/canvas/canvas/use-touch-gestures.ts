@@ -1,6 +1,6 @@
 /**
  * @fileoverview Хук для обработки touch-жестов на мобильных устройствах
- * 
+ *
  * Содержит логику панорамирования и масштабирования (pinch-to-zoom)
  * для компонента холста визуального редактора.
  */
@@ -17,6 +17,14 @@ interface UseTouchGesturesProps {
   pan: { x: number; y: number };
   /** Текущий масштаб (в процентах) */
   zoom: number;
+  /** Ref-зеркало текущего смещения (для синхронного доступа в жесте) */
+  panRef?: { current: { x: number; y: number } };
+  /** Ref-зеркало текущего масштаба (для синхронного доступа в жесте) */
+  zoomRef?: { current: number };
+  /** Колбэк начала/продолжения интерактивного жеста (отключает CSS-переход) */
+  onInteract?: () => void;
+  /** Колбэк планирования обновления pan/zoom через RAF (один рендер за кадр) */
+  scheduleFlush?: (pan: { x: number; y: number }, zoom: number) => void;
   /** Установщик состояния панорамирования */
   setPan: (pan: { x: number; y: number } | ((prev: { x: number; y: number }) => { x: number; y: number })) => void;
   /** Установщик состояния масштаба */
@@ -55,6 +63,10 @@ export function useTouchGestures({
   canvasRef,
   pan,
   zoom,
+  panRef,
+  zoomRef,
+  onInteract,
+  scheduleFlush,
   setPan,
   setZoom,
   isTouchPanning,
@@ -113,14 +125,14 @@ export function useTouchGestures({
       const touch = touches[0];
       setIsTouchPanning(true);
       setTouchStart({ x: touch.clientX, y: touch.clientY });
-      setLastTouchPosition(pan);
+      setLastTouchPosition(panRef?.current ?? pan);
     } else if (touches.length === 2) {
       const distance = getTouchDistance(touches);
       setLastPinchDistance(distance);
-      setInitialPinchZoom(zoom);
+      setInitialPinchZoom(zoomRef?.current ?? zoom);
       setIsTouchPanning(false);
     }
-  }, [pan, zoom, isNodeBeingDragged, setIsTouchPanning, setTouchStart, setLastTouchPosition, setLastPinchDistance, setInitialPinchZoom, getTouchDistance]);
+  }, [pan, zoom, panRef, zoomRef, isNodeBeingDragged, setIsTouchPanning, setTouchStart, setLastTouchPosition, setLastPinchDistance, setInitialPinchZoom, getTouchDistance]);
 
   /**
    * Обработчик движения touch-события (нативный, для { passive: false })
@@ -138,16 +150,28 @@ export function useTouchGestures({
 
     e.preventDefault();
     const touches = e.touches;
+    onInteract?.();
 
     if (touches.length === 1 && isTouchPanning) {
       const touch = touches[0];
       const deltaX = touch.clientX - touchStart.x;
       const deltaY = touch.clientY - touchStart.y;
 
-      setPan({
+      const newPan = {
         x: lastTouchPosition.x + deltaX,
-        y: lastTouchPosition.y + deltaY
-      });
+        y: lastTouchPosition.y + deltaY,
+      };
+
+      // Панорамирование идёт через тот же RAF-throttle, что и зум:
+      // синхронно обновляем panRef и планируем единый flush за кадр.
+      // Иначе прямой setPan на каждое touch-событие даёт несколько
+      // ре-рендеров за кадр и вызывает мерцание холста.
+      if (panRef) panRef.current = newPan;
+      if (scheduleFlush) {
+        scheduleFlush(newPan, zoomRef?.current ?? zoom);
+      } else {
+        setPan(newPan);
+      }
     } else if (touches.length === 2) {
       const currentDistance = getTouchDistance(touches);
       const center = getTouchCenter(touches);
@@ -160,14 +184,25 @@ export function useTouchGestures({
         if (rect) {
           const centerX = center.x - rect.left;
           const centerY = center.y - rect.top;
-          const zoomRatio = newZoom / zoom;
+          // Берём актуальные pan/zoom из refs (если переданы), иначе из props.
+          // Refs синхронны и не «застревают» между быстрыми событиями жеста.
+          const currentZoom = zoomRef?.current ?? zoom;
+          const currentPan = panRef?.current ?? pan;
+          const zoomRatio = newZoom / currentZoom;
 
-          setPan((prev: { x: number; y: number }) => ({
-            x: centerX - (centerX - prev.x) * zoomRatio,
-            y: centerY - (centerY - prev.y) * zoomRatio
-          }));
+          const newPan = {
+            x: centerX - (centerX - currentPan.x) * zoomRatio,
+            y: centerY - (centerY - currentPan.y) * zoomRatio,
+          };
 
-          setZoom(newZoom);
+          if (panRef) panRef.current = newPan;
+          if (zoomRef) zoomRef.current = newZoom;
+          if (scheduleFlush) {
+            scheduleFlush(newPan, newZoom);
+          } else {
+            setPan(newPan);
+            setZoom(newZoom);
+          }
         }
       }
     }
@@ -178,6 +213,11 @@ export function useTouchGestures({
     lastPinchDistance,
     initialPinchZoom,
     zoom,
+    pan,
+    panRef,
+    zoomRef,
+    onInteract,
+    scheduleFlush,
     isNodeBeingDragged,
     getTouchDistance,
     getTouchCenter,
@@ -200,11 +240,11 @@ export function useTouchGestures({
     } else if (e.touches.length === 1) {
       const touch = e.touches[0];
       setTouchStart({ x: touch.clientX, y: touch.clientY });
-      setLastTouchPosition(pan);
+      setLastTouchPosition(panRef?.current ?? pan);
       setIsTouchPanning(true);
       setLastPinchDistance(0);
     }
-  }, [pan, setIsTouchPanning, setTouchStart, setLastTouchPosition, setLastPinchDistance]);
+  }, [pan, panRef, setIsTouchPanning, setTouchStart, setLastTouchPosition, setLastPinchDistance]);
 
   return {
     handleTouchStart,

@@ -1,7 +1,7 @@
 /**
  * @fileoverview Поле ввода кастомного callback_data для inline-кнопки с валидацией байт
  *
- * Показывает поле ввода только для inline-кнопок с действиями goto/command.
+ * Показывает поле ввода для inline-кнопок с действиями goto/command/default.
  * Если поле пустое — используется авто-генерируемое значение (отображается как placeholder).
  * Telegram ограничивает callback_data до 64 байт — отображается счётчик и предупреждение.
  * @module components/editor/properties/components/button-card/button-callback-field
@@ -16,7 +16,7 @@ import { ButtonCallbackVariablePicker } from './button-callback-variable-picker'
 const MAX_CALLBACK_BYTES = 64;
 
 /** Действия, для которых показывается поле callback_data */
-const INLINE_ACTIONS = ['goto', 'command'] as const;
+const INLINE_ACTIONS = ['goto', 'command', 'default'] as const;
 type InlineAction = typeof INLINE_ACTIONS[number];
 
 /** Пропсы поля callback_data */
@@ -47,7 +47,7 @@ function getByteLength(str: string): number {
 /**
  * Вычисляет авто-генерируемое значение callback_data по типу действия
  *
- * @param action - Действие кнопки (goto или command)
+ * @param action - Действие кнопки (goto, command или default)
  * @param button - Объект кнопки
  * @returns Авто-значение callback_data
  */

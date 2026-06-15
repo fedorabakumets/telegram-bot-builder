@@ -15,6 +15,7 @@ import { ButtonRequestManagedBotFields } from './button-request-managed-bot-fiel
 import type { Button } from '@shared/schema';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Node } from '@shared/schema';
+import type { ButtonActionType } from './button-action-options';
 
 /** Пропсы карточки кнопки */
 interface ButtonCardProps {
@@ -36,6 +37,12 @@ interface ButtonCardProps {
   selectedNode: Node;
   /** Тип клавиатуры (inline/reply/none) */
   keyboardType?: string;
+  /** Белый список разрешённых действий (пробрасывается в селектор) */
+  allowedActions?: ButtonActionType[];
+  /** Скрыть дополнительные поля (стиль, callback, hideAfterClick); цель goto остаётся видимой */
+  hideExtras?: boolean;
+  /** Показывать селектор стиля даже при hideExtras */
+  showStyle?: boolean;
 }
 
 /**
@@ -54,6 +61,9 @@ export function ButtonCard({
   onButtonDuplicate,
   selectedNode,
   keyboardType,
+  allowedActions,
+  hideExtras = false,
+  showStyle = false,
 }: ButtonCardProps) {
   return (
     <div
@@ -77,9 +87,12 @@ export function ButtonCard({
         onButtonUpdate={onButtonUpdate}
         allowMultipleSelection={selectedNode.data.allowMultipleSelection ?? false}
         keyboardType={keyboardType}
+        allowedActions={allowedActions}
       />
 
       {/* Селектор стиля кнопки (Bot API 9.4) */}
+      {(!hideExtras || showStyle) && (
+      <>
       <div className="border-t border-border/20 my-3"></div>
       <div className="space-y-1.5">
         <span className="text-xs text-gray-500 dark:text-gray-400">Стиль кнопки</span>
@@ -102,6 +115,8 @@ export function ButtonCard({
           ))}
         </div>
       </div>
+      </>
+      )}
 
       {button.action === 'goto' && (
         <>
@@ -115,7 +130,11 @@ export function ButtonCard({
         </>
       )}
 
-      {!['url', 'contact', 'location', 'copy_text', 'web_app', 'request_managed_bot'].includes(button.action) && (
+      {/* Поле callback_data: скрыто для url/contact/location/copy_text/web_app/request_managed_bot.
+          В обычной панели (hideExtras=false) показывается как раньше; в диалоге (hideExtras=true)
+          появляется только для действия default — у goto уже есть селектор цели. */}
+      {!['url', 'contact', 'location', 'copy_text', 'web_app', 'request_managed_bot'].includes(button.action) &&
+        (!hideExtras || button.action === 'default') && (
         <>
           <div className="border-t border-border/20 my-3"></div>
           <ButtonCallbackField
@@ -176,13 +195,17 @@ export function ButtonCard({
         </>
       )}
 
-      <div className="border-t border-border/20 my-3"></div>
-      <ButtonHideAfterClickToggle
-        nodeId={nodeId}
-        button={button}
-        onButtonUpdate={onButtonUpdate}
-        keyboardType={keyboardType as 'inline' | 'reply' | 'none' | undefined}
-      />
+      {!hideExtras && (
+        <>
+          <div className="border-t border-border/20 my-3"></div>
+          <ButtonHideAfterClickToggle
+            nodeId={nodeId}
+            button={button}
+            onButtonUpdate={onButtonUpdate}
+            keyboardType={keyboardType as 'inline' | 'reply' | 'none' | undefined}
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -35,13 +35,26 @@ const SEND_RATE = 25;
  */
 export function StepConfirm({ projectId, formData, isLoading, onConfirm, onBack }: StepConfirmProps) {
   const { audienceType, ...filterFields } = formData.filters;
+  /**
+   * Фильтры для preview-аудитории. Для ручного выбора передаём userIds,
+   * иначе сервер посчитает всех пользователей и счётчик будет неверным.
+   */
   const apiFilters = audienceType === 'tags' ? { tags: filterFields.tags } :
     audienceType === 'date' ? { registeredFrom: filterFields.registeredFrom, registeredTo: filterFields.registeredTo } :
-    audienceType === 'activity' ? { activeFrom: filterFields.activeFrom, activeTo: filterFields.activeTo } : {};
+    audienceType === 'activity' ? { activeFrom: filterFields.activeFrom, activeTo: filterFields.activeTo } :
+    audienceType === 'manual' ? { userIds: filterFields.userIds ?? [] } : {};
 
   const { count, isLoading: isCountLoading } = useAudiencePreview(projectId, apiFilters);
 
-  const estimatedSeconds = count > 0 ? Math.ceil(count / SEND_RATE) : 0;
+  /**
+   * Итоговое число получателей. Для ручного выбора берём длину userIds,
+   * т.к. при пустом массиве preview на сервере вернул бы всех пользователей.
+   */
+  const recipientCount = audienceType === 'manual'
+    ? (filterFields.userIds?.length ?? 0)
+    : count;
+
+  const estimatedSeconds = recipientCount > 0 ? Math.ceil(recipientCount / SEND_RATE) : 0;
   const plainText = formData.messageText.replace(/<[^>]+>/g, '');
   const preview = plainText.length > 100 ? plainText.slice(0, 100) + '...' : plainText;
 
@@ -60,7 +73,9 @@ export function StepConfirm({ projectId, formData, isLoading, onConfirm, onBack 
           <Users className="w-4 h-4 text-violet-500 shrink-0" />
           <span className="text-muted-foreground">Получателей</span>
           <span className="ml-auto font-medium">
-            {isCountLoading ? '...' : count.toLocaleString('ru-RU')}
+            {audienceType === 'manual'
+              ? recipientCount.toLocaleString('ru-RU')
+              : (isCountLoading ? '...' : count.toLocaleString('ru-RU'))}
           </span>
         </div>
         <div className="flex items-center gap-3 px-4 py-3">
@@ -95,7 +110,7 @@ export function StepConfirm({ projectId, formData, isLoading, onConfirm, onBack 
         <Button variant="outline" onClick={onBack} disabled={isLoading}>← Назад</Button>
         <Button
           onClick={onConfirm}
-          disabled={isLoading || count === 0}
+          disabled={isLoading || recipientCount === 0}
           className="bg-gradient-to-r from-blue-500 to-violet-500 text-white hover:from-blue-600 hover:to-violet-600 gap-1.5 px-5"
         >
           <Rocket className="w-4 h-4" />

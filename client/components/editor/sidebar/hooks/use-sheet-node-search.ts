@@ -11,7 +11,7 @@ import { getNodeTypeLabel } from '@/components/editor/properties/utils/node-form
  * @param node - Узел проекта
  * @returns Строка с кратким содержимым узла
  */
-function getShortContent(node: any): string {
+export function getShortContent(node: any): string {
   if (node.type === 'command_trigger') return node.data?.command || '';
   if (node.type === 'text_trigger') return node.data?.textSynonyms?.[0] || '';
   if (node.type === 'message') return node.data?.messageText || '';

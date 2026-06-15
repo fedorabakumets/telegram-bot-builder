@@ -6,6 +6,8 @@
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
+import { buildUsersApiUrl } from '@/components/editor/database/utils';
+import type { Button } from '@shared/schema';
 
 /**
  * Параметры хука useSendGroupMessage
@@ -15,6 +17,8 @@ interface UseSendGroupMessageParams {
   projectId: number;
   /** Telegram chat_id группы */
   groupId?: string | null;
+  /** Идентификатор выбранного в шапке диалога токена бота */
+  selectedTokenId?: number | null;
   /** Колбэк после успешной отправки */
   onSent?: () => void;
 }
@@ -27,6 +31,7 @@ interface UseSendGroupMessageParams {
 export function useSendGroupMessage({
   projectId,
   groupId,
+  selectedTokenId,
   onSent,
 }: UseSendGroupMessageParams) {
   const { toast } = useToast();
@@ -35,12 +40,23 @@ export function useSendGroupMessage({
     /**
      * Отправляет сообщение в группу
      * @param messageText - Текст сообщения
+     * @param mediaUrls - Массив URL медиафайлов (опционально)
+     * @param buttons - Массив инлайн-кнопок сообщения (опционально, бэкенд подключит позже)
+     * @param buttonsPerRow - Кол-во кнопок в ряду (0 = все в один ряд)
      */
-    mutationFn: async ({ messageText }: { messageText: string }) => {
+    mutationFn: async ({ messageText, mediaUrls, buttons, buttonsPerRow }: { messageText: string; mediaUrls?: string[]; buttons?: Button[]; buttonsPerRow?: number }) => {
       if (!groupId) throw new Error('Не указан ID группы');
-      return apiRequest('POST', `/api/projects/${projectId}/bot/send-group-message`, {
+      // Добавляем tokenId выбранного бота, чтобы сообщение ушло от него, а не от бота по умолчанию
+      const url = buildUsersApiUrl(
+        `/api/projects/${projectId}/bot/send-group-message`,
+        selectedTokenId
+      );
+      return apiRequest('POST', url, {
         groupId,
         message: messageText,
+        mediaUrls: mediaUrls ?? [],
+        buttons: buttons ?? [],
+        buttonsPerRow: buttonsPerRow ?? 0,
       });
     },
 

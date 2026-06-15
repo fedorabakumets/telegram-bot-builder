@@ -9,6 +9,8 @@ export type {
   BroadcastFilters,
 } from '@shared/schema';
 
+import type { Button } from '@shared/schema';
+
 /**
  * WS-событие прогресса рассылки (broadcast-progress)
  */
@@ -57,6 +59,10 @@ export interface NewBroadcastFormData {
   messageText: string;
   /** URL прикреплённых медиафайлов */
   mediaUrls: string[];
+  /** Инлайн-кнопки сообщения рассылки */
+  buttons?: Button[];
+  /** Кол-во кнопок в ряду (0 = все в один ряд) */
+  buttonsPerRow?: number;
   /** Фильтры аудитории */
   filters: {
     /** Тип аудитории */

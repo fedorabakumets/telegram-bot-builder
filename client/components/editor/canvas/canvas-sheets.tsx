@@ -13,6 +13,7 @@ import {
 import { CanvasSheet } from '@shared/schema';
 import { cn } from '@/utils/utils';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
+import { generateNextSheetName } from '@/utils/sheets/generate-next-sheet-name';
 
 interface CanvasSheetsProps {
   sheets: CanvasSheet[];
@@ -175,17 +176,8 @@ export function CanvasSheets({
 
   // Создание листа одним кликом с автоматическим именем
   const addNewSheet = () => {
-    // Генерируем имя нового листа
-    const existingNumbers = sheets
-      .map(sheet => {
-        const match = sheet.name.match(/^Лист (\d+)$/);
-        return match ? parseInt(match[1]) : 0;
-      })
-      .filter(num => num > 0);
-    
-    const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : sheets.length + 1;
-    const newSheetName = `Лист ${nextNumber}`;
-    
+    // Генерируем имя нового листа через общую утилиту
+    const newSheetName = generateNextSheetName(sheets);
     onSheetAdd(newSheetName);
   };
 

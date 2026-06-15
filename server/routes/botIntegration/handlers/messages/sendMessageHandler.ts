@@ -17,60 +17,8 @@ import {
 import { replaceVariablesInText } from "./replace-variables";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 import { sendTelegramMessage } from "./send-telegram-message";
-import type { SendMediaFile } from "./extract-media";
-
-/**
- * Определяет тип медиа по расширению URL
- * @param url - URL файла
- * @returns Тип медиа для Telegram API: photo, video, audio или document
- */
-function resolveMediaType(url: string): string {
-  const ext = url.split('.').pop()?.toLowerCase() ?? '';
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'photo';
-  if (['mp4', 'avi', 'mov', 'webm'].includes(ext)) return 'video';
-  if (['mp3', 'wav', 'ogg', 'm4a'].includes(ext)) return 'audio';
-  return 'document';
-}
-
-/**
- * Преобразует массив URL медиафайлов в формат SendMediaFile.
- * Поддерживает JSON file_id записи вида {"__type":"file_id","mediaType":"photo","fileIdsByToken":{"42":"AgAC..."}}.
- * @param mediaUrls - Массив URL медиафайлов
- * @param tokenId - ID токена для выбора нужного file_id из маппинга
- * @returns Массив SendMediaFile для sendTelegramMessage
- */
-function buildMediaFiles(mediaUrls: string[], tokenId: number): SendMediaFile[] {
-  const result: SendMediaFile[] = [];
-
-  for (let i = 0; i < mediaUrls.length; i++) {
-    const url = mediaUrls[i];
-
-    // Формат JSON file_id
-    if (url.startsWith('{"__type":"file_id"')) {
-      try {
-        const parsed = JSON.parse(url) as {
-          __type: string;
-          mediaType?: string;
-          fileIdsByToken?: Record<string, string>;
-        };
-        const fileIdsByToken = parsed.fileIdsByToken ?? {};
-        // Сначала ищем file_id для текущего токена, затем берём первый доступный
-        const fileId =
-          fileIdsByToken[String(tokenId)] ?? Object.values(fileIdsByToken)[0];
-        if (fileId) {
-          result.push({ id: i, url: fileId, type: parsed.mediaType ?? 'photo' });
-        }
-      } catch {
-        console.warn(`[sendMessageHandler] Не удалось распарсить file_id: ${url.slice(0, 80)}`);
-      }
-      continue;
-    }
-
-    result.push({ id: i, url, type: resolveMediaType(url) });
-  }
-
-  return result;
-}
+import { extractButtonsFromNode } from "./extract-buttons";
+import { buildMediaFiles } from "./build-media-files";
 
 /**
  * Обрабатывает запрос на отправку сообщения пользователю.
@@ -112,6 +60,12 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
     const { messageText } = validationResult.data;
     /** Массив URL медиафайлов из тела запроса (опционально) */
     const mediaUrls: string[] = Array.isArray(req.body.mediaUrls) ? req.body.mediaUrls : [];
+    /** Сырые инлайн-кнопки из тела запроса (формат Button фронтенда) */
+    const rawButtons = Array.isArray(req.body.buttons) ? req.body.buttons : [];
+    /** Инлайн-кнопки в формате Telegram API */
+    const buttons = extractButtonsFromNode({ buttons: rawButtons });
+    /** Кол-во кнопок в ряду (0 = все в один ряд) */
+    const buttonsPerRow = Number.isFinite(Number(req.body.buttonsPerRow)) ? Number(req.body.buttonsPerRow) : 0;
 
     const userResult = await (await import("../../../../database/db")).pool.query(
       `SELECT user_id AS "userId", username AS "userName", first_name AS "firstName",
@@ -136,13 +90,20 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
 
     const mediaFiles = buildMediaFiles(mediaUrls, effectiveTokenId);
 
+    // Нечего отправлять: нет текста, нет медиа и нет кнопок
+    if (textWithVariables.trim() === "" && mediaFiles.length === 0 && buttons.length === 0) {
+      res.status(400).json({ message: "Нечего отправлять: добавьте текст, медиа или кнопки" });
+      return;
+    }
+
     const result = await sendTelegramMessage(
       selectedToken.token,
       userId,
       textWithVariables,
       mediaFiles,
-      [],
-      true
+      buttons,
+      true,
+      buttonsPerRow
     );
 
     /** ID отправленного сообщения в Telegram (из result.message_id) */
@@ -153,6 +114,14 @@ export async function sendMessageHandler(req: Request, res: Response): Promise<v
     if (mediaFiles.length > 0) {
       mediaMessageData.broadcastMediaUrl = mediaFiles[0].url;
       mediaMessageData.broadcastMediaType = mediaFiles[0].type;
+    }
+    // Сохраняем кнопки для отображения в истории диалога
+    if (rawButtons.length > 0) {
+      mediaMessageData.buttons = rawButtons;
+    }
+    // Сохраняем раскладку кнопок по рядам (для возможного будущего отображения)
+    if (buttonsPerRow > 0) {
+      mediaMessageData.buttonsPerRow = buttonsPerRow;
     }
 
     const savedMessage = await storage.createBotMessage({

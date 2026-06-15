@@ -20,6 +20,8 @@ export interface InlineButton {
   webAppUrl?: string;
   /** Текст для копирования в буфер (action=copy_text) */
   copyText?: string;
+  /** Визуальный стиль кнопки (Bot API 9.4): primary=синий, success=зелёный, danger=красный */
+  style?: 'primary' | 'success' | 'danger';
 }
 
 /**
@@ -42,6 +44,8 @@ interface RawButton {
   copyText?: string;
   /** Кастомный callback_data */
   customCallbackData?: string;
+  /** Визуальный стиль кнопки (Bot API 9.4) */
+  style?: string;
 }
 
 /**
@@ -58,17 +62,19 @@ export function extractButtonsFromNode(nodeData: Record<string, unknown>): Inlin
 
   return buttons.map(b => {
     const action = b.action ?? 'default';
+    // Поле стиля (Bot API 9.4) добавляем к любой ветке, если оно задано
+    const styleField = b.style ? { style: b.style as InlineButton['style'] } : {};
 
     if (action === 'url') {
-      return { id: b.id, text: b.text, url: b.url };
+      return { id: b.id, text: b.text, url: b.url, ...styleField };
     }
 
     if (action === 'web_app') {
-      return { id: b.id, text: b.text, webAppUrl: b.webAppUrl };
+      return { id: b.id, text: b.text, webAppUrl: b.webAppUrl, ...styleField };
     }
 
     if (action === 'copy_text') {
-      return { id: b.id, text: b.text, copyText: b.copyText };
+      return { id: b.id, text: b.text, copyText: b.copyText, ...styleField };
     }
 
     // goto, command, selection, complete, default — используют callbackData
@@ -76,6 +82,6 @@ export function extractButtonsFromNode(nodeData: Record<string, unknown>): Inlin
       || (action === 'goto' && b.target ? `node:${b.target}` : undefined)
       || b.id;
 
-    return { id: b.id, text: b.text, callbackData };
+    return { id: b.id, text: b.text, callbackData, ...styleField };
   });
 }

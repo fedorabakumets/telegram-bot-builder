@@ -688,6 +688,24 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при миграции полей трекинга в bot_users:', error);
     }
 
+    // Миграция: добавить buttons в broadcasts (инлайн-кнопки сообщения рассылки)
+    try {
+      await executeWithRetry(db, sql`
+        ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS buttons JSON DEFAULT '[]';
+      `, "Миграция: добавление buttons в broadcasts");
+    } catch (error) {
+      console.log('⚠️ Ошибка при миграции buttons в broadcasts:', error);
+    }
+
+    // Миграция: добавить buttons_per_row в broadcasts (раскладка кнопок по рядам)
+    try {
+      await executeWithRetry(db, sql`
+        ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS buttons_per_row INTEGER DEFAULT 0;
+      `, "Миграция: добавление buttons_per_row в broadcasts");
+    } catch (error) {
+      console.log('⚠️ Ошибка при миграции buttons_per_row в broadcasts:', error);
+    }
+
     console.log('✅ Таблицы базы данных успешно инициализированы!');
     return true;
   } catch (error) {

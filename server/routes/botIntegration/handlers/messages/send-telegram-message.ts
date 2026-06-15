@@ -9,6 +9,8 @@ import { basename, join } from 'path';
 import type { SendMediaFile } from "./extract-media";
 import type { InlineButton } from "./extract-buttons";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
+import { isLocalPath, buildMultipartBody } from "./media-multipart";
+import { sendTelegramMediaGroup } from "./send-telegram-media-group";
 
 /**
  * Объект сообщения из ответа Telegram API
@@ -32,73 +34,59 @@ export interface TelegramSendResult {
   description?: string;
 }
 
-/** MIME-типы по расширению файла */
-const MIME_TYPES: Record<string, string> = {
-  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
-  gif: 'image/gif', webp: 'image/webp',
-  mp4: 'video/mp4', avi: 'video/x-msvideo', mov: 'video/quicktime', webm: 'video/webm',
-  mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', m4a: 'audio/mp4',
-  pdf: 'application/pdf', zip: 'application/zip',
-};
-
 /**
- * Определяет MIME-тип по имени файла
- * @param fileName - Имя файла
- * @returns MIME-тип
+ * Разбивает массив кнопок Telegram на ряды.
+ * При buttonsPerRow >= 1 режет массив на чанки по N штук в каждом ряду,
+ * иначе возвращает все кнопки одним рядом (обратная совместимость).
+ * @param buttons - Массив кнопок в формате Telegram API
+ * @param buttonsPerRow - Кол-во кнопок в ряду (0 или отсутствует = один ряд)
+ * @returns Массив рядов кнопок для inline_keyboard
  */
-function getMimeType(fileName: string): string {
-  const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
-  return MIME_TYPES[ext] ?? 'application/octet-stream';
-}
-
-/**
- * Проверяет является ли URL локальным путём к файлу на сервере
- * @param url - URL или путь
- * @returns true если это локальный путь
- */
-function isLocalPath(url: string): boolean {
-  return url.startsWith('/uploads/') || url.startsWith('uploads/');
-}
-
-/**
- * Строит multipart/form-data тело запроса для отправки файла в Telegram
- * @param fields - Текстовые поля формы
- * @param fileField - Имя поля файла
- * @param fileName - Имя файла
- * @param fileBuffer - Содержимое файла
- * @returns Объект с body и boundary
- */
-function buildMultipartBody(
-  fields: Record<string, string | undefined>,
-  fileField: string,
-  fileName: string,
-  fileBuffer: Buffer,
-): { body: Buffer; boundary: string } {
-  const boundary = `----TelegramBotBoundary${Date.now()}`;
-  const CRLF = '\r\n';
-  const parts: Buffer[] = [];
-
-  // Текстовые поля
-  for (const [name, value] of Object.entries(fields)) {
-    if (value === undefined) continue;
-    parts.push(Buffer.from(
-      `--${boundary}${CRLF}` +
-      `Content-Disposition: form-data; name="${name}"${CRLF}${CRLF}` +
-      `${value}${CRLF}`
-    ));
+function chunkButtons<T>(buttons: T[], buttonsPerRow?: number): T[][] {
+  if (!buttonsPerRow || buttonsPerRow < 1) {
+    return [buttons];
   }
+  const rows: T[][] = [];
+  for (let i = 0; i < buttons.length; i += buttonsPerRow) {
+    rows.push(buttons.slice(i, i + buttonsPerRow));
+  }
+  return rows;
+}
 
-  // Файл
-  const mimeType = getMimeType(fileName);
-  parts.push(Buffer.from(
-    `--${boundary}${CRLF}` +
-    `Content-Disposition: form-data; name="${fileField}"; filename="${fileName}"${CRLF}` +
-    `Content-Type: ${mimeType}${CRLF}${CRLF}`
-  ));
-  parts.push(fileBuffer);
-  parts.push(Buffer.from(`${CRLF}--${boundary}--${CRLF}`));
+/**
+ * Преобразует кнопку фронтенда в формат Telegram inline_keyboard.
+ * Telegram API требует разные поля для разных типов кнопок:
+ * - url-кнопки: { text, url }
+ * - web_app-кнопки: { text, web_app: { url } }
+ * - copy_text-кнопки: { text, copy_text: { text } }
+ * - остальные: { text, callback_data }
+ * @param b - Инлайн-кнопка во внутреннем формате
+ * @returns Объект кнопки в формате Telegram API
+ */
+function buildButton(b: InlineButton): Record<string, unknown> {
+  // Поле стиля (Bot API 9.4) добавляем к любой кнопке, если оно задано;
+  // Telegram игнорирует style для неподдерживаемых типов кнопок
+  const styleField = b.style ? { style: b.style } : {};
+  if (b.url) return { text: b.text, url: b.url, ...styleField };
+  if (b.webAppUrl) return { text: b.text, web_app: { url: b.webAppUrl }, ...styleField };
+  if (b.copyText) return { text: b.text, copy_text: { text: b.copyText }, ...styleField };
+  return { text: b.text, callback_data: b.callbackData ?? b.id, ...styleField };
+}
 
-  return { body: Buffer.concat(parts), boundary };
+/**
+ * Собирает inline-клавиатуру Telegram из массива кнопок.
+ * Маппит каждую кнопку в формат Telegram и режет на ряды по buttonsPerRow.
+ * @param buttons - Кнопки во внутреннем формате InlineButton
+ * @param buttonsPerRow - Кол-во кнопок в ряду (0 или отсутствует = все в один ряд)
+ * @returns Объект reply_markup с полем inline_keyboard
+ */
+export function buildInlineKeyboard(
+  buttons: InlineButton[],
+  buttonsPerRow?: number
+): { inline_keyboard: any[][] } {
+  return {
+    inline_keyboard: chunkButtons(buttons.map(buildButton), buttonsPerRow),
+  };
 }
 
 /**
@@ -110,6 +98,7 @@ function buildMultipartBody(
  * @param mediaFiles - Медиафайлы
  * @param buttons - Кнопки
  * @param useHtml - Использовать HTML форматирование
+ * @param buttonsPerRow - Кол-во кнопок в ряду (0 или отсутствует = все в один ряд)
  * @returns Типизированный результат Telegram API с message_id
  */
 export async function sendTelegramMessage(
@@ -118,26 +107,24 @@ export async function sendTelegramMessage(
   text: string,
   mediaFiles: SendMediaFile[],
   buttons: InlineButton[],
-  useHtml: boolean
+  useHtml: boolean,
+  buttonsPerRow?: number
 ): Promise<TelegramSendResult> {
   const hasMedia = mediaFiles.length > 0;
   const hasButtons = buttons.length > 0;
 
-  // Формируем клавиатуру.
-  // Telegram API требует разные поля для разных типов кнопок:
-  // - url-кнопки: { text, url }
-  // - web_app-кнопки: { text, web_app: { url } }
-  // - остальные: { text, callback_data }
-  const replyMarkup = hasButtons ? {
-    inline_keyboard: [buttons.map(b => {
-      if (b.url) return { text: b.text, url: b.url };
-      if (b.webAppUrl) return { text: b.text, web_app: { url: b.webAppUrl } };
-      return { text: b.text, callback_data: b.callbackData ?? b.id };
-    })]
-  } : undefined;
+  // Строим ряды инлайн-кнопок через переиспользуемый хелпер: при buttonsPerRow >= 1
+  // режем массив на чанки по N штук, иначе — все кнопки в один ряд.
+  const replyMarkup = hasButtons ? buildInlineKeyboard(buttons, buttonsPerRow) : undefined;
 
   if (!hasMedia) {
     return sendTextMessage(token, chatId, text, useHtml, replyMarkup);
+  }
+
+  // Несколько вложений без кнопок — отправляем альбомом (sendMediaGroup),
+  // т.к. альбомы Telegram не поддерживают inline-клавиатуру.
+  if (mediaFiles.length > 1 && !hasButtons) {
+    return sendTelegramMediaGroup(token, chatId, text, mediaFiles, useHtml);
   }
 
   // Отправляем первое медиа
@@ -254,7 +241,9 @@ async function sendMediaMessage(
         reply_markup: replyMarkup ? JSON.stringify(replyMarkup) : undefined,
       };
 
-      const { body, boundary } = buildMultipartBody(fields, media.type, fileName, fileBuffer);
+      const { body, boundary } = buildMultipartBody(fields, [
+        { field: media.type, fileName, buffer: fileBuffer },
+      ]);
 
       response = await fetchWithProxy(`https://api.telegram.org/bot${token}/${endpoint}`, {
         method: 'POST',

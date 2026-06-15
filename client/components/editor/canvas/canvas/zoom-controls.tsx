@@ -5,7 +5,7 @@
  * выпадающий список выбора масштаба и кнопку "Уместить всё".
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 /**
@@ -90,11 +90,38 @@ export function ZoomControls({
     setLocalAutoFit(value);
     onAutoFitOnSheetChangeToggle?.(value);
   };
+
+  /**
+   * Хелпер для long-press: сразу выполняет действие (одиночный клик),
+   * затем при удержании повторяет с ускорением. onClick не используется,
+   * чтобы не конфликтовать с pointer-событиями.
+   */
+  const repeatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startRepeat = useCallback((action: () => void) => {
+    action(); // немедленно — обрабатывает одиночный клик
+    let delay = 400;
+    const tick = () => {
+      action();
+      delay = Math.max(delay * 0.7, 50);
+      repeatTimerRef.current = setTimeout(tick, delay);
+    };
+    repeatTimerRef.current = setTimeout(tick, delay);
+  }, []);
+  const stopRepeat = useCallback(() => {
+    if (repeatTimerRef.current) {
+      clearTimeout(repeatTimerRef.current);
+      repeatTimerRef.current = null;
+    }
+  }, []);
+
   return (
     <>
       {/* Кнопка уменьшения масштаба */}
       <button
-        onClick={onZoomOut}
+        onPointerDown={() => startRepeat(onZoomOut)}
+        onPointerUp={stopRepeat}
+        onPointerLeave={stopRepeat}
+        onPointerCancel={stopRepeat}
         disabled={!canZoomOut}
         className={`${BUTTON_BASE_CLASSES} ${BUTTON_INACTIVE_CLASSES} ${!canZoomOut ? BUTTON_DISABLED_CLASSES : ''}`}
         title="Уменьшить масштаб (Ctrl + -)"
@@ -193,7 +220,10 @@ export function ZoomControls({
 
       {/* Кнопка увеличения масштаба */}
       <button
-        onClick={onZoomIn}
+        onPointerDown={() => startRepeat(onZoomIn)}
+        onPointerUp={stopRepeat}
+        onPointerLeave={stopRepeat}
+        onPointerCancel={stopRepeat}
         disabled={!canZoomIn}
         className={`${BUTTON_BASE_CLASSES} ${BUTTON_INACTIVE_CLASSES} ${!canZoomIn ? BUTTON_DISABLED_CLASSES : ''} flex items-center justify-center`}
         title="Увеличить масштаб (Ctrl + +)"
