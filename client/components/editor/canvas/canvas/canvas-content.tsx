@@ -26,6 +26,8 @@ interface CanvasContentProps {
   pan: { x: number; y: number };
   /** Масштаб холста (в процентах) */
   zoom: number;
+  /** Отключить CSS-переход трансформации (на время интерактивного зума/пана) */
+  disableTransition?: boolean;
   /** Идентификатор выбранного узла */
   selectedNodeId: string | null;
   /** Колбэк при выборе узла */
@@ -83,6 +85,7 @@ export function CanvasContent({
   nodes,
   pan,
   zoom,
+  disableTransition,
   selectedNodeId,
   onNodeSelect,
   onNodeDelete,
@@ -184,7 +187,7 @@ export function CanvasContent({
 
   return (
     <div
-      className="relative origin-top-left transition-transform duration-200 ease-out"
+      className={`relative origin-top-left ${disableTransition ? '' : 'transition-transform duration-200 ease-out'}`}
       style={{
         transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
         transformOrigin: '0 0',

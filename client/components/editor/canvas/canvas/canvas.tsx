@@ -5,6 +5,7 @@
  * историю операций и специальные семантики соединений на канвасе.
  * Для `forward_message` связь от message/media-узла трактуется как
  * привязка источника сообщения, а не как автопереход выполнения.
+ * Зум к курсору/щипку использует ref-зеркала pan/zoom для синхронности.
  */
 
 import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
@@ -251,6 +252,18 @@ export function Canvas({
   const [isDragOver, setIsDragOver] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  /**
+   * Ref-зеркала pan/zoom для синхронного доступа в обработчиках колеса и
+   * touch-жестов. События зума приходят быстрее, чем React успевает
+   * перерисоваться, поэтому чтение pan/zoom из замыкания давало устаревшие
+   * значения и якорь зума «уносило» в сторону. Refs всегда содержат актуальные.
+   */
+  const zoomRef = useRef(zoom);
+  const panRef = useRef(pan);
+  /** Флаг активного интерактивного зума/панорамирования — отключает CSS-переход */
+  const [isInteracting, setIsInteracting] = useState(false);
+  /** Таймер сброса флага интерактивности после паузы в жесте */
+  const interactTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
@@ -981,10 +994,25 @@ export function Canvas({
     return () => clearTimeout(timer);
   }, [fitTrigger]);
 
+  /** Синхронизируем ref-зеркала с состоянием при любых внешних изменениях */
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  useEffect(() => { panRef.current = pan; }, [pan]);
+
+  /**
+   * Помечает начало/продолжение интерактивного жеста: отключает CSS-переход
+   * трансформации и сбрасывает флаг через 160мс после последнего события.
+   */
+  const markInteracting = useCallback(() => {
+    setIsInteracting(true);
+    if (interactTimerRef.current) clearTimeout(interactTimerRef.current);
+    interactTimerRef.current = setTimeout(() => setIsInteracting(false), 160);
+  }, []);
+
   // Handle wheel zoom (native handler, registered with { passive: false })
   const handleWheel = useCallback((e: WheelEvent) => {
     // Всегда предотвращаем нативный скролл контейнера — управляем паном сами
     e.preventDefault();
+    markInteracting();
 
     if (e.ctrlKey || e.metaKey) {
       // Зум (pinch на тачпаде или Ctrl+scroll)
@@ -992,29 +1020,37 @@ export function Canvas({
       const sensitivity = 0.003;
       const zoomFactor = Math.max(0.85, Math.min(1.15, 1 - e.deltaY * sensitivity));
 
-      const newZoom = Math.max(Math.min(zoom * zoomFactor, 200), 1);
+      // Берём актуальные значения из refs (не из stale-замыкания)
+      const currentZoom = zoomRef.current;
+      const currentPan = panRef.current;
+      const newZoom = Math.max(Math.min(currentZoom * zoomFactor, 200), 1);
 
       // Зум к точке под курсором: позиция курсора относительно холста
       // остаётся неподвижной, поэтому изображение не «уносит» в сторону.
       const rect = canvasRef.current?.getBoundingClientRect();
       const pointerX = rect ? e.clientX - rect.left : 0;
       const pointerY = rect ? e.clientY - rect.top : 0;
-      const zoomRatio = newZoom / zoom;
+      const zoomRatio = newZoom / currentZoom;
 
-      setPan(prev => ({
-        x: pointerX - (pointerX - prev.x) * zoomRatio,
-        y: pointerY - (pointerY - prev.y) * zoomRatio
-      }));
+      const newPan = {
+        x: pointerX - (pointerX - currentPan.x) * zoomRatio,
+        y: pointerY - (pointerY - currentPan.y) * zoomRatio,
+      };
 
+      // Синхронно обновляем refs, чтобы следующее событие в том же кадре
+      // считало от уже изменённых значений.
+      zoomRef.current = newZoom;
+      panRef.current = newPan;
+      setPan(newPan);
       setZoom(newZoom);
     } else {
       // Обычный скролл/тачпад без Ctrl — двигаем пан вместо скролла контейнера
-      setPan(prev => ({
-        x: prev.x - e.deltaX,
-        y: prev.y - e.deltaY
-      }));
+      const currentPan = panRef.current;
+      const newPan = { x: currentPan.x - e.deltaX, y: currentPan.y - e.deltaY };
+      panRef.current = newPan;
+      setPan(newPan);
     }
-  }, [zoom]);
+  }, [markInteracting]);
 
   // Handle panning
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -1034,6 +1070,7 @@ export function Canvas({
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isPanning) {
+      markInteracting();
       const deltaX = e.clientX - panStart.x;
       const deltaY = e.clientY - panStart.y;
 
@@ -1053,6 +1090,9 @@ export function Canvas({
     canvasRef,
     pan,
     zoom,
+    panRef,
+    zoomRef,
+    onInteract: markInteracting,
     setPan,
     setZoom,
     isTouchPanning,
@@ -1552,6 +1592,7 @@ export function Canvas({
             nodes={nodes}
             pan={pan}
             zoom={zoom}
+            disableTransition={isInteracting}
             selectedNodeId={selectedNodeId}
             onNodeSelect={onNodeSelect}
             onNodeDelete={onNodeDelete}
