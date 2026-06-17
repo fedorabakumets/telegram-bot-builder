@@ -14,6 +14,7 @@ import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getNodeDefaults } from '../../utils/node-defaults';
 import { getNodeName, getNodeIcon, getNodeColor } from '../../../shared/node-registry';
+import { PropertiesViewToggle, type PropertiesView } from './properties-view-toggle';
 
 /**
  * Пропсы компонента заголовка панели свойств
@@ -27,6 +28,10 @@ interface PropertiesHeaderProps {
   onClose?: (() => void) | undefined;
   /** Отображаемый ID узла */
   displayNodeId: string;
+  /** Режим панели: форма или JSON */
+  propertiesView?: PropertiesView;
+  /** Смена режима панели */
+  onPropertiesViewChange?: (view: PropertiesView) => void;
 }
 
 /**
@@ -39,7 +44,9 @@ export function PropertiesHeader({
   selectedNode,
   onNodeTypeChange,
   onClose,
-  displayNodeId
+  displayNodeId,
+  propertiesView,
+  onPropertiesViewChange,
 }: PropertiesHeaderProps) {
   const { toast } = useToast();
 
@@ -165,6 +172,9 @@ export function PropertiesHeader({
             )}
           </div>
         </div>
+        {onPropertiesViewChange && propertiesView && (
+          <PropertiesViewToggle value={propertiesView} onChange={onPropertiesViewChange} />
+        )}
       </div>
     </div>
   );

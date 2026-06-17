@@ -29,8 +29,8 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
   const targetNode = button.action === 'goto' && button.target 
     ? allNodes?.find(n => n.id === button.target) 
     : null;
-  const targetNodeDisplay = targetNode?.data?.messageText?.slice(0, 30) || 
-                           targetNode?.data?.command || 
+  const targetNodeDisplay = targetNode?.data?.messageText?.slice(0, 30) ||
+                           targetNode?.data?.command ||
                            (button.action === 'goto' ? (button.target?.slice(0, 8) ?? '') : '');
 
   /** Классы фона и текста в зависимости от style (Bot API 9.4) */
@@ -46,7 +46,7 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
     <div className={`rounded-lg border shadow-sm transition-colors p-3 ${styleClass}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium truncate">
+          <div className="text-sm font-medium break-words">
             {button.text}
           </div>
           {button.action === 'goto' && (
@@ -55,7 +55,7 @@ export function ReplyButton({ button, allNodes }: ReplyButtonProps) {
             </div>
           )}
           {button.action === 'url' && (
-            <div className="mt-1.5 text-xs text-purple-600 dark:text-purple-300 truncate">
+            <div className="mt-1.5 text-xs text-purple-600 dark:text-purple-300 break-all">
               🔗 {button.url}
             </div>
           )}

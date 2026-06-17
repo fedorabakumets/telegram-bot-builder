@@ -17,9 +17,10 @@ export interface UseProjectNavigationResult {
   handleGoToProjects: () => void;
   /**
    * Открыть проект в редакторе
-   * @param projectId - ID проекта
+   * @param projectId - ID проекта для открытия
+   * @param sheetId - Опциональный ID листа для открытия
    */
-  handleProjectSelect: (projectId: number) => void;
+  handleProjectSelect: (projectId: number, sheetId?: string) => void;
 }
 
 /**
@@ -42,8 +43,13 @@ export function useProjectNavigation(): UseProjectNavigationResult {
   /**
    * Открыть проект в редакторе
    * @param projectId - ID проекта для открытия
+   * @param sheetId - Опциональный ID листа (?sheet= в URL)
    */
-  const handleProjectSelect = useCallback((projectId: number) => {
+  const handleProjectSelect = useCallback((projectId: number, sheetId?: string) => {
+    if (sheetId) {
+      setLocation(`/editor/${projectId}?sheet=${encodeURIComponent(sheetId)}`);
+      return;
+    }
     setLocation(`/editor/${projectId}`);
   }, [setLocation]);
 

@@ -8,6 +8,7 @@ import { Button } from '@lib/bot-generator';
 import { KeyboardLayout } from '../../types/keyboard-layout';
 import { DYNAMIC_BUTTONS_PLACEHOLDER_ID } from '../../utils/keyboard-layout-utils';
 import { buildDynamicButtonsPreviewItems } from '../../utils/dynamic-buttons';
+import { getButtonStyleClassName } from '../../utils/button-style-classes';
 import { cn } from '@/utils/utils';
 
 /** Свойства компонента KeyboardGridPreview */
@@ -78,9 +79,33 @@ export function KeyboardGridPreview({
     }
   };
 
+  const getButtonById = (buttonId: string): Button | undefined => {
+    return buttons.find((button) => button.id === buttonId);
+  };
+
   const getButtonText = (buttonId: string): string => {
-    const button = buttons.find(b => b.id === buttonId);
-    return button?.text || 'Кнопка';
+    return getButtonById(buttonId)?.text || 'Кнопка';
+  };
+
+  /**
+   * Возвращает CSS-классы ячейки кнопки с учётом стиля и режима drag-and-drop.
+   *
+   * @param buttonId - ID кнопки в раскладке
+   * @returns Строка Tailwind-классов
+   */
+  const getButtonCellClassName = (buttonId: string): string => {
+    if (buttonId === DYNAMIC_BUTTONS_PLACEHOLDER_ID) {
+      return 'bg-amber-50 dark:bg-amber-950/30 border-amber-300/60 dark:border-amber-700/50 text-amber-800 dark:text-amber-200 cursor-move';
+    }
+
+    const button = getButtonById(buttonId);
+    const styleClass = getButtonStyleClassName(button?.style);
+
+    if (disabled) {
+      return cn(styleClass, 'cursor-not-allowed opacity-60');
+    }
+
+    return cn(styleClass, 'cursor-move hover:opacity-90 transition-colors');
   };
 
   return (
@@ -122,18 +147,20 @@ export function KeyboardGridPreview({
                   handleDropOnButton(e, rowIndex, buttonIndex);
                 }}
                 className={cn(
-                  'flex-1 min-w-[120px] p-3 rounded-md text-center text-sm border shadow-sm',
-                  buttonId === DYNAMIC_BUTTONS_PLACEHOLDER_ID
-                    ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-300/60 dark:border-amber-700/50 text-amber-800 dark:text-amber-200 cursor-move'
-                    : disabled
-                      ? 'bg-muted cursor-not-allowed opacity-60'
-                      : 'bg-muted cursor-move hover:bg-accent transition-colors'
+                  'flex-1 min-w-[120px] p-3 rounded-md text-center text-sm border shadow-sm break-words',
+                  getButtonCellClassName(buttonId),
                 )}
               >
                 {buttonId === DYNAMIC_BUTTONS_PLACEHOLDER_ID ? (
                   <div className="space-y-1">
                     {buildDynamicButtonsPreviewItems(dynamicButtonsConfig).slice(0, 2).map((item, i) => (
-                      <div key={i} className="rounded px-2 py-1 bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/50 text-xs text-blue-700 dark:text-blue-300 text-left">
+                      <div
+                        key={i}
+                        className={cn(
+                          'rounded px-2 py-1 border text-xs text-left',
+                          getButtonStyleClassName(item.style),
+                        )}
+                      >
                         {item.text}
                       </div>
                     ))}

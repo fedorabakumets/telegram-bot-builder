@@ -15,6 +15,7 @@ import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
 import { MobileCanvasFab } from './mobile-canvas-fab';
 import { useConnectionDrag } from './use-connection-drag';
+import { useCanvasViewHistory } from './use-canvas-view-history';
 import { useMarqueeSelection } from './use-marquee-selection';
 import { useMoveNodesToSheet } from './use-move-nodes-to-sheet';
 import { useMoveNodesToProject } from './use-move-nodes-to-project';
@@ -391,6 +392,25 @@ export function Canvas({
     animateTimerRef.current = setTimeout(() => setAnimateTransform(false), 220);
   }, []);
 
+  /** Стек предыдущих видов — сохраняется только перед программным focusOnNode */
+  const {
+    pushView,
+    restorePreviousView: popViewFromHistory,
+    canRestore: canRestorePreviousView,
+    clear: clearViewHistory,
+  } = useCanvasViewHistory();
+
+  /**
+   * Восстанавливает предыдущий pan/zoom из стека истории вида
+   */
+  const restorePreviousView = useCallback(() => {
+    const previous = popViewFromHistory();
+    if (!previous) return;
+    triggerTransformAnimation();
+    setZoom(previous.zoom);
+    setPan(previous.pan);
+  }, [popViewFromHistory, triggerTransformAnimation]);
+
   /**
    * Центрирует холст на узле: выделяет узел и подбирает масштаб/смещение
    * @param nodeId - Идентификатор узла для фокусировки
@@ -398,6 +418,7 @@ export function Canvas({
   const focusOnNode = useCallback((nodeId: string) => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
+    pushView(panRef.current, zoomRef.current);
     triggerTransformAnimation();
     onNodeSelect(nodeId);
     const scrollContainer = canvasRef.current?.parentElement;
@@ -417,7 +438,7 @@ export function Canvas({
     const newPanX = containerWidth / 2 - (node.position.x + nodeW / 2) * (newZoom / 100);
     const newPanY = containerHeight / 2 - (node.position.y + nodeH / 2) * (newZoom / 100);
     setPan({ x: newPanX, y: newPanY });
-  }, [nodes, nodeSizes, onNodeSelect, setZoom, setPan, triggerTransformAnimation]);
+  }, [nodes, nodeSizes, onNodeSelect, pushView, setZoom, setPan, triggerTransformAnimation]);
 
   /**
    * Фокусировка на узле: выделяет узел и центрирует его в видимой области
@@ -778,8 +799,9 @@ export function Canvas({
 
     // Затем переключаемся на новый лист
     const updatedData = SheetsManager.setActiveSheet(dataWithCurrentSheetSaved, sheetId);
+    clearViewHistory();
     onBotDataUpdate(updatedData);
-  }, [botData, onBotDataUpdate, nodes]);
+  }, [botData, onBotDataUpdate, nodes, clearViewHistory]);
 
   const handleSheetAdd = useCallback((name: string) => {
     if (!botData || !onBotDataUpdate) return;
@@ -1215,13 +1237,19 @@ export function Canvas({
         !!target.closest('[data-properties-panel]');
 
       if (!isInputField) {
-        // Escape — снимает рамочное мульти-выделение узлов и возвращает
-        // инструмент в режим курсора, если активен режим рамки.
-        if (e.key === 'Escape' && (selectedNodeIds.size > 0 || tool === 'marquee')) {
-          e.preventDefault();
-          clearSelection();
-          if (tool === 'marquee') setTool('pointer');
-          return;
+        // Escape — сначала восстанавливает предыдущий вид, иначе снимает выделение
+        if (e.key === 'Escape') {
+          if (canRestorePreviousView) {
+            e.preventDefault();
+            restorePreviousView();
+            return;
+          }
+          if (selectedNodeIds.size > 0 || tool === 'marquee') {
+            e.preventDefault();
+            clearSelection();
+            if (tool === 'marquee') setTool('pointer');
+            return;
+          }
         }
 
         // Обработка клавиши Delete для удаления выбранного узла
@@ -1398,7 +1426,7 @@ export function Canvas({
       document.removeEventListener('gesturechange', handleGesture);
       document.removeEventListener('gestureend', handleGesture);
     };
-  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate, nodes, addAction, getPastePosition, onPasteFromClipboard, onCopyToClipboard, canvasView, clearSelection, selectedNodeIds, tool, setTool]);
+  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate, nodes, addAction, getPastePosition, onPasteFromClipboard, onCopyToClipboard, canvasView, clearSelection, selectedNodeIds, tool, setTool, canRestorePreviousView, restorePreviousView]);
 
 
 
@@ -1848,6 +1876,8 @@ export function Canvas({
         onResetZoom={resetZoom}
         onFitToContent={fitToContent}
         onZoomLevelChange={setZoomLevel}
+        canRestorePreviousView={canRestorePreviousView}
+        onRestorePreviousView={restorePreviousView}
         onUndo={onUndo}
         onRedo={onRedo}
         onSave={onSave}

@@ -24,6 +24,8 @@ interface ActionLogger {
 interface UseNodeHandlersResult {
   /** Обработчик обновления узла с синхронизацией листов */
   handleNodeUpdateWithSheets: (nodeId: string, updates: any) => void;
+  /** Полная замена node.data (для JSON-режима панели свойств) */
+  handleNodeDataReplace: (nodeId: string, newData: Node['data']) => void;
   /** Обработчик смены типа узла с синхронизацией листов */
   handleNodeTypeChange: (nodeId: string, newType: any, newData: any) => void;
   /** Обработчик смены ID узла с синхронизацией листов */
@@ -123,6 +125,48 @@ export function useNodeHandlers({
       });
     }
   }, [updateNodeData, botDataWithSheets, setBotDataWithSheets, nodes, onActionLog, saveToHistory]);
+
+  const handleNodeDataReplace = useCallback((nodeId: string, newData: Node['data']) => {
+    const node = nodes.find(n => n.id === nodeId);
+    const data = { ...newData };
+
+    if (data.keyboardLayout || data.buttons) {
+      data.keyboardLayout = migrateKeyboardLayout(data.buttons || [], data.keyboardLayout);
+    }
+
+    if (node) {
+      const changedFields = Object.keys({ ...node.data, ...data }).filter((key) => {
+        const oldVal = (node.data as Record<string, unknown>)[key];
+        const newVal = (data as Record<string, unknown>)[key];
+        return JSON.stringify(oldVal) !== JSON.stringify(newVal);
+      });
+      if (changedFields.length > 0) {
+        logNodeUpdate({ node, onActionLog, updatedFields: changedFields });
+      }
+    }
+
+    saveToHistory();
+    updateNode(nodeId, { data });
+
+    if (botDataWithSheets?.activeSheetId) {
+      const updatedSheets = botDataWithSheets.sheets.map((sheet) => {
+        if (sheet.id === botDataWithSheets.activeSheetId) {
+          return {
+            ...sheet,
+            nodes: sheet.nodes.map((n) =>
+              n.id === nodeId ? { ...n, data } : n,
+            ),
+          };
+        }
+        return sheet;
+      });
+
+      setBotDataWithSheets({
+        ...botDataWithSheets,
+        sheets: updatedSheets,
+      });
+    }
+  }, [updateNode, botDataWithSheets, setBotDataWithSheets, nodes, onActionLog, saveToHistory]);
 
   const handleNodeTypeChange = useCallback((nodeId: string, newType: any, newData: any) => {
     const node = nodes.find(n => n.id === nodeId);
@@ -236,6 +280,7 @@ export function useNodeHandlers({
 
   return {
     handleNodeUpdateWithSheets,
+    handleNodeDataReplace,
     handleNodeTypeChange,
     handleNodeIdChange,
     handleNodeMove,

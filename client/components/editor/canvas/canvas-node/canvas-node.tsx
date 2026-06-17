@@ -4,7 +4,7 @@
 
 import { Node } from '@/types/bot';
 import { cn } from '@/utils/utils';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { OutputPort } from './output-port';
 import { PortType } from './port-colors';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from '../canvas/utils/canvas-coordinate-utils';
@@ -56,6 +56,7 @@ import { UserbotClickButtonPreview } from './userbot-click-button-preview';
 import { UserbotInlineQueryPreview } from './userbot-inline-query-preview';
 import { UserbotEditTriggerPreview } from './userbot-edit-trigger-preview';
 import { MoveToSheetMenu } from './context-menu/move-to-sheet-menu';
+import { getKeyboardNodeWidth } from '../utils/get-keyboard-node-width';
 
 /**
  * Интерфейс свойств компонента CanvasNode
@@ -538,6 +539,12 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
   /** ����������� hover: ��������� ��� �������������� �� �������� */
   const effectiveHover = isHovered || !!forceHover;
 
+  /** Динамическая ширина узла keyboard по числу колонок и длине текста кнопок */
+  const keyboardNodeWidth = useMemo(() => {
+    if (node.type !== 'keyboard') return undefined;
+    return getKeyboardNodeWidth(node);
+  }, [node]);
+
   return (
     /**
      * Внешний wrapper-div: только позиционирование.
@@ -585,7 +592,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
             : node.type === 'message'
             ? "p-4 w-80"
             : node.type === 'keyboard'
-            ? "p-4 w-80"
+            ? "p-4"
             : node.type === 'input'
             ? "p-4 w-80"
             : "p-6 w-80",
@@ -605,6 +612,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
         style={{
           position: 'relative',
           overflow: 'visible',
+          ...(keyboardNodeWidth != null ? { width: keyboardNodeWidth } : {}),
           transform: isDragActive ? 'translate3d(0, 0, 0)' : isConnectedToDragging && !isDragActive ? 'scale(1.02)' : undefined,
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden' as any,

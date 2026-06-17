@@ -57,6 +57,10 @@ interface CanvasToolbarProps {
   onFitToContent: () => void;
   /** РљРѕР»Р±СЌРє СѓСЃС‚Р°РЅРѕРІРєРё СѓСЂРѕРІРЅСЏ РјР°СЃС€С‚Р°Р±Р° */
   onZoomLevelChange: (level: number) => void;
+  /** Доступность восстановления предыдущего вида */
+  canRestorePreviousView?: boolean;
+  /** Колбэк восстановления предыдущего вида */
+  onRestorePreviousView?: () => void;
   /** РљРѕР»Р±СЌРє РѕС‚РјРµРЅС‹ РґРµР№СЃС‚РІРёСЏ */
   onUndo?: () => void;
   /** РљРѕР»Р±СЌРє РїРѕРІС‚РѕСЂР° РґРµР№СЃС‚РІРёСЏ */
@@ -131,6 +135,8 @@ export function CanvasToolbar({
   onResetZoom,
   onFitToContent,
   onZoomLevelChange,
+  canRestorePreviousView,
+  onRestorePreviousView,
   onUndo,
   onRedo,
   onSave,
@@ -172,6 +178,8 @@ export function CanvasToolbar({
               onResetZoom={onResetZoom}
               onFitToContent={onFitToContent}
               onZoomLevelChange={onZoomLevelChange}
+              canRestorePreviousView={canRestorePreviousView}
+              onRestorePreviousView={onRestorePreviousView}
             />
 
             {/* РљРЅРѕРїРєРё РѕС‚РјРµРЅС‹/РїРѕРІС‚РѕСЂР° */}

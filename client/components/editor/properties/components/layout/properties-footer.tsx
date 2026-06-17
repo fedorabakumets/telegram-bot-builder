@@ -9,6 +9,7 @@
 import { Node } from '@shared/schema';
 import { handleNodeReset } from '../action-loggers/node-reset';
 import { ApplyButton } from '../common/apply-button';
+import type { PropertiesView } from './properties-view-toggle';
 
 /**
  * Пропсы компонента футера панели свойств
@@ -22,6 +23,12 @@ interface PropertiesFooterProps {
   onActionLog?: (type: string, description: string) => void;
   /** Функция сохранения проекта */
   onSaveProject?: () => void;
+  /** Режим панели свойств */
+  propertiesView?: PropertiesView;
+  /** Применить JSON node.data; возвращает успех */
+  onJsonApply?: () => boolean;
+  /** Ошибка парсинга JSON */
+  jsonError?: string | null;
 }
 
 /**
@@ -34,7 +41,15 @@ interface PropertiesFooterProps {
  * @param {PropertiesFooterProps} props - Пропсы компонента
  * @returns {JSX.Element} Футер панели свойств
  */
-export function PropertiesFooter({ selectedNode, onNodeUpdate, onActionLog, onSaveProject }: PropertiesFooterProps) {
+export function PropertiesFooter({
+  selectedNode,
+  onNodeUpdate,
+  onActionLog,
+  onSaveProject,
+  propertiesView,
+  onJsonApply,
+  jsonError,
+}: PropertiesFooterProps) {
   const handleReset = () => {
     handleNodeReset({
       node: selectedNode,
@@ -44,9 +59,14 @@ export function PropertiesFooter({ selectedNode, onNodeUpdate, onActionLog, onSa
   };
 
   const handleNodeApply = () => {
-    // Триггерим обновление для текущего узла
+    if (propertiesView === 'json' && onJsonApply) {
+      return onJsonApply();
+    }
     onNodeUpdate(selectedNode.id, {});
+    return true;
   };
+
+  const applyDisabled = propertiesView === 'json' && Boolean(jsonError);
 
   return (
     <div className="sticky bottom-0 p-2.5 sm:p-3 lg:p-4 border-t border-border/50 bg-gradient-to-r from-background via-background to-muted/5 dark:from-background dark:via-background dark:to-muted/2 backdrop-blur-sm">
@@ -63,6 +83,7 @@ export function PropertiesFooter({ selectedNode, onNodeUpdate, onActionLog, onSa
           onNodeUpdate={handleNodeApply}
           onSaveProject={onSaveProject}
           onActionLog={onActionLog}
+          disabled={applyDisabled}
         />
       </div>
     </div>

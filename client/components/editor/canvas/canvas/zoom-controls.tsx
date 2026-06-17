@@ -34,6 +34,10 @@ interface ZoomControlsProps {
   autoFitOnSheetChange?: boolean;
   /** Колбэк переключения авто-уместить */
   onAutoFitOnSheetChangeToggle?: (value: boolean) => void;
+  /** Доступность восстановления предыдущего вида */
+  canRestorePreviousView?: boolean;
+  /** Колбэк восстановления предыдущего вида */
+  onRestorePreviousView?: () => void;
 }
 
 /**
@@ -67,6 +71,8 @@ export function ZoomControls({
   onZoomLevelChange,
   autoFitOnSheetChange: autoFitProp,
   onAutoFitOnSheetChangeToggle,
+  canRestorePreviousView = false,
+  onRestorePreviousView,
 }: ZoomControlsProps) {
   /** Локальное состояние для переключателя авто-fit (если пропсы не переданы) */
   const [localAutoFit, setLocalAutoFit] = useState(() => {
@@ -239,6 +245,24 @@ export function ZoomControls({
         title="Уместить в экран (Ctrl + 1)"
       >
         <i className={`fas fa-expand-arrows-alt ${ICON_CLASSES}`} />
+      </button>
+
+      {/* Кнопка вернуть предыдущий вид камеры (отличается от Undo действий) */}
+      <button
+        onClick={onRestorePreviousView}
+        disabled={!canRestorePreviousView || !onRestorePreviousView}
+        className={`${BUTTON_BASE_CLASSES} ${
+          canRestorePreviousView
+            ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 hover:bg-amber-500/30 hover:border-amber-500/60'
+            : BUTTON_INACTIVE_CLASSES
+        } ${!canRestorePreviousView ? BUTTON_DISABLED_CLASSES : ''} flex items-center justify-center`}
+        title="Вернуть предыдущий вид камеры (Escape)"
+      >
+        <i className={`fas fa-history text-sm transition-colors ${
+          canRestorePreviousView
+            ? 'text-amber-700 dark:text-amber-300 group-hover:text-amber-800 dark:group-hover:text-amber-200'
+            : ICON_CLASSES
+        }`} />
       </button>
 
       {/* Toggle авто-уместить при смене листа */}

@@ -52,7 +52,7 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
     <div className={`rounded-lg border shadow-sm transition-colors p-3 ${styleClass}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium truncate">
+          <div className="text-sm font-medium break-words">
             {button.text}
           </div>
           {button.action === 'goto' && (
@@ -61,12 +61,12 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
             </div>
           )}
           {(button.action === 'goto' || button.action === 'command' || button.customCallbackData) && (
-            <div className="mt-1 text-xs text-gray-400 dark:text-gray-500 truncate font-mono">
+            <div className="mt-1 text-xs text-gray-400 dark:text-gray-500 break-all font-mono">
               {button.customCallbackData || button.target || button.id || 'no_action'}
             </div>
           )}
           {button.action === 'url' && (
-            <div className="mt-1.5 text-xs text-purple-600 dark:text-purple-300 truncate">
+            <div className="mt-1.5 text-xs text-purple-600 dark:text-purple-300 break-all">
               🔗 {button.url}
             </div>
           )}
@@ -81,12 +81,12 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
             </div>
           )}
           {button.action === 'copy_text' && (
-            <div className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 truncate">
+            <div className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 break-words">
               📋 {(button as any).copyText}
             </div>
           )}
           {button.action === 'web_app' && (
-            <div className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 truncate">
+            <div className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 break-all">
               🌐 {(button as any).webAppUrl}
             </div>
           )}
