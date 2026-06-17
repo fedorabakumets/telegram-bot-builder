@@ -843,6 +843,21 @@
     "author": ""
   },
   {
+    "path": "futures/properties-json-view",
+    "title": "JSON-режим панели свойств",
+    "excerpt": "> **Статус:** MVP реализован (этап 1). Пользовательская документация — в [`docs/interface/editor/properties.md`](../interface/editor/propert",
+    "parts": [
+      "futures",
+      "properties-json-view"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-06-17T23:45:35+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "futures/psql-query-node",
     "title": "Узел `psql_query` — прямой SQL-запрос к базе данных",
     "excerpt": "<!-- @fileoverview План реализации нового типа узла `psql_query` для BotCraft Studio.",
@@ -1302,7 +1317,7 @@
       "interface": "🖥️ Интерфейс",
       "editor": "🖥️ Редактор"
     },
-    "updated_at": "2026-06-15T01:26:00+03:00",
+    "updated_at": "2026-06-17T23:45:35+03:00",
     "tags": [],
     "author": ""
   },
@@ -1336,7 +1351,7 @@
       "interface": "🖥️ Интерфейс",
       "editor": "🖥️ Редактор"
     },
-    "updated_at": "2026-06-15T19:12:45+03:00",
+    "updated_at": "2026-06-17T23:45:35+03:00",
     "tags": [],
     "author": ""
   },
