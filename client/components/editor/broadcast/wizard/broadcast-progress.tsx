@@ -3,9 +3,11 @@
  * @module client/components/editor/broadcast/wizard/broadcast-progress
  */
 
+import { useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useBroadcastLiveProgress } from '../hooks/use-broadcast-live-progress';
+import { useBroadcastDetail } from '../hooks/use-broadcast-detail';
 import { useStopBroadcast } from '../hooks/use-stop-broadcast';
 import type { Broadcast } from '../types';
 
@@ -32,14 +34,23 @@ interface BroadcastProgressProps {
  */
 export function BroadcastProgress({ projectId, broadcast, refetch, onClose }: BroadcastProgressProps) {
   const { progressEvent } = useBroadcastLiveProgress(projectId, broadcast.id);
+  const { broadcast: detailBroadcast, refetch: refetchDetail } = useBroadcastDetail(projectId, broadcast.id);
   const stopMutation = useStopBroadcast({ projectId, refetch });
 
-  // Используем данные из WS-события если есть, иначе из broadcast
-  const sentCount = progressEvent?.sentCount ?? broadcast.sentCount;
-  const deliveredCount = progressEvent?.deliveredCount ?? broadcast.deliveredCount;
-  const failedCount = progressEvent?.failedCount ?? broadcast.failedCount;
-  const totalCount = progressEvent?.totalCount ?? broadcast.totalCount;
-  const status = progressEvent?.status ?? broadcast.status;
+  const base = detailBroadcast ?? broadcast;
+  const sentCount = progressEvent?.sentCount ?? base.sentCount ?? 0;
+  const deliveredCount = progressEvent?.deliveredCount ?? base.deliveredCount ?? 0;
+  const failedCount = progressEvent?.failedCount ?? base.failedCount ?? 0;
+  const totalCount = progressEvent?.totalCount ?? base.totalCount ?? 0;
+  const status = progressEvent?.status ?? base.status;
+
+  /** Polling как fallback, если WS-события приходят редко */
+  useEffect(() => {
+    if (status === 'done' || status === 'stopped' || status === 'failed') return;
+    void refetchDetail();
+    const timer = setInterval(() => void refetchDetail(), 2000);
+    return () => clearInterval(timer);
+  }, [status, refetchDetail]);
 
   const percent = totalCount > 0 ? Math.round((sentCount / totalCount) * 100) : 0;
   const remaining = Math.max(0, totalCount - sentCount);

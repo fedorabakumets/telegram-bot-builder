@@ -8,6 +8,12 @@ import { apiRequest } from '@/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import type { NewBroadcastFormData } from '../types';
 
+/** Ответ сервера POST /api/projects/:projectId/broadcasts */
+interface CreateBroadcastResponse {
+  /** Идентификатор созданной рассылки */
+  broadcastId: number;
+}
+
 /**
  * Параметры хука useCreateBroadcast
  */
@@ -70,12 +76,12 @@ export function useCreateBroadcast({
         buttons: formData.buttons ?? [],
         buttonsPerRow: formData.buttonsPerRow ?? 0,
         filters: filtersWithGroups,
-      });
+      }) as Promise<CreateBroadcastResponse>;
     },
     onSuccess: (data) => {
       toast({ title: 'Рассылка создана', description: 'Рассылка запущена успешно' });
       refetch?.();
-      onSuccess?.(data?.id);
+      onSuccess?.(data.broadcastId);
     },
     onError: (error: Error) => {
       toast({

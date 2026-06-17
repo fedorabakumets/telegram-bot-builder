@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 import { parseHTML } from '@/components/editor/inline-rich/utils/formatting-parser';
 import { BroadcastDeliveryErrors } from '@/components/editor/broadcast/components/broadcast-delivery-errors';
+import { useBroadcastLiveProgress } from '@/components/editor/broadcast/hooks/use-broadcast-live-progress';
 import type { Broadcast } from '@shared/schema';
 
 /**
@@ -62,7 +63,8 @@ function formatDate(date: Date | string | null | undefined): string {
 
 /**
  * Компонент пузыря рассылки — отображает одну рассылку как сообщение бота
- * с кнопками удаления и редактирования при наведении и раскрываемым списком ошибок
+ * с кнопками удаления и редактирования при наведении и раскрываемым списком ошибок.
+ * Статистика и статус обновляются в реальном времени через WS broadcast-progress.
  * @param props - Свойства компонента
  * @returns JSX элемент пузыря рассылки
  */
@@ -79,11 +81,17 @@ export function BroadcastMessageBubble({
   const [editMode, setEditMode] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editText, setEditText] = useState(broadcast.messageText ?? '');
-  const badge = getStatusBadge(broadcast.status);
-  const isRunning = broadcast.status === 'running';
+  const { progressEvent } = useBroadcastLiveProgress(projectId, broadcast.id);
+
+  const liveStatus = progressEvent?.status ?? broadcast.status;
+  const totalCount = progressEvent?.totalCount ?? broadcast.totalCount ?? 0;
+  const isRunning = liveStatus === 'running';
+  const count = isRunning
+    ? (progressEvent?.sentCount ?? broadcast.sentCount ?? 0)
+    : (progressEvent?.deliveredCount ?? broadcast.deliveredCount ?? 0);
+  const failedCount = progressEvent?.failedCount ?? broadcast.failedCount ?? 0;
+  const badge = getStatusBadge(liveStatus);
   const statsIcon = isRunning ? '⏳' : '✓';
-  const count = isRunning ? broadcast.sentCount : broadcast.deliveredCount;
-  const failedCount = broadcast.failedCount ?? 0;
   const hasErrors = failedCount > 0;
 
   /** Парсим HTML-текст рассылки */
@@ -214,7 +222,7 @@ export function BroadcastMessageBubble({
             }
             <span>{formatDate(broadcast.createdAt)}</span>
             <span>
-              {statsIcon} {count}/{broadcast.totalCount}
+              {statsIcon} {count}/{totalCount}
             </span>
             {hasErrors && (
               <span className="text-red-500 hover:text-red-600 font-medium">
@@ -235,6 +243,7 @@ export function BroadcastMessageBubble({
               broadcastId={broadcast.id}
               enabled={expanded}
               compact
+              liveFailedCount={failedCount}
             />
           </div>
         )}

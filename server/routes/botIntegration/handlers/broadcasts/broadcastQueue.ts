@@ -154,6 +154,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     const users = await storage.getUsersForBroadcast(projectId, tokenId, filters as Parameters<typeof storage.getUsersForBroadcast>[2]);
 
     await storage.updateBroadcast(broadcastId, { totalCount: users.length });
+    await emitProgress(projectId, broadcastId, 0, 0, 0, users.length, "running");
 
     let sentCount = 0;
     let deliveredCount = 0;
@@ -248,16 +249,25 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
           }
         }
 
+        if (sentCount % 10 === 0) {
+          void emitProgress(projectId, broadcastId, sentCount, deliveredCount, failedCount, users.length, "running");
+        }
+
         await sleep(DELAY_BETWEEN_MESSAGES);
       }
 
       // После каждого батча обновляем счётчики и отправляем WS-событие
       const isStopped = activeBroadcasts.get(broadcastId) === "stopped";
       await storage.updateBroadcast(broadcastId, { sentCount, deliveredCount, failedCount });
-      const isLastBatch = i + BATCH_SIZE >= users.length;
-      if (!isLastBatch || isStopped) {
-        await emitProgress(projectId, broadcastId, sentCount, deliveredCount, failedCount, users.length, isStopped ? "stopped" : "running");
-      }
+      await emitProgress(
+        projectId,
+        broadcastId,
+        sentCount,
+        deliveredCount,
+        failedCount,
+        users.length,
+        isStopped ? "stopped" : "running",
+      );
     }
 
     // Отправка в выбранные группы (текст + медиа)

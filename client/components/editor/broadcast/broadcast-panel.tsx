@@ -15,6 +15,7 @@ import { BroadcastDetail } from './components/broadcast-detail';
 import { BroadcastPagination } from './components/broadcast-pagination';
 import { NewBroadcastModal } from './wizard/new-broadcast-modal';
 import { useBroadcasts } from './hooks/use-broadcasts';
+import { useBroadcastLiveInvalidate } from './hooks/use-broadcast-live-invalidate';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
@@ -47,6 +48,7 @@ export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allP
   }, [tokens, selectedTokenId, onSelectToken]);
 
   const { broadcasts, total, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId, page);
+  useBroadcastLiveInvalidate({ projectId, selectedTokenId });
   const totalPages = Math.max(1, Math.ceil(total / PAGE_LIMIT));
 
   // Синхронизируем selectedBroadcast с актуальными данными из списка после каждого refetch.

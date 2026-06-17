@@ -14,6 +14,7 @@ import { BroadcastDialogPanel } from '../../dialog/broadcast-dialog-panel';
 import { UserAvatar } from '../../dialog/components/user-avatar';
 import { DialogList } from './dialog-list';
 import { useLiveInvalidate } from '../hooks/use-live-invalidate';
+import { useBroadcastLiveInvalidate } from '@/components/editor/broadcast/hooks/use-broadcast-live-invalidate';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useSyncGroups } from '../hooks/use-sync-groups';
 import { useInfiniteUsers } from '../hooks/queries/use-infinite-users';
@@ -97,6 +98,8 @@ export function DialogsTabContent({
 
   // Подписываемся на WS-события: обновляет кэш infinite-users (lastMessageText, порядок)
   useLiveInvalidate({ projectId, selectedTokenId: resolvedTokenId });
+  // Подписываемся на WS-события broadcast-progress: обновляет кэш рассылок
+  useBroadcastLiveInvalidate({ projectId, selectedTokenId: resolvedTokenId });
 
   // Загружаем первую страницу диалогов чтобы передать группы в useSyncGroups
   const { allUsers: dialogs } = useInfiniteUsers({

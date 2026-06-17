@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { UserBotData } from '@shared/schema';
 import { useInfiniteUsers } from '../hooks/queries/use-infinite-users';
 import { useBroadcasts } from '@/components/editor/broadcast/hooks/use-broadcasts';
+import { useBroadcastLiveProgress } from '@/components/editor/broadcast/hooks/use-broadcast-live-progress';
+import type { Broadcast } from '@/components/editor/broadcast/types';
 import { DialogListItem } from './dialog-list-item';
 
 /**
@@ -28,6 +30,26 @@ interface DialogListProps {
   onSelectBroadcast?: () => void;
   /** Флаг активности виртуального элемента «Рассылка» */
   isBroadcastSelected?: boolean;
+}
+
+/**
+ * Превью прогресса последней рассылки с live-обновлением через WS
+ * @param props - Свойства компонента
+ * @returns JSX строка прогресса или null
+ */
+function BroadcastRunningProgress({ broadcast }: { broadcast: Broadcast }): React.JSX.Element | null {
+  const { progressEvent } = useBroadcastLiveProgress(broadcast.projectId, broadcast.id);
+  const liveStatus = progressEvent?.status ?? broadcast.status;
+  if (liveStatus !== 'running') return null;
+
+  const sent = progressEvent?.sentCount ?? broadcast.sentCount ?? 0;
+  const total = progressEvent?.totalCount ?? broadcast.totalCount ?? 0;
+
+  return (
+    <span className="text-[10px] text-blue-600 dark:text-blue-400 shrink-0">
+      ⏳ {sent}/{total}
+    </span>
+  );
 }
 
 /**
@@ -118,6 +140,7 @@ export function DialogList({
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-sm font-medium truncate">📢 Рассылка</span>
+                {lastBroadcast && <BroadcastRunningProgress broadcast={lastBroadcast} />}
               </div>
               <p className="text-xs text-muted-foreground truncate mt-0.5">{broadcastPreview}</p>
             </div>
