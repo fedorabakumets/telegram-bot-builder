@@ -6,6 +6,7 @@
 
 import { PropertiesFooter } from '../layout/properties-footer';
 import type { Node } from '@shared/schema';
+import type { PropertiesView } from '../layout/properties-view-toggle';
 
 /** Пропсы компонента */
 interface PropertiesFooterWrapperProps {
@@ -17,6 +18,12 @@ interface PropertiesFooterWrapperProps {
   onActionLog?: (type: string, description: string) => void;
   /** Функция сохранения проекта */
   onSaveProject?: () => void;
+  /** Режим панели свойств */
+  propertiesView?: PropertiesView;
+  /** Применить JSON node.data */
+  onJsonApply?: () => boolean;
+  /** Ошибка парсинга JSON */
+  jsonError?: string | null;
 }
 
 /**
@@ -29,7 +36,10 @@ export function PropertiesFooterWrapper({
   selectedNode,
   onNodeUpdate,
   onActionLog,
-  onSaveProject
+  onSaveProject,
+  propertiesView,
+  onJsonApply,
+  jsonError,
 }: PropertiesFooterWrapperProps) {
   return (
     <PropertiesFooter
@@ -37,6 +47,9 @@ export function PropertiesFooterWrapper({
       onNodeUpdate={onNodeUpdate}
       onActionLog={onActionLog}
       onSaveProject={onSaveProject}
+      propertiesView={propertiesView}
+      onJsonApply={onJsonApply}
+      jsonError={jsonError}
     />
   );
 }

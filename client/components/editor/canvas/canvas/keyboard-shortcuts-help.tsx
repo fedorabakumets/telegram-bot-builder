@@ -45,6 +45,10 @@ export function KeyboardShortcutsHelp() {
                 <span className="text-gray-600 dark:text-gray-400">Авто-уместить (A):</span>
                 <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 2</code>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Предыдущий вид:</span>
+                <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Escape</code>
+              </div>
             </div>
           </div>
 

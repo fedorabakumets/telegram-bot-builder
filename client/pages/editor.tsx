@@ -21,6 +21,9 @@ import { BotLayout } from '@/components/editor/bot/panel/BotLayout';
 import { TerminalPanel } from '@/components/editor/terminal/TerminalPanel';
 import { BotControl } from '@/components/editor/bot/bot-control';
 import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
+import { getSheetIdFromUrl, getNodeIdFromUrl, syncEditorUrlParams } from './editor/utils/editor-url-params';
+import { findSheetIdByNodeId } from './editor/utils/find-sheet-by-node-id';
+import { useEditorNodeUrl } from './editor/hooks/use-editor-node-url';
 import { createActionHistoryItem } from './editor/utils/action-logger';
 import type { ActionType, PreviousEditorTab, ActionHistoryItem, EditorTab } from './editor/types';
 import { useProjectLoader } from './editor/hooks/use-project-loader';
@@ -150,22 +153,6 @@ export default function Editor() {
     return bot ? parseInt(bot, 10) || null : null;
   });
 
-  // Синхронизация вкладки и выбранного бота с URL query-параметрами
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    if (currentTab === 'editor') {
-      url.searchParams.delete('tab');
-    } else {
-      url.searchParams.set('tab', currentTab);
-    }
-    if (selectedDatabaseTokenId) {
-      url.searchParams.set('bot', String(selectedDatabaseTokenId));
-    } else {
-      url.searchParams.delete('bot');
-    }
-    window.history.replaceState(null, '', url.toString());
-  }, [currentTab, selectedDatabaseTokenId]);
-
   /**
    * Флаг использования гибкого макета
    * @type {boolean}
@@ -209,6 +196,18 @@ export default function Editor() {
     setLastLoadedProjectId,
     setHasLocalChanges,
   } = useSheetStates();
+
+  // Синхронизация вкладки, бота и активного листа с URL query-параметрами
+  useEffect(() => {
+    const options: Parameters<typeof syncEditorUrlParams>[0] = {
+      tab: currentTab,
+      bot: selectedDatabaseTokenId,
+    };
+    if (botDataWithSheets?.activeSheetId) {
+      options.sheet = botDataWithSheets.activeSheetId;
+    }
+    syncEditorUrlParams(options);
+  }, [currentTab, selectedDatabaseTokenId, botDataWithSheets?.activeSheetId]);
 
   // Хук состояний кода
   const {
@@ -567,15 +566,6 @@ export default function Editor() {
   // Вычисляем selectedNode из selectedNodeId и nodes
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
 
-  /**
-   * Обёртка над setSelectedNodeId — сбрасывает highlight при клике на пустое место
-   * @param nodeId - ID выбранного узла или '' если кликнули на пустое место
-   */
-  const handleNodeSelect = useCallback((nodeId: string) => {
-    setSelectedNodeId(nodeId);
-    if (!nodeId) setHighlightNodeId(null);
-  }, [setSelectedNodeId]);
-
   // Реактивно открываем/закрываем панель свойств при выборе/снятии выбора узла
   // useLayoutEffect — синхронно до отрисовки, чтобы не было мигания пустой панели
   useLayoutEffect(() => {
@@ -748,6 +738,7 @@ export default function Editor() {
   // Обработчики узлов через хук
   const {
     handleNodeUpdateWithSheets,
+    handleNodeDataReplace,
     handleNodeTypeChange,
     handleNodeIdChange,
     handleNodeMove,
@@ -810,6 +801,19 @@ export default function Editor() {
         ...sheetsData,
         sheets: migrateAllKeyboardLayouts(sheetsData.sheets)
       };
+
+      const sheetFromUrl = getSheetIdFromUrl();
+      const nodeFromUrl = getNodeIdFromUrl();
+      let targetSheetId = sheetFromUrl;
+
+      if (nodeFromUrl) {
+        const sheetForNode = findSheetIdByNodeId(sheetsData.sheets, nodeFromUrl);
+        if (sheetForNode) targetSheetId = sheetForNode;
+      }
+
+      if (targetSheetId && sheetsData.sheets.some(s => s.id === targetSheetId)) {
+        sheetsData = SheetsManager.setActiveSheet(sheetsData, targetSheetId);
+      }
 
       // Устанавливаем данные листов для отображения панели
       setBotDataWithSheets(sheetsData);
@@ -897,6 +901,27 @@ export default function Editor() {
       setFitTrigger(t => t + 1);
     },
   });
+
+  const { handleNodeSelect, handleNodeFocusWithUrl, nodeUrlSyncParams } = useEditorNodeUrl({
+    projectId,
+    lastLoadedProjectId,
+    botDataWithSheets,
+    nodes,
+    selectedNodeId,
+    setSelectedNodeId,
+    handleNodeFocus,
+    setHighlightNodeId,
+    handleSheetSelect,
+  });
+
+  // Синхронизация ?node= и ?button= с выбранным узлом (после применения deep-link из URL)
+  useEffect(() => {
+    if (!nodeUrlSyncParams) return;
+    syncEditorUrlParams({
+      node: nodeUrlSyncParams.node,
+      button: nodeUrlSyncParams.button,
+    });
+  }, [nodeUrlSyncParams]);
 
   // Проверяем, есть ли выбранный сценарий при загрузке страницы
   useEffect(() => {
@@ -1270,6 +1295,7 @@ export default function Editor() {
       allSheets={botDataWithSheets?.sheets || []}
       currentSheetId={botDataWithSheets?.activeSheetId || undefined}
       onNodeUpdate={handleNodeUpdateWithSheets}
+      onNodeDataReplace={handleNodeDataReplace}
       onNodeTypeChange={handleNodeTypeChange}
       onNodeIdChange={handleNodeIdChange}
       onButtonAdd={handleButtonAdd}
@@ -1702,7 +1728,7 @@ export default function Editor() {
         onSheetSelect={handleSheetSelect}
         isMobile={isMobile}
         onClose={handleToggleSidebar}
-        onNodeFocus={handleNodeFocus}
+        onNodeFocus={handleNodeFocusWithUrl}
       />
     ) : null;
 
@@ -1860,7 +1886,7 @@ export default function Editor() {
                 onSheetSelect={handleSheetSelect}
                 isMobile={isMobile}
                 onClose={handleToggleSidebar}
-                onNodeFocus={handleNodeFocus}
+                onNodeFocus={handleNodeFocusWithUrl}
               />
             ) : null
           }
@@ -2000,6 +2026,7 @@ export default function Editor() {
                 allSheets={botDataWithSheets?.sheets || []}
                 currentSheetId={botDataWithSheets?.activeSheetId || undefined}
                 onNodeUpdate={handleNodeUpdateWithSheets}
+                onNodeDataReplace={handleNodeDataReplace}
                 onNodeTypeChange={handleNodeTypeChange}
                 onNodeIdChange={handleNodeIdChange}
                 onButtonAdd={handleButtonAdd}
@@ -2069,7 +2096,7 @@ export default function Editor() {
               isMobile={isMobile}
               onClose={() => setShowMobileSidebar(false)}
               onNodeFocus={(nodeId, buttonId) => {
-                handleNodeFocus(nodeId, buttonId);
+                handleNodeFocusWithUrl(nodeId, buttonId);
                 setShowMobileSidebar(false);
                 setShowMobileProperties(true);
               }}

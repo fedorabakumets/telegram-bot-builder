@@ -80,7 +80,9 @@ import { UserbotInlineQueryConfiguration } from '../userbot/UserbotInlineQueryCo
 import { UserbotEditTriggerConfiguration } from '../trigger/UserbotEditTriggerConfiguration';
 import type { Variable } from '../../../inline-rich/types';
 import { useEnvVariablesForNode } from '../../hooks/use-env-variables-for-node';
+import { usePropertiesView } from '../../hooks/use-properties-view';
 import { PropertyCheckbox } from '../common/property-checkbox';
+import { NodeDataJsonEditor } from './node-data-json-editor';
 
 /**
  * РРЅС‚РµСЂС„РµР№СЃ РїСЂРѕРїСЃРѕРІ РґР»СЏ РїР°РЅРµР»Рё СЃРІРѕР№СЃС‚РІ СѓР·Р»РѕРІ
@@ -95,6 +97,8 @@ interface PropertiesPanelProps {
   allNodes?: Node[] | undefined;
   /** Р¤СѓРЅРєС†РёСЏ РѕР±РЅРѕРІР»РµРЅРёСЏ РґР°РЅРЅС‹С… СѓР·Р»Р° */
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
+  /** Полная замена node.data (JSON-режим панели свойств) */
+  onNodeDataReplace: (nodeId: string, newData: Node['data']) => void;
   /** Р¤СѓРЅРєС†РёСЏ РёР·РјРµРЅРµРЅРёСЏ С‚РёРїР° СѓР·Р»Р° */
   onNodeTypeChange?: (nodeId: string, newType: Node['type'], newData: Partial<Node['data']>) => void;
   /** Р¤СѓРЅРєС†РёСЏ РёР·РјРµРЅРµРЅРёСЏ ID СѓР·Р»Р° */
@@ -150,6 +154,7 @@ export function PropertiesPanel({
   selectedNode,
   allNodes = [],
   onNodeUpdate,
+  onNodeDataReplace,
   onNodeTypeChange,
   onNodeIdChange,
   onButtonAdd,
@@ -179,6 +184,23 @@ export function PropertiesPanel({
 
   /** Env-переменные бота для селектора подключения к БД */
   const envVariablesForNode = useEnvVariablesForNode(projectId);
+
+  const {
+    view: propertiesView,
+    requestViewChange,
+    jsonDraft,
+    jsonError,
+    handleJsonChange,
+    applyJson,
+  } = usePropertiesView({ selectedNode, onNodeDataReplace });
+
+  /** Общие пропсы заголовка и футера панели */
+  const headerFooterProps = selectedNode ? {
+    propertiesView,
+    onPropertiesViewChange: requestViewChange,
+    jsonError,
+    onJsonApply: applyJson,
+  } : {};
 
   /** Таблицы проекта для переменных формата {table.имя.колонка} */
   const botTables = useBotTablesForVariables(projectId);
@@ -316,15 +338,24 @@ export function PropertiesPanel({
 
   if (selectedNode.type === 'keyboard') {
     return (
-      <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
+      <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden" data-properties-panel>
         <PropertiesHeader
           selectedNode={selectedNode}
           onNodeTypeChange={onNodeTypeChange}
           onClose={onClose}
           displayNodeId={displayNodeId}
+          {...headerFooterProps}
         />
-        <div className="flex-1 overflow-y-auto">
-          <KeyboardNodeProperties
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {propertiesView === 'json' ? (
+            <NodeDataJsonEditor
+              value={jsonDraft}
+              error={jsonError}
+              onChange={handleJsonChange}
+              onApply={applyJson}
+            />
+          ) : (
+            <KeyboardNodeProperties
             selectedNode={selectedNode}
             textVariables={textVariables as Variable[]}
             getAllNodesFromAllSheets={getAllNodesFromAllSheets}
@@ -333,12 +364,14 @@ export function PropertiesPanel({
             onButtonUpdate={onButtonUpdate}
             onButtonDelete={onButtonDelete}
           />
+          )}
         </div>
         <PropertiesFooterWrapper
           selectedNode={selectedNode}
           onNodeUpdate={onNodeUpdate}
           onActionLog={onActionLog}
           onSaveProject={onSaveProject}
+          {...headerFooterProps}
         />
       </aside>
     );
@@ -346,14 +379,24 @@ export function PropertiesPanel({
 
   if (selectedNode.type === 'input') {
     return (
-      <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
+      <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden" data-properties-panel>
         <PropertiesHeader
           selectedNode={selectedNode}
           onNodeTypeChange={onNodeTypeChange}
           onClose={onClose}
           displayNodeId={displayNodeId}
+          {...headerFooterProps}
         />
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {propertiesView === 'json' ? (
+            <NodeDataJsonEditor
+              value={jsonDraft}
+              error={jsonError}
+              onChange={handleJsonChange}
+              onApply={applyJson}
+            />
+          ) : (
+          <div className="p-4">
           <SaveAnswerProperties
             selectedNode={selectedNode}
             onNodeUpdate={onNodeUpdate}
@@ -361,29 +404,41 @@ export function PropertiesPanel({
             formatNodeDisplay={formatNodeDisplay}
             textVariables={textVariables as Variable[]}
           />
+          </div>
+          )}
         </div>
         <PropertiesFooterWrapper
           selectedNode={selectedNode}
           onNodeUpdate={onNodeUpdate}
           onActionLog={onActionLog}
           onSaveProject={onSaveProject}
+          {...headerFooterProps}
         />
       </aside>
     );
   }
 
   return (
-    <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden">
+    <aside className="w-full h-full bg-background border-l border-border flex flex-col shadow-lg md:shadow-none overflow-hidden" data-properties-panel>
       {/* Properties Header */}
       <PropertiesHeader
         selectedNode={selectedNode}
         onNodeTypeChange={onNodeTypeChange}
         onClose={onClose}
         displayNodeId={displayNodeId}
+        {...headerFooterProps}
       />
 
       {/* Properties Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {propertiesView === 'json' ? (
+          <NodeDataJsonEditor
+            value={jsonDraft}
+            error={jsonError}
+            onChange={handleJsonChange}
+            onApply={applyJson}
+          />
+        ) : (
         <div className="space-y-0">
 
           {/* Basic Settings Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»Р° СЂР°СЃСЃС‹Р»РєР°, client_auth, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
@@ -977,13 +1032,15 @@ export function PropertiesPanel({
         />
 
         </div>
-        </div>
+        )}
+      </div>
 
-        <PropertiesFooterWrapper
+      <PropertiesFooterWrapper
           selectedNode={selectedNode}
           onNodeUpdate={onNodeUpdate}
           onActionLog={onActionLog}
           onSaveProject={onSaveProject}
+          {...headerFooterProps}
         />
       </aside>
     );

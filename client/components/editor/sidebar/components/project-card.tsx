@@ -95,7 +95,7 @@ export interface ProjectCardProps {
   /** Идентификатор активного листа */
   activeSheetId?: string;
   /** Обработчик выбора проекта */
-  onProjectSelect?: (projectId: number) => void;
+  onProjectSelect?: (projectId: number, sheetId?: string) => void;
   /** Обработчик удаления проекта */
   onProjectDelete: (projectId: number) => void;
   /** Обработчик выбора листа */
@@ -538,6 +538,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
    * @param sheetId - Идентификатор листа
    */
   const handleSheetClick = (sheetId: string) => {
+    if (currentProjectId !== project.id && onProjectSelect) {
+      onProjectSelect(project.id, sheetId);
+      return;
+    }
     if (onSheetSelect) {
       onSheetSelect(sheetId);
     }

@@ -13,12 +13,14 @@ import { useToast } from '@/hooks/use-toast';
  * Пропсы компонента кнопки применения
  */
 interface ApplyButtonProps {
-  /** Функция обновления данных узла */
-  onNodeUpdate?: () => void;
+  /** Функция обновления данных узла; false — отменить сохранение */
+  onNodeUpdate?: () => void | boolean;
   /** Функция сохранения проекта */
   onSaveProject?: () => void;
   /** Функция логирования действий */
   onActionLog?: (type: string, description: string) => void;
+  /** Заблокировать кнопку (например, невалидный JSON) */
+  disabled?: boolean;
 }
 
 /**
@@ -32,10 +34,11 @@ interface ApplyButtonProps {
  * @param {ApplyButtonProps} props - Пропсы компонента
  * @returns {JSX.Element} Кнопка применения
  */
-export function ApplyButton({ onNodeUpdate, onSaveProject, onActionLog }: ApplyButtonProps) {
+export function ApplyButton({ onNodeUpdate, onSaveProject, onActionLog, disabled }: ApplyButtonProps) {
   const { toast } = useToast();
 
   const handleApply = () => {
+    if (disabled) return;
     // Логируем применение изменений
     if (onActionLog) {
       onActionLog('apply', 'Применены изменения в панели свойств');
@@ -43,7 +46,8 @@ export function ApplyButton({ onNodeUpdate, onSaveProject, onActionLog }: ApplyB
 
     // Вызываем обновление узла (если передано)
     if (onNodeUpdate) {
-      onNodeUpdate();
+      const result = onNodeUpdate();
+      if (result === false) return;
     }
 
     // Сохраняем проект
@@ -63,6 +67,7 @@ export function ApplyButton({ onNodeUpdate, onSaveProject, onActionLog }: ApplyB
       size="sm"
       className="flex-1 text-xs sm:text-sm h-8 sm:h-9 bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/80 transition-all duration-200 shadow-sm hover:shadow-md"
       onClick={handleApply}
+      disabled={disabled}
     >
       <i className="fas fa-check mr-1.5"></i>
       Применить
