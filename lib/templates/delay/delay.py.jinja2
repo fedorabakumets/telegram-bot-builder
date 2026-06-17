@@ -11,15 +11,15 @@
 
 {%- macro compute_seconds(entry) -%}
 {%- if entry.unit == 'minutes' -%}
-int(float(_delay_val) * 60)
+float(_delay_val) * 60
 {%- elif entry.unit == 'hours' -%}
-int(float(_delay_val) * 3600)
+float(_delay_val) * 3600
 {%- elif entry.unit == 'days' -%}
-int(float(_delay_val) * 86400)
+float(_delay_val) * 86400
 {%- elif entry.unit == 'weeks' -%}
-int(float(_delay_val) * 604800)
+float(_delay_val) * 604800
 {%- else -%}
-int(float(_delay_val))
+float(_delay_val)
 {%- endif -%}
 {%- endmacro -%}
 

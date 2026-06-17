@@ -61,7 +61,7 @@ export function DelayConfiguration({ selectedNode, onNodeUpdate, textVariables =
           <Input
             value={seconds}
             onChange={(e) => onNodeUpdate(selectedNode.id, { seconds: e.target.value })}
-            placeholder="3"
+            placeholder={unit === 'seconds' ? '3 или 0.1' : '3'}
             className="h-8 text-xs flex-1"
           />
           <Select value={unit} onValueChange={(val) => onNodeUpdate(selectedNode.id, { unit: val })}>
@@ -77,6 +77,11 @@ export function DelayConfiguration({ selectedNode, onNodeUpdate, textVariables =
             </SelectContent>
           </Select>
         </div>
+        {unit === 'seconds' && (
+          <p className="text-[10px] text-gray-400">
+            Дробные значения поддерживаются, например 0.1 = 100 мс
+          </p>
+        )}
       </div>
 
       {/* Селектор переменных */}

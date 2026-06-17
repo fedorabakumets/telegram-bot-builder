@@ -7,7 +7,7 @@
 export interface DelayEntry {
   /** ID узла */
   nodeId: string;
-  /** Значение задержки (поддерживает {переменные}) */
+  /** Значение задержки (поддерживает {переменные}; дробные секунды, напр. 0.1) */
   seconds: string;
   /** Единица измерения: seconds, minutes, hours, days, weeks */
   unit: string;

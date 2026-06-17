@@ -49,6 +49,14 @@ async function pushProjectJson(projectId: number, tokenId?: number): Promise<voi
     /* Redis опционален при локальном push */
   }
   console.log(`OK: project ${projectId} обновлён из ${jsonPath}`);
+
+  const { restartBotIfRunning } = await import('../server/bots/restartBotIfRunning');
+  const restart = await restartBotIfRunning(projectId);
+  if (restart.success) {
+    console.log(`OK: бот project ${projectId} перезапущен`);
+  } else if (restart.error) {
+    console.log(`ℹ️ перезапуск: ${restart.error}`);
+  }
 }
 
 const projectId = parseInt(process.argv[2] || '', 10);

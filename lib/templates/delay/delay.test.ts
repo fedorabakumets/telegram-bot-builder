@@ -35,6 +35,25 @@ describe('generateDelayHandlers()', () => {
     const r = generateDelayHandlers(nodesWithDelay);
     expect(r).toContain('replace_variables_in_text');
   });
+
+  it('поддерживает дробные секунды (float, не int)', () => {
+    const r = generateDelayHandlers([
+      {
+        id: 'delay_frac',
+        type: 'delay',
+        position: { x: 0, y: 0 },
+        data: {
+          seconds: '0.1',
+          unit: 'seconds',
+          mode: 'blocking',
+          autoTransitionTo: 'msg_1',
+          enableAutoTransition: true,
+        },
+      },
+    ]);
+    expect(r).toContain('float(_delay_val)');
+    expect(r).not.toMatch(/int\(float\(_delay_val\)\)/);
+  });
 });
 
 describe('collectDelayEntries()', () => {
