@@ -119,53 +119,81 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="max-w-lg w-[calc(100vw-2rem)] sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-lg bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
-            📢 Новая рассылка
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent
+        className={[
+          '!inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0',
+          '!w-screen !h-screen !max-w-none !max-h-screen',
+          'sm:!max-w-none md:!max-w-none lg:!max-w-none',
+          'rounded-none border-0 p-0 gap-0',
+          '!flex flex-col overflow-hidden',
+          'data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100',
+          'data-[state=open]:slide-in-from-left-0 data-[state=open]:slide-in-from-top-0',
+          'data-[state=closed]:slide-out-to-left-0 data-[state=closed]:slide-out-to-top-0',
+        ].join(' ')}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          width: '100vw',
+          height: '100vh',
+          maxWidth: '100vw',
+          maxHeight: '100vh',
+          transform: 'none',
+        }}
+      >
+        <div className="flex-shrink-0 px-4 sm:px-8 pt-4 sm:pt-6 pb-3 border-b border-border/50 bg-card">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
+              📢 Новая рассылка
+            </DialogTitle>
+          </DialogHeader>
 
-        {step !== 'progress' && (
-          <WizardStepper steps={STEP_TITLES} currentStep={currentStepNumber} />
-        )}
+          {step !== 'progress' && (
+            <div className="mt-4 max-w-3xl">
+              <WizardStepper steps={STEP_TITLES} currentStep={currentStepNumber} />
+            </div>
+          )}
+        </div>
 
-        {step === 1 && (
-          <StepAudience
-            projectId={projectId}
-            tokenId={tokenId}
-            formData={formData}
-            onChange={updateForm}
-            onNext={() => setStep(2)}
-            onCancel={handleClose}
-          />
-        )}
-        {step === 2 && (
-          <StepMessage
-            projectId={projectId}
-            formData={formData}
-            onChange={updateForm}
-            onNext={() => setStep(3)}
-            onBack={() => setStep(1)}
-          />
-        )}
-        {step === 3 && (
-          <StepConfirm
-            projectId={projectId}
-            formData={formData}
-            isLoading={createMutation.isPending}
-            onConfirm={() => createMutation.mutate(formData)}
-            onBack={() => setStep(2)}
-          />
-        )}
-        {step === 'progress' && createdBroadcast && (
-          <BroadcastProgress
-            projectId={projectId}
-            broadcast={createdBroadcast}
-            refetch={refetch}
-            onClose={handleClose}
-          />
-        )}
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6">
+          <div className="mx-auto w-full max-w-3xl">
+            {step === 1 && (
+              <StepAudience
+                projectId={projectId}
+                tokenId={tokenId}
+                formData={formData}
+                onChange={updateForm}
+                onNext={() => setStep(2)}
+                onCancel={handleClose}
+              />
+            )}
+            {step === 2 && (
+              <StepMessage
+                projectId={projectId}
+                formData={formData}
+                onChange={updateForm}
+                onNext={() => setStep(3)}
+                onBack={() => setStep(1)}
+              />
+            )}
+            {step === 3 && (
+              <StepConfirm
+                projectId={projectId}
+                formData={formData}
+                isLoading={createMutation.isPending}
+                onConfirm={() => createMutation.mutate(formData)}
+                onBack={() => setStep(2)}
+              />
+            )}
+            {step === 'progress' && createdBroadcast && (
+              <BroadcastProgress
+                projectId={projectId}
+                broadcast={createdBroadcast}
+                refetch={refetch}
+                onClose={handleClose}
+              />
+            )}
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

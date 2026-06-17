@@ -12,6 +12,9 @@ import { FileIdInput } from '@/components/editor/properties/media/file-id-input'
 import { DialogButtonsEditor } from '@/components/editor/database/dialog/components/dialog-buttons-editor';
 import { useProjectData } from '@/components/editor/database/dialog/hooks/use-project-data';
 import { collectNodesFromProjectData } from '@/components/editor/database/dialog/utils/node-utils';
+import { BroadcastMessagePreview } from '../components/broadcast-message-preview';
+import { BroadcastValidationAlerts } from '../components/broadcast-validation-alerts';
+import { validateBroadcastMessage } from '../utils/validate-broadcast-message';
 import type { NewBroadcastFormData } from '../types';
 
 /**
@@ -66,6 +69,9 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
     onChange({ messageText: formData.messageText + variable });
   };
 
+  /** Валидация по лимитам Telegram */
+  const validation = useMemo(() => validateBroadcastMessage(formData), [formData]);
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -76,6 +82,7 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
           placeholder="Введите текст рассылки..."
           showStats
         />
+        <BroadcastValidationAlerts validation={validation} showTextCounter showMessages={false} />
       </div>
 
       <div className="space-y-1.5">
@@ -149,20 +156,21 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
         </div>
       </div>
 
-      {formData.messageText && (
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Предпросмотр:</p>
-          <div className="rounded-xl rounded-tl-sm bg-gradient-to-br from-blue-50 to-violet-50 dark:from-blue-950/40 dark:to-violet-950/30 border border-blue-100 dark:border-blue-900/40 p-3 text-sm whitespace-pre-wrap break-words max-h-24 overflow-auto">
-            {formData.messageText.replace(/<[^>]+>/g, '')}
-          </div>
-        </div>
-      )}
+      <BroadcastMessagePreview
+        messageText={formData.messageText}
+        mediaUrls={formData.mediaUrls}
+        buttons={formData.buttons}
+        buttonsPerRow={formData.buttonsPerRow}
+        projectId={projectId}
+      />
+
+      <BroadcastValidationAlerts validation={validation} />
 
       <div className="flex justify-between pt-2">
         <Button variant="ghost" onClick={onBack}>← Назад</Button>
         <Button
           onClick={onNext}
-          disabled={!formData.messageText.trim()}
+          disabled={!validation.isValid}
           className="bg-gradient-to-r from-blue-500 to-violet-500 text-white hover:from-blue-600 hover:to-violet-600"
         >
           Далее →

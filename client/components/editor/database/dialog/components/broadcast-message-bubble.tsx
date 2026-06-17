@@ -4,10 +4,11 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Trash2, Loader2, Pencil, Check, X } from 'lucide-react';
+import { Trash2, Loader2, Pencil, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 import { parseHTML } from '@/components/editor/inline-rich/utils/formatting-parser';
+import { BroadcastDeliveryErrors } from '@/components/editor/broadcast/components/broadcast-delivery-errors';
 import type { Broadcast } from '@shared/schema';
 
 /**
@@ -16,6 +17,8 @@ import type { Broadcast } from '@shared/schema';
 interface BroadcastMessageBubbleProps {
   /** Данные рассылки */
   broadcast: Broadcast;
+  /** Идентификатор проекта */
+  projectId: number;
   /** Колбэк удаления рассылки */
   onDelete?: (broadcastId: number) => void;
   /** Идёт ли удаление этой рассылки */
@@ -59,18 +62,29 @@ function formatDate(date: Date | string | null | undefined): string {
 
 /**
  * Компонент пузыря рассылки — отображает одну рассылку как сообщение бота
- * с кнопками удаления и редактирования при наведении
+ * с кнопками удаления и редактирования при наведении и раскрываемым списком ошибок
  * @param props - Свойства компонента
  * @returns JSX элемент пузыря рассылки
  */
-export function BroadcastMessageBubble({ broadcast, onDelete, isDeleting, onRepeat, onEdit, isEditing }: BroadcastMessageBubbleProps) {
+export function BroadcastMessageBubble({
+  broadcast,
+  projectId,
+  onDelete,
+  isDeleting,
+  onRepeat,
+  onEdit,
+  isEditing,
+}: BroadcastMessageBubbleProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [editText, setEditText] = useState(broadcast.messageText ?? '');
   const badge = getStatusBadge(broadcast.status);
   const isRunning = broadcast.status === 'running';
   const statsIcon = isRunning ? '⏳' : '✓';
   const count = isRunning ? broadcast.sentCount : broadcast.deliveredCount;
+  const failedCount = broadcast.failedCount ?? 0;
+  const hasErrors = failedCount > 0;
 
   /** Парсим HTML-текст рассылки */
   const content = useMemo(() => {
@@ -101,6 +115,12 @@ export function BroadcastMessageBubble({ broadcast, onDelete, isDeleting, onRepe
   const handleCancelEdit = () => {
     setEditMode(false);
     setEditText(broadcast.messageText ?? '');
+  };
+
+  /** Переключить раскрытие блока ошибок */
+  const handleToggleExpand = () => {
+    if (editMode) return;
+    setExpanded((v) => !v);
   };
 
   return (
@@ -181,16 +201,43 @@ export function BroadcastMessageBubble({ broadcast, onDelete, isDeleting, onRepe
 
         {/* Мета-информация: дата, статистика, бейдж */}
         <div className="flex items-center justify-end gap-2 px-1">
-          <span className="text-[10px] text-muted-foreground">
-            {formatDate(broadcast.createdAt)}
-          </span>
-          <span className="text-[10px] text-muted-foreground">
-            {statsIcon} {count}/{broadcast.totalCount}
-          </span>
+          <button
+            type="button"
+            className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            onClick={handleToggleExpand}
+            disabled={editMode}
+            title={expanded ? 'Скрыть детали' : 'Показать детали и ошибки'}
+          >
+            {expanded
+              ? <ChevronUp className="h-3 w-3 shrink-0" />
+              : <ChevronDown className="h-3 w-3 shrink-0" />
+            }
+            <span>{formatDate(broadcast.createdAt)}</span>
+            <span>
+              {statsIcon} {count}/{broadcast.totalCount}
+            </span>
+            {hasErrors && (
+              <span className="text-red-500 hover:text-red-600 font-medium">
+                {failedCount} {failedCount === 1 ? 'ошибка' : failedCount < 5 ? 'ошибки' : 'ошибок'}
+              </span>
+            )}
+          </button>
           <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${badge.className}`}>
             {badge.label}
           </span>
         </div>
+
+        {/* Ошибки доставки — ленивая загрузка при раскрытии */}
+        {expanded && !editMode && (
+          <div className="px-1 pt-1 border-t border-border/50">
+            <BroadcastDeliveryErrors
+              projectId={projectId}
+              broadcastId={broadcast.id}
+              enabled={expanded}
+              compact
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -172,6 +172,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
               <BroadcastMessageBubble
                 key={b.id}
                 broadcast={b}
+                projectId={projectId}
                 onDelete={(id) => deleteMutation.mutate(id)}
                 isDeleting={deletingId === b.id}
                 onRepeat={handleRepeat}

@@ -6,13 +6,11 @@
 import { useEffect } from 'react';
 import { X, Calendar, Clock, StopCircle, CheckCircle2, XCircle, Users, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BroadcastStatusBadge } from './broadcast-status-badge';
 import { StatMini } from './broadcast-stat-mini';
 import { MediaPreviewList } from './media-preview';
+import { BroadcastDeliveryErrors } from './broadcast-delivery-errors';
 import { useBroadcastDetail } from '../hooks/use-broadcast-detail';
 import { useStopBroadcast } from '../hooks/use-stop-broadcast';
 import { useBroadcastLiveProgress } from '../hooks/use-broadcast-live-progress';
@@ -49,7 +47,7 @@ function fmt(date: string | Date | null | undefined): string {
  * @returns JSX элемент детальной панели
  */
 export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: BroadcastDetailProps) {
-  const { broadcast: detailBroadcast, results, isLoading } = useBroadcastDetail(projectId, broadcast.id);
+  const { broadcast: detailBroadcast } = useBroadcastDetail(projectId, broadcast.id);
   const stopMutation = useStopBroadcast({ projectId, refetch });
   const { progressEvent } = useBroadcastLiveProgress(projectId, broadcast.id);
 
@@ -135,39 +133,7 @@ export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: Broa
         <Separator />
 
         {/* Таблица ошибок в аккордеоне */}
-        {isLoading ? (
-          <Skeleton className="h-16 w-full" />
-        ) : results.length > 0 ? (
-          <Collapsible>
-            <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 w-full text-left">
-              <XCircle className="h-4 w-4" />
-              Ошибки доставки ({results.length})
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2 border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">User ID</TableHead>
-                    <TableHead className="text-xs">Причина</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {results.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-mono text-xs">{r.userId}</TableCell>
-                      <TableCell className="text-xs text-red-500">{r.errorMessage ?? r.status}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CollapsibleContent>
-          </Collapsible>
-        ) : (
-          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-            Ошибок нет
-          </p>
-        )}
+        <BroadcastDeliveryErrors projectId={projectId} broadcastId={broadcast.id} />
       </div>
     </div>
   );

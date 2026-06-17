@@ -5,10 +5,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MessageSquare, Megaphone, X, Users, Radio } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Megaphone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TabHeader } from '@/components/ui/tab-header';
-import { UserBotData } from '@shared/schema';
+import type { UserBotData } from '@/types/bot';
 import { DialogPanel } from '../../dialog/dialog-panel';
 import { BroadcastDialogPanel } from '../../dialog/broadcast-dialog-panel';
 import { UserAvatar } from '../../dialog/components/user-avatar';
@@ -61,7 +61,6 @@ function NoDialogSelected(): React.JSX.Element {
  */
 export function DialogsTabContent({
   projectId,
-  projectName,
   selectedTokenId: selectedTokenIdProp,
   onSelectToken,
   allProjects,

@@ -3,7 +3,7 @@
  * @description Форматирует имя пользователя для отображения в интерфейсе
  */
 
-import { UserBotData } from '@shared/schema';
+import type { UserBotData } from '@/types/bot';
 
 /**
  * Форматирует имя пользователя для отображения

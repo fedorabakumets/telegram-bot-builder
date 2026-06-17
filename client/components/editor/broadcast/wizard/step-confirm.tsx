@@ -3,10 +3,13 @@
  * @module client/components/editor/broadcast/wizard/step-confirm
  */
 
+import { useMemo } from 'react';
 import { Tag, Users, Clock, MessageSquare, Rocket, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAudiencePreview } from '../hooks/use-audience-preview';
-import { MediaPreviewList } from '../components/media-preview';
+import { BroadcastMessagePreview } from '../components/broadcast-message-preview';
+import { BroadcastValidationAlerts } from '../components/broadcast-validation-alerts';
+import { validateBroadcastMessage } from '../utils/validate-broadcast-message';
 import type { NewBroadcastFormData } from '../types';
 
 /**
@@ -55,12 +58,18 @@ export function StepConfirm({ projectId, formData, isLoading, onConfirm, onBack 
     : count;
 
   const estimatedSeconds = recipientCount > 0 ? Math.ceil(recipientCount / SEND_RATE) : 0;
-  const plainText = formData.messageText.replace(/<[^>]+>/g, '');
-  const preview = plainText.length > 100 ? plainText.slice(0, 100) + '...' : plainText;
+  const validation = useMemo(() => validateBroadcastMessage(formData), [formData]);
+  const hasMessageContent = Boolean(
+    formData.messageText.trim()
+    || (formData.mediaUrls?.length ?? 0) > 0
+    || (formData.buttons?.length ?? 0) > 0,
+  );
 
   return (
     <div className="space-y-4">
       <p className="text-sm font-medium text-muted-foreground">Проверьте параметры рассылки</p>
+
+      <BroadcastValidationAlerts validation={validation} />
 
       {/* Таблица параметров */}
       <div className="rounded-xl border shadow-sm divide-y text-sm overflow-hidden">
@@ -95,14 +104,23 @@ export function StepConfirm({ projectId, formData, isLoading, onConfirm, onBack 
         <div className="px-4 py-3 space-y-2">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-green-500 shrink-0" />
-            <span className="text-muted-foreground">Текст сообщения</span>
+            <span className="text-muted-foreground">Сообщение</span>
           </div>
-          {/* Пузырь предпросмотра как сообщение бота */}
-          <div className="ml-6 relative rounded-xl rounded-tl-sm bg-gradient-to-br from-blue-50 to-violet-50 dark:from-blue-950/40 dark:to-violet-950/30 border border-blue-100 dark:border-blue-900/40 p-3 text-xs whitespace-pre-wrap break-words max-h-24 overflow-auto">
-            {preview || '—'}
+          <div className="ml-6">
+            {hasMessageContent ? (
+              <BroadcastMessagePreview
+                messageText={formData.messageText}
+                mediaUrls={formData.mediaUrls}
+                buttons={formData.buttons}
+                buttonsPerRow={formData.buttonsPerRow}
+                projectId={projectId}
+                showLabel={false}
+              />
+            ) : (
+              <span className="text-xs text-muted-foreground">—</span>
+            )}
           </div>
         </div>
-        <MediaPreviewList mediaUrls={formData.mediaUrls ?? []} />
       </div>
 
       {/* Кнопки навигации */}
@@ -110,7 +128,7 @@ export function StepConfirm({ projectId, formData, isLoading, onConfirm, onBack 
         <Button variant="outline" onClick={onBack} disabled={isLoading}>← Назад</Button>
         <Button
           onClick={onConfirm}
-          disabled={isLoading || recipientCount === 0}
+          disabled={isLoading || recipientCount === 0 || !validation.isValid}
           className="bg-gradient-to-r from-blue-500 to-violet-500 text-white hover:from-blue-600 hover:to-violet-600 gap-1.5 px-5"
         >
           <Rocket className="w-4 h-4" />
