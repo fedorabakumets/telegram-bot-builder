@@ -858,6 +858,21 @@
     "author": ""
   },
   {
+    "path": "futures/properties-mobile-bottom-sheet",
+    "title": "Нижняя панель свойств на мобильных",
+    "excerpt": "Идея: на маленьких экранах показывать панель свойств **снизу** (bottom sheet), а не справа и не на весь экран — чтобы холст оставался видимы",
+    "parts": [
+      "futures",
+      "properties-mobile-bottom-sheet"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-06-18T00:18:02+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "futures/psql-query-node",
     "title": "Узел `psql_query` — прямой SQL-запрос к базе данных",
     "excerpt": "<!-- @fileoverview План реализации нового типа узла `psql_query` для BotCraft Studio.",
