@@ -50,7 +50,7 @@ export function BotControlPanelHeader({ onConnectBot, allProjects, currentProjec
               <span className="hidden sm:inline">Подключить бот</span>
             </Button>
           )}
-          <WorkerPoolStatus />
+          <WorkerPoolStatus projects={allProjects} />
         </>
       }
     >

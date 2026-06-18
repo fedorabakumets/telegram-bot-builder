@@ -26,6 +26,8 @@ interface BotLogsStore {
   logs: Record<string, LogEntry[]>;
   addLog: (key: string, entry: LogEntry) => void;
   getLogs: (key: string) => LogEntry[];
+  /** Загрузить или слить логи из БД (по id без дублей) */
+  hydrateLogs: (key: string, entries: LogEntry[]) => void;
   clearLogs: (key: string) => void;
 }
 
@@ -40,7 +42,7 @@ export function BotLogsProvider({ children }: { children: ReactNode }) {
   const addLog = useCallback((key: string, entry: LogEntry) => {
     setLogs(prev => {
       const currentLogs = prev[key] || [];
-      // Дедупликация: пропускаем если последняя строка с тем же содержимым и временем
+      if (currentLogs.some(e => e.id === entry.id)) return prev;
       const last = currentLogs[currentLogs.length - 1];
       if (last && last.content === entry.content && last.type === entry.type &&
           Math.abs(last.timestamp.getTime() - entry.timestamp.getTime()) < 500) {
@@ -53,6 +55,19 @@ export function BotLogsProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const hydrateLogs = useCallback((key: string, entries: LogEntry[]) => {
+    if (entries.length === 0) return;
+    setLogs(prev => {
+      const byId = new Map<string, LogEntry>();
+      for (const e of prev[key] || []) byId.set(e.id, e);
+      for (const e of entries) byId.set(e.id, e);
+      const merged = Array.from(byId.values())
+        .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+        .slice(-1000);
+      return { ...prev, [key]: merged };
+    });
+  }, []);
+
   const getLogs = useCallback((key: string) => logs[key] || [], [logs]);
 
   const clearLogs = useCallback((key: string) => {
@@ -60,7 +75,7 @@ export function BotLogsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <BotLogsContext.Provider value={{ logs, addLog, getLogs, clearLogs }}>
+    <BotLogsContext.Provider value={{ logs, addLog, getLogs, hydrateLogs, clearLogs }}>
       {children}
     </BotLogsContext.Provider>
   );

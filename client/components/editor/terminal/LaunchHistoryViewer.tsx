@@ -13,8 +13,8 @@ import { useTerminalTheme } from './useTerminalTheme';
 import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
 import { TerminalOutput } from './TerminalOutput';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
+import { botLogToTerminalLine } from './bot-log-utils';
 import { Button } from '@/components/ui/button';
-import type { BotLog } from '@shared/schema';
 
 /** Пропсы компонента просмотра истории запуска */
 interface LaunchHistoryViewerProps {
@@ -40,19 +40,6 @@ function formatStartedAt(startedAt: string | null): string {
 }
 
 /**
- * Преобразует BotLog в формат строки терминала
- * @param log - Запись лога
- * @returns Строка терминала
- */
-function botLogToLine(log: BotLog) {
-  return {
-    id: String(log.id),
-    content: log.content,
-    type: (log.type === 'status' ? 'stdout' : log.type) as 'stdout' | 'stderr',
-  };
-}
-
-/**
  * Компонент просмотра логов истории запуска
  * @param props - Свойства компонента
  * @returns JSX элемент
@@ -63,14 +50,18 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
     terminalBgClass, terminalTextClass, headerBgClass,
     buttonTextColorClass, buttonHoverClass, placeholderTextClass, stderrTextClass,
   } = useTerminalTheme();
-  // Масштаб для этой конкретной вкладки истории
-  const { getTabScale, adjustTabScale } = useActiveTerminals();
+  const { getTabScale, adjustTabScale, removeTerminalById } = useActiveTerminals();
   const historyTabId = `history_${launchId}`;
   const scale = getTabScale(historyTabId);
   const adjustScale = useCallback((factor: number) => adjustTabScale(historyTabId, factor), [historyTabId, adjustTabScale]);
+
+  /** Закрывает вкладку истории запуска и убирает её из селектора */
+  const handleClose = useCallback(() => {
+    removeTerminalById(historyTabId);
+  }, [historyTabId, removeTerminalById]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const lines = logs.map(botLogToLine);
+  const lines = logs.map(botLogToTerminalLine);
 
   // Прокрутка вниз при первой загрузке логов
   useEffect(() => {
@@ -94,6 +85,8 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
             className={`${buttonTextColorClass} ${buttonHoverClass}`}>Копировать</Button>
           <Button variant="ghost" size="sm" onClick={() => saveTerminalOutput(lines)}
             className={`${buttonTextColorClass} ${buttonHoverClass}`}>Сохранить</Button>
+          <Button variant="ghost" size="sm" onClick={handleClose}
+            className={`${buttonTextColorClass} ${buttonHoverClass}`}>Закрыть</Button>
         </div>
       </div>
       {isLoading ? (

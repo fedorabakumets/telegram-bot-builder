@@ -8,6 +8,7 @@ import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
 import { useActiveTerminals } from '@/components/editor/bot/contexts/ActiveTerminalsContext';
+import { resolveBotDisplayNameFromCache } from '@/components/editor/bot/contexts/bot-control-utils';
 
 /**
  * Структура события проекта, получаемого по WebSocket
@@ -25,6 +26,8 @@ interface ProjectEvent {
   data?: unknown;
   /** Временная метка */
   timestamp: string;
+  /** ID записи в bot_logs */
+  logId?: number;
 }
 
 /**
@@ -142,7 +145,7 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
             const logKey = `${msg.projectId}-${msg.tokenId}`;
             const ts = msg.timestamp ? new Date(msg.timestamp) : new Date();
             addLog(logKey, {
-              id: `${Date.now()}-${++logCountRef.current}`,
+              id: msg.logId != null ? String(msg.logId) : `${Date.now()}-${++logCountRef.current}`,
               content: msg.content,
               type: msg.type,
               timestamp: ts,
@@ -158,7 +161,7 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
                 addTerminal({
                   projectId: msg.projectId,
                   tokenId: msg.tokenId,
-                  botName: `Bot #${msg.tokenId}`,
+                  botName: resolveBotDisplayNameFromCache(queryClient, msg.projectId, msg.tokenId),
                   isRunning: true,
                 });
               }

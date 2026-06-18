@@ -17,6 +17,8 @@ export interface TerminalMessage {
   tokenId: number;
   /** Временная метка */
   timestamp: string;
+  /** ID записи в таблице bot_logs (для постоянных ссылок) */
+  logId?: number;
   /** Дополнительные данные (для событий проекта) */
   data?: unknown;
 }

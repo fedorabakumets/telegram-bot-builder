@@ -107,11 +107,22 @@ export function ActiveTerminalsProvider({ children }: { children: ReactNode }) {
 
   const addTerminal = useCallback((info: TerminalInfo) => {
     setTerminals(prev => {
-      const exists = prev.some(t => t.projectId === info.projectId && t.tokenId === info.tokenId);
-      if (exists) return prev;
-      return [...prev, info];
+      if (info.tabType === 'history') {
+        const exists = prev.some(t => t.tabType === 'history' && t.launchId === info.launchId);
+        if (exists) return prev;
+        return [...prev, info];
+      }
+      const idx = prev.findIndex(
+        t => t.projectId === info.projectId && t.tokenId === info.tokenId && t.tabType !== 'history',
+      );
+      if (idx === -1) return [...prev, info];
+      const next = [...prev];
+      next[idx] = { ...next[idx], ...info };
+      return next;
     });
-    setActiveTerminalId(`${info.projectId}_${info.tokenId}`);
+    if (info.tabType !== 'history') {
+      setActiveTerminalId(`${info.projectId}_${info.tokenId}`);
+    }
   }, []);
 
   const removeTerminal = useCallback((projectId: number, tokenId: number) => {

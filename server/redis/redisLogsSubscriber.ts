@@ -9,6 +9,7 @@ import { getRedisSubscriber } from './redisClient';
 import { sendOutputToTerminals } from '../terminal/sendOutputToTerminals';
 import { waitForRedis } from './waitForRedis';
 import { storage } from '../storages/storage';
+import { getActiveLaunchId } from '../terminal/activeLaunchIds';
 
 /** Паттерн подписки на каналы логов всех ботов */
 const LOGS_PATTERN = 'bot:logs:*';
@@ -58,6 +59,9 @@ const launchIdCache = new Map<number, number | null>();
  * @returns launchId или undefined
  */
 async function getCachedLaunchId(tokenId: number): Promise<number | undefined> {
+  const inMemory = getActiveLaunchId(tokenId);
+  if (inMemory !== undefined) return inMemory;
+
   if (launchIdCache.has(tokenId)) {
     return launchIdCache.get(tokenId) ?? undefined;
   }

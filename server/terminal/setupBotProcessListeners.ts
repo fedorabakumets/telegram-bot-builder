@@ -12,6 +12,7 @@ import { botProcesses } from '../routes/routes';
 import { setupProcessOutputListener } from './setupProcessOutputListener';
 import { workerManager } from '../bots/botWorkerManager';
 import { sendOutputToTerminals } from './sendOutputToTerminals';
+import { getActiveLaunchId } from './activeLaunchIds';
 
 /**
  * Хранилище функций очистки слушателей для каждого процесса.
@@ -78,9 +79,10 @@ export function setupBotProcessListeners() {
         if (workerLogCount <= 5 || workerLogCount % 50 === 0) {
           console.log(`[Terminal:WorkerPool] bot-log #${workerLogCount}: project=${projectId} token=${tokenId} type=${type} content="${content.slice(0, 80)}"`);
         }
-        // Маршрутизируем логи воркера через тот же механизм что и для обычных процессов
+        // Маршрутизируем логи воркера с привязкой к активному launchId
         const streamType = (type === 'stderr') ? 'stderr' : 'stdout';
-        sendOutputToTerminals(content, streamType, projectId, tokenId);
+        const launchId = getActiveLaunchId(tokenId);
+        sendOutputToTerminals(content, streamType, projectId, tokenId, launchId);
       });
 
       console.log('[Terminal] Подписка на логи воркеров настроена');

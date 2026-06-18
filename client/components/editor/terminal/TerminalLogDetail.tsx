@@ -11,11 +11,14 @@ import { ChevronUp, ChevronDown, X, Link, FileJson, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TerminalLine } from './terminalTypes';
+import { buildTerminalLogPermalink } from './terminal-log-permalink';
 
 /** Свойства компонента панели деталей строки */
 export interface TerminalLogDetailProps {
   /** Строка лога для отображения */
   line: TerminalLine | undefined;
+  /** ID токена бота (для постоянной ссылки) */
+  tokenId?: number;
   /** Закрыть панель */
   onClose: () => void;
   /** Перейти к предыдущей строке */
@@ -54,11 +57,10 @@ function copyAsJson(line: TerminalLine) {
 /**
  * Копирует постоянную ссылку на лог в буфер обмена
  * @param line - Строка лога
+ * @param tokenId - ID токена бота
  */
-function copyPermalink(line: TerminalLine) {
-  const url = new URL(window.location.href);
-  url.searchParams.set('log', line.id);
-  navigator.clipboard.writeText(url.toString());
+function copyPermalink(line: TerminalLine, tokenId: number) {
+  navigator.clipboard.writeText(buildTerminalLogPermalink(line.id, tokenId));
 }
 
 /**
@@ -66,7 +68,7 @@ function copyPermalink(line: TerminalLine) {
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function TerminalLogDetail({ line, onClose, onPrev, onNext, onScrollToLine }: TerminalLogDetailProps) {
+export function TerminalLogDetail({ line, tokenId, onClose, onPrev, onNext, onScrollToLine }: TerminalLogDetailProps) {
   if (!line) return null;
 
   const isError = line.type === 'stderr';
@@ -88,7 +90,14 @@ export function TerminalLogDetail({ line, onClose, onPrev, onNext, onScrollToLin
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyAsJson(line)} title="Скопировать журнал в формате JSON">
           <FileJson className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyPermalink(line)} title="Скопировать постоянную ссылку">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => tokenId && copyPermalink(line, tokenId)}
+          disabled={!tokenId}
+          title="Скопировать постоянную ссылку"
+        >
           <Link className="h-4 w-4" />
         </Button>
         <div className="flex-1" />

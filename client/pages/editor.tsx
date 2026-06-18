@@ -22,6 +22,7 @@ import { TerminalPanel } from '@/components/editor/terminal/TerminalPanel';
 import { BotControl } from '@/components/editor/bot/bot-control';
 import { migrateAllKeyboardLayouts } from './editor/utils/keyboard-migration';
 import { getSheetIdFromUrl, getNodeIdFromUrl, syncEditorUrlParams } from './editor/utils/editor-url-params';
+import { useTerminalLogNavigation } from '@/components/editor/terminal/use-terminal-log-navigation';
 import { findSheetIdByNodeId } from './editor/utils/find-sheet-by-node-id';
 import { useEditorNodeUrl } from './editor/hooks/use-editor-node-url';
 import { createActionHistoryItem } from './editor/utils/action-logger';
@@ -113,6 +114,7 @@ export default function Editor() {
    */
   const [currentTab, setCurrentTab] = useState<EditorTab>(() => {
     const params = new URLSearchParams(window.location.search);
+    if (params.get('log')) return 'terminal';
     const tab = params.get('tab');
     const validTabs: EditorTab[] = ['editor', 'export', 'bot', 'terminal', 'users', 'dialogs', 'broadcast', 'analytics', 'tables', 'files'];
     if (tab && validTabs.includes(tab as EditorTab)) {
@@ -433,6 +435,13 @@ export default function Editor() {
 
   // Активный проект
   const activeProject = projectId ? currentProject : firstProject;
+
+  /** Открыть терминал по постоянной ссылке ?log=&bot= */
+  const openTerminalTab = useCallback(() => setCurrentTab('terminal'), []);
+  useTerminalLogNavigation({
+    projectId: activeProject?.id,
+    onOpenTerminalTab: openTerminalTab,
+  });
 
   /** Сброс выбранного токена при смене проекта */
   useEffect(() => {

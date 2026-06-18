@@ -6,6 +6,18 @@
  * @module bot-control-utils
  */
 
+import type { QueryClient } from '@tanstack/react-query';
+
+/** Минимальные поля токена для формирования имени бота */
+interface BotNameToken {
+  /** Имя токена в проекте */
+  name?: string | null;
+  /** Имя бота из Telegram getMe */
+  botFirstName?: string | null;
+  /** Username бота из Telegram getMe */
+  botUsername?: string | null;
+}
+
 /**
  * Форматирование времени выполнения
  * @param seconds - Количество секунд
@@ -32,7 +44,7 @@ export function formatExecutionTime(seconds: number): string {
  * @returns Отображаемое имя бота
  */
 export function getBotDisplayName(
-  token: { name?: string | null; botFirstName?: string | null; botUsername?: string | null },
+  token: BotNameToken,
   fallback = 'Бот',
 ): string {
   if (token.botFirstName && token.botUsername) {
@@ -41,4 +53,24 @@ export function getBotDisplayName(
   if (token.botFirstName) return token.botFirstName;
   if (token.name) return token.name;
   return fallback;
+}
+
+/**
+ * Ищет токен в кэше React Query и возвращает отображаемое имя бота
+ * @param queryClient - Клиент React Query
+ * @param projectId - ID проекта
+ * @param tokenId - ID токена
+ * @returns Имя бота или запасной вариант Bot #id
+ */
+export function resolveBotDisplayNameFromCache(
+  queryClient: QueryClient,
+  projectId: number,
+  tokenId: number,
+): string {
+  const tokens = queryClient.getQueryData<Array<BotNameToken & { id: number }>>(
+    [`/api/projects/${projectId}/tokens`],
+  );
+  const token = tokens?.find(t => t.id === tokenId);
+  if (token) return getBotDisplayName(token, `Bot #${tokenId}`);
+  return `Bot #${tokenId}`;
 }

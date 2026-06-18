@@ -33,6 +33,47 @@ const MAX_LOGS_PER_BOT = 2000;
 const FLUSH_INTERVAL_MS = 5000;
 
 /**
+ * Сохраняет одну строку лога в БД и возвращает её id
+ * @param projectId - Идентификатор проекта
+ * @param tokenId - Идентификатор токена
+ * @param content - Содержимое строки
+ * @param type - Тип строки
+ * @param launchId - ID запуска (опционально)
+ * @param timestamp - Временная метка ISO (опционально)
+ * @returns ID записи в bot_logs или undefined при ошибке
+ */
+export async function persistLogLine(
+  projectId: number,
+  tokenId: number,
+  content: string,
+  type: "stdout" | "stderr" | "status",
+  launchId?: number,
+  timestamp?: string
+): Promise<number | undefined> {
+  if (globalThis.__dbPoolActive === false) return undefined;
+
+  try {
+    const [row] = await db.insert(botLogs).values({
+      projectId,
+      tokenId,
+      content,
+      type,
+      launchId,
+      ...(timestamp ? { timestamp: new Date(timestamp) } : {}),
+    }).returning({ id: botLogs.id });
+
+    if (!row) return undefined;
+
+    if (launchId !== undefined) await trimLogsByLaunch(launchId);
+    await trimOldLogs(projectId, tokenId);
+    return row.id;
+  } catch (err) {
+    console.error("[BotLogsBuffer] Ошибка записи лога:", err);
+    return undefined;
+  }
+}
+
+/**
  * Добавляет строку лога в буфер
  * @param projectId - Идентификатор проекта
  * @param tokenId - Идентификатор токена

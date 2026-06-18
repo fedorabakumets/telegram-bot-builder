@@ -28,6 +28,7 @@ import { storage } from '../storages/storage';
 import { flushBuffer } from '../terminal/botLogsBuffer';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { getRedisPublisher } from '../redis/redisClient';
+import { clearActiveLaunchId } from '../terminal/activeLaunchIds';
 
 /**
  * Останавливает запущенный экземпляр Telegram-бота по идентификатору проекта и токена
@@ -74,6 +75,7 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
           errorMessage: null,
         });
       }
+      clearActiveLaunchId(tokenId);
       await storage.stopBotInstanceByToken(tokenId);
 
       void broadcastProjectEvent(projectId, {
@@ -183,6 +185,7 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
         errorMessage: null,
       });
     }
+    clearActiveLaunchId(tokenId);
 
     await storage.stopBotInstanceByToken(tokenId);
 

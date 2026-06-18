@@ -176,6 +176,7 @@ async function sendHistoryToClient(
         projectId,
         tokenId,
         timestamp: log.timestamp?.toISOString() ?? new Date().toISOString(),
+        logId: log.id,
       };
       ws.send(JSON.stringify(message));
     }

@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ProjectOptionLabel } from './project-name-label';
 
 /**
  * Пропсы селектора проекта
@@ -34,6 +35,8 @@ export function ProjectSelector({
   selectedProjectId,
   onSelect,
 }: ProjectSelectorProps): React.JSX.Element {
+  const selectedProject = projects.find((p) => p.id === selectedProjectId);
+
   return (
     <div className="flex items-center gap-1.5">
       <FolderOpen className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
@@ -42,12 +45,17 @@ export function ProjectSelector({
         onValueChange={(value) => onSelect(Number(value))}
       >
         <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px] max-w-[180px]">
-          <SelectValue placeholder="Проект" />
+          <SelectValue placeholder="Проект">{selectedProject?.name}</SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[220px]">
           {projects.map((project) => (
-            <SelectItem key={project.id} value={String(project.id)}>
-              {project.name}
+            <SelectItem
+              key={project.id}
+              value={String(project.id)}
+              className="py-2 pr-3"
+              textValue={project.name}
+            >
+              <ProjectOptionLabel name={project.name} id={project.id} />
             </SelectItem>
           ))}
         </SelectContent>

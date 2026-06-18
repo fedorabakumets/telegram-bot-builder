@@ -9,9 +9,12 @@
 
 import { Button } from '@/components/ui/button';
 import { ChevronsDownUp, ChevronsUpDown, RefreshCw } from 'lucide-react';
+import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
 
 /** Свойства заголовка проекта */
 interface ProjectHeaderProps {
+  /** ID проекта */
+  projectId: number;
   /** Название проекта */
   projectName: string;
   /** Количество ботов в проекте */
@@ -34,13 +37,14 @@ interface ProjectHeaderProps {
  * @returns JSX элемент
  */
 export function ProjectHeader({
-  projectName, botsCount, onCollapseAll, onExpandAll, allCollapsed,
+  projectId, projectName, botsCount, onCollapseAll, onExpandAll, allCollapsed,
   onRestartAll, isRestartingAll,
 }: ProjectHeaderProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <h3 className="text-base sm:text-lg font-semibold text-foreground truncate min-w-0">
-        {projectName}
+      <h3 className="flex min-w-0 items-center gap-2 text-base sm:text-lg font-semibold text-foreground">
+        <span className="truncate">{projectName}</span>
+        <IdBadge id={projectId} className="text-[11px]" />
       </h3>
       <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
         <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
