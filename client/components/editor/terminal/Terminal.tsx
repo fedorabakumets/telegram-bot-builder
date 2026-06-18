@@ -7,11 +7,12 @@
  * @module Terminal
  */
 
-import { forwardRef, useImperativeHandle, useCallback, useState, useRef } from 'react';
+import { forwardRef, useImperativeHandle, useCallback, useState, useRef, useEffect } from 'react';
 import { TerminalOutput } from './TerminalOutput';
 import { TerminalFilterBar } from './TerminalFilterBar';
 import { TerminalSearchBar } from './TerminalSearchBar';
 import { TerminalLogDetail } from './TerminalLogDetail';
+import { TerminalLogNotFound } from './TerminalLogNotFound';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { TerminalHandle, TerminalProps } from './terminalTypes';
 import { useTerminalTheme } from './useTerminalTheme';
@@ -20,6 +21,8 @@ import { useTerminalLines } from './useTerminalLines';
 import { useTerminalMethods } from './useTerminalMethods';
 import { useTerminalFilter } from './useTerminalFilter';
 import { useTerminalSearch } from './useTerminalSearch';
+import { useTerminalLogUrl } from './use-terminal-log-url';
+import { useTerminalLogsHydration } from './use-terminal-logs-hydration';
 import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
 
 export type { TerminalHandle, TerminalProps };
@@ -58,6 +61,8 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
 
   // Хук строк
   const { lines, outputContainerRef, setLines } = useTerminalLines(logKey);
+
+  useTerminalLogsHydration({ projectId, tokenId });
 
   // Хук методов
   const { addLine, addLineLocal, sendToServer, clearTerminal } = useTerminalMethods({
@@ -98,21 +103,38 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
   /** ID выбранной строки для панели деталей */
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
 
+  const { closeDetail } = useTerminalLogUrl({
+    logKey,
+    lines,
+    selectedLineId,
+    setSelectedLineId,
+    outputContainerRef,
+  });
+
+  /** Выбранная строка — ищем во всех lines, не только в отфильтрованных */
+  const selectedLine = selectedLineId ? lines.find(l => l.id === selectedLineId) : undefined;
+
+  /** Сбросить фильтр, если выбранная строка скрыта (например stderr) */
+  useEffect(() => {
+    if (!selectedLine || filter === 'all') return;
+    if (selectedLine.type !== filter) setFilter('all');
+  }, [selectedLine, filter, setFilter]);
+
   /** Реф для скролла к выбранной строке */
   const selectedLineRef = useRef<string | null>(null);
   selectedLineRef.current = selectedLineId;
 
-  /** Навигация к предыдущей строке */
+  /** Навигация к предыдущей строке (по полному списку lines) */
   const handleDetailPrev = useCallback(() => {
-    const idx = visibleLines.findIndex(l => l.id === selectedLineRef.current);
-    if (idx > 0) setSelectedLineId(visibleLines[idx - 1].id);
-  }, [visibleLines]);
+    const idx = lines.findIndex(l => l.id === selectedLineRef.current);
+    if (idx > 0) setSelectedLineId(lines[idx - 1].id);
+  }, [lines]);
 
-  /** Навигация к следующей строке */
+  /** Навигация к следующей строке (по полному списку lines) */
   const handleDetailNext = useCallback(() => {
-    const idx = visibleLines.findIndex(l => l.id === selectedLineRef.current);
-    if (idx >= 0 && idx < visibleLines.length - 1) setSelectedLineId(visibleLines[idx + 1].id);
-  }, [visibleLines]);
+    const idx = lines.findIndex(l => l.id === selectedLineRef.current);
+    if (idx >= 0 && idx < lines.length - 1) setSelectedLineId(lines[idx + 1].id);
+  }, [lines]);
 
   /** Скролл к выбранной строке в контексте */
   const handleScrollToLine = useCallback(() => {
@@ -182,13 +204,21 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
           />
         </div>
         {selectedLineId && (
-          <TerminalLogDetail
-            line={visibleLines.find(l => l.id === selectedLineId)}
-            onClose={() => setSelectedLineId(null)}
-            onPrev={handleDetailPrev}
-            onNext={handleDetailNext}
-            onScrollToLine={handleScrollToLine}
-          />
+          selectedLine ? (
+            <TerminalLogDetail
+              line={selectedLine}
+              tokenId={tokenId}
+              onClose={closeDetail}
+              onPrev={handleDetailPrev}
+              onNext={handleDetailNext}
+              onScrollToLine={handleScrollToLine}
+            />
+          ) : (
+            <TerminalLogNotFound
+              logId={selectedLineId}
+              onClose={closeDetail}
+            />
+          )
         )}
       </div>
     </div>

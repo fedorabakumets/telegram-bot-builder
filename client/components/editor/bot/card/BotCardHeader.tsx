@@ -20,6 +20,7 @@ import { Pencil, ChevronUp, ChevronDown } from 'lucide-react';
 import { BotAvatar } from './BotAvatar';
 import { BotActions } from '../card/BotActions';
 import { formatExecutionTime } from '../contexts/bot-control-utils';
+import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
 import type { BotToken } from '@shared/schema';
 
 /** Свойства заголовка карточки бота */
@@ -161,6 +162,7 @@ export function BotCardHeader({
               </Tooltip>
             </TooltipProvider>
           )}
+          {!isEditingName && <IdBadge id={tokenId} className="text-[11px]" />}
           {token.botUsername && (
             <a
               href={`https://t.me/${token.botUsername}`}

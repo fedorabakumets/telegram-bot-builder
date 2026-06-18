@@ -91,9 +91,9 @@ export function useTerminalMethods({
   /**
    * Добавить строку без отправки на сервер
    */
-  const addLineLocal = (content: string, type: 'stdout' | 'stderr' = 'stdout', timestamp?: Date) => {
+  const addLineLocal = (content: string, type: 'stdout' | 'stderr' = 'stdout', timestamp?: Date, logId?: number) => {
     const newLine: TerminalLine = {
-      id: generateLineId(),
+      id: logId != null ? String(logId) : generateLineId(),
       content,
       type,
       timestamp: timestamp ?? new Date()

@@ -94,6 +94,7 @@ export function BotManagementInterface({ projects, allTokens, currentProjectId }
         return (
           <div key={project.id} className="space-y-4">
             <ProjectHeader
+              projectId={project.id}
               projectName={project.name}
               botsCount={projectTokens.length}
               allCollapsed={allCollapsed}

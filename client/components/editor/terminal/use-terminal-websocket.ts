@@ -25,6 +25,8 @@ interface TerminalWebSocketMessage {
   projectId: number;
   tokenId: number;
   timestamp: string;
+  /** ID записи в bot_logs */
+  logId?: number;
 }
 
 /**
@@ -168,7 +170,7 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
           const content = message.content ?? '';
           if (content) {
             const ts = message.timestamp ? new Date(message.timestamp) : undefined;
-            terminalRefRef.current.current!.addLineLocal(content, outputType, ts);
+            terminalRefRef.current.current!.addLineLocal(content, outputType, ts, message.logId);
           }
         } catch (error) {
           console.error('[WS-Terminal] Ошибка при обработке сообщения от терминала:', error);

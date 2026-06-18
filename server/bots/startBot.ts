@@ -50,6 +50,8 @@ import { storage } from "../storages/storage";
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { pendingLaunchIds } from '../terminal/setupBotProcessListeners';
 import { clearBotLogs } from '../terminal/botLogsBuffer';
+import { setActiveLaunchId } from '../terminal/activeLaunchIds';
+import { closeActiveLaunchHistory } from './closeActiveLaunchHistory';
 import {
   getRestartDelay,
   incrementRestartCounter,
@@ -301,6 +303,9 @@ export async function startBot(projectId: number, token: string, tokenId: number
     }
     }
 
+    // Закрываем предыдущий незавершённый запуск перед стартом нового
+    await closeActiveLaunchHistory(tokenId);
+
     // Очищаем логи предыдущего запуска перед стартом нового (только при ручном запуске)
     if (shouldClearLogs) {
       await clearBotLogs(projectId, tokenId);
@@ -310,6 +315,22 @@ export async function startBot(projectId: number, token: string, tokenId: number
     if (process.env.USE_WORKER_POOL !== 'false') {
       console.log(`🏭 [WorkerPool] Запуск бота ${projectId}/${tokenId} через воркер...`);
       console.log(`🏭 [WorkerPool] mainFile: ${mainFile}`);
+
+      let launchId: number | undefined;
+      try {
+        const launchRecord = await storage.createLaunchHistory({
+          projectId,
+          tokenId,
+          status: 'running',
+          processId: `worker_${projectId}`,
+          startedAt: new Date(),
+        });
+        launchId = launchRecord.id;
+        setActiveLaunchId(tokenId, launchId);
+      } catch (historyError) {
+        console.error('Ошибка создания записи истории запуска:', historyError);
+      }
+
       try {
         await workerManager.startBot(projectId, token, tokenId, mainFile, effectiveWebhookUrl ? {
           webhookUrl: effectiveWebhookUrl,
@@ -340,15 +361,6 @@ export async function startBot(projectId: number, token: string, tokenId: number
           processId: `worker_${projectId}`,
         });
       }
-
-      // Создаём запись в истории запусков
-      await storage.createLaunchHistory({
-        projectId,
-        tokenId,
-        status: 'running',
-        processId: `worker_${projectId}`,
-        startedAt: new Date(),
-      });
 
       // Рассылаем событие о запуске бота
       void broadcastProjectEvent(projectId, {
@@ -408,6 +420,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
     // Регистрируем launchId до сохранения процесса, чтобы слушатель его подхватил
     if (launchId !== undefined) {
       pendingLaunchIds.set(processKey, launchId);
+      setActiveLaunchId(tokenId, launchId);
     }
 
     // Сохраняем процесс

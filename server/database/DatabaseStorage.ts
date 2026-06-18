@@ -1216,6 +1216,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
+   * Получить одну запись лога по ID
+   * @param id - ID записи в bot_logs
+   * @returns Запись лога или undefined
+   */
+  async getBotLogById(id: number): Promise<BotLog | undefined> {
+    const [row] = await this.db
+      .select()
+      .from(botLogs)
+      .where(eq(botLogs.id, id))
+      .limit(1);
+    return row;
+  }
+
+  /**
    * Получить последние N строк логов бота из базы данных
    * @param projectId - Идентификатор проекта
    * @param tokenId - Идентификатор токена

@@ -6,7 +6,7 @@
 import { WebSocket } from "ws";
 import { activeConnections } from "./activeConnections";
 import { TerminalMessage } from "./TerminalMessage";
-import { addToBuffer } from "./botLogsBuffer";
+import { persistLogLine } from "./botLogsBuffer";
 
 /**
  * Парсит timestamp из строки лога Python-формата: "2026-04-09 11:00:16,191 - ..."
@@ -17,7 +17,6 @@ import { addToBuffer } from "./botLogsBuffer";
 function parseLogTimestamp(content: string): string {
   const match = content.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),(\d+)/);
   if (match) {
-    // Заменяем запятую на точку для корректного парсинга миллисекунд
     const iso = `${match[1]}.${match[2]}`;
     const date = new Date(iso);
     if (!isNaN(date.getTime())) return date.toISOString();
@@ -26,29 +25,49 @@ function parseLogTimestamp(content: string): string {
 }
 
 /**
- * Отправляет вывод в активные терминалы и добавляет строку в буфер логов
+ * Рассылает сообщение всем подписчикам WebSocket
+ * @param message - Сообщение терминала
+ * @param connectionKey - Ключ прямого подключения projectId_tokenId
+ */
+function broadcastMessage(message: TerminalMessage, connectionKey: string): void {
+  const payload = JSON.stringify(message);
+  const connections = activeConnections.get(connectionKey);
+
+  if (connections) {
+    for (const ws of connections) {
+      if (ws.readyState === WebSocket.OPEN) ws.send(payload);
+    }
+  }
+
+  for (const [key, conns] of activeConnections.entries()) {
+    if (!key.startsWith("user_")) continue;
+    for (const ws of conns) {
+      if (ws.readyState === WebSocket.OPEN) ws.send(payload);
+    }
+  }
+}
+
+/**
+ * Сохраняет лог в bot_logs и отправляет вывод в активные терминалы
  * @param content - Содержимое вывода
  * @param type - Тип вывода: stdout, stderr или status
  * @param projectId - Идентификатор проекта
  * @param tokenId - Идентификатор токена
  * @param launchId - Идентификатор запуска (опционально)
  */
-export function sendOutputToTerminals(
+export async function sendOutputToTerminals(
   content: string,
   type: "stdout" | "stderr" | "status",
   projectId: number,
   tokenId: number,
   launchId?: number
-): void {
+): Promise<void> {
   const connectionKey = `${projectId}_${tokenId}`;
-  const connections = activeConnections.get(connectionKey);
   const timestamp = type === "stdout" || type === "stderr"
     ? parseLogTimestamp(content)
     : new Date().toISOString();
 
-  // Проверяем наличие прямого подписчика (projectId_tokenId)
-  // Если нет — лог всё равно уйдёт через user_* подписки ниже
-  const connCount = connections?.size ?? 0;
+  const logId = await persistLogLine(projectId, tokenId, content, type, launchId, timestamp);
 
   const message: TerminalMessage = {
     type,
@@ -56,32 +75,8 @@ export function sendOutputToTerminals(
     projectId,
     tokenId,
     timestamp,
+    ...(logId !== undefined ? { logId } : {}),
   };
 
-  if (connections) {
-    let sentCount = 0;
-    for (const ws of connections) {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(message));
-        sentCount++;
-      }
-    }
-    if (sentCount === 0 && connections.size > 0) {
-      console.warn(`[Terminal] ⚠️ ${connections.size} соединений для ${connectionKey}, но ни одно не OPEN`);
-    }
-  }
-
-  // Рассылаем также подписчикам user_* (глобальная подписка на все проекты)
-  for (const [key, conns] of activeConnections.entries()) {
-    if (!key.startsWith('user_')) continue;
-    const payload = JSON.stringify(message);
-    for (const ws of conns) {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(payload);
-      }
-    }
-  }
-
-  // Добавляем строку в буфер для последующей записи в БД
-  addToBuffer(projectId, tokenId, content, type, launchId, timestamp);
+  broadcastMessage(message, connectionKey);
 }
