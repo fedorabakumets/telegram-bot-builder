@@ -9,6 +9,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TerminalHandle } from './Terminal';
+import { useBotLogs } from '../bot/contexts/bot-logs-context';
+
+/** Счётчик для генерации id строк при отсутствии logId с сервера */
+let wsLineIdCounter = 0;
 
 /**
  * Тип для сообщений, получаемых от WebSocket-сервера терминала
@@ -78,17 +82,20 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
   const wsRef = useRef<WebSocket | null>(null);
   /** Ключ для реестра соединений */
   const connectionKeyRef = useRef<string | null>(null);
+  const { addLog } = useBotLogs();
 
   // Используем ref для хранения актуальных значений чтобы избежать пересоздания connect
   const projectIdRef = useRef(projectId);
   const tokenIdRef = useRef(tokenId);
   const terminalRefRef = useRef(terminalRef);
+  const addLogRef = useRef(addLog);
 
   useEffect(() => {
     projectIdRef.current = projectId;
     tokenIdRef.current = tokenId;
     terminalRefRef.current = terminalRef;
-  }, [projectId, tokenId, terminalRef]);
+    addLogRef.current = addLog;
+  }, [projectId, tokenId, terminalRef, addLog]);
 
   /**
    * Подключается к WebSocket-серверу терминала
@@ -158,24 +165,30 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
           // Игнорируем pong-ответы на keepalive ping
           if ((message as any).command === 'pong') return;
 
-          // Отправляем сообщение в терминал без отправки обратно на сервер
-          const hasRef = !!terminalRefRef.current?.current;
-          if (!hasRef) {
-            console.warn('[WS-Terminal] ⚠️ terminalRef.current недоступен, сообщение потеряно:', message.content?.slice(0, 80));
-            return;
-          }
-          // Для типа 'status' используем 'stdout', так как TerminalHandle.addLine принимает только 'stdout' или 'stderr'
-          const outputType = message.type === 'status' ? 'stdout' : message.type;
-          // Защита от undefined content
           const content = message.content ?? '';
-          if (content) {
-            const ts = message.timestamp ? new Date(message.timestamp) : undefined;
-            terminalRefRef.current.current!.addLineLocal(content, outputType, ts, message.logId);
-          }
+          if (!content) return;
+
+          const outputType = message.type === 'status' ? 'stdout' : message.type;
+          if (outputType !== 'stdout' && outputType !== 'stderr') return;
+
+          // Пишем в BotLogsContext — UI читает логи из контекста, ref терминала не обязателен
+          const logKey = `${message.projectId}-${message.tokenId}`;
+          addLogRef.current(logKey, {
+            id: message.logId != null ? String(message.logId) : `${Date.now()}-${++wsLineIdCounter}`,
+            content,
+            type: outputType,
+            timestamp: message.timestamp ? new Date(message.timestamp) : new Date(),
+          });
         } catch (error) {
           console.error('[WS-Terminal] Ошибка при обработке сообщения от терминала:', error);
-          if (terminalRefRef.current?.current) {
-            terminalRefRef.current.current.addLineLocal(`[Ошибка] Некорректное сообщение от сервера: ${event.data}`, 'stderr');
+          const errContent = `[Ошибка] Некорректное сообщение от сервера: ${event.data}`;
+          if (projectIdRef.current && tokenIdRef.current) {
+            addLogRef.current(`${projectIdRef.current}-${tokenIdRef.current}`, {
+              id: `${Date.now()}-${++wsLineIdCounter}`,
+              content: errContent,
+              type: 'stderr',
+              timestamp: new Date(),
+            });
           }
         }
       };
@@ -198,8 +211,13 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
         console.error('[WS-Terminal] readyState при ошибке:', ws.readyState, '(0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)');
         setStatus('error');
 
-        if (terminalRefRef.current?.current) {
-          terminalRefRef.current.current.addLineLocal('[Ошибка] Соединение с терминалом потеряно', 'stderr');
+        if (projectIdRef.current && tokenIdRef.current) {
+          addLogRef.current(`${projectIdRef.current}-${tokenIdRef.current}`, {
+            id: `${Date.now()}-${++wsLineIdCounter}`,
+            content: '[Ошибка] Соединение с терминалом потеряно',
+            type: 'stderr',
+            timestamp: new Date(),
+          });
         }
       };
     } catch (error) {
@@ -229,8 +247,13 @@ export const useTerminalWebSocket = ({ terminalRef, projectId, tokenId }: UseTer
     wsRef.current = null;
     setStatus('disconnected');
 
-    if (terminalRef?.current) {
-      terminalRef.current.addLineLocal('[Система] Отключено от терминала', 'stdout');
+    if (projectIdRef.current && tokenIdRef.current) {
+      addLogRef.current(`${projectIdRef.current}-${tokenIdRef.current}`, {
+        id: `${Date.now()}-${++wsLineIdCounter}`,
+        content: '[Система] Отключено от терминала',
+        type: 'stdout',
+        timestamp: new Date(),
+      });
     }
   };
 
