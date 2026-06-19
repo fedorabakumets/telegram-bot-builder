@@ -14,7 +14,7 @@ import { migrateLegacyMessageInputToLinkedInputs } from './utils/migrate-message
 import { migrateMessageKeyboardsToNodes } from './utils/migrate-message-keyboards';
 import { migrateForwardMessageSourceLinks } from './utils/migrate-forward-message-source-links';
 import { migrateInputNodeTarget } from './utils/migrate-input-node-target';
-import { needsMessageDefaults } from '@/utils/sheets/needs-message-defaults';
+import { needsMessageDefaults, stripMessageJunkFields } from '@/utils/sheets/needs-message-defaults';
 
 /**
  * Интерфейс для состояния истории изменений
@@ -341,9 +341,10 @@ export function useBotEditor(initialData?: BotData) {
 
     const normalizedData = { ...node.data };
 
-    // Триггеры, management-ноды, condition и comment не нуждаются в служебных полях сообщения
+    // Триггеры, management-ноды, condition и comment не нуждаются в служебных
+    // полях сообщения — вычищаем мусор, накопившийся в старых проектах
     if (!needsMessageDefaults(node.type)) {
-      return node;
+      return stripMessageJunkFields(node);
     }
 
     // Дефолтные поля для всех узлов
