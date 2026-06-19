@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-06-17T16:59:19+03:00",
+    "updated_at": "2026-06-19T23:13:33+03:00",
     "tags": [],
     "author": ""
   },
@@ -208,7 +208,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-06-17T16:59:19+03:00",
+    "updated_at": "2026-06-19T23:13:33+03:00",
     "tags": [],
     "author": ""
   },
@@ -434,6 +434,21 @@
       "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-14T08:32:24+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/bot-generation-profiles-and-toggles",
+    "title": "Bot generation profiles and toggles",
+    "excerpt": "Сейчас даже проект с 1–2 нодами генерирует **огромный Python-файл** (тысячи строк).",
+    "parts": [
+      "futures",
+      "bot-generation-profiles-and-toggles"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-06-19T21:54:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -783,6 +798,21 @@
     "author": ""
   },
   {
+    "path": "futures/move-buttons-to-keyboard-node",
+    "title": "Полный вынос кнопок из message в keyboard-ноду",
+    "excerpt": "Поля `buttons` и `keyboardType` концептуально относятся только к `keyboard`-ноде, но фактически до сих пор живут и в `message`-нодах. Архите",
+    "parts": [
+      "futures",
+      "move-buttons-to-keyboard-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-06-20T00:09:17+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "futures/multi-recipient-edit-message",
     "title": "Multi-recipient edit_message",
     "excerpt": "Когда сообщение отправляется нескольким получателям через `messageSendRecipients`, каждый получатель получает своё сообщение с уникальным `m",
@@ -974,6 +1004,21 @@
       "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-25T22:42:03+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/sheet-portal-nodes",
+    "title": "Ноды-порталы: визуализация кросс-листовых связей",
+    "excerpt": "Когда в проекте много листов, непонятно какие ноды связаны с нодами на других листах. Приходится лезть в настройки каждой ноды, чтобы увидет",
+    "parts": [
+      "futures",
+      "sheet-portal-nodes"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-06-20T00:09:17+03:00",
     "tags": [],
     "author": ""
   },
@@ -1449,7 +1494,7 @@
     "folder_titles": {
       "nodes": "🧩 Справочник нод"
     },
-    "updated_at": "2026-06-14T18:48:13+03:00",
+    "updated_at": "2026-06-19T23:13:33+03:00",
     "tags": [],
     "author": ""
   },
@@ -1518,6 +1563,23 @@
       "triggers": "📨 Триггеры"
     },
     "updated_at": "2026-06-14T21:55:47+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "nodes/utility/comment",
+    "title": "Комментарий (comment)",
+    "excerpt": "Текстовая заметка-стикер на холсте. Служит для пояснений к сценарию и **не влияет на логику бота** — полностью игнорируется при генерации Py",
+    "parts": [
+      "nodes",
+      "utility",
+      "comment"
+    ],
+    "folder_titles": {
+      "nodes": "🧩 Справочник нод",
+      "utility": "🧰 Утилиты"
+    },
+    "updated_at": "2026-06-19T23:13:33+03:00",
     "tags": [],
     "author": ""
   },
