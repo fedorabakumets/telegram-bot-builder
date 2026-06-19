@@ -78,6 +78,7 @@ import { UserbotMessageConfiguration } from '../userbot/UserbotMessageConfigurat
 import { UserbotClickButtonConfiguration } from '../userbot/UserbotClickButtonConfiguration';
 import { UserbotInlineQueryConfiguration } from '../userbot/UserbotInlineQueryConfiguration';
 import { UserbotEditTriggerConfiguration } from '../trigger/UserbotEditTriggerConfiguration';
+import { CommentConfiguration } from '../configuration/CommentConfiguration';
 import type { Variable } from '../../../inline-rich/types';
 import { useEnvVariablesForNode } from '../../hooks/use-env-variables-for-node';
 import { usePropertiesView } from '../../hooks/use-properties-view';
@@ -442,7 +443,7 @@ export function PropertiesPanel({
         <div className="space-y-0">
 
           {/* Basic Settings Section - СЃРєСЂС‹С‚Рѕ РґР»СЏ СѓР·Р»Р° СЂР°СЃСЃС‹Р»РєР°, client_auth, С‚СЂРёРіРіРµСЂРѕРІ, СѓСЃР»РѕРІРёСЏ Рё РјРµРґРёР°-РЅРѕРґС‹ */}
-          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (selectedNode.type as any) !== 'delete_message' && (selectedNode.type as any) !== 'kick_user' && (selectedNode.type as any) !== 'set_variable' && (selectedNode.type as any) !== 'psql_query' && (selectedNode.type as any) !== 'convert_file' && (selectedNode.type as any) !== 'loop' && (selectedNode.type as any) !== 'bot_table' && (selectedNode.type as any) !== 'delay' && (selectedNode.type as any) !== 'userbot_message' && (selectedNode.type as any) !== 'userbot_click_button' && (selectedNode.type as any) !== 'userbot_inline_query' && (selectedNode.type as any) !== 'parallel_split' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
+          {selectedNode.type !== 'broadcast' && selectedNode.type !== 'client_auth' && selectedNode.type !== 'media' && (selectedNode.type as any) !== 'http_request' && (selectedNode.type as any) !== 'get_managed_bot_token' && (selectedNode.type as any) !== 'answer_callback_query' && (selectedNode.type as any) !== 'edit_message' && (selectedNode.type as any) !== 'delete_message' && (selectedNode.type as any) !== 'kick_user' && (selectedNode.type as any) !== 'set_variable' && (selectedNode.type as any) !== 'psql_query' && (selectedNode.type as any) !== 'convert_file' && (selectedNode.type as any) !== 'loop' && (selectedNode.type as any) !== 'bot_table' && (selectedNode.type as any) !== 'delay' && (selectedNode.type as any) !== 'userbot_message' && (selectedNode.type as any) !== 'userbot_click_button' && (selectedNode.type as any) !== 'userbot_inline_query' && (selectedNode.type as any) !== 'parallel_split' && (selectedNode.type as any) !== 'comment' && !isTriggerNode(selectedNode.type) && !isConditionNode(selectedNode.type) && (
             <BasicSettingsSection
               selectedNode={selectedNode}
               projectId={projectId}
@@ -657,6 +658,11 @@ export function PropertiesPanel({
           {/* Delay Section */}
           {(selectedNode.type as any) === 'delay' && (
             <DelayConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} textVariables={textVariables as Variable[]} />
+          )}
+
+          {/* Comment Section */}
+          {(selectedNode.type as any) === 'comment' && (
+            <CommentConfiguration selectedNode={selectedNode} onNodeUpdate={onNodeUpdate} />
           )}
 
           {/* SQL Query Section */}

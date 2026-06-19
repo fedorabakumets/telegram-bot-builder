@@ -19,6 +19,7 @@
 | Автоматизация | schedule_trigger |
 | Интеграции | http_request, psql_query, bot_table, convert_file, condition, set_variable, loop, delay, parallel_split |
 | Юзербот | userbot_message, userbot_click_button, userbot_inline_query, userbot_edit_trigger |
+| Утилиты | comment (заметка на холсте) |
 
 ## Быстрый поиск
 
@@ -41,6 +42,7 @@
 | Задержка перед следующим шагом | delay |
 | Цикл по массиву | loop |
 | Параллельное выполнение | parallel_split |
+| Оставить заметку на холсте | [comment](./utility/comment.md) |
 | Кикнуть/забанить/замутить пользователя | kick_user, ban_user, mute_user |
 | Отправить от имени юзербота | userbot_message |
 

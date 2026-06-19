@@ -49,6 +49,7 @@ export const MANAGEMENT_NODE_TYPES = [
   'userbot_click_button' as any,
   'userbot_inline_query' as any,
   'parallel_split' as any,
+  'comment' as any,
 ] as const;
 
 /**

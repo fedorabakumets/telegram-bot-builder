@@ -32,6 +32,11 @@ export function MessagePreview({ node }: MessagePreviewProps) {
     return null;
   }
 
+  // Комментарий имеет собственный превью
+  if ((node.type as string) === 'comment') {
+    return null;
+  }
+
   const saveMessageIdTo: string = (node.data as any)?.saveMessageIdTo || '';
 
   return (

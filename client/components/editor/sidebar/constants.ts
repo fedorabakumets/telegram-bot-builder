@@ -20,6 +20,7 @@ import { getManagedBotTokenNode } from './massive/managed-bots';
 import { answerCallbackQueryNode, editMessageNode } from './massive/actions';
 import { userbotMessage, userbotClickButton, userbotInlineQuery, userbotEditTrigger } from './massive/userbot';
 import { kickUser } from './massive/user-management';
+import { commentNode } from './massive/utility';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -54,6 +55,10 @@ export const componentCategories: Array<{
   {
     title: 'Юзербот',
     components: [userbotMessage, userbotClickButton, userbotInlineQuery, userbotEditTrigger]
+  },
+  {
+    title: 'Утилиты',
+    components: [commentNode]
   }
 ];
 

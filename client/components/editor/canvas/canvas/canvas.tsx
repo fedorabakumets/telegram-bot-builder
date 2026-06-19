@@ -1580,14 +1580,19 @@ export function Canvas({
     const component: ComponentDefinition = JSON.parse(componentData);
     const nodePosition = getDropPosition();
 
-    const clonedData = structuredClone({
-      keyboardType: 'none',
-      buttons: [],
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      markdown: false,
-      ...component.defaultData
-    });
+    // Нода-комментарий не нуждается в служебных полях клавиатуры
+    const clonedData = structuredClone(
+      (component.type as string) === 'comment'
+        ? { ...component.defaultData }
+        : {
+            keyboardType: 'none',
+            buttons: [],
+            oneTimeKeyboard: false,
+            resizeKeyboard: true,
+            markdown: false,
+            ...component.defaultData
+          }
+    );
     // Регенерируем id кнопок чтобы они были уникальны между узлами
     if (Array.isArray((clonedData as any).buttons)) {
       (clonedData as any).buttons = (clonedData as any).buttons.map((btn: any) => ({ ...btn, id: generateButtonId() }));
@@ -1635,14 +1640,18 @@ export function Canvas({
       nodePosition = getCenterPosition();
     }
 
-    const clonedTouchData = structuredClone({
-      keyboardType: 'none',
-      buttons: [],
-      oneTimeKeyboard: false,
-      resizeKeyboard: true,
-      markdown: false,
-      ...component.defaultData
-    });
+    const clonedTouchData = structuredClone(
+      (component.type as string) === 'comment'
+        ? { ...component.defaultData }
+        : {
+            keyboardType: 'none',
+            buttons: [],
+            oneTimeKeyboard: false,
+            resizeKeyboard: true,
+            markdown: false,
+            ...component.defaultData
+          }
+    );
     if (Array.isArray((clonedTouchData as any).buttons)) {
       (clonedTouchData as any).buttons = (clonedTouchData as any).buttons.map((btn: any) => ({ ...btn, id: generateButtonId() }));
     }
