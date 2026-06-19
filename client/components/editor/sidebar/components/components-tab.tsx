@@ -6,10 +6,13 @@
  * @module components/editor/sidebar/components/components-tab
  */
 
+import { useState } from 'react';
 import { ComponentDefinition } from '@shared/schema';
 import type { CommandPreset } from '../massive/commands';
 import { cn } from '@/utils/utils';
-import { Plus, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, ChevronDown, ChevronRight, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useComponentsFilter } from './use-components-filter';
 
 /** Пропсы компонента ComponentsTab */
 export interface ComponentsTabProps {
@@ -62,8 +65,121 @@ export function ComponentsTab({
   /** Заголовок секции команд */
   const COMMANDS_TITLE = 'Команды';
 
+  /** Строка поиска по компонентам */
+  const [searchQuery, setSearchQuery] = useState('');
+
+  /** Результаты фильтрации (null если поиск пуст) */
+  const filtered = useComponentsFilter(categories, commandPresets, searchQuery);
+
   return (
     <div className="px-2 pb-2 pt-3 space-y-2 sm:space-y-3">
+      {/* Строка поиска компонентов */}
+      <div className="relative mb-2">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Поиск компонентов..."
+          className="h-8 text-xs pl-8 pr-2"
+        />
+      </div>
+
+      {/* Результаты поиска — плоский список */}
+      {filtered && !filtered.hasResults && (
+        <p className="text-xs text-muted-foreground text-center py-4">Ничего не найдено</p>
+      )}
+
+      {filtered && filtered.hasResults && (
+        <div className="space-y-1.5 sm:space-y-2">
+          {filtered.components.map((component) => (
+            <div
+              key={component.id}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData('application/json', JSON.stringify(component));
+                e.dataTransfer.setData('text/plain', component.type);
+                onComponentDrag(component);
+              }}
+              onTouchStart={(e) => onTouchStart(e, component)}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              className={cn(
+                "component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3",
+                "bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30",
+                "hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40",
+                "rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select",
+                "border border-border/30 hover:border-primary/30",
+                touchState.touchedComponent?.id === component.id && touchState.isDragging
+                  ? 'opacity-50 scale-95'
+                  : ''
+              )}
+              data-testid={`component-${component.id}`}
+            >
+              <div className={cn(
+                "w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0",
+                "transition-transform group-hover/item:scale-110",
+                component.color
+              )}>
+                <i className={`${component.icon} text-xs sm:text-sm`}></i>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{component.name}</p>
+                <p className="text-xs text-muted-foreground line-clamp-1">{component.description}</p>
+              </div>
+              {onComponentAdd && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onComponentAdd(component); }}
+                  className={cn(
+                    "ml-1 flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg",
+                    "bg-primary/10 hover:bg-primary/20 text-primary",
+                    "dark:bg-primary/15 dark:hover:bg-primary/25",
+                    "hidden group-hover/item:flex items-center justify-center",
+                    "transition-all duration-200 hover:shadow-md hover:shadow-primary/20"
+                  )}
+                  title={`Добавить ${component.name} на холст`}
+                >
+                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                </button>
+              )}
+            </div>
+          ))}
+          {filtered.presets.map((preset) => (
+            <div
+              key={preset.id}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData('application/command-preset', JSON.stringify(preset));
+                e.dataTransfer.setData('text/plain', 'command_preset');
+              }}
+              className={cn(
+                "component-item group/item flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3",
+                "bg-gradient-to-br from-muted/40 to-muted/20 dark:from-slate-800/50 dark:to-slate-900/30",
+                "hover:from-muted/70 hover:to-muted/40 dark:hover:from-slate-700/60 dark:hover:to-slate-800/40",
+                "rounded-lg sm:rounded-xl cursor-move transition-all duration-200 touch-action-none no-select",
+                "border border-border/30 hover:border-primary/30"
+              )}
+              data-testid={`command-preset-${preset.id}`}
+            >
+              <div className={cn(
+                "w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center flex-shrink-0",
+                "transition-transform group-hover/item:scale-110",
+                preset.color
+              )}>
+                <i className={`${preset.icon} text-xs sm:text-sm`}></i>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{preset.name}</p>
+                <p className="text-xs text-muted-foreground line-clamp-1">{preset.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Обычный вид с категориями (когда поиск пуст) */}
+      {!filtered && (<>
       {categories.map((category) => {
         /** Флаг свёрнутости категории */
         const isCollapsed = collapsedCategories.has(category.title);
@@ -235,6 +351,7 @@ export function ComponentsTab({
           )}
         </div>
       )}
+      </>)}
     </div>
   );
 }
