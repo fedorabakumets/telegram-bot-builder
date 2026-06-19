@@ -14,6 +14,7 @@ import { migrateLegacyMessageInputToLinkedInputs } from './utils/migrate-message
 import { migrateMessageKeyboardsToNodes } from './utils/migrate-message-keyboards';
 import { migrateForwardMessageSourceLinks } from './utils/migrate-forward-message-source-links';
 import { migrateInputNodeTarget } from './utils/migrate-input-node-target';
+import { needsMessageDefaults } from '@/utils/sheets/needs-message-defaults';
 
 /**
  * Интерфейс для состояния истории изменений
@@ -194,20 +195,17 @@ export function useBotEditor(initialData?: BotData) {
       }
 
       const normalizedData = { ...node.data };
-      // Нода-комментарий не нуждается в служебных полях сообщения
-      const skipDefaultFields = (node.type as string) === 'comment';
+      // Триггеры, management-ноды, condition и comment не нуждаются в служебных полях сообщения
+      const skipDefaultFields = !needsMessageDefaults(node.type);
       const defaultFields = {
-        buttons: [],
         messageText: '',
-        keyboardType: 'none',
         oneTimeKeyboard: false,
         resizeKeyboard: true,
         markdown: false,
         isPrivateOnly: false,
         adminOnly: false,
         requiresAuth: false,
-        showInMenu: true,
-        enableStatistics: true
+        showInMenu: true
       };
 
       if (!skipDefaultFields) {
@@ -343,24 +341,21 @@ export function useBotEditor(initialData?: BotData) {
 
     const normalizedData = { ...node.data };
 
-    // Нода-комментарий не нуждается в служебных полях сообщения
-    if ((node.type as string) === 'comment') {
+    // Триггеры, management-ноды, condition и comment не нуждаются в служебных полях сообщения
+    if (!needsMessageDefaults(node.type)) {
       return node;
     }
 
     // Дефолтные поля для всех узлов
     const defaultFields = {
-      buttons: [],
       messageText: '',
-      keyboardType: 'none',
       oneTimeKeyboard: false,
       resizeKeyboard: true,
       markdown: false,
       isPrivateOnly: false,
       adminOnly: false,
       requiresAuth: false,
-      showInMenu: true,
-      enableStatistics: true
+      showInMenu: true
     };
 
     // Применяем дефолтные поля

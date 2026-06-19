@@ -145,8 +145,6 @@ export const nodeSchema = z.object({
     cooldownTime: z.number().optional(),
     /** Максимальное количество использований в день */
     maxUsagesPerDay: z.number().optional(),
-    /** Включить сбор статистики использования */
-    enableStatistics: z.boolean().default(true),
     /** Пользовательские параметры команды */
     customParameters: z.array(z.string()).default([]),
     /** ID целевого сообщения для операций с сообщениями */

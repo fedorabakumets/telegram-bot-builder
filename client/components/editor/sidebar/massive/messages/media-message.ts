@@ -14,8 +14,6 @@ export const mediaMessage: ComponentDefinition = {
   type: 'media',
   defaultData: {
     attachedMedia: [],
-    keyboardType: 'none',
-    buttons: [],
     enableAutoTransition: false,
     autoTransitionTo: '',
   }

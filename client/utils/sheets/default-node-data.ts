@@ -36,8 +36,6 @@ export const defaultNodeData = {
   requiresAuth: false,
   /** Показывать в меню */
   showInMenu: true,
-  /** Включить статистику */
-  enableStatistics: true,
   /** Пользовательские параметры */
   customParameters: [],
   /** Варианты ответа */

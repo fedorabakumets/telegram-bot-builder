@@ -83,7 +83,6 @@ export function useCommandSync({
         formatMode: 'none',
         adminOnly: false,
         requiresAuth: false,
-        enableStatistics: true,
         enableAutoTransition: false,
         collectUserInput: false,
         saveToDatabase: false,

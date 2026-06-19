@@ -16,8 +16,6 @@ export const stickerMessage: ComponentDefinition = {
     messageText: 'Стикер',
     stickerUrl: '',
     stickerFileId: '',
-    keyboardType: 'none',
-    buttons: [],
     markdown: false,
     oneTimeKeyboard: false,
     resizeKeyboard: true

@@ -16,8 +16,6 @@ export const voiceMessage: ComponentDefinition = {
     messageText: 'Голосовое сообщение',
     voiceUrl: '',
     duration: 0,
-    keyboardType: 'none',
-    buttons: [],
     markdown: false,
     oneTimeKeyboard: false,
     resizeKeyboard: true

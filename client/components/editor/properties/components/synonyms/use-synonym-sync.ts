@@ -93,7 +93,6 @@ export function useSynonymSync({
         adminOnly: false,
         requiresAuth: false,
         showInMenu: true,
-        enableStatistics: true,
         enableAutoTransition: false,
         collectUserInput: false,
         saveToDatabase: false,

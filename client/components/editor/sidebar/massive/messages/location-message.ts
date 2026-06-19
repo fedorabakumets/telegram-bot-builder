@@ -20,8 +20,6 @@ export const locationMessage: ComponentDefinition = {
     address: 'Москва, Россия',
     foursquareId: '',
     foursquareType: '',
-    keyboardType: 'none',
-    buttons: [],
     markdown: false,
     oneTimeKeyboard: false,
     resizeKeyboard: true
