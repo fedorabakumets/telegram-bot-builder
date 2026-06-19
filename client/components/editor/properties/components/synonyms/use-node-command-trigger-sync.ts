@@ -78,7 +78,6 @@ function createCommandTriggerNode(command: string, sourceNode: Node, allNodes: N
       formatMode: 'none',
       adminOnly: false,
       requiresAuth: false,
-      enableStatistics: true,
       enableAutoTransition: false,
       collectUserInput: false,
       saveToDatabase: false,

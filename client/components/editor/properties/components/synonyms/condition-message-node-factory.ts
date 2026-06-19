@@ -60,7 +60,6 @@ export function createMessageNodeForCondition(
       isPrivateOnly: src.isPrivateOnly ?? false,
       adminOnly: src.adminOnly ?? false,
       requiresAuth: src.requiresAuth ?? false,
-      enableStatistics: src.enableStatistics ?? true,
       enableAutoTransition: src.enableAutoTransition ?? false,
       /** Поля сбора ответов — копируются из исходного узла */
       collectUserInput: src.collectUserInput ?? false,

@@ -136,7 +136,6 @@ export function migrateCommandsToCommandTriggers(nodes: Node[]): Node[] {
         formatMode: 'none',
         adminOnly: false,
         requiresAuth: false,
-        enableStatistics: true,
         enableAutoTransition: false,
         collectUserInput: false,
         saveToDatabase: false,

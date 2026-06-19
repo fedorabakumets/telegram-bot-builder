@@ -33,6 +33,7 @@ import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { generateNextSheetName } from '@/utils/sheets/generate-next-sheet-name';
 import { nanoid } from 'nanoid';
 import { generateButtonId } from '@/utils/generate-button-id';
+import { needsMessageDefaults } from '@/utils/sheets/needs-message-defaults';
 
 /**
  * Типы узлов, которые могут выступать источником сообщения для `forward_message`.
@@ -1582,11 +1583,9 @@ export function Canvas({
 
     // Нода-комментарий не нуждается в служебных полях клавиатуры
     const clonedData = structuredClone(
-      (component.type as string) === 'comment'
+      !needsMessageDefaults(component.type)
         ? { ...component.defaultData }
         : {
-            keyboardType: 'none',
-            buttons: [],
             oneTimeKeyboard: false,
             resizeKeyboard: true,
             markdown: false,
@@ -1641,11 +1640,9 @@ export function Canvas({
     }
 
     const clonedTouchData = structuredClone(
-      (component.type as string) === 'comment'
+      !needsMessageDefaults(component.type)
         ? { ...component.defaultData }
         : {
-            keyboardType: 'none',
-            buttons: [],
             oneTimeKeyboard: false,
             resizeKeyboard: true,
             markdown: false,

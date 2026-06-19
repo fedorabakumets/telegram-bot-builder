@@ -14,10 +14,6 @@ export const textMessage: ComponentDefinition = {
   type: 'message',
   defaultData: {
     messageText: 'Новое сообщение',
-    keyboardType: 'none',
-    buttons: [],
-    markdown: false,
-    oneTimeKeyboard: false,
-    resizeKeyboard: true
+    markdown: false
   }
 };

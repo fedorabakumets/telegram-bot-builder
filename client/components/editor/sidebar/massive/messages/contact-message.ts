@@ -19,8 +19,6 @@ export const contactMessage: ComponentDefinition = {
     lastName: 'Фамилия',
     userId: 0,
     vcard: '',
-    keyboardType: 'none',
-    buttons: [],
     markdown: false,
     oneTimeKeyboard: false,
     resizeKeyboard: true
