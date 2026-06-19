@@ -359,6 +359,13 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
     canvasColor: 'bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-600 dark:text-amber-400 border-2 border-amber-300 dark:border-amber-700/50 shadow-lg shadow-amber-500/20',
   },
+  // Утилиты
+  comment: {
+    name: 'Комментарий',
+    icon: 'fas fa-sticky-note',
+    color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+    canvasColor: 'bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 text-yellow-700 dark:text-yellow-300 border border-dashed border-yellow-300 dark:border-yellow-700/50',
+  },
 };
 
 /**

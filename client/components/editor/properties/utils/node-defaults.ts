@@ -527,6 +527,12 @@ export function getNodeDefaults(type: Node['type']): any {
       /** ID следующего узла */
       autoTransitionTo: '',
     },
+    comment: {
+      /** Текст комментария */
+      messageText: '',
+      /** Цвет заметки */
+      commentColor: 'yellow',
+    },
   };
   return defaults[type] || {};
 }

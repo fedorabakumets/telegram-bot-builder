@@ -194,6 +194,8 @@ export function useBotEditor(initialData?: BotData) {
       }
 
       const normalizedData = { ...node.data };
+      // Нода-комментарий не нуждается в служебных полях сообщения
+      const skipDefaultFields = (node.type as string) === 'comment';
       const defaultFields = {
         buttons: [],
         messageText: '',
@@ -208,9 +210,11 @@ export function useBotEditor(initialData?: BotData) {
         enableStatistics: true
       };
 
-      for (const [key, value] of Object.entries(defaultFields)) {
-        if ((normalizedData as any)[key] === undefined) {
-          (normalizedData as any)[key] = value;
+      if (!skipDefaultFields) {
+        for (const [key, value] of Object.entries(defaultFields)) {
+          if ((normalizedData as any)[key] === undefined) {
+            (normalizedData as any)[key] = value;
+          }
         }
       }
 
@@ -338,6 +342,11 @@ export function useBotEditor(initialData?: BotData) {
     if (!node || !node.type) return node;
 
     const normalizedData = { ...node.data };
+
+    // Нода-комментарий не нуждается в служебных полях сообщения
+    if ((node.type as string) === 'comment') {
+      return node;
+    }
 
     // Дефолтные поля для всех узлов
     const defaultFields = {
