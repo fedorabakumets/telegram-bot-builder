@@ -438,6 +438,21 @@
     "author": ""
   },
   {
+    "path": "futures/bot-generation-profiles-and-toggles",
+    "title": "Bot generation profiles and toggles",
+    "excerpt": "Сейчас даже проект с 1–2 нодами генерирует **огромный Python-файл** (тысячи строк).",
+    "parts": [
+      "futures",
+      "bot-generation-profiles-and-toggles"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-06-19T21:54:20+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "futures/bot-manager-scenario-roadmap",
     "title": "Сценарий управляющего бота — Roadmap улучшений",
     "excerpt": "Документ описывает будущие улучшения сценария `bots/новый/новый.json` с учётом",
