@@ -7,6 +7,9 @@
 import { CanvasNodeItem } from '@/components/editor/canvas/canvas-node/canvas-node-item';
 import { ConnectionsLayer } from '@/components/editor/canvas/canvas-node/connections-layer';
 import { DraftConnectionLayer } from '@/components/editor/canvas/canvas-node/draft-connection-layer';
+import { SheetPortalsLayer } from '@/components/editor/canvas/canvas-node/sheet-portals-layer';
+import { IncomingSheetPortalsLayer } from '@/components/editor/canvas/canvas-node/incoming-sheet-portals-layer';
+import { collectCrossSheetLinks, collectIncomingCrossSheetLinks } from './utils/collect-cross-sheet-links';
 import { Node } from '@/types/bot';
 import { BotDataWithSheets } from '@shared/schema';
 import { PortType } from '../canvas-node/port-colors';
@@ -80,6 +83,12 @@ interface CanvasContentProps {
   onMoveNodeToSheet?: (nodeId: string, sheetId: string) => void;
   /** ID проекта (для превью Telegram file_id через прокси) */
   projectId?: number;
+  /** Показывать ли порталы к другим листам */
+  showPortals?: boolean;
+  /** Колбэк навигации на другой лист через портал (одиночный клик) */
+  onSheetNavigate?: (sheetId: string) => void;
+  /** Колбэк навигации к целевой ноде через портал с фокусом (двойной клик) */
+  onPortalNavigate?: (targetNodeId: string) => void;
 }
 
 /**
@@ -118,6 +127,9 @@ export function CanvasContent({
   sheets,
   onMoveNodeToSheet,
   projectId,
+  showPortals,
+  onSheetNavigate,
+  onPortalNavigate,
 }: CanvasContentProps) {
   /**
    * Получение всех узлов со всех листов для отображения связей.
@@ -132,6 +144,18 @@ export function CanvasContent({
     });
     return collected;
   }, [botData, nodes]);
+
+  /** Кросс-листовые порталы (вычисляются только если showPortals включён) */
+  const crossSheetPortals = useMemo(() => {
+    if (!showPortals || !botData?.sheets || !botData.activeSheetId) return [];
+    return collectCrossSheetLinks(nodes, botData.sheets, botData.activeSheetId);
+  }, [showPortals, nodes, botData]);
+
+  /** Входящие кросс-листовые порталы (ноды с других листов, ведущие на текущий) */
+  const incomingPortals = useMemo(() => {
+    if (!showPortals || !botData?.sheets || !botData.activeSheetId) return [];
+    return collectIncomingCrossSheetLinks(nodes, botData.sheets, botData.activeSheetId);
+  }, [showPortals, nodes, botData]);
 
   /** Узлы, подсвечиваемые при наведении на линию соединения */
   const [hoveredConnectionNodes, setHoveredConnectionNodes] = useState<{ fromId: string | null; toId: string | null }>({ fromId: null, toId: null });
@@ -207,6 +231,28 @@ export function CanvasContent({
     >
       {/* SVG-слой соединений — рисуется под нодами */}
       <ConnectionsLayer nodes={nodes} nodeSizes={nodeSizes} onConnectionDelete={onConnectionDelete} buttonPortYOffsets={buttonPortYOffsets} draggingNodeId={draftConnection ? null : (draggingNodeId ?? hoveredNodeId ?? highlightNodeId)} onConnectionHover={draftConnection ? undefined : handleConnectionHover} />
+
+      {/* SVG-слой порталов к другим листам */}
+      {showPortals && crossSheetPortals.length > 0 && onSheetNavigate && (
+        <SheetPortalsLayer
+          portals={crossSheetPortals}
+          nodes={nodes}
+          nodeSizes={nodeSizes}
+          onNavigate={onSheetNavigate}
+          onNavigateNode={onPortalNavigate}
+        />
+      )}
+
+      {/* SVG-слой входящих порталов с других листов */}
+      {showPortals && incomingPortals.length > 0 && onSheetNavigate && (
+        <IncomingSheetPortalsLayer
+          portals={incomingPortals}
+          nodes={nodes}
+          nodeSizes={nodeSizes}
+          onNavigate={onSheetNavigate}
+          onNavigateNode={onPortalNavigate}
+        />
+      )}
 
       {/* SVG-слой временного соединения при drag-to-connect */}
       <DraftConnectionLayer draftConnection={draftConnection ?? null} />

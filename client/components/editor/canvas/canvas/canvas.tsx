@@ -24,6 +24,7 @@ import { MultiSelectionToolbar } from './multi-selection-toolbar';
 import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-connection';
 import { PortType } from '../canvas-node/port-colors';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from './utils/canvas-coordinate-utils';
+import { collectCrossSheetLinks, collectIncomingCrossSheetLinks } from './utils/collect-cross-sheet-links';
 
 import { toast } from '@/hooks/use-toast';
 import { Node, ComponentDefinition } from '@/types/bot';
@@ -200,6 +201,8 @@ interface CanvasProps {
   projectId?: number;
   /** Список всех проектов (для переноса узлов в другой проект) */
   projects?: Array<{ id: number; name: string; ownerId: number | null; data?: unknown }>;
+  /** Колбэк навигации к целевой ноде через портал с фокусом (двойной клик) */
+  onPortalNavigate?: (targetNodeId: string) => void;
 }
 
 export function Canvas({
@@ -254,6 +257,7 @@ export function Canvas({
   projects = [],
   onOpenMobileSidebar,
   onOpenMobileProperties,
+  onPortalNavigate,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -305,6 +309,14 @@ export function Canvas({
       .filter(s => s.id !== botData.activeSheetId)
       .map(s => ({ id: s.id, name: s.name }));
   }, [botData]);
+
+  /** Количество порталов к другим листам (для бейджа в тулбаре) */
+  const portalsCount = useMemo(() => {
+    if (!botData?.sheets || !botData.activeSheetId) return 0;
+    const outgoing = collectCrossSheetLinks(nodes, botData.sheets, botData.activeSheetId).length;
+    const incoming = collectIncomingCrossSheetLinks(nodes, botData.sheets, botData.activeSheetId).length;
+    return outgoing + incoming;
+  }, [nodes, botData]);
 
   /** Состояние мульти-выделения узлов рамкой */
   const {
@@ -452,6 +464,12 @@ export function Canvas({
 
   // Состояние открытия поиска узлов (управляется кнопкой и горячей клавишей Ctrl+F)
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // Состояние видимости порталов к другим листам
+  const [showPortals, setShowPortals] = useState(false);
+
+  /** Переключение видимости порталов */
+  const togglePortals = useCallback(() => setShowPortals(prev => !prev), []);
 
   // Система истории действий — используем внешнюю историю если передана, иначе локальную
   const [localActionHistory, setLocalActionHistory] = useState<Action[]>([]);
@@ -1846,6 +1864,9 @@ export function Canvas({
             onMoveNodeToSheet={onMoveNodeToSheet}
             highlightNodeId={highlightNodeId}
             projectId={projectId}
+            showPortals={showPortals}
+            onSheetNavigate={handleSheetSelect}
+            onPortalNavigate={onPortalNavigate}
           />
 
           {/* Слой рамки выделения (marquee) — координаты в screen-пространстве холста,
@@ -1908,6 +1929,9 @@ export function Canvas({
         onSearchOpenChange={setSearchOpen}
         marqueeActive={tool === 'marquee'}
         onToggleMarquee={toggleTool}
+        showPortals={showPortals}
+        onTogglePortals={togglePortals}
+        portalsCount={portalsCount}
       />
 
       {/* Плавающая панель для мобильных устройств */}

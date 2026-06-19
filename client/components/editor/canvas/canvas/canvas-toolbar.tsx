@@ -15,6 +15,7 @@ import { InterfaceToggles } from './interface-toggles';
 import { KeyboardShortcutsHelp } from './keyboard-shortcuts-help';
 import { NodeSearchButton } from './node-search-button';
 import { MarqueeSelectButton } from './marquee-select-button';
+import { PortalsToggleButton } from './portals-toggle-button';
 import { Action } from './canvas';
 import { CanvasViewToggle } from '@/pages/editor/components/canvas-view-toggle';
 import type { CanvasView } from '@/pages/editor/components/canvas-view-toggle';
@@ -109,6 +110,12 @@ interface CanvasToolbarProps {
   marqueeActive?: boolean;
   /** Колбэк переключения инструмента рамочного выделения */
   onToggleMarquee?: () => void;
+  /** Видимость порталов к другим листам */
+  showPortals?: boolean;
+  /** Колбэк переключения видимости порталов */
+  onTogglePortals?: () => void;
+  /** Количество порталов (для бейджа на кнопке) */
+  portalsCount?: number;
 }
 
 /**
@@ -161,6 +168,9 @@ export function CanvasToolbar({
   onSearchOpenChange,
   marqueeActive,
   onToggleMarquee,
+  showPortals,
+  onTogglePortals,
+  portalsCount,
 }: CanvasToolbarProps) {
   return (
     <div data-canvas-toolbar className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{ left: 0, right: 0 }}>
@@ -227,6 +237,11 @@ export function CanvasToolbar({
             {/* Инструмент рамочного выделения нескольких узлов */}
             {onToggleMarquee && (
               <MarqueeSelectButton active={marqueeActive ?? false} onToggle={onToggleMarquee} />
+            )}
+
+            {/* Переключатель видимости порталов к другим листам */}
+            {onTogglePortals && (
+              <PortalsToggleButton active={showPortals ?? false} onToggle={onTogglePortals} count={portalsCount} />
             )}
 
             {/* Р Р°Р·РґРµР»РёС‚РµР»СЊ */}

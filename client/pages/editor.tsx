@@ -25,6 +25,7 @@ import { getSheetIdFromUrl, getNodeIdFromUrl, syncEditorUrlParams } from './edit
 import { useTerminalLogNavigation } from '@/components/editor/terminal/use-terminal-log-navigation';
 import { findSheetIdByNodeId } from './editor/utils/find-sheet-by-node-id';
 import { useEditorNodeUrl } from './editor/hooks/use-editor-node-url';
+import { usePortalNavigation } from './editor/hooks/use-portal-navigation';
 import { createActionHistoryItem } from './editor/utils/action-logger';
 import type { ActionType, PreviousEditorTab, ActionHistoryItem, EditorTab } from './editor/types';
 import { useProjectLoader } from './editor/hooks/use-project-loader';
@@ -923,6 +924,15 @@ export default function Editor() {
     handleSheetSelect,
   });
 
+  // Программная навигация к ноде через портал (двойной клик)
+  const { navigateToPortalNode } = usePortalNavigation({
+    botDataWithSheets,
+    nodes,
+    handleSheetSelect,
+    handleNodeFocus,
+    setSelectedNodeId,
+  });
+
   // Синхронизация ?node= и ?button= с выбранным узлом (после применения deep-link из URL)
   useEffect(() => {
     if (!nodeUrlSyncParams) return;
@@ -1538,6 +1548,7 @@ export default function Editor() {
                 onViewChange={currentTab === 'editor' ? handleViewChange : undefined}
                 projectId={activeProject?.id}
                 projects={allProjects.map((p) => ({ id: p.id, name: p.name, ownerId: p.ownerId, data: p.data }))}
+                onPortalNavigate={navigateToPortalNode}
               />
             </div>
           )}
@@ -1946,6 +1957,7 @@ export default function Editor() {
                   onAutoLayout={handleAutoLayout}
                   projectId={activeProject?.id}
                   projects={allProjects.map((p) => ({ id: p.id, name: p.name, ownerId: p.ownerId, data: p.data }))}
+                  onPortalNavigate={navigateToPortalNode}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">
