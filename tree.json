@@ -798,6 +798,21 @@
     "author": ""
   },
   {
+    "path": "futures/move-buttons-to-keyboard-node",
+    "title": "Полный вынос кнопок из message в keyboard-ноду",
+    "excerpt": "Поля `buttons` и `keyboardType` концептуально относятся только к `keyboard`-ноде, но фактически до сих пор живут и в `message`-нодах. Архите",
+    "parts": [
+      "futures",
+      "move-buttons-to-keyboard-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-06-20T00:09:17+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "futures/multi-recipient-edit-message",
     "title": "Multi-recipient edit_message",
     "excerpt": "Когда сообщение отправляется нескольким получателям через `messageSendRecipients`, каждый получатель получает своё сообщение с уникальным `m",
@@ -989,6 +1004,21 @@
       "futures": "🔮 Планы развития"
     },
     "updated_at": "2026-04-25T22:42:03+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/sheet-portal-nodes",
+    "title": "Ноды-порталы: визуализация кросс-листовых связей",
+    "excerpt": "Когда в проекте много листов, непонятно какие ноды связаны с нодами на других листах. Приходится лезть в настройки каждой ноды, чтобы увидет",
+    "parts": [
+      "futures",
+      "sheet-portal-nodes"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития"
+    },
+    "updated_at": "2026-06-20T00:09:17+03:00",
     "tags": [],
     "author": ""
   },
