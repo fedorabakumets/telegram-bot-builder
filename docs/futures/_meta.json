@@ -1,4 +1,7 @@
 {
   "title": "🔮 Планы развития",
-  "order": 4
+  "order": 4,
+  "pages": [
+    "bot-generation-profiles-and-toggles"
+  ]
 }
