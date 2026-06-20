@@ -37,6 +37,13 @@ export interface GenerationOptions {
   /** Сохранять входящие фото от пользователей в БД */
   saveIncomingMedia?: boolean;
   /**
+   * Генерировать catch-all обработчики (handle_unhandled_message,
+   * handle_unhandled_photo, fallback_callback_handler). По умолчанию true.
+   * При наличии incoming-триггеров/динамических кнопок генерируются принудительно
+   * независимо от значения этого флага (см. computeFeatureFlags).
+   */
+  catchAllHandlers?: boolean;
+  /**
    * Словарь кэшированных Telegram file_id для медиафайлов.
    * Ключ — URL файла, значение — Telegram file_id.
    */
@@ -70,6 +77,7 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   webhookUrl: null,
   webhookPort: null,
   saveIncomingMedia: false,
+  catchAllHandlers: true,
   telegramFileIds: {},
   thumbnailFileIds: {},
   thumbnailUrls: {},

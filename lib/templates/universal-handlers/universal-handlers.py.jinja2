@@ -26,7 +26,7 @@ async def fallback_text_handler(message: types.Message):
         if not user_data.get(user_id, {}).get("_imt_handled"):
             logging.info(f"📩 Получено необработанное текстовое сообщение от {message.from_user.id}: {message.text}")
 
-
+{% if generateCatchAll %}
 @dp.message(F.photo)
 async def handle_unhandled_photo(message: types.Message):
     """
@@ -54,3 +54,4 @@ async def fallback_callback_handler(callback_query: types.CallbackQuery, state: 
     не обрабатываются и aiogram логирует "Update is not handled".
     """
     logging.info(f"📲 Получен необработанный callback от {callback_query.from_user.id}: {callback_query.data}")
+{% endif %}

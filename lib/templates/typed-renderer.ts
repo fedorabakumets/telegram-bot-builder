@@ -135,6 +135,7 @@ export function generateUniversalHandlers(params: UniversalHandlersTemplateParam
     hasSkipDataCollectionButtons:
       validated.hasSkipDataCollectionButtons ?? hasSkipDataCollectionButtons(params.nodes ?? []),
     allNodeIds: params.allNodeIds ?? [],
+    generateCatchAll: validated.generateCatchAll,
   });
 }
 
@@ -144,6 +145,7 @@ export function generateUniversalHandlers(params: UniversalHandlersTemplateParam
 const universalHandlersParamsSchema = z.object({
   userDatabaseEnabled: z.boolean().optional().default(false),
   hasSkipDataCollectionButtons: z.boolean().optional(),
+  generateCatchAll: z.boolean().optional().default(true),
 });
 
 // ============================================================================

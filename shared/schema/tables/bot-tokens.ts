@@ -63,6 +63,12 @@ export const botTokens = pgTable("bot_tokens", {
   protectContent: integer("protect_content").default(0),
   /** Флаг сохранения входящих медиафайлов от пользователей (0 = выключено, 1 = включено) */
   saveIncomingMedia: integer("save_incoming_media").default(0),
+  /**
+   * Генерировать catch-all обработчики необработанных сообщений/callback
+   * (0 = выключено, 1 = включено). При наличии incoming-триггеров/динамических
+   * кнопок генератор включает их принудительно независимо от флага.
+   */
+  catchAllHandlers: integer("catch_all_handlers").default(1),
   /** Режим запуска бота: 'polling' (по умолчанию) или 'webhook' */
   launchMode: text("launch_mode").default("polling"),
   /** Базовый URL для webhook режима (например https://example.com) */
@@ -121,6 +127,8 @@ export const insertBotTokenSchema = z.object({
   protectContent: z.number().min(0).max(1).default(0),
   /** Флаг сохранения входящих медиафайлов от пользователей (0 = выключено, 1 = включено) */
   saveIncomingMedia: z.number().min(0).max(1).default(0),
+  /** Генерировать catch-all обработчики (0 = выключено, 1 = включено) */
+  catchAllHandlers: z.number().min(0).max(1).default(1),
   /** Режим запуска бота: polling или webhook */
   launchMode: z.enum(['polling', 'webhook']).default('polling').optional(),
   /** Базовый URL для webhook режима */

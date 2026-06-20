@@ -213,9 +213,30 @@ describe('main.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 6 полей', () => {
+      it('должен иметь 12 полей', () => {
         const shape = mainParamsSchema.shape;
-        assert.strictEqual(Object.keys(shape).length, 6);
+        assert.strictEqual(Object.keys(shape).length, 12);
+      });
+
+      it('должен содержать ключевые поля схемы', () => {
+        const shape = mainParamsSchema.shape;
+        const expectedKeys = [
+          'userDatabaseEnabled',
+          'hasInlineButtons',
+          'menuCommands',
+          'autoRegisterUsers',
+          'incomingMessageTriggerMiddlewares',
+          'managedBotUpdatedTriggerMiddlewares',
+          'webhookUrl',
+          'hasScheduleTrigger',
+          'webhookPort',
+          'tokenId',
+          'projectId',
+          'hasUserbotNodes',
+        ];
+        for (const key of expectedKeys) {
+          assert.ok(key in shape, `Поле ${key} отсутствует в схеме`);
+        }
       });
 
       it('должен использовать ZodOptional', () => {

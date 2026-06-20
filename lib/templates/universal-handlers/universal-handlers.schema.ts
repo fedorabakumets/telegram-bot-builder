@@ -11,6 +11,8 @@ export const universalHandlersParamsSchema = z.object({
   userDatabaseEnabled: z.boolean().optional().default(false),
   /** Есть ли в проекте хотя бы одна кнопка с skipDataCollection=true */
   hasSkipDataCollectionButtons: z.boolean().optional(),
+  /** Генерировать catch-all обработчики (по умолчанию true) */
+  generateCatchAll: z.boolean().optional().default(true),
 });
 
 /** Тип параметров (выведен из схемы) */

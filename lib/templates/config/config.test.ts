@@ -150,6 +150,23 @@ describe('config.py.jinja2 шаблон', () => {
         assert.ok(!result2.includes('DATABASE_URL'));
       });
 
+      it('должен всегда объявлять db_pool = None (защита от NameError при выключенной БД)', () => {
+        const resultEnabled = generateConfig({
+          userDatabaseEnabled: true,
+          projectId: 123,
+        });
+        const resultDisabled = generateConfig({
+          userDatabaseEnabled: false,
+          projectId: 123,
+        });
+
+        assert.ok(resultEnabled.includes('db_pool = None'));
+        assert.ok(
+          resultDisabled.includes('db_pool = None'),
+          'db_pool = None должен присутствовать даже при выключенной БД',
+        );
+      });
+
       it('должен всегда включать базовые импорты и настройки', () => {
         const result = generateConfig(validParamsAllDisabled);
 

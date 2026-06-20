@@ -566,6 +566,16 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при проверке/добавлении колонки protect_content в bot_tokens:', error);
     }
 
+    // Миграция: добавление catch_all_handlers в bot_tokens если его нет
+    try {
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_tokens
+        ADD COLUMN IF NOT EXISTS catch_all_handlers INTEGER DEFAULT 1;
+      `, "Миграция: добавление catch_all_handlers в bot_tokens");
+    } catch (error) {
+      console.log('⚠️ Ошибка при проверке/добавлении колонки catch_all_handlers в bot_tokens:', error);
+    }
+
     // Миграция: добавить project_id в bot_users и обновить первичный ключ
     try {
       const columnCheck = await db.execute(sql`

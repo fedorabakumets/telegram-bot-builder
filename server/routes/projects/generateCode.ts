@@ -59,6 +59,18 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
       return;
     }
 
+    // Читаем настройку catch-all обработчиков из первого токена проекта.
+    // Если токен недоступен — дефолт true (catch-all включены).
+    let catchAllHandlers = true;
+    try {
+      const tokens = await storage.getBotTokensByProject(projectId);
+      if (tokens.length > 0) {
+        catchAllHandlers = tokens[0].catchAllHandlers !== 0;
+      }
+    } catch {
+      // ignore — остаётся дефолт true
+    }
+
     const botDataForGenerator = project.data as any;
 
     // Логирование для отладки
@@ -222,6 +234,7 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
       enableComments,
       enableLogging,
       projectId,
+      catchAllHandlers,
       telegramFileIds,
       thumbnailFileIds,
       thumbnailUrls,

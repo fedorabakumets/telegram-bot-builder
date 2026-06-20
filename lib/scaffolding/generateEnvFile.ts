@@ -21,6 +21,7 @@
  * @param saveIncomingMedia - Сохранять входящие фото от пользователей
  * @param tokenId - ID токена бота в системе (для сегментации данных в БД)
  * @param customVariables - Массив пользовательских переменных (переопределяют дефолты)
+ * @param catchAllHandlers - Генерировать catch-all обработчики (по умолчанию true)
  * @returns Содержимое .env файла
  */
 export function generateEnvFile(
@@ -35,6 +36,7 @@ export function generateEnvFile(
   saveIncomingMedia: boolean = false,
   tokenId: number = 0,
   customVariables?: Array<{ key: string; value: string }>,
+  catchAllHandlers: boolean = true,
 ): string {
   /** Маппинг кастомных переменных для переопределения дефолтов */
   const overrides = new Map(
@@ -105,6 +107,10 @@ export function generateEnvFile(
   envLines.push('# Сохранение входящих фото от пользователей (true/false)');
   envLines.push(`SAVE_INCOMING_MEDIA=${saveIncomingMedia ? 'true' : 'false'}`);
   systemKeys.add('SAVE_INCOMING_MEDIA');
+  envLines.push('');
+  envLines.push('# Генерация catch-all обработчиков (0/1)');
+  envLines.push(`CATCH_ALL_HANDLERS=${catchAllHandlers ? 1 : 0}`);
+  systemKeys.add('CATCH_ALL_HANDLERS');
   envLines.push('');
   envLines.push('# URL базы данных PostgreSQL');
   envLines.push(`DATABASE_URL=${resolve('DATABASE_URL', '')}`);

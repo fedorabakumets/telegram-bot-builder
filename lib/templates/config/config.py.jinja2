@@ -203,6 +203,11 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # │      Пул соединений с базой данных    │
 # └─────────────────────────────────────────┘
 db_pool = None
+{%- else %}
+
+# Пул соединений с базой данных (БД выключена — остаётся None,
+# объявляем всегда для защиты от NameError в коде контента и main())
+db_pool = None
 {%- endif %}
 
 {%- if hasUserbotNodes %}

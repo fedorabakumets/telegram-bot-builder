@@ -1260,6 +1260,71 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Обновление настройки catch-all обработчиков для токена бота
+   * PUT /api/projects/:projectId/tokens/:tokenId/catch-all-handlers
+   *
+   * Управляет генерацией универсальных catch-all обработчиков
+   * (handle_unhandled_message, handle_unhandled_photo, fallback_callback_handler).
+   * Значение в .env пишется как 0/1 (как USER_DATABASE), а не true/false.
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/catch-all-handlers", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
+      const { catchAllHandlers } = req.body as { catchAllHandlers: number };
+
+      if (catchAllHandlers !== 0 && catchAllHandlers !== 1) {
+        return res.status(400).json({ message: "catchAllHandlers должен быть 0 или 1" });
+      }
+
+      const updated = await storage.updateBotToken(tokenId, { catchAllHandlers });
+      if (!updated) {
+        return res.status(404).json({ message: "Токен не найден" });
+      }
+
+      try {
+        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
+        const { join } = await import('path');
+        const botsDir = join(process.cwd(), 'bots');
+
+        if (existsSync(botsDir)) {
+          const dirs = readdirSync(botsDir, { withFileTypes: true });
+
+          for (const dir of dirs) {
+            if (!dir.isDirectory()) continue;
+
+            const envPath = join(botsDir, dir.name, '.env');
+            if (!existsSync(envPath)) continue;
+
+            const content = readFileSync(envPath, 'utf8');
+            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
+
+            const line = `CATCH_ALL_HANDLERS=${catchAllHandlers}`;
+            let updatedContent = content;
+
+            if (/^CATCH_ALL_HANDLERS=.*/m.test(updatedContent)) {
+              updatedContent = updatedContent.replace(/^CATCH_ALL_HANDLERS=.*/m, line);
+            } else {
+              updatedContent = `${updatedContent.trim()}\n\n# Генерация catch-all обработчиков (0/1)\n${line}\n`;
+            }
+
+            if (updatedContent !== content) {
+              writeFileSync(envPath, updatedContent, 'utf8');
+              console.log(`✅ CATCH_ALL_HANDLERS обновлён в ${envPath}: ${catchAllHandlers}`);
+            }
+          }
+        }
+      } catch (envErr) {
+        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
+      }
+
+      res.json({ success: true, catchAllHandlers });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка обновления настройки catch-all обработчиков" });
+    }
+  });
+
+  /**
    * Обновление настроек Telethon userbot для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/userbot
    */
@@ -5099,6 +5164,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
    * - LOG_LEVEL → bot_tokens.logLevel
    * - PROTECT_CONTENT → bot_tokens.protectContent
    * - SAVE_INCOMING_MEDIA → bot_tokens.saveIncomingMedia
+   * - CATCH_ALL_HANDLERS → bot_tokens.catchAllHandlers
    * - AUTO_RESTART → bot_tokens.autoRestart
    * - MAX_RESTART_ATTEMPTS → bot_tokens.maxRestartAttempts
    * - Остальные → bot_env_variables (CRUD)
@@ -5121,6 +5187,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
         LOG_LEVEL: 'logLevel',
         PROTECT_CONTENT: 'protectContent',
         SAVE_INCOMING_MEDIA: 'saveIncomingMedia',
+        CATCH_ALL_HANDLERS: 'catchAllHandlers',
         AUTO_RESTART: 'autoRestart',
         MAX_RESTART_ATTEMPTS: 'maxRestartAttempts',
         LAUNCH_MODE: 'launchMode',
@@ -5175,7 +5242,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
           if (tokenFieldMap[key]) {
             const field = tokenFieldMap[key];
             let dbValue: any = value;
-            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART') {
+            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART' || key === 'CATCH_ALL_HANDLERS') {
               dbValue = value === 'true' || value === '1' ? 1 : 0;
             }
             if (key === 'MAX_RESTART_ATTEMPTS') {
