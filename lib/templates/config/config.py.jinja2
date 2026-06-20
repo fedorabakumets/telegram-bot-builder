@@ -36,6 +36,7 @@ if os.getenv("DISABLE_ASYNC_LOG", "true").lower() == "true":
 # Создание бота
 bot = Bot(token=BOT_TOKEN)
 
+{%- if protectContent %}
 # Глобальная защита контента от копирования/пересылки
 PROTECT_CONTENT = os.getenv("PROTECT_CONTENT", "false").lower() == "true"
 
@@ -72,6 +73,7 @@ def _wrap_bot_protect_content(bot_instance):
         setattr(bot_instance, method_name, protected_send)
 
 _wrap_bot_protect_content(bot)
+{%- endif %}
 
 {# Список администраторов #}
 # Список администраторов (загружается из .env)
@@ -202,6 +204,11 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # ┌─────────────────────────────────────────┐
 # │      Пул соединений с базой данных    │
 # └─────────────────────────────────────────┘
+db_pool = None
+{%- else %}
+
+# Пул соединений с базой данных (БД выключена — остаётся None,
+# объявляем всегда для защиты от NameError в коде контента и main())
 db_pool = None
 {%- endif %}
 

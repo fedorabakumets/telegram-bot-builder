@@ -19,4 +19,10 @@ export interface UniversalHandlersTemplateParams {
   hasSkipDataCollectionButtons?: boolean;
   /** Все ID узлов */
   allNodeIds?: string[];
+  /**
+   * Генерировать catch-all обработчики (handle_unhandled_message,
+   * handle_unhandled_photo, fallback_callback_handler). По умолчанию true.
+   * При false эти обработчики не попадают в сгенерированный код.
+   */
+  generateCatchAll?: boolean;
 }

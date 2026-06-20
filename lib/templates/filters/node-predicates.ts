@@ -362,3 +362,29 @@ export function hasKickUserNodes(nodes: Node[]): boolean {
   if (!nodes || nodes.length === 0) return false;
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'kick_user');
 }
+
+/**
+ * Проверяет наличие зависимостей, требующих обязательной генерации catch-all
+ * обработчиков (предохранитель-автодетект).
+ *
+ * Catch-all обработчики (`handle_unhandled_message`, `handle_unhandled_photo`,
+ * `fallback_callback_handler`) обязательны, когда в проекте есть incoming-триггеры
+ * (`incoming_message_trigger`, `incoming_callback_trigger`) или узлы с динамическими
+ * кнопками: в aiogram 3 middleware этих триггеров не срабатывает без подходящего
+ * зарегистрированного хендлера, а динамические callback_data (project_42 и т.п.)
+ * не совпадают ни с одним статическим фильтром.
+ *
+ * @param nodes - Массив узлов для проверки
+ * @returns true если в проекте есть incoming-триггеры или динамические кнопки
+ */
+export function hasCatchAllDependencies(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.filter(n => n != null).some(node => {
+    const type = node.type as string;
+    if (type === 'incoming_message_trigger' || type === 'incoming_callback_trigger') {
+      return true;
+    }
+    // Динамические inline-кнопки: data.enableDynamicButtons === true
+    return (node.data as any)?.enableDynamicButtons === true;
+  });
+}

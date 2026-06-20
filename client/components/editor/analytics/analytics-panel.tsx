@@ -26,6 +26,8 @@ import { BotTokenSelector } from '@/components/editor/database/user-database/com
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useLiveInvalidate } from '@/components/editor/database/user-database/hooks/use-live-invalidate';
 import { AnalyticsSourcesChart } from './analytics-sources-chart';
+import { AnalyticsPopularButtonsChart } from './analytics-popular-buttons-chart';
+import { AnalyticsTableChartCard } from './table-chart/analytics-table-chart-card';
 
 
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
@@ -225,10 +227,20 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
             <StatDonutCard title="Источники трафика" items={sourceItems} maxItems={null} className="h-full" />
           </div>
 
+          {/* Строка: топ-10 популярных кнопок */}
+          <div className="grid grid-cols-1 gap-3">
+            <AnalyticsPopularButtonsChart projectId={projectId} selectedTokenId={selectedTokenId} />
+          </div>
+
           {/* Строка 3: Premium + языки */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <StatDonutCard title="Premium" items={statusItems} className="h-full" />
             <StatDonutCard title="Языки" items={languageItems} className="h-full" />
+          </div>
+
+          {/* Строка: конструктор графика по таблице */}
+          <div className="grid grid-cols-1 gap-3">
+            <AnalyticsTableChartCard projectId={projectId} />
           </div>
         </div>
       </ScrollArea>

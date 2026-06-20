@@ -96,7 +96,7 @@ async def main():
             except Exception as _cache_err:
                 logging.warning(f"⚠️ Не удалось загрузить file_id кэш из БД: {_cache_err}")
 
-{%- if projectId %}
+{%- if projectId and contentCache %}
         # Загрузка контента из таблицы _content
         if db_pool:
             await load_content(db_pool)
@@ -156,7 +156,7 @@ async def main():
                 logging.info("🟣 Telethon userbot подключён")
 {%- endif %}
 
-{%- if projectId %}
+{%- if projectId and contentCache %}
         # Фоновая перезагрузка контента из _content каждые 60 сек (fallback)
         if db_pool:
             _background_tasks.append(asyncio.create_task(_content_reload_loop(db_pool)))

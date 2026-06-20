@@ -43,5 +43,6 @@ export function generateUniversalHandlers(params: UniversalHandlersTemplateParam
     hasSkipDataCollectionButtons:
       validated.hasSkipDataCollectionButtons ?? hasSkipDataCollectionButtons(nodes),
     allNodeIds: params.allNodeIds ?? [],
+    generateCatchAll: params.generateCatchAll ?? true,
   });
 }

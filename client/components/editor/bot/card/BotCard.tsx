@@ -18,6 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { BotCardHeader } from './BotCardHeader';
 import { BotCardInfo } from './BotCardInfo';
 import { BotSettingsGrid } from './BotSettingsGrid';
+import { BotExecutionTimer } from './BotExecutionTimer';
 import { BotCardViewToggle, type BotCardViewMode } from './BotCardViewToggle';
 import { BotEnvPanel } from './BotEnvPanel';
 import { BotEnvStagingBar } from './BotEnvStagingBar';
@@ -121,6 +122,15 @@ export function BotCard({
             queryClient={queryClient}
           />
           <BotCardViewToggle mode={viewMode} onModeChange={setViewMode} />
+          {isThisTokenRunning && (
+            <div className="mt-2 sm:mt-3">
+              <BotExecutionTimer
+                tokenId={token.id}
+                currentElapsedSeconds={currentElapsedSeconds}
+                allBotStatuses={allBotStatuses}
+              />
+            </div>
+          )}
           {pending.changesCount > 0 && (
             <BotEnvStagingBar
               changesCount={pending.changesCount}
@@ -135,9 +145,7 @@ export function BotCard({
               projectId={project.id} tokenId={token.id}
               botName={token.name ?? `Бот ${token.id}`}
               userDatabaseEnabled={project.userDatabaseEnabled}
-              isBotRunning={isThisTokenRunning}
-              currentElapsedSeconds={currentElapsedSeconds}
-              allBotStatuses={allBotStatuses} token={token}
+              token={token}
               toggleDatabaseMutation={toggleDatabaseMutation}
               launchMode={token.launchMode ?? 'polling'}
               webhookBaseUrl={token.webhookBaseUrl ?? null}

@@ -37,6 +37,24 @@ export interface GenerationOptions {
   /** Сохранять входящие фото от пользователей в БД */
   saveIncomingMedia?: boolean;
   /**
+   * Генерировать catch-all обработчики (handle_unhandled_message,
+   * handle_unhandled_photo, fallback_callback_handler). По умолчанию true.
+   * При наличии incoming-триггеров/динамических кнопок генерируются принудительно
+   * независимо от значения этого флага (см. computeFeatureFlags).
+   */
+  catchAllHandlers?: boolean;
+  /**
+   * Генерировать обёртку защиты контента от копирования/пересылки.
+   * По умолчанию false — большинство ботов защиту не используют.
+   */
+  protectContent?: boolean;
+  /**
+   * Генерировать машинерию live-reload контента (load_content, reload_content,
+   * _content_reload_loop, _content_subscribe_redis). По умолчанию true.
+   * Аксессор get_content и _content_cache генерируются всегда (при projectId).
+   */
+  contentCache?: boolean;
+  /**
    * Словарь кэшированных Telegram file_id для медиафайлов.
    * Ключ — URL файла, значение — Telegram file_id.
    */
@@ -70,6 +88,9 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   webhookUrl: null,
   webhookPort: null,
   saveIncomingMedia: false,
+  catchAllHandlers: true,
+  protectContent: false,
+  contentCache: true,
   telegramFileIds: {},
   thumbnailFileIds: {},
   thumbnailUrls: {},

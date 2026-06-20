@@ -9,4 +9,6 @@ export interface ContentTemplateParams {
   projectId: number;
   /** Интервал перезагрузки кэша в секундах */
   reloadIntervalSeconds: number;
+  /** Генерировать машинерию live-reload (load_content/reload_content/циклы). По умолчанию true */
+  contentCache?: boolean;
 }

@@ -137,6 +137,12 @@ export interface GeneratePythonCodeOptions {
   webhookPort?: number | null;
   /** Сохранять входящие фото от пользователей в БД */
   saveIncomingMedia?: boolean;
+  /** Генерировать catch-all обработчики (по умолчанию true) */
+  catchAllHandlers?: boolean;
+  /** Защита контента от копирования/пересылки (по умолчанию false) */
+  protectContent?: boolean;
+  /** Живое обновление контента из _content (по умолчанию true) */
+  contentCache?: boolean;
   /**
    * Словарь кэшированных Telegram file_id для медиафайлов проекта.
    * Ключ — URL файла (/uploads/...), значение — Telegram file_id.
@@ -204,6 +210,9 @@ function buildGenerationContext(
     webhookUrl = null,
     webhookPort = null,
     saveIncomingMedia = false,
+    catchAllHandlers = true,
+    protectContent = false,
+    contentCache = true,
     telegramFileIds = {},
     thumbnailFileIds = {},
     thumbnailUrls = {},
@@ -219,6 +228,9 @@ function buildGenerationContext(
     webhookUrl,
     webhookPort,
     saveIncomingMedia,
+    catchAllHandlers,
+    protectContent,
+    contentCache,
     telegramFileIds,
     thumbnailFileIds,
     thumbnailUrls,
@@ -283,21 +295,25 @@ function generateCodeSections(
       webhookUrl: context.options.webhookUrl ?? null,
       webhookPort: context.options.webhookPort ?? null,
       hasUserbotNodes: flags.hasUserbotNodesResult,
+      protectContent: !!context.options.protectContent,
     })
   );
 
   // --- logging middleware (включает save_message_to_api) ---
+  // Генерируем всегда: middleware.py.jinja2 содержит stale_update_filter_middleware,
+  // который main() регистрирует безусловно. DB- и autoRegister-зависимые части
+  // (message_logging_middleware, register_user_middleware, save_message_to_api)
+  // гейтятся внутри шаблона/рендерера, поэтому при выключенной БД отдаётся
+  // только всегда-нужный фильтр устаревших апдейтов.
   const autoRegisterUsers = !!context.options.autoRegisterUsers;
   const loggingCode = emitOnce(state, COMPONENT_NAMES.MIDDLEWARE, () =>
-    (userDatabaseEnabled || autoRegisterUsers)
-      ? generateMessageLoggingCode(
-          userDatabaseEnabled,
-          hasInlineButtons(nodes),
-          context.projectId,
-          autoRegisterUsers,
-          !!context.options.saveIncomingMedia
-        )
-      : ''
+    generateMessageLoggingCode(
+      userDatabaseEnabled,
+      hasInlineButtons(nodes),
+      context.projectId,
+      autoRegisterUsers,
+      !!context.options.saveIncomingMedia
+    )
   );
 
   // --- database ---
@@ -322,7 +338,7 @@ function generateCodeSections(
   // --- content (загрузка из _content) ---
   const contentCode = emitOnce(state, 'content', () =>
     context.projectId
-      ? generateContentCode({ projectId: context.projectId, reloadIntervalSeconds: 60 })
+      ? generateContentCode({ projectId: context.projectId, reloadIntervalSeconds: 60, contentCache: flags.generateContentResult })
       : ''
   );
 
@@ -494,6 +510,7 @@ function generateCodeSections(
       hasUrlButtons: hasUrlButtonsFlag,
       hasSkipDataCollectionButtons: hasSkipDataCollectionButtonsFlag,
       allNodeIds: context.allNodeIds,
+      generateCatchAll: flags.generateCatchAllResult,
     })
   );
 
@@ -529,6 +546,7 @@ function generateCodeSections(
       webhookPort: context.options.webhookPort ?? null,
       projectId: context.projectId ?? null,
       hasUserbotNodes: flags.hasUserbotNodesResult,
+      contentCache: flags.generateContentResult,
     })
   );
 

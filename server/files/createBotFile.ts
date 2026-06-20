@@ -148,6 +148,10 @@ export async function createCompleteBotFiles(
   const webhookPort = launchMode === 'webhook' && webhookBaseUrl ? 9000 + tokenId : null;
   const protectContent = tokenRecord?.protectContent === 1;
   const saveIncomingMedia = tokenRecord?.saveIncomingMedia === 1;
+  // null/undefined => true (catch-all включены по умолчанию)
+  const catchAllHandlers = tokenRecord?.catchAllHandlers !== 0;
+  // null/undefined => true (живое обновление контента включено по умолчанию)
+  const contentCache = tokenRecord?.contentCache !== 0;
 
   // Получаем кастомные переменные окружения из БД
   const customEnvVars = await storage.getEnvVariables(tokenId);
@@ -194,6 +198,8 @@ export async function createCompleteBotFiles(
     saveIncomingMedia,
     tokenId,
     customVariables,
+    catchAllHandlers,
+    contentCache,
   );
   const envPath = join(botDir, '.env');
   writeFileSync(envPath, envContent, 'utf8');

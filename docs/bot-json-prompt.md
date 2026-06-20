@@ -66,6 +66,24 @@
 | `managed_bot_updated_trigger` | Обновление управляемого бота |
 | `schedule_trigger` | Запуск по расписанию (интервал / cron) |
 
+### Catch-all обработчики (`CATCH_ALL_HANDLERS`)
+
+Флаг `catchAllHandlers` (env `CATCH_ALL_HANDLERS`, значения `0`/`1`, по умолчанию `1`) управляет генерацией универсальных catch-all обработчиков `handle_unhandled_message`, `handle_unhandled_photo`, `fallback_callback_handler`.
+
+Действует **предохранитель-автодетект**: при наличии `incoming_message_trigger`, `incoming_callback_trigger` или динамических кнопок catch-all генерируются **принудительно**, даже если флаг выключен — иначе в aiogram 3 middleware этих триггеров не срабатывает. Формула: `generateCatchAll = (catchAllHandlers !== 0) || есть incoming-триггеры/динамические кнопки`.
+
+### Защита контента (`PROTECT_CONTENT`)
+
+Флаг `protectContent` (env `PROTECT_CONTENT`, значения `0`/`1`, по умолчанию `0`) управляет генерацией обёртки защиты контента от копирования/пересылки (`PROTECT_CONTENT = os.getenv(...)`, `_protect_content_kwargs`, `_wrap_bot_protect_content`, добавляющая `protect_content=True` ко всем исходящим методам бота).
+
+Код защиты теперь генерируется **только при включённом флаге** (`protectContent=true`). При выключенной защите (`protectContent=0/false` или флаг не задан) этот блок не попадает в сгенерированный код вовсе — раньше он генерировался всегда и лишь активировался рантайм-флагом env.
+
+### Живое обновление контента (`CONTENT_CACHE`)
+
+Флаг `contentCache` (env `CONTENT_CACHE`, значения `0`/`1`, по умолчанию `1`) управляет генерацией машинерии «живого» обновления контента из таблицы `_content`: функций `load_content`, `reload_content`, фоновых задач `_content_reload_loop` (перезагрузка кэша каждые 60 сек) и `_content_subscribe_redis` (мгновенное обновление через Redis pub/sub), а также их вызовов в `main()`.
+
+Важно: аксессор `get_content(key, fallback)` и кэш `_content_cache` генерируются **всегда** (при заданном `projectId`), потому что текст каждой ноды обращается к `get_content(...)`. При `contentCache=0` машинерия live-reload не генерируется, кэш остаётся пустым, и `get_content` всегда возвращает вшитый в код `fallback`-текст — живого обновления нет, но код не ломается. Формула: `generateContent = (contentCache !== 0)`.
+
 ### Поля command_trigger
 
 ```json

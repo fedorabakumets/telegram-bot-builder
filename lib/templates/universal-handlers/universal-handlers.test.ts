@@ -176,9 +176,16 @@ describe('universal-handlers.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 1 поле', () => {
+      it('должен иметь 3 поля', () => {
         const shape = universalHandlersParamsSchema.shape;
-        assert.strictEqual(Object.keys(shape).length, 1);
+        assert.strictEqual(Object.keys(shape).length, 3);
+      });
+
+      it('должен содержать ключевые поля схемы', () => {
+        const shape = universalHandlersParamsSchema.shape;
+        for (const key of ['userDatabaseEnabled', 'hasSkipDataCollectionButtons', 'generateCatchAll']) {
+          assert.ok(key in shape, `Поле ${key} отсутствует в схеме`);
+        }
       });
 
       it('должен использовать ZodOptional', () => {

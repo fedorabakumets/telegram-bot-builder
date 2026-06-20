@@ -1260,6 +1260,137 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Обновление настройки catch-all обработчиков для токена бота
+   * PUT /api/projects/:projectId/tokens/:tokenId/catch-all-handlers
+   *
+   * Управляет генерацией универсальных catch-all обработчиков
+   * (handle_unhandled_message, handle_unhandled_photo, fallback_callback_handler).
+   * Значение в .env пишется как 0/1 (как USER_DATABASE), а не true/false.
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/catch-all-handlers", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
+      const { catchAllHandlers } = req.body as { catchAllHandlers: number };
+
+      if (catchAllHandlers !== 0 && catchAllHandlers !== 1) {
+        return res.status(400).json({ message: "catchAllHandlers должен быть 0 или 1" });
+      }
+
+      const updated = await storage.updateBotToken(tokenId, { catchAllHandlers });
+      if (!updated) {
+        return res.status(404).json({ message: "Токен не найден" });
+      }
+
+      try {
+        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
+        const { join } = await import('path');
+        const botsDir = join(process.cwd(), 'bots');
+
+        if (existsSync(botsDir)) {
+          const dirs = readdirSync(botsDir, { withFileTypes: true });
+
+          for (const dir of dirs) {
+            if (!dir.isDirectory()) continue;
+
+            const envPath = join(botsDir, dir.name, '.env');
+            if (!existsSync(envPath)) continue;
+
+            const content = readFileSync(envPath, 'utf8');
+            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
+
+            const line = `CATCH_ALL_HANDLERS=${catchAllHandlers}`;
+            let updatedContent = content;
+
+            if (/^CATCH_ALL_HANDLERS=.*/m.test(updatedContent)) {
+              updatedContent = updatedContent.replace(/^CATCH_ALL_HANDLERS=.*/m, line);
+            } else {
+              updatedContent = `${updatedContent.trim()}\n\n# Генерация catch-all обработчиков (0/1)\n${line}\n`;
+            }
+
+            if (updatedContent !== content) {
+              writeFileSync(envPath, updatedContent, 'utf8');
+              console.log(`✅ CATCH_ALL_HANDLERS обновлён в ${envPath}: ${catchAllHandlers}`);
+            }
+          }
+        }
+      } catch (envErr) {
+        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
+      }
+
+      res.json({ success: true, catchAllHandlers });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка обновления настройки catch-all обработчиков" });
+    }
+  });
+
+  /**
+   * Обновление настройки живого обновления контента для токена бота
+   * PUT /api/projects/:projectId/tokens/:tokenId/content-cache
+   *
+   * Управляет генерацией машинерии live-reload контента
+   * (load_content, reload_content, _content_reload_loop, _content_subscribe_redis).
+   * Аксессор get_content и кэш _content_cache генерируются всегда.
+   * Значение в .env пишется как 0/1 (как CATCH_ALL_HANDLERS), а не true/false.
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/content-cache", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
+      const { contentCache } = req.body as { contentCache: number };
+
+      if (contentCache !== 0 && contentCache !== 1) {
+        return res.status(400).json({ message: "contentCache должен быть 0 или 1" });
+      }
+
+      const updated = await storage.updateBotToken(tokenId, { contentCache });
+      if (!updated) {
+        return res.status(404).json({ message: "Токен не найден" });
+      }
+
+      try {
+        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
+        const { join } = await import('path');
+        const botsDir = join(process.cwd(), 'bots');
+
+        if (existsSync(botsDir)) {
+          const dirs = readdirSync(botsDir, { withFileTypes: true });
+
+          for (const dir of dirs) {
+            if (!dir.isDirectory()) continue;
+
+            const envPath = join(botsDir, dir.name, '.env');
+            if (!existsSync(envPath)) continue;
+
+            const content = readFileSync(envPath, 'utf8');
+            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
+
+            const line = `CONTENT_CACHE=${contentCache}`;
+            let updatedContent = content;
+
+            if (/^CONTENT_CACHE=.*/m.test(updatedContent)) {
+              updatedContent = updatedContent.replace(/^CONTENT_CACHE=.*/m, line);
+            } else {
+              updatedContent = `${updatedContent.trim()}\n\n# Живое обновление контента из таблицы _content (0/1)\n${line}\n`;
+            }
+
+            if (updatedContent !== content) {
+              writeFileSync(envPath, updatedContent, 'utf8');
+              console.log(`✅ CONTENT_CACHE обновлён в ${envPath}: ${contentCache}`);
+            }
+          }
+        }
+      } catch (envErr) {
+        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
+      }
+
+      res.json({ success: true, contentCache });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка обновления настройки живого обновления контента" });
+    }
+  });
+
+  /**
    * Обновление настроек Telethon userbot для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/userbot
    */
@@ -2886,6 +3017,60 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error("Error fetching growth by source data:", error);
       res.status(500).json({ message: "Ошибка при получении данных прироста по источникам" });
+    }
+  });
+
+  /**
+   * Эндпоинт получения топ-10 самых популярных inline-кнопок проекта.
+   * Считает нажатия кнопок (message_data.button_clicked = true) за окно времени.
+   * @route GET /api/projects/:id/users/popular-buttons
+   * @param id - Идентификатор проекта
+   * @query granularity - Гранулярность периода: "1m"|"5m"|"1h"|"1d"|"7d"|"30d" (опциональный, по умолчанию "1d")
+   * @returns Массив объектов [{label, count}] — топ-10 кнопок по числу нажатий
+   */
+  app.get("/api/projects/:id/users/popular-buttons", async (req, res) => {
+    const projectId = parseInt(req.params.id);
+    const tokenId = getRequestTokenId(req);
+    const granularity = req.query.granularity as string | undefined;
+
+    // Проверка прав доступа к проекту
+    const ownerId = getOwnerIdFromRequest(req);
+    if (ownerId !== null) {
+      const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Нет прав доступа к проекту" });
+      }
+    }
+
+    try {
+      /** Маппинг гранулярности на окно времени для выборки нажатий кнопок */
+      const windowConfig: Record<string, string> = {
+        "1m": "1 hour", "5m": "3 hours", "1h": "24 hours",
+        "1d": "30 days", "7d": "84 days", "30d": "365 days",
+      };
+      const windowInterval = windowConfig[granularity ?? "1d"] ?? "30 days";
+
+      const queryText = `
+        SELECT
+          COALESCE(NULLIF(message_data->>'button_text',''), message_data->>'callback_data') AS label,
+          COUNT(*) AS count
+        FROM bot_messages
+        WHERE project_id = $1
+          AND ($2::integer IS NULL OR token_id = $2)
+          AND message_type = 'user'
+          AND message_data->>'button_clicked' = 'true'
+          AND created_at >= NOW() - INTERVAL '${windowInterval}'
+        GROUP BY label
+        HAVING COALESCE(NULLIF(message_data->>'button_text',''), message_data->>'callback_data') IS NOT NULL
+        ORDER BY count DESC
+        LIMIT 10
+      `;
+
+      const result = await dbPool.query(queryText, [projectId, tokenId]);
+      res.json(result.rows.map(r => ({ label: r.label, count: Number(r.count) })));
+    } catch (error) {
+      console.error("Error fetching popular buttons data:", error);
+      res.status(500).json({ message: "Ошибка при получении популярных кнопок" });
     }
   });
 
@@ -5099,6 +5284,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
    * - LOG_LEVEL → bot_tokens.logLevel
    * - PROTECT_CONTENT → bot_tokens.protectContent
    * - SAVE_INCOMING_MEDIA → bot_tokens.saveIncomingMedia
+   * - CATCH_ALL_HANDLERS → bot_tokens.catchAllHandlers
    * - AUTO_RESTART → bot_tokens.autoRestart
    * - MAX_RESTART_ATTEMPTS → bot_tokens.maxRestartAttempts
    * - Остальные → bot_env_variables (CRUD)
@@ -5121,6 +5307,8 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
         LOG_LEVEL: 'logLevel',
         PROTECT_CONTENT: 'protectContent',
         SAVE_INCOMING_MEDIA: 'saveIncomingMedia',
+        CATCH_ALL_HANDLERS: 'catchAllHandlers',
+        CONTENT_CACHE: 'contentCache',
         AUTO_RESTART: 'autoRestart',
         MAX_RESTART_ATTEMPTS: 'maxRestartAttempts',
         LAUNCH_MODE: 'launchMode',
@@ -5175,7 +5363,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
           if (tokenFieldMap[key]) {
             const field = tokenFieldMap[key];
             let dbValue: any = value;
-            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART') {
+            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART' || key === 'CATCH_ALL_HANDLERS' || key === 'CONTENT_CACHE') {
               dbValue = value === 'true' || value === '1' ? 1 : 0;
             }
             if (key === 'MAX_RESTART_ATTEMPTS') {

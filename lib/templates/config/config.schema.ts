@@ -17,6 +17,8 @@ export const configParamsSchema = z.object({
   webhookPort: z.number().nullable().optional().default(null),
   /** Есть ли узлы userbot_message (нужен Telethon клиент) */
   hasUserbotNodes: z.boolean().default(false),
+  /** Генерировать обёртку защиты контента от копирования/пересылки */
+  protectContent: z.boolean().optional().default(false),
 });
 
 /** Тип параметров конфигурации (выведен из схемы) */

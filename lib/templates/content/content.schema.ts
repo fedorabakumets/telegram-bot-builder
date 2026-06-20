@@ -11,4 +11,6 @@ export const contentParamsSchema = z.object({
   projectId: z.number().int().positive(),
   /** Интервал перезагрузки в секундах */
   reloadIntervalSeconds: z.number().int().min(10).default(60),
+  /** Генерировать машинерию live-reload контента (по умолчанию true) */
+  contentCache: z.boolean().optional().default(true),
 });

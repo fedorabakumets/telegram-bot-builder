@@ -10,7 +10,7 @@ import type { EnhancedNode } from '../types/enhanced-node.types';
 import type { GenerationContext } from './generation-context';
 import { NODE_TYPES } from '../types';
 import { hasInlineButtons } from '../../templates/keyboard/keyboard.renderer';
-import { hasAutoTransitions, hasMediaNodes, hasUploadImageUrls, hasNodesRequiringSafeEditOrSend, hasReplyKeyboardButtons, hasLocalMediaFiles, hasBotCommands, hasInputCollection } from '../../templates/filters';
+import { hasAutoTransitions, hasMediaNodes, hasUploadImageUrls, hasNodesRequiringSafeEditOrSend, hasReplyKeyboardButtons, hasLocalMediaFiles, hasBotCommands, hasInputCollection, hasCatchAllDependencies } from '../../templates/filters';
 
 /**
  * Флаги возможностей, вычисленные из узлов бота
@@ -34,6 +34,15 @@ export interface FeatureFlags {
   hasDeepLinkTriggersResult: boolean;
   /** Есть ли узлы userbot_message (нужен Telethon) */
   hasUserbotNodesResult: boolean;
+  /**
+   * Нужно ли генерировать catch-all обработчики (handle_unhandled_message,
+   * handle_unhandled_photo, fallback_callback_handler).
+   * Управляется опцией catchAllHandlers, но принудительно true при наличии
+   * incoming-триггеров/динамических кнопок (предохранитель-автодетект).
+   */
+  generateCatchAllResult: boolean;
+  /** Генерировать машинерию live-reload контента (load_content/reload_content/циклы) */
+  generateContentResult: boolean;
 }
 
 /**
@@ -145,5 +154,13 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
     hasUserbotNodesResult: nodes.some(
       n => (n.type as string) === 'userbot_message' || (n.type as string) === 'userbot_click_button' || (n.type as string) === 'userbot_inline_query'
     ),
+    // Catch-all генерируются если флаг не выключен ЛИБО есть зависимости-предохранители
+    generateCatchAllResult:
+      context.options.catchAllHandlers !== false || hasCatchAllDependencies(nodes),
+    // Машинерия live-reload контента генерируется только при включённой БД
+    // (таблица _content читается через db_pool) и не выключенном флаге contentCache.
+    // get_content/_content_cache генерируются отдельно (всегда при projectId).
+    generateContentResult:
+      context.options.contentCache !== false && !!context.options.userDatabaseEnabled,
   };
 }

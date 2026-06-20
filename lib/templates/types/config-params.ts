@@ -1,16 +1,11 @@
 /**
- * @fileoverview Параметры для шаблона конфигурации (config.py.jinja2)
+ * @fileoverview Реэкспорт типа параметров конфигурации
+ *
+ * Канонический источник — `templates/config/config.params.ts`.
+ * Этот модуль сохранён для обратной совместимости barrel-импортов
+ * (`templates/types/index.ts`) и typed-renderer.
+ *
  * @module templates/types/config-params
  */
 
-/** Параметры для генерации конфигурации бота */
-export interface ConfigTemplateParams {
-  /** Включена ли база данных пользователей */
-  userDatabaseEnabled: boolean;
-  /** ID проекта для сохранения в базу данных */
-  projectId: number | null;
-  /** URL вебхука (если задан — включается webhook режим) */
-  webhookUrl?: string | null;
-  /** Порт aiohttp сервера для webhook режима */
-  webhookPort?: number | null;
-}
+export type { ConfigTemplateParams } from '../config/config.params';
