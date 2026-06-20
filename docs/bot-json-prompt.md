@@ -72,6 +72,12 @@
 
 Действует **предохранитель-автодетект**: при наличии `incoming_message_trigger`, `incoming_callback_trigger` или динамических кнопок catch-all генерируются **принудительно**, даже если флаг выключен — иначе в aiogram 3 middleware этих триггеров не срабатывает. Формула: `generateCatchAll = (catchAllHandlers !== 0) || есть incoming-триггеры/динамические кнопки`.
 
+### Защита контента (`PROTECT_CONTENT`)
+
+Флаг `protectContent` (env `PROTECT_CONTENT`, значения `0`/`1`, по умолчанию `0`) управляет генерацией обёртки защиты контента от копирования/пересылки (`PROTECT_CONTENT = os.getenv(...)`, `_protect_content_kwargs`, `_wrap_bot_protect_content`, добавляющая `protect_content=True` ко всем исходящим методам бота).
+
+Код защиты теперь генерируется **только при включённом флаге** (`protectContent=true`). При выключенной защите (`protectContent=0/false` или флаг не задан) этот блок не попадает в сгенерированный код вовсе — раньше он генерировался всегда и лишь активировался рантайм-флагом env.
+
 ### Поля command_trigger
 
 ```json

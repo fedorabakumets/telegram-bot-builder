@@ -4,16 +4,16 @@
  * Компонент объединяет все настройки бота в единую сетку:
  * - Переключатель базы данных
  * - Переключатель автоперезапуска
- * - Таймер выполнения (только когда бот запущен)
  * - Список администраторов
  * - История запусков
+ *
+ * Таймер времени работы вынесен в карточку (BotCard) — над всеми переключателями.
  *
  * @module BotSettingsGrid
  */
 
 import { BotDatabaseToggle } from './BotDatabaseToggle';
 import { BotAutoRestartToggle } from './BotAutoRestartToggle';
-import { BotExecutionTimer } from './BotExecutionTimer';
 import { BotLogLevelSelect } from './BotLogLevelSelect';
 import { BotProtectContentToggle } from './BotProtectContentToggle';
 import { BotSaveMediaToggle } from './BotSaveMediaToggle';
@@ -23,7 +23,6 @@ import { ProjectCollaborators } from '../profile/ProjectCollaborators';
 import { BotLaunchHistory } from './BotLaunchHistory';
 import { BotLaunchSettings } from './BotLaunchSettings';
 import { BotUserbotSettings } from './BotUserbotSettings';
-import type { BotStatusResponse } from '../bot-types';
 import type { BotToken } from '@shared/schema';
 
 /** Пропсы сетки настроек бота */
@@ -38,12 +37,6 @@ interface BotSettingsGridProps {
   botName?: string;
   /** Включена ли база данных пользователей (1 — да, 0/null — нет) */
   userDatabaseEnabled: number | null;
-  /** Запущен ли бот */
-  isBotRunning: boolean;
-  /** Текущее время работы ботов в секундах (ключ — tokenId) */
-  currentElapsedSeconds: Record<number, number>;
-  /** Статусы всех ботов */
-  allBotStatuses: BotStatusResponse[];
   /** Данные токена для настроек автоперезапуска */
   token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia' | 'catchAllHandlers' | 'userbotEnabled' | 'userbotApiId' | 'userbotApiHash' | 'userbotSessionString'>;
   /** Мутация переключения базы данных */
@@ -73,9 +66,6 @@ export function BotSettingsGrid({
   tokenId,
   botName,
   userDatabaseEnabled,
-  isBotRunning,
-  currentElapsedSeconds,
-  allBotStatuses,
   token,
   toggleDatabaseMutation,
   launchMode,
@@ -139,13 +129,6 @@ export function BotSettingsGrid({
         catchAllHandlers={token.catchAllHandlers ?? 1}
         onPendingChange={onPendingChange}
       />
-      {isBotRunning && (
-        <BotExecutionTimer
-          tokenId={tokenId}
-          currentElapsedSeconds={currentElapsedSeconds}
-          allBotStatuses={allBotStatuses}
-        />
-      )}
       <BotAdminIds projectId={projectId} onPendingChange={onPendingChange} />
       <ProjectCollaborators projectId={projectId} canManage={canManage} />
       <BotLaunchHistory

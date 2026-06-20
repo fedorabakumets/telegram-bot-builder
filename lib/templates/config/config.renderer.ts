@@ -25,6 +25,7 @@ export function generateConfig(params: ConfigTemplateParams): string {
     ...params,
     userDatabaseEnabled: params.userDatabaseEnabled ?? false,
     projectId: params.projectId ?? null,
+    protectContent: params.protectContent ?? false,
   });
   return renderPartialTemplate('config/config.py.jinja2', validated);
 }

@@ -139,6 +139,8 @@ export interface GeneratePythonCodeOptions {
   saveIncomingMedia?: boolean;
   /** Генерировать catch-all обработчики (по умолчанию true) */
   catchAllHandlers?: boolean;
+  /** Защита контента от копирования/пересылки (по умолчанию false) */
+  protectContent?: boolean;
   /**
    * Словарь кэшированных Telegram file_id для медиафайлов проекта.
    * Ключ — URL файла (/uploads/...), значение — Telegram file_id.
@@ -207,6 +209,7 @@ function buildGenerationContext(
     webhookPort = null,
     saveIncomingMedia = false,
     catchAllHandlers = true,
+    protectContent = false,
     telegramFileIds = {},
     thumbnailFileIds = {},
     thumbnailUrls = {},
@@ -223,6 +226,7 @@ function buildGenerationContext(
     webhookPort,
     saveIncomingMedia,
     catchAllHandlers,
+    protectContent,
     telegramFileIds,
     thumbnailFileIds,
     thumbnailUrls,
@@ -287,6 +291,7 @@ function generateCodeSections(
       webhookUrl: context.options.webhookUrl ?? null,
       webhookPort: context.options.webhookPort ?? null,
       hasUserbotNodes: flags.hasUserbotNodesResult,
+      protectContent: !!context.options.protectContent,
     })
   );
 

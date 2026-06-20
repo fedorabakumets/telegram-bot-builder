@@ -44,6 +44,11 @@ export interface GenerationOptions {
    */
   catchAllHandlers?: boolean;
   /**
+   * Генерировать обёртку защиты контента от копирования/пересылки.
+   * По умолчанию false — большинство ботов защиту не используют.
+   */
+  protectContent?: boolean;
+  /**
    * Словарь кэшированных Telegram file_id для медиафайлов.
    * Ключ — URL файла, значение — Telegram file_id.
    */
@@ -78,6 +83,7 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   webhookPort: null,
   saveIncomingMedia: false,
   catchAllHandlers: true,
+  protectContent: false,
   telegramFileIds: {},
   thumbnailFileIds: {},
   thumbnailUrls: {},
