@@ -18,6 +18,7 @@ import { BotLogLevelSelect } from './BotLogLevelSelect';
 import { BotProtectContentToggle } from './BotProtectContentToggle';
 import { BotSaveMediaToggle } from './BotSaveMediaToggle';
 import { BotCatchAllToggle } from './BotCatchAllToggle';
+import { BotContentCacheToggle } from './BotContentCacheToggle';
 import { BotAdminIds } from '../profile/BotAdminIds';
 import { ProjectCollaborators } from '../profile/ProjectCollaborators';
 import { BotLaunchHistory } from './BotLaunchHistory';
@@ -38,7 +39,7 @@ interface BotSettingsGridProps {
   /** Включена ли база данных пользователей (1 — да, 0/null — нет) */
   userDatabaseEnabled: number | null;
   /** Данные токена для настроек автоперезапуска */
-  token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia' | 'catchAllHandlers' | 'userbotEnabled' | 'userbotApiId' | 'userbotApiHash' | 'userbotSessionString'>;
+  token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia' | 'catchAllHandlers' | 'contentCache' | 'userbotEnabled' | 'userbotApiId' | 'userbotApiHash' | 'userbotSessionString'>;
   /** Мутация переключения базы данных */
   toggleDatabaseMutation: {
     /** Флаг ожидания ответа */
@@ -127,6 +128,12 @@ export function BotSettingsGrid({
         projectId={projectId}
         tokenId={tokenId}
         catchAllHandlers={token.catchAllHandlers ?? 1}
+        onPendingChange={onPendingChange}
+      />
+      <BotContentCacheToggle
+        projectId={projectId}
+        tokenId={tokenId}
+        contentCache={token.contentCache ?? 1}
         onPendingChange={onPendingChange}
       />
       <BotAdminIds projectId={projectId} onPendingChange={onPendingChange} />

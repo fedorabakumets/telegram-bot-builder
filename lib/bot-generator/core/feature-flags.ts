@@ -41,6 +41,8 @@ export interface FeatureFlags {
    * incoming-триггеров/динамических кнопок (предохранитель-автодетект).
    */
   generateCatchAllResult: boolean;
+  /** Генерировать машинерию live-reload контента (load_content/reload_content/циклы) */
+  generateContentResult: boolean;
 }
 
 /**
@@ -155,5 +157,7 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
     // Catch-all генерируются если флаг не выключен ЛИБО есть зависимости-предохранители
     generateCatchAllResult:
       context.options.catchAllHandlers !== false || hasCatchAllDependencies(nodes),
+    // Машинерия live-reload контента — простой проброс флага (дефолт true)
+    generateContentResult: context.options.contentCache !== false,
   };
 }

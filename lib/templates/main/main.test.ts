@@ -213,9 +213,9 @@ describe('main.py.jinja2 шаблон', () => {
     });
 
     describe('Структура схемы', () => {
-      it('должен иметь 12 полей', () => {
+      it('должен иметь 13 полей', () => {
         const shape = mainParamsSchema.shape;
-        assert.strictEqual(Object.keys(shape).length, 12);
+        assert.strictEqual(Object.keys(shape).length, 13);
       });
 
       it('должен содержать ключевые поля схемы', () => {
@@ -233,6 +233,7 @@ describe('main.py.jinja2 шаблон', () => {
           'tokenId',
           'projectId',
           'hasUserbotNodes',
+          'contentCache',
         ];
         for (const key of expectedKeys) {
           assert.ok(key in shape, `Поле ${key} отсутствует в схеме`);

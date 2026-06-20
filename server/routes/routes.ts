@@ -1325,6 +1325,72 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Обновление настройки живого обновления контента для токена бота
+   * PUT /api/projects/:projectId/tokens/:tokenId/content-cache
+   *
+   * Управляет генерацией машинерии live-reload контента
+   * (load_content, reload_content, _content_reload_loop, _content_subscribe_redis).
+   * Аксессор get_content и кэш _content_cache генерируются всегда.
+   * Значение в .env пишется как 0/1 (как CATCH_ALL_HANDLERS), а не true/false.
+   */
+  app.put("/api/projects/:projectId/tokens/:tokenId/content-cache", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
+      const { contentCache } = req.body as { contentCache: number };
+
+      if (contentCache !== 0 && contentCache !== 1) {
+        return res.status(400).json({ message: "contentCache должен быть 0 или 1" });
+      }
+
+      const updated = await storage.updateBotToken(tokenId, { contentCache });
+      if (!updated) {
+        return res.status(404).json({ message: "Токен не найден" });
+      }
+
+      try {
+        const { existsSync, readFileSync, writeFileSync, readdirSync } = await import('fs');
+        const { join } = await import('path');
+        const botsDir = join(process.cwd(), 'bots');
+
+        if (existsSync(botsDir)) {
+          const dirs = readdirSync(botsDir, { withFileTypes: true });
+
+          for (const dir of dirs) {
+            if (!dir.isDirectory()) continue;
+
+            const envPath = join(botsDir, dir.name, '.env');
+            if (!existsSync(envPath)) continue;
+
+            const content = readFileSync(envPath, 'utf8');
+            if (!content.includes(`PROJECT_ID=${projectId}`)) continue;
+
+            const line = `CONTENT_CACHE=${contentCache}`;
+            let updatedContent = content;
+
+            if (/^CONTENT_CACHE=.*/m.test(updatedContent)) {
+              updatedContent = updatedContent.replace(/^CONTENT_CACHE=.*/m, line);
+            } else {
+              updatedContent = `${updatedContent.trim()}\n\n# Живое обновление контента из таблицы _content (0/1)\n${line}\n`;
+            }
+
+            if (updatedContent !== content) {
+              writeFileSync(envPath, updatedContent, 'utf8');
+              console.log(`✅ CONTENT_CACHE обновлён в ${envPath}: ${contentCache}`);
+            }
+          }
+        }
+      } catch (envErr) {
+        console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
+      }
+
+      res.json({ success: true, contentCache });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка обновления настройки живого обновления контента" });
+    }
+  });
+
+  /**
    * Обновление настроек Telethon userbot для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/userbot
    */
@@ -5188,6 +5254,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
         PROTECT_CONTENT: 'protectContent',
         SAVE_INCOMING_MEDIA: 'saveIncomingMedia',
         CATCH_ALL_HANDLERS: 'catchAllHandlers',
+        CONTENT_CACHE: 'contentCache',
         AUTO_RESTART: 'autoRestart',
         MAX_RESTART_ATTEMPTS: 'maxRestartAttempts',
         LAUNCH_MODE: 'launchMode',
@@ -5242,7 +5309,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
           if (tokenFieldMap[key]) {
             const field = tokenFieldMap[key];
             let dbValue: any = value;
-            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART' || key === 'CATCH_ALL_HANDLERS') {
+            if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART' || key === 'CATCH_ALL_HANDLERS' || key === 'CONTENT_CACHE') {
               dbValue = value === 'true' || value === '1' ? 1 : 0;
             }
             if (key === 'MAX_RESTART_ATTEMPTS') {

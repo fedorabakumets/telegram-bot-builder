@@ -22,6 +22,7 @@
  * @param tokenId - ID токена бота в системе (для сегментации данных в БД)
  * @param customVariables - Массив пользовательских переменных (переопределяют дефолты)
  * @param catchAllHandlers - Генерировать catch-all обработчики (по умолчанию true)
+ * @param contentCache - Живое обновление контента из таблицы _content (по умолчанию true)
  * @returns Содержимое .env файла
  */
 export function generateEnvFile(
@@ -37,6 +38,7 @@ export function generateEnvFile(
   tokenId: number = 0,
   customVariables?: Array<{ key: string; value: string }>,
   catchAllHandlers: boolean = true,
+  contentCache: boolean = true,
 ): string {
   /** Маппинг кастомных переменных для переопределения дефолтов */
   const overrides = new Map(
@@ -111,6 +113,10 @@ export function generateEnvFile(
   envLines.push('# Генерация catch-all обработчиков (0/1)');
   envLines.push(`CATCH_ALL_HANDLERS=${catchAllHandlers ? 1 : 0}`);
   systemKeys.add('CATCH_ALL_HANDLERS');
+  envLines.push('');
+  envLines.push('# Живое обновление контента из таблицы _content (0/1)');
+  envLines.push(`CONTENT_CACHE=${contentCache ? 1 : 0}`);
+  systemKeys.add('CONTENT_CACHE');
   envLines.push('');
   envLines.push('# URL базы данных PostgreSQL');
   envLines.push(`DATABASE_URL=${resolve('DATABASE_URL', '')}`);

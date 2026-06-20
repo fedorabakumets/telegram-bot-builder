@@ -29,4 +29,6 @@ export interface MainTemplateParams {
   tokenId?: number | null;
   /** ID проекта для формирования пути вебхука */
   projectId?: number | null;
+  /** Живое обновление контента (машинерия load_content/циклы). По умолчанию true */
+  contentCache?: boolean;
 }
