@@ -26,6 +26,7 @@ import { BotTokenSelector } from '@/components/editor/database/user-database/com
 import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useLiveInvalidate } from '@/components/editor/database/user-database/hooks/use-live-invalidate';
 import { AnalyticsSourcesChart } from './analytics-sources-chart';
+import { AnalyticsPopularButtonsChart } from './analytics-popular-buttons-chart';
 
 
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
@@ -223,6 +224,11 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               selectedTokenId={selectedTokenId}
             />
             <StatDonutCard title="Источники трафика" items={sourceItems} maxItems={null} className="h-full" />
+          </div>
+
+          {/* Строка: топ-10 популярных кнопок */}
+          <div className="grid grid-cols-1 gap-3">
+            <AnalyticsPopularButtonsChart projectId={projectId} selectedTokenId={selectedTokenId} />
           </div>
 
           {/* Строка 3: Premium + языки */}

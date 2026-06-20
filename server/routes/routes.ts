@@ -3021,6 +3021,60 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   /**
+   * Эндпоинт получения топ-10 самых популярных inline-кнопок проекта.
+   * Считает нажатия кнопок (message_data.button_clicked = true) за окно времени.
+   * @route GET /api/projects/:id/users/popular-buttons
+   * @param id - Идентификатор проекта
+   * @query granularity - Гранулярность периода: "1m"|"5m"|"1h"|"1d"|"7d"|"30d" (опциональный, по умолчанию "1d")
+   * @returns Массив объектов [{label, count}] — топ-10 кнопок по числу нажатий
+   */
+  app.get("/api/projects/:id/users/popular-buttons", async (req, res) => {
+    const projectId = parseInt(req.params.id);
+    const tokenId = getRequestTokenId(req);
+    const granularity = req.query.granularity as string | undefined;
+
+    // Проверка прав доступа к проекту
+    const ownerId = getOwnerIdFromRequest(req);
+    if (ownerId !== null) {
+      const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Нет прав доступа к проекту" });
+      }
+    }
+
+    try {
+      /** Маппинг гранулярности на окно времени для выборки нажатий кнопок */
+      const windowConfig: Record<string, string> = {
+        "1m": "1 hour", "5m": "3 hours", "1h": "24 hours",
+        "1d": "30 days", "7d": "84 days", "30d": "365 days",
+      };
+      const windowInterval = windowConfig[granularity ?? "1d"] ?? "30 days";
+
+      const queryText = `
+        SELECT
+          COALESCE(NULLIF(message_data->>'button_text',''), message_data->>'callback_data') AS label,
+          COUNT(*) AS count
+        FROM bot_messages
+        WHERE project_id = $1
+          AND ($2::integer IS NULL OR token_id = $2)
+          AND message_type = 'user'
+          AND message_data->>'button_clicked' = 'true'
+          AND created_at >= NOW() - INTERVAL '${windowInterval}'
+        GROUP BY label
+        HAVING COALESCE(NULLIF(message_data->>'button_text',''), message_data->>'callback_data') IS NOT NULL
+        ORDER BY count DESC
+        LIMIT 10
+      `;
+
+      const result = await dbPool.query(queryText, [projectId, tokenId]);
+      res.json(result.rows.map(r => ({ label: r.label, count: Number(r.count) })));
+    } catch (error) {
+      console.error("Error fetching popular buttons data:", error);
+      res.status(500).json({ message: "Ошибка при получении популярных кнопок" });
+    }
+  });
+
+  /**
    * Эндпоинт получения логов бота для проекта (системная таблица)
    * @route GET /api/projects/:id/logs/all
    * @returns Массив логов [{level, message, timestamp}]
