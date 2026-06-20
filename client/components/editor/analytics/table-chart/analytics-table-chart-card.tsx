@@ -9,6 +9,7 @@ import { TableAggregation, TableChartType } from './chart-types';
 import { aggregateTableData, isNumericColumn } from './aggregate-table-data';
 import { TableChartControls } from './table-chart-controls';
 import { TableChartRender } from './table-chart-render';
+import { TableChartInfo } from './table-chart-info';
 
 /** Подписи агрегаций для тултипа значения */
 const AGG_TOOLTIP: Record<TableAggregation, string> = {
@@ -94,6 +95,7 @@ export function AnalyticsTableChartCard({ projectId }: AnalyticsTableChartCardPr
   return (
     <div className="bg-background border rounded-xl p-3 flex flex-col gap-3">
       <span className="text-sm font-medium">График по таблице</span>
+      <TableChartInfo />
       {tables.length === 0 ? (
         <p className="text-xs text-muted-foreground/50 italic py-8 text-center">
           Создайте таблицу во вкладке Таблицы
