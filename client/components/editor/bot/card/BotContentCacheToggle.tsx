@@ -25,6 +25,8 @@ interface BotContentCacheToggleProps {
   tokenId: number;
   /** Текущее значение флага (0 = выключено, 1 = включено) */
   contentCache: number | null;
+  /** Флаг включения базы данных пользователей — компонент показывается только если === 1 */
+  userDatabaseEnabled: number | null;
   /** Дополнительный CSS класс */
   className?: string;
   /** Колбэк для pending (если передан — не сохраняет мгновенно) */
@@ -65,6 +67,7 @@ export function BotContentCacheToggle({
   projectId,
   tokenId,
   contentCache,
+  userDatabaseEnabled,
   className = '',
   onPendingChange,
 }: BotContentCacheToggleProps) {
@@ -92,6 +95,12 @@ export function BotContentCacheToggle({
       });
     },
   });
+
+  // Живое обновление контента работает только при включённой БД
+  // (таблица _content читается через db_pool). Без БД тумблер не показываем.
+  if (userDatabaseEnabled !== 1) {
+    return null;
+  }
 
   return (
     <div

@@ -9,14 +9,17 @@
  *      `_content_reload_loop`, `_content_subscribe_redis` + их вызовы в main().
  *      ВОТ ЭТО гейтится флагом contentCache.
  *
- * Формула генерации (простой проброс флага, без автодетекта):
- *   generateContent = (contentCache !== false)
+ * Формула генерации машинерии:
+ *   generateContent = (contentCache !== false) && userDatabaseEnabled
+ *   (live-reload читает таблицу _content через db_pool — без БД бесполезен).
+ *   Аксессор get_content/_content_cache генерируется всегда при projectId.
  *
  * Блоки:
- *  A. contentCache не задан/true + projectId → есть машинерия И есть аксессор
- *  B. contentCache=false + projectId → НЕТ машинерии, НО аксессор ВСЁ РАВНО есть
+ *  A. contentCache не задан/true + БД вкл → есть машинерия И есть аксессор
+ *  B. contentCache=false + БД вкл → НЕТ машинерии, НО аксессор ВСЁ РАВНО есть
  *  C. contentCache=false → в main НЕТ вызовов load_content/_content_reload_loop
  *  D. Синтаксис Python OK для обоих вариантов
+ *  E. contentCache=true + БД ВЫКЛ → НЕТ машинерии (нужна БД), аксессор есть
  */
 
 import fs from 'fs';
@@ -91,15 +94,21 @@ function startProject() {
 /**
  * Генерирует Python-код с заданным значением contentCache.
  * ВСЕГДА передаёт projectId — без него контент-кода нет в принципе.
+ * БД по умолчанию включена (машинерия live-reload требует БД).
  * @param label - Метка для имени бота
  * @param contentCache - Значение опции (undefined → дефолт true)
- * @param projectId - ID проекта (по умолчанию 263)
+ * @param opts - Доп. опции: userDatabaseEnabled (по умолчанию true), projectId (263)
  */
-function gen(label: string, contentCache?: boolean, projectId = 263): string {
+function gen(
+  label: string,
+  contentCache?: boolean,
+  opts: { userDatabaseEnabled?: boolean; projectId?: number } = {},
+): string {
+  const { userDatabaseEnabled = true, projectId = 263 } = opts;
   const options: any = {
     botName: `ContentCache_${label}`,
     enableComments: false,
-    userDatabaseEnabled: false,
+    userDatabaseEnabled,
     projectId,
   };
   if (contentCache !== undefined) options.contentCache = contentCache;
@@ -285,6 +294,42 @@ test('D01', 'Синтаксис OK: contentCache=true', () => {
 
 test('D02', 'Синтаксис OK: contentCache=false', () => {
   syntax(gen('D02', false), 'D02');
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// БЛОК E: contentCache=true, но БД выключена → машинерии нет (нужна БД)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+console.log('\n── Блок E: при выключенной БД машинерии нет ────────────────────');
+
+test('E01', 'contentCache=true + БД выкл → НЕТ load_content', () => {
+  const code = gen('E01', true, { userDatabaseEnabled: false });
+  ok(!code.includes('async def load_content'),
+    'load_content НЕ должен генерироваться при выключенной БД (live-reload требует db_pool)');
+});
+
+test('E02', 'contentCache=true + БД выкл → НЕТ _content_reload_loop', () => {
+  const code = gen('E02', true, { userDatabaseEnabled: false });
+  ok(!code.includes('async def _content_reload_loop'),
+    '_content_reload_loop НЕ должен генерироваться при выключенной БД');
+});
+
+test('E03', 'contentCache=true + БД выкл → в main НЕТ await load_content(db_pool)', () => {
+  const code = gen('E03', true, { userDatabaseEnabled: false });
+  ok(!code.includes('await load_content(db_pool)'),
+    'вызов load_content НЕ должен присутствовать в main при выключенной БД');
+});
+
+test('E04', 'contentCache=true + БД выкл → аксессор get_content ВСЁ РАВНО есть', () => {
+  const code = gen('E04', true, { userDatabaseEnabled: false });
+  ok(code.includes('def get_content'),
+    'get_content должен присутствовать всегда (часть 1 не гейтится)');
+  ok(code.includes('_content_cache'),
+    '_content_cache должен присутствовать всегда');
+});
+
+test('E05', 'Синтаксис OK: contentCache=true + БД выкл', () => {
+  syntax(gen('E05', true, { userDatabaseEnabled: false }), 'E05');
 });
 
 // ─── Итог ────────────────────────────────────────────────────────────────────

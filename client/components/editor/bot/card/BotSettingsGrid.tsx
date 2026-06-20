@@ -134,6 +134,7 @@ export function BotSettingsGrid({
         projectId={projectId}
         tokenId={tokenId}
         contentCache={token.contentCache ?? 1}
+        userDatabaseEnabled={userDatabaseEnabled}
         onPendingChange={onPendingChange}
       />
       <BotAdminIds projectId={projectId} onPendingChange={onPendingChange} />

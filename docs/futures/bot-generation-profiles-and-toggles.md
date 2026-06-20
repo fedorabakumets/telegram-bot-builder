@@ -169,3 +169,38 @@
 - Профиль по умолчанию для существующих проектов: **Стандартный** (без изменения поведения).
 - Для новых проектов — предлагать «Минимальный» как быстрый старт.
 - В UI: «Профиль влияет на размер сгенерированного кода; переключение требует перегенерации и перезапуска».
+
+---
+
+## Статус реализации (обновляется по мере работы)
+
+Вместо одного «профиля» движемся по отдельным переключателям/автодетектам — каждый режет свой блок сгенерированного кода. Текущее состояние:
+
+### ✅ Сделано
+
+- **Сбор базы данных пользователей** (`USER_DATABASE` → `bot_tokens` через проект). Выключение убирает весь блок БД (пул, `init_database`, `save_user_to_db`, логирование сообщений). Под тумблером добавлен спойлer-пояснение «Что это за переключатель?».
+- **Catch-all обработчики** (`CATCH_ALL_HANDLERS`, поле `bot_tokens.catch_all_handlers`, default 1). Гейтит `handle_unhandled_message` / `handle_unhandled_photo` / `fallback_callback_handler`. **Предохранитель-автодетект**: при наличии `incoming_*_trigger` или динамических кнопок генерируются принудительно. Тест: `lib/tests/test-phase67-catch-all.ts`.
+- **Защита от копирования** (`PROTECT_CONTENT`, поле `bot_tokens.protect_content`, default 0). Гейтит `_wrap_bot_protect_content` и обёртки `send_*`. Тест: `test-phase68-protect-content.ts`.
+- **Живое обновление контента** (`CONTENT_CACHE`, поле `bot_tokens.content_cache`, default 1). Гейтит машинерию live-reload (`load_content` / `reload_content` / `_content_reload_loop` / `_content_subscribe_redis`); аксессор `get_content` / `_content_cache` остаётся всегда. Дополнительно гейтится по БД (`generateContentResult = contentCache && userDatabaseEnabled`), т.к. `_content` читается через `db_pool`; тумблер в UI скрыт при выключенной БД. Тест: `test-phase69-content-cache.ts`.
+
+### 🔧 Сопутствующие фиксы генерации при выключенной БД
+
+- `db_pool = None` объявляется всегда (защита от `NameError` в коде контента и `main()`).
+- `stale_update_filter_middleware` генерируется всегда (его безусловно регистрирует `main()`).
+- Тесты: `test-phase66-db-toggle.ts`.
+
+### 📋 Кандидаты дальше (по приоритету)
+
+1. **Режим запуска `polling` / `webhook`** — поле `bot_tokens.launch_mode` уже есть. При `polling` не генерировать webhook-ветку (`aiohttp`, `SimpleRequestHandler`, `set_webhook`) и валидацию «REDIS_URL обязателен». Низкий риск.
+2. **Redis (off/on)** — самый крупный блок (`init_redis_client`, `RedisStorage`, distributed-lock + refresh, `_RedisLogHandler`, pub/sub). **Предохранитель**: при `webhook` Redis обязателен → принудительно on. Делать после (1).
+3. **FSM-хранилище** (`in_memory` / `postgres` / `redis`) — `PostgresStorage` генерируется всегда; при БД off + Redis off логичнее `MemoryStorage`. Заодно закрывает латентный риск с `update_user_data_in_db`.
+4. **Фильтр устаревших апдейтов** (`stale_update_filter_middleware`) — тумблер «Игнорировать старые апдейты».
+5. **Отслеживание источников** (utm / deep_link / referrer) — меньший объём; автодетект по наличию deep-link сценариев.
+
+### Паттерн реализации тумблера (закреплён)
+
+1. Поле `bot_tokens.<flag>` (default сохраняет текущее поведение) + миграция `migrations/000N_*.sql` + дубль-страховка в `server/database/init-db.ts`.
+2. Сервер: PUT `/api/projects/:projectId/tokens/:tokenId/<flag>`, запись в `.env`, маппинг `ENV_KEY → поле` в `tokenFieldMap`.
+3. lib: опция в `GeneratePythonCodeOptions` + `GenerationOptions`, флаг в `computeFeatureFlags`, гейт в шаблоне (`{%- if flag %}`), при необходимости предохранитель-автодетект через предикат в `node-predicates.ts`.
+4. UI: компонент-тумблер в карточке бота (`client/components/editor/bot/card/`), подключение в `BotSettingsGrid`.
+5. Фазовый тест `lib/tests/test-phaseNN-*.ts` (включая `py_compile`) + обновление `docs/`.
