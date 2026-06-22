@@ -15,6 +15,11 @@
 - [Как обновить проект](development/HOW_TO_UPDATE.md)
 - [Работа с документацией (WikiNest)](development/WIKI_DOCS_GUIDE.md)
 
+## 🤖 MCP-конструктор
+- [Обзор](mcp/overview.md)
+- [Полное руководство (botcraft-builder)](mcp/bot-builder.md)
+- [Пример: простой бот /start + /help](mcp/example-simple-bot.md)
+
 ## 🖥️ Интерфейс
 - [Обзор интерфейса](interface/overview.md)
 - [Вкладка «Редактор»](interface/editor.md)

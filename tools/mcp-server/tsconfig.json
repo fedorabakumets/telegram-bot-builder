@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "moduleResolution": "node",
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@lib/*": ["../../lib/*"],
+      "@shared/*": ["../../shared/*"]
+    }
+  },
+  "include": [
+    "./**/*",
+    "../../lib/bot-tools/**/*"
+  ]
+}

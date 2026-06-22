@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "botcraft-builder": {
+      "command": "C:\\Program Files\\nodejs\\npm.cmd",
+      "args": ["run", "mcp:bot-builder"],
+      "cwd": "C:\\Users\\1\\Desktop\\telegram-bot-builder"
+    }
+  }
+}
