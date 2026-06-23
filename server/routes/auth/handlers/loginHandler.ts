@@ -23,7 +23,7 @@ export async function handleLogin(_req: Request, res: Response): Promise<void> {
     const botUsername = botUsernameRaw;
     const cleanBotUsername = botUsername.replace('@', '');
     const clientId = await getSetting("telegram_client_id") || '0';
-    const isDev = process.env.NODE_ENV === 'development';
+    const isDev = process.env.NODE_ENV === 'development' || process.env.SKIP_AUTH === 'true';
 
     const devForm = `
     <form id="devForm" style="margin-top:20px">

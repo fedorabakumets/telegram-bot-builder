@@ -99,11 +99,10 @@ export function useTelegramLogin() {
   const { login } = useTelegramAuth();
   const { toast } = useToast();
   const didInit = useRef(false);
-  const isDev = import.meta.env?.MODE === 'development';
-
   // Читаем clientId с сервера в рантайме — решает проблему Docker build stage
   const { data: appConfig } = useAppConfig();
   const clientId = appConfig?.telegramClientId || CLIENT_ID_FALLBACK;
+  const isDev = import.meta.env?.MODE === 'development' || appConfig?.skipAuth === true;
 
   const init = useCallback(() => {
     if (didInit.current) return;

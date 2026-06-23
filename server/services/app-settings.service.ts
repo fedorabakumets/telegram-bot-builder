@@ -132,22 +132,31 @@ export async function getAllSettings(): Promise<Record<string, string>> {
 /**
  * Проверить, настроены ли все обязательные ключи приложения.
  *
- * В режиме разработки (`NODE_ENV=development`) всегда возвращает `true`,
- * чтобы не блокировать запуск при отсутствии настроек в БД.
+ * В режиме разработки (`NODE_ENV=development`) или при `SKIP_AUTH=true`
+ * всегда возвращает `true`, чтобы не блокировать запуск при отсутствии настроек в БД.
  *
  * В production считает приложение настроенным, если все три ключа
  * присутствуют и непустые: `telegram_client_id`, `telegram_client_secret`,
  * `telegram_bot_username`.
  *
- * @returns `true` если все обязательные ключи заданы (или режим разработки)
+ * @returns `true` если все обязательные ключи заданы (или режим разработки / SKIP_AUTH)
  */
 export async function isConfigured(): Promise<boolean> {
-  // В dev-режиме считаем настроенным даже без данных в БД
-  if (process.env.NODE_ENV === "development") {
+  // В dev-режиме или при SKIP_AUTH считаем настроенным даже без данных в БД
+  if (process.env.NODE_ENV === "development" || process.env.SKIP_AUTH === "true") {
     return true;
   }
   const values = await Promise.all(REQUIRED_KEYS.map(getSetting));
   return values.every((v) => typeof v === "string" && v.trim().length > 0);
+}
+
+/**
+ * Проверяет, отключена ли авторизация через переменную окружения SKIP_AUTH
+ *
+ * @returns `true` если авторизация отключена
+ */
+export function isAuthSkipped(): boolean {
+  return process.env.SKIP_AUTH === "true";
 }
 
 /**
