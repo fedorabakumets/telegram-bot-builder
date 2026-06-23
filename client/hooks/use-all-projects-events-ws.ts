@@ -9,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
 import { useActiveTerminals } from '@/components/editor/bot/contexts/ActiveTerminalsContext';
 import { resolveBotDisplayNameFromCache } from '@/components/editor/bot/contexts/bot-control-utils';
+import { subscribeSharedTerminalWs, onSharedTerminalWsReconnect } from '@/lib/shared-terminal-ws';
 
 /**
  * Структура события проекта, получаемого по WebSocket
@@ -96,14 +97,10 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
   const queryClient = useQueryClient();
   const { addLog } = useBotLogs();
   const { terminals, addTerminal } = useActiveTerminals();
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onTokenCreatedRef = useRef(onTokenCreated);
   onTokenCreatedRef.current = onTokenCreated;
   const onBotStartedRef = useRef(onBotStarted);
   onBotStartedRef.current = onBotStarted;
-  /** Флаг первого подключения — при первом onopen рефетч не нужен */
-  const isFirstConnectRef = useRef(true);
   /** Счётчик логов для диагностики */
   const logCountRef = useRef(0);
   /** Актуальный список терминалов для проверки наличия вкладки */
@@ -113,95 +110,66 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
   const createdTabsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    let destroyed = false;
+    const unsubscribeReconnect = onSharedTerminalWsReconnect(() => {
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          typeof query.queryKey[0] === 'string' &&
+          (query.queryKey[0] as string).endsWith('/bot-status'),
+      });
+    });
 
-    const connect = () => {
-      if (destroyed) return;
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const url = `${protocol}//${window.location.host}/api/terminal?projectId=0&tokenId=0`;
-      const ws = new WebSocket(url);
-      wsRef.current = ws;
+    const unsubscribe = subscribeSharedTerminalWs((raw) => {
+      try {
+        const msg = raw as ProjectEvent;
 
-      ws.onopen = () => {
-        if (isFirstConnectRef.current) {
-          isFirstConnectRef.current = false;
+        // Логи бота (stdout/stderr) — всегда записываем в BotLogsContext.
+        // Дедупликация в addLog (500ms окно) предотвращает дубли с live-терминалом.
+        if ((msg.type === 'stdout' || msg.type === 'stderr') && msg.projectId && msg.tokenId && msg.content) {
+          const logKey = `${msg.projectId}-${msg.tokenId}`;
+          const ts = msg.timestamp ? new Date(msg.timestamp) : new Date();
+          addLog(logKey, {
+            id: msg.logId != null ? String(msg.logId) : `${Date.now()}-${++logCountRef.current}`,
+            content: msg.content,
+            type: msg.type,
+            timestamp: ts,
+          });
+
+          // Создаём вкладку терминала если её ещё нет
+          const tabKey = `${msg.projectId}_${msg.tokenId}`;
+          if (!createdTabsRef.current.has(tabKey)) {
+            const hasTab = terminalsRef.current.some(
+              t => t.projectId === msg.projectId && t.tokenId === msg.tokenId && t.tabType !== 'history'
+            );
+            if (!hasTab) {
+              addTerminal({
+                projectId: msg.projectId,
+                tokenId: msg.tokenId,
+                botName: resolveBotDisplayNameFromCache(queryClient, msg.projectId, msg.tokenId),
+                isRunning: true,
+              });
+            }
+            createdTabsRef.current.add(tabKey);
+          }
           return;
         }
-        // Реконнект — инвалидируем все bot-status чтобы подтянуть пропущенные изменения
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            typeof query.queryKey[0] === 'string' &&
-            (query.queryKey[0] as string).endsWith('/bot-status'),
-        });
-      };
 
-      ws.onmessage = (event) => {
-        try {
-          const msg: ProjectEvent = JSON.parse(event.data);
-
-          // Логи бота (stdout/stderr) — всегда записываем в BotLogsContext.
-          // Дедупликация в addLog (500ms окно) предотвращает дубли с live-терминалом.
-          if ((msg.type === 'stdout' || msg.type === 'stderr') && msg.projectId && msg.tokenId && msg.content) {
-            const logKey = `${msg.projectId}-${msg.tokenId}`;
-            const ts = msg.timestamp ? new Date(msg.timestamp) : new Date();
-            addLog(logKey, {
-              id: msg.logId != null ? String(msg.logId) : `${Date.now()}-${++logCountRef.current}`,
-              content: msg.content,
-              type: msg.type,
-              timestamp: ts,
-            });
-
-            // Создаём вкладку терминала если её ещё нет
-            const tabKey = `${msg.projectId}_${msg.tokenId}`;
-            if (!createdTabsRef.current.has(tabKey)) {
-              const hasTab = terminalsRef.current.some(
-                t => t.projectId === msg.projectId && t.tokenId === msg.tokenId && t.tabType !== 'history'
-              );
-              if (!hasTab) {
-                addTerminal({
-                  projectId: msg.projectId,
-                  tokenId: msg.tokenId,
-                  botName: resolveBotDisplayNameFromCache(queryClient, msg.projectId, msg.tokenId),
-                  isRunning: true,
-                });
-              }
-              createdTabsRef.current.add(tabKey);
-            }
-            return;
-          }
-
-          if (msg.type === 'token-created' || msg.type === 'token-deleted') {
-            handleTokenEvent(queryClient, msg, onTokenCreatedRef.current);
-          }
-          if (msg.type === 'bot-started' || msg.type === 'bot-stopped' || msg.type === 'bot-error') {
-            handleBotEvent(queryClient, msg);
-          }
-          if (msg.type === 'bot-started' && msg.tokenId) {
-            onBotStartedRef.current?.(msg.projectId, msg.tokenId);
-          }
-        } catch {
-          // Игнорируем некорректные сообщения
+        if (msg.type === 'token-created' || msg.type === 'token-deleted') {
+          handleTokenEvent(queryClient, msg, onTokenCreatedRef.current);
         }
-      };
-
-      ws.onclose = () => {
-        wsRef.current = null;
-        if (!destroyed) {
-          reconnectTimerRef.current = setTimeout(connect, 3000);
+        if (msg.type === 'bot-started' || msg.type === 'bot-stopped' || msg.type === 'bot-error') {
+          handleBotEvent(queryClient, msg);
         }
-      };
-
-      ws.onerror = () => ws.close();
-    };
-
-    connect();
+        if (msg.type === 'bot-started' && msg.tokenId) {
+          onBotStartedRef.current?.(msg.projectId, msg.tokenId);
+        }
+      } catch {
+        // Игнорируем некорректные сообщения
+      }
+    });
 
     return () => {
-      destroyed = true;
-      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-      wsRef.current?.close();
-      wsRef.current = null;
-      isFirstConnectRef.current = true;
+      unsubscribe();
+      unsubscribeReconnect();
     };
-  }, [queryClient]);
+  }, [queryClient, addLog, addTerminal]);
 }

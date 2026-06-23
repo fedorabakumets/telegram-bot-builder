@@ -7,6 +7,7 @@ import { registerRoutes } from "./routes/routes";
 import { log, serveStatic, setupVite } from "./routes/vite";
 import { storage } from "./storages/storage";
 import { initializeTerminalWebSocket } from './terminal/initializeTerminalWebSocket';
+import { initializeCanvasWebSocket } from './canvas/initializeCanvasWebSocket';
 import { initRedisPlatformSubscriber } from './redis/redisPlatformSubscriber';
 import { initRedisLogsSubscriber } from './redis/redisLogsSubscriber';
 import { stopCleanup } from "./utils/cache";
@@ -131,6 +132,8 @@ app.use((req, res, next) => {
 
   // Инициализируем WebSocket-сервер для терминала
   initializeTerminalWebSocket(httpServer);
+  // WebSocket live-синхронизация холста (устройства, коллабораторы)
+  initializeCanvasWebSocket(httpServer);
   // Подписываемся на Redis Pub/Sub события платформы
   initRedisPlatformSubscriber();
   // Подписываемся на Redis Pub/Sub логи ботов (дополнительный канал к stdout)

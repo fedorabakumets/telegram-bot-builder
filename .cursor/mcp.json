@@ -1,8 +1,13 @@
 {
   "mcpServers": {
     "botcraft-builder": {
-      "command": "C:\\Program Files\\nodejs\\npm.cmd",
-      "args": ["run", "mcp:bot-builder"],
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "node_modules/tsx/dist/cli.mjs",
+        "--tsconfig",
+        "tools/mcp-server/tsconfig.json",
+        "tools/mcp-server/index.ts"
+      ],
       "cwd": "C:\\Users\\1\\Desktop\\telegram-bot-builder"
     }
   }

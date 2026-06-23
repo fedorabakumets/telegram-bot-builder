@@ -95,10 +95,10 @@ export function useBotQueries(): BotQueriesResult {
     .filter(Boolean) as BotStatusResponse[];
 
   const botInfoResults = useQueries({
-    queries: projects.map(project => ({
+    queries: projects.map((project, idx) => ({
       queryKey: [`/api/projects/${project.id}/bot/info`],
       queryFn: () => apiRequest('GET', `/api/projects/${project.id}/bot/info`),
-      enabled: projects.length > 0,
+      enabled: projects.length > 0 && allTokens[idx].length > 0,
       refetchInterval: allBotStatuses.some(s => s?.status === 'running') ? 60000 : false,
       refetchIntervalInBackground: false,
       staleTime: 30000,

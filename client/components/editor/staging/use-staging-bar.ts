@@ -5,6 +5,7 @@
 
 import { useMemo, useCallback } from 'react';
 import type { ActionHistoryItem } from '@/pages/editor/types/action-history-item';
+import type { CanvasActor } from '@shared/canvas-sync/canvas-actor';
 
 /** Вариант отображения панели */
 export type StagingVariant = 'canvas' | 'json-dirty' | 'json-error';
@@ -24,6 +25,8 @@ export interface UseStagingBarOptions {
   onDiscard: () => void;
   /** Идёт ли сохранение в данный момент */
   isSaving: boolean;
+  /** Последний актор удалённой синхронизации холста */
+  remoteSyncActor?: CanvasActor | null;
   // --- JSON режим ---
   /** Есть ли несохранённые изменения в JSON-редакторе */
   isDirty: boolean;
@@ -66,6 +69,8 @@ export interface UseStagingBarResult {
   hasLocalChanges: boolean;
   /** Есть ли несохранённые изменения в JSON (для предупреждения о конфликте) */
   isDirty: boolean;
+  /** Актор последней удалённой синхронизации холста */
+  remoteSyncActor?: CanvasActor | null;
 }
 
 /**
@@ -77,7 +82,7 @@ export interface UseStagingBarResult {
 export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResult {
   const {
     hasLocalChanges, actionHistory, onSave, onSaveAndRestart, onDiscard, isSaving,
-    isDirty, jsonError, onApplyJson, onResetJson, mode,
+    isDirty, jsonError, onApplyJson, onResetJson, mode, remoteSyncActor,
   } = options;
 
   const variant = useMemo<StagingVariant>(() => {
@@ -90,9 +95,10 @@ export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResul
   }, [mode, jsonError, isDirty]);
 
   const isVisible = useMemo(() => {
+    if (remoteSyncActor) return true;
     if (mode === 'canvas') return hasLocalChanges;
     return isDirty || !!jsonError || hasLocalChanges;
-  }, [mode, hasLocalChanges, isDirty, jsonError]);
+  }, [mode, hasLocalChanges, isDirty, jsonError, remoteSyncActor]);
 
   /**
    * В json-dirty режиме сначала применяет JSON, затем сохраняет.
@@ -130,5 +136,6 @@ export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResul
     mode,
     hasLocalChanges,
     isDirty,
+    remoteSyncActor,
   };
 }

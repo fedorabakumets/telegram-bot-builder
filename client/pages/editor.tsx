@@ -78,6 +78,10 @@ import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useMoveNodeToSheet } from '@/components/editor/canvas/canvas/use-move-node-to-sheet';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { useCanvasSync } from '@/hooks/use-canvas-sync';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import type { CanvasActor } from '@shared/canvas-sync/canvas-actor';
+import type { CanvasSyncMessage } from '@shared/canvas-sync/canvas-sync-message';
 import { apiRequest } from '@/queryClient';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { clearKeyboardNodeId, getKeyboardNodeId } from '@/components/editor/canvas/canvas-node/keyboard-connection';
@@ -272,7 +276,11 @@ export default function Editor() {
 
   const { config: layoutConfig, updateConfig: updateLayoutConfig, resetConfig: resetLayoutConfig, applyConfig: applyLayoutConfig } = useLayoutManager();
   const { toast } = useToast();
+  const { user: localUser } = useTelegramAuth();
   const queryClient = useQueryClient();
+  /** Актор последней удалённой синхронизации холста (коллаборатор / агент) */
+  const [remoteSyncActor, setRemoteSyncActor] = useState<CanvasActor | null>(null);
+  const remoteSyncDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Хук обработчиков диалогов
   const {
@@ -398,6 +406,7 @@ export default function Editor() {
     onSuccess: async (_updatedProject) => {
       // Reset local changes flag only after successful save
       setHasLocalChanges(false);
+      setRemoteSyncActor(null);
 
       // Инвалидируем кеш для загрузки актуальных данных с сервера
       if (activeProject?.id) {
@@ -626,6 +635,35 @@ export default function Editor() {
     }
   }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
 
+  /** Live-синхронизация холста: вкладки, устройства, коллабораторы */
+  const handleRemoteCanvasSync = useCallback((msg: CanvasSyncMessage) => {
+    if (!msg.actor) return;
+    setRemoteSyncActor(msg.actor);
+    setHasLocalChanges(true);
+    if (remoteSyncDismissTimerRef.current) {
+      clearTimeout(remoteSyncDismissTimerRef.current);
+    }
+    remoteSyncDismissTimerRef.current = setTimeout(() => {
+      setRemoteSyncActor(null);
+    }, 12_000);
+  }, [setHasLocalChanges]);
+
+  const dismissRemoteCanvasSync = useCallback(() => {
+    setRemoteSyncActor(null);
+    if (remoteSyncDismissTimerRef.current) {
+      clearTimeout(remoteSyncDismissTimerRef.current);
+    }
+  }, []);
+
+  useCanvasSync({
+    projectId: activeProject?.id,
+    botDataWithSheets,
+    localUser,
+    onRemoteUpdate: handleBotDataUpdate,
+    onRemoteSync: handleRemoteCanvasSync,
+    enabled: currentTab === 'editor' && !!activeProject?.id,
+  });
+
   /**
    * Применяет отредактированный JSON к данным бота.
    * После успешного применения сбрасывает editedJsonContent,
@@ -702,6 +740,7 @@ export default function Editor() {
   const stagingBar = useStagingBar({
     hasLocalChanges,
     actionHistory,
+    remoteSyncActor,
     onSave: () => updateProjectMutation.mutate({}),
     onSaveAndRestart: () => {
       // Сохраняем проект с флагом restartOnUpdate — сервер сам перезапустит бота
@@ -1443,7 +1482,11 @@ export default function Editor() {
       <div className="h-full flex flex-col">
         {/* Универсальная панель изменений сверху */}
         {currentTab === 'editor' && (
-          <StagingBar {...stagingBar} actionHistory={actionHistory} />
+          <StagingBar
+            {...stagingBar}
+            actionHistory={actionHistory}
+            onDismissRemoteSync={dismissRemoteCanvasSync}
+          />
         )}
         {/* Контейнер вкладок: relative нужен для absolute-позиционирования JSON-редактора поверх Canvas */}
         <div className="flex-1 min-h-0 relative">

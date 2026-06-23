@@ -35,7 +35,7 @@ export async function getBotInfoHandler(req: Request, res: Response): Promise<vo
 
         const defaultToken = await storage.getDefaultBotToken(projectId);
         if (!defaultToken) {
-            res.status(400).json({ message: "Токен бота не найден. Добавьте токен." });
+            res.json({ hasToken: false });
             return;
         }
 
