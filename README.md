@@ -780,7 +780,7 @@ if __name__ == "__main__":
 <p><strong>🏗️ <a href="docs/features/NODE_TYPES.md" style="color: #FFE4E1;">Типы узлов</a></strong><br/>
 <small>Полный список доступных блоков</small></p>
 
-<p><strong>🔧 <a href="docs/features/POSSIBLE_TRIGGERS_AND_ACTIONS.md" style="color: #FFE4E1;">Триггеры и действия</a></strong><br/>
+<p><strong>🔧 <a href="docs/futures/features/possible-triggers-and-actions.md" style="color: #FFE4E1;">Триггеры и действия</a></strong><br/>
 <small>Справочник возможностей</small></p>
 
 <p><strong>📈 Производительность</strong><br/>
