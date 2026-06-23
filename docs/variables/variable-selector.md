@@ -84,5 +84,5 @@
 ## Связанные страницы
 
 - [Переменные и данные](overview.md) — что такое переменные, системные и пользовательские
-- [Inline-выражения](../futures/inline-expressions.md) — вычисления прямо в тексте
+- [Inline-выражения](../futures/features/inline-expressions.md) — вычисления прямо в тексте
 - [Условие (condition)](../nodes/logic/condition.md) — где используется селектор значений

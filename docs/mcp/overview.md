@@ -64,5 +64,5 @@
 
 - [[mcp/bot-builder]] — полная документация (установка, все тулы, workflow)
 - [[mcp/example-simple-bot]] — разбор примера `/start` + `/help`
-- [[futures/ai-agent-tab-vision]] — планы (lint, layout, вкладка агента в UI)
+- [[futures/features/ai-agent-tab-vision]] — планы (lint, layout, вкладка агента в UI)
 - [[bot-json-prompt]] — формат JSON

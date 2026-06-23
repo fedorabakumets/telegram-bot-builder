@@ -158,7 +158,7 @@ await _redis_client.zadd("scheduled_tasks", {json.dumps({
 
 ### 6. Shared user_data для worker pool
 
-**Контекст:** когда появится worker pool (`docs/futures/bot-worker-pool.md`) — несколько Python процессов одного бота будут шарить состояние.
+**Контекст:** когда появится worker pool (`docs/futures/infrastructure/bot-worker-pool.md`) — несколько Python процессов одного бота будут шарить состояние.
 
 **Решение:** `user_data` переедет из памяти Python в Redis Hash:
 ```python

@@ -27,7 +27,7 @@ MCP **не заменяет** визуальный редактор. Он доп
 
 - [[mcp/overview]] — краткий обзор
 - [[mcp/example-simple-bot]] — пример `/start` + `/help`
-- [[futures/ai-agent-tab-vision]] — дорожная карта (MCP = «внешнее лицо» слоя инструментов)
+- [[futures/features/ai-agent-tab-vision]] — дорожная карта (MCP = «внешнее лицо» слоя инструментов)
 - [[bot-json-prompt]] — полный формат `project.json` для ИИ
 - [[features/NODE_TYPES]] — настройки нод в UI
 
@@ -327,7 +327,7 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 
 | Возможность | Статус | Где в roadmap |
 |-------------|--------|----------------|
-| `lint_bot_project` | ❌ | [[futures/ai-agent-tab-vision]] слой 2 |
+| `lint_bot_project` | ❌ | [[futures/features/ai-agent-tab-vision]] слой 2 |
 | `auto_layout` | ❌ | слой 4; логика в `client/utils/hierarchical-layout.ts` |
 | `generate_project_files` | ❌ | Dockerfile, requirements, README |
 | `list_bots` / `save_bot` / push в БД | ❌ | слой 5 |

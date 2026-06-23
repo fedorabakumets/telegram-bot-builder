@@ -76,7 +76,7 @@
 - Панель файлов проекта (`files-panel.tsx`)
 - Таблица файлов с тулбаром
 - API для получения файлов проекта (`getProjectFilesHandler`)
-- Документ-план: `docs/futures/file-storage.md`
+- Документ-план: `docs/futures/infrastructure/file-storage.md`
 
 ---
 

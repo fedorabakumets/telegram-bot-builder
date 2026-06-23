@@ -4,7 +4,7 @@
 `asyncio`-задачу. Ветки выполняются одновременно; точки сбора (join) нет —
 сбор результатов собирается из существующих нод (`set_variable` + `condition`).
 
-Полная концепция: `docs/futures/parallel-split-node.md`.
+Полная концепция: `docs/futures/nodes/parallel-split-node.md`.
 
 ## Параметры (ParallelSplitEntry)
 
