@@ -19,6 +19,7 @@ import {
   renameSheetInProject,
   removeSheetFromProject,
   setActiveSheetInProject,
+  reorderSheetsInProject,
   listSheets,
   type ListSheetsResult,
 } from './sheet-ops.ts';
@@ -134,6 +135,25 @@ export async function setActiveSheetInDb(
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
   return applyAndSave(projectId, setActiveSheetInProject(fetched.data, sheetId), options);
+}
+
+/**
+ * Переупорядочивает листы проекта живой БД и обновляет холст (live).
+ * sheetIds — полный список id листов в нужном порядке (перестановка всех
+ * существующих). activeSheetId не меняется.
+ * @param projectId - Числовой ID проекта
+ * @param sheetIds - Полный список id листов в нужном порядке
+ * @param options - Опции записи в БД
+ * @returns Результат записи или ошибка
+ */
+export async function reorderSheetsInDb(
+  projectId: number,
+  sheetIds: string[],
+  options?: SheetOpsDbOptions,
+): Promise<SheetOpsDbResult> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+  return applyAndSave(projectId, reorderSheetsInProject(fetched.data, sheetIds), options);
 }
 
 /**

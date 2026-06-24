@@ -15,11 +15,14 @@ import {
   updateNodeInProject,
   removeNodeFromProject,
   connectNodes,
+  disconnectNodes,
+  duplicateNodeInProject,
   moveNodeToProjectSheet,
   type MutateProjectResult,
 } from './project-mutate.ts';
 import {
   addSheetToProject,
+  duplicateSheetInProject,
   renameSheetInProject,
   removeSheetFromProject,
   setActiveSheetInProject,
@@ -34,7 +37,7 @@ import type { ValidateProjectResult } from './types.ts';
 
 /** Одна операция пакета: поле op задаёт тип, остальные поля — её параметры */
 export interface BatchOp {
-  /** Тип операции (add_node, update_node, remove_node, connect_nodes, move_node, add_sheet, rename_sheet, remove_sheet, set_active_sheet) */
+  /** Тип операции (add_node, update_node, remove_node, connect_nodes, disconnect_nodes, move_node, duplicate_node, add_sheet, rename_sheet, remove_sheet, duplicate_sheet, set_active_sheet) */
   op: string;
   /** Прочие параметры операции */
   [key: string]: unknown;
@@ -98,10 +101,23 @@ export function applyOpsToProject(
           sheetId: op.sheet_id as string | undefined,
         });
         break;
+      case 'disconnect_nodes':
+        result = disconnectNodes(current, op.from_id as string, op.to_id as string, {
+          branch: op.branch as string | undefined,
+          portType: op.port_type as never,
+          sheetId: op.sheet_id as string | undefined,
+        });
+        break;
       case 'move_node':
         result = moveNodeToProjectSheet(current, op.node_id as string, op.to_sheet_id as string, {
           fromSheetId: op.from_sheet_id as string | undefined,
           position: op.position as { x: number; y: number } | undefined,
+        });
+        break;
+      case 'duplicate_node':
+        result = duplicateNodeInProject(current, op.node_id as string, {
+          position: op.position as { x: number; y: number } | undefined,
+          sheetId: op.sheet_id as string | undefined,
         });
         break;
       case 'add_sheet':
@@ -112,6 +128,9 @@ export function applyOpsToProject(
         break;
       case 'remove_sheet':
         result = removeSheetFromProject(current, op.sheet_id as string);
+        break;
+      case 'duplicate_sheet':
+        result = duplicateSheetInProject(current, op.sheet_id as string);
         break;
       case 'set_active_sheet':
         result = setActiveSheetInProject(current, op.sheet_id as string);

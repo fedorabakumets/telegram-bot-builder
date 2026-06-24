@@ -286,9 +286,43 @@ export function setActiveSheetInProject(
   return { project: updated, validation: validateBotProject(updated) };
 }
 
+/**
+ * Переупорядочивает листы проекта строго в порядке переданного списка id.
+ * sheetIds должен быть ПЕРЕСТАНОВКОЙ id существующих листов: то же множество,
+ * та же длина, без дублей и без неизвестных id. activeSheetId НЕ меняется
+ * (порядок вкладок не связан с тем, какой лист активен).
+ * @param projectJson - Текущий project.json (объект или JSON-строка)
+ * @param sheetIds - Полный список id листов в нужном порядке (перестановка всех существующих)
+ * @returns Обновлённый проект с валидацией или ошибка
+ */
+export function reorderSheetsInProject(
+  projectJson: unknown,
+  sheetIds: string[],
+): MutateProjectResult | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const sheets = (project.sheets ?? []) as SheetLike[];
+  const currentIds = sheets.map((s) => s.id);
+  const incoming = Array.isArray(sheetIds) ? sheetIds : [];
+
+  const sameSet =
+    incoming.length === currentIds.length &&
+    new Set(incoming).size === incoming.length &&
+    incoming.every((id) => currentIds.includes(id));
+
+  if (!sameSet) {
+    return { error: 'sheetIds должен содержать ровно все id существующих листов без дублей' };
+  }
+
+  const reordered = incoming.map((id) => sheets.find((s) => s.id === id)!);
+
+  const updated = { ...project, sheets: reordered } as BotDataWithSheets;
+  return { project: updated, validation: validateBotProject(updated) };
+}
+
 /** Краткая информация об одном листе для read-only списка */
-export interface SheetInfo {
-  /** Идентификатор листа */
+export interface SheetInfo {  /** Идентификатор листа */
   id: string;
   /** Название листа */
   name: string;

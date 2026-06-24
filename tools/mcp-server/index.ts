@@ -42,6 +42,7 @@ import {
   pruneVersionsInDb,
   setActiveSheetInDb,
   listSheetsInDb,
+  reorderSheetsInDb,
   saveProject,
   scaffoldMinimalProject,
   summarizeProjectFromDb,
@@ -588,6 +589,20 @@ function registerTools(server: McpServer): void {
   );
 
   server.registerTool(
+    'db_reorder_sheets',
+    {
+      description: 'Изменить порядок листов проекта в БД живого приложения (live). sheetIds — полный список id листов в нужном порядке (перестановка всех существующих). Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        sheet_ids: z.array(z.string()).describe('Полный список id листов в нужном порядке'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, sheet_ids, commit_message }) =>
+      textResult(await reorderSheetsInDb(project_id, sheet_ids, { commitMessage: commit_message })),
+  );
+
+  server.registerTool(
     'db_list_versions',
     {
       description: 'Список версий проекта из БД живого приложения (история чекпоинтов и авто-снимков): id, label, автор, kind, дата. Адресация по числовому projectId из URL редактора',
@@ -646,7 +661,7 @@ function registerTools(server: McpServer): void {
   server.registerTool(
     'db_apply_ops',
     {
-      description: 'Применить несколько операций к проекту в БД живого приложения за одну транзакцию (один live-broadcast и одна версия). Прерывается на первой ошибке без записи. Операции: add_node/update_node/remove_node/connect_nodes/move_node/add_sheet/rename_sheet/remove_sheet/set_active_sheet — тип задаётся полем op. Адресация по числовому projectId из URL редактора',
+      description: 'Применить несколько операций к проекту в БД живого приложения за одну транзакцию (один live-broadcast и одна версия). Прерывается на первой ошибке без записи. Операции: add_node/update_node/remove_node/connect_nodes/disconnect_nodes/move_node/duplicate_node/add_sheet/rename_sheet/remove_sheet/duplicate_sheet/set_active_sheet — тип задаётся полем op. Адресация по числовому projectId из URL редактора',
       inputSchema: {
         project_id: z.number().describe('Числовой ID проекта из URL редактора'),
         ops: z.array(z.record(z.unknown())).describe('Массив операций; в каждой поле op задаёт тип (add_node, update_node, remove_node, connect_nodes, move_node, add_sheet, rename_sheet, remove_sheet, set_active_sheet)'),
