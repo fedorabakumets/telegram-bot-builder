@@ -23,6 +23,7 @@ import {
   saveProject,
   scaffoldMinimalProject,
   updateNodeInProject,
+  updateProjectInDb,
   validateBotProject,
   validateNode,
 } from '../../lib/bot-tools/index.ts';
@@ -245,6 +246,24 @@ function registerTools(server: McpServer): void {
     },
     async ({ path, project_json, skip_validation }) =>
       textResult(await saveProject(path, project_json, { skipValidation: skip_validation })),
+  );
+
+  server.registerTool(
+    'update_project_db',
+    {
+      description: 'Записать сценарий в БД запущенного приложения и в реальном времени обновить открытый холст (live-редактирование). Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        project_json: z.union([z.string(), z.record(z.unknown())]).describe('project.json'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+        skip_validation: z.boolean().optional().describe('Пропустить валидацию перед записью'),
+      },
+    },
+    async ({ project_id, project_json, commit_message, skip_validation }) =>
+      textResult(await updateProjectInDb(project_id, project_json, {
+        commitMessage: commit_message,
+        skipValidation: skip_validation,
+      })),
   );
 }
 

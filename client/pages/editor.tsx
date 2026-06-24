@@ -657,20 +657,32 @@ export default function Editor() {
     }
   }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
 
-  /** Live-синхронизация холста: вкладки, устройства, коллабораторы */
+  /**
+   * Live-синхронизация холста: вкладки, устройства, коллабораторы, ИИ-агент.
+   * Для actor.kind='agent' данные уже записаны в БД — показываем бейдж, но НЕ
+   * выставляем флаг «несохранённые изменения», а также инвалидируем список версий,
+   * чтобы открытая история подхватила новый снимок без перезагрузки.
+   * Для user/guest поведение прежнее.
+   */
   const handleRemoteCanvasSync = useCallback((msg: CanvasSyncMessage) => {
     if (!msg.actor) return;
     // Если только что был удалённый сброс — не возвращаем плашку из-за запоздавшего data-sync
     if (Date.now() < suppressLocalChangesUntilRef.current) return;
     setRemoteSyncActor(msg.actor);
-    setHasLocalChanges(true);
+    // Правка ИИ-агента уже в БД → плашка «несохранённые изменения» не нужна,
+    // но открытый список версий надо обновить (агент создал новый снимок).
+    if (msg.actor.kind !== 'agent') {
+      setHasLocalChanges(true);
+    } else if (activeProject?.id) {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', activeProject.id, 'versions'] });
+    }
     if (remoteSyncDismissTimerRef.current) {
       clearTimeout(remoteSyncDismissTimerRef.current);
     }
     remoteSyncDismissTimerRef.current = setTimeout(() => {
       setRemoteSyncActor(null);
     }, 12_000);
-  }, [setHasLocalChanges]);
+  }, [setHasLocalChanges, activeProject?.id, queryClient]);
 
   const dismissRemoteCanvasSync = useCallback(() => {
     setRemoteSyncActor(null);

@@ -16,6 +16,7 @@ import type { StorageBotProjectUpdate } from "../../../storages/storageTypes";
 import { restartBotIfRunning } from "../../../bots/restartBotIfRunning";
 import { syncContentToTable } from "../../../services/content-table";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
+import { broadcastAgentCanvasUpdate } from "../../../canvas/broadcastAgentCanvasUpdate";
 
 /**
  * Обрабатывает запрос на обновление проекта
@@ -71,10 +72,14 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
 
             // Создание снимка версии проекта (история + откат)
             try {
+                // Признак авторства MCP-агента: при agentEdit=true у запроса нет
+                // сессии (authorId=null), поэтому помечаем снимок author_kind='agent',
+                // чтобы в истории версий отобразить автора «ИИ-агент».
+                const authorKind = req.body?.agentEdit === true ? 'agent' : undefined;
                 if (commitMessage) {
                     // Ручной чекпоинт: создаётся всегда по явному намерению
                     // пользователя — без дедупликации и без очистки истории.
-                    await storage.createProjectVersion(projectId, validatedData.data, commitMessage, getOwnerIdFromRequest(req), 'manual');
+                    await storage.createProjectVersion(projectId, validatedData.data, commitMessage, getOwnerIdFromRequest(req), 'manual', authorKind);
                 } else {
                     // Авто-снимок: дедупликация + ограничение истории до 30 версий.
                     // Дедупликация: не создаём новый снимок, если самая свежая
@@ -83,12 +88,25 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
                     const isDuplicate = latest != null &&
                         JSON.stringify(latest.snapshot) === JSON.stringify(validatedData.data);
                     if (!isDuplicate) {
-                        await storage.createProjectVersion(projectId, validatedData.data, project.name, project.ownerId ?? null, 'auto');
+                        await storage.createProjectVersion(projectId, validatedData.data, project.name, project.ownerId ?? null, 'auto', authorKind);
                         await storage.pruneProjectVersions(projectId, 30);
                     }
                 }
             } catch (err) {
                 console.error(`[updateProjectHandler] Ошибка создания снимка версии для проекта ${projectId}:`, err);
+            }
+
+            // Live-редактирование: правка от MCP-агента вещается на открытый холст
+            // с actor.kind='agent' (без пометки «несохранённые изменения» на клиенте).
+            if (req.body?.agentEdit === true) {
+                try {
+                    broadcastAgentCanvasUpdate(projectId, validatedData.data, {
+                        sessionId: req.body.agentSessionId,
+                        displayName: req.body.agentDisplayName,
+                    });
+                } catch (err) {
+                    console.error(`[updateProjectHandler] Ошибка broadcast canvas-sync для проекта ${projectId}:`, err);
+                }
             }
         }
 

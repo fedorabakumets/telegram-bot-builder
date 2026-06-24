@@ -978,9 +978,10 @@ export interface IStorage {
    * @param label - Опциональная метка версии
    * @param authorId - Опциональный ID автора снимка
    * @param kind - Тип версии: "auto" (по умолчанию) или "manual" (ручной коммит)
+   * @param authorKind - Тип автора снимка: 'agent' — ИИ-агент (MCP), 'user'/null — обычный пользователь
    * @returns Созданная версия проекта
    */
-  createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind?: 'auto' | 'manual'): Promise<ProjectVersion>;
+  createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind?: 'auto' | 'manual', authorKind?: 'user' | 'agent' | null): Promise<ProjectVersion>;
 
   /**
    * Получить список версий проекта, отсортированный по дате создания (DESC)

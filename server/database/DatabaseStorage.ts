@@ -1941,15 +1941,17 @@ export class DatabaseStorage implements IStorage {
    * @param label - Опциональная метка версии
    * @param authorId - Опциональный ID автора снимка
    * @param kind - Тип версии: "auto" (по умолчанию) или "manual" (ручной коммит)
+   * @param authorKind - Тип автора снимка: 'agent' — ИИ-агент (MCP), 'user'/null — обычный пользователь
    * @returns Созданная версия проекта
    */
-  async createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind: 'auto' | 'manual' = 'auto'): Promise<ProjectVersion> {
+  async createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind: 'auto' | 'manual' = 'auto', authorKind?: 'user' | 'agent' | null): Promise<ProjectVersion> {
     const [version] = await this.db.insert(projectVersions).values({
       projectId,
       snapshot,
       label: label ?? null,
       authorId: authorId ?? null,
       kind,
+      authorKind: authorKind ?? null,
     }).returning();
     return version;
   }

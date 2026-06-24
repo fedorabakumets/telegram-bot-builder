@@ -27,6 +27,8 @@ export const projectVersions = pgTable("project_versions", {
   authorId: bigint("author_id", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "set null" }),
   /** Тип версии: "auto" — авто-снимок при сохранении, "manual" — ручной коммит-чекпоинт */
   kind: text("kind").notNull().default("auto"),
+  /** Тип автора снимка: 'agent' — ИИ-агент (MCP), NULL/'user' — обычный пользователь */
+  authorKind: text("author_kind"),
   /** Время создания версии */
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
@@ -46,6 +48,8 @@ export const insertProjectVersionSchema = z.object({
   authorId: z.number().nullable().optional(),
   /** Тип версии: "auto" — авто-снимок, "manual" — ручной коммит */
   kind: z.enum(["auto", "manual"]).default("auto"),
+  /** Тип автора снимка: 'agent' — ИИ-агент (MCP), null/'user' — обычный пользователь */
+  authorKind: z.string().nullable().optional(),
 });
 
 /** Тип записи версии проекта */
