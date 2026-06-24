@@ -246,3 +246,65 @@ export function connectNodes(
   const updated = { ...project, sheets };
   return { project: updated, validation: validateBotProject(updated) };
 }
+
+/**
+ * Переносит ноду на другой лист проекта, сохраняя id, data и все ссылки.
+ * Ссылки (target'ы) НЕ ремаппятся: id ноды сохраняется, поэтому связи остаются
+ * валидными глобально. Аналог клиентского useMoveNodeToSheet, но иммутабельно.
+ * @param projectJson - Текущий project.json (объект или JSON-строка)
+ * @param nodeId - ID переносимой ноды
+ * @param toSheetId - ID целевого листа
+ * @param options - Опции: fromSheetId (исходный лист, иначе автопоиск), position (новая позиция на целевом листе)
+ * @returns project + validation или { error }
+ */
+export function moveNodeToProjectSheet(
+  projectJson: unknown,
+  nodeId: string,
+  toSheetId: string,
+  options?: { fromSheetId?: string; position?: { x: number; y: number } },
+): MutateProjectResult | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const sheets = [...(project.sheets ?? [])];
+
+  // Проверка существования целевого листа
+  const toIdx = sheets.findIndex((s) => s.id === toSheetId);
+  if (toIdx < 0) return { error: 'Целевой лист не найден' };
+
+  // Определение исходного листа: явный fromSheetId или автопоиск по nodeId
+  let fromIdx: number;
+  if (options?.fromSheetId) {
+    fromIdx = sheets.findIndex((s) => s.id === options.fromSheetId);
+    if (fromIdx < 0) return { error: 'Исходный лист не найден' };
+    if (!(sheets[fromIdx]?.nodes ?? []).some((n) => n.id === nodeId)) {
+      return { error: 'Нода не найдена' };
+    }
+  } else {
+    fromIdx = sheets.findIndex((s) => (s.nodes ?? []).some((n) => n.id === nodeId));
+    if (fromIdx < 0) return { error: 'Нода не найдена' };
+  }
+
+  // Guard: нода уже на целевом листе — бессмысленный no-op-PUT не делаем
+  if (sheets[fromIdx]?.id === toSheetId) return { error: 'Нода уже на этом листе' };
+
+  // Извлечение объекта ноды из исходного листа
+  const sourceNode = (sheets[fromIdx]?.nodes ?? []).find((n) => n.id === nodeId) as Node;
+  // id, type, data — без изменений; меняется только позиция (опционально)
+  const movedNode: Node = options?.position
+    ? { ...sourceNode, position: options.position }
+    : sourceNode;
+
+  // Иммутабельная пересборка листов
+  sheets[fromIdx] = {
+    ...sheets[fromIdx],
+    nodes: (sheets[fromIdx]?.nodes ?? []).filter((n) => n.id !== nodeId),
+  };
+  sheets[toIdx] = {
+    ...sheets[toIdx],
+    nodes: [...(sheets[toIdx]?.nodes ?? []), movedNode],
+  };
+
+  const updated = { ...project, sheets };
+  return { project: updated, validation: validateBotProject(updated) };
+}

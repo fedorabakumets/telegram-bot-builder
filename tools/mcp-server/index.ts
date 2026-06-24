@@ -26,6 +26,12 @@ import {
   loadProject,
   removeNodeFromProject,
   removeNodeInDb,
+  moveNodeInDb,
+  addSheetInDb,
+  renameSheetInDb,
+  removeSheetInDb,
+  setActiveSheetInDb,
+  listSheetsInDb,
   saveProject,
   scaffoldMinimalProject,
   summarizeProjectFromDb,
@@ -351,6 +357,23 @@ function registerTools(server: McpServer): void {
   );
 
   server.registerTool(
+    'db_move_node',
+    {
+      description: 'Перенести ноду на другой лист проекта в БД живого приложения с обновлением холста (live). id и связи сохраняются. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        node_id: z.string().describe('ID переносимой ноды'),
+        to_sheet_id: z.string().describe('ID целевого листа'),
+        from_sheet_id: z.string().optional().describe('ID исходного листа (по умолчанию автопоиск)'),
+        position: z.object({ x: z.number(), y: z.number() }).optional().describe('Новая позиция на целевом листе (по умолчанию сохраняется текущая)'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, node_id, to_sheet_id, from_sheet_id, position, commit_message }) =>
+      textResult(await moveNodeInDb(project_id, node_id, to_sheet_id, { fromSheetId: from_sheet_id, position }, { commitMessage: commit_message })),
+  );
+
+  server.registerTool(
     'get_project_db',
     {
       description: 'Прочитать весь сценарий проекта из БД живого приложения (тяжёлый: возвращает полный BotDataWithSheets). Адресация по числовому projectId из URL редактора',
@@ -396,6 +419,82 @@ function registerTools(server: McpServer): void {
     },
     async ({ project_id, node_id, sheet_id }) =>
       textResult(await getNodeFromDb(project_id, node_id, sheet_id)),
+  );
+
+  server.registerTool(
+    'db_add_sheet',
+    {
+      description: 'Добавить лист в проект в БД живого приложения (live). Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        name: z.string().optional().describe('Имя листа (опционально; иначе "Лист N")'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, name, commit_message }) =>
+      textResult(await addSheetInDb(project_id, name, {
+        commitMessage: commit_message,
+      })),
+  );
+
+  server.registerTool(
+    'db_rename_sheet',
+    {
+      description: 'Переименовать лист в проекте в БД живого приложения (live). Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        sheet_id: z.string().describe('ID переименовываемого листа'),
+        name: z.string().describe('Новое имя листа'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, sheet_id, name, commit_message }) =>
+      textResult(await renameSheetInDb(project_id, sheet_id, name, {
+        commitMessage: commit_message,
+      })),
+  );
+
+  server.registerTool(
+    'db_remove_sheet',
+    {
+      description: 'Удалить лист из проекта в БД живого приложения (live). Нельзя удалить последний лист. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        sheet_id: z.string().describe('ID удаляемого листа'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, sheet_id, commit_message }) =>
+      textResult(await removeSheetInDb(project_id, sheet_id, {
+        commitMessage: commit_message,
+      })),
+  );
+
+  server.registerTool(
+    'db_set_active_sheet',
+    {
+      description: 'Сделать лист активным в проекте в БД живого приложения (live). Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        sheet_id: z.string().describe('ID листа, который сделать активным'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, sheet_id, commit_message }) =>
+      textResult(await setActiveSheetInDb(project_id, sheet_id, {
+        commitMessage: commit_message,
+      })),
+  );
+
+  server.registerTool(
+    'db_list_sheets',
+    {
+      description: 'Лёгкий read-only список листов проекта из БД живого приложения: id, name, число нод',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+      },
+    },
+    async ({ project_id }) => textResult(await listSheetsInDb(project_id)),
   );
 }
 

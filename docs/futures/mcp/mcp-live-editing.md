@@ -95,7 +95,7 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 ### Фаза 2 — Гранулярные правки нод (node-level)
 | # | Задача | Сложность | Статус |
 |---|--------|-----------|--------|
-| 2.1 | MCP-операции уровня ноды: add/update/remove node, connect/disconnect | Средняя | ✅ Готово (`lib/bot-tools/node-ops-db.ts`: `db_add_node`/`db_update_node`/`db_remove_node`/`db_connect_nodes`; read-тулы `get_project_db`/`db_project_summary`/`db_list_nodes`/`db_get_node` поверх `project-db-read.ts`/`node-query-db.ts`) |
+| 2.1 | MCP-операции уровня ноды: add/update/remove node, connect/disconnect | Средняя | ✅ Готово + расширено. Ноды: `db_add_node`/`db_update_node`/`db_remove_node`/`db_connect_nodes`/`db_move_node` (перенос между листами, `lib/bot-tools/node-ops-db.ts`, `project-mutate.ts`). Чтение: `get_project_db`/`db_project_summary`/`db_list_nodes`/`db_get_node` (`project-db-read.ts`, `node-query-db.ts`). Листы: `db_add_sheet`/`db_rename_sheet`/`db_remove_sheet`/`db_set_active_sheet`/`db_list_sheets` (`sheet-ops.ts`, `sheet-ops-db.ts`). Фикс: `canvasSheetSchema.createdAt/updatedAt` → `z.coerce.date()` (jsonb round-trip). Не сделано: `db_duplicate_sheet` (нужна регенерация id нод + ремаппинг ссылок). |
 | 2.2 | Дельта-протокол `(nodeId, property, value)` (общий с realtime-collaboration #4) | Высокая | ⬜ |
 | 2.3 | Точечное применение дельты на холсте (анимация/подсветка изменённой ноды) | Средняя | ⬜ |
 | 2.4 | Арбитраж порядка событий на сервере (общий с realtime-collaboration #6) | Высокая | ⬜ |
@@ -195,6 +195,28 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 2. **Фаза 2** (дельты) внедряем вместе с операционной моделью из
    [`realtime-collaboration.md`](../../features/realtime-collaboration.md) — у них общий протокол и арбитраж сервера.
 3. **Фаза 3** навешивается поверх как UX-полировка.
+
+## Дальнейшие улучшения тулов билдера (бэклог)
+
+Приоритезировано по практической отдаче (выявлено в ходе реализации 2.1).
+
+### Быстрые победы
+- **`db_apply_ops` — батч-операции одним вызовом.** Массив операций (add/update/remove/connect/move node + sheet-ops) применяется в одной транзакции read→mutate→PUT. Даёт скорость, атомарность, отсутствие гонок LWW и одну версию на пакет. Сейчас N операций = N последовательных GET+PUT.
+- **Раскрытие enum-значений в `get_node_schema`.** Возвращать допустимые значения по каждому полю (напр. `button.action` ∈ goto/command/url/…, `assignment.mode` ∈ text/expression). Убирает цикл «попробовал → отказ валидации → исправил».
+- **`db_list_versions` + `db_restore_version`.** История версий пишется (автор «ИИ-агент»), но через MCP её нельзя ни прочитать, ни откатить. Встроенный undo для правок агента.
+
+### Пробелы возможностей
+- **`db_disconnect_nodes` + `db_list_connections`.** Есть connect, нет «разъединить» и интроспекции рёбер (кто на кого ссылается).
+- **`db_find_nodes(query)`.** Поиск/фильтр нод по тексту/типу/листу (как поиск в панели «Проекты»).
+- **`db_duplicate_sheet`.** Требует портирования в lib регенерации id нод и ремаппинга ссылок (`updateNodeReferencesInData`).
+
+### UX / наблюдаемость
+- **Подсветка изменённой ноды (Фаза 2.3).** Поле `changedNodeId` в `canvas-sync` + подсветка/центрирование на холсте.
+- **Аудит схемы на `z.date()` ↔ jsonb.** Найти другие даты в jsonb-данных, которые ломаются после round-trip (как было с `updatedAt`).
+
+### Архитектурные ставки
+- **Дельты + арбитраж (Фазы 2.2 / 2.4).** Точечные `(nodeId, поле, значение)` вместо снапшота + сервер-арбитр — убирает гонки человек+агент и снижает трафик.
+- **Сервис-токен (Фаза 0.2).** Для прода, где `SKIP_AUTH` выключен.
 
 ## Открытые вопросы
 

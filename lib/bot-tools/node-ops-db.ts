@@ -13,6 +13,7 @@ import {
   updateNodeInProject,
   removeNodeFromProject,
   connectNodes,
+  moveNodeToProjectSheet,
   type ConnectPortType,
   type MutateProjectResult,
 } from './project-mutate.ts';
@@ -124,4 +125,26 @@ export async function connectNodesInDb(
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
   return applyAndSave(projectId, connectNodes(fetched.data, fromId, toId, connectOptions ?? {}), options);
+}
+
+/**
+ * Переносит ноду на другой лист проекта в живой БД и обновляет холст (live).
+ * id и связи ноды сохраняются (target'ы не ремаппятся). Один PUT = одна версия в истории.
+ * @param projectId - Числовой ID проекта
+ * @param nodeId - ID переносимой ноды
+ * @param toSheetId - ID целевого листа
+ * @param moveOptions - Опции переноса { fromSheetId? (иначе автопоиск), position? (новая позиция) }
+ * @param options - Опции записи в БД
+ * @returns Результат записи или ошибка
+ */
+export async function moveNodeInDb(
+  projectId: number,
+  nodeId: string,
+  toSheetId: string,
+  moveOptions?: { fromSheetId?: string; position?: { x: number; y: number } },
+  options?: NodeOpsDbOptions,
+): Promise<NodeOpsDbResult> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+  return applyAndSave(projectId, moveNodeToProjectSheet(fetched.data, nodeId, toSheetId, moveOptions), options);
 }
