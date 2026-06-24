@@ -1822,9 +1822,7 @@ export default function Editor() {
           )}
           {currentTab === 'agent' && (
             <div className="h-full p-6 bg-background overflow-auto">
-              <div className="max-w-3xl mx-auto">
-                <AgentTokensPanel />
-              </div>
+              <AgentTokensPanel />
             </div>
           )}
           {/* Для вкладки Экспорт показываем пустой контейнер */}
