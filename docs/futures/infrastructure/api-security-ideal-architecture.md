@@ -458,6 +458,8 @@ app.use(errorHandler);
 
 ## 8. Response Filtering (Фильтрация ответов)
 
+> **Статус реализации.** 🟡 Частично. Первый DTO применён: `server/routes/projectRoutes/project-list-dto.ts` (`toProjectListItem`) — `GET /api/projects/list` больше НЕ отдаёт `botToken`/`sessionId` (явный whitelist, без spread). Проверено на живом сервере. **Осталось:** `getAllProjectsHandler` (та же утечка, другой контракт), маскировка `token` в token-эндпоинтах (`/api/user/tokens`, `/api/bot/projects/:id/tokens`), шифрование `botToken` в БД (сейчас plaintext, несмотря на комментарий в схеме).
+
 ### Никогда не отдавать sensitive data:
 
 ```typescript
@@ -678,12 +680,12 @@ app.use((req, res, next) => {
 | Аспект | Сейчас | Идеал |
 |--------|--------|-------|
 | Auth по умолчанию | Нет (opt-in) | Да (opt-out для публичных) |
-| Проверка доступа | Пропускает гостей | Блокирует всех без прав |
+| Проверка доступа | Пропускает гостей | Блокирует всех без прав · ✅ сделано (0.2a) |
 | Валидация | ~20% эндпоинтов | 100% эндпоинтов |
 | Rate limiting | Нет | Глобальный + per-endpoint |
 | Security headers | Нет | helmet + CORS |
 | Error handling | Может крашить процесс | Централизованный, безопасный |
-| Response filtering | Токены утекают | DTO, whitelist полей |
+| Response filtering | Токены утекают | DTO, whitelist полей · 🟡 /api/projects/list готово, остальное позже |
 | Body limits | 50MB на всё | 1MB глобально, 20MB для upload |
 | Env validation | Fallback значения | Fail-fast при старте |
 | Logging | console.log | Структурированные логи |
