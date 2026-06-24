@@ -24,6 +24,7 @@ import {
   listNodeTypes,
   listNodesInDb,
   listOperators,
+  listVersionsInDb,
   loadProject,
   removeNodeFromProject,
   removeNodeInDb,
@@ -31,6 +32,7 @@ import {
   addSheetInDb,
   renameSheetInDb,
   removeSheetInDb,
+  restoreVersionInDb,
   setActiveSheetInDb,
   listSheetsInDb,
   saveProject,
@@ -496,6 +498,35 @@ function registerTools(server: McpServer): void {
       },
     },
     async ({ project_id }) => textResult(await listSheetsInDb(project_id)),
+  );
+
+  server.registerTool(
+    'db_list_versions',
+    {
+      description: 'Список версий проекта из БД живого приложения (история чекпоинтов и авто-снимков): id, label, автор, kind, дата. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+      },
+    },
+    async ({ project_id }) => textResult(await listVersionsInDb(project_id)),
+  );
+
+  server.registerTool(
+    'db_restore_version',
+    {
+      description: 'Откатить проект к версии из истории в БД живого приложения с обновлением холста (live). Создаёт новый чекпоинт отката. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        version_id: z.number().describe('ID версии из db_list_versions'),
+        commit_message: z.string().optional().describe('Заметка к версии-чекпоинту отката'),
+        skip_validation: z.boolean().optional().describe('Пропустить валидацию (по умолчанию true для отката)'),
+      },
+    },
+    async ({ project_id, version_id, commit_message, skip_validation }) =>
+      textResult(await restoreVersionInDb(project_id, version_id, {
+        commitMessage: commit_message,
+        skipValidation: skip_validation,
+      })),
   );
 
   server.registerTool(

@@ -22,6 +22,7 @@ export { updateProjectInDb } from './project-db.ts';
 export * from './project-db-read.ts';
 export * from './node-ops-db.ts';
 export * from './node-query-db.ts';
+export * from './version-ops-db.ts';
 export * from './sheet-ops.ts';
 export * from './sheet-ops-db.ts';
 export * from './batch-ops.ts';
