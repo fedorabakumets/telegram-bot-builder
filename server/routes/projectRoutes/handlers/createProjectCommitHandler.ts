@@ -12,6 +12,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
+import { broadcastVersionsChanged } from '../../../canvas/broadcastVersionsChanged';
 
 /**
  * Обрабатывает запрос на создание ручного коммита-чекпоинта
@@ -49,6 +50,7 @@ export async function createProjectCommitHandler(req: Request, res: Response): P
             "manual",
         );
 
+        broadcastVersionsChanged(projectId);
         res.status(201).json(version);
     } catch (error) {
         console.error("Ошибка создания коммита проекта:", error);

@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
+import { broadcastVersionsChanged } from '../../../canvas/broadcastVersionsChanged';
 
 /**
  * Обрабатывает запрос на удаление одной версии проекта
@@ -32,6 +33,7 @@ export async function deleteProjectVersionHandler(req: Request, res: Response): 
         }
 
         const deleted = await storage.deleteProjectVersion(projectId, versionId);
+        broadcastVersionsChanged(projectId);
         res.json({ deleted });
     } catch (error) {
         console.error("Ошибка удаления версии проекта:", error);

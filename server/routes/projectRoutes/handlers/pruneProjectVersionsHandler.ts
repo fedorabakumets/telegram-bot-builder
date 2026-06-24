@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
+import { broadcastVersionsChanged } from '../../../canvas/broadcastVersionsChanged';
 
 /**
  * Обрабатывает запрос на массовое удаление версий проекта
@@ -31,6 +32,7 @@ export async function pruneProjectVersionsHandler(req: Request, res: Response): 
         };
 
         const deleted = await storage.deleteProjectVersionsBulk(projectId, { keep, kind, authorKind });
+        broadcastVersionsChanged(projectId);
         res.json({ deleted });
     } catch (error) {
         console.error("Ошибка массового удаления версий проекта:", error);

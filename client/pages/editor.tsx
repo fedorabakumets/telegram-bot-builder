@@ -748,6 +748,16 @@ export default function Editor() {
     }
   }, [discardLocalChanges, activeProject?.id, queryClient, setHasLocalChanges, setActionHistory]);
 
+  /**
+   * Обрабатывает сигнал об изменении истории версий: инвалидирует react-query
+   * запрос версий, чтобы открытая панель версий обновилась в реальном времени.
+   */
+  const handleVersionsChanged = useCallback(() => {
+    if (activeProject?.id) {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', activeProject.id, 'versions'] });
+    }
+  }, [activeProject?.id, queryClient]);
+
   const { broadcastReset } = useCanvasSync({
     projectId: activeProject?.id,
     botDataWithSheets,
@@ -755,7 +765,8 @@ export default function Editor() {
     onRemoteUpdate: handleBotDataUpdate,
     onRemoteSync: handleRemoteCanvasSync,
     onRemoteReset: handleRemoteReset,
-    enabled: currentTab === 'editor' && !!activeProject?.id,
+    onVersionsChanged: handleVersionsChanged,
+    enabled: (currentTab === 'editor' || currentTab === 'versions') && !!activeProject?.id,
   });
   // Зеркалим broadcastReset в ref чтобы вызывать из onSuccess мутации (объявлена выше)
   broadcastResetFnRef.current = broadcastReset;
