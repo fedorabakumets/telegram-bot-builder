@@ -245,7 +245,7 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 - **Чек-сумма в префиксе токена** (как `ghp_` + CRC у GitHub для секрет-сканеров) — nice-to-have, позже.
 
 **Эндпоинты тулов проектного блока (после токен-инфры):**
-- `db_list_projects` → `GET /api/projects/list` — проекты владельца токена (`total` + метаданные id/name/nodeCount/sheetsCount/sortOrder, через DTO — без `botToken`). ✅ **Серверный DTO готов** (`server/routes/projectRoutes/project-list-dto.ts`, коммит `5de9ec3d5`): `/list` больше не отдаёт `botToken`/`sessionId`. Осталось — сам lib-тул `listProjectsInDb` + регистрация.
+- `db_list_projects` → `GET /api/projects/list` — проекты владельца токена (`total` + метаданные id/name/nodeCount/sheetsCount/sortOrder, через DTO — без `botToken`). ✅ **Готово** (`lib/bot-tools/project-ops-db.ts` `listProjectsInDb` + тул `db_list_projects` без inputSchema; серверный DTO `5de9ec3d5`). Проверено вживую: 7 проектов с id, без секретов. Единственный db-тул без project_id — закрывает дискавери.
 - `db_create_project` → `POST /api/projects`, тело `{ name, data }` (`data` = `scaffoldMinimalProject().project` по умолчанию) → `{ ok, projectId }`.
 - `db_rename_project` → `PUT /api/projects/:id` с телом `{ name }` (без `data` — версии не плодятся).
 - `db_reorder_projects` → `PUT /api/projects/reorder`, тело `{ projectIds: number[] }`.

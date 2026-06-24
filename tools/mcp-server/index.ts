@@ -30,6 +30,7 @@ import {
   listNodesInDb,
   listConnectionsInDb,
   listOperators,
+  listProjectsInDb,
   listVersionsInDb,
   loadProject,
   removeNodeFromProject,
@@ -445,6 +446,14 @@ function registerTools(server: McpServer): void {
       },
     },
     async ({ project_id }) => textResult(await summarizeProjectFromDb(project_id)),
+  );
+
+  server.registerTool(
+    'db_list_projects',
+    {
+      description: 'Список проектов владельца токена из БД живого приложения: id, name, число нод/листов, дата. БЕЗ project_id — единственный тул для дискавери: по нему узнаёшь id проектов для остальных db_-тулов. Read-only.',
+    },
+    async () => textResult(await listProjectsInDb()),
   );
 
   server.registerTool(

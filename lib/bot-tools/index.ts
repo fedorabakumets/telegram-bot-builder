@@ -28,3 +28,4 @@ export * from './sheet-ops.ts';
 export * from './sheet-node-references.ts';
 export * from './sheet-ops-db.ts';
 export * from './batch-ops.ts';
+export * from './project-ops-db.ts';
