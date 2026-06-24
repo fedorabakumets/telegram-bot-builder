@@ -14,6 +14,7 @@ import {
   removeNodeFromProject,
   connectNodes,
   disconnectNodes,
+  duplicateNodeInProject,
   moveNodeToProjectSheet,
   type ConnectPortType,
   type MutateProjectResult,
@@ -148,6 +149,31 @@ export async function disconnectNodesInDb(
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
   return applyAndSave(projectId, disconnectNodes(fetched.data, fromId, toId, disconnectOptions ?? {}), options);
+}
+
+/**
+ * Дублирует ноду на том же листе в проекте живой БД и обновляет холст (live).
+ * Копия получает новый id (_copy_<ts>_<rand>) и смещённую позицию; исходящие
+ * ссылки сохраняются как у оригинала. Один PUT = одна версия в истории.
+ * @param projectId - Числовой ID проекта
+ * @param nodeId - ID дублируемой ноды
+ * @param dupOptions - Опции { position? (позиция копии), sheetId? (лист) }
+ * @param options - Опции записи в БД
+ * @returns Результат записи с newNodeId или ошибка
+ */
+export async function duplicateNodeInDb(
+  projectId: number,
+  nodeId: string,
+  dupOptions?: { position?: { x: number; y: number }; sheetId?: string },
+  options?: NodeOpsDbOptions,
+): Promise<NodeOpsDbResult> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+  const mutated = duplicateNodeInProject(fetched.data, nodeId, dupOptions);
+  if ('error' in mutated) return { error: mutated.error };
+  const saved = await updateProjectInDb(projectId, mutated.project, options);
+  if ('error' in saved) return saved;
+  return { ...saved, newNodeId: mutated.newNodeId } as NodeOpsDbResult;
 }
 
 /**

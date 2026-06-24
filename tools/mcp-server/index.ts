@@ -32,6 +32,7 @@ import {
   removeNodeFromProject,
   removeNodeInDb,
   moveNodeInDb,
+  duplicateNodeInDb,
   addSheetInDb,
   renameSheetInDb,
   removeSheetInDb,
@@ -401,6 +402,22 @@ function registerTools(server: McpServer): void {
     },
     async ({ project_id, node_id, to_sheet_id, from_sheet_id, position, commit_message }) =>
       textResult(await moveNodeInDb(project_id, node_id, to_sheet_id, { fromSheetId: from_sheet_id, position }, { commitMessage: commit_message })),
+  );
+
+  server.registerTool(
+    'db_duplicate_node',
+    {
+      description: 'Дублировать ноду на том же листе в БД живого приложения с обновлением холста (live). Копия получает новый id и смещённую позицию; исходящие связи сохраняются как у оригинала. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        node_id: z.string().describe('ID дублируемой ноды'),
+        position: z.object({ x: z.number(), y: z.number() }).optional().describe('Позиция копии (по умолчанию смещение +40/+40 от оригинала)'),
+        sheet_id: z.string().optional().describe('ID листа (по умолчанию активный/первый)'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, node_id, position, sheet_id, commit_message }) =>
+      textResult(await duplicateNodeInDb(project_id, node_id, { position, sheetId: sheet_id }, { commitMessage: commit_message })),
   );
 
   server.registerTool(

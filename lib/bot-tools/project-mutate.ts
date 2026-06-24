@@ -342,6 +342,55 @@ export function disconnectNodes(
 }
 
 /**
+ * Генерирует новый уникальный id ноды на основе существующего: срезает прежние
+ * суффиксы копирования (_copy_/_paste_) и добавляет свежий _copy_<ts>_<rand>.
+ * Портирован из клиентского generateNewId, без внешних зависимостей.
+ * @param id - Исходный id ноды
+ * @returns Новый уникальный id
+ */
+function generateDuplicateNodeId(id: string): string {
+  const baseId = id.replace(/(_paste_\d+_[a-z0-9]+|_copy_\d+_[a-z0-9]+|_copy_\d+)+$/, '');
+  return `${baseId}_copy_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+}
+
+/**
+ * Дублирует одну ноду на том же листе: глубокая копия с новым id и смещённой
+ * позицией. Исходящие ссылки копии (target/autoTransitionTo/inputTargetNodeId/
+ * keyboardNodeId) НАМЕРЕННО сохраняются как у оригинала — копия ведёт к тем же
+ * downstream-нодам (зеркало клиентского duplicateNode для одиночного узла).
+ * branch.id внутри копии не ремаппятся: они уникальны лишь в рамках ноды, а нода новая.
+ * @param projectJson - project.json (объект или JSON-строка)
+ * @param nodeId - ID дублируемой ноды
+ * @param options - position (позиция копии, иначе смещение +40/+40), sheetId
+ * @returns project + validation + newNodeId или { error }
+ */
+export function duplicateNodeInProject(
+  projectJson: unknown,
+  nodeId: string,
+  options?: { position?: { x: number; y: number }; sheetId?: string },
+): (MutateProjectResult & { newNodeId: string }) | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const idx = resolveSheetIndex(project, options?.sheetId);
+  const sheets = [...(project.sheets ?? [])];
+  const source = (sheets[idx]?.nodes ?? []).find((n) => n.id === nodeId);
+  if (!source) return { error: `Нода не найдена: ${nodeId}` };
+
+  const newId = generateDuplicateNodeId(nodeId);
+  const clone = structuredClone(source) as Node;
+  clone.id = newId;
+  clone.position = options?.position ?? {
+    x: (source.position?.x ?? 0) + 40,
+    y: (source.position?.y ?? 0) + 40,
+  };
+
+  sheets[idx] = { ...sheets[idx], nodes: [...(sheets[idx]?.nodes ?? []), clone] };
+  const updated = { ...project, sheets };
+  return { project: updated, validation: validateBotProject(updated), newNodeId: newId };
+}
+
+/**
  * Переносит ноду на другой лист проекта, сохраняя id, data и все ссылки.
  * Ссылки (target'ы) НЕ ремаппятся: id ноды сохраняется, поэтому связи остаются
  * валидными глобально. Аналог клиентского useMoveNodeToSheet, но иммутабельно.
