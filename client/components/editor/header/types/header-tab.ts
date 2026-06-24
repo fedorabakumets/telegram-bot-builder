@@ -19,4 +19,5 @@ export type HeaderTab =
   | 'tables'
   | 'files'
   | 'versions'
+  | 'agent'
   | 'terminal';

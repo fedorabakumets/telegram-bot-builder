@@ -618,9 +618,10 @@ export class DatabaseStorage implements IStorage {
    * @param ownerId - ID владельца токена
    * @param label - Пользовательское имя токена
    * @param scopes - Права токена через запятую (по умолчанию read,write)
+   * @param expiresAt - Дата истечения токена (null — бессрочный)
    * @returns Полный токен и сохранённая запись
    */
-  async createAgentToken(ownerId: number, label: string, scopes: string = "read,write"): Promise<{ token: string; record: AgentToken }> {
+  async createAgentToken(ownerId: number, label: string, scopes: string = "read,write", expiresAt: Date | null = null): Promise<{ token: string; record: AgentToken }> {
     const { token, prefix, tokenHash } = generateAgentToken();
     const [record] = await this.db.insert(agentTokens).values({
       ownerId,
@@ -628,6 +629,7 @@ export class DatabaseStorage implements IStorage {
       tokenHash,
       prefix,
       scopes,
+      expiresAt: expiresAt ?? null,
     }).returning();
     return { token, record };
   }

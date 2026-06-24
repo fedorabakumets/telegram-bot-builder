@@ -61,6 +61,7 @@ import { AnalyticsPanel } from '@/components/editor/analytics';
 import { TablesPanel } from '@/components/editor/tables';
 import { FilesPanel } from '@/components/editor/files';
 import { VersionsPanel } from '@/components/editor/versions';
+import { AgentTokensPanel } from '@/components/editor/agent';
 import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
 import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
@@ -122,7 +123,7 @@ export default function Editor() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('log')) return 'terminal';
     const tab = params.get('tab');
-    const validTabs: EditorTab[] = ['editor', 'export', 'bot', 'terminal', 'users', 'dialogs', 'broadcast', 'analytics', 'tables', 'files', 'versions'];
+    const validTabs: EditorTab[] = ['editor', 'export', 'bot', 'terminal', 'users', 'dialogs', 'broadcast', 'analytics', 'tables', 'files', 'versions', 'agent'];
     if (tab && validTabs.includes(tab as EditorTab)) {
       return tab as EditorTab;
     }
@@ -1816,6 +1817,13 @@ export default function Editor() {
             <div className="h-full p-6 bg-background overflow-auto">
               <div className="max-w-3xl mx-auto">
                 <TelegramClientConfig />
+              </div>
+            </div>
+          )}
+          {currentTab === 'agent' && (
+            <div className="h-full p-6 bg-background overflow-auto">
+              <div className="max-w-3xl mx-auto">
+                <AgentTokensPanel />
               </div>
             </div>
           )}

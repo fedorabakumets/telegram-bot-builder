@@ -36,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: 'bot', label: 'Бот' },
   { key: 'terminal', label: 'Терминал' },
   { key: 'users', label: 'Пользователи' },
+  { key: 'agent', label: 'Агент' },
 ];
 
 /**

@@ -358,9 +358,10 @@ export interface IStorage {
    * @param ownerId - ID владельца токена
    * @param label - Пользовательское имя токена
    * @param scopes - Права токена через запятую (по умолчанию read,write)
+   * @param expiresAt - Дата истечения токена (null — бессрочный)
    * @returns Полный токен и запись из БД
    */
-  createAgentToken(ownerId: number, label: string, scopes?: string): Promise<{ token: string; record: AgentToken }>;
+  createAgentToken(ownerId: number, label: string, scopes?: string, expiresAt?: Date | null): Promise<{ token: string; record: AgentToken }>;
 
   /**
    * Получить список токенов агента владельца (без секрета — только метаданные).

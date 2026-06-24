@@ -49,6 +49,7 @@ import { setupWebhookRoutes } from './setupWebhookRoutes';
 import { getRedisPublisher, waitForRedisInit } from "../redis/redisClient";
 import { setupProjectRoutes } from "./setupProjectRoutes";
 import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes";
+import { setupAgentTokenRoutes } from "./setupAgentTokenRoutes";
 import { setupUserTemplateRoutes } from "./setupUserTemplateRoutes";
 import type { StorageBotTokenInput, StorageBotTokenUpdate } from "../storages/storageTypes";
 import { createUserIdsRoutes } from "./user-ids-routes";
@@ -4707,6 +4708,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // User-specific endpoints
   // Get user's projects
   setupUserProjectAndTokenRoutes(app);
+
+  // Персональные токены агента (PAT) для MCP
+  setupAgentTokenRoutes(app);
 
   // Get user's templates
   setupUserTemplateRoutes(app);
