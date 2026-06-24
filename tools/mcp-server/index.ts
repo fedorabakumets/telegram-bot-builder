@@ -8,21 +8,29 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import {
+  addNodeInDb,
   addNodeToProject,
   connectNodes,
+  connectNodesInDb,
   createNode,
+  fetchProjectFromDb,
   generateBotCode,
   getNodeExampleTool,
+  getNodeFromDb,
   getNodeSchema,
   getPromptGuide,
   listCommands,
   listNodeTypes,
+  listNodesInDb,
   listOperators,
   loadProject,
   removeNodeFromProject,
+  removeNodeInDb,
   saveProject,
   scaffoldMinimalProject,
+  summarizeProjectFromDb,
   updateNodeInProject,
+  updateNodeInDb,
   updateProjectInDb,
   validateBotProject,
   validateNode,
@@ -264,6 +272,130 @@ function registerTools(server: McpServer): void {
         commitMessage: commit_message,
         skipValidation: skip_validation,
       })),
+  );
+
+  server.registerTool(
+    'db_add_node',
+    {
+      description: 'Добавить ноду в проект в БД живого приложения с обновлением холста (live). Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        node: z.record(z.unknown()).describe('Объект ноды'),
+        sheet_id: z.string().optional(),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, node, sheet_id, commit_message }) =>
+      textResult(await addNodeInDb(project_id, node as never, sheet_id, {
+        commitMessage: commit_message,
+      })),
+  );
+
+  server.registerTool(
+    'db_update_node',
+    {
+      description: 'Обновить ноду по id в проекте в БД живого приложения с обновлением холста (live). Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        node_id: z.string(),
+        patch: z.record(z.unknown()).describe('{ position?, data?, type? }'),
+        sheet_id: z.string().optional(),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, node_id, patch, sheet_id, commit_message }) =>
+      textResult(await updateNodeInDb(project_id, node_id, patch as never, sheet_id, {
+        commitMessage: commit_message,
+      })),
+  );
+
+  server.registerTool(
+    'db_remove_node',
+    {
+      description: 'Удалить ноду из проекта в БД живого приложения с обновлением холста (live). Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        node_id: z.string(),
+        sheet_id: z.string().optional(),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, node_id, sheet_id, commit_message }) =>
+      textResult(await removeNodeInDb(project_id, node_id, sheet_id, {
+        commitMessage: commit_message,
+      })),
+  );
+
+  server.registerTool(
+    'db_connect_nodes',
+    {
+      description: 'Соединить ноды (auto-transition, button-goto+branch, input-target) в проекте в БД живого приложения с обновлением холста (live). Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        from_id: z.string(),
+        to_id: z.string(),
+        branch: z.string().optional().describe('id кнопки/ветки для portType=button-goto'),
+        port_type: z.enum(['auto-transition', 'trigger-next', 'button-goto', 'input-target']).optional(),
+        sheet_id: z.string().optional(),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, from_id, to_id, branch, port_type, sheet_id, commit_message }) =>
+      textResult(await connectNodesInDb(project_id, from_id, to_id, {
+        branch,
+        portType: port_type,
+        sheetId: sheet_id,
+      }, {
+        commitMessage: commit_message,
+      })),
+  );
+
+  server.registerTool(
+    'get_project_db',
+    {
+      description: 'Прочитать весь сценарий проекта из БД живого приложения (тяжёлый: возвращает полный BotDataWithSheets). Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+      },
+    },
+    async ({ project_id }) => textResult(await fetchProjectFromDb(project_id)),
+  );
+
+  server.registerTool(
+    'db_project_summary',
+    {
+      description: 'Лёгкая сводка проекта из БД живого приложения: листы, число нод, счётчик по типам (без data нод)',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+      },
+    },
+    async ({ project_id }) => textResult(await summarizeProjectFromDb(project_id)),
+  );
+
+  server.registerTool(
+    'db_list_nodes',
+    {
+      description: 'Лёгкий список нод проекта из БД живого приложения: id, type, лист, краткая сводка (без полного data)',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        sheet_id: z.string().optional().describe('ID листа (по умолчанию все листы)'),
+      },
+    },
+    async ({ project_id, sheet_id }) => textResult(await listNodesInDb(project_id, sheet_id)),
+  );
+
+  server.registerTool(
+    'db_get_node',
+    {
+      description: 'Прочитать одну ноду целиком из БД живого приложения по id. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        node_id: z.string().describe('ID искомой ноды'),
+        sheet_id: z.string().optional().describe('ID листа (по умолчанию поиск по всем листам)'),
+      },
+    },
+    async ({ project_id, node_id, sheet_id }) =>
+      textResult(await getNodeFromDb(project_id, node_id, sheet_id)),
   );
 }
 

@@ -1,0 +1,127 @@
+/**
+ * @fileoverview Node-level операции над живой БД запущенного приложения (live-редактирование)
+ * @description Каждая функция читает актуальный проект из БД через GET /api/projects/:id,
+ * применяет ОДНУ node-операцию из project-mutate.ts и при успехе пишет результат обратно
+ * через updateProjectInDb (PUT с agentEdit:true, сервер вещает правку на открытый холст).
+ * При ошибке операции запись в БД не выполняется.
+ * @module lib/bot-tools/node-ops-db
+ */
+
+import type { Node } from '@shared/schema';
+import {
+  addNodeToProject,
+  updateNodeInProject,
+  removeNodeFromProject,
+  connectNodes,
+  type ConnectPortType,
+  type MutateProjectResult,
+} from './project-mutate.ts';
+import {
+  updateProjectInDb,
+  type UpdateProjectInDbOptions,
+  type UpdateProjectInDbResult,
+} from './project-db.ts';
+import { fetchProjectFromDb } from './project-db-read.ts';
+
+/** Опции node-level операций над живой БД */
+export type NodeOpsDbOptions = UpdateProjectInDbOptions;
+
+/** Объединённый тип результата node-level операции над БД */
+export type NodeOpsDbResult = UpdateProjectInDbResult | { error: string };
+
+/**
+ * Применяет результат node-операции и при успехе пишет проект в БД.
+ * Если node-операция вернула ошибку — запись в БД не выполняется.
+ * @param projectId - Числовой ID проекта
+ * @param mutateResult - Результат node-операции из project-mutate.ts
+ * @param options - Опции записи в БД
+ * @returns Результат записи или ошибка node-операции
+ */
+async function applyAndSave(
+  projectId: number,
+  mutateResult: MutateProjectResult | { error: string },
+  options?: NodeOpsDbOptions,
+): Promise<NodeOpsDbResult> {
+  if ('error' in mutateResult) return { error: mutateResult.error };
+  return updateProjectInDb(projectId, mutateResult.project, options);
+}
+
+/**
+ * Добавляет ноду в проект живой БД и обновляет холст (live).
+ * @param projectId - Числовой ID проекта
+ * @param node - Нода для добавления
+ * @param sheetId - ID листа (опционально)
+ * @param options - Опции записи в БД
+ * @returns Результат записи или ошибка
+ */
+export async function addNodeInDb(
+  projectId: number,
+  node: Node,
+  sheetId?: string,
+  options?: NodeOpsDbOptions,
+): Promise<NodeOpsDbResult> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+  return applyAndSave(projectId, addNodeToProject(fetched.data, node, sheetId), options);
+}
+
+/**
+ * Обновляет ноду по id в проекте живой БД и обновляет холст (live).
+ * @param projectId - Числовой ID проекта
+ * @param nodeId - ID ноды
+ * @param patch - Частичное обновление ноды { type?, position?, data? }
+ * @param sheetId - ID листа (опционально)
+ * @param options - Опции записи в БД
+ * @returns Результат записи или ошибка
+ */
+export async function updateNodeInDb(
+  projectId: number,
+  nodeId: string,
+  patch: { type?: Node['type']; position?: Node['position']; data?: Partial<Node['data']> },
+  sheetId?: string,
+  options?: NodeOpsDbOptions,
+): Promise<NodeOpsDbResult> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+  return applyAndSave(projectId, updateNodeInProject(fetched.data, nodeId, patch, sheetId), options);
+}
+
+/**
+ * Удаляет ноду из проекта живой БД и обновляет холст (live).
+ * @param projectId - Числовой ID проекта
+ * @param nodeId - ID ноды
+ * @param sheetId - ID листа (опционально)
+ * @param options - Опции записи в БД
+ * @returns Результат записи или ошибка
+ */
+export async function removeNodeInDb(
+  projectId: number,
+  nodeId: string,
+  sheetId?: string,
+  options?: NodeOpsDbOptions,
+): Promise<NodeOpsDbResult> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+  return applyAndSave(projectId, removeNodeFromProject(fetched.data, nodeId, sheetId), options);
+}
+
+/**
+ * Соединяет две ноды в проекте живой БД и обновляет холст (live).
+ * @param projectId - Числовой ID проекта
+ * @param fromId - ID исходной ноды
+ * @param toId - ID целевой ноды
+ * @param connectOptions - Параметры соединения { branch?, portType?, sheetId? }
+ * @param options - Опции записи в БД
+ * @returns Результат записи или ошибка
+ */
+export async function connectNodesInDb(
+  projectId: number,
+  fromId: string,
+  toId: string,
+  connectOptions?: { branch?: string; portType?: ConnectPortType; sheetId?: string },
+  options?: NodeOpsDbOptions,
+): Promise<NodeOpsDbResult> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+  return applyAndSave(projectId, connectNodes(fetched.data, fromId, toId, connectOptions ?? {}), options);
+}
