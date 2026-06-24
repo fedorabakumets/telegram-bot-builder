@@ -17,7 +17,8 @@ import { restartBotIfRunning } from "../../../bots/restartBotIfRunning";
 import { syncContentToTable } from "../../../services/content-table";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 import { broadcastAgentCanvasUpdate } from "../../../canvas/broadcastAgentCanvasUpdate";
-import { broadcastProjectsChanged } from "../../../terminal/broadcastProjectsChanged";
+import { broadcastProjectsChangedToUsers } from "../../../terminal/broadcastProjectsChanged";
+import { getProjectMemberIds } from "../../../terminal/resolveProjectMembers";
 
 /**
  * Обрабатывает запрос на обновление проекта
@@ -121,13 +122,13 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
 
         // Live-обновление списка проектов: имя в списке могло измениться (rename).
         // Эмитим только при изменении имени, чтобы не дублировать canvas-broadcast
-        // при правках сценария (data).
+        // при правках сценария (data). Для общих проектов уведомляем владельца и
+        // всех коллабораторов, чтобы их список обновился без перезагрузки.
         if (validatedData.name !== undefined) {
             try {
                 const ownerId = project.ownerId ?? getOwnerIdFromRequest(req);
-                if (ownerId != null) {
-                    broadcastProjectsChanged(ownerId, 'renamed');
-                }
+                const members = await getProjectMemberIds(projectId, ownerId);
+                broadcastProjectsChangedToUsers(members, 'renamed');
             } catch (err) {
                 console.error(`[updateProjectHandler] Ошибка broadcast projects-changed для проекта ${projectId}:`, err);
             }

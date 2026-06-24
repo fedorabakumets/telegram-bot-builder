@@ -1,10 +1,11 @@
 /**
- * @fileoverview Рассылка сигнала «список проектов изменился» на owner-канал.
+ * @fileoverview Рассылка сигнала «список проектов изменился» на каналы пользователей.
  * @description Вызывается после создания/переименования/переупорядочивания/удаления
- * проекта: формирует projects-changed и рассылает всем WS-соединениям владельца
- * (ключ `user_<ownerId>` в карте activeConnections). Список проектов принадлежит
- * владельцу, а не одному проекту, поэтому событие шлётся на owner-канал, а не в
- * комнату конкретного проекта.
+ * проекта: формирует projects-changed и рассылает всем WS-соединениям указанных
+ * пользователей (ключ `user_<id>` в карте activeConnections). Список проектов
+ * принадлежит пользователю, а не одному проекту, поэтому событие шлётся на
+ * пользовательские каналы, а не в комнату конкретного проекта. Для общих проектов
+ * получателями являются владелец и все коллабораторы.
  * @module server/terminal/broadcastProjectsChanged
  */
 
@@ -16,18 +17,17 @@ import type {
 } from '../../shared/project-sync/projects-changed-message';
 
 /**
- * Вещает сигнал об изменении списка проектов всем соединениям владельца.
- * @param ownerId - ID владельца, чей список проектов изменился
+ * Отправляет projects-changed всем WS-соединениям одного пользователя.
+ * @param userId - ID пользователя-получателя
  * @param reason - Причина изменения (опционально)
  */
-export function broadcastProjectsChanged(ownerId: number, reason?: ProjectsChangedReason): void {
-  const key = `user_${ownerId}`;
-  const connections = activeConnections.get(key);
+function sendToUser(userId: number, reason?: ProjectsChangedReason): void {
+  const connections = activeConnections.get(`user_${userId}`);
   if (!connections?.size) return;
 
   const message: ProjectsChangedMessage = {
     type: 'projects-changed',
-    ownerId,
+    ownerId: userId,
     reason,
     timestamp: Date.now(),
   };
@@ -37,4 +37,33 @@ export function broadcastProjectsChanged(ownerId: number, reason?: ProjectsChang
       ws.send(payload);
     }
   }
+}
+
+/**
+ * Вещает сигнал об изменении списка проектов нескольким пользователям.
+ * Дедуплицирует id и пропускает невалидные (не положительные числа) значения.
+ * @param userIds - Массив ID пользователей-получателей
+ * @param reason - Причина изменения (опционально)
+ */
+export function broadcastProjectsChangedToUsers(
+  userIds: number[],
+  reason?: ProjectsChangedReason,
+): void {
+  const seen = new Set<number>();
+  for (const userId of userIds) {
+    if (typeof userId !== 'number' || !Number.isFinite(userId) || userId <= 0) continue;
+    if (seen.has(userId)) continue;
+    seen.add(userId);
+    sendToUser(userId, reason);
+  }
+}
+
+/**
+ * Вещает сигнал об изменении списка проектов всем соединениям владельца.
+ * Тонкая обёртка над broadcastProjectsChangedToUsers для обратной совместимости.
+ * @param ownerId - ID владельца, чей список проектов изменился
+ * @param reason - Причина изменения (опционально)
+ */
+export function broadcastProjectsChanged(ownerId: number, reason?: ProjectsChangedReason): void {
+  broadcastProjectsChangedToUsers([ownerId], reason);
 }
