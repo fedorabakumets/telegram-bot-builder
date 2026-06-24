@@ -254,7 +254,7 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 
 **Фазировка:**
 - **0.2a — серверная токен-инфра + deny-by-default + удаление гостей:** ✅ **Готово** (коммит `8dd17ba23`). Таблица `agent_tokens` (+миграция `0008`, sha-256 хеш, uniqueIndex, `scopes`-задел) + крипто-хелпер (`server/utils/agent-token-crypto.ts`) + storage (`createAgentToken`/`getAgentTokensByOwner`/`revokeAgentToken`/`resolveAgentToken`) + resolver `identifyAgent` (`server/middleware/agentTokenMiddleware.ts`, `Authorization: Bearer`) + **глобальный `requireApiAuth`** (deny-by-default с allowlist) + ужесточён `requireProjectAccess` (аноним → 403) + удалены гостевые ветки (`listProjectsHandler`/`getAllProjectsHandler`/guest-middleware/`ensureDefaultProject`). MCP: `lib/bot-tools/api-fetch.ts` (Bearer + `MCP_AGENT_TOKEN`) + рефактор 3 файлов + `dotenv` в точке входа MCP. Проверено вживую: без токена 401, валидный 200, неверный 401, агентские версии теперь под реальным владельцем (`authorId` + `authorKind='agent'`).
-- **0.2b — вкладка «Агент» (UI):** ⬜ генерация/список/отзыв токенов + сниппет настройки MCP + включение проверки scopes.
+- **0.2b — вкладка «Агент» (UI):** ⬜ генерация/список/отзыв токенов + сниппет настройки MCP + включение проверки scopes. Полная спецификация — [`../ui/agent-tab.md`](../ui/agent-tab.md).
 - **0.2c — проектный блок тулов:** ⬜ `project-ops-db.ts` (6 функций) + регистрация 6 тулов + экспорт в барель.
 
 #### Удаление гостевых проектов + deny-by-default (security-фикс, часть 0.2a)
