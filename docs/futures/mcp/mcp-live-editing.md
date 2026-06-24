@@ -80,7 +80,7 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 | # | Задача | Сложность | Статус |
 |---|--------|-----------|--------|
 | 0.1 | Зафиксировать решение «MCP → HTTP API сервера» и формат правки | Низкая | ✅ Готово (вариант 1A: адресация по числовому `projectId`, снапшот целиком) |
-| 0.2 | Аутентификация MCP к API — **персональные токены агента (per-user PAT)** + deny-by-default + удаление гостевых проектов | Средняя | 🟦 Решено делать (профессиональный состав, модель GitHub/Stripe + RFC 6750): таблица `agent_tokens` (sha-256 хеш, колонка `scopes` на будущее) + resolver-middleware `identifyAgent` (`Authorization: Bearer`) + **глобальный `requireAuth` с allowlist** (не точечная заплатка) + вкладка «Агент» в UI. Гостевые проекты убираются (в БД 0 — миграция не нужна). Фазировка 0.2a/0.2b/0.2c — см. раздел «Проектный блок». |
+| 0.2 | Аутентификация MCP к API — **персональные токены агента (per-user PAT)** + deny-by-default + удаление гостевых проектов | Средняя | 🟨 В работе: **0.2a ✅ Готово** (`8dd17ba23` — `agent_tokens` + `identifyAgent` Bearer + `requireApiAuth` deny-by-default + удаление гостей + MCP `api-fetch`; проверено: аноним 401, токен 200, именное авторство агента). 0.2b (вкладка «Агент» UI) и 0.2c (проектные тулы) — ⬜. Модель GitHub/Stripe + RFC 6750. См. раздел «Проектный блок». |
 
 ### Фаза 1 — Полный снапшот через API + broadcast (MVP realtime)
 | # | Задача | Сложность | Статус |
@@ -253,9 +253,9 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 - `db_delete_project` → `DELETE /api/projects/:id`. **ДЕСТРУКТИВНО, необратимо** — обязательный флаг `confirm: true`.
 
 **Фазировка:**
-- **0.2a — серверная токен-инфра + deny-by-default + удаление гостей:** таблица `agent_tokens` (+миграция `0008`) + storage (create/list/revoke/resolveByToken с хешем) + resolver-middleware `identifyAgent` + **глобальный `requireAuth` с allowlist** + удаление гостевых веток. MCP-хелпер `api-fetch.ts` (рефактор 3 файлов, Bearer). Всё одним атомарным изменением. После 0.2a проектные тулы работают под токеном.
-- **0.2b — вкладка «Агент» (UI):** генерация/список/отзыв токенов + сниппет настройки MCP + включение проверки scopes.
-- **0.2c — проектный блок тулов:** `project-ops-db.ts` (6 функций) + регистрация 6 тулов + экспорт в барель.
+- **0.2a — серверная токен-инфра + deny-by-default + удаление гостей:** ✅ **Готово** (коммит `8dd17ba23`). Таблица `agent_tokens` (+миграция `0008`, sha-256 хеш, uniqueIndex, `scopes`-задел) + крипто-хелпер (`server/utils/agent-token-crypto.ts`) + storage (`createAgentToken`/`getAgentTokensByOwner`/`revokeAgentToken`/`resolveAgentToken`) + resolver `identifyAgent` (`server/middleware/agentTokenMiddleware.ts`, `Authorization: Bearer`) + **глобальный `requireApiAuth`** (deny-by-default с allowlist) + ужесточён `requireProjectAccess` (аноним → 403) + удалены гостевые ветки (`listProjectsHandler`/`getAllProjectsHandler`/guest-middleware/`ensureDefaultProject`). MCP: `lib/bot-tools/api-fetch.ts` (Bearer + `MCP_AGENT_TOKEN`) + рефактор 3 файлов + `dotenv` в точке входа MCP. Проверено вживую: без токена 401, валидный 200, неверный 401, агентские версии теперь под реальным владельцем (`authorId` + `authorKind='agent'`).
+- **0.2b — вкладка «Агент» (UI):** ⬜ генерация/список/отзыв токенов + сниппет настройки MCP + включение проверки scopes.
+- **0.2c — проектный блок тулов:** ⬜ `project-ops-db.ts` (6 функций) + регистрация 6 тулов + экспорт в барель.
 
 #### Удаление гостевых проектов + deny-by-default (security-фикс, часть 0.2a)
 
