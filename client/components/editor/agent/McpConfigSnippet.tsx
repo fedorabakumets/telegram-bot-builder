@@ -28,8 +28,9 @@ function buildConfig(token: string): string {
     {
       mcpServers: {
         "botcraft-builder": {
-          command: "npx",
-          args: ["-y", "botcraft-mcp"],
+          command: "npm",
+          args: ["run", "mcp:bot-builder"],
+          cwd: "<путь к каталогу проекта>",
           env: {
             API_BASE_URL: apiBaseUrl,
             MCP_AGENT_TOKEN: token,
