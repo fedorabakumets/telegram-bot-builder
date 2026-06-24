@@ -314,8 +314,8 @@ def _eval_expr(template: str, user_vars: dict):
 
     Поддерживает арифметику (+, -, *, /, //, %, **), логику (and, or, not),
     тернарный if/else, сравнения, безопасные функции
-    (round, abs, int, float, min, max) и строковые методы
-    (replace, strip, lower, upper, startswith, endswith, split, join).
+    (round, abs, int, float, min, max, str, reversed, thousands) и строковые
+    методы (replace, strip, lower, upper, startswith, endswith, split, join).
     При любой ошибке возвращает исходный шаблон без изменений.
 
     Args:
@@ -368,7 +368,7 @@ def _eval_expr(template: str, user_vars: dict):
             _ast_expr.BoolOp, _ast_expr.And, _ast_expr.Or, _ast_expr.Not,
             _ast_expr.List, _ast_expr.Dict, _ast_expr.Tuple,
         )
-        _safe_funcs = {'round': round, 'abs': abs, 'int': int, 'float': float, 'min': min, 'max': max, 'str': str, 'thousands': lambda n: f"{int(float(n)):,}".replace(",", " ")}
+        _safe_funcs = {'round': round, 'abs': abs, 'int': int, 'float': float, 'min': min, 'max': max, 'str': str, 'reversed': reversed, 'thousands': lambda n: f"{int(float(n)):,}".replace(",", " ")}
         _safe_methods = {'replace', 'strip', 'lstrip', 'rstrip', 'lower', 'upper', 'startswith', 'endswith', 'split', 'join', 'count', 'find', 'format'}
         for _node in _ast_expr.walk(tree):
             if not isinstance(_node, _allowed):
