@@ -15,6 +15,7 @@
 import { nanoid } from 'nanoid';
 import type { BotDataWithSheets } from '@shared/schema';
 import { validateBotProject } from './validate-project.ts';
+import { updateNodeReferencesInData } from './sheet-node-references.ts';
 import type { MutateProjectResult } from './project-mutate.ts';
 
 /**
@@ -97,6 +98,111 @@ export function addSheetToProject(
     ...project,
     sheets: [...(project.sheets ?? []), newSheet],
     activeSheetId: newId,
+  } as BotDataWithSheets;
+
+  return { project: updated, validation: validateBotProject(updated) };
+}
+
+/**
+ * Генерирует новый уникальный id ноды на основе существующего: срезает прежние
+ * суффиксы копирования (_paste_/_copy_/_dup_) и добавляет свежий _dup_<ts>_<rand>.
+ * Аналог клиентского generateNewId(id, 'dup'), без внешних зависимостей.
+ * @param id - Исходный id ноды
+ * @returns Новый уникальный id с суффиксом _dup_
+ */
+function generateDuplicateSheetNodeId(id: string): string {
+  const baseId = id.replace(
+    /(_paste_\d+_[a-z0-9]+|_copy_\d+_[a-z0-9]+|_copy_\d+|_dup_\d+_[a-z0-9]+)+$/,
+    '',
+  );
+  return `${baseId}_dup_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+}
+
+/**
+ * Дублирует целый лист со всеми нодами (иммутабельный порт клиентского
+ * duplicateSheet под live-БД). Пошагово:
+ * 1. Каждой ноде выдаётся новый id (_dup_) и позиция со смещением +50/+50,
+ *    строится карта старый node.id → новый (nodeIdMap).
+ * 2. Каждой ветке в data.branches выдаётся свежий nanoid(), строится branchIdMap.
+ * 3. У нод с data.condSourceId, присутствующим в branchIdMap, ссылка ремаппится.
+ * 4. Все ссылки на ноды внутри data ремаппятся через updateNodeReferencesInData.
+ * 5. Создаётся новый лист "{name} (копия)" с новым id и копией viewState оригинала.
+ *
+ * ⚠️ Новый лист создаётся БЕЗ createdAt/updatedAt (z.date() в схеме провалит
+ * валидацию после JSON round-trip GET→PUT). Лист становится активным.
+ * @param projectJson - Текущий project.json (объект или JSON-строка)
+ * @param sheetId - ID дублируемого листа
+ * @returns Обновлённый проект с валидацией или ошибка
+ */
+export function duplicateSheetInProject(
+  projectJson: unknown,
+  sheetId: string,
+): MutateProjectResult | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const sheets = (project.sheets ?? []) as SheetLike[];
+  const original = sheets.find((s) => s.id === sheetId);
+  if (!original) return { error: 'Лист не найден' };
+
+  const originalNodes = (original.nodes ?? []) as any[];
+
+  // Шаг 1: новые id нод + смещение позиции, карта nodeIdMap
+  const duplicatedNodes = originalNodes.map((node) => ({
+    ...node,
+    id: generateDuplicateSheetNodeId(node.id),
+    position: {
+      x: (node.position?.x ?? 0) + 50,
+      y: (node.position?.y ?? 0) + 50,
+    },
+  }));
+  const nodeIdMap = new Map<string, string>(
+    originalNodes.map((node, index) => [node.id, duplicatedNodes[index].id]),
+  );
+
+  // Шаг 2: новые branch.id для нод с data.branches, карта branchIdMap
+  const branchIdMap = new Map<string, string>();
+  const nodesWithBranches = duplicatedNodes.map((node) => {
+    const data = node.data as any;
+    if (data?.branches && Array.isArray(data.branches)) {
+      const updatedBranches = data.branches.map((branch: any) => {
+        const newBranchId = nanoid();
+        if (branch.id) branchIdMap.set(branch.id, newBranchId);
+        return { ...branch, id: newBranchId };
+      });
+      return { ...node, data: { ...data, branches: updatedBranches } };
+    }
+    return node;
+  });
+
+  // Шаг 3: ремап condSourceId через branchIdMap
+  const nodesWithCondSource = nodesWithBranches.map((node) => {
+    const data = node.data as any;
+    if (data?.condSourceId && branchIdMap.has(data.condSourceId)) {
+      return { ...node, data: { ...data, condSourceId: branchIdMap.get(data.condSourceId) } };
+    }
+    return node;
+  });
+
+  // Шаг 4: ремап всех ссылок на ноды внутри data
+  const finalNodes = nodesWithCondSource.map((node) => ({
+    ...node,
+    data: updateNodeReferencesInData(node.data, nodeIdMap),
+  }));
+
+  // Шаг 5: сборка нового листа (без createdAt/updatedAt)
+  const newSheetId = nanoid();
+  const newSheet = {
+    id: newSheetId,
+    name: `${original.name} (копия)`,
+    nodes: finalNodes,
+    viewState: { ...((original as any).viewState ?? { pan: { x: 0, y: 0 }, zoom: 100 }) },
+  };
+
+  const updated = {
+    ...project,
+    sheets: [...(project.sheets ?? []), newSheet],
+    activeSheetId: newSheetId,
   } as BotDataWithSheets;
 
   return { project: updated, validation: validateBotProject(updated) };

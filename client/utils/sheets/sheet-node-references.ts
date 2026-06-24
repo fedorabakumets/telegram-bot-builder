@@ -28,7 +28,8 @@ export function updateNodeReferencesInData(data: any, nodeIdMap: Map<string, str
     'fallbackTarget',
     'autoTransitionTo',
     'sourceNodeId',
-    'keyboardNodeId'
+    'keyboardNodeId',
+    'sourceMessageNodeId'
   ];
 
   for (const field of nodeRefFields) {
@@ -103,6 +104,17 @@ export function updateNodeReferencesInData(data: any, nodeIdMap: Map<string, str
   // Обновляем ветки condition-узла
   if (updatedData?.branches && Array.isArray(updatedData.branches)) {
     updatedData.branches = updatedData.branches.map((branch: any) => {
+      const updatedBranch = { ...branch };
+      if (updatedBranch.target && nodeIdMap.has(updatedBranch.target)) {
+        updatedBranch.target = nodeIdMap.get(updatedBranch.target);
+      }
+      return updatedBranch;
+    });
+  }
+
+  // Обновляем параллельные ветки (parallel-узел)
+  if (updatedData?.parallelBranches && Array.isArray(updatedData.parallelBranches)) {
+    updatedData.parallelBranches = updatedData.parallelBranches.map((branch: any) => {
       const updatedBranch = { ...branch };
       if (updatedBranch.target && nodeIdMap.has(updatedBranch.target)) {
         updatedBranch.target = nodeIdMap.get(updatedBranch.target);

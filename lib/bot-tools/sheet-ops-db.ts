@@ -15,6 +15,7 @@ import {
 } from './project-db.ts';
 import {
   addSheetToProject,
+  duplicateSheetInProject,
   renameSheetInProject,
   removeSheetFromProject,
   setActiveSheetInProject,
@@ -61,6 +62,25 @@ export async function addSheetInDb(
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
   return applyAndSave(projectId, addSheetToProject(fetched.data, name), options);
+}
+
+/**
+ * Дублирует лист со всеми нодами в проекте живой БД и обновляет холст (live).
+ * Копия получает суффикс "(копия)", новые id нод/веток, внутренние связи
+ * ремаппятся на копии, новый лист становится активным.
+ * @param projectId - Числовой ID проекта
+ * @param sheetId - ID дублируемого листа
+ * @param options - Опции записи в БД
+ * @returns Результат записи или ошибка
+ */
+export async function duplicateSheetInDb(
+  projectId: number,
+  sheetId: string,
+  options?: SheetOpsDbOptions,
+): Promise<SheetOpsDbResult> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+  return applyAndSave(projectId, duplicateSheetInProject(fetched.data, sheetId), options);
 }
 
 /**

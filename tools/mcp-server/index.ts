@@ -34,6 +34,7 @@ import {
   moveNodeInDb,
   duplicateNodeInDb,
   addSheetInDb,
+  duplicateSheetInDb,
   renameSheetInDb,
   removeSheetInDb,
   restoreVersionInDb,
@@ -506,6 +507,22 @@ function registerTools(server: McpServer): void {
     },
     async ({ project_id, name, commit_message }) =>
       textResult(await addSheetInDb(project_id, name, {
+        commitMessage: commit_message,
+      })),
+  );
+
+  server.registerTool(
+    'db_duplicate_sheet',
+    {
+      description: 'Дублировать лист со всеми нодами в БД живого приложения с обновлением холста (live). Копия получает суффикс «(копия)», новые id нод/веток, внутренние связи ремаппятся на копии, лист становится активным. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        sheet_id: z.string().describe('ID дублируемого листа'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, sheet_id, commit_message }) =>
+      textResult(await duplicateSheetInDb(project_id, sheet_id, {
         commitMessage: commit_message,
       })),
   );
