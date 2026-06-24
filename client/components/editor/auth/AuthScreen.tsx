@@ -14,19 +14,21 @@ import {
 import { AuthTelegramButton } from './AuthTelegramButton';
 import { AuthDevForm } from './AuthDevForm';
 import { useAuthScreen } from './hooks/use-auth-screen';
-
-/** true если приложение запущено в dev-режиме */
-const isDev = import.meta.env.MODE === 'development';
+import { useAppConfig } from '@/hooks/use-app-config';
 
 /**
  * Экран авторизации приложения.
- * В dev-режиме показывает инлайн-форму ввода Telegram ID.
+ * В dev-режиме или при SKIP_AUTH показывает инлайн-форму ввода Telegram ID.
  * В prod-режиме показывает кнопку входа через Telegram.
  *
  * @returns JSX элемент экрана авторизации
  */
 export function AuthScreen() {
   const { handleTelegramLogin, isLoading } = useAuthScreen();
+  const { data: appConfig } = useAppConfig();
+
+  /** true если приложение запущено в dev-режиме или сервер отдал skipAuth */
+  const isDev = import.meta.env.MODE === 'development' || appConfig?.skipAuth === true;
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">

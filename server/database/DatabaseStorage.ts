@@ -2,7 +2,7 @@
  * @fileoverview Базовая реализация storage поверх Drizzle для серверной части конструктора
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess, projectVersions, type ProjectVersion } from "@shared/schema";
 import { and, asc, desc, eq, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
@@ -1930,5 +1930,79 @@ export class DatabaseStorage implements IStorage {
     return await this.db.select().from(workerProcesses)
       .where(eq(workerProcesses.status, "running"))
       .orderBy(desc(workerProcesses.startedAt));
+  }
+
+  // Версии проектов (история снимков и откат)
+
+  /**
+   * Создать снимок версии проекта в базе данных
+   * @param projectId - ID проекта
+   * @param snapshot - Снимок данных проекта (BotDataWithSheets)
+   * @param label - Опциональная метка версии
+   * @param authorId - Опциональный ID автора снимка
+   * @param kind - Тип версии: "auto" (по умолчанию) или "manual" (ручной коммит)
+   * @returns Созданная версия проекта
+   */
+  async createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind: 'auto' | 'manual' = 'auto'): Promise<ProjectVersion> {
+    const [version] = await this.db.insert(projectVersions).values({
+      projectId,
+      snapshot,
+      label: label ?? null,
+      authorId: authorId ?? null,
+      kind,
+    }).returning();
+    return version;
+  }
+
+  /**
+   * Получить список версий проекта, отсортированный по дате создания (DESC)
+   * @param projectId - ID проекта
+   * @returns Массив версий проекта
+   */
+  async listProjectVersions(projectId: number): Promise<ProjectVersion[]> {
+    return await this.db.select().from(projectVersions)
+      .where(eq(projectVersions.projectId, projectId))
+      .orderBy(desc(projectVersions.createdAt));
+  }
+
+  /**
+   * Получить одну версию проекта по ID
+   * @param versionId - ID версии
+   * @returns Версия проекта или undefined, если не найдена
+   */
+  async getProjectVersion(versionId: number): Promise<ProjectVersion | undefined> {
+    const [version] = await this.db.select().from(projectVersions)
+      .where(eq(projectVersions.id, versionId));
+    return version || undefined;
+  }
+
+  /**
+   * Получить самую свежую версию проекта (для дедупликации снимков)
+   * @param projectId - ID проекта
+   * @returns Самая свежая версия проекта или undefined, если версий нет
+   */
+  async getLatestProjectVersion(projectId: number): Promise<ProjectVersion | undefined> {
+    const [version] = await this.db.select().from(projectVersions)
+      .where(eq(projectVersions.projectId, projectId))
+      .orderBy(desc(projectVersions.createdAt))
+      .limit(1);
+    return version || undefined;
+  }
+
+  /**
+   * Удалить старые авто-снимки проекта, оставив последние keep штук.
+   * Ручные коммиты (kind='manual') не удаляются и не учитываются в лимите.
+   * @param projectId - ID проекта
+   * @param keep - Сколько последних авто-снимков сохранить
+   * @returns Promise<void>
+   */
+  async pruneProjectVersions(projectId: number, keep: number): Promise<void> {
+    // Берём только авто-снимки — ручные коммиты сохраняем всегда
+    const versions = await this.db.select({ id: projectVersions.id }).from(projectVersions)
+      .where(and(eq(projectVersions.projectId, projectId), eq(projectVersions.kind, 'auto')))
+      .orderBy(desc(projectVersions.createdAt));
+    const idsToDelete = versions.slice(keep).map((v) => v.id);
+    if (idsToDelete.length === 0) return;
+    await this.db.delete(projectVersions).where(inArray(projectVersions.id, idsToDelete));
   }
 }

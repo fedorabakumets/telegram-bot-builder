@@ -116,7 +116,7 @@ user_data[user_id]["export_file"] = {
 await set_user_var(user_id, "export_file", user_data[user_id]["export_file"])
 ```
 
-Результат — переменная типа `file` (см. `docs/futures/file-variable-type.md`), которую медиа-нода отправляет через `BufferedInputFile`.
+Результат — переменная типа `file` (см. `docs/futures/features/file-variable-type.md`), которую медиа-нода отправляет через `BufferedInputFile`.
 
 ---
 

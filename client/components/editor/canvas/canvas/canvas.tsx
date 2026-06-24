@@ -123,6 +123,8 @@ interface CanvasProps {
   canRedo?: boolean;
   /** Колбэк для сохранения */
   onSave?: () => void;
+  /** Колбэк сохранения с заметкой — создаёт постоянный ручной чекпоинт */
+  onSaveWithNote?: (note: string) => void;
   /** Флаг процесса сохранения */
   isSaving?: boolean;
   /** Колбэк для копирования в буфер обмена */
@@ -203,6 +205,8 @@ interface CanvasProps {
   projects?: Array<{ id: number; name: string; ownerId: number | null; data?: unknown }>;
   /** Колбэк навигации к целевой ноде через портал с фокусом (двойной клик) */
   onPortalNavigate?: (targetNodeId: string) => void;
+  /** Колбэк после восстановления версии — перезагрузка холста */
+  onRestoreVersion?: () => void;
 }
 
 export function Canvas({
@@ -224,6 +228,7 @@ export function Canvas({
   canUndo,
   canRedo,
   onSave,
+  onSaveWithNote,
   isSaving,
   onCopyToClipboard,
   onPasteFromClipboard,
@@ -258,6 +263,7 @@ export function Canvas({
   onOpenMobileSidebar,
   onOpenMobileProperties,
   onPortalNavigate,
+  onRestoreVersion,
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1908,6 +1914,7 @@ export function Canvas({
         onUndo={onUndo}
         onRedo={onRedo}
         onSave={onSave}
+        onSaveWithNote={onSaveWithNote}
         onAutoLayout={onAutoLayout}
         onCopyToClipboard={onCopyToClipboard}
         onPasteFromClipboard={onPasteFromClipboard}
@@ -1932,6 +1939,8 @@ export function Canvas({
         showPortals={showPortals}
         onTogglePortals={togglePortals}
         portalsCount={portalsCount}
+        projectId={projectId}
+        onRestoreVersion={onRestoreVersion}
       />
 
       {/* Плавающая панель для мобильных устройств */}

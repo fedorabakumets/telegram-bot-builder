@@ -62,3 +62,6 @@ export type { Broadcast, InsertBroadcast, BroadcastResult, InsertBroadcastResult
 
 export { botEnvVariables, insertBotEnvVariableSchema } from "./bot-env-variables";
 export type { BotEnvVariable, InsertBotEnvVariable } from "./bot-env-variables";
+
+export { projectVersions, insertProjectVersionSchema } from "./project-versions";
+export type { ProjectVersion, InsertProjectVersion } from "./project-versions";

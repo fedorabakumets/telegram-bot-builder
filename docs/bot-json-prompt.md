@@ -1739,7 +1739,7 @@ GIN-индекс на `bot_table_rows.data` для быстрого поиска
 | Синхронизация таблица → JSON | `server/services/content-table/sync-table-to-scenario.ts` |
 | Маппинг ключей | `server/services/content-table/content-key-parser.ts` |
 | Шаблон Python (get_content) | `lib/templates/content/content.py.jinja2` |
-| Документация фичи | `docs/futures/content-table.md` |
+| Документация фичи | `docs/futures/features/content-table.md` |
 
 ---
 

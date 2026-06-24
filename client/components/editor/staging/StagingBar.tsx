@@ -6,13 +6,18 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChangesModal } from './ChangesModal';
+import { RemoteSyncBadge } from './remote-sync-badge';
+import { SaveCheckpointPopover } from '@/components/editor/canvas/canvas/save-checkpoint-popover';
 import type { UseStagingBarResult } from './use-staging-bar';
 import type { ActionHistoryItem } from '@/pages/editor/types/action-history-item';
+import type { CanvasActor } from '@shared/canvas-sync/canvas-actor';
 
 /** Свойства компонента StagingBar */
 interface StagingBarProps extends UseStagingBarResult {
   /** История действий для передачи в ChangesModal */
   actionHistory: ActionHistoryItem[];
+  /** Скрыть бейдж удалённой синхронизации */
+  onDismissRemoteSync?: () => void;
 }
 
 /**
@@ -22,7 +27,8 @@ interface StagingBarProps extends UseStagingBarResult {
  */
 export function StagingBar(props: StagingBarProps) {
   const { isVisible, variant, changesCount, onSave, onSaveAndRestart, onDiscard, isSaving,
-    onApplyJson, onResetJson, jsonError, actionHistory, mode, hasLocalChanges, isDirty } = props;
+    onApplyJson, onResetJson, jsonError, actionHistory, mode, hasLocalChanges, isDirty,
+    remoteSyncActor, onDismissRemoteSync, onSaveWithNote } = props;
 
   /** Открыто ли модальное окно деталей */
   const [modalOpen, setModalOpen] = useState(false);
@@ -52,9 +58,13 @@ export function StagingBar(props: StagingBarProps) {
           {variant === 'canvas' && (
             <CanvasVariant
               changesCount={changesCount}
+              hasLocalChanges={hasLocalChanges}
               isSaving={isSaving}
+              remoteSyncActor={remoteSyncActor}
+              onDismissRemoteSync={onDismissRemoteSync}
               onSave={onSave}
               onSaveAndRestart={onSaveAndRestart}
+              onSaveWithNote={onSaveWithNote}
               onDiscard={onDiscard}
               onDetails={() => setModalOpen(true)}
             />
@@ -65,6 +75,7 @@ export function StagingBar(props: StagingBarProps) {
               onDetails={() => setModalOpen(true)}
               onSave={onSave}
               onSaveAndRestart={onSaveAndRestart}
+              onSaveWithNote={onSaveWithNote}
               isSaving={isSaving}
             />
           )}
@@ -94,12 +105,20 @@ export function StagingBar(props: StagingBarProps) {
 interface CanvasVariantProps {
   /** Количество изменений */
   changesCount: number;
+  /** Есть ли локальные несохранённые правки */
+  hasLocalChanges: boolean;
   /** Идёт ли сохранение */
   isSaving: boolean;
+  /** Актор последней удалённой синхронизации */
+  remoteSyncActor?: CanvasActor | null;
+  /** Скрыть бейдж удалённой синхронизации */
+  onDismissRemoteSync?: () => void;
   /** Колбэк сохранения */
   onSave: () => void;
   /** Колбэк сохранения с перезапуском */
   onSaveAndRestart: () => void;
+  /** Колбэк сохранения с заметкой — создаёт постоянный ручной чекпоинт */
+  onSaveWithNote: (note: string) => void;
   /** Колбэк сброса */
   onDiscard: () => void;
   /** Колбэк открытия деталей */
@@ -111,22 +130,40 @@ interface CanvasVariantProps {
  * @param props - Свойства варианта
  * @returns JSX элемент
  */
-function CanvasVariant({ changesCount, isSaving, onSave, onSaveAndRestart, onDiscard, onDetails }: CanvasVariantProps) {
+function CanvasVariant({
+  changesCount,
+  hasLocalChanges,
+  isSaving,
+  remoteSyncActor,
+  onDismissRemoteSync,
+  onSave,
+  onSaveAndRestart,
+  onSaveWithNote,
+  onDiscard,
+  onDetails,
+}: CanvasVariantProps) {
   return (
     <>
-      {/* Верхняя строка: статус + детали */}
-      <div className="flex items-center gap-1.5">
-        <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
-          <i className="fas fa-pencil text-violet-500 dark:text-violet-400 mr-1.5" />
-          {changesCount > 0 ? `${changesCount} изменений` : 'Есть изменения'}
-        </span>
-        <div className="hidden sm:block w-px h-4 bg-slate-300 dark:bg-slate-700" />
-        <Button size="sm" variant="ghost" onClick={onDetails}
-          className="h-7 px-2 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
-          Детали
-        </Button>
+      <div className="flex items-center gap-1.5 flex-wrap justify-center">
+        {remoteSyncActor && (
+          <RemoteSyncBadge actor={remoteSyncActor} onDismiss={onDismissRemoteSync} />
+        )}
+        {hasLocalChanges && (
+          <>
+            <span className="text-xs text-slate-600 dark:text-slate-300 px-1.5 whitespace-nowrap">
+              <i className="fas fa-pencil text-violet-500 dark:text-violet-400 mr-1.5" />
+              {changesCount > 0 ? `${changesCount} изменений` : 'Есть изменения'}
+            </span>
+            <div className="hidden sm:block w-px h-4 bg-slate-300 dark:bg-slate-700" />
+            <Button size="sm" variant="ghost" onClick={onDetails}
+              className="h-7 px-2 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+              Детали
+            </Button>
+          </>
+        )}
       </div>
-      {/* Кнопки действий — на мобилке в 2 строки, на десктопе в одну */}
+      {hasLocalChanges && (
+        <>
       <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center">
         <Button size="sm" variant="ghost" onClick={onDiscard}
           className="h-7 px-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
@@ -138,6 +175,7 @@ function CanvasVariant({ changesCount, isSaving, onSave, onSaveAndRestart, onDis
             ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
             : <><i className="fas fa-floppy-disk mr-1" />Сохранить <kbd className="ml-1 opacity-60 text-[10px] hidden sm:inline">⇧+↵</kbd></>}
         </Button>
+        <SaveCheckpointPopover size="bar" onSaveWithNote={onSaveWithNote} isSaving={isSaving} />
       </div>
       <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center sm:hidden">
         <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
@@ -147,7 +185,6 @@ function CanvasVariant({ changesCount, isSaving, onSave, onSaveAndRestart, onDis
             : <><i className="fas fa-play mr-1" />Сохранить и перезапустить</>}
         </Button>
       </div>
-      {/* На десктопе — в той же строке */}
       <div className="hidden sm:flex items-center">
         <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
           className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -156,6 +193,8 @@ function CanvasVariant({ changesCount, isSaving, onSave, onSaveAndRestart, onDis
             : <><i className="fas fa-play mr-1" />Сохранить и перезапустить</>}
         </Button>
       </div>
+        </>
+      )}
     </>
   );
 }
@@ -170,6 +209,8 @@ interface JsonDirtyVariantProps {
   onSave: () => void;
   /** Колбэк сохранения с перезапуском ботов (с применением JSON) */
   onSaveAndRestart: () => void;
+  /** Колбэк сохранения с заметкой — создаёт постоянный ручной чекпоинт */
+  onSaveWithNote: (note: string) => void;
   /** Идёт ли сохранение */
   isSaving: boolean;
 }
@@ -179,7 +220,7 @@ interface JsonDirtyVariantProps {
  * @param props - Свойства варианта
  * @returns JSX элемент
  */
-function JsonDirtyVariant({ onReset, onDetails, onSave, onSaveAndRestart, isSaving }: JsonDirtyVariantProps) {
+function JsonDirtyVariant({ onReset, onDetails, onSave, onSaveAndRestart, onSaveWithNote, isSaving }: JsonDirtyVariantProps) {
   return (
     <>
       {/* Верхняя строка: статус + детали */}
@@ -206,6 +247,7 @@ function JsonDirtyVariant({ onReset, onDetails, onSave, onSaveAndRestart, isSavi
             ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
             : <><i className="fas fa-floppy-disk mr-1" />Сохранить</>}
         </Button>
+        <SaveCheckpointPopover size="bar" onSaveWithNote={onSaveWithNote} isSaving={isSaving} />
       </div>
       <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center sm:hidden">
         <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}

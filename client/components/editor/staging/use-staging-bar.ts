@@ -5,6 +5,7 @@
 
 import { useMemo, useCallback } from 'react';
 import type { ActionHistoryItem } from '@/pages/editor/types/action-history-item';
+import type { CanvasActor } from '@shared/canvas-sync/canvas-actor';
 
 /** Вариант отображения панели */
 export type StagingVariant = 'canvas' | 'json-dirty' | 'json-error';
@@ -20,10 +21,14 @@ export interface UseStagingBarOptions {
   onSave: () => void;
   /** Колбэк сохранения с перезапуском ботов сценария */
   onSaveAndRestart: () => void;
+  /** Колбэк сохранения с заметкой — создаёт постоянный ручной чекпоинт */
+  onSaveWithNote: (note: string) => void;
   /** Колбэк сброса изменений холста */
   onDiscard: () => void;
   /** Идёт ли сохранение в данный момент */
   isSaving: boolean;
+  /** Последний актор удалённой синхронизации холста */
+  remoteSyncActor?: CanvasActor | null;
   // --- JSON режим ---
   /** Есть ли несохранённые изменения в JSON-редакторе */
   isDirty: boolean;
@@ -50,6 +55,8 @@ export interface UseStagingBarResult {
   onSave: () => void;
   /** Колбэк сохранения с перезапуском ботов сценария */
   onSaveAndRestart: () => void;
+  /** Колбэк сохранения с заметкой — создаёт постоянный ручной чекпоинт */
+  onSaveWithNote: (note: string) => void;
   /** Колбэк сброса (canvas) */
   onDiscard: () => void;
   /** Идёт ли сохранение */
@@ -66,6 +73,8 @@ export interface UseStagingBarResult {
   hasLocalChanges: boolean;
   /** Есть ли несохранённые изменения в JSON (для предупреждения о конфликте) */
   isDirty: boolean;
+  /** Актор последней удалённой синхронизации холста */
+  remoteSyncActor?: CanvasActor | null;
 }
 
 /**
@@ -77,7 +86,7 @@ export interface UseStagingBarResult {
 export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResult {
   const {
     hasLocalChanges, actionHistory, onSave, onSaveAndRestart, onDiscard, isSaving,
-    isDirty, jsonError, onApplyJson, onResetJson, mode,
+    isDirty, jsonError, onApplyJson, onResetJson, mode, remoteSyncActor, onSaveWithNote,
   } = options;
 
   const variant = useMemo<StagingVariant>(() => {
@@ -90,9 +99,10 @@ export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResul
   }, [mode, jsonError, isDirty]);
 
   const isVisible = useMemo(() => {
+    if (remoteSyncActor) return true;
     if (mode === 'canvas') return hasLocalChanges;
     return isDirty || !!jsonError || hasLocalChanges;
-  }, [mode, hasLocalChanges, isDirty, jsonError]);
+  }, [mode, hasLocalChanges, isDirty, jsonError, remoteSyncActor]);
 
   /**
    * В json-dirty режиме сначала применяет JSON, затем сохраняет.
@@ -116,12 +126,24 @@ export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResul
     onSaveAndRestart();
   }, [mode, isDirty, onApplyJson, onSaveAndRestart]);
 
+  /**
+   * В json-dirty режиме сначала применяет JSON, затем сохраняет с заметкой.
+   * В canvas режиме — просто сохраняет с заметкой (постоянный ручной чекпоинт).
+   */
+  const handleSaveWithNote = useCallback((note: string) => {
+    if (mode === 'json' && isDirty) {
+      onApplyJson();
+    }
+    onSaveWithNote(note);
+  }, [mode, isDirty, onApplyJson, onSaveWithNote]);
+
   return {
     isVisible,
     variant,
     changesCount: actionHistory.length,
     onSave: handleSave,
     onSaveAndRestart: handleSaveAndRestart,
+    onSaveWithNote: handleSaveWithNote,
     onDiscard,
     isSaving,
     onApplyJson,
@@ -130,5 +152,6 @@ export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResul
     mode,
     hasLocalChanges,
     isDirty,
+    remoteSyncActor,
   };
 }

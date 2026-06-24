@@ -24,6 +24,7 @@ import {
   type BotTableColumn,
   type BotTableRow,
   type WorkerProcess,
+  type ProjectVersion,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
 import type {
@@ -967,6 +968,49 @@ export interface IStorage {
    * @returns Массив активных записей воркеров
    */
   getActiveWorkers(): Promise<WorkerProcess[]>;
+
+  // Версии проектов (история снимков и откат)
+
+  /**
+   * Создать снимок версии проекта
+   * @param projectId - ID проекта
+   * @param snapshot - Снимок данных проекта (BotDataWithSheets)
+   * @param label - Опциональная метка версии
+   * @param authorId - Опциональный ID автора снимка
+   * @param kind - Тип версии: "auto" (по умолчанию) или "manual" (ручной коммит)
+   * @returns Созданная версия проекта
+   */
+  createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind?: 'auto' | 'manual'): Promise<ProjectVersion>;
+
+  /**
+   * Получить список версий проекта, отсортированный по дате создания (DESC)
+   * @param projectId - ID проекта
+   * @returns Массив версий проекта
+   */
+  listProjectVersions(projectId: number): Promise<ProjectVersion[]>;
+
+  /**
+   * Получить самую свежую версию проекта (для дедупликации снимков)
+   * @param projectId - ID проекта
+   * @returns Самая свежая версия проекта или undefined, если версий нет
+   */
+  getLatestProjectVersion(projectId: number): Promise<ProjectVersion | undefined>;
+
+  /**
+   * Получить одну версию проекта по ID
+   * @param versionId - ID версии
+   * @returns Версия проекта или undefined, если не найдена
+   */
+  getProjectVersion(versionId: number): Promise<ProjectVersion | undefined>;
+
+  /**
+   * Удалить старые авто-снимки проекта, оставив последние keep штук.
+   * Ручные коммиты (kind='manual') не удаляются и не учитываются в лимите.
+   * @param projectId - ID проекта
+   * @param keep - Сколько последних авто-снимков сохранить
+   * @returns Promise<void>
+   */
+  pruneProjectVersions(projectId: number, keep: number): Promise<void>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных

@@ -28,5 +28,7 @@ export async function handlePublicConfig(_req: Request, res: Response): Promise<
     telegramClientId: Number(clientId) || 0,
     /** Имя бота для Telegram Login Widget (без @) */
     telegramBotUsername: botUsername || "",
+    /** Авторизация через Telegram отключена (SKIP_AUTH=true) */
+    skipAuth: process.env.SKIP_AUTH === "true",
   });
 }

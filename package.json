@@ -1,6 +1,6 @@
 {
   "name": "telegram-bot-builder",
-  "version": "2.1.9.6",
+  "version": "2.2.0.4",
   "description": "🤖 Visual Telegram Bot Builder - Create bots without coding using drag-and-drop interface",
   "type": "module",
   "license": "MIT",
@@ -32,6 +32,7 @@
     "auto-commit:watch": "powershell -ExecutionPolicy Bypass -File .\\scripts\\watch-and-auto-commit.ps1",
     "clean:vite": "node -e \"const fs=require('fs');const path=require('path');const viteDir=path.join(process.cwd(),'node_modules','.vite');if(fs.existsSync(viteDir)){fs.rmSync(viteDir,{recursive:true,force:true});console.log('✅ Vite cache cleared');}else{console.log('ℹ️ Vite cache not found');}\"",
     "migrate": "tsx --tsconfig tsconfig.node.json scripts/run-migrations.ts",
+    "mcp:bot-builder": "tsx --tsconfig tools/mcp-server/tsconfig.json tools/mcp-server/index.ts",
     "fetch-avatars": "tsx --tsconfig tsconfig.node.json scripts/fetch-user-avatars.ts",
     "fetch-bot-avatar": "tsx --tsconfig tsconfig.node.json scripts/fetch-bot-avatar.ts",
     "update-avatar-urls": "tsx --tsconfig tsconfig.node.json scripts/update-avatar-urls.ts",
@@ -126,6 +127,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@jridgewell/trace-mapping": "^0.3.31",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@monaco-editor/react": "^4.7.0",
     "@octokit/rest": "^22.0.1",
     "@radix-ui/react-accordion": "^1.2.12",

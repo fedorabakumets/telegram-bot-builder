@@ -7,6 +7,8 @@ import { registerRoutes } from "./routes/routes";
 import { log, serveStatic, setupVite } from "./routes/vite";
 import { storage } from "./storages/storage";
 import { initializeTerminalWebSocket } from './terminal/initializeTerminalWebSocket';
+import { initializeCanvasWebSocket } from './canvas/initializeCanvasWebSocket';
+import { registerWebSocketUpgrade } from './websocket/registerWebSocketUpgrade';
 import { initRedisPlatformSubscriber } from './redis/redisPlatformSubscriber';
 import { initRedisLogsSubscriber } from './redis/redisLogsSubscriber';
 import { stopCleanup } from "./utils/cache";
@@ -129,8 +131,15 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Инициализируем WebSocket-сервер для терминала
-  initializeTerminalWebSocket(httpServer);
+  // Инициализируем WebSocket-серверы в режиме noServer (без привязки к upgrade).
+  // Маршрутизацию upgrade по пути выполняет единый registerWebSocketUpgrade —
+  // это устраняет конфликт нескольких ws-серверов ("Invalid frame header").
+  const terminalWss = initializeTerminalWebSocket();
+  const canvasWss = initializeCanvasWebSocket();
+  registerWebSocketUpgrade(httpServer, {
+    "/api/terminal": terminalWss,
+    "/api/canvas": canvasWss,
+  });
   // Подписываемся на Redis Pub/Sub события платформы
   initRedisPlatformSubscriber();
   // Подписываемся на Redis Pub/Sub логи ботов (дополнительный канал к stdout)

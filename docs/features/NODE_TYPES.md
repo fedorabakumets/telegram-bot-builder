@@ -390,7 +390,7 @@ keyboard (кнопка с customCallbackData: "approve_{user_id}")
 - Триггеры внутри веток не имеют смысла (это точки входа)
 - Сброс счётчика сбора ставить **до** ноды, не внутри веток
 
-Подробная концепция и сценарии: `docs/futures/parallel-split-node.md`.
+Подробная концепция и сценарии: `docs/futures/nodes/parallel-split-node.md`.
 
 ---
 

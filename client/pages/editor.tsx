@@ -60,6 +60,7 @@ import { BroadcastPanel } from '@/components/editor/broadcast';
 import { AnalyticsPanel } from '@/components/editor/analytics';
 import { TablesPanel } from '@/components/editor/tables';
 import { FilesPanel } from '@/components/editor/files';
+import { VersionsPanel } from '@/components/editor/versions';
 import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
 import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
@@ -78,6 +79,10 @@ import { useBotEditor } from '@/components/editor/canvas/canvas/use-bot-editor';
 import { useMoveNodeToSheet } from '@/components/editor/canvas/canvas/use-move-node-to-sheet';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { useCanvasSync } from '@/hooks/use-canvas-sync';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import type { CanvasActor } from '@shared/canvas-sync/canvas-actor';
+import type { CanvasSyncMessage } from '@shared/canvas-sync/canvas-sync-message';
 import { apiRequest } from '@/queryClient';
 import { SheetsManager } from '@/utils/sheets/sheets-manager';
 import { clearKeyboardNodeId, getKeyboardNodeId } from '@/components/editor/canvas/canvas-node/keyboard-connection';
@@ -117,7 +122,7 @@ export default function Editor() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('log')) return 'terminal';
     const tab = params.get('tab');
-    const validTabs: EditorTab[] = ['editor', 'export', 'bot', 'terminal', 'users', 'dialogs', 'broadcast', 'analytics', 'tables', 'files'];
+    const validTabs: EditorTab[] = ['editor', 'export', 'bot', 'terminal', 'users', 'dialogs', 'broadcast', 'analytics', 'tables', 'files', 'versions'];
     if (tab && validTabs.includes(tab as EditorTab)) {
       return tab as EditorTab;
     }
@@ -272,7 +277,21 @@ export default function Editor() {
 
   const { config: layoutConfig, updateConfig: updateLayoutConfig, resetConfig: resetLayoutConfig, applyConfig: applyLayoutConfig } = useLayoutManager();
   const { toast } = useToast();
+  const { user: localUser } = useTelegramAuth();
   const queryClient = useQueryClient();
+  /** Актор последней удалённой синхронизации холста (коллаборатор / агент) */
+  const [remoteSyncActor, setRemoteSyncActor] = useState<CanvasActor | null>(null);
+  const remoteSyncDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /**
+   * Время (ms), до которого входящие canvas-sync не должны выставлять hasLocalChanges.
+   * Используется при удалённом сбросе, чтобы запоздавший data-sync не вернул плашку.
+   */
+  const suppressLocalChangesUntilRef = useRef<number>(0);
+  /**
+   * Ref-зеркало функции рассылки сигнала сброса/сохранения.
+   * Нужен потому что updateProjectMutation объявлена раньше useCanvasSync (TDZ).
+   */
+  const broadcastResetFnRef = useRef<((kind: 'reset' | 'saved') => void) | null>(null);
 
   // Хук обработчиков диалогов
   const {
@@ -309,7 +328,7 @@ export default function Editor() {
    * Используется для сохранения изменений в проекте на сервере
    */
   const updateProjectMutation = useMutation({
-    mutationFn: async (params: { restartOnUpdate?: boolean; newName?: string } = {}) => {
+    mutationFn: async (params: { restartOnUpdate?: boolean; newName?: string; commitMessage?: string } = {}) => {
       if (!activeProject?.id) {
         console.warn('Cannot save: activeProject or ID is undefined');
         return;
@@ -348,6 +367,8 @@ export default function Editor() {
         restartOnUpdate: params.restartOnUpdate || false,
         // Передаём новое имя если оно было указано при вызове мутации
         ...(params.newName ? { name: params.newName } : {}),
+        // Непустая заметка превращает снимок в постоянный ручной чекпоинт
+        ...(params.commitMessage ? { commitMessage: params.commitMessage } : {}),
       });
     },
     onMutate: async (_variables) => {
@@ -398,12 +419,21 @@ export default function Editor() {
     onSuccess: async (_updatedProject) => {
       // Reset local changes flag only after successful save
       setHasLocalChanges(false);
+      setRemoteSyncActor(null);
+
+      // Оповещаем другие вкладки/устройства что изменения сохранены —
+      // у них тоже пропадёт плашка несохранённых изменений (данные уже синхронизированы)
+      broadcastResetFnRef.current?.('saved');
 
       // Инвалидируем кеш для загрузки актуальных данных с сервера
       if (activeProject?.id) {
         await queryClient.invalidateQueries({
           queryKey: [`/api/projects/${activeProject.id}`],
           exact: true
+        });
+        // Обновляем список версий — после сохранения мог появиться новый снимок
+        queryClient.invalidateQueries({
+          queryKey: ['/api/projects', activeProject.id, 'versions'],
         });
       }
     },
@@ -604,7 +634,8 @@ export default function Editor() {
     const activeSheet = SheetsManager.getActiveSheet(updatedData);
     if (activeSheet) {
       // Применяем миграции и получаем итоговые узлы (без автоиерархии)
-      const migratedNodes = setBotData({ nodes: activeSheet.nodes }, undefined, currentNodeSizes, true);
+      // preserveSelection=true — не сбрасываем выделение при remote sync
+      const migratedNodes = setBotData({ nodes: activeSheet.nodes }, undefined, currentNodeSizes, true, true);
 
       // Сохраняем мигрированные узлы обратно в botDataWithSheets
       // чтобы при следующем вызове handleBotDataUpdate не было дублей
@@ -625,6 +656,97 @@ export default function Editor() {
       setBotDataWithSheets(updatedData);
     }
   }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
+
+  /** Live-синхронизация холста: вкладки, устройства, коллабораторы */
+  const handleRemoteCanvasSync = useCallback((msg: CanvasSyncMessage) => {
+    if (!msg.actor) return;
+    // Если только что был удалённый сброс — не возвращаем плашку из-за запоздавшего data-sync
+    if (Date.now() < suppressLocalChangesUntilRef.current) return;
+    setRemoteSyncActor(msg.actor);
+    setHasLocalChanges(true);
+    if (remoteSyncDismissTimerRef.current) {
+      clearTimeout(remoteSyncDismissTimerRef.current);
+    }
+    remoteSyncDismissTimerRef.current = setTimeout(() => {
+      setRemoteSyncActor(null);
+    }, 12_000);
+  }, [setHasLocalChanges]);
+
+  const dismissRemoteCanvasSync = useCallback(() => {
+    setRemoteSyncActor(null);
+    if (remoteSyncDismissTimerRef.current) {
+      clearTimeout(remoteSyncDismissTimerRef.current);
+    }
+  }, []);
+
+  /**
+   * Откатывает локальные изменения к сохранённой на сервере версии проекта.
+   * Берёт данные из кэша React Query, восстанавливает листы, очищает флаг и историю.
+   * Используется как при ручном сбросе, так и при удалённом сигнале сброса.
+   */
+  const discardLocalChanges = useCallback(() => {
+    if (activeProject?.id) {
+      const savedProject = queryClient.getQueryData<BotProject>([`/api/projects/${activeProject.id}`]);
+      const savedData = savedProject?.data as any;
+      if (savedData) {
+        let sheetsData: BotDataWithSheets;
+        if (SheetsManager.isNewFormat(savedData)) {
+          sheetsData = savedData;
+        } else {
+          sheetsData = SheetsManager.migrateLegacyData(savedData as BotData);
+        }
+        // Остаёмся на текущем листе если он существует в сохранённых данных
+        const currentSheetId = botDataWithSheets?.activeSheetId;
+        const sheetExists = currentSheetId && sheetsData.sheets.some(s => s.id === currentSheetId);
+        if (sheetExists) {
+          sheetsData = SheetsManager.setActiveSheet(sheetsData, currentSheetId!);
+        }
+        setBotDataWithSheets(sheetsData);
+        const activeSheet = SheetsManager.getActiveSheet(sheetsData);
+        if (activeSheet) {
+          setBotData({ nodes: activeSheet.nodes }, undefined, undefined, true);
+        }
+      }
+    }
+    setHasLocalChanges(false);
+    setActionHistory([]);
+    setRemoteSyncActor(null);
+  }, [activeProject?.id, queryClient, botDataWithSheets, setBotDataWithSheets, setBotData, setHasLocalChanges, setActionHistory]);
+
+  /**
+   * Обрабатывает удалённый сигнал сброса/сохранения от другой вкладки/устройства.
+   * 'reset' — откатывает изменения к серверной версии.
+   * 'saved' — изменения сохранены: данные уже синхронизированы, лишь убираем плашку
+   * и обновляем кэш проекта. В обоих случаях подавляем возврат плашки запоздавшим data-sync.
+   * @param kind - Вид сигнала
+   */
+  const handleRemoteReset = useCallback((kind: 'reset' | 'saved') => {
+    suppressLocalChangesUntilRef.current = Date.now() + 2000;
+    if (kind === 'reset') {
+      discardLocalChanges();
+      return;
+    }
+    // kind === 'saved': данные на холсте уже актуальны (синхронизированы),
+    // просто убираем плашку и подтягиваем сохранённую версию в кэш
+    setHasLocalChanges(false);
+    setActionHistory([]);
+    setRemoteSyncActor(null);
+    if (activeProject?.id) {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
+    }
+  }, [discardLocalChanges, activeProject?.id, queryClient, setHasLocalChanges, setActionHistory]);
+
+  const { broadcastReset } = useCanvasSync({
+    projectId: activeProject?.id,
+    botDataWithSheets,
+    localUser,
+    onRemoteUpdate: handleBotDataUpdate,
+    onRemoteSync: handleRemoteCanvasSync,
+    onRemoteReset: handleRemoteReset,
+    enabled: currentTab === 'editor' && !!activeProject?.id,
+  });
+  // Зеркалим broadcastReset в ref чтобы вызывать из onSuccess мутации (объявлена выше)
+  broadcastResetFnRef.current = broadcastReset;
 
   /**
    * Применяет отредактированный JSON к данным бота.
@@ -702,40 +824,18 @@ export default function Editor() {
   const stagingBar = useStagingBar({
     hasLocalChanges,
     actionHistory,
+    remoteSyncActor,
     onSave: () => updateProjectMutation.mutate({}),
+    onSaveWithNote: (note: string) => updateProjectMutation.mutate({ commitMessage: note }),
     onSaveAndRestart: () => {
       // Сохраняем проект с флагом restartOnUpdate — сервер сам перезапустит бота
       updateProjectMutation.mutate({ restartOnUpdate: true });
     },
     onDiscard: () => {
-      // Восстанавливаем данные из кэша сервера — это корректно сбрасывает все листы,
-      // а не только текущий (undoSteps откатывал nodes только активного листа).
-      // Сохраняем текущий activeSheetId чтобы остаться на том же листе после сброса.
-      if (activeProject?.id) {
-        const savedProject = queryClient.getQueryData<BotProject>([`/api/projects/${activeProject.id}`]);
-        const savedData = savedProject?.data as any;
-        if (savedData) {
-          let sheetsData: BotDataWithSheets;
-          if (SheetsManager.isNewFormat(savedData)) {
-            sheetsData = savedData;
-          } else {
-            sheetsData = SheetsManager.migrateLegacyData(savedData as BotData);
-          }
-          // Остаёмся на текущем листе если он существует в сохранённых данных
-          const currentSheetId = botDataWithSheets?.activeSheetId;
-          const sheetExists = currentSheetId && sheetsData.sheets.some(s => s.id === currentSheetId);
-          if (sheetExists) {
-            sheetsData = SheetsManager.setActiveSheet(sheetsData, currentSheetId!);
-          }
-          setBotDataWithSheets(sheetsData);
-          const activeSheet = SheetsManager.getActiveSheet(sheetsData);
-          if (activeSheet) {
-            setBotData({ nodes: activeSheet.nodes }, undefined, undefined, true);
-          }
-        }
-      }
-      setHasLocalChanges(false);
-      setActionHistory([]);
+      // Откатываем локальные изменения к серверной версии и оповещаем другие вкладки,
+      // чтобы у них тоже пропала плашка несохранённых изменений.
+      discardLocalChanges();
+      broadcastReset('reset');
     },
     isSaving: updateProjectMutation.isPending,
     isDirty,
@@ -1443,7 +1543,11 @@ export default function Editor() {
       <div className="h-full flex flex-col">
         {/* Универсальная панель изменений сверху */}
         {currentTab === 'editor' && (
-          <StagingBar {...stagingBar} actionHistory={actionHistory} />
+          <StagingBar
+            {...stagingBar}
+            actionHistory={actionHistory}
+            onDismissRemoteSync={dismissRemoteCanvasSync}
+          />
         )}
         {/* Контейнер вкладок: relative нужен для absolute-позиционирования JSON-редактора поверх Canvas */}
         <div className="flex-1 min-h-0 relative">
@@ -1515,6 +1619,7 @@ export default function Editor() {
                 canUndo={canUndo}
                 canRedo={canRedo}
                 onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
+                onSaveWithNote={(note) => updateProjectMutation.mutate({ restartOnUpdate: true, commitMessage: note })}
                 isSaving={updateProjectMutation.isPending}
                 onCopyToClipboard={copyToClipboard}
                 onPasteFromClipboard={pasteFromClipboard}
@@ -1549,6 +1654,7 @@ export default function Editor() {
                 projectId={activeProject?.id}
                 projects={allProjects.map((p) => ({ id: p.id, name: p.name, ownerId: p.ownerId, data: p.data }))}
                 onPortalNavigate={navigateToPortalNode}
+                onRestoreVersion={discardLocalChanges}
               />
             </div>
           )}
@@ -1672,6 +1778,14 @@ export default function Editor() {
                   setSelectedDatabaseTokenId(null);
                   setLocation(`/projects/${projectId}`);
                 }}
+              />
+            </div>
+          )}
+          {currentTab === 'versions' && (
+            <div className="h-full overflow-hidden">
+              <VersionsPanel
+                projectId={activeProject.id}
+                onRestored={discardLocalChanges}
               />
             </div>
           )}
@@ -1931,6 +2045,7 @@ export default function Editor() {
                   canUndo={canUndo}
                   canRedo={canRedo}
                   onSave={() => updateProjectMutation.mutate({ restartOnUpdate: true })}
+                  onSaveWithNote={(note) => updateProjectMutation.mutate({ restartOnUpdate: true, commitMessage: note })}
                   isSaving={updateProjectMutation.isPending}
                   onCopyToClipboard={copyToClipboard}
                   onPasteFromClipboard={pasteFromClipboard}
@@ -1958,6 +2073,7 @@ export default function Editor() {
                   projectId={activeProject?.id}
                   projects={allProjects.map((p) => ({ id: p.id, name: p.name, ownerId: p.ownerId, data: p.data }))}
                   onPortalNavigate={navigateToPortalNode}
+                  onRestoreVersion={discardLocalChanges}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">

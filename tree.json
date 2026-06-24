@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-06-19T23:12:11+03:00",
+    "updated_at": "2026-06-21T02:37:51+03:00",
     "tags": [],
     "author": ""
   },
@@ -208,7 +208,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-06-19T23:12:11+03:00",
+    "updated_at": "2026-06-21T02:37:51+03:00",
     "tags": [],
     "author": ""
   },
@@ -288,6 +288,36 @@
     "author": ""
   },
   {
+    "path": "features/project-versioning",
+    "title": "Версионирование проекта",
+    "excerpt": "Версионирование — это автоматическая история снимков проекта с возможностью отката к любой сохранённой версии. По принципу работы напоминает",
+    "parts": [
+      "features",
+      "project-versioning"
+    ],
+    "folder_titles": {
+      "features": "🧩 Возможности"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/realtime-collaboration",
+    "title": "Roadmap: Совместная синхронизация в реальном времени (как в Figma)",
+    "excerpt": "Документ описывает целевую модель live-совместного редактирования холста по образцу Figma,",
+    "parts": [
+      "features",
+      "realtime-collaboration"
+    ],
+    "folder_titles": {
+      "features": "🧩 Возможности"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "features/telegram-buttons-new-features",
     "title": "План новых фич кнопок для Telegram бот-редактора",
     "excerpt": "> Дата обновления: 4 апреля 2026",
@@ -303,827 +333,1022 @@
     "author": ""
   },
   {
-    "path": "futures/BOT_SYSTEM_API",
-    "title": "Системный API бота (скрытые эндпоинты)",
-    "excerpt": "Документ описывает архитектуру внутреннего HTTP API генерируемого бота.",
-    "parts": [
-      "futures",
-      "BOT_SYSTEM_API"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-14T21:27:17+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/FUTURE_NODES",
-    "title": "Будущие ноды конструктора",
-    "excerpt": "Документ описывает планируемые ноды и расширения для добавления в конструктор.",
-    "parts": [
-      "futures",
-      "FUTURE_NODES"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-17T17:43:15+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/activity-tracking-for-mass-kick",
-    "title": "Трекинг активности для массового кика",
-    "excerpt": "Все сообщения уже записываются в таблицу `bot_messages` (хардкорно, на уровне сервера). Таблица содержит `user_id`, `chat_id`, `created_at`,",
-    "parts": [
-      "futures",
-      "activity-tracking-for-mass-kick"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-29T16:05:18+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/analytics-dashboard",
-    "title": "Analytics Dashboard — Roadmap",
-    "excerpt": "Полноценная аналитика для Telegram-ботов прямо в редакторе.",
-    "parts": [
-      "futures",
-      "analytics-dashboard"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-05T02:27:11+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/api-security-audit",
-    "title": "Аудит безопасности API — Проблемы и план исправлений",
-    "excerpt": "---",
-    "parts": [
-      "futures",
-      "api-security-audit"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-30T01:26:14+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/api-security-ideal-architecture",
-    "title": "Идеальная архитектура безопасности API",
-    "excerpt": "Как должна выглядеть серверная часть с точки зрения безопасности, валидации и контроля доступа — эталонная модель для нашего проекта.",
-    "parts": [
-      "futures",
-      "api-security-ideal-architecture"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-30T01:26:14+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/attribution-model",
-    "title": "Attribution Model — Модель атрибуции источников",
-    "excerpt": "Каждый пользователь приходит откуда-то. Нужно знать не только откуда,",
-    "parts": [
-      "futures",
-      "attribution-model"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-05T03:03:43+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/auth-and-isolation",
-    "title": "Авторизация и изоляция данных — дальнейшие улучшения",
-    "excerpt": "Без этой переменной Mini App авторизация не верифицирует initData в продакшене — работает только в dev-режиме.",
-    "parts": [
-      "futures",
-      "auth-and-isolation"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-04-29T04:51:37+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/bot-execution-modes",
-    "title": "Bot Execution Modes — архитектура режимов запуска ботов",
-    "excerpt": "Единая концепция управления режимами запуска ботов через переменную окружения `BOT_MODE`.",
-    "parts": [
-      "futures",
-      "bot-execution-modes"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-04-14T08:32:24+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/bot-generation-profiles-and-toggles",
-    "title": "Bot generation profiles and toggles",
-    "excerpt": "Сейчас даже проект с 1–2 нодами генерирует **огромный Python-файл** (тысячи строк).",
-    "parts": [
-      "futures",
-      "bot-generation-profiles-and-toggles"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-06-19T21:54:20+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/bot-manager-scenario-roadmap",
-    "title": "Сценарий управляющего бота — Roadmap улучшений",
-    "excerpt": "Документ описывает будущие улучшения сценария `bots/новый/новый.json` с учётом",
-    "parts": [
-      "futures",
-      "bot-manager-scenario-roadmap"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-04-13T06:23:48+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/bot-table-node",
-    "title": "Узел `bot_table` — работа с внутренними таблицами конструктора",
-    "excerpt": "Сейчас для хранения пользовательских данных (профили, баланс, репутация, отношения) нужно использовать `psql_query` и писать SQL вручную. Эт",
-    "parts": [
-      "futures",
-      "bot-table-node"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-18T10:13:54+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/bot-worker-pool",
-    "title": "Bot Worker Pool — масштабируемый запуск ботов",
-    "excerpt": "Текущая архитектура запускает каждого Telegram-бота как отдельный Python процесс (`spawn python3 bot.py`).",
-    "parts": [
-      "futures",
-      "bot-worker-pool"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-16T01:49:03+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/broadcast-panel",
-    "title": "Broadcast Panel — Рассылки",
-    "excerpt": "> Массовая отправка сообщений пользователям бота с фильтрацией аудитории, live-прогрессом и историей.",
-    "parts": [
-      "futures",
-      "broadcast-panel"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-08T15:46:41+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/canvas-improvements",
-    "title": "План улучшений холста редактора",
-    "excerpt": "Документ собирает предложения по дальнейшему развитию холста визуального редактора (вкладка «Редактор»). Сформирован после серии оптимизаций",
-    "parts": [
-      "futures",
-      "canvas-improvements"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-06-15T19:12:45+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/charts-roadmap",
-    "title": "Фича: Кастомные графики на основе таблиц",
-    "excerpt": "Владелец бота создаёт графики/дашборды на основе данных из пользовательских таблиц (bot_tables) и системных данных (bot_users, bot_messages)",
-    "parts": [
-      "futures",
-      "charts-roadmap"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-18T17:04:17+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/code-node",
-    "title": "Нода `code` — произвольный Python-код",
-    "excerpt": "Пользователь пишет Python-код прямо в редакторе конструктора. Код имеет доступ к переменным пользователя, может их читать и менять. Аналог б",
-    "parts": [
-      "futures",
-      "code-node"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-17T15:55:51+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/content-table",
-    "title": "Фича: Таблица контента (_content)",
-    "excerpt": "| Компонент | Статус | Описание |",
-    "parts": [
-      "futures",
-      "content-table"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-18T22:51:22+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/convert-file-node",
-    "title": "Узел `convert_file` — конвертер данных в файл и обратно",
-    "excerpt": "<!-- @fileoverview Концепция узла `convert_file` для BotCraft Studio.",
-    "parts": [
-      "futures",
-      "convert-file-node"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-08T03:38:33+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/cross-user-target-variables",
-    "title": "Кросс-пользовательские переменные через {target.*}",
-    "excerpt": "Когда админ нажимает кнопку с `customCallbackData: \"approve_{user_id}\"`, обработчик работает в контексте админа. Переменные заявителя (`{nam",
-    "parts": [
-      "futures",
-      "cross-user-target-variables"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-30T15:49:17+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/deep-link-analytics",
-    "title": "Deep Link Analytics — Roadmap",
-    "excerpt": "- ✅ **Deep link routing** — параметры `?start=` корректно обрабатываются",
-    "parts": [
-      "futures",
-      "deep-link-analytics"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-03T01:40:55+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/delete-message-node",
-    "title": "Нода `delete_message` — полноценное удаление сообщений",
-    "excerpt": "Сейчас `delete_message` существует только как часть шаблона `synonyms` — работает исключительно в группах через ответ на сообщение словом-си",
-    "parts": [
-      "futures",
-      "delete-message-node"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-25T00:19:41+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/docs-restructuring-plan",
+    "path": "futures/docs/docs-restructuring-plan",
     "title": "Реструктуризация документации: идеальная структура docs/",
     "excerpt": "| Проблема | Описание | Влияние |",
     "parts": [
       "futures",
+      "docs",
       "docs-restructuring-plan"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "docs": "📚 Документация"
     },
-    "updated_at": "2026-05-30T01:44:05+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/docusaurus-docs-site",
+    "path": "futures/docs/docusaurus-docs-site",
     "title": "Документация-сайт на Docusaurus",
     "excerpt": "Создать красивый сайт документации на Docusaurus с автодеплоем на GitHub Pages.",
     "parts": [
       "futures",
+      "docs",
       "docusaurus-docs-site"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "docs": "📚 Документация"
     },
-    "updated_at": "2026-05-25T03:13:36+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/exchange-rate-aggregation",
-    "title": "Агрегация курсов обменников — план доработок",
-    "excerpt": "Бот сравнивает курсы обменников, но:",
-    "parts": [
-      "futures",
-      "exchange-rate-aggregation"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-17T13:14:41+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/file-storage",
-    "title": "Файловое хранилище (File Storage)",
-    "excerpt": "Централизованное управление всеми медиафайлами проекта — входящими, исходящими и загруженными вручную. Основной принцип: **не скачивать файл",
-    "parts": [
-      "futures",
-      "file-storage"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-22T22:01:05+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/file-variable-type",
-    "title": "Тип переменной `file` для медиа-ноды",
-    "excerpt": "<!-- @fileoverview Концепция нового типа переменной `file` для медиа-ноды в BotCraft Studio.",
-    "parts": [
-      "futures",
-      "file-variable-type"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-04-27T03:12:12+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/fsm-state-middleware",
-    "title": "FSM State Middleware — глобальные состояния с автовосстановлением",
-    "excerpt": "Сейчас `delay` (background mode) использует `asyncio.create_task()` — при перезапуске бота все активные таймеры теряются. Если бот перезапус",
-    "parts": [
-      "futures",
-      "fsm-state-middleware"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-20T02:03:47+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/inline-expressions",
-    "title": "🧮 Формулы в тексте сообщения (Inline Expressions)",
-    "excerpt": "| Фаза | Статус | Описание |",
-    "parts": [
-      "futures",
-      "inline-expressions"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-30T21:11:45+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/interface-docs-plan",
+    "path": "futures/docs/interface-docs-plan",
     "title": "План: документация по вкладкам интерфейса",
     "excerpt": "Задание для агента: написать подробную пользовательскую документацию по интерфейсу конструктора. Цель — закрыть пробел: сейчас в доках описа",
     "parts": [
       "futures",
+      "docs",
       "interface-docs-plan"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "docs": "📚 Документация"
     },
-    "updated_at": "2026-06-14T23:14:13+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/loop-node",
-    "title": "Узел `loop` — цикл по массиву",
-    "excerpt": "<!-- @fileoverview Концепция узла `loop` для BotCraft Studio.",
+    "path": "futures/features/activity-tracking-for-mass-kick",
+    "title": "Трекинг активности для массового кика",
+    "excerpt": "Все сообщения уже записываются в таблицу `bot_messages` (хардкорно, на уровне сервера). Таблица содержит `user_id`, `chat_id`, `created_at`,",
     "parts": [
       "futures",
-      "loop-node"
+      "features",
+      "activity-tracking-for-mass-kick"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-05-14T23:24:20+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/merge-node",
-    "title": "Merge Node — нода объединения данных",
-    "excerpt": "Нода с **двумя входными портами** (как в n8n). Принимает данные из двух веток, объединяет по выбранному режиму, отдаёт результат дальше.",
+    "path": "futures/features/ai-agent-tab-vision",
+    "title": "Вкладка ИИ-агента и MCP-сервер конструктора",
+    "excerpt": "Документ описывает целевую архитектуру встроенного ИИ-агента, который собирает и редактирует ботов прямо в конструкторе, а также MCP-сервера",
     "parts": [
       "futures",
-      "merge-node"
+      "features",
+      "ai-agent-tab-vision"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-05-29T16:05:18+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/migrate-collectUserInput-to-input-node",
-    "title": "Миграция collectUserInput → отдельная нода input",
-    "excerpt": "Message-ноды исторически поддерживают `collectUserInput: true` с полями `inputVariable`, `enableTextInput/Photo/Video/Audio/Document` и т.д.",
+    "path": "futures/features/analytics-dashboard",
+    "title": "Analytics Dashboard — Roadmap",
+    "excerpt": "Полноценная аналитика для Telegram-ботов прямо в редакторе.",
     "parts": [
       "futures",
-      "migrate-collectUserInput-to-input-node"
+      "features",
+      "analytics-dashboard"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-05-30T15:49:17+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/move-buttons-to-keyboard-node",
-    "title": "Полный вынос кнопок из message в keyboard-ноду",
-    "excerpt": "Поля `buttons` и `keyboardType` концептуально относятся только к `keyboard`-ноде, но фактически до сих пор живут и в `message`-нодах. Архите",
+    "path": "futures/features/attribution-model",
+    "title": "Attribution Model — Модель атрибуции источников",
+    "excerpt": "Каждый пользователь приходит откуда-то. Нужно знать не только откуда,",
     "parts": [
       "futures",
-      "move-buttons-to-keyboard-node"
+      "features",
+      "attribution-model"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-06-19T23:41:21+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/multi-recipient-edit-message",
-    "title": "Multi-recipient edit_message",
-    "excerpt": "Когда сообщение отправляется нескольким получателям через `messageSendRecipients`, каждый получатель получает своё сообщение с уникальным `m",
+    "path": "futures/features/bot-manager-scenario-roadmap",
+    "title": "Сценарий управляющего бота — Roadmap улучшений",
+    "excerpt": "Документ описывает будущие улучшения сценария `bots/новый/новый.json` с учётом",
     "parts": [
       "futures",
-      "multi-recipient-edit-message"
+      "features",
+      "bot-manager-scenario-roadmap"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-05-30T15:49:17+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/new-navigation",
-    "title": "New Navigation — Redesign Roadmap",
-    "excerpt": "> Переход от редактора с вкладками к полноценной платформе управления ботами.",
+    "path": "futures/features/broadcast-panel",
+    "title": "Broadcast Panel — Рассылки",
+    "excerpt": "> Массовая отправка сообщений пользователям бота с фильтрацией аудитории, live-прогрессом и историей.",
     "parts": [
       "futures",
-      "new-navigation"
+      "features",
+      "broadcast-panel"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-05-05T09:46:36+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/parallel-split-node",
-    "title": "Узел `parallel_split` — параллельный запуск веток",
-    "excerpt": "<!-- @fileoverview Концепция узла `parallel_split` для BotCraft Studio.",
+    "path": "futures/features/content-table",
+    "title": "Фича: Таблица контента (_content)",
+    "excerpt": "| Компонент | Статус | Описание |",
     "parts": [
       "futures",
-      "parallel-split-node"
+      "features",
+      "content-table"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-06-12T01:56:10+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/project-collaborators",
-    "title": "Совместный доступ к проекту",
-    "excerpt": "<!--",
+    "path": "futures/features/cross-user-target-variables",
+    "title": "Кросс-пользовательские переменные через {target.*}",
+    "excerpt": "Когда админ нажимает кнопку с `customCallbackData: \"approve_{user_id}\"`, обработчик работает в контексте админа. Переменные заявителя (`{nam",
     "parts": [
       "futures",
-      "project-collaborators"
+      "features",
+      "cross-user-target-variables"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-04-23T01:02:06+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/properties-json-view",
-    "title": "JSON-режим панели свойств",
-    "excerpt": "> **Статус:** MVP реализован (этап 1). Пользовательская документация — в [`docs/interface/editor/properties.md`](../interface/editor/propert",
+    "path": "futures/features/deep-link-analytics",
+    "title": "Deep Link Analytics — Roadmap",
+    "excerpt": "- ✅ **Deep link routing** — параметры `?start=` корректно обрабатываются",
     "parts": [
       "futures",
-      "properties-json-view"
+      "features",
+      "deep-link-analytics"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-06-17T23:45:35+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/properties-mobile-bottom-sheet",
-    "title": "Нижняя панель свойств на мобильных",
-    "excerpt": "Идея: на маленьких экранах показывать панель свойств **снизу** (bottom sheet), а не справа и не на весь экран — чтобы холст оставался видимы",
+    "path": "futures/features/exchange-rate-aggregation",
+    "title": "Агрегация курсов обменников — план доработок",
+    "excerpt": "Бот сравнивает курсы обменников, но:",
     "parts": [
       "futures",
-      "properties-mobile-bottom-sheet"
+      "features",
+      "exchange-rate-aggregation"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-06-18T00:18:02+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/psql-query-node",
-    "title": "Узел `psql_query` — прямой SQL-запрос к базе данных",
-    "excerpt": "<!-- @fileoverview План реализации нового типа узла `psql_query` для BotCraft Studio.",
+    "path": "futures/features/file-variable-type",
+    "title": "Тип переменной `file` для медиа-ноды",
+    "excerpt": "<!-- @fileoverview Концепция нового типа переменной `file` для медиа-ноды в BotCraft Studio.",
     "parts": [
       "futures",
-      "psql-query-node"
+      "features",
+      "file-variable-type"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-05-08T01:06:00+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/redis-events-improvements",
-    "title": "Redis Events — Улучшения",
-    "excerpt": "| Канал | Когда | Данные |",
+    "path": "futures/features/fsm-state-middleware",
+    "title": "FSM State Middleware — глобальные состояния с автовосстановлением",
+    "excerpt": "Сейчас `delay` (background mode) использует `asyncio.create_task()` — при перезапуске бота все активные таймеры теряются. Если бот перезапус",
     "parts": [
       "futures",
-      "redis-events-improvements"
+      "features",
+      "fsm-state-middleware"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-05-05T04:37:28+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/redis-roadmap",
-    "title": "Redis — Roadmap улучшений платформы",
-    "excerpt": "Документ описывает все возможные улучшения платформы с использованием Redis (Memurai на Windows, Redis на Linux/Railway).",
+    "path": "futures/features/inline-expressions",
+    "title": "🧮 Формулы в тексте сообщения (Inline Expressions)",
+    "excerpt": "| Фаза | Статус | Описание |",
     "parts": [
       "futures",
-      "redis-roadmap"
+      "features",
+      "inline-expressions"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-04-14T07:42:10+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/schedule-trigger",
-    "title": "Нода `schedule_trigger` — запуск по расписанию",
-    "excerpt": "Фоновая задача, которая запускает цепочку нод по таймеру без участия пользователя. Аналог Schedule Trigger в n8n — визуальный конструктор ра",
-    "parts": [
-      "futures",
-      "schedule-trigger"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-17T17:29:22+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/set-variable-modes",
-    "title": "🧮 Узел «Переменные» — все режимы (modes)",
-    "excerpt": "Отражает суть — узел не просто \"устанавливает переменные\", а вычисляет, форматирует, ищет, генерирует, трансформирует.",
-    "parts": [
-      "futures",
-      "set-variable-modes"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-20T16:20:22+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/set-variable-node",
-    "title": "Узел `set_variable` — установка переменных без HTTP-запроса",
-    "excerpt": "<!-- @fileoverview План реализации нового типа узла `set_variable` для BotCraft Studio.",
-    "parts": [
-      "futures",
-      "set-variable-node"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-04-27T05:00:02+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/setup-wizard-app-settings",
-    "title": "Setup Wizard + хранение настроек приложения в PostgreSQL",
-    "excerpt": "<!--",
-    "parts": [
-      "futures",
-      "setup-wizard-app-settings"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-04-25T22:42:03+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/sheet-portal-nodes",
-    "title": "Ноды-порталы: визуализация кросс-листовых связей",
-    "excerpt": "> ✅ **Статус: реализовано.** Все три этапа завершены — исходящие и входящие порталы, навигация двойным кликом и тултипы со списком связей. П",
-    "parts": [
-      "futures",
-      "sheet-portal-nodes"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-06-20T01:10:03+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/start-param-rules",
+    "path": "futures/features/start-param-rules",
     "title": "Start Param Rules — Универсальный парсинг параметра /start",
     "excerpt": "Сейчас в узле `command_trigger` парсинг параметра `/start` работает так:",
     "parts": [
       "futures",
+      "features",
       "start-param-rules"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-05-05T02:55:06+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/token-card-improvements",
-    "title": "Идеи улучшений карточки токена бота",
-    "excerpt": "<!--",
-    "parts": [
-      "futures",
-      "token-card-improvements"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-04-22T23:14:25+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/typed-columns-and-table-math",
+    "path": "futures/features/typed-columns-and-table-math",
     "title": "📊 Типизированные колонки + Математика в таблицах",
     "excerpt": "**Статус:** Планирование",
     "parts": [
       "futures",
+      "features",
       "typed-columns-and-table-math"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-05-20T12:35:56+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/universal-dynamic-callback-pattern",
+    "path": "futures/features/universal-dynamic-callback-pattern",
     "title": "Универсальная поддержка динамического callbackPattern",
     "excerpt": "Когда кнопка имеет `customCallbackData` с переменной (например `\"approve_{user_id}\"`), callback_data в рантайме становится `\"approve_6591857",
     "parts": [
       "futures",
+      "features",
       "universal-dynamic-callback-pattern"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
     },
-    "updated_at": "2026-05-30T17:51:35+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/user-data-persistence-after-redeploy",
+    "path": "futures/infrastructure/api-security-audit",
+    "title": "Аудит безопасности API — Проблемы и план исправлений",
+    "excerpt": "---",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "api-security-audit"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/api-security-ideal-architecture",
+    "title": "Идеальная архитектура безопасности API",
+    "excerpt": "Как должна выглядеть серверная часть с точки зрения безопасности, валидации и контроля доступа — эталонная модель для нашего проекта.",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "api-security-ideal-architecture"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/auth-and-isolation",
+    "title": "Авторизация и изоляция данных — дальнейшие улучшения",
+    "excerpt": "Без этой переменной Mini App авторизация не верифицирует initData в продакшене — работает только в dev-режиме.",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "auth-and-isolation"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/bot-execution-modes",
+    "title": "Bot Execution Modes — архитектура режимов запуска ботов",
+    "excerpt": "Единая концепция управления режимами запуска ботов через переменную окружения `BOT_MODE`.",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "bot-execution-modes"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/bot-generation-profiles-and-toggles",
+    "title": "Bot generation profiles and toggles",
+    "excerpt": "Сейчас даже проект с 1–2 нодами генерирует **огромный Python-файл** (тысячи строк).",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "bot-generation-profiles-and-toggles"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/bot-system-api",
+    "title": "Системный API бота (скрытые эндпоинты)",
+    "excerpt": "Документ описывает архитектуру внутреннего HTTP API генерируемого бота.",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "bot-system-api"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/bot-worker-pool",
+    "title": "Bot Worker Pool — масштабируемый запуск ботов",
+    "excerpt": "Текущая архитектура запускает каждого Telegram-бота как отдельный Python процесс (`spawn python3 bot.py`).",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "bot-worker-pool"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/file-storage",
+    "title": "Файловое хранилище (File Storage)",
+    "excerpt": "Централизованное управление всеми медиафайлами проекта — входящими, исходящими и загруженными вручную. Основной принцип: **не скачивать файл",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "file-storage"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/redis-events-improvements",
+    "title": "Redis Events — Улучшения",
+    "excerpt": "| Канал | Когда | Данные |",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "redis-events-improvements"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/redis-roadmap",
+    "title": "Redis — Roadmap улучшений платформы",
+    "excerpt": "Документ описывает все возможные улучшения платформы с использованием Redis (Memurai на Windows, Redis на Linux/Railway).",
+    "parts": [
+      "futures",
+      "infrastructure",
+      "redis-roadmap"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/infrastructure/user-data-persistence-after-redeploy",
     "title": "Персистентность user_data после редеплоя",
     "excerpt": "При редеплое бота `user_data` (in-memory dict) полностью очищается. Если пользователь после редеплоя нажимает кнопку, которая ведёт на узел ",
     "parts": [
       "futures",
+      "infrastructure",
       "user-data-persistence-after-redeploy"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-05-30T21:11:45+03:00",
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
   {
-    "path": "futures/user-profile",
-    "title": "User Profile — Roadmap",
-    "excerpt": "> Профиль пользователя в шапке приложения. Дропдаун `👤 Иван ▼` с настройками,",
-    "parts": [
-      "futures",
-      "user-profile"
-    ],
-    "folder_titles": {
-      "futures": "🔮 Планы развития"
-    },
-    "updated_at": "2026-05-05T10:01:02+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "futures/webhook-mode",
+    "path": "futures/infrastructure/webhook-mode",
     "title": "Webhook режим для ботов",
     "excerpt": "Документ описывает переход с polling на webhook для генерируемых Python ботов.",
     "parts": [
       "futures",
+      "infrastructure",
       "webhook-mode"
     ],
     "folder_titles": {
-      "futures": "🔮 Планы развития"
+      "futures": "🔮 Планы развития",
+      "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-04-21T11:08:55+03:00",
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/mcp/mcp-live-editing",
+    "title": "Roadmap: Live-редактирование сценария через БД (MCP / ассистент → холст)",
+    "excerpt": "Документ описывает план, при котором правки сценария, сделанные **MCP-сервером",
+    "parts": [
+      "futures",
+      "mcp",
+      "mcp-live-editing"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "mcp": "🤖 MCP"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/mcp/mcp-observability",
+    "title": "Roadmap: MCP как наблюдательно-управляющий слой над платформой",
+    "excerpt": "Документ описывает план, при котором MCP-сервер (ассистент) получает доступ",
+    "parts": [
+      "futures",
+      "mcp",
+      "mcp-observability"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "mcp": "🤖 MCP"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/mcp/mcp-tooling-comparison",
+    "title": "Сравнение MCP-инструментов: n8n vs botcraft",
+    "excerpt": "Документ сравнивает набор MCP-инструментов нашего конструктора с встроенным",
+    "parts": [
+      "futures",
+      "mcp",
+      "mcp-tooling-comparison"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "mcp": "🤖 MCP"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/bot-table-node",
+    "title": "Узел `bot_table` — работа с внутренними таблицами конструктора",
+    "excerpt": "Сейчас для хранения пользовательских данных (профили, баланс, репутация, отношения) нужно использовать `psql_query` и писать SQL вручную. Эт",
+    "parts": [
+      "futures",
+      "nodes",
+      "bot-table-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/code-node",
+    "title": "Нода `code` — произвольный Python-код",
+    "excerpt": "Пользователь пишет Python-код прямо в редакторе конструктора. Код имеет доступ к переменным пользователя, может их читать и менять. Аналог б",
+    "parts": [
+      "futures",
+      "nodes",
+      "code-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/convert-file-node",
+    "title": "Узел `convert_file` — конвертер данных в файл и обратно",
+    "excerpt": "<!-- @fileoverview Концепция узла `convert_file` для BotCraft Studio.",
+    "parts": [
+      "futures",
+      "nodes",
+      "convert-file-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/delete-message-node",
+    "title": "Нода `delete_message` — полноценное удаление сообщений",
+    "excerpt": "Сейчас `delete_message` существует только как часть шаблона `synonyms` — работает исключительно в группах через ответ на сообщение словом-си",
+    "parts": [
+      "futures",
+      "nodes",
+      "delete-message-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/future-nodes",
+    "title": "Будущие ноды конструктора",
+    "excerpt": "Документ описывает планируемые ноды и расширения для добавления в конструктор.",
+    "parts": [
+      "futures",
+      "nodes",
+      "future-nodes"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/loop-node",
+    "title": "Узел `loop` — цикл по массиву",
+    "excerpt": "<!-- @fileoverview Концепция узла `loop` для BotCraft Studio.",
+    "parts": [
+      "futures",
+      "nodes",
+      "loop-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/merge-node",
+    "title": "Merge Node — нода объединения данных",
+    "excerpt": "Нода с **двумя входными портами** (как в n8n). Принимает данные из двух веток, объединяет по выбранному режиму, отдаёт результат дальше.",
+    "parts": [
+      "futures",
+      "nodes",
+      "merge-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/migrate-collectUserInput-to-input-node",
+    "title": "Миграция collectUserInput → отдельная нода input",
+    "excerpt": "Message-ноды исторически поддерживают `collectUserInput: true` с полями `inputVariable`, `enableTextInput/Photo/Video/Audio/Document` и т.д.",
+    "parts": [
+      "futures",
+      "nodes",
+      "migrate-collectUserInput-to-input-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/move-buttons-to-keyboard-node",
+    "title": "Полный вынос кнопок из message в keyboard-ноду",
+    "excerpt": "Поля `buttons` и `keyboardType` концептуально относятся только к `keyboard`-ноде, но фактически до сих пор живут и в `message`-нодах. Архите",
+    "parts": [
+      "futures",
+      "nodes",
+      "move-buttons-to-keyboard-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/multi-recipient-edit-message",
+    "title": "Multi-recipient edit_message",
+    "excerpt": "Когда сообщение отправляется нескольким получателям через `messageSendRecipients`, каждый получатель получает своё сообщение с уникальным `m",
+    "parts": [
+      "futures",
+      "nodes",
+      "multi-recipient-edit-message"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/parallel-split-node",
+    "title": "Узел `parallel_split` — параллельный запуск веток",
+    "excerpt": "<!-- @fileoverview Концепция узла `parallel_split` для BotCraft Studio.",
+    "parts": [
+      "futures",
+      "nodes",
+      "parallel-split-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/psql-query-node",
+    "title": "Узел `psql_query` — прямой SQL-запрос к базе данных",
+    "excerpt": "<!-- @fileoverview План реализации нового типа узла `psql_query` для BotCraft Studio.",
+    "parts": [
+      "futures",
+      "nodes",
+      "psql-query-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/schedule-trigger",
+    "title": "Нода `schedule_trigger` — запуск по расписанию",
+    "excerpt": "Фоновая задача, которая запускает цепочку нод по таймеру без участия пользователя. Аналог Schedule Trigger в n8n — визуальный конструктор ра",
+    "parts": [
+      "futures",
+      "nodes",
+      "schedule-trigger"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/set-variable-modes",
+    "title": "🧮 Узел «Переменные» — все режимы (modes)",
+    "excerpt": "Отражает суть — узел не просто \"устанавливает переменные\", а вычисляет, форматирует, ищет, генерирует, трансформирует.",
+    "parts": [
+      "futures",
+      "nodes",
+      "set-variable-modes"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/set-variable-node",
+    "title": "Узел `set_variable` — установка переменных без HTTP-запроса",
+    "excerpt": "<!-- @fileoverview План реализации нового типа узла `set_variable` для BotCraft Studio.",
+    "parts": [
+      "futures",
+      "nodes",
+      "set-variable-node"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/nodes/sheet-portal-nodes",
+    "title": "Ноды-порталы: визуализация кросс-листовых связей",
+    "excerpt": "> ✅ **Статус: реализовано.** Все три этапа завершены — исходящие и входящие порталы, навигация двойным кликом и тултипы со списком связей. П",
+    "parts": [
+      "futures",
+      "nodes",
+      "sheet-portal-nodes"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "nodes": "🧩 Новые ноды"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/ui/canvas-improvements",
+    "title": "План улучшений холста редактора",
+    "excerpt": "Документ собирает предложения по дальнейшему развитию холста визуального редактора (вкладка «Редактор»). Сформирован после серии оптимизаций",
+    "parts": [
+      "futures",
+      "ui",
+      "canvas-improvements"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "ui": "🎨 Интерфейс"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/ui/charts-roadmap",
+    "title": "Фича: Кастомные графики на основе таблиц",
+    "excerpt": "Владелец бота создаёт графики/дашборды на основе данных из пользовательских таблиц (bot_tables) и системных данных (bot_users, bot_messages)",
+    "parts": [
+      "futures",
+      "ui",
+      "charts-roadmap"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "ui": "🎨 Интерфейс"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/ui/constructor-improvements-roadmap",
+    "title": "Дальнейшие улучшения конструктора",
+    "excerpt": "Документ собирает идеи по развитию визуального редактора, появившиеся после реализации [нод-порталов](sheet-portal-nodes.md). Здесь только т",
+    "parts": [
+      "futures",
+      "ui",
+      "constructor-improvements-roadmap"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "ui": "🎨 Интерфейс"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/ui/new-navigation",
+    "title": "New Navigation — Redesign Roadmap",
+    "excerpt": "> Переход от редактора с вкладками к полноценной платформе управления ботами.",
+    "parts": [
+      "futures",
+      "ui",
+      "new-navigation"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "ui": "🎨 Интерфейс"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/ui/project-collaborators",
+    "title": "Совместный доступ к проекту",
+    "excerpt": "<!--",
+    "parts": [
+      "futures",
+      "ui",
+      "project-collaborators"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "ui": "🎨 Интерфейс"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/ui/properties-json-view",
+    "title": "JSON-режим панели свойств",
+    "excerpt": "> **Статус:** MVP реализован (этап 1). Пользовательская документация — в [`docs/interface/editor/properties.md`](../interface/editor/propert",
+    "parts": [
+      "futures",
+      "ui",
+      "properties-json-view"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "ui": "🎨 Интерфейс"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/ui/properties-mobile-bottom-sheet",
+    "title": "Нижняя панель свойств на мобильных",
+    "excerpt": "Идея: на маленьких экранах показывать панель свойств **снизу** (bottom sheet), а не справа и не на весь экран — чтобы холст оставался видимы",
+    "parts": [
+      "futures",
+      "ui",
+      "properties-mobile-bottom-sheet"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "ui": "🎨 Интерфейс"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/ui/setup-wizard-app-settings",
+    "title": "Setup Wizard + хранение настроек приложения в PostgreSQL",
+    "excerpt": "<!--",
+    "parts": [
+      "futures",
+      "ui",
+      "setup-wizard-app-settings"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "ui": "🎨 Интерфейс"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/ui/token-card-improvements",
+    "title": "Идеи улучшений карточки токена бота",
+    "excerpt": "<!--",
+    "parts": [
+      "futures",
+      "ui",
+      "token-card-improvements"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "ui": "🎨 Интерфейс"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/ui/user-profile",
+    "title": "User Profile — Roadmap",
+    "excerpt": "> Профиль пользователя в шапке приложения. Дропдаун `👤 Иван ▼` с настройками,",
+    "parts": [
+      "futures",
+      "ui",
+      "user-profile"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "ui": "🎨 Интерфейс"
+    },
+    "updated_at": null,
     "tags": [],
     "author": ""
   },
@@ -1138,7 +1363,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-06-15T01:26:00+03:00",
+    "updated_at": "2026-06-21T02:37:51+03:00",
     "tags": [],
     "author": ""
   },
@@ -1153,7 +1378,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-06-15T01:26:00+03:00",
+    "updated_at": "2026-06-21T02:37:51+03:00",
     "tags": [],
     "author": ""
   },
@@ -1462,7 +1687,7 @@
       "interface": "🖥️ Интерфейс",
       "tables": "🗄️ Таблицы"
     },
-    "updated_at": "2026-06-15T01:26:00+03:00",
+    "updated_at": "2026-06-21T02:37:51+03:00",
     "tags": [],
     "author": ""
   },
@@ -1480,6 +1705,51 @@
       "tables": "🗄️ Таблицы"
     },
     "updated_at": "2026-06-15T01:26:00+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/bot-builder",
+    "title": "MCP-сервер конструктора (botcraft-builder)",
+    "excerpt": "> Подробное руководство по MCP-серверу BotCraft Studio для сборки `project.json` и генерации Python-кода через внешние ИИ-клиенты (Cursor, C",
+    "parts": [
+      "mcp",
+      "bot-builder"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/example-simple-bot",
+    "title": "Пример: простой бот через MCP",
+    "excerpt": "Демонстрационный проект, собранный **инструментами MCP botcraft-builder**.",
+    "parts": [
+      "mcp",
+      "example-simple-bot"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор"
+    },
+    "updated_at": null,
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "mcp/overview",
+    "title": "MCP-конструктор ботов — обзор",
+    "excerpt": "> Краткое введение. Полное руководство: [[mcp/bot-builder]]. Пример: [[mcp/example-simple-bot]].",
+    "parts": [
+      "mcp",
+      "overview"
+    ],
+    "folder_titles": {
+      "mcp": "🤖 MCP-конструктор"
+    },
+    "updated_at": null,
     "tags": [],
     "author": ""
   },

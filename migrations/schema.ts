@@ -324,3 +324,28 @@ export const userIds = pgTable("user_ids", {
 	index("user_ids_user_id_idx").using("btree", table.userId.asc().nullsLast().op("int8_ops")),
 	unique("user_ids_user_unique").on(table.userId),
 ]);
+
+/** Таблица истории версий проекта — снимки data (BotDataWithSheets) при сохранении */
+export const projectVersions = pgTable("project_versions", {
+	id: serial().primaryKey().notNull(),
+	projectId: integer("project_id").notNull(),
+	snapshot: jsonb().notNull(),
+	label: text(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	authorId: bigint("author_id", { mode: "number" }),
+	/** Тип версии: "auto" — авто-снимок, "manual" — ручной коммит-чекпоинт */
+	kind: text().default("auto").notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
+}, (table) => [
+	index("idx_project_versions_project").using("btree", table.projectId.asc().nullsLast().op("int4_ops")),
+	foreignKey({
+			columns: [table.projectId],
+			foreignColumns: [botProjects.id],
+			name: "project_versions_project_id_bot_projects_id_fk"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.authorId],
+			foreignColumns: [telegramUsers.id],
+			name: "project_versions_author_id_telegram_users_id_fk"
+		}).onDelete("set null"),
+]);

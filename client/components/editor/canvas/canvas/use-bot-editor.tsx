@@ -378,12 +378,14 @@ export function useBotEditor(initialData?: BotData) {
    * @param templateName - Название шаблона компоновки (опционально)
    * @param nodeSizes - Карта размеров узлов (опционально)
    * @param skipLayout - Флаг для отключения автоматической компоновки (опционально)
+   * @param preserveSelection - Не сбрасывать выделение (для remote sync)
    */
   const setBotData = useCallback((
     botData: BotData,
     templateName?: string,
     nodeSizes?: Map<string, { width: number; height: number }>,
-    skipLayout?: boolean // Новый параметр для отключения автоматического layout
+    skipLayout?: boolean,
+    preserveSelection?: boolean,
   ) => {
     // Устанавливаем данные бота
 
@@ -419,7 +421,9 @@ export function useBotEditor(initialData?: BotData) {
       : applyTemplateLayout(migratedWithInputTargets, [], templateName, nodeSizes);
 
     setNodes(finalNodes);
-    setSelectedNodeId(null); // Сбрасываем выбранный узел
+    if (!preserveSelection) {
+      setSelectedNodeId(null); // Сбрасываем выбранный узел
+    }
 
     // Возвращаем итоговый массив мигрированных узлов для предотвращения дублирования
     return finalNodes;

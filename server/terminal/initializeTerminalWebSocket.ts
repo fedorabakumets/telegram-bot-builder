@@ -4,7 +4,6 @@
  * @module server/terminal/initializeTerminalWebSocket
  */
 
-import { Server as HttpServer } from "node:http";
 import { WebSocket, WebSocketServer } from "ws";
 import { activeConnections } from "./activeConnections";
 import { setTerminalWss } from "./setTerminalWss";
@@ -12,7 +11,7 @@ import { setupBotProcessListeners } from "./setupBotProcessListeners";
 import { startFlushTimer, flushBuffer } from "./botLogsBuffer";
 import { storage } from "../storages/storage";
 import { TerminalMessage } from "./TerminalMessage";
-import { exportedSessionMiddleware } from "../routes/routes";
+import { applyWebSocketSession } from "../websocket/applyWebSocketSession";
 import "express-session";
 
 /**
@@ -42,104 +41,99 @@ function removeConnection(key: string, ws: WebSocket): void {
 
 /**
  * Инициализирует WebSocket-сервер для передачи вывода ботов.
+ * Создаётся в режиме noServer — маршрутизация upgrade выполняется отдельно
+ * (см. registerWebSocketUpgrade), чтобы не конфликтовать с другими ws-серверами.
  * При projectId=0 открывает соединение для всех проектов пользователя (ключ user_${userId}).
- * @param server - HTTP-сервер, к которому будет подключён WebSocket
  * @returns Экземпляр WebSocket-сервера
  */
-export function initializeTerminalWebSocket(server: HttpServer): WebSocketServer {
-  const wss = new WebSocketServer({ server, path: "/api/terminal" });
+export function initializeTerminalWebSocket(): WebSocketServer {
+  const wss = new WebSocketServer({ noServer: true });
 
   wss.on("connection", (ws: WebSocket, request) => {
-    console.log("[Terminal WS] Новое WebSocket-соединение, URL:", request.url);
-
-    // Прикрепляем Express-сессию к WS запросу чтобы получить userId
-    const applySession = (): Promise<void> => new Promise((resolve, reject) => {
-      if (!exportedSessionMiddleware) {
-        resolve();
+    (async () => {
+      try {
+        // Прикрепляем Express-сессию к WS запросу чтобы получить userId.
+        // Reject не должен молча ронять обработчик — оборачиваем в try/catch.
+        await applyWebSocketSession(request);
+      } catch (error) {
+        console.error("[Terminal WS] Ошибка прикрепления сессии:", error);
+        ws.close(1011, "Ошибка сервера при прикреплении сессии");
         return;
       }
-      exportedSessionMiddleware(request as any, {} as any, (error?: unknown) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
-      });
-    });
-
-    (async () => {
-      await applySession();
 
       const urlParams = new URLSearchParams(request.url?.split("?")[1]);
-    const projectIdStr = urlParams.get("projectId");
-    const tokenIdStr = urlParams.get("tokenId");
+      const projectIdStr = urlParams.get("projectId");
+      const tokenIdStr = urlParams.get("tokenId");
 
-    if (!projectIdStr || !tokenIdStr) {
-      console.error("Отсутствуют обязательные параметры projectId или tokenId");
-      ws.close(4001, "Отсутствуют обязательные параметры");
-      return;
-    }
+      if (!projectIdStr || !tokenIdStr) {
+        console.error("Отсутствуют обязательные параметры projectId или tokenId");
+        ws.close(4001, "Отсутствуют обязательные параметры");
+        return;
+      }
 
-    const projectId = parseInt(projectIdStr);
-    const tokenId = parseInt(tokenIdStr);
+      const projectId = parseInt(projectIdStr);
+      const tokenId = parseInt(tokenIdStr);
 
-    // Режим подписки на все проекты: projectId=0
-    // В single-tenant режиме без авторизации используем глобальный ключ
-    if (projectId === 0) {
-      const session = (request as any).session;
-      const userId: number | undefined = session?.telegramUser?.id;
-      const allKey = userId ? `user_${userId}` : `user_global`;
-      registerConnection(allKey, ws);
+      // Режим подписки на все проекты: projectId=0
+      // В single-tenant режиме без авторизации используем глобальный ключ
+      if (projectId === 0) {
+        const session = (request as any).session;
+        const userId: number | undefined = session?.telegramUser?.id;
+        const allKey = userId ? `user_${userId}` : `user_global`;
+        registerConnection(allKey, ws);
 
-      // Отвечаем на ping чтобы Railway не закрыл idle соединение
+        // Отвечаем на ping чтобы Railway не закрыл idle соединение
+        ws.on("message", (data) => {
+          try {
+            const parsed = JSON.parse(data.toString());
+            if (parsed.command === 'ping') {
+              ws.send(JSON.stringify({ command: 'pong' }));
+            }
+          } catch {
+            // Игнорируем некорректные сообщения
+          }
+        });
+
+        ws.on("close", () => removeConnection(allKey, ws));
+        ws.on("error", (err) => {
+          console.error(`[Terminal WS] Ошибка соединения подписки key=${allKey}:`, err);
+          removeConnection(allKey, ws);
+        });
+        return;
+      }
+
+      const connectionKey = `${projectId}_${tokenId}`;
+      registerConnection(connectionKey, ws);
+      console.log(`[Terminal WS] Зарегистрировано соединение: key=${connectionKey}, всего соединений для ключа: ${activeConnections.get(connectionKey)?.size ?? 0}`);
+
+      // Сбрасываем буфер и отправляем историю асинхронно
+      (async () => {
+        await flushBuffer(connectionKey);
+        sendHistoryToClient(ws, projectId, tokenId);
+      })();
+
+      ws.on("close", () => {
+        console.log(`WebSocket закрыт для проекта ${projectId}, токена ${tokenId}`);
+        removeConnection(connectionKey, ws);
+      });
+
+      ws.on("error", (error) => {
+        console.error(`Ошибка WebSocket для проекта ${projectId}, токена ${tokenId}:`, error);
+        removeConnection(connectionKey, ws);
+      });
+
       ws.on("message", (data) => {
         try {
           const parsed = JSON.parse(data.toString());
-          if (parsed.command === 'ping') {
-            ws.send(JSON.stringify({ command: 'pong' }));
+          if (parsed.command === "clear") {
+            console.log(`Команда очистки терминала для проекта ${projectId}, токена ${tokenId}`);
+          } else if (parsed.command === "ping") {
+            ws.send(JSON.stringify({ command: "pong" }));
           }
         } catch {
-          // Игнорируем некорректные сообщения
+          console.warn("Некорректное сообщение от клиента:", data.toString());
         }
       });
-
-      ws.on("close", () => removeConnection(allKey, ws));
-      ws.on("error", () => removeConnection(allKey, ws));
-      return;
-    }
-
-    const connectionKey = `${projectId}_${tokenId}`;
-    registerConnection(connectionKey, ws);
-    console.log(`[Terminal WS] Зарегистрировано соединение: key=${connectionKey}, всего соединений для ключа: ${activeConnections.get(connectionKey)?.size ?? 0}`);
-
-    // Сбрасываем буфер и отправляем историю асинхронно
-    (async () => {
-      await flushBuffer(connectionKey);
-      sendHistoryToClient(ws, projectId, tokenId);
-    })();
-
-    ws.on("close", () => {
-      console.log(`WebSocket закрыт для проекта ${projectId}, токена ${tokenId}`);
-      removeConnection(connectionKey, ws);
-    });
-
-    ws.on("error", (error) => {
-      console.error(`Ошибка WebSocket для проекта ${projectId}, токена ${tokenId}:`, error);
-      removeConnection(connectionKey, ws);
-    });
-
-    ws.on("message", (data) => {
-      try {
-        const parsed = JSON.parse(data.toString());
-        if (parsed.command === "clear") {
-          console.log(`Команда очистки терминала для проекта ${projectId}, токена ${tokenId}`);
-        } else if (parsed.command === "ping") {
-          ws.send(JSON.stringify({ command: "pong" }));
-        }
-      } catch {
-        console.warn("Некорректное сообщение от клиента:", data.toString());
-      }
-    });
     })();
   });
 

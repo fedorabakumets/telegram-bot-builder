@@ -1,6 +1,6 @@
 /**
  * @fileoverview Хендлер dev-входа по Telegram ID без верификации.
- * Доступен ТОЛЬКО в NODE_ENV=development.
+ * Доступен в NODE_ENV=development или при SKIP_AUTH=true.
  * @module auth/handlers/devLoginHandler
  */
 
@@ -11,15 +11,17 @@ import { regenerateSession, saveSession } from '../utils/sessionUtils';
 /**
  * Обрабатывает dev-вход: создаёт/находит пользователя по Telegram ID,
  * регенерирует сессию и мигрирует ВСЕ гостевые проекты на этого пользователя.
- * Возвращает 403 если NODE_ENV !== 'development'.
+ * Возвращает 403 если NODE_ENV !== 'development' и SKIP_AUTH !== 'true'.
  *
  * @param req - Объект запроса (тело: { id, firstName, username? })
  * @param res - Объект ответа
  * @returns Promise<void>
  */
 export async function handleDevLogin(req: Request, res: Response): Promise<void> {
-  if (process.env.NODE_ENV !== 'development') {
-    res.status(403).json({ success: false, error: 'Forbidden: только в development' });
+  const isDevOrSkipAuth = process.env.NODE_ENV === 'development' || process.env.SKIP_AUTH === 'true';
+
+  if (!isDevOrSkipAuth) {
+    res.status(403).json({ success: false, error: 'Forbidden: только в development или с SKIP_AUTH=true' });
     return;
   }
 

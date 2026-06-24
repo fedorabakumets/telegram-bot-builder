@@ -1,0 +1,248 @@
+/**
+ * @fileoverview Мутации project.json: scaffold, add, connect, remove
+ * @module lib/bot-tools/project-mutate
+ */
+
+import { nanoid } from 'nanoid';
+import type { BotDataWithSheets, Node } from '@shared/schema';
+import { collectAllNodes } from './collect-nodes.ts';
+import { minimizeNode } from './minimize-node-data.ts';
+import { validateBotProject } from './validate-project.ts';
+import type { ValidateProjectResult } from './types.ts';
+
+/** Результат мутации проекта */
+export interface MutateProjectResult {
+  /** Обновлённый проект */
+  project: BotDataWithSheets;
+  /** Валидация после мутации */
+  validation: ValidateProjectResult;
+}
+
+/** Тип порта соединения (упрощённый порт canvas) */
+export type ConnectPortType = 'auto-transition' | 'trigger-next' | 'button-goto' | 'input-target';
+
+/**
+ * Парсит project_json в объект
+ * @param input - Объект или JSON-строка
+ * @returns project или null
+ */
+function parseProject(input: unknown): BotDataWithSheets | null {
+  if (typeof input === 'string') {
+    try {
+      return JSON.parse(input) as BotDataWithSheets;
+    } catch {
+      return null;
+    }
+  }
+  if (input && typeof input === 'object') return structuredClone(input) as BotDataWithSheets;
+  return null;
+}
+
+/**
+ * Находит индекс листа по id или возвращает активный/первый
+ * @param project - Проект
+ * @param sheetId - ID листа
+ * @returns Индекс листа
+ */
+function resolveSheetIndex(project: BotDataWithSheets, sheetId?: string): number {
+  const sheets = project.sheets ?? [];
+  if (sheetId) {
+    const idx = sheets.findIndex((s) => s.id === sheetId);
+    if (idx >= 0) return idx;
+  }
+  if (project.activeSheetId) {
+    const idx = sheets.findIndex((s) => s.id === project.activeSheetId);
+    if (idx >= 0) return idx;
+  }
+  return 0;
+}
+
+/**
+ * Создаёт минимальный project.json со стартовой парой command_trigger + message
+ * @param nodes - Опциональный список нод (иначе дефолтный scaffold)
+ * @param sheetName - Имя листа
+ * @returns project + validation
+ */
+export function scaffoldMinimalProject(nodes?: Node[], sheetName = 'Лист 1'): MutateProjectResult {
+  const sheetId = nanoid();
+  const defaultNodes: Node[] = (nodes ?? [
+    {
+      id: 'start-message',
+      type: 'message',
+      position: { x: 400, y: 300 },
+      data: { messageText: 'Привет! Я ваш новый бот.' },
+    },
+    {
+      id: 'start-command-trigger',
+      type: 'command_trigger',
+      position: { x: 100, y: 300 },
+      data: {
+        command: '/start',
+        description: 'Запустить бота',
+        showInMenu: true,
+        autoTransitionTo: 'start-message',
+        sourceNodeId: 'start-message',
+      },
+    },
+  ] as Node[]).map((n) => minimizeNode(n));
+
+  const project: BotDataWithSheets = {
+    version: 2,
+    activeSheetId: sheetId,
+    sheets: [{
+      id: sheetId,
+      name: sheetName,
+      nodes: defaultNodes,
+      viewState: { pan: { x: 0, y: 0 }, zoom: 100 },
+    }],
+  };
+
+  return { project, validation: validateBotProject(project) };
+}
+
+/**
+ * Добавляет ноду на лист проекта
+ * @param projectJson - Текущий project.json
+ * @param node - Нода для добавления
+ * @param sheetId - ID листа
+ */
+export function addNodeToProject(projectJson: unknown, node: Node, sheetId?: string): MutateProjectResult | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const idx = resolveSheetIndex(project, sheetId);
+  const sheets = [...(project.sheets ?? [])];
+  const sheet = { ...sheets[idx], nodes: [...(sheets[idx]?.nodes ?? []), minimizeNode(node)] };
+  sheets[idx] = sheet;
+
+  const updated = { ...project, sheets };
+  return { project: updated, validation: validateBotProject(updated) };
+}
+
+/**
+ * Обновляет ноду по id (shallow merge data)
+ * @param projectJson - project.json
+ * @param nodeId - ID ноды
+ * @param patch - Частичное обновление ноды
+ * @param sheetId - ID листа
+ */
+export function updateNodeInProject(
+  projectJson: unknown,
+  nodeId: string,
+  patch: { type?: Node['type']; position?: Node['position']; data?: Partial<Node['data']> },
+  sheetId?: string,
+): MutateProjectResult | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const idx = resolveSheetIndex(project, sheetId);
+  const sheets = [...(project.sheets ?? [])];
+  const nodes = (sheets[idx]?.nodes ?? []).map((n) => {
+    if (n.id !== nodeId) return n;
+    return {
+      ...n,
+      ...(patch.type ? { type: patch.type } : {}),
+      ...(patch.position ? { position: patch.position } : {}),
+      ...(patch.data ? { data: { ...n.data, ...patch.data } } : {}),
+    };
+  });
+  sheets[idx] = { ...sheets[idx], nodes };
+
+  const updated = { ...project, sheets };
+  return { project: updated, validation: validateBotProject(updated) };
+}
+
+/**
+ * Удаляет ноду из проекта
+ * @param projectJson - project.json
+ * @param nodeId - ID ноды
+ * @param sheetId - ID листа
+ */
+export function removeNodeFromProject(
+  projectJson: unknown,
+  nodeId: string,
+  sheetId?: string,
+): MutateProjectResult | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const idx = resolveSheetIndex(project, sheetId);
+  const sheets = [...(project.sheets ?? [])];
+  sheets[idx] = {
+    ...sheets[idx],
+    nodes: (sheets[idx]?.nodes ?? []).filter((n) => n.id !== nodeId),
+  };
+
+  const updated = { ...project, sheets };
+  return { project: updated, validation: validateBotProject(updated) };
+}
+
+/**
+ * Соединяет две ноды (auto-transition, button/branch target, input-target)
+ * @param projectJson - project.json
+ * @param fromId - ID исходной ноды
+ * @param toId - ID целевой ноды
+ * @param options - branch id, portType, sheetId
+ */
+export function connectNodes(
+  projectJson: unknown,
+  fromId: string,
+  toId: string,
+  options: { branch?: string; portType?: ConnectPortType; sheetId?: string } = {},
+): MutateProjectResult | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const allIds = new Set(collectAllNodes(project as Record<string, unknown>).map((e) => e.node.id));
+  if (!allIds.has(fromId) || !allIds.has(toId)) {
+    return { error: `Нода не найдена: from=${fromId} to=${toId}` };
+  }
+
+  const portType = options.portType ?? 'auto-transition';
+  const branchId = options.branch;
+  const idx = resolveSheetIndex(project, options.sheetId);
+  const sheets = [...(project.sheets ?? [])];
+
+  const nodes = (sheets[idx]?.nodes ?? []).map((n) => {
+    if (n.id !== fromId) return n;
+    const data = { ...n.data } as Record<string, unknown>;
+
+    if (portType === 'trigger-next' || portType === 'auto-transition') {
+      data.autoTransitionTo = toId;
+      if (portType === 'auto-transition') data.enableAutoTransition = true;
+      return { ...n, data: data as Node['data'] };
+    }
+
+    if (portType === 'button-goto' && branchId) {
+      if (Array.isArray(data.buttons)) {
+        data.buttons = data.buttons.map((btn) =>
+          btn.id === branchId ? { ...btn, target: toId } : btn,
+        );
+      }
+      if (Array.isArray(data.branches)) {
+        data.branches = data.branches.map((b) =>
+          b.id === branchId ? { ...b, target: toId } : b,
+        );
+      }
+      if (Array.isArray(data.parallelBranches)) {
+        data.parallelBranches = data.parallelBranches.map((b) =>
+          b.id === branchId ? { ...b, target: toId } : b,
+        );
+      }
+      return { ...n, data: data as Node['data'] };
+    }
+
+    if (portType === 'input-target') {
+      data.inputTargetNodeId = toId;
+      return { ...n, data: data as Node['data'] };
+    }
+
+    data.autoTransitionTo = toId;
+    data.enableAutoTransition = true;
+    return { ...n, data: data as Node['data'] };
+  });
+
+  sheets[idx] = { ...sheets[idx], nodes };
+  const updated = { ...project, sheets };
+  return { project: updated, validation: validateBotProject(updated) };
+}
