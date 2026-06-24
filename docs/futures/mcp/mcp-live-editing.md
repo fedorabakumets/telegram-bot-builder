@@ -80,7 +80,7 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 | # | Задача | Сложность | Статус |
 |---|--------|-----------|--------|
 | 0.1 | Зафиксировать решение «MCP → HTTP API сервера» и формат правки | Низкая | ✅ Готово (вариант 1A: адресация по числовому `projectId`, снапшот целиком) |
-| 0.2 | Сервисная аутентификация MCP к API (токен/заголовок) | Низкая–средняя | ⬜ Отложено (локально проходит как гость при `SKIP_AUTH`; токен нужен для прода) |
+| 0.2 | Аутентификация MCP к API — **персональные токены агента (per-user PAT)** + deny-by-default + удаление гостевых проектов | Средняя | 🟦 Решено делать (профессиональный состав, модель GitHub/Stripe + RFC 6750): таблица `agent_tokens` (sha-256 хеш, колонка `scopes` на будущее) + resolver-middleware `identifyAgent` (`Authorization: Bearer`) + **глобальный `requireAuth` с allowlist** (не точечная заплатка) + вкладка «Агент» в UI. Гостевые проекты убираются (в БД 0 — миграция не нужна). Фазировка 0.2a/0.2b/0.2c — см. раздел «Проектный блок». |
 
 ### Фаза 1 — Полный снапшот через API + broadcast (MVP realtime)
 | # | Задача | Сложность | Статус |
@@ -217,14 +217,76 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 - **Подсветка изменённой ноды (Фаза 2.3).** Поле `changedNodeId` в `canvas-sync` + подсветка/центрирование на холсте.
 - **Аудит схемы на `z.date()` ↔ jsonb.** Найти другие даты в jsonb-данных, которые ломаются после round-trip (как было с `updatedAt`).
 
+### Проектный блок (уровень проекта) — персональные токены агента (мультитенант)
+
+**Решение зафиксировано:** профессиональный путь — **персональные токены на каждого пользователя** (Personal Access Token), которые юзер сам генерирует во вкладке «Агент» в UI. Токен резолвится в личность СВОЕГО владельца, поэтому MCP мультитенантный: любой пользователь подключает свой токен и работает только со своими проектами. Это ровно модель Figma (PAT) и n8n (API-ключ), без привязки к одному `ownerId` через env.
+
+> **Целевая модель безопасности:** [`api-security-ideal-architecture.md`](../../infrastructure/api-security-ideal-architecture.md). Токен агента — это новый источник личности в слое 4 (Authentication) того дока (`identifyAgent`), а удаление гостевого пропуска в `requireProjectAccess` закрывает дыру из его таблицы «сейчас vs идеал». Фаза 0.2 = первый практический шаг к этому эталону.
+
+> Отвергнут промежуточный вариант с единым `MCP_SERVICE_TOKEN` + `MCP_SERVICE_OWNER_ID` (один токен = один захардкоженный владелец). Он годится лишь для прототипа одного разработчика; для продукта нужен per-user.
+
+**Почему так.** У Figma и n8n внешний доступ к API всегда несёт личность через токен. У них нет «анонимного гостя»: `list` возвращает проекты владельца токена, `create` создаёт под ним, адресация по `file_key`/id из URL (наш паттерн «операция по id»). Каждый пользователь имеет свой ключ — это и безопасность, и изоляция данных.
+
+**Наша текущая проблема.** MCP ходит анонимно (нет сессии/токена), `ownerId === null`. Операции по id работают лишь потому, что `requireProjectAccess` пропускает гостя. Но `GET /api/projects/list` без личности отдаёт только гостевые проекты, а `POST /api/projects` жёстко возвращает `401`.
+
+**Архитектура (per-user PAT, профессиональный состав):**
+
+> **Стандарты, на которые равняемся:** GitHub/Stripe (API-ключи хранятся sha-256-хешем, не plaintext — для 256-битного случайного токена соль/bcrypt не нужны), RFC 6750 (`Authorization: Bearer`), deny-by-default из `api-security-ideal-architecture.md`.
+
+1. **Таблица токенов** — новая `agent_tokens`: `id`, `ownerId` (FK `telegram_users.id`), `label`, `tokenHash` (sha-256 hex, **уникальный индекс**, сам токен НЕ хранится), `prefix` (первые ~10 символов для отображения), `scopes` (text, по умолчанию `read,write` — **колонку заводим сразу**, чтобы не делать вторую миграцию; разграничение прав включаем позже), `createdAt`, `lastUsedAt`, `expiresAt?`, `revokedAt?`. Сам секрет (`mcp_<base64url(randomBytes32)>`) показывается пользователю ОДИН раз при генерации.
+2. **Формат токена и транспорт** — токен вида `mcp_<base64url>`; транспорт — **`Authorization: Bearer <token>`** (RFC 6750, стандарт; не кастомный заголовок). Резолвер также принимает голый токен в этом заголовке.
+3. **Серверный resolver-middleware (`identifyAgent`)** — если `req.user` ещё пуст, читает `Authorization: Bearer`, хеширует токен (sha-256), ищет по `tokenHash`; при совпадении (не отозван/не истёк) ставит `req.user` = `TelegramUserDB` владельца и обновляет `lastUsedAt`. Дальше `getOwnerIdFromRequest` отдаёт реального владельца — все хендлеры работают без правок. Встроить в `routes.ts` сразу после `authMiddleware`, до гостевого блока; не перетирать сессию.
+4. **Deny-by-default (профессиональный ключевой пункт).** Вместо точечной заплатки одного middleware — глобальный `requireAuth` на весь `/api/` с явным allowlist публичных роутов (`/api/health`, `/api/auth/*`, `/api/webhook/*`, `/api/setup*`, `/api/config`, `import-from-files` и т.п. — собрать реальный список из `routes.ts`). Любой эндпоинт защищён по умолчанию; публичное помечается явно. Это закрывает не одну известную дыру (гостевой доступ по id), а весь класс «забыли повесить auth». Разнести текущий `authMiddleware` на `identifyUser` (обогащает `req.user`) + `requireAuth` (блокирует) — как в эталоне.
+5. **MCP-сторона** — общий хелпер `lib/bot-tools/api-fetch.ts` (читает `API_BASE_URL` + `MCP_AGENT_TOKEN` из `process.env`, добавляет `Authorization: Bearer`, если токен задан). Рефактор 3 файлов с fetch (`project-db.ts`, `project-db-read.ts`, `version-ops-db.ts`, 6 вызовов). Токен каждый пользователь кладёт в env своего MCP-процесса; mcp.json в репо не трогаем.
+6. **Вкладка «Агент» в UI (0.2b)** — управление своими токенами: список (label, prefix, scopes, создан, last used), «Сгенерировать» (полный токен один раз + копирование + готовый сниппет настройки MCP), «Отозвать».
+
+**Отложено осознанно (не переинженерим первую версию):**
+- **Скоупы read/write в рантайме** — колонку `scopes` заводим сразу, но проверку прав (read-токен не может писать) включаем в 0.2b/0.2c.
+- **Чек-сумма в префиксе токена** (как `ghp_` + CRC у GitHub для секрет-сканеров) — nice-to-have, позже.
+
+**Эндпоинты тулов проектного блока (после токен-инфры):**
+- `db_list_projects` → `GET /api/projects/list` — проекты владельца токена (`total` + метаданные id/name/nodeCount/sheetsCount/sortOrder, через DTO — без `botToken`).
+- `db_create_project` → `POST /api/projects`, тело `{ name, data }` (`data` = `scaffoldMinimalProject().project` по умолчанию) → `{ ok, projectId }`.
+- `db_rename_project` → `PUT /api/projects/:id` с телом `{ name }` (без `data` — версии не плодятся).
+- `db_reorder_projects` → `PUT /api/projects/reorder`, тело `{ projectIds: number[] }`.
+- `db_export_project` → `POST /api/projects/:id/export` → `{ code }` (готовый Python `bot.py`).
+- `db_delete_project` → `DELETE /api/projects/:id`. **ДЕСТРУКТИВНО, необратимо** — обязательный флаг `confirm: true`.
+
+**Фазировка:**
+- **0.2a — серверная токен-инфра + deny-by-default + удаление гостей:** таблица `agent_tokens` (+миграция `0008`) + storage (create/list/revoke/resolveByToken с хешем) + resolver-middleware `identifyAgent` + **глобальный `requireAuth` с allowlist** + удаление гостевых веток. MCP-хелпер `api-fetch.ts` (рефактор 3 файлов, Bearer). Всё одним атомарным изменением. После 0.2a проектные тулы работают под токеном.
+- **0.2b — вкладка «Агент» (UI):** генерация/список/отзыв токенов + сниппет настройки MCP + включение проверки scopes.
+- **0.2c — проектный блок тулов:** `project-ops-db.ts` (6 функций) + регистрация 6 тулов + экспорт в барель.
+
+#### Удаление гостевых проектов + deny-by-default (security-фикс, часть 0.2a)
+
+**Решение:** концепции «гостевых проектов» больше нет. У каждого проекта есть владелец; неавторизованный запрос (без сессии и без валидного токена агента) отклоняется (401), а не превращается в гостя. Профессиональный способ — **deny-by-default**: глобальный `requireAuth` на `/api/` + allowlist, а не точечная правка одного middleware.
+
+**Почему:** текущий безусловный пропуск гостя в `requireProjectAccess` (`if (ownerId === null) next()`) открывает доступ к ЛЮБОМУ проекту по числовому `id` для анонима (id последовательны, легко перебираются). Это та самая строка из таблицы «сейчас vs идеал» эталонного дока.
+
+**Влияние на данные:** в БД сейчас **0 гостевых проектов** (8 из 8 имеют владельца) — миграция не нужна, ничего не осиротеет.
+
+**Что меняется:**
+- `server/telegram/auth-middleware.ts`: разнести на `identifyUser` (обогащает `req.user` из сессии) + `requireAuth` (блокирует с 401). 
+- `routes.ts`: порядок `session → identifyUser → identifyAgent → requireAuth('/api' c allowlist) → no-cache`; удалить guest-session middleware.
+- `requireProjectAccess` (`server/middleware/requireProjectAccess.ts`): убрать пропуск при `ownerId === null` (после `requireAuth` личность гарантирована; оставить как defense-in-depth — нет личности → 403).
+- `listProjectsHandler` **и** `getAllProjectsHandler`: убрать гостевые ветки — только проекты владельца.
+- Storage: удалить `getGuestBotProjects`/`getGuestBotProjectsBySession`; поправить зависимость `server/utils/ensureDefaultProject.ts` (зовёт `getGuestBotProjectsBySession`); `getSessionIdFromRequest` становится ненужным.
+- `createProjectHandler` уже отдаёт 401 без владельца — оставить.
+
+**⚠️ Порядок (критично):** resolver-токены + deny-by-default + MCP-хелпер с токеном идут ОДНИМ изменением — иначе анонимный MCP (вся текущая оснастка: `update_project_db`, все `db_*`) сломается на 401/403. Для непрерывности тестов токен владельца проекта 266 (`6591857297`) кладётся в env MCP-процесса (`MCP_AGENT_TOKEN`) до/вместе с выкаткой.
+
+**Dev-режим:** `SKIP_AUTH`/`dev-login` создают реального пользователя в сессии — личность есть, авторизованные сценарии в деве не страдают.
+
+**Файлы (весь блок 0.2):** `shared/schema/tables/agent-tokens.ts` (+ реэкспорт в `shared/schema.ts` и `shared/schema/tables/index.ts`), `migrations/0008_create_agent_tokens.sql`, `server/utils/agent-token-crypto.ts` (sha-256 + генерация секрета), storage-методы (create/list/revoke/resolveByToken + удаление guest-методов), `server/middleware/agentTokenMiddleware.ts` (`identifyAgent`), `server/telegram/auth-middleware.ts` (разнести identifyUser/requireAuth), `server/middleware/requireProjectAccess.ts` (ужесточение), `server/routes/routes.ts` (порядок middleware + allowlist + удаление guest-middleware), серверные хендлеры вкладки «Агент» (CRUD токенов, DTO без хеша), `listProjectsHandler`/`getAllProjectsHandler` (убрать guest-ветки), `server/utils/ensureDefaultProject.ts` (правка), клиентская вкладка «Агент», `lib/bot-tools/api-fetch.ts` + рефактор 3 файлов (Bearer), `lib/bot-tools/project-ops-db.ts`, регистрация тулов в `tools/mcp-server/index.ts`, экспорт в `lib/bot-tools/index.ts`, `.env.example` (`MCP_AGENT_TOKEN`). mcp.json в репо не трогаем.
+
 ### Архитектурные ставки
 - **Дельты + арбитраж (Фазы 2.2 / 2.4).** Точечные `(nodeId, поле, значение)` вместо снапшота + сервер-арбитр — убирает гонки человек+агент и снижает трафик.
-- **Сервис-токен (Фаза 0.2).** Для прода, где `SKIP_AUTH` выключен.
+- **Персональные токены агента (Фаза 0.2).** 🟦 Решено делать (per-user PAT, профессиональный состав: sha-256 хеш как GitHub/Stripe, `Authorization: Bearer` по RFC 6750, deny-by-default с allowlist, колонка `scopes` на будущее) — таблица `agent_tokens` + `identifyAgent`-резолвер + вкладка «Агент». Гостевые проекты убираются. Предусловие проектного блока и прод-безопасности. См. раздел «Проектный блок» выше.
 
 ## Открытые вопросы
 
 - Где запускается MCP относительно сервера (один хост? сеть?) — влияет на способ
   аутентификации и доступность realtime. Локально MCP читает `API_BASE_URL` (дефолт
-  `http://localhost:5000`); для прода нужна Фаза 0.2 (сервис-токен).
+  `http://localhost:5000`); для прода и проектного блока — Фаза 0.2 (персональные токены агента, per-user PAT — решено).
 - Нужна ли двусторонняя синхронизация диск ↔ БД, или диск только для экспорта.
 - Поведение при одновременной ручной и MCP-правке до появления дельта-модели.

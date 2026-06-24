@@ -4,6 +4,8 @@
 
 Как должна выглядеть серверная часть с точки зрения безопасности, валидации и контроля доступа — эталонная модель для нашего проекта.
 
+> **Статус реализации (обновлено).** Первый шаг к этому эталону выполняется в рамках **Фазы 0.2** плана `docs/futures/mcp/mcp-live-editing.md`: вводится персональный токен агента (PAT, раздел 4 ниже), закрывается дыра с гостевым доступом в `requireProjectAccess` (таблица «сейчас vs идеал»), удаляется концепция гостевых проектов. Остальные слои (rate limiting, helmet/CORS, env fail-fast, повсеместный DTO, разнесение `identifyUser`/`requireAuth`) — отдельная зачистка по этому доку, выполняется позже.
+
 ---
 
 ## Принцип: Deny by Default
@@ -204,6 +206,37 @@ function requireAuth(req, res, next) {
   next();
 }
 ```
+
+### Источник личности: персональный токен агента (PAT)
+
+Кроме сессии (браузер) есть второй источник личности — **персональный токен агента** для внешних клиентов (MCP-сервер, CLI, скрипты). Модель как у Figma (PAT) и n8n (API-ключ): токен несёт личность владельца, поэтому внешний клиент работает только со своими проектами. Это расширение слоя Authentication, а не обход авторизации — после резолва токена `req.user` заполнен так же, как от сессии, и слой 5 (Authorization) отрабатывает штатно.
+
+```typescript
+/**
+ * Резолвер токена агента — ставит req.user по персональному токену (PAT).
+ * Подключается ПОСЛЕ identifyUser: дополняет личность, если сессии нет.
+ * Токены хранятся хешем (sha-256); сам секрет в БД не лежит.
+ */
+async function identifyAgent(req: Request, _res: Response, next: NextFunction) {
+  if (req.user) return next();                       // сессия уже дала личность
+  const auth = req.get('Authorization');             // RFC 6750: "Bearer <token>"
+  const raw = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+  if (!raw) return next();                            // нет токена — остаёмся анонимом → requireAuth даст 401
+  const owner = await storage.resolveAgentToken(raw); // hash(sha-256) → поиск активного → владелец
+  if (owner) req.user = owner;                        // далее requireAuth/requireProjectAccess как обычно
+  next();
+}
+
+// Порядок:
+app.use(sessionMiddleware);
+app.use(identifyUser);          // личность из сессии (браузер)
+app.use(identifyAgent);         // личность из токена агента (MCP/CLI), Authorization: Bearer
+app.use('/api/', requireAuth);  // нет ни сессии, ни токена → 401
+```
+
+Таблица `agent_tokens`: `id`, `ownerId` (FK `telegram_users.id`), `label`, `tokenHash` (sha-256 hex, уникальный индекс), `prefix` (для отображения), `scopes` (text, по умолчанию `read,write` — задел под разграничение прав), `createdAt`, `lastUsedAt`, `expiresAt?`, `revokedAt?`. Токен `mcp_<base64url(randomBytes32)>` показывается пользователю один раз при генерации (вкладка «Агент» в UI). Хранение хешем (а не plaintext) — стандарт GitHub/Stripe: для 256-битного случайного секрета соль/bcrypt не нужны. Полный план — `docs/futures/mcp/mcp-live-editing.md`, Фаза 0.2.
+
+> **Связь с гостевым доступом:** текущий пропуск анонима в `requireProjectAccess` (`ownerId === null → next()`) — это та самая дыра из таблицы «сейчас vs идеал». Закрывается вместе с вводом токена агента: гость больше не источник доступа, концепция гостевых проектов удаляется (в БД их 0 — миграции нет).
 
 ---
 
