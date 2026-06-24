@@ -345,7 +345,7 @@ keyboard (кнопка с customCallbackData: "approve_{user_id}")
 
 Поддерживается в любом текстовом поле: `messageText`, `mediaCaption`, button text, `httpRequestUrl` и т.д.
 
-Доступные функции: `round`, `abs`, `int`, `float`, `min`, `max`, `str`, `thousands`.
+Доступные функции: `round`, `abs`, `int`, `float`, `min`, `max`, `str`, `reversed`, `thousands`.
 
 При ошибке или невалидном выражении текст `{=...}` остаётся без изменений (бот не падает).
 

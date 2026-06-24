@@ -1339,7 +1339,9 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 | `{=round(score / games, 2)}` | `70.58` | Округление |
 | `{=max(hp - damage, 0)}` | `0` | Функции min/max |
 
-Доступные функции: `round`, `abs`, `int`, `float`, `min`, `max`, `str`, `thousands`.
+Доступные функции: `round`, `abs`, `int`, `float`, `min`, `max`, `str`, `reversed`, `thousands`.
+
+Пример разворота порядка слов: `{=' '.join(reversed('{user_message}'.split()))}` → «Привет как дела» станет «дела как Привет». Разворот символов проще делать срезом: `{='{user_message}'[::-1]}`.
 
 Переменные внутри `{=...}` пишутся **без** фигурных скобок: `{=thousands(user_amount)}`, не `{=thousands({user_amount})}`.
 

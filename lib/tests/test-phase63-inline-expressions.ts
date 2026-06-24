@@ -111,6 +111,17 @@ test('09', '_eval_expr определён до _inline_expr_replacer', () => {
   ok(evalPos < inlinePos, '_eval_expr должен быть определён до _inline_expr_replacer');
 });
 
+test('10', 'reversed добавлен в whitelist _safe_funcs', () => {
+  const code = renderUtils();
+  // Проверяем что reversed зарегистрирована как безопасная функция в _eval_expr
+  ok(code.includes("'reversed': reversed"), 'Должен содержать reversed в _safe_funcs');
+  // Проверяем что reversed объявлена внутри блока _safe_funcs
+  const safeFuncsPos = code.indexOf('_safe_funcs = {');
+  ok(safeFuncsPos > -1, '_safe_funcs должен быть определён');
+  const safeFuncsLine = code.slice(safeFuncsPos, code.indexOf('}', safeFuncsPos) + 1);
+  ok(safeFuncsLine.includes('reversed'), 'reversed должна быть в словаре _safe_funcs');
+});
+
 // ─── Итоги ───────────────────────────────────────────────────────────────────
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
