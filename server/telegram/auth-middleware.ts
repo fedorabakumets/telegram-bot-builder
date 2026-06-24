@@ -29,6 +29,12 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
 }
 
 /**
+ * Алиас authMiddleware по эталонной модели безопасности (см. api-security-ideal-architecture.md).
+ * Обогащает req.user из сессии, не блокирует запрос. Блокировку выполняет requireAuth/requireApiAuth.
+ */
+export const identifyUser = authMiddleware;
+
+/**
  * Middleware для проверки авторизации
  * Возвращает 401, если пользователь не авторизован
  */
@@ -57,6 +63,7 @@ export function getOwnerIdFromRequest(req: Request): number | null {
 
 /**
  * Возвращает ID сессии для неавторизованных пользователей
+ * @deprecated Концепция гостевых сессий удалена (deny-by-default). Не используется.
  * @param req - Объект запроса Express
  * @returns ID сессии или null если пользователь авторизован
  */

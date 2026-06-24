@@ -10,6 +10,7 @@
 import type { BotDataWithSheets } from '@shared/schema';
 import { updateProjectInDb, type UpdateProjectInDbResult } from './project-db.ts';
 import type { ReadDbOptions } from './node-query-db.ts';
+import { apiFetch } from './api-fetch.ts';
 
 /** Мета-запись версии проекта (без snapshot) */
 export interface ProjectVersionMeta {
@@ -41,11 +42,9 @@ export async function listVersionsInDb(
   projectId: number,
   options?: ReadDbOptions,
 ): Promise<{ total: number; versions: ProjectVersionMeta[] } | { error: string }> {
-  const baseUrl = options?.apiBaseUrl ?? process.env.API_BASE_URL ?? 'http://localhost:5000';
-
   let res: Response;
   try {
-    res = await fetch(`${baseUrl}/api/projects/${projectId}/versions`);
+    res = await apiFetch(`/api/projects/${projectId}/versions`, { apiBaseUrl: options?.apiBaseUrl });
   } catch (err) {
     return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
   }
@@ -79,11 +78,9 @@ export async function restoreVersionInDb(
   versionId: number,
   options?: { apiBaseUrl?: string; commitMessage?: string; skipValidation?: boolean },
 ): Promise<UpdateProjectInDbResult> {
-  const baseUrl = options?.apiBaseUrl ?? process.env.API_BASE_URL ?? 'http://localhost:5000';
-
   let res: Response;
   try {
-    res = await fetch(`${baseUrl}/api/projects/${projectId}/versions/${versionId}`);
+    res = await apiFetch(`/api/projects/${projectId}/versions/${versionId}`, { apiBaseUrl: options?.apiBaseUrl });
   } catch (err) {
     return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
   }
@@ -122,11 +119,9 @@ export async function deleteVersionInDb(
   versionId: number,
   options?: { apiBaseUrl?: string },
 ): Promise<{ deleted: boolean } | { error: string }> {
-  const baseUrl = options?.apiBaseUrl ?? process.env.API_BASE_URL ?? 'http://localhost:5000';
-
   let res: Response;
   try {
-    res = await fetch(`${baseUrl}/api/projects/${projectId}/versions/${versionId}`, { method: 'DELETE' });
+    res = await apiFetch(`/api/projects/${projectId}/versions/${versionId}`, { apiBaseUrl: options?.apiBaseUrl, method: 'DELETE' });
   } catch (err) {
     return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
   }
@@ -157,11 +152,10 @@ export async function pruneVersionsInDb(
   projectId: number,
   options?: { apiBaseUrl?: string; keep?: number; kind?: 'auto' | 'manual'; authorKind?: 'agent' | 'user' },
 ): Promise<{ deleted: number } | { error: string }> {
-  const baseUrl = options?.apiBaseUrl ?? process.env.API_BASE_URL ?? 'http://localhost:5000';
-
   let res: Response;
   try {
-    res = await fetch(`${baseUrl}/api/projects/${projectId}/versions/prune`, {
+    res = await apiFetch(`/api/projects/${projectId}/versions/prune`, {
+      apiBaseUrl: options?.apiBaseUrl,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ keep: options?.keep, kind: options?.kind, authorKind: options?.authorKind }),

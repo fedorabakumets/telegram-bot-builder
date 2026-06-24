@@ -4,6 +4,9 @@
  * @module tools/mcp-server
  */
 
+// Загружаем переменные окружения из .env, чтобы MCP-процесс видел API_BASE_URL и
+// персональный токен агента MCP_AGENT_TOKEN (mcp.json не трогаем — токен лежит в .env).
+import 'dotenv/config';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';

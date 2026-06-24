@@ -7,6 +7,7 @@
  */
 
 import type { BotDataWithSheets } from '@shared/schema';
+import { apiFetch } from './api-fetch.ts';
 
 /**
  * Опции чтения проекта из БД через HTTP API
@@ -42,11 +43,9 @@ export async function fetchProjectFromDb(
   projectId: number,
   options?: FetchProjectFromDbOptions,
 ): Promise<FetchProjectFromDbResult> {
-  const baseUrl = options?.apiBaseUrl ?? process.env.API_BASE_URL ?? 'http://localhost:5000';
-
   let res: Response;
   try {
-    res = await fetch(`${baseUrl}/api/projects/${projectId}`);
+    res = await apiFetch(`/api/projects/${projectId}`, { apiBaseUrl: options?.apiBaseUrl });
   } catch (err) {
     return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
   }

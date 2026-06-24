@@ -37,6 +37,8 @@ import { createQRClient } from "../telegram/services/auth/create-qr-client";
 import { userTelegramSettings } from "@shared/schema";
 import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/auth-middleware";
 import { setupGuard } from "../middleware/setup-guard";
+import { identifyAgent } from "../middleware/agentTokenMiddleware";
+import { requireApiAuth } from "../middleware/requireApiAuth";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { handleTelegramError } from "../utils/telegram-error-handler";
 import { fetchWithProxy } from "../utils/telegram-proxy";
@@ -451,17 +453,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.use("/api", setupGuard);
   app.use("/api", authMiddleware);
 
-  // Middleware для гостевых сессий — сохраняет сессию при первом API запросе
-  // Нужно чтобы sessionId был стабильным между запросами (saveUninitialized: false)
-  app.use("/api", (req, _res, next) => {
-    if (!req.user && req.session && !req.session.telegramUser) {
-      // Помечаем сессию как инициализированную для гостя
-      (req.session as any).guest = true;
-      req.session.save(() => next());
-    } else {
-      next();
-    }
-  });
+  // Резолвер личности по персональному токену агента (PAT) — Authorization: Bearer.
+  // Дополняет личность, если сессии нет (MCP/CLI). Не блокирует запрос.
+  app.use("/api", identifyAgent);
+
+  // Deny-by-default: все /api закрыты, кроме публичного allowlist.
+  // Подключается ПОСЛЕ identifyUser/identifyAgent — личность уже установлена.
+  app.use("/api", requireApiAuth);
 
   // Отключаем HTTP-кеширование для всех API роутов — ответы зависят от сессии пользователя
   app.use("/api", (_req, res, next) => {

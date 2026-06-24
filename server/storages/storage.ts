@@ -25,6 +25,7 @@ import {
   type BotTableRow,
   type WorkerProcess,
   type ProjectVersion,
+  type AgentToken,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
 import type {
@@ -350,6 +351,41 @@ export interface IStorage {
    */
   deleteTelegramUser(id: number): Promise<boolean>;
 
+  // Agent Tokens (персональные токены агента, PAT)
+  /**
+   * Создать персональный токен агента для владельца.
+   * Возвращает полный секрет (показывается ОДИН раз) и сохранённую запись.
+   * @param ownerId - ID владельца токена
+   * @param label - Пользовательское имя токена
+   * @param scopes - Права токена через запятую (по умолчанию read,write)
+   * @returns Полный токен и запись из БД
+   */
+  createAgentToken(ownerId: number, label: string, scopes?: string): Promise<{ token: string; record: AgentToken }>;
+
+  /**
+   * Получить список токенов агента владельца (без секрета — только метаданные).
+   * @param ownerId - ID владельца токенов
+   * @returns Массив записей токенов
+   */
+  getAgentTokensByOwner(ownerId: number): Promise<AgentToken[]>;
+
+  /**
+   * Отозвать токен агента (проставить revokedAt) по id и владельцу.
+   * @param id - ID токена
+   * @param ownerId - ID владельца (защита от отзыва чужого токена)
+   * @returns true, если токен был отозван, иначе false
+   */
+  revokeAgentToken(id: number, ownerId: number): Promise<boolean>;
+
+  /**
+   * Резолвит сырой токен агента в личность владельца.
+   * Хеширует токен, ищет активную (не отозванную/не истёкшую) запись,
+   * обновляет lastUsedAt и возвращает владельца.
+   * @param rawToken - Сырой секрет токена из заголовка Authorization
+   * @returns Владелец токена или undefined, если токен невалиден
+   */
+  resolveAgentToken(rawToken: string): Promise<TelegramUserDB | undefined>;
+
   // User-specific methods (filtered by ownerId)
   /**
    * Получить проекты ботов пользователя
@@ -361,6 +397,7 @@ export interface IStorage {
   /**
    * Получить гостевые проекты ботов (без владельца)
    * Возвращает только проекты с sessionId = NULL (старые общие)
+   * @deprecated Концепция гостевых проектов удалена (deny-by-default). Метод не вызывается.
    * @returns Массив гостевых проектов ботов
    */
   getGuestBotProjects(): Promise<BotProject[]>;
@@ -374,6 +411,7 @@ export interface IStorage {
   /**
    * Получить гостевые проекты по ID сессии
    * Возвращает проекты конкретной сессии + старые общие (sessionId = NULL)
+   * @deprecated Концепция гостевых проектов удалена (deny-by-default). Метод не вызывается.
    * @param sessionId - ID сессии гостевого пользователя
    * @returns Массив гостевых проектов доступных для данной сессии
    */

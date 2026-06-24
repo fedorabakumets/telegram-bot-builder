@@ -3,7 +3,8 @@
  *
  * Проверяет что авторизованный пользователь является владельцем
  * или коллаборатором проекта перед выполнением хендлера.
- * Гостевые запросы (ownerId === null) пропускаются без проверки.
+ * Личность гарантирована вышестоящим requireApiAuth (deny-by-default);
+ * отсутствие личности здесь — defense-in-depth → 403.
  *
  * @module middleware/requireProjectAccess
  */
@@ -25,7 +26,7 @@ function extractProjectId(req: Request): number {
 
 /**
  * Middleware проверки доступа к проекту.
- * Пропускает гостей (ownerId === null).
+ * Отсутствие личности → 403 (defense-in-depth; requireApiAuth выше уже гарантирует личность).
  * Для авторизованных пользователей проверяет владельца или коллаборатора.
  *
  * @param req - Объект запроса Express
@@ -47,7 +48,7 @@ export async function requireProjectAccess(
 
     const ownerId = getOwnerIdFromRequest(req);
     if (ownerId === null) {
-        next();
+        res.status(403).json({ message: "Нет прав доступа к проекту" });
         return;
     }
 

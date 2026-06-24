@@ -8,6 +8,7 @@
 import type { BotDataWithSheets } from '@shared/schema';
 import { validateBotProject } from './validate-project.ts';
 import type { ValidateProjectResult } from './types.ts';
+import { apiFetch } from './api-fetch.ts';
 
 /**
  * Опции записи проекта в БД через HTTP API
@@ -89,10 +90,9 @@ export async function updateProjectInDb(
     return { error: 'Проект не прошёл валидацию', validation };
   }
 
-  const baseUrl = options?.apiBaseUrl ?? process.env.API_BASE_URL ?? 'http://localhost:5000';
-
   try {
-    const res = await fetch(`${baseUrl}/api/projects/${projectId}`, {
+    const res = await apiFetch(`/api/projects/${projectId}`, {
+      apiBaseUrl: options?.apiBaseUrl,
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

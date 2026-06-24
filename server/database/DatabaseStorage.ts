@@ -2,11 +2,12 @@
  * @fileoverview Базовая реализация storage поверх Drizzle для серверной части конструктора
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess, projectVersions, type ProjectVersion } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess, projectVersions, type ProjectVersion, agentTokens, type AgentToken } from "@shared/schema";
 import { and, asc, desc, eq, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
 import { db } from "./db";
+import { generateAgentToken, hashAgentToken } from "../utils/agent-token-crypto";
 
 /**
  * Реализация хранилища данных с использованием базы данных
@@ -608,6 +609,75 @@ export class DatabaseStorage implements IStorage {
     await this.db.update(botProjects)
       .set({ ownerId, sessionId: null })
       .where(isNull(botProjects.ownerId));
+  }
+
+  // Agent Tokens (персональные токены агента, PAT)
+  /**
+   * Создать персональный токен агента для владельца.
+   * Генерирует секрет, сохраняет только его хеш/префикс и возвращает полный токен один раз.
+   * @param ownerId - ID владельца токена
+   * @param label - Пользовательское имя токена
+   * @param scopes - Права токена через запятую (по умолчанию read,write)
+   * @returns Полный токен и сохранённая запись
+   */
+  async createAgentToken(ownerId: number, label: string, scopes: string = "read,write"): Promise<{ token: string; record: AgentToken }> {
+    const { token, prefix, tokenHash } = generateAgentToken();
+    const [record] = await this.db.insert(agentTokens).values({
+      ownerId,
+      label,
+      tokenHash,
+      prefix,
+      scopes,
+    }).returning();
+    return { token, record };
+  }
+
+  /**
+   * Получить список токенов агента владельца (метаданные, без секрета).
+   * @param ownerId - ID владельца токенов
+   * @returns Массив записей токенов, новые сверху
+   */
+  async getAgentTokensByOwner(ownerId: number): Promise<AgentToken[]> {
+    return await this.db.select().from(agentTokens)
+      .where(eq(agentTokens.ownerId, ownerId))
+      .orderBy(desc(agentTokens.createdAt));
+  }
+
+  /**
+   * Отозвать токен агента (проставить revokedAt) по id и владельцу.
+   * @param id - ID токена
+   * @param ownerId - ID владельца (защита от отзыва чужого токена)
+   * @returns true, если токен был отозван, иначе false
+   */
+  async revokeAgentToken(id: number, ownerId: number): Promise<boolean> {
+    const result = await this.db.update(agentTokens)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(agentTokens.id, id), eq(agentTokens.ownerId, ownerId), isNull(agentTokens.revokedAt)));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  /**
+   * Резолвит сырой токен агента в личность владельца.
+   * Хеширует токен, ищет активную (не отозванную) запись, проверяет срок действия,
+   * обновляет lastUsedAt и возвращает владельца.
+   * @param rawToken - Сырой секрет токена из заголовка Authorization
+   * @returns Владелец токена или undefined, если токен невалиден
+   */
+  async resolveAgentToken(rawToken: string): Promise<TelegramUserDB | undefined> {
+    const tokenHash = hashAgentToken(rawToken);
+    const [record] = await this.db.select().from(agentTokens)
+      .where(and(eq(agentTokens.tokenHash, tokenHash), isNull(agentTokens.revokedAt)));
+    if (!record) return undefined;
+
+    if (record.expiresAt && record.expiresAt.getTime() < Date.now()) {
+      return undefined;
+    }
+
+    await this.db.update(agentTokens)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(agentTokens.id, record.id));
+
+    return await this.getTelegramUser(record.ownerId);
   }
 
   /**

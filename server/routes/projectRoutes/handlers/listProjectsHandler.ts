@@ -9,7 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
-import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegram/auth-middleware";
+import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 
 /**
  * Обрабатывает запрос на получение списка проектов
@@ -22,18 +22,10 @@ import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegra
 export async function listProjectsHandler(req: Request, res: Response): Promise<void> {
     try {
         const ownerId = getOwnerIdFromRequest(req);
-        let projects;
-
-        if (ownerId !== null) {
-            // Авторизованный: только свои проекты, без гостевых
-            projects = await storage.getUserBotProjects(ownerId);
-        } else {
-            // Гость: свои по sessionId + старые общие (sessionId = NULL)
-            const sessionId = getSessionIdFromRequest(req);
-            projects = sessionId
-                ? await storage.getGuestBotProjectsBySession(sessionId)
-                : await storage.getGuestBotProjects();
-        }
+        // Личность гарантирована requireApiAuth; без владельца — пустой список (defense-in-depth)
+        const projects = ownerId !== null
+            ? await storage.getUserBotProjects(ownerId)
+            : [];
 
         const projectsList = projects.map(({ data, ...metadata }) => {
             // Считаем узлы и листы из data не передавая весь объект клиенту

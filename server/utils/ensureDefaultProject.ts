@@ -34,31 +34,29 @@ const DEFAULT_MESSAGE_NODE = {
 };
 
 /**
- * Гарантирует существование хотя бы одного проекта для указанной сессии или глобально.
+ * Гарантирует существование хотя бы одного проекта в системе.
  *
- * Если `sessionId` передан — проверяет проекты гостя по сессии и создаёт
- * дефолтный проект привязанный к этой сессии. Без `sessionId` — проверяет
- * все проекты в системе (используется при старте сервера).
+ * Концепция гостевых проектов удалена (deny-by-default), поэтому проверка
+ * выполняется глобально по всем проектам. Параметр `sessionId` сохранён для
+ * обратной совместимости сигнатуры и больше не влияет на выборку.
  *
- * @param sessionId - ID сессии гостя (опционально)
+ * @param sessionId - Не используется (оставлен для совместимости)
  * @returns Промис без возвращаемого значения
  */
-export async function ensureDefaultProject(sessionId?: string): Promise<void> {
+export async function ensureDefaultProject(_sessionId?: string): Promise<void> {
   try {
-    const projects = sessionId
-      ? await storage.getGuestBotProjectsBySession(sessionId)
-      : await storage.getAllBotProjects();
+    const projects = await storage.getAllBotProjects();
 
     if (projects.length === 0) {
       const defaultProject: StorageBotProjectInput = {
         name: "Мой первый бот",
         description: "Базовый бот с приветствием",
         userDatabaseEnabled: 1,
-        sessionId: sessionId ?? null,
+        sessionId: null,
         data: { nodes: [DEFAULT_START_NODE, DEFAULT_MESSAGE_NODE] },
       };
       await storage.createBotProject(defaultProject);
-      console.log("✅ Создан проект по умолчанию", sessionId ? `для сессии ${sessionId}` : "(глобальный)");
+      console.log("✅ Создан проект по умолчанию (глобальный)");
     }
   } catch (error) {
     console.error("❌ Ошибка создания проекта по умолчанию:", error);
