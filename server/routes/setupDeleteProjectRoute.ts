@@ -11,6 +11,7 @@ import type { Express } from "express";
 import { getOwnerIdFromRequest } from "../telegram/auth-middleware";
 import { deleteProject } from "./projectManagement/utils/projectDeleter";
 import { storage } from "../storages/storage";
+import { broadcastProjectsChanged } from "../terminal/broadcastProjectsChanged";
 
 /**
  * Настраивает маршрут удаления проекта
@@ -49,6 +50,17 @@ export function setupDeleteProjectRoute(app: Express, requireDbReady: (_req: any
             }
 
             console.log(`🎉 Проект ${id} успешно удален`);
+
+            // Live-обновление списка проектов владельца во всех открытых вкладках.
+            // ownerId известен — проект прочитан до удаления.
+            try {
+                if (project.ownerId != null) {
+                    broadcastProjectsChanged(project.ownerId, 'deleted');
+                }
+            } catch (err) {
+                console.error(`[setupDeleteProjectRoute] Ошибка broadcast projects-changed для проекта ${id}:`, err);
+            }
+
             return res.json({ message: result.message });
         } catch (error) {
             console.error("❌ Критическая ошибка удаления проекта:", error);
