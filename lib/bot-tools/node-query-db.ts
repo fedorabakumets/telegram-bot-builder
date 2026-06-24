@@ -8,6 +8,7 @@
 
 import type { BotDataWithSheets } from '@shared/schema';
 import { fetchProjectFromDb, type FetchProjectFromDbOptions } from './project-db-read.ts';
+import { collectAllNodes, collectNodeTransitions } from './collect-nodes.ts';
 
 /** Опции read-запросов к живой БД */
 export type ReadDbOptions = FetchProjectFromDbOptions;
@@ -124,6 +125,71 @@ export async function getNodeFromDb(
     if (node) return { sheetId: sheet.id, node };
   }
   return { error: `Нода не найдена: ${nodeId}` };
+}
+
+/** Ребро графа связей проекта (from→to) */
+export interface ConnectionEdge {
+  /** ID исходной ноды */
+  from: string;
+  /** ID листа исходной ноды */
+  fromSheetId: string;
+  /** ID целевой ноды (target перехода) */
+  to: string;
+  /** Тип перехода: auto/input/keyboard/button/branch/parallel */
+  type: 'auto' | 'input' | 'keyboard' | 'button' | 'branch' | 'parallel';
+  /** Исходная метка перехода из collectNodeTransitions */
+  label: string;
+  /** true, если target указывает на несуществующую ноду (битая связь) */
+  broken: boolean;
+}
+
+/**
+ * Выводит тип ребра из метки перехода collectNodeTransitions.
+ * @param label - Метка перехода (autoTransitionTo|inputTargetNodeId|keyboardNodeId|button:...|branch:...|parallel:...)
+ * @returns Тип ребра графа связей
+ */
+function edgeTypeFromLabel(label: string): ConnectionEdge['type'] {
+  if (label.startsWith('button:')) return 'button';
+  if (label.startsWith('branch:')) return 'branch';
+  if (label.startsWith('parallel:')) return 'parallel';
+  if (label === 'inputTargetNodeId') return 'input';
+  if (label === 'keyboardNodeId') return 'keyboard';
+  return 'auto';
+}
+
+/**
+ * Возвращает граф связей проекта из живой БД: рёбра from→to с типом и флагом broken.
+ * Read-only: ничего не пишет в БД.
+ * @param projectId - Числовой ID проекта из URL редактора
+ * @param options - Опции чтения (URL API)
+ * @returns Список рёбер графа связей или ошибка
+ */
+export async function listConnectionsInDb(
+  projectId: number,
+  options?: ReadDbOptions,
+): Promise<{ total: number; connections: ConnectionEdge[] } | { error: string }> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+
+  const data = fetched.data as unknown as Record<string, unknown>;
+  const all = collectAllNodes(data);
+  const nodeIds = new Set(all.map((e) => e.node.id));
+
+  const connections: ConnectionEdge[] = [];
+  for (const { node, sheetId } of all) {
+    for (const { label, target } of collectNodeTransitions(node)) {
+      connections.push({
+        from: node.id,
+        fromSheetId: sheetId,
+        to: target,
+        type: edgeTypeFromLabel(label),
+        label,
+        broken: !nodeIds.has(target),
+      });
+    }
+  }
+
+  return { total: connections.length, connections };
 }
 
 /**

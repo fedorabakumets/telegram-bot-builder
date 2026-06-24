@@ -13,6 +13,7 @@ import {
   updateNodeInProject,
   removeNodeFromProject,
   connectNodes,
+  disconnectNodes,
   moveNodeToProjectSheet,
   type ConnectPortType,
   type MutateProjectResult,
@@ -125,6 +126,28 @@ export async function connectNodesInDb(
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
   return applyAndSave(projectId, connectNodes(fetched.data, fromId, toId, connectOptions ?? {}), options);
+}
+
+/**
+ * Снимает переход между нодами в проекте живой БД и обновляет холст (live).
+ * Без branch снимает все рёбра from→to; с branch — только указанную кнопку/ветку.
+ * @param projectId - Числовой ID проекта
+ * @param fromId - ID исходной ноды
+ * @param toId - ID целевой ноды
+ * @param disconnectOptions - Параметры снятия { branch?, portType?, sheetId? }
+ * @param options - Опции записи в БД
+ * @returns Результат записи или ошибка
+ */
+export async function disconnectNodesInDb(
+  projectId: number,
+  fromId: string,
+  toId: string,
+  disconnectOptions?: { branch?: string; portType?: ConnectPortType; sheetId?: string },
+  options?: NodeOpsDbOptions,
+): Promise<NodeOpsDbResult> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+  return applyAndSave(projectId, disconnectNodes(fetched.data, fromId, toId, disconnectOptions ?? {}), options);
 }
 
 /**

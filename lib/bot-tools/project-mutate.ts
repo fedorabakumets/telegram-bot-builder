@@ -248,6 +248,100 @@ export function connectNodes(
 }
 
 /**
+ * Снимает переход(ы) между нодами (зеркало connectNodes).
+ * Без options.branch снимает ВСЕ рёбра fromId→toId по всем полям data
+ * (autoTransitionTo + enableAutoTransition, inputTargetNodeId, keyboardNodeId,
+ * target у элементов buttons/branches/parallelBranches). С options.branch
+ * снимает только target у элемента с этим id.
+ * @param projectJson - project.json (объект или JSON-строка)
+ * @param fromId - ID исходной ноды
+ * @param toId - ID целевой ноды
+ * @param options - branch id (снять только указанную кнопку/ветку), portType, sheetId
+ * @returns project + validation или { error }
+ */
+export function disconnectNodes(
+  projectJson: unknown,
+  fromId: string,
+  toId: string,
+  options: { branch?: string; portType?: ConnectPortType; sheetId?: string } = {},
+): MutateProjectResult | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const allIds = new Set(collectAllNodes(project as Record<string, unknown>).map((e) => e.node.id));
+  if (!allIds.has(fromId)) {
+    return { error: `Нода не найдена: from=${fromId}` };
+  }
+
+  const branchId = options.branch;
+  const idx = resolveSheetIndex(project, options.sheetId);
+  const sheets = [...(project.sheets ?? [])];
+
+  let changed = false;
+
+  const nodes = (sheets[idx]?.nodes ?? []).map((n) => {
+    if (n.id !== fromId) return n;
+    const data = { ...n.data } as Record<string, unknown>;
+
+    if (branchId) {
+      // Снять target только у элемента с заданным id в buttons/branches/parallelBranches
+      for (const key of ['buttons', 'branches', 'parallelBranches'] as const) {
+        const arr = data[key];
+        if (Array.isArray(arr)) {
+          data[key] = arr.map((el) => {
+            const item = el as Record<string, unknown>;
+            if (item.id === branchId && item.target === toId) {
+              changed = true;
+              return { ...item, target: undefined };
+            }
+            return el;
+          }) as never;
+        }
+      }
+      return { ...n, data: data as Node['data'] };
+    }
+
+    // Снять ВСЕ рёбра fromId→toId по всем полям
+    if (data.autoTransitionTo === toId) {
+      delete data.autoTransitionTo;
+      delete data.enableAutoTransition;
+      changed = true;
+    }
+    if (data.inputTargetNodeId === toId) {
+      delete data.inputTargetNodeId;
+      changed = true;
+    }
+    if (data.keyboardNodeId === toId) {
+      delete data.keyboardNodeId;
+      changed = true;
+    }
+    for (const key of ['buttons', 'branches', 'parallelBranches'] as const) {
+      const arr = data[key];
+      if (Array.isArray(arr)) {
+        data[key] = arr.map((el) => {
+          const item = el as Record<string, unknown>;
+          if (item.target === toId) {
+            changed = true;
+            return { ...item, target: undefined };
+          }
+          return el;
+        }) as never;
+      }
+    }
+
+    return { ...n, data: data as Node['data'] };
+  });
+
+  if (!changed) {
+    return { error: `Связь не найдена: from=${fromId} to=${toId}${branchId ? ' branch=' + branchId : ''}` };
+  }
+
+  sheets[idx] = { ...sheets[idx], nodes };
+  const updated = { ...project, sheets };
+  return { project: updated, validation: validateBotProject(updated) };
+}
+
+/**
  * Переносит ноду на другой лист проекта, сохраняя id, data и все ссылки.
  * Ссылки (target'ы) НЕ ремаппятся: id ноды сохраняется, поэтому связи остаются
  * валидными глобально. Аналог клиентского useMoveNodeToSheet, но иммутабельно.

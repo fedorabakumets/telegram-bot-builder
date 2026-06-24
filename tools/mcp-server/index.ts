@@ -13,6 +13,7 @@ import {
   applyOpsInDb,
   connectNodes,
   connectNodesInDb,
+  disconnectNodesInDb,
   createNode,
   fetchProjectFromDb,
   generateBotCode,
@@ -23,6 +24,7 @@ import {
   listCommands,
   listNodeTypes,
   listNodesInDb,
+  listConnectionsInDb,
   listOperators,
   listVersionsInDb,
   loadProject,
@@ -362,6 +364,28 @@ function registerTools(server: McpServer): void {
   );
 
   server.registerTool(
+    'db_disconnect_nodes',
+    {
+      description: 'Снять переход между нодами в проекте в БД живого приложения с обновлением холста (live). Без branch снимает все рёбра from→to; с branch — только указанную кнопку/ветку. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        from_id: z.string(),
+        to_id: z.string(),
+        branch: z.string().optional().describe('id кнопки/ветки — снять только её'),
+        sheet_id: z.string().optional(),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, from_id, to_id, branch, sheet_id, commit_message }) =>
+      textResult(await disconnectNodesInDb(project_id, from_id, to_id, {
+        branch,
+        sheetId: sheet_id,
+      }, {
+        commitMessage: commit_message,
+      })),
+  );
+
+  server.registerTool(
     'db_move_node',
     {
       description: 'Перенести ноду на другой лист проекта в БД живого приложения с обновлением холста (live). id и связи сохраняются. Адресация по числовому projectId из URL редактора',
@@ -410,6 +434,17 @@ function registerTools(server: McpServer): void {
       },
     },
     async ({ project_id, sheet_id }) => textResult(await listNodesInDb(project_id, sheet_id)),
+  );
+
+  server.registerTool(
+    'db_list_connections',
+    {
+      description: 'Граф связей проекта из БД живого приложения: рёбра from→to с типом (auto/button/branch/parallel/input/keyboard) и флагом broken. Read-only. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+      },
+    },
+    async ({ project_id }) => textResult(await listConnectionsInDb(project_id)),
   );
 
   server.registerTool(
