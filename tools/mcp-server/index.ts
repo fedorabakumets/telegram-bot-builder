@@ -18,7 +18,9 @@ import {
   listCommands,
   listNodeTypes,
   listOperators,
+  loadProject,
   removeNodeFromProject,
+  saveProject,
   scaffoldMinimalProject,
   updateNodeInProject,
   validateBotProject,
@@ -218,6 +220,31 @@ function registerTools(server: McpServer): void {
         portType: port_type,
         sheetId: sheet_id,
       })),
+  );
+
+  server.registerTool(
+    'load_project',
+    {
+      description: 'Прочитать project.json бота с диска (из каталога bots/)',
+      inputSchema: {
+        path: z.string().describe('Путь к папке бота или project.json внутри bots/, напр. "сценарий/бот" или "exchanger-monitor"'),
+      },
+    },
+    async ({ path }) => textResult(await loadProject(path)),
+  );
+
+  server.registerTool(
+    'save_project',
+    {
+      description: 'Записать project.json на диск в каталог bots/ (с валидацией перед записью)',
+      inputSchema: {
+        path: z.string().describe('Путь к папке бота или project.json внутри bots/'),
+        project_json: z.union([z.string(), z.record(z.unknown())]).describe('project.json'),
+        skip_validation: z.boolean().optional().describe('Пропустить валидацию перед записью'),
+      },
+    },
+    async ({ path, project_json, skip_validation }) =>
+      textResult(await saveProject(path, project_json, { skipValidation: skip_validation })),
   );
 }
 

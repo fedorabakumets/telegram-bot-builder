@@ -77,6 +77,7 @@ config/google-auth/token.json
 .gigaide/
 .kiro/
 .local/
+.cursor/mcp.json
 
 # Deployment configs
 .nixpacks/
@@ -87,6 +88,9 @@ config/google-auth/token.json
 # Test output
 test-results/
 test-output.txt
+
+# Playwright MCP артефакты (логи консоли и снимки страниц)
+.playwright-mcp/
 terminal-output-*.txt
 
 # Standalone telegram-moderator (local tool, not part of builder)

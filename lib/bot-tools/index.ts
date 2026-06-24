@@ -17,3 +17,4 @@ export * from './create-node.ts';
 export * from './mcp-allowed-types.ts';
 export * from './minimize-node-data.ts';
 export * from './project-mutate.ts';
+export * from './project-io.ts';

@@ -14,6 +14,10 @@ let subscriberCount = 0;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 /** Таймер ping для удержания соединения */
 let pingTimer: ReturnType<typeof setInterval> | null = null;
+/** Таймер отложенного закрытия при падении числа подписчиков до 0 */
+let disconnectTimer: ReturnType<typeof setTimeout> | null = null;
+/** Задержка перед закрытием сокета без подписчиков (мс), гасит быстрый churn 1↔0 */
+const DISCONNECT_DELAY_MS = 400;
 /** Подписчики на сообщения */
 const listeners = new Set<TerminalMessageListener>();
 /** Подписчики на переподключение (не первое открытие) */
@@ -21,11 +25,24 @@ const reconnectListeners = new Set<() => void>();
 /** Было ли уже хотя бы одно успешное подключение */
 let hasConnectedOnce = false;
 
+/** Префикс логов ошибок общего Terminal WS */
+const LOG_PREFIX = '[SharedTerminalWS]';
+
 /**
  * Открывает WebSocket если ещё не подключён
  */
 function ensureConnected(): void {
   if (typeof window === 'undefined') return;
+  // Появился интерес к соединению — отменяем отложенное закрытие
+  if (disconnectTimer) {
+    clearTimeout(disconnectTimer);
+    disconnectTimer = null;
+  }
+  // Сбрасываем таймер переподключения: соединение либо уже есть, либо создаётся сейчас
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
   if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
     return;
   }
@@ -63,18 +80,22 @@ function ensureConnected(): void {
       pingTimer = null;
     }
     if (subscriberCount > 0) {
+      if (reconnectTimer) clearTimeout(reconnectTimer);
       reconnectTimer = setTimeout(ensureConnected, 3000);
     }
   };
 
-  ws.onerror = () => ws?.close();
+  ws.onerror = (event) => {
+    console.error(`${LOG_PREFIX} Ошибка WebSocket-соединения:`, event);
+    ws?.close();
+  };
 }
 
 /**
- * Закрывает соединение если подписчиков не осталось
+ * Немедленно закрывает соединение и сбрасывает все таймеры.
+ * Вызывается только когда подтверждено, что подписчиков нет.
  */
-function maybeDisconnect(): void {
-  if (subscriberCount > 0) return;
+function closeConnectionNow(): void {
   if (reconnectTimer) {
     clearTimeout(reconnectTimer);
     reconnectTimer = null;
@@ -83,8 +104,26 @@ function maybeDisconnect(): void {
     clearInterval(pingTimer);
     pingTimer = null;
   }
-  ws?.close();
+  const closing = ws;
   ws = null;
+  closing?.close();
+}
+
+/**
+ * Планирует отложенное закрытие соединения при отсутствии подписчиков.
+ * Закрытие откладывается на DISCONNECT_DELAY_MS, чтобы быстрый churn подписчиков
+ * (1↔0 при открытии/закрытии диалогов, React StrictMode в dev) не пересоздавал сокет.
+ * Если за время задержки появится новый подписчик — ensureConnected отменит таймер.
+ */
+function maybeDisconnect(): void {
+  if (subscriberCount > 0) return;
+  if (disconnectTimer) return;
+  disconnectTimer = setTimeout(() => {
+    disconnectTimer = null;
+    // Повторная проверка: за время задержки мог появиться подписчик
+    if (subscriberCount > 0) return;
+    closeConnectionNow();
+  }, DISCONNECT_DELAY_MS);
 }
 
 /**

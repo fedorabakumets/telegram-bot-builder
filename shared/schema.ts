@@ -76,6 +76,9 @@ export type { BotTable, InsertBotTable, BotTableColumn, InsertBotTableColumn, Bo
 export { workerProcesses, insertWorkerProcessSchema } from "./schema/tables/worker-processes";
 export type { WorkerProcess, InsertWorkerProcess } from "./schema/tables/worker-processes";
 
+export { projectVersions, insertProjectVersionSchema } from "./schema/tables/project-versions";
+export type { ProjectVersion, InsertProjectVersion } from "./schema/tables/project-versions";
+
 export type TelegramUserDB = typeof telegramUsersTable.$inferSelect;
 
 // Импорты для обратной совместимости

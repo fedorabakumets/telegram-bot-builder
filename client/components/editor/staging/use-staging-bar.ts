@@ -21,6 +21,8 @@ export interface UseStagingBarOptions {
   onSave: () => void;
   /** Колбэк сохранения с перезапуском ботов сценария */
   onSaveAndRestart: () => void;
+  /** Колбэк сохранения с заметкой — создаёт постоянный ручной чекпоинт */
+  onSaveWithNote: (note: string) => void;
   /** Колбэк сброса изменений холста */
   onDiscard: () => void;
   /** Идёт ли сохранение в данный момент */
@@ -53,6 +55,8 @@ export interface UseStagingBarResult {
   onSave: () => void;
   /** Колбэк сохранения с перезапуском ботов сценария */
   onSaveAndRestart: () => void;
+  /** Колбэк сохранения с заметкой — создаёт постоянный ручной чекпоинт */
+  onSaveWithNote: (note: string) => void;
   /** Колбэк сброса (canvas) */
   onDiscard: () => void;
   /** Идёт ли сохранение */
@@ -82,7 +86,7 @@ export interface UseStagingBarResult {
 export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResult {
   const {
     hasLocalChanges, actionHistory, onSave, onSaveAndRestart, onDiscard, isSaving,
-    isDirty, jsonError, onApplyJson, onResetJson, mode, remoteSyncActor,
+    isDirty, jsonError, onApplyJson, onResetJson, mode, remoteSyncActor, onSaveWithNote,
   } = options;
 
   const variant = useMemo<StagingVariant>(() => {
@@ -122,12 +126,24 @@ export function useStagingBar(options: UseStagingBarOptions): UseStagingBarResul
     onSaveAndRestart();
   }, [mode, isDirty, onApplyJson, onSaveAndRestart]);
 
+  /**
+   * В json-dirty режиме сначала применяет JSON, затем сохраняет с заметкой.
+   * В canvas режиме — просто сохраняет с заметкой (постоянный ручной чекпоинт).
+   */
+  const handleSaveWithNote = useCallback((note: string) => {
+    if (mode === 'json' && isDirty) {
+      onApplyJson();
+    }
+    onSaveWithNote(note);
+  }, [mode, isDirty, onApplyJson, onSaveWithNote]);
+
   return {
     isVisible,
     variant,
     changesCount: actionHistory.length,
     onSave: handleSave,
     onSaveAndRestart: handleSaveAndRestart,
+    onSaveWithNote: handleSaveWithNote,
     onDiscard,
     isSaving,
     onApplyJson,

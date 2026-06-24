@@ -175,6 +175,30 @@ const CREATE_WORKER_PROCESSES_TABLE = `
 `;
 
 /**
+ * SQL для создания таблицы версий проектов.
+ * Хранит снимки данных проекта (BotDataWithSheets) для истории и отката.
+ */
+const CREATE_PROJECT_VERSIONS_TABLE = `
+  CREATE TABLE IF NOT EXISTS project_versions (
+    id SERIAL PRIMARY KEY,
+    project_id INTEGER NOT NULL REFERENCES bot_projects(id) ON DELETE CASCADE,
+    snapshot JSONB NOT NULL,
+    label TEXT,
+    author_id BIGINT,
+    created_at TIMESTAMP DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS idx_project_versions_project ON project_versions(project_id);
+`;
+
+/**
+ * SQL для добавления колонки kind в таблицу версий проектов.
+ * Различает авто-снимки ('auto') и ручные коммиты-чекпоинты ('manual').
+ */
+const ADD_KIND_TO_PROJECT_VERSIONS = `
+  ALTER TABLE project_versions ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'auto';
+`;
+
+/**
  * Запускает все необходимые миграции базы данных
  * @returns Promise<void>
  */
@@ -203,6 +227,10 @@ export async function runMigrations(): Promise<void> {
     console.log("[Migrations] Таблица bot_table_rows готова");
     await client.query(CREATE_WORKER_PROCESSES_TABLE);
     console.log("[Migrations] Таблица worker_processes готова");
+    await client.query(CREATE_PROJECT_VERSIONS_TABLE);
+    console.log("[Migrations] Таблица project_versions готова");
+    await client.query(ADD_KIND_TO_PROJECT_VERSIONS);
+    console.log("[Migrations] Колонка kind в project_versions готова");
   } catch (err) {
     console.error("[Migrations] Ошибка выполнения миграций:", err);
   } finally {

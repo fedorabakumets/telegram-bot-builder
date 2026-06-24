@@ -15,6 +15,7 @@ import { storage } from "../../../storages/storage";
 import type { StorageBotProjectUpdate } from "../../../storages/storageTypes";
 import { restartBotIfRunning } from "../../../bots/restartBotIfRunning";
 import { syncContentToTable } from "../../../services/content-table";
+import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 
 /**
  * Обрабатывает запрос на обновление проекта
@@ -39,6 +40,12 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
         const validatedData = insertBotProjectSchema
             .partial()
             .parse(req.body) as StorageBotProjectUpdate;
+
+        // Необязательная заметка к версии. Берётся напрямую из тела запроса,
+        // т.к. не является частью схемы данных проекта. Непустое значение
+        // превращает снимок в постоянный ручной чекпоинт (kind='manual').
+        const commitMessage = typeof req.body?.commitMessage === "string" ? req.body.commitMessage.trim() : "";
+
         const project = await storage.updateBotProject(projectId, validatedData);
 
         if (!project) {
@@ -60,6 +67,28 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
                 } catch {}
             } catch (err) {
                 console.error(`[updateProjectHandler] Ошибка синхронизации _content для проекта ${projectId}:`, err);
+            }
+
+            // Создание снимка версии проекта (история + откат)
+            try {
+                if (commitMessage) {
+                    // Ручной чекпоинт: создаётся всегда по явному намерению
+                    // пользователя — без дедупликации и без очистки истории.
+                    await storage.createProjectVersion(projectId, validatedData.data, commitMessage, getOwnerIdFromRequest(req), 'manual');
+                } else {
+                    // Авто-снимок: дедупликация + ограничение истории до 30 версий.
+                    // Дедупликация: не создаём новый снимок, если самая свежая
+                    // версия проекта идентична текущим данным (по JSON-представлению)
+                    const latest = await storage.getLatestProjectVersion(projectId);
+                    const isDuplicate = latest != null &&
+                        JSON.stringify(latest.snapshot) === JSON.stringify(validatedData.data);
+                    if (!isDuplicate) {
+                        await storage.createProjectVersion(projectId, validatedData.data, project.name, project.ownerId ?? null, 'auto');
+                        await storage.pruneProjectVersions(projectId, 30);
+                    }
+                }
+            } catch (err) {
+                console.error(`[updateProjectHandler] Ошибка создания снимка версии для проекта ${projectId}:`, err);
             }
         }
 

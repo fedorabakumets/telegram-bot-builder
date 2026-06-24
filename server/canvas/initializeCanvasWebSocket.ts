@@ -3,9 +3,7 @@
  * @module server/canvas/initializeCanvasWebSocket
  */
 
-import type { Server as HttpServer } from 'node:http';
 import { WebSocket, WebSocketServer } from 'ws';
-import { exportedSessionMiddleware } from '../routes/routes';
 import { storage } from '../storages/storage';
 import type { TelegramUserDB } from '@shared/schema';
 import { isCanvasSyncMessage } from '../../shared/canvas-sync/canvas-sync-message';
@@ -16,40 +14,22 @@ import {
 } from './canvasConnections';
 import { broadcastCanvasSync } from './broadcastCanvasSync';
 import { enrichCanvasActor } from './enrichCanvasActor';
+import { applyWebSocketSession } from '../websocket/applyWebSocketSession';
 import 'express-session';
 
 /**
- * Прикрепляет Express-сессию к WebSocket-запросу
- * @param request - HTTP upgrade request
- */
-function applySession(request: unknown): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (!exportedSessionMiddleware) {
-      resolve();
-      return;
-    }
-    exportedSessionMiddleware(request as never, {} as never, (error?: unknown) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-    });
-  });
-}
-
-/**
- * Инициализирует WebSocket для синхронизации холста между устройствами и коллабораторами
- * @param server - HTTP-сервер
+ * Инициализирует WebSocket для синхронизации холста между устройствами и коллабораторами.
+ * Создаётся в режиме noServer — маршрутизация upgrade выполняется отдельно
+ * (см. registerWebSocketUpgrade), чтобы не конфликтовать с другими ws-серверами.
  * @returns WebSocketServer
  */
-export function initializeCanvasWebSocket(server: HttpServer): WebSocketServer {
-  const wss = new WebSocketServer({ server, path: '/api/canvas' });
+export function initializeCanvasWebSocket(): WebSocketServer {
+  const wss = new WebSocketServer({ noServer: true });
 
   wss.on('connection', (ws: WebSocket, request) => {
     (async () => {
       try {
-        await applySession(request);
+        await applyWebSocketSession(request);
 
         const urlParams = new URLSearchParams(request.url?.split('?')[1]);
         const projectId = parseInt(urlParams.get('projectId') ?? '', 10);

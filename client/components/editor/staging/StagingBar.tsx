@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChangesModal } from './ChangesModal';
 import { RemoteSyncBadge } from './remote-sync-badge';
+import { SaveCheckpointPopover } from '@/components/editor/canvas/canvas/save-checkpoint-popover';
 import type { UseStagingBarResult } from './use-staging-bar';
 import type { ActionHistoryItem } from '@/pages/editor/types/action-history-item';
 import type { CanvasActor } from '@shared/canvas-sync/canvas-actor';
@@ -27,7 +28,7 @@ interface StagingBarProps extends UseStagingBarResult {
 export function StagingBar(props: StagingBarProps) {
   const { isVisible, variant, changesCount, onSave, onSaveAndRestart, onDiscard, isSaving,
     onApplyJson, onResetJson, jsonError, actionHistory, mode, hasLocalChanges, isDirty,
-    remoteSyncActor, onDismissRemoteSync } = props;
+    remoteSyncActor, onDismissRemoteSync, onSaveWithNote } = props;
 
   /** Открыто ли модальное окно деталей */
   const [modalOpen, setModalOpen] = useState(false);
@@ -63,6 +64,7 @@ export function StagingBar(props: StagingBarProps) {
               onDismissRemoteSync={onDismissRemoteSync}
               onSave={onSave}
               onSaveAndRestart={onSaveAndRestart}
+              onSaveWithNote={onSaveWithNote}
               onDiscard={onDiscard}
               onDetails={() => setModalOpen(true)}
             />
@@ -73,6 +75,7 @@ export function StagingBar(props: StagingBarProps) {
               onDetails={() => setModalOpen(true)}
               onSave={onSave}
               onSaveAndRestart={onSaveAndRestart}
+              onSaveWithNote={onSaveWithNote}
               isSaving={isSaving}
             />
           )}
@@ -114,6 +117,8 @@ interface CanvasVariantProps {
   onSave: () => void;
   /** Колбэк сохранения с перезапуском */
   onSaveAndRestart: () => void;
+  /** Колбэк сохранения с заметкой — создаёт постоянный ручной чекпоинт */
+  onSaveWithNote: (note: string) => void;
   /** Колбэк сброса */
   onDiscard: () => void;
   /** Колбэк открытия деталей */
@@ -133,6 +138,7 @@ function CanvasVariant({
   onDismissRemoteSync,
   onSave,
   onSaveAndRestart,
+  onSaveWithNote,
   onDiscard,
   onDetails,
 }: CanvasVariantProps) {
@@ -169,6 +175,7 @@ function CanvasVariant({
             ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
             : <><i className="fas fa-floppy-disk mr-1" />Сохранить <kbd className="ml-1 opacity-60 text-[10px] hidden sm:inline">⇧+↵</kbd></>}
         </Button>
+        <SaveCheckpointPopover size="bar" onSaveWithNote={onSaveWithNote} isSaving={isSaving} />
       </div>
       <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center sm:hidden">
         <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}
@@ -202,6 +209,8 @@ interface JsonDirtyVariantProps {
   onSave: () => void;
   /** Колбэк сохранения с перезапуском ботов (с применением JSON) */
   onSaveAndRestart: () => void;
+  /** Колбэк сохранения с заметкой — создаёт постоянный ручной чекпоинт */
+  onSaveWithNote: (note: string) => void;
   /** Идёт ли сохранение */
   isSaving: boolean;
 }
@@ -211,7 +220,7 @@ interface JsonDirtyVariantProps {
  * @param props - Свойства варианта
  * @returns JSX элемент
  */
-function JsonDirtyVariant({ onReset, onDetails, onSave, onSaveAndRestart, isSaving }: JsonDirtyVariantProps) {
+function JsonDirtyVariant({ onReset, onDetails, onSave, onSaveAndRestart, onSaveWithNote, isSaving }: JsonDirtyVariantProps) {
   return (
     <>
       {/* Верхняя строка: статус + детали */}
@@ -238,6 +247,7 @@ function JsonDirtyVariant({ onReset, onDetails, onSave, onSaveAndRestart, isSavi
             ? <><i className="fas fa-spinner fa-spin mr-1" />Сохранение…</>
             : <><i className="fas fa-floppy-disk mr-1" />Сохранить</>}
         </Button>
+        <SaveCheckpointPopover size="bar" onSaveWithNote={onSaveWithNote} isSaving={isSaving} />
       </div>
       <div className="flex items-center gap-1.5 w-full sm:w-auto justify-center sm:hidden">
         <Button size="sm" onClick={onSaveAndRestart} disabled={isSaving}

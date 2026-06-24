@@ -8,7 +8,9 @@
 import { ZoomControls } from './zoom-controls';
 import { UndoRedoButtons } from './undo-redo-buttons';
 import { ActionHistory } from './action-history';
+import { VersionHistoryButton } from './version-history-button';
 import { SaveButton } from './save-button';
+import { SaveCheckpointPopover } from './save-checkpoint-popover';
 import { AutoLayoutButton } from './auto-layout-button';
 import { ClipboardButtons } from './clipboard-buttons';
 import { InterfaceToggles } from './interface-toggles';
@@ -68,6 +70,8 @@ interface CanvasToolbarProps {
   onRedo?: () => void;
   /** РљРѕР»Р±СЌРє РґР»СЏ СЃРѕС…СЂР°РЅРµРЅРёСЏ */
   onSave?: () => void;
+  /** Колбэк сохранения с заметкой — создаёт постоянный ручной чекпоинт */
+  onSaveWithNote?: (note: string) => void;
   /** Колбэк для авто-расстановки узлов */
   onAutoLayout?: () => void;
   /** РљРѕР»Р±СЌРє РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ РІ Р±СѓС„РµСЂ РѕР±РјРµРЅР° */
@@ -116,6 +120,10 @@ interface CanvasToolbarProps {
   onTogglePortals?: () => void;
   /** Количество порталов (для бейджа на кнопке) */
   portalsCount?: number;
+  /** ID проекта (включает кнопку истории версий) */
+  projectId?: number;
+  /** Колбэк после восстановления версии — перезагрузка холста */
+  onRestoreVersion?: () => void;
 }
 
 /**
@@ -147,6 +155,7 @@ export function CanvasToolbar({
   onUndo,
   onRedo,
   onSave,
+  onSaveWithNote,
   onAutoLayout,
   onCopyToClipboard,
   onPasteFromClipboard,
@@ -171,6 +180,8 @@ export function CanvasToolbar({
   showPortals,
   onTogglePortals,
   portalsCount,
+  projectId,
+  onRestoreVersion,
 }: CanvasToolbarProps) {
   return (
     <div data-canvas-toolbar className="absolute top-0 z-40 pointer-events-none w-full transition-all duration-300" style={{ left: 0, right: 0 }}>
@@ -210,7 +221,14 @@ export function CanvasToolbar({
               handleUndoSelected={handleUndoSelected}
             />
 
+            {/* История версий проекта */}
+            {projectId != null && (
+              <VersionHistoryButton projectId={projectId} onRestored={onRestoreVersion} />
+            )}
+
             <SaveButton onSave={onSave} isSaving={isSaving} />
+
+            {onSaveWithNote && <SaveCheckpointPopover onSaveWithNote={onSaveWithNote} isSaving={isSaving} />}
 
             <AutoLayoutButton onAutoLayout={onAutoLayout} />
 
