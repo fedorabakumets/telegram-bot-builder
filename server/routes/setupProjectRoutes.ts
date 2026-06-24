@@ -22,6 +22,8 @@ import { listProjectVersionsHandler } from "./projectRoutes/handlers/listProject
 import { restoreProjectVersionHandler } from "./projectRoutes/handlers/restoreProjectVersionHandler";
 import { createProjectCommitHandler } from "./projectRoutes/handlers/createProjectCommitHandler";
 import { getProjectVersionHandler } from "./projectRoutes/handlers/getProjectVersionHandler";
+import { deleteProjectVersionHandler } from "./projectRoutes/handlers/deleteProjectVersionHandler";
+import { pruneProjectVersionsHandler } from "./projectRoutes/handlers/pruneProjectVersionsHandler";
 import { reorderProjectsHandler } from "./projectRoutes/handlers/reorderProjectsHandler";
 import { exportProjectHandler } from "./projectRoutes/handlers/exportProjectHandler";
 import { getTokenHandler, clearTokenHandler } from "./projectRoutes/handlers/tokenHandlers";
@@ -55,8 +57,10 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
     // История версий проекта (снимки + откат)
     app.get("/api/projects/:id/versions", requireDbReady, requireProjectAccess, listProjectVersionsHandler);
     app.post("/api/projects/:id/versions/commit", requireDbReady, requireProjectAccess, createProjectCommitHandler);
+    app.post("/api/projects/:id/versions/prune", requireDbReady, requireProjectAccess, pruneProjectVersionsHandler);
     app.get("/api/projects/:id/versions/:versionId", requireDbReady, requireProjectAccess, getProjectVersionHandler);
     app.post("/api/projects/:id/versions/:versionId/restore", requireDbReady, requireProjectAccess, restoreProjectVersionHandler);
+    app.delete("/api/projects/:id/versions/:versionId", requireDbReady, requireProjectAccess, deleteProjectVersionHandler);
 
     // Удаление проекта
     setupDeleteProjectRoute(app, requireDbReady);

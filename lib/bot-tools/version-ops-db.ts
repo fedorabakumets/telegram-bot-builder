@@ -109,3 +109,78 @@ export async function restoreVersionInDb(
     skipValidation: options?.skipValidation ?? true,
   });
 }
+
+/**
+ * Удаляет одну версию проекта из истории через живую БД (необратимо).
+ * @param projectId - Числовой ID проекта из URL редактора
+ * @param versionId - ID удаляемой версии (из listVersionsInDb)
+ * @param options - Опции запроса (URL API)
+ * @returns Признак удаления { deleted } либо ошибка { error }
+ */
+export async function deleteVersionInDb(
+  projectId: number,
+  versionId: number,
+  options?: { apiBaseUrl?: string },
+): Promise<{ deleted: boolean } | { error: string }> {
+  const baseUrl = options?.apiBaseUrl ?? process.env.API_BASE_URL ?? 'http://localhost:5000';
+
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}/api/projects/${projectId}/versions/${versionId}`, { method: 'DELETE' });
+  } catch (err) {
+    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    if (res.status === 404) return { error: `HTTP 404: версия не найдена${body ? `: ${body}` : ''}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+  }
+
+  let body: { deleted?: boolean };
+  try {
+    body = (await res.json()) as { deleted?: boolean };
+  } catch (err) {
+    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+  }
+
+  return { deleted: Boolean(body.deleted) };
+}
+
+/**
+ * Массово удаляет версии проекта из истории по фильтру через живую БД (необратимо).
+ * @param projectId - Числовой ID проекта из URL редактора
+ * @param options - Опции: URL API, keep (сколько последних сохранить), kind (вид версии), authorKind (тип автора)
+ * @returns Число удалённых версий { deleted } либо ошибка { error }
+ */
+export async function pruneVersionsInDb(
+  projectId: number,
+  options?: { apiBaseUrl?: string; keep?: number; kind?: 'auto' | 'manual'; authorKind?: 'agent' | 'user' },
+): Promise<{ deleted: number } | { error: string }> {
+  const baseUrl = options?.apiBaseUrl ?? process.env.API_BASE_URL ?? 'http://localhost:5000';
+
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}/api/projects/${projectId}/versions/prune`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keep: options?.keep, kind: options?.kind, authorKind: options?.authorKind }),
+    });
+  } catch (err) {
+    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+  }
+
+  let body: { deleted?: number };
+  try {
+    body = (await res.json()) as { deleted?: number };
+  } catch (err) {
+    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+  }
+
+  return { deleted: body.deleted ?? 0 };
+}

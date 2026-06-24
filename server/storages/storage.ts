@@ -1012,6 +1012,22 @@ export interface IStorage {
    * @returns Promise<void>
    */
   pruneProjectVersions(projectId: number, keep: number): Promise<void>;
+
+  /**
+   * Удалить одну версию проекта по id (с проверкой принадлежности проекту)
+   * @param projectId - ID проекта, которому должна принадлежать версия
+   * @param versionId - ID удаляемой версии
+   * @returns true, если версия была удалена
+   */
+  deleteProjectVersion(projectId: number, versionId: number): Promise<boolean>;
+
+  /**
+   * Массово удалить версии проекта по фильтру, оставив keep последних по дате
+   * @param projectId - ID проекта
+   * @param options - Фильтр удаления: keep (сколько последних сохранить), kind (вид версии), authorKind (тип автора)
+   * @returns Число удалённых версий
+   */
+  deleteProjectVersionsBulk(projectId: number, options: { keep?: number; kind?: 'auto' | 'manual'; authorKind?: 'agent' | 'user' }): Promise<number>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных

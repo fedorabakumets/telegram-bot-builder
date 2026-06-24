@@ -2007,4 +2007,49 @@ export class DatabaseStorage implements IStorage {
     if (idsToDelete.length === 0) return;
     await this.db.delete(projectVersions).where(inArray(projectVersions.id, idsToDelete));
   }
+
+  /**
+   * Удалить одну версию проекта по id с проверкой принадлежности проекту.
+   * Операция необратима.
+   * @param projectId - ID проекта, которому должна принадлежать версия
+   * @param versionId - ID удаляемой версии
+   * @returns true, если версия была удалена
+   */
+  async deleteProjectVersion(projectId: number, versionId: number): Promise<boolean> {
+    const rows = await this.db.delete(projectVersions)
+      .where(and(eq(projectVersions.id, versionId), eq(projectVersions.projectId, projectId)))
+      .returning({ id: projectVersions.id });
+    return rows.length > 0;
+  }
+
+  /**
+   * Массово удалить версии проекта по фильтру, оставив keep последних по дате (DESC).
+   * Операция необратима.
+   * Для authorKind='user' учитываются версии с authorKind IS NULL или 'user';
+   * для authorKind='agent' — только версии с authorKind='agent'.
+   * @param projectId - ID проекта
+   * @param options - Фильтр удаления: keep (сколько последних сохранить), kind (вид версии), authorKind (тип автора)
+   * @returns Число удалённых версий
+   */
+  async deleteProjectVersionsBulk(
+    projectId: number,
+    options: { keep?: number; kind?: 'auto' | 'manual'; authorKind?: 'agent' | 'user' },
+  ): Promise<number> {
+    const conditions = [eq(projectVersions.projectId, projectId)];
+    if (options.kind) conditions.push(eq(projectVersions.kind, options.kind));
+    if (options.authorKind === 'agent') {
+      conditions.push(eq(projectVersions.authorKind, 'agent'));
+    } else if (options.authorKind === 'user') {
+      const userCondition = or(isNull(projectVersions.authorKind), eq(projectVersions.authorKind, 'user'));
+      if (userCondition) conditions.push(userCondition);
+    }
+
+    const versions = await this.db.select({ id: projectVersions.id }).from(projectVersions)
+      .where(and(...conditions))
+      .orderBy(desc(projectVersions.createdAt));
+    const idsToDelete = versions.slice(options.keep ?? 0).map((v) => v.id);
+    if (idsToDelete.length === 0) return 0;
+    await this.db.delete(projectVersions).where(inArray(projectVersions.id, idsToDelete));
+    return idsToDelete.length;
+  }
 }

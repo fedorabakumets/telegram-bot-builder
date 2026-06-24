@@ -33,6 +33,8 @@ import {
   renameSheetInDb,
   removeSheetInDb,
   restoreVersionInDb,
+  deleteVersionInDb,
+  pruneVersionsInDb,
   setActiveSheetInDb,
   listSheetsInDb,
   saveProject,
@@ -527,6 +529,33 @@ function registerTools(server: McpServer): void {
         commitMessage: commit_message,
         skipValidation: skip_validation,
       })),
+  );
+
+  server.registerTool(
+    'db_delete_version',
+    {
+      description: 'Удалить одну версию проекта из истории в БД (НЕОБРАТИМО). Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        version_id: z.number().describe('ID версии из db_list_versions'),
+      },
+    },
+    async ({ project_id, version_id }) => textResult(await deleteVersionInDb(project_id, version_id)),
+  );
+
+  server.registerTool(
+    'db_prune_versions',
+    {
+      description: 'Массово удалить версии проекта из истории по фильтру (НЕОБРАТИМО). keep — сколько последних оставить; kind — только auto/manual; author_kind — только agent/user. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        keep: z.number().optional().describe('Сколько последних версий (по дате) сохранить'),
+        kind: z.enum(['auto', 'manual']).optional().describe('Удалять только версии этого вида'),
+        author_kind: z.enum(['agent', 'user']).optional().describe('Удалять только версии этого типа автора'),
+      },
+    },
+    async ({ project_id, keep, kind, author_kind }) =>
+      textResult(await pruneVersionsInDb(project_id, { keep, kind, authorKind: author_kind })),
   );
 
   server.registerTool(
