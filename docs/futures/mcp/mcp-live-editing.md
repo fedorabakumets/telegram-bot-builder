@@ -201,7 +201,7 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 Приоритезировано по практической отдаче (выявлено в ходе реализации 2.1).
 
 ### Быстрые победы
-- **`db_apply_ops` — батч-операции одним вызовом.** Массив операций (add/update/remove/connect/move node + sheet-ops) применяется в одной транзакции read→mutate→PUT. Даёт скорость, атомарность, отсутствие гонок LWW и одну версию на пакет. Сейчас N операций = N последовательных GET+PUT.
+- **`db_apply_ops` — батч-операции одним вызовом.** ✅ Готово (`lib/bot-tools/batch-ops.ts`: `applyOpsToProject` + `applyOpsInDb`). Массив операций (add/update/remove/connect/move node + add/rename/remove/set_active sheet) применяется в одной транзакции read→chaining→PUT: один live-broadcast, одна версия, без гонок. Атомарно — прерывание на первой ошибке с `failedIndex`/`failedOp`, без записи. `add_sheet` принимает опц. `id` для адресации новых листов внутри пакета.
 - **Раскрытие enum-значений в `get_node_schema`.** Возвращать допустимые значения по каждому полю (напр. `button.action` ∈ goto/command/url/…, `assignment.mode` ∈ text/expression). Убирает цикл «попробовал → отказ валидации → исправил».
 - **`db_list_versions` + `db_restore_version`.** История версий пишется (автор «ИИ-агент»), но через MCP её нельзя ни прочитать, ни откатить. Встроенный undo для правок агента.
 

@@ -67,17 +67,23 @@ function generateNextSheetName(sheets: SheetLike[]): string {
  * Добавляет новый пустой лист в проект и делает его активным.
  * @param projectJson - Текущий project.json
  * @param name - Имя листа (опционально; иначе генерируется "Лист N")
+ * @param id - Явный id нового листа (опционально; иначе генерируется nanoid).
+ *   Если передан и лист с таким id уже существует — возвращается ошибка.
  * @returns Обновлённый проект с валидацией или ошибка
  */
 export function addSheetToProject(
   projectJson: unknown,
   name?: string,
+  id?: string,
 ): MutateProjectResult | { error: string } {
   const project = parseProject(projectJson);
   if (!project) return { error: 'Невалидный project_json' };
 
   const sheets = [...(project.sheets ?? [])] as SheetLike[];
-  const newId = nanoid();
+  if (id && sheets.some((s) => s.id === id)) {
+    return { error: 'Лист с таким id уже существует' };
+  }
+  const newId = id ?? nanoid();
   const sheetName = name?.trim() || generateNextSheetName(sheets);
 
   const newSheet = {

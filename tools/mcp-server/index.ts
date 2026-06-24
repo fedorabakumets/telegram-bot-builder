@@ -10,6 +10,7 @@ import { z } from 'zod';
 import {
   addNodeInDb,
   addNodeToProject,
+  applyOpsInDb,
   connectNodes,
   connectNodesInDb,
   createNode,
@@ -495,6 +496,20 @@ function registerTools(server: McpServer): void {
       },
     },
     async ({ project_id }) => textResult(await listSheetsInDb(project_id)),
+  );
+
+  server.registerTool(
+    'db_apply_ops',
+    {
+      description: 'Применить несколько операций к проекту в БД живого приложения за одну транзакцию (один live-broadcast и одна версия). Прерывается на первой ошибке без записи. Операции: add_node/update_node/remove_node/connect_nodes/move_node/add_sheet/rename_sheet/remove_sheet/set_active_sheet — тип задаётся полем op. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        ops: z.array(z.record(z.unknown())).describe('Массив операций; в каждой поле op задаёт тип (add_node, update_node, remove_node, connect_nodes, move_node, add_sheet, rename_sheet, remove_sheet, set_active_sheet)'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, ops, commit_message }) =>
+      textResult(await applyOpsInDb(project_id, ops as never, { commitMessage: commit_message })),
   );
 }
 
