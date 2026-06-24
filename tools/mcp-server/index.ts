@@ -16,6 +16,7 @@ import {
   disconnectNodesInDb,
   createNode,
   fetchProjectFromDb,
+  findNodesInDb,
   generateBotCode,
   getNodeExampleTool,
   getNodeFromDb,
@@ -434,6 +435,21 @@ function registerTools(server: McpServer): void {
       },
     },
     async ({ project_id, sheet_id }) => textResult(await listNodesInDb(project_id, sheet_id)),
+  );
+
+  server.registerTool(
+    'db_find_nodes',
+    {
+      description: 'Поиск нод проекта в БД живого приложения по подстроке (в тексте/команде/имени/переменной/id) и опционально по типу ноды. Read-only. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        query: z.string().describe('Подстрока для поиска (регистронезависимо)'),
+        type: z.string().optional().describe('Фильтр по типу ноды (точное совпадение)'),
+        sheet_id: z.string().optional().describe('ID листа (по умолчанию все листы)'),
+      },
+    },
+    async ({ project_id, query, type, sheet_id }) =>
+      textResult(await findNodesInDb(project_id, query, { type, sheetId: sheet_id })),
   );
 
   server.registerTool(

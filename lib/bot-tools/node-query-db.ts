@@ -62,6 +62,33 @@ function buildSummary(node: RawNode): string {
 }
 
 /**
+ * Собирает из ноды строку для регистронезависимого поиска по подстроке.
+ * Включает id, type и ключевые строковые поля data (текст/команда/имя/переменная и т.п.).
+ * @param node - Сырой объект ноды
+ * @returns Склеенная через пробел строка в нижнем регистре
+ */
+function buildSearchText(node: RawNode): string {
+  const d = node.data ?? {};
+  /** Ключевые строковые поля data, по которым осмысленно искать */
+  const fields = [
+    'messageText',
+    'command',
+    'description',
+    'inputPrompt',
+    'variable',
+    'label',
+    'text',
+    'name',
+  ] as const;
+  const parts: string[] = [node.id ?? '', node.type ?? ''];
+  for (const key of fields) {
+    const value = d[key];
+    if (value !== undefined && value !== null) parts.push(String(value));
+  }
+  return parts.join(' ').toLowerCase();
+}
+
+/**
  * Выбирает листы проекта: один по sheetId или все
  * @param data - Данные проекта
  * @param sheetId - ID листа (опционально)
@@ -101,6 +128,41 @@ export async function listNodesInDb(
   }
 
   return { activeSheetId: fetched.data.activeSheetId, total: nodes.length, nodes };
+}
+
+/**
+ * Ищет ноды проекта в живой БД по подстроке и/или типу ноды (read-only).
+ * Поиск регистронезависимый, идёт по id, type и ключевым строковым полям data
+ * (messageText, command, description, inputPrompt, variable, label, text, name).
+ * @param projectId - Числовой ID проекта из URL редактора
+ * @param query - Подстрока для поиска (пустая строка — фильтр только по типу/листу)
+ * @param options - Опции: type (точный тип ноды), sheetId (лист), apiBaseUrl (URL API)
+ * @returns Число совпадений и список сводок нод, либо ошибка
+ */
+export async function findNodesInDb(
+  projectId: number,
+  query: string,
+  options?: { type?: string; sheetId?: string; apiBaseUrl?: string },
+): Promise<{ total: number; nodes: NodeSummary[] } | { error: string }> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+
+  const q = (query ?? '').trim().toLowerCase();
+  const matches: NodeSummary[] = [];
+  for (const sheet of selectSheets(fetched.data, options?.sheetId)) {
+    for (const node of sheet.nodes ?? []) {
+      if (options?.type && node.type !== options.type) continue;
+      if (q && !buildSearchText(node).includes(q)) continue;
+      matches.push({
+        id: node.id ?? '',
+        type: node.type ?? 'unknown',
+        sheetId: sheet.id,
+        summary: buildSummary(node),
+      });
+    }
+  }
+
+  return { total: matches.length, nodes: matches };
 }
 
 /**
