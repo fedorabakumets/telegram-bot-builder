@@ -202,7 +202,7 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 
 ### Быстрые победы
 - **`db_apply_ops` — батч-операции одним вызовом.** ✅ Готово (`lib/bot-tools/batch-ops.ts`: `applyOpsToProject` + `applyOpsInDb`). Массив операций (add/update/remove/connect/move node + add/rename/remove/set_active sheet) применяется в одной транзакции read→chaining→PUT: один live-broadcast, одна версия, без гонок. Атомарно — прерывание на первой ошибке с `failedIndex`/`failedOp`, без записи. `add_sheet` принимает опц. `id` для адресации новых листов внутри пакета.
-- **Раскрытие enum-значений в `get_node_schema`.** Возвращать допустимые значения по каждому полю (напр. `button.action` ∈ goto/command/url/…, `assignment.mode` ∈ text/expression). Убирает цикл «попробовал → отказ валидации → исправил».
+- **Раскрытие enum-значений в `get_node_schema`.** ✅ Готово (`lib/bot-tools/enum-introspection.ts`: `extractEnumFields` — рекурсивный обход zod-схемы; `get_node_schema` возвращает поле `enumFields` — карту «путь → допустимые значения» для всех 47 enum-полей data, включая `buttons[].action`, `assignments[].mode`, `branches[].operator`). Убирает цикл «попробовал → отказ → исправил».
 - **`db_list_versions` + `db_restore_version`.** История версий пишется (автор «ИИ-агент»), но через MCP её нельзя ни прочитать, ни откатить. Встроенный undo для правок агента.
 
 ### Пробелы возможностей
