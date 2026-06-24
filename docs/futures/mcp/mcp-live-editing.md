@@ -207,7 +207,7 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 
 ### Пробелы возможностей
 - **`db_delete_version` + `db_prune_versions`.** ✅ Готово (storage `deleteProjectVersion`/`deleteProjectVersionsBulk`; эндпоинты `DELETE /api/projects/:id/versions/:versionId` и `POST .../versions/prune`; lib `version-ops-db.ts`). Точечное и массовое удаление версий из истории (необратимо). `db_prune_versions` фильтрует по `keep`/`kind`/`author_kind` — напр. убрать все агентские чекпоинты, не трогая человеческие.
-- **`db_disconnect_nodes` + `db_list_connections`.** Есть connect, нет «разъединить» и интроспекции рёбер (кто на кого ссылается).
+- **`db_disconnect_nodes` + `db_list_connections`.** ✅ Готово. `db_list_connections` — read-only граф рёбер from→to (тип auto/button/branch/parallel/input/keyboard + флаг broken, `node-query-db.ts`). `db_disconnect_nodes` — снятие перехода (зеркало connect, `project-mutate.ts`/`node-ops-db.ts`): без branch снимает все рёбра from→to, с branch — только указанную кнопку/ветку.
 - **`db_find_nodes(query)`.** Поиск/фильтр нод по тексту/типу/листу (как поиск в панели «Проекты»).
 - **`db_duplicate_sheet`.** Требует портирования в lib регенерации id нод и ремаппинга ссылок (`updateNodeReferencesInData`).
 
