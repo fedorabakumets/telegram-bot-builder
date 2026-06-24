@@ -31,6 +31,11 @@ import {
   listConnectionsInDb,
   listOperators,
   listProjectsInDb,
+  createProjectInDb,
+  renameProjectInDb,
+  reorderProjectsInDb,
+  exportProjectInDb,
+  deleteProjectInDb,
   listVersionsInDb,
   loadProject,
   removeNodeFromProject,
@@ -454,6 +459,56 @@ function registerTools(server: McpServer): void {
       description: 'Список проектов владельца токена из БД живого приложения: id, name, число нод/листов, дата. БЕЗ project_id — единственный тул для дискавери: по нему узнаёшь id проектов для остальных db_-тулов. Read-only.',
     },
     async () => textResult(await listProjectsInDb()),
+  );
+
+  server.registerTool(
+    'db_create_project',
+    {
+      description: 'Создать новый проект с дефолтным сценарием (/start → приветствие) в БД живого приложения. Возвращает id нового проекта.',
+      inputSchema: { name: z.string().describe('Название нового проекта') },
+    },
+    async ({ name }) => textResult(await createProjectInDb(name)),
+  );
+
+  server.registerTool(
+    'db_rename_project',
+    {
+      description: 'Переименовать проект в БД живого приложения. Меняет только имя (без правки сценария, без новой версии).',
+      inputSchema: { project_id: z.number(), name: z.string() },
+    },
+    async ({ project_id, name }) => textResult(await renameProjectInDb(project_id, name)),
+  );
+
+  server.registerTool(
+    'db_reorder_projects',
+    {
+      description: 'Изменить порядок проектов в списке. project_ids — полный список id проектов владельца в нужном порядке.',
+      inputSchema: { project_ids: z.array(z.number()).describe('Полный список id проектов в нужном порядке') },
+    },
+    async ({ project_ids }) => textResult(await reorderProjectsInDb(project_ids)),
+  );
+
+  server.registerTool(
+    'db_export_project',
+    {
+      description: 'Экспортировать проект в готовый Python-код бота (bot.py): сохраняет файл на диск в каталог bots/ и возвращает путь, размер, число строк и превью (а не весь код — чтобы не раздувать контекст). Полный код — флаг inline:true или чтение файла.',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        save_path: z.string().optional().describe('Папка или путь к .py внутри bots/ (по умолчанию bots/exported/project_<id>/bot.py)'),
+        inline: z.boolean().optional().describe('Вернуть и полный код в ответе (по умолчанию только путь+превью)'),
+      },
+    },
+    async ({ project_id, save_path, inline }) =>
+      textResult(await exportProjectInDb(project_id, { savePath: save_path, inline })),
+  );
+
+  server.registerTool(
+    'db_delete_project',
+    {
+      description: 'Удалить проект целиком (НЕОБРАТИМО): останавливает бота и удаляет все связанные данные. Требует confirm: true.',
+      inputSchema: { project_id: z.number(), confirm: z.boolean().describe('Обязательное подтверждение необратимого удаления') },
+    },
+    async ({ project_id, confirm }) => textResult(await deleteProjectInDb(project_id, { confirm })),
   );
 
   server.registerTool(
