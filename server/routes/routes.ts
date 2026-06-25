@@ -43,6 +43,7 @@ import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
 import { requireMediaOwnership } from "../middleware/mediaOwnership";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
+import { resolveSessionSecret } from "../utils/resolveSessionSecret";
 import { handleTelegramError } from "../utils/telegram-error-handler";
 import { fetchWithProxy } from "../utils/telegram-proxy";
 import { setupAuthRoutes } from "./setupAuthRoutes";
@@ -424,7 +425,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   const sessionMiddleware = session({
     store: store,
-    secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+    secret: resolveSessionSecret(),
     resave: false,
     saveUninitialized: false,
     cookie: {
