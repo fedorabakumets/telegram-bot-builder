@@ -29,7 +29,8 @@ export type EditorTab =
   | 'analytics'
   | 'tables'
   | 'files'
-  | 'versions';
+  | 'versions'
+  | 'agent';
 
 /**
  * Тип предыдущей вкладки

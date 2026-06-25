@@ -9,6 +9,7 @@
 
 import type { Express } from 'express';
 import { requireProjectAccess } from '../middleware/requireProjectAccess';
+import { requireTokenOwnership } from '../middleware/requireResourceOwnership';
 import { handleBotStart } from './botManagement/handlers/botStartHandler';
 import { handleBotStop } from './botManagement/handlers/botStopHandler';
 import { handleBotRestart } from './botManagement/handlers/botRestartHandler';
@@ -34,7 +35,8 @@ export function setupBotManagementRoutes(app: Express): void {
     app.get("/api/workers/stats", handleWorkerStats);
     app.get("/api/tokens/:tokenId/bot-status", handleBotStatusByToken);
     app.get("/api/bot/tokens/:tokenId/status", getBotTokenStatusHandler);
-    app.get("/api/bot/tokens/:tokenId/photo", getBotTokenPhotoHandler);
+    // Защита владением: резолвим :tokenId → projectId → доступ владельца/коллаборатора
+    app.get("/api/bot/tokens/:tokenId/photo", requireTokenOwnership, getBotTokenPhotoHandler);
     app.get("/api/tokens/:tokenId/launch-history", handleGetLaunchHistory);
     app.get("/api/launch/:launchId/logs", handleGetLaunchLogs);
     app.get("/api/bot-logs/:logId", handleGetBotLogById);

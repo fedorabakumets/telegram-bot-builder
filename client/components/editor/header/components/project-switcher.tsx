@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
 
 /**
  * Свойства переключателя проекта
@@ -53,6 +54,7 @@ export function ProjectSwitcher({ projects, currentProjectId, onSelect }: Projec
           >
             <FolderOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="flex-1 truncate">{project.name}</span>
+            <IdBadge id={project.id} />
             {project.id === currentProjectId && (
               <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
             )}

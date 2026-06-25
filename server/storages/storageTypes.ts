@@ -127,3 +127,8 @@ export type StorageWorkerProcessInput = typeof workerProcesses.$inferInsert;
 
 /** Тип обновления записи процесса воркера */
 export type StorageWorkerProcessUpdate = Partial<StorageWorkerProcessInput>;
+
+import { agentTokens } from "@shared/schema";
+
+/** Тип вставки персонального токена агента по таблице Drizzle */
+export type StorageAgentTokenInput = typeof agentTokens.$inferInsert;

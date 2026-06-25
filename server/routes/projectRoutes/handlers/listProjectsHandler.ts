@@ -9,7 +9,8 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
-import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegram/auth-middleware";
+import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
+import { toProjectListItem, type ProjectListItem } from "../project-list-dto";
 
 /**
  * Обрабатывает запрос на получение списка проектов
@@ -22,21 +23,14 @@ import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegra
 export async function listProjectsHandler(req: Request, res: Response): Promise<void> {
     try {
         const ownerId = getOwnerIdFromRequest(req);
-        let projects;
+        // Личность гарантирована requireApiAuth; без владельца — пустой список (defense-in-depth)
+        const projects = ownerId !== null
+            ? await storage.getUserBotProjects(ownerId)
+            : [];
 
-        if (ownerId !== null) {
-            // Авторизованный: только свои проекты, без гостевых
-            projects = await storage.getUserBotProjects(ownerId);
-        } else {
-            // Гость: свои по sessionId + старые общие (sessionId = NULL)
-            const sessionId = getSessionIdFromRequest(req);
-            projects = sessionId
-                ? await storage.getGuestBotProjectsBySession(sessionId)
-                : await storage.getGuestBotProjects();
-        }
-
-        const projectsList = projects.map(({ data, ...metadata }) => {
+        const projectsList: ProjectListItem[] = projects.map((project) => {
             // Считаем узлы и листы из data не передавая весь объект клиенту
+            const data = project.data;
             let nodeCount = 0;
             let sheetsCount = 0;
             if (data && typeof data === 'object') {
@@ -49,7 +43,8 @@ export async function listProjectsHandler(req: Request, res: Response): Promise<
                     nodeCount = d.nodes.length;
                 }
             }
-            return { ...metadata, nodeCount, sheetsCount };
+            // DTO с явным whitelist: секреты botToken и sessionId не попадают в ответ
+            return toProjectListItem(project, nodeCount, sheetsCount);
         });
         res.json(projectsList);
     } catch (error) {

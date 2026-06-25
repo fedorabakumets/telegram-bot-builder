@@ -41,15 +41,22 @@ export async function listProjectVersionsHandler(req: Request, res: Response): P
         }));
 
         // Возвращаем только метаданные без snapshot для экономии трафика
-        const meta = versions.map((v) => ({
-            id: v.id,
-            projectId: v.projectId,
-            label: v.label,
-            authorId: v.authorId,
-            authorName: v.authorId != null ? authorNames.get(v.authorId) : undefined,
-            kind: v.kind,
-            createdAt: v.createdAt,
-        }));
+        const meta = versions.map((v) => {
+            // Имя автора: сначала реальное имя пользователя по authorId; если его
+            // нет, но снимок создан MCP-агентом (authorKind='agent') — «ИИ-агент».
+            const realName = v.authorId != null ? authorNames.get(v.authorId) : undefined;
+            const authorName = realName ?? (v.authorKind === "agent" ? "ИИ-агент" : undefined);
+            return {
+                id: v.id,
+                projectId: v.projectId,
+                label: v.label,
+                authorId: v.authorId,
+                authorName,
+                authorKind: v.authorKind,
+                kind: v.kind,
+                createdAt: v.createdAt,
+            };
+        });
         res.json(meta);
     } catch (error) {
         console.error("Ошибка получения версий проекта:", error);

@@ -246,3 +246,208 @@ export function connectNodes(
   const updated = { ...project, sheets };
   return { project: updated, validation: validateBotProject(updated) };
 }
+
+/**
+ * Снимает переход(ы) между нодами (зеркало connectNodes).
+ * Без options.branch снимает ВСЕ рёбра fromId→toId по всем полям data
+ * (autoTransitionTo + enableAutoTransition, inputTargetNodeId, keyboardNodeId,
+ * target у элементов buttons/branches/parallelBranches). С options.branch
+ * снимает только target у элемента с этим id.
+ * @param projectJson - project.json (объект или JSON-строка)
+ * @param fromId - ID исходной ноды
+ * @param toId - ID целевой ноды
+ * @param options - branch id (снять только указанную кнопку/ветку), portType, sheetId
+ * @returns project + validation или { error }
+ */
+export function disconnectNodes(
+  projectJson: unknown,
+  fromId: string,
+  toId: string,
+  options: { branch?: string; portType?: ConnectPortType; sheetId?: string } = {},
+): MutateProjectResult | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const allIds = new Set(collectAllNodes(project as Record<string, unknown>).map((e) => e.node.id));
+  if (!allIds.has(fromId)) {
+    return { error: `Нода не найдена: from=${fromId}` };
+  }
+
+  const branchId = options.branch;
+  const idx = resolveSheetIndex(project, options.sheetId);
+  const sheets = [...(project.sheets ?? [])];
+
+  let changed = false;
+
+  const nodes = (sheets[idx]?.nodes ?? []).map((n) => {
+    if (n.id !== fromId) return n;
+    const data = { ...n.data } as Record<string, unknown>;
+
+    if (branchId) {
+      // Снять target только у элемента с заданным id в buttons/branches/parallelBranches
+      for (const key of ['buttons', 'branches', 'parallelBranches'] as const) {
+        const arr = data[key];
+        if (Array.isArray(arr)) {
+          data[key] = arr.map((el) => {
+            const item = el as Record<string, unknown>;
+            if (item.id === branchId && item.target === toId) {
+              changed = true;
+              return { ...item, target: undefined };
+            }
+            return el;
+          }) as never;
+        }
+      }
+      return { ...n, data: data as Node['data'] };
+    }
+
+    // Снять ВСЕ рёбра fromId→toId по всем полям
+    if (data.autoTransitionTo === toId) {
+      delete data.autoTransitionTo;
+      delete data.enableAutoTransition;
+      changed = true;
+    }
+    if (data.inputTargetNodeId === toId) {
+      delete data.inputTargetNodeId;
+      changed = true;
+    }
+    if (data.keyboardNodeId === toId) {
+      delete data.keyboardNodeId;
+      changed = true;
+    }
+    for (const key of ['buttons', 'branches', 'parallelBranches'] as const) {
+      const arr = data[key];
+      if (Array.isArray(arr)) {
+        data[key] = arr.map((el) => {
+          const item = el as Record<string, unknown>;
+          if (item.target === toId) {
+            changed = true;
+            return { ...item, target: undefined };
+          }
+          return el;
+        }) as never;
+      }
+    }
+
+    return { ...n, data: data as Node['data'] };
+  });
+
+  if (!changed) {
+    return { error: `Связь не найдена: from=${fromId} to=${toId}${branchId ? ' branch=' + branchId : ''}` };
+  }
+
+  sheets[idx] = { ...sheets[idx], nodes };
+  const updated = { ...project, sheets };
+  return { project: updated, validation: validateBotProject(updated) };
+}
+
+/**
+ * Генерирует новый уникальный id ноды на основе существующего: срезает прежние
+ * суффиксы копирования (_copy_/_paste_) и добавляет свежий _copy_<ts>_<rand>.
+ * Портирован из клиентского generateNewId, без внешних зависимостей.
+ * @param id - Исходный id ноды
+ * @returns Новый уникальный id
+ */
+function generateDuplicateNodeId(id: string): string {
+  const baseId = id.replace(/(_paste_\d+_[a-z0-9]+|_copy_\d+_[a-z0-9]+|_copy_\d+)+$/, '');
+  return `${baseId}_copy_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+}
+
+/**
+ * Дублирует одну ноду на том же листе: глубокая копия с новым id и смещённой
+ * позицией. Исходящие ссылки копии (target/autoTransitionTo/inputTargetNodeId/
+ * keyboardNodeId) НАМЕРЕННО сохраняются как у оригинала — копия ведёт к тем же
+ * downstream-нодам (зеркало клиентского duplicateNode для одиночного узла).
+ * branch.id внутри копии не ремаппятся: они уникальны лишь в рамках ноды, а нода новая.
+ * @param projectJson - project.json (объект или JSON-строка)
+ * @param nodeId - ID дублируемой ноды
+ * @param options - position (позиция копии, иначе смещение +40/+40), sheetId
+ * @returns project + validation + newNodeId или { error }
+ */
+export function duplicateNodeInProject(
+  projectJson: unknown,
+  nodeId: string,
+  options?: { position?: { x: number; y: number }; sheetId?: string },
+): (MutateProjectResult & { newNodeId: string }) | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const idx = resolveSheetIndex(project, options?.sheetId);
+  const sheets = [...(project.sheets ?? [])];
+  const source = (sheets[idx]?.nodes ?? []).find((n) => n.id === nodeId);
+  if (!source) return { error: `Нода не найдена: ${nodeId}` };
+
+  const newId = generateDuplicateNodeId(nodeId);
+  const clone = structuredClone(source) as Node;
+  clone.id = newId;
+  clone.position = options?.position ?? {
+    x: (source.position?.x ?? 0) + 40,
+    y: (source.position?.y ?? 0) + 40,
+  };
+
+  sheets[idx] = { ...sheets[idx], nodes: [...(sheets[idx]?.nodes ?? []), clone] };
+  const updated = { ...project, sheets };
+  return { project: updated, validation: validateBotProject(updated), newNodeId: newId };
+}
+
+/**
+ * Переносит ноду на другой лист проекта, сохраняя id, data и все ссылки.
+ * Ссылки (target'ы) НЕ ремаппятся: id ноды сохраняется, поэтому связи остаются
+ * валидными глобально. Аналог клиентского useMoveNodeToSheet, но иммутабельно.
+ * @param projectJson - Текущий project.json (объект или JSON-строка)
+ * @param nodeId - ID переносимой ноды
+ * @param toSheetId - ID целевого листа
+ * @param options - Опции: fromSheetId (исходный лист, иначе автопоиск), position (новая позиция на целевом листе)
+ * @returns project + validation или { error }
+ */
+export function moveNodeToProjectSheet(
+  projectJson: unknown,
+  nodeId: string,
+  toSheetId: string,
+  options?: { fromSheetId?: string; position?: { x: number; y: number } },
+): MutateProjectResult | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const sheets = [...(project.sheets ?? [])];
+
+  // Проверка существования целевого листа
+  const toIdx = sheets.findIndex((s) => s.id === toSheetId);
+  if (toIdx < 0) return { error: 'Целевой лист не найден' };
+
+  // Определение исходного листа: явный fromSheetId или автопоиск по nodeId
+  let fromIdx: number;
+  if (options?.fromSheetId) {
+    fromIdx = sheets.findIndex((s) => s.id === options.fromSheetId);
+    if (fromIdx < 0) return { error: 'Исходный лист не найден' };
+    if (!(sheets[fromIdx]?.nodes ?? []).some((n) => n.id === nodeId)) {
+      return { error: 'Нода не найдена' };
+    }
+  } else {
+    fromIdx = sheets.findIndex((s) => (s.nodes ?? []).some((n) => n.id === nodeId));
+    if (fromIdx < 0) return { error: 'Нода не найдена' };
+  }
+
+  // Guard: нода уже на целевом листе — бессмысленный no-op-PUT не делаем
+  if (sheets[fromIdx]?.id === toSheetId) return { error: 'Нода уже на этом листе' };
+
+  // Извлечение объекта ноды из исходного листа
+  const sourceNode = (sheets[fromIdx]?.nodes ?? []).find((n) => n.id === nodeId) as Node;
+  // id, type, data — без изменений; меняется только позиция (опционально)
+  const movedNode: Node = options?.position
+    ? { ...sourceNode, position: options.position }
+    : sourceNode;
+
+  // Иммутабельная пересборка листов
+  sheets[fromIdx] = {
+    ...sheets[fromIdx],
+    nodes: (sheets[fromIdx]?.nodes ?? []).filter((n) => n.id !== nodeId),
+  };
+  sheets[toIdx] = {
+    ...sheets[toIdx],
+    nodes: [...(sheets[toIdx]?.nodes ?? []), movedNode],
+  };
+
+  const updated = { ...project, sheets };
+  return { project: updated, validation: validateBotProject(updated) };
+}

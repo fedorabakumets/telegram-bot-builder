@@ -79,6 +79,9 @@ export type { WorkerProcess, InsertWorkerProcess } from "./schema/tables/worker-
 export { projectVersions, insertProjectVersionSchema } from "./schema/tables/project-versions";
 export type { ProjectVersion, InsertProjectVersion } from "./schema/tables/project-versions";
 
+export { agentTokens, insertAgentTokenSchema } from "./schema/tables/agent-tokens";
+export type { AgentToken, InsertAgentToken } from "./schema/tables/agent-tokens";
+
 export type TelegramUserDB = typeof telegramUsersTable.$inferSelect;
 
 // Импорты для обратной совместимости

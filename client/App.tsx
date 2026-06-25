@@ -25,6 +25,7 @@ import { Loader2 } from "lucide-react";
 import { BotLogsProvider } from "./components/editor/bot/contexts/bot-logs-context";
 import { ActiveTerminalsProvider } from "./components/editor/bot/contexts/ActiveTerminalsContext";
 import { TerminalAutoRegister } from "./components/editor/bot/hooks/TerminalAutoRegister";
+import { ProjectsChangedListener } from "@/components/projects-changed-listener";
 import { SetupGuard } from "@/components/editor/setup";
 import { AuthGuard } from "@/components/editor/auth";
 import { NoProjectsScreen } from "@/components/editor/no-projects";
@@ -114,6 +115,7 @@ function Router() {
       <AuthGuard>
         <SetupGuard>
           <TerminalAutoRegister />
+          <ProjectsChangedListener />
           <ProjectsGuard>
             <Switch>
               <Route path="/projects" component={Home} />

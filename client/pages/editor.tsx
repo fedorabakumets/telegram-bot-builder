@@ -61,6 +61,7 @@ import { AnalyticsPanel } from '@/components/editor/analytics';
 import { TablesPanel } from '@/components/editor/tables';
 import { FilesPanel } from '@/components/editor/files';
 import { VersionsPanel } from '@/components/editor/versions';
+import { AgentTokensPanel } from '@/components/editor/agent';
 import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
 import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
@@ -122,7 +123,7 @@ export default function Editor() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('log')) return 'terminal';
     const tab = params.get('tab');
-    const validTabs: EditorTab[] = ['editor', 'export', 'bot', 'terminal', 'users', 'dialogs', 'broadcast', 'analytics', 'tables', 'files', 'versions'];
+    const validTabs: EditorTab[] = ['editor', 'export', 'bot', 'terminal', 'users', 'dialogs', 'broadcast', 'analytics', 'tables', 'files', 'versions', 'agent'];
     if (tab && validTabs.includes(tab as EditorTab)) {
       return tab as EditorTab;
     }
@@ -657,20 +658,32 @@ export default function Editor() {
     }
   }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
 
-  /** Live-синхронизация холста: вкладки, устройства, коллабораторы */
+  /**
+   * Live-синхронизация холста: вкладки, устройства, коллабораторы, ИИ-агент.
+   * Для actor.kind='agent' данные уже записаны в БД — показываем бейдж, но НЕ
+   * выставляем флаг «несохранённые изменения», а также инвалидируем список версий,
+   * чтобы открытая история подхватила новый снимок без перезагрузки.
+   * Для user/guest поведение прежнее.
+   */
   const handleRemoteCanvasSync = useCallback((msg: CanvasSyncMessage) => {
     if (!msg.actor) return;
     // Если только что был удалённый сброс — не возвращаем плашку из-за запоздавшего data-sync
     if (Date.now() < suppressLocalChangesUntilRef.current) return;
     setRemoteSyncActor(msg.actor);
-    setHasLocalChanges(true);
+    // Правка ИИ-агента уже в БД → плашка «несохранённые изменения» не нужна,
+    // но открытый список версий надо обновить (агент создал новый снимок).
+    if (msg.actor.kind !== 'agent') {
+      setHasLocalChanges(true);
+    } else if (activeProject?.id) {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', activeProject.id, 'versions'] });
+    }
     if (remoteSyncDismissTimerRef.current) {
       clearTimeout(remoteSyncDismissTimerRef.current);
     }
     remoteSyncDismissTimerRef.current = setTimeout(() => {
       setRemoteSyncActor(null);
     }, 12_000);
-  }, [setHasLocalChanges]);
+  }, [setHasLocalChanges, activeProject?.id, queryClient]);
 
   const dismissRemoteCanvasSync = useCallback(() => {
     setRemoteSyncActor(null);
@@ -736,6 +749,16 @@ export default function Editor() {
     }
   }, [discardLocalChanges, activeProject?.id, queryClient, setHasLocalChanges, setActionHistory]);
 
+  /**
+   * Обрабатывает сигнал об изменении истории версий: инвалидирует react-query
+   * запрос версий, чтобы открытая панель версий обновилась в реальном времени.
+   */
+  const handleVersionsChanged = useCallback(() => {
+    if (activeProject?.id) {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', activeProject.id, 'versions'] });
+    }
+  }, [activeProject?.id, queryClient]);
+
   const { broadcastReset } = useCanvasSync({
     projectId: activeProject?.id,
     botDataWithSheets,
@@ -743,7 +766,8 @@ export default function Editor() {
     onRemoteUpdate: handleBotDataUpdate,
     onRemoteSync: handleRemoteCanvasSync,
     onRemoteReset: handleRemoteReset,
-    enabled: currentTab === 'editor' && !!activeProject?.id,
+    onVersionsChanged: handleVersionsChanged,
+    enabled: (currentTab === 'editor' || currentTab === 'versions') && !!activeProject?.id,
   });
   // Зеркалим broadcastReset в ref чтобы вызывать из onSuccess мутации (объявлена выше)
   broadcastResetFnRef.current = broadcastReset;
@@ -1794,6 +1818,11 @@ export default function Editor() {
               <div className="max-w-3xl mx-auto">
                 <TelegramClientConfig />
               </div>
+            </div>
+          )}
+          {currentTab === 'agent' && (
+            <div className="h-full p-6 bg-background overflow-auto">
+              <AgentTokensPanel />
             </div>
           )}
           {/* Для вкладки Экспорт показываем пустой контейнер */}

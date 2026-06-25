@@ -16,6 +16,9 @@ import type { StorageBotProjectUpdate } from "../../../storages/storageTypes";
 import { restartBotIfRunning } from "../../../bots/restartBotIfRunning";
 import { syncContentToTable } from "../../../services/content-table";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
+import { broadcastAgentCanvasUpdate } from "../../../canvas/broadcastAgentCanvasUpdate";
+import { broadcastProjectsChangedToUsers } from "../../../terminal/broadcastProjectsChanged";
+import { getProjectMemberIds } from "../../../terminal/resolveProjectMembers";
 
 /**
  * Обрабатывает запрос на обновление проекта
@@ -71,10 +74,14 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
 
             // Создание снимка версии проекта (история + откат)
             try {
+                // Признак авторства MCP-агента: при agentEdit=true у запроса нет
+                // сессии (authorId=null), поэтому помечаем снимок author_kind='agent',
+                // чтобы в истории версий отобразить автора «ИИ-агент».
+                const authorKind = req.body?.agentEdit === true ? 'agent' : undefined;
                 if (commitMessage) {
                     // Ручной чекпоинт: создаётся всегда по явному намерению
                     // пользователя — без дедупликации и без очистки истории.
-                    await storage.createProjectVersion(projectId, validatedData.data, commitMessage, getOwnerIdFromRequest(req), 'manual');
+                    await storage.createProjectVersion(projectId, validatedData.data, commitMessage, getOwnerIdFromRequest(req), 'manual', authorKind);
                 } else {
                     // Авто-снимок: дедупликация + ограничение истории до 30 версий.
                     // Дедупликация: не создаём новый снимок, если самая свежая
@@ -83,12 +90,25 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
                     const isDuplicate = latest != null &&
                         JSON.stringify(latest.snapshot) === JSON.stringify(validatedData.data);
                     if (!isDuplicate) {
-                        await storage.createProjectVersion(projectId, validatedData.data, project.name, project.ownerId ?? null, 'auto');
+                        await storage.createProjectVersion(projectId, validatedData.data, project.name, project.ownerId ?? null, 'auto', authorKind);
                         await storage.pruneProjectVersions(projectId, 30);
                     }
                 }
             } catch (err) {
                 console.error(`[updateProjectHandler] Ошибка создания снимка версии для проекта ${projectId}:`, err);
+            }
+
+            // Live-редактирование: правка от MCP-агента вещается на открытый холст
+            // с actor.kind='agent' (без пометки «несохранённые изменения» на клиенте).
+            if (req.body?.agentEdit === true) {
+                try {
+                    broadcastAgentCanvasUpdate(projectId, validatedData.data, {
+                        sessionId: req.body.agentSessionId,
+                        displayName: req.body.agentDisplayName,
+                    });
+                } catch (err) {
+                    console.error(`[updateProjectHandler] Ошибка broadcast canvas-sync для проекта ${projectId}:`, err);
+                }
             }
         }
 
@@ -97,6 +117,20 @@ export async function updateProjectHandler(req: Request, res: Response): Promise
             const restartResult = await restartBotIfRunning(projectId);
             if (!restartResult.success) {
                 console.error(`Ошибка перезапуска бота ${projectId}:`, restartResult.error);
+            }
+        }
+
+        // Live-обновление списка проектов: имя в списке могло измениться (rename).
+        // Эмитим только при изменении имени, чтобы не дублировать canvas-broadcast
+        // при правках сценария (data). Для общих проектов уведомляем владельца и
+        // всех коллабораторов, чтобы их список обновился без перезагрузки.
+        if (validatedData.name !== undefined) {
+            try {
+                const ownerId = project.ownerId ?? getOwnerIdFromRequest(req);
+                const members = await getProjectMemberIds(projectId, ownerId);
+                broadcastProjectsChangedToUsers(members, 'renamed');
+            } catch (err) {
+                console.error(`[updateProjectHandler] Ошибка broadcast projects-changed для проекта ${projectId}:`, err);
             }
         }
 

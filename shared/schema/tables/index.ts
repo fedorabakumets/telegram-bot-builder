@@ -65,3 +65,6 @@ export type { BotEnvVariable, InsertBotEnvVariable } from "./bot-env-variables";
 
 export { projectVersions, insertProjectVersionSchema } from "./project-versions";
 export type { ProjectVersion, InsertProjectVersion } from "./project-versions";
+
+export { agentTokens, insertAgentTokenSchema } from "./agent-tokens";
+export type { AgentToken, InsertAgentToken } from "./agent-tokens";

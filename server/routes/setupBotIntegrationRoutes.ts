@@ -9,6 +9,7 @@
  */
 
 import type { Express } from "express";
+import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
 import { getTelegramFileHandler } from "./botIntegration/handlers/botData/getTelegramFileHandler";
 import { getProjectFilesHandler, addProjectFileHandler, deleteProjectFilesHandler } from "./botIntegration/handlers/botData/getProjectFilesHandler";
@@ -52,7 +53,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route GET /api/projects/:projectId/bot/data
      */
-    app.get("/api/projects/:projectId/bot/data", getBotDataHandler);
+    app.get("/api/projects/:projectId/bot/data", requireProjectAccess, getBotDataHandler);
 
     /**
      * Обработчик маршрута GET /api/projects/:projectId/users/:userId/avatar
@@ -61,7 +62,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route GET /api/projects/:projectId/users/:userId/avatar
      */
-    app.get("/api/projects/:projectId/users/:userId/avatar", getAvatarHandler);
+    app.get("/api/projects/:projectId/users/:userId/avatar", requireProjectAccess, getAvatarHandler);
 
     /**
      * Обработчик маршрута GET /api/projects/:projectId/telegram-file
@@ -71,7 +72,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route GET /api/projects/:projectId/telegram-file?fileId=...
      */
-    app.get("/api/projects/:projectId/telegram-file", getTelegramFileHandler);
+    app.get("/api/projects/:projectId/telegram-file", requireProjectAccess, getTelegramFileHandler);
 
     /**
      * Обработчик маршрута GET /api/projects/:projectId/files
@@ -81,7 +82,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route GET /api/projects/:projectId/files?source=incoming|outgoing|uploaded
      */
-    app.get("/api/projects/:projectId/files", getProjectFilesHandler);
+    app.get("/api/projects/:projectId/files", requireProjectAccess, getProjectFilesHandler);
 
     /**
      * Обработчик маршрута POST /api/projects/:projectId/files
@@ -91,7 +92,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route POST /api/projects/:projectId/files
      */
-    app.post("/api/projects/:projectId/files", addProjectFileHandler);
+    app.post("/api/projects/:projectId/files", requireProjectAccess, addProjectFileHandler);
 
     /**
      * Обработчик маршрута DELETE /api/projects/:projectId/files
@@ -102,7 +103,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route DELETE /api/projects/:projectId/files
      */
-    app.delete("/api/projects/:projectId/files", deleteProjectFilesHandler);
+    app.delete("/api/projects/:projectId/files", requireProjectAccess, deleteProjectFilesHandler);
 
     /**
      * Обработчик маршрута GET /api/projects/:projectId/users/:userId/messages
@@ -111,7 +112,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route GET /api/projects/:projectId/users/:userId/messages
      */
-    app.get("/api/projects/:projectId/users/:userId/messages", getMessagesHandler);
+    app.get("/api/projects/:projectId/users/:userId/messages", requireProjectAccess, getMessagesHandler);
 
     /**
      * Обработчик маршрута GET /api/projects/:projectId/groups/:groupId/messages
@@ -120,7 +121,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route GET /api/projects/:projectId/groups/:groupId/messages
      */
-    app.get("/api/projects/:projectId/groups/:groupId/messages", getGroupMessagesHandler);
+    app.get("/api/projects/:projectId/groups/:groupId/messages", requireProjectAccess, getGroupMessagesHandler);
 
     /**
      * Обработчик маршрута POST /api/projects/:projectId/users/:userId/send-message
@@ -129,7 +130,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route POST /api/projects/:projectId/users/:userId/send-message
      */
-    app.post("/api/projects/:projectId/users/:userId/send-message", sendMessageHandler);
+    app.post("/api/projects/:projectId/users/:userId/send-message", requireProjectAccess, sendMessageHandler);
 
     /**
      * Обработчик маршрута POST /api/projects/:projectId/users/:userId/send-node-message
@@ -138,7 +139,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route POST /api/projects/:projectId/users/:userId/send-node-message
      */
-    app.post("/api/projects/:projectId/users/:userId/send-node-message", sendNodeMessageHandler);
+    app.post("/api/projects/:projectId/users/:userId/send-node-message", requireProjectAccess, sendNodeMessageHandler);
 
     /**
      * Обработчик маршрута POST /api/projects/:projectId/messages
@@ -147,7 +148,7 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route POST /api/projects/:projectId/messages
      */
-    app.post("/api/projects/:projectId/messages", saveMessageHandler);
+    app.post("/api/projects/:projectId/messages", requireProjectAccess, saveMessageHandler);
 
     /**
      * Обработчик маршрута DELETE /api/projects/:projectId/users/:userId/messages
@@ -156,89 +157,89 @@ export function setupBotIntegrationRoutes(app: Express) {
      *
      * @route DELETE /api/projects/:projectId/users/:userId/messages
      */
-    app.delete("/api/projects/:projectId/users/:userId/messages", deleteMessagesHandler);
+    app.delete("/api/projects/:projectId/users/:userId/messages", requireProjectAccess, deleteMessagesHandler);
 
     /**
      * Удаление одного сообщения из диалога
      *
      * @route DELETE /api/projects/:projectId/messages/:messageId
      */
-    app.delete("/api/projects/:projectId/messages/:messageId", deleteSingleMessageHandler);
+    app.delete("/api/projects/:projectId/messages/:messageId", requireProjectAccess, deleteSingleMessageHandler);
 
     /**
      * Редактирование одного сообщения бота в диалоге
      *
      * @route PATCH /api/projects/:projectId/messages/:messageId
      */
-    app.patch("/api/projects/:projectId/messages/:messageId", editSingleMessageHandler);
+    app.patch("/api/projects/:projectId/messages/:messageId", requireProjectAccess, editSingleMessageHandler);
 
     // API групп ботов
-    app.get("/api/projects/:id/groups", getGroupsHandler);
-    app.post("/api/projects/:id/groups", createGroupHandler);
-    app.put("/api/projects/:projectId/groups/:groupId", updateGroupHandler);
-    app.delete("/api/projects/:projectId/groups/:groupId", deleteGroupHandler);
+    app.get("/api/projects/:id/groups", requireProjectAccess, getGroupsHandler);
+    app.post("/api/projects/:id/groups", requireProjectAccess, createGroupHandler);
+    app.put("/api/projects/:projectId/groups/:groupId", requireProjectAccess, updateGroupHandler);
+    app.delete("/api/projects/:projectId/groups/:groupId", requireProjectAccess, deleteGroupHandler);
 
     /**
      * Синхронизация названия и аватарки группы из Telegram
      * @route POST /api/projects/:projectId/groups/:groupId/sync
      */
-    app.post("/api/projects/:projectId/groups/:groupId/sync", syncGroupHandler);
+    app.post("/api/projects/:projectId/groups/:groupId/sync", requireProjectAccess, syncGroupHandler);
 
     // Получение информации о боте (getMe)
-    app.get("/api/projects/:id/bot/info", getBotInfoHandler);
+    app.get("/api/projects/:id/bot/info", requireProjectAccess, getBotInfoHandler);
 
     // Обновление имени бота
-    app.put("/api/projects/:id/bot/name", updateBotNameHandler);
+    app.put("/api/projects/:id/bot/name", requireProjectAccess, updateBotNameHandler);
 
     // Обновление описания бота
-    app.put("/api/projects/:id/bot/description", updateBotDescriptionHandler);
+    app.put("/api/projects/:id/bot/description", requireProjectAccess, updateBotDescriptionHandler);
 
     // Обновление краткого описания бота
-    app.put("/api/projects/:id/bot/short-description", updateBotShortDescriptionHandler);
+    app.put("/api/projects/:id/bot/short-description", requireProjectAccess, updateBotShortDescriptionHandler);
 
     // Интеграция Telegram Bot API для групп
-    app.post("/api/projects/:projectId/bot/send-group-message", sendGroupMessageHandler);
-    app.get("/api/projects/:projectId/bot/group-info/:groupId", getGroupInfoHandler);
-    app.get("/api/projects/:projectId/bot/group-members-count/:groupId", getGroupMembersCountHandler);
-    app.get("/api/projects/:projectId/bot/admin-status/:groupId", getBotAdminStatusHandler);
-    app.get("/api/projects/:projectId/bot/group-admins/:groupId", getGroupAdminsHandler);
-    app.get("/api/projects/:projectId/bot/group-members/:groupId", getGroupMembersHandler);
-    app.get("/api/projects/:projectId/bot/check-member/:groupId/:userId", checkMemberHandler);
-    app.get("/api/projects/:projectId/groups/:groupId/saved-members", getSavedMembersHandler);
-    app.post("/api/projects/:projectId/bot/ban-member", banMemberHandler);
-    app.post("/api/projects/:projectId/bot/unban-member", unbanMemberHandler);
-    app.post("/api/projects/:projectId/bot/promote-member", promoteMemberHandler);
-    app.post("/api/projects/:projectId/bot/demote-member", demoteMemberHandler);
+    app.post("/api/projects/:projectId/bot/send-group-message", requireProjectAccess, sendGroupMessageHandler);
+    app.get("/api/projects/:projectId/bot/group-info/:groupId", requireProjectAccess, getGroupInfoHandler);
+    app.get("/api/projects/:projectId/bot/group-members-count/:groupId", requireProjectAccess, getGroupMembersCountHandler);
+    app.get("/api/projects/:projectId/bot/admin-status/:groupId", requireProjectAccess, getBotAdminStatusHandler);
+    app.get("/api/projects/:projectId/bot/group-admins/:groupId", requireProjectAccess, getGroupAdminsHandler);
+    app.get("/api/projects/:projectId/bot/group-members/:groupId", requireProjectAccess, getGroupMembersHandler);
+    app.get("/api/projects/:projectId/bot/check-member/:groupId/:userId", requireProjectAccess, checkMemberHandler);
+    app.get("/api/projects/:projectId/groups/:groupId/saved-members", requireProjectAccess, getSavedMembersHandler);
+    app.post("/api/projects/:projectId/bot/ban-member", requireProjectAccess, banMemberHandler);
+    app.post("/api/projects/:projectId/bot/unban-member", requireProjectAccess, unbanMemberHandler);
+    app.post("/api/projects/:projectId/bot/promote-member", requireProjectAccess, promoteMemberHandler);
+    app.post("/api/projects/:projectId/bot/demote-member", requireProjectAccess, demoteMemberHandler);
 
     // Поиск пользователя по username или ID для повышения
-    app.get("/api/projects/:projectId/bot/search-user/:query", searchUserHandler);
+    app.get("/api/projects/:projectId/bot/search-user/:query", requireProjectAccess, searchUserHandler);
 
     // Ограничение участника группы
-    app.post("/api/projects/:projectId/bot/restrict-member", restrictMemberHandler);
+    app.post("/api/projects/:projectId/bot/restrict-member", requireProjectAccess, restrictMemberHandler);
 
     // Установка фото группы через Bot API
-    app.post("/api/projects/:projectId/bot/set-group-photo", setGroupPhotoHandler);
+    app.post("/api/projects/:projectId/bot/set-group-photo", requireProjectAccess, setGroupPhotoHandler);
 
     // Установка названия группы
-    app.post("/api/projects/:projectId/bot/set-group-title", setGroupTitleHandler);
+    app.post("/api/projects/:projectId/bot/set-group-title", requireProjectAccess, setGroupTitleHandler);
 
     // Установка описания группы
-    app.post("/api/projects/:projectId/bot/set-group-description", setGroupDescriptionHandler);
+    app.post("/api/projects/:projectId/bot/set-group-description", requireProjectAccess, setGroupDescriptionHandler);
 
     // Установка username группы (сделать публичной/приватной)
-    app.post("/api/projects/:projectId/bot/set-group-username", setGroupUsernameHandler);
+    app.post("/api/projects/:projectId/bot/set-group-username", requireProjectAccess, setGroupUsernameHandler);
 
     // Закрепление сообщения в группе
-    app.post("/api/projects/:projectId/bot/pin-message", pinMessageHandler);
+    app.post("/api/projects/:projectId/bot/pin-message", requireProjectAccess, pinMessageHandler);
 
     // Открепление сообщения в группе
-    app.post("/api/projects/:projectId/bot/unpin-message", unpinMessageHandler);
+    app.post("/api/projects/:projectId/bot/unpin-message", requireProjectAccess, unpinMessageHandler);
 
     // Создание новой ссылки-приглашения для группы
-    app.post("/api/projects/:projectId/bot/create-invite-link", createInviteLinkHandler);
+    app.post("/api/projects/:projectId/bot/create-invite-link", requireProjectAccess, createInviteLinkHandler);
 
     // Удаление сообщения в группе
-    app.post("/api/projects/:projectId/bot/delete-message", deleteMessageHandler);
+    app.post("/api/projects/:projectId/bot/delete-message", requireProjectAccess, deleteMessageHandler);
 
     // Конечные точки Telegram Client API
     // Сохранение данных Telegram API пользователя
@@ -248,11 +249,11 @@ export function setupBotIntegrationRoutes(app: Express) {
     app.get("/api/telegram-client/group-members/:groupId", groupMembersHandler);
 
     // Рассылки
-    app.get("/api/projects/:projectId/broadcasts", getBroadcastsHandler);
-    app.post("/api/projects/:projectId/broadcasts", createBroadcastHandler);
-    app.post("/api/projects/:projectId/broadcasts/preview-audience", previewAudienceHandler);
-    app.get("/api/projects/:projectId/broadcasts/:broadcastId", getBroadcastDetailHandler);
-    app.post("/api/projects/:projectId/broadcasts/:broadcastId/stop", stopBroadcastHandler);
-    app.put("/api/projects/:projectId/broadcasts/:broadcastId", editBroadcastHandler);
-    app.delete("/api/projects/:projectId/broadcasts/:broadcastId", deleteBroadcastHandler);
+    app.get("/api/projects/:projectId/broadcasts", requireProjectAccess, getBroadcastsHandler);
+    app.post("/api/projects/:projectId/broadcasts", requireProjectAccess, createBroadcastHandler);
+    app.post("/api/projects/:projectId/broadcasts/preview-audience", requireProjectAccess, previewAudienceHandler);
+    app.get("/api/projects/:projectId/broadcasts/:broadcastId", requireProjectAccess, getBroadcastDetailHandler);
+    app.post("/api/projects/:projectId/broadcasts/:broadcastId/stop", requireProjectAccess, stopBroadcastHandler);
+    app.put("/api/projects/:projectId/broadcasts/:broadcastId", requireProjectAccess, editBroadcastHandler);
+    app.delete("/api/projects/:projectId/broadcasts/:broadcastId", requireProjectAccess, deleteBroadcastHandler);
 }

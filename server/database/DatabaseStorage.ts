@@ -2,11 +2,12 @@
  * @fileoverview Базовая реализация storage поверх Drizzle для серверной части конструктора
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess, projectVersions, type ProjectVersion } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess, projectVersions, type ProjectVersion, agentTokens, type AgentToken } from "@shared/schema";
 import { and, asc, desc, eq, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
 import { db } from "./db";
+import { generateAgentToken, hashAgentToken } from "../utils/agent-token-crypto";
 
 /**
  * Реализация хранилища данных с использованием базы данных
@@ -608,6 +609,77 @@ export class DatabaseStorage implements IStorage {
     await this.db.update(botProjects)
       .set({ ownerId, sessionId: null })
       .where(isNull(botProjects.ownerId));
+  }
+
+  // Agent Tokens (персональные токены агента, PAT)
+  /**
+   * Создать персональный токен агента для владельца.
+   * Генерирует секрет, сохраняет только его хеш/префикс и возвращает полный токен один раз.
+   * @param ownerId - ID владельца токена
+   * @param label - Пользовательское имя токена
+   * @param scopes - Права токена через запятую (по умолчанию read,write)
+   * @param expiresAt - Дата истечения токена (null — бессрочный)
+   * @returns Полный токен и сохранённая запись
+   */
+  async createAgentToken(ownerId: number, label: string, scopes: string = "read,write", expiresAt: Date | null = null): Promise<{ token: string; record: AgentToken }> {
+    const { token, prefix, tokenHash } = generateAgentToken();
+    const [record] = await this.db.insert(agentTokens).values({
+      ownerId,
+      label,
+      tokenHash,
+      prefix,
+      scopes,
+      expiresAt: expiresAt ?? null,
+    }).returning();
+    return { token, record };
+  }
+
+  /**
+   * Получить список токенов агента владельца (метаданные, без секрета).
+   * @param ownerId - ID владельца токенов
+   * @returns Массив записей токенов, новые сверху
+   */
+  async getAgentTokensByOwner(ownerId: number): Promise<AgentToken[]> {
+    return await this.db.select().from(agentTokens)
+      .where(eq(agentTokens.ownerId, ownerId))
+      .orderBy(desc(agentTokens.createdAt));
+  }
+
+  /**
+   * Отозвать токен агента (проставить revokedAt) по id и владельцу.
+   * @param id - ID токена
+   * @param ownerId - ID владельца (защита от отзыва чужого токена)
+   * @returns true, если токен был отозван, иначе false
+   */
+  async revokeAgentToken(id: number, ownerId: number): Promise<boolean> {
+    const result = await this.db.update(agentTokens)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(agentTokens.id, id), eq(agentTokens.ownerId, ownerId), isNull(agentTokens.revokedAt)));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  /**
+   * Резолвит сырой токен агента в личность владельца.
+   * Хеширует токен, ищет активную (не отозванную) запись, проверяет срок действия,
+   * обновляет lastUsedAt и возвращает владельца.
+   * @param rawToken - Сырой секрет токена из заголовка Authorization
+   * @returns Владелец токена или undefined, если токен невалиден
+   */
+  async resolveAgentToken(rawToken: string): Promise<TelegramUserDB | undefined> {
+    const tokenHash = hashAgentToken(rawToken);
+    const [record] = await this.db.select().from(agentTokens)
+      .where(and(eq(agentTokens.tokenHash, tokenHash), isNull(agentTokens.revokedAt)));
+    if (!record) return undefined;
+
+    if (record.expiresAt && record.expiresAt.getTime() < Date.now()) {
+      return undefined;
+    }
+
+    await this.db.update(agentTokens)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(agentTokens.id, record.id));
+
+    return await this.getTelegramUser(record.ownerId);
   }
 
   /**
@@ -1941,15 +2013,17 @@ export class DatabaseStorage implements IStorage {
    * @param label - Опциональная метка версии
    * @param authorId - Опциональный ID автора снимка
    * @param kind - Тип версии: "auto" (по умолчанию) или "manual" (ручной коммит)
+   * @param authorKind - Тип автора снимка: 'agent' — ИИ-агент (MCP), 'user'/null — обычный пользователь
    * @returns Созданная версия проекта
    */
-  async createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind: 'auto' | 'manual' = 'auto'): Promise<ProjectVersion> {
+  async createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind: 'auto' | 'manual' = 'auto', authorKind?: 'user' | 'agent' | null): Promise<ProjectVersion> {
     const [version] = await this.db.insert(projectVersions).values({
       projectId,
       snapshot,
       label: label ?? null,
       authorId: authorId ?? null,
       kind,
+      authorKind: authorKind ?? null,
     }).returning();
     return version;
   }
@@ -2004,5 +2078,50 @@ export class DatabaseStorage implements IStorage {
     const idsToDelete = versions.slice(keep).map((v) => v.id);
     if (idsToDelete.length === 0) return;
     await this.db.delete(projectVersions).where(inArray(projectVersions.id, idsToDelete));
+  }
+
+  /**
+   * Удалить одну версию проекта по id с проверкой принадлежности проекту.
+   * Операция необратима.
+   * @param projectId - ID проекта, которому должна принадлежать версия
+   * @param versionId - ID удаляемой версии
+   * @returns true, если версия была удалена
+   */
+  async deleteProjectVersion(projectId: number, versionId: number): Promise<boolean> {
+    const rows = await this.db.delete(projectVersions)
+      .where(and(eq(projectVersions.id, versionId), eq(projectVersions.projectId, projectId)))
+      .returning({ id: projectVersions.id });
+    return rows.length > 0;
+  }
+
+  /**
+   * Массово удалить версии проекта по фильтру, оставив keep последних по дате (DESC).
+   * Операция необратима.
+   * Для authorKind='user' учитываются версии с authorKind IS NULL или 'user';
+   * для authorKind='agent' — только версии с authorKind='agent'.
+   * @param projectId - ID проекта
+   * @param options - Фильтр удаления: keep (сколько последних сохранить), kind (вид версии), authorKind (тип автора)
+   * @returns Число удалённых версий
+   */
+  async deleteProjectVersionsBulk(
+    projectId: number,
+    options: { keep?: number; kind?: 'auto' | 'manual'; authorKind?: 'agent' | 'user' },
+  ): Promise<number> {
+    const conditions = [eq(projectVersions.projectId, projectId)];
+    if (options.kind) conditions.push(eq(projectVersions.kind, options.kind));
+    if (options.authorKind === 'agent') {
+      conditions.push(eq(projectVersions.authorKind, 'agent'));
+    } else if (options.authorKind === 'user') {
+      const userCondition = or(isNull(projectVersions.authorKind), eq(projectVersions.authorKind, 'user'));
+      if (userCondition) conditions.push(userCondition);
+    }
+
+    const versions = await this.db.select({ id: projectVersions.id }).from(projectVersions)
+      .where(and(...conditions))
+      .orderBy(desc(projectVersions.createdAt));
+    const idsToDelete = versions.slice(options.keep ?? 0).map((v) => v.id);
+    if (idsToDelete.length === 0) return 0;
+    await this.db.delete(projectVersions).where(inArray(projectVersions.id, idsToDelete));
+    return idsToDelete.length;
   }
 }

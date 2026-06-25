@@ -98,6 +98,8 @@ export interface ProjectCardProps {
   onProjectSelect?: (projectId: number, sheetId?: string) => void;
   /** Обработчик удаления проекта */
   onProjectDelete: (projectId: number) => void;
+  /** Обработчик дублирования проекта */
+  onProjectDuplicate?: (projectId: number) => void;
   /** Обработчик выбора листа */
   onSheetSelect?: (sheetId: string) => void;
   /** Обработчик переименования листа */
@@ -413,6 +415,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   activeSheetId,
   onProjectSelect,
   onProjectDelete,
+  onProjectDuplicate,
   onSheetSelect,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onSheetRename,
@@ -737,6 +740,18 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           >
             {project.ownerId === null ? '👥' : '👤'}
           </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onProjectDuplicate?.(project.id);
+            }}
+            className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 p-0 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-blue-500/20 rounded-md flex-shrink-0"
+            title="Дублировать проект"
+          >
+            <Copy className="h-3 xs:h-3.5 w-3 xs:w-3.5" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"

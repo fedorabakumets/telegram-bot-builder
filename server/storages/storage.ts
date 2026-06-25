@@ -25,6 +25,7 @@ import {
   type BotTableRow,
   type WorkerProcess,
   type ProjectVersion,
+  type AgentToken,
 } from "@shared/schema";
 import { EnhancedDatabaseStorage } from "../database/EnhancedDatabaseStorage";
 import type {
@@ -350,6 +351,42 @@ export interface IStorage {
    */
   deleteTelegramUser(id: number): Promise<boolean>;
 
+  // Agent Tokens (персональные токены агента, PAT)
+  /**
+   * Создать персональный токен агента для владельца.
+   * Возвращает полный секрет (показывается ОДИН раз) и сохранённую запись.
+   * @param ownerId - ID владельца токена
+   * @param label - Пользовательское имя токена
+   * @param scopes - Права токена через запятую (по умолчанию read,write)
+   * @param expiresAt - Дата истечения токена (null — бессрочный)
+   * @returns Полный токен и запись из БД
+   */
+  createAgentToken(ownerId: number, label: string, scopes?: string, expiresAt?: Date | null): Promise<{ token: string; record: AgentToken }>;
+
+  /**
+   * Получить список токенов агента владельца (без секрета — только метаданные).
+   * @param ownerId - ID владельца токенов
+   * @returns Массив записей токенов
+   */
+  getAgentTokensByOwner(ownerId: number): Promise<AgentToken[]>;
+
+  /**
+   * Отозвать токен агента (проставить revokedAt) по id и владельцу.
+   * @param id - ID токена
+   * @param ownerId - ID владельца (защита от отзыва чужого токена)
+   * @returns true, если токен был отозван, иначе false
+   */
+  revokeAgentToken(id: number, ownerId: number): Promise<boolean>;
+
+  /**
+   * Резолвит сырой токен агента в личность владельца.
+   * Хеширует токен, ищет активную (не отозванную/не истёкшую) запись,
+   * обновляет lastUsedAt и возвращает владельца.
+   * @param rawToken - Сырой секрет токена из заголовка Authorization
+   * @returns Владелец токена или undefined, если токен невалиден
+   */
+  resolveAgentToken(rawToken: string): Promise<TelegramUserDB | undefined>;
+
   // User-specific methods (filtered by ownerId)
   /**
    * Получить проекты ботов пользователя
@@ -361,6 +398,7 @@ export interface IStorage {
   /**
    * Получить гостевые проекты ботов (без владельца)
    * Возвращает только проекты с sessionId = NULL (старые общие)
+   * @deprecated Концепция гостевых проектов удалена (deny-by-default). Метод не вызывается.
    * @returns Массив гостевых проектов ботов
    */
   getGuestBotProjects(): Promise<BotProject[]>;
@@ -374,6 +412,7 @@ export interface IStorage {
   /**
    * Получить гостевые проекты по ID сессии
    * Возвращает проекты конкретной сессии + старые общие (sessionId = NULL)
+   * @deprecated Концепция гостевых проектов удалена (deny-by-default). Метод не вызывается.
    * @param sessionId - ID сессии гостевого пользователя
    * @returns Массив гостевых проектов доступных для данной сессии
    */
@@ -978,9 +1017,10 @@ export interface IStorage {
    * @param label - Опциональная метка версии
    * @param authorId - Опциональный ID автора снимка
    * @param kind - Тип версии: "auto" (по умолчанию) или "manual" (ручной коммит)
+   * @param authorKind - Тип автора снимка: 'agent' — ИИ-агент (MCP), 'user'/null — обычный пользователь
    * @returns Созданная версия проекта
    */
-  createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind?: 'auto' | 'manual'): Promise<ProjectVersion>;
+  createProjectVersion(projectId: number, snapshot: unknown, label?: string, authorId?: number | null, kind?: 'auto' | 'manual', authorKind?: 'user' | 'agent' | null): Promise<ProjectVersion>;
 
   /**
    * Получить список версий проекта, отсортированный по дате создания (DESC)
@@ -1011,6 +1051,22 @@ export interface IStorage {
    * @returns Promise<void>
    */
   pruneProjectVersions(projectId: number, keep: number): Promise<void>;
+
+  /**
+   * Удалить одну версию проекта по id (с проверкой принадлежности проекту)
+   * @param projectId - ID проекта, которому должна принадлежать версия
+   * @param versionId - ID удаляемой версии
+   * @returns true, если версия была удалена
+   */
+  deleteProjectVersion(projectId: number, versionId: number): Promise<boolean>;
+
+  /**
+   * Массово удалить версии проекта по фильтру, оставив keep последних по дате
+   * @param projectId - ID проекта
+   * @param options - Фильтр удаления: keep (сколько последних сохранить), kind (вид версии), authorKind (тип автора)
+   * @returns Число удалённых версий
+   */
+  deleteProjectVersionsBulk(projectId: number, options: { keep?: number; kind?: 'auto' | 'manual'; authorKind?: 'agent' | 'user' }): Promise<number>;
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных

@@ -14,6 +14,7 @@ import { storage } from "../../../storages/storage";
 import type { StorageBotProjectInput } from "../../../storages/storageTypes";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 import { ensureContentTable } from "../../../services/content-table";
+import { broadcastProjectsChanged } from "../../../terminal/broadcastProjectsChanged";
 
 /**
  * Обрабатывает запрос на создание проекта
@@ -49,6 +50,13 @@ export async function createProjectHandler(req: Request, res: Response): Promise
             await ensureContentTable(project.id);
         } catch (err) {
             console.error(`[createProjectHandler] Ошибка создания _content для проекта ${project.id}:`, err);
+        }
+
+        // Live-обновление списка проектов владельца во всех открытых вкладках
+        try {
+            broadcastProjectsChanged(ownerId, 'created');
+        } catch (err) {
+            console.error(`[createProjectHandler] Ошибка broadcast projects-changed для владельца ${ownerId}:`, err);
         }
 
         res.status(201).json(project);

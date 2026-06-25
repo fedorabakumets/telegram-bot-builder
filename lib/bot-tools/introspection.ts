@@ -5,8 +5,10 @@
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { nodeSchema } from '@shared/schema';
 import { STANDARD_COMMANDS } from '../commands.ts';
 import { CONDITION_OPERATORS, ZOD_CONDITION_OPERATORS } from './constants.ts';
+import { extractEnumFields } from './enum-introspection.ts';
 import {
   buildMcpNodeTypeList,
   getMcpForbiddenTypesHint,
@@ -14,6 +16,25 @@ import {
   MCP_ALLOWED_NODE_TYPES,
 } from './mcp-allowed-types.ts';
 import { getNodeExample } from './node-examples.ts';
+
+/** Мемоизированная карта enum-полей data ноды (вычисляется один раз) */
+let cachedEnumFields: Record<string, string[]> | undefined;
+
+/**
+ * Возвращает карту допустимых значений всех enum-полей data ноды.
+ * Разворачивает возможные обёртки над nodeSchema.shape.data до ZodObject и
+ * рекурсивно собирает значения через extractEnumFields. Результат кешируется.
+ * @returns Плоская карта "путь к полю → массив enum-значений"
+ */
+function getDataEnumFields(): Record<string, string[]> {
+  if (cachedEnumFields) {
+    return cachedEnumFields;
+  }
+  // data может быть обёрнут (optional/default) — extractEnumFields сам развернёт
+  const dataSchema = (nodeSchema as any)?.shape?.data;
+  cachedEnumFields = extractEnumFields(dataSchema);
+  return cachedEnumFields;
+}
 
 /** Критические правила формата project.json для ИИ */
 const PROJECT_FORMAT_RULES = [
@@ -75,6 +96,7 @@ export function getNodeSchema(type: string) {
     projectFormatRules: PROJECT_FORMAT_RULES,
     typeSpecificNotes: typeNotes[type] ?? [`Стандартные поля data: messageText, buttons, keyboardType, markdown и др.`],
     example: getNodeExample(type),
+    enumFields: getDataEnumFields(),
     zodConditionOperators: type === 'condition' ? [...ZOD_CONDITION_OPERATORS] : undefined,
   };
 }

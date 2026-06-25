@@ -8,6 +8,7 @@ import type { BotDataWithSheets } from '@shared/schema';
 import type { CanvasActor } from '@shared/canvas-sync/canvas-actor';
 import { isCanvasSyncMessage, type CanvasSyncMessage } from '@shared/canvas-sync/canvas-sync-message';
 import { isCanvasResetMessage, type CanvasResetMessage, type CanvasResetKind } from '@shared/canvas-sync/canvas-reset-message';
+import { isCanvasVersionsChangedMessage, type CanvasVersionsChangedMessage } from '@shared/canvas-sync/canvas-versions-changed-message';
 import type { AppUser } from '@/types/telegram-user';
 import { buildLocalCanvasActor } from './canvas-sync/build-local-canvas-actor';
 
@@ -27,6 +28,8 @@ export interface UseCanvasSyncOptions {
   onRemoteSync?: (msg: CanvasSyncMessage) => void;
   /** Callback при получении сигнала сброса/сохранения изменений от другого клиента */
   onRemoteReset?: (kind: CanvasResetKind) => void;
+  /** Callback при сигнале об изменении истории версий */
+  onVersionsChanged?: (projectId: number) => void;
   /** Включена ли синхронизация */
   enabled?: boolean;
   /** Debounce рассылки (мс) */
@@ -73,6 +76,7 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
     onRemoteUpdate,
     onRemoteSync,
     onRemoteReset,
+    onVersionsChanged,
     enabled = true,
     debounceMs = DEFAULT_DEBOUNCE_MS,
   } = options;
@@ -85,6 +89,7 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
   const onRemoteUpdateRef = useRef(onRemoteUpdate);
   const onRemoteSyncRef = useRef(onRemoteSync);
   const onRemoteResetRef = useRef(onRemoteReset);
+  const onVersionsChangedRef = useRef(onVersionsChanged);
   const localUserRef = useRef(localUser);
   const agentActorRef = useRef(agentActor);
   const bcRef = useRef<BroadcastChannel | null>(null);
@@ -96,6 +101,7 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
   onRemoteUpdateRef.current = onRemoteUpdate;
   onRemoteSyncRef.current = onRemoteSync;
   onRemoteResetRef.current = onRemoteReset;
+  onVersionsChangedRef.current = onVersionsChanged;
   localUserRef.current = localUser;
   agentActorRef.current = agentActor;
   projectIdRef.current = projectId;
@@ -109,6 +115,16 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
     const pid = projectIdRef.current;
     if (pid != null && msg.projectId !== pid) return;
     onRemoteResetRef.current?.(msg.kind);
+  });
+
+  /**
+   * Обрабатывает входящий сигнал об изменении истории версий.
+   * Игнорирует чужие проекты, иначе вызывает onVersionsChanged с ID проекта.
+   */
+  const applyVersionsChangedRef = useRef((msg: CanvasVersionsChangedMessage) => {
+    const pid = projectIdRef.current;
+    if (pid != null && msg.projectId !== pid) return;
+    onVersionsChangedRef.current?.(msg.projectId);
   });
 
   const applyRemoteRef = useRef((msg: CanvasSyncMessage) => {
@@ -147,6 +163,10 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
         applyResetRef.current(event.data);
         return;
       }
+      if (isCanvasVersionsChangedMessage(event.data)) {
+        applyVersionsChangedRef.current(event.data);
+        return;
+      }
       if (!isCanvasSyncMessage(event.data)) return;
       applyRemoteRef.current(event.data);
     };
@@ -183,6 +203,10 @@ export function useCanvasSync(options: UseCanvasSyncOptions): UseCanvasSyncResul
           const parsed = JSON.parse(event.data as string) as unknown;
           if (isCanvasResetMessage(parsed)) {
             applyResetRef.current(parsed);
+            return;
+          }
+          if (isCanvasVersionsChangedMessage(parsed)) {
+            applyVersionsChangedRef.current(parsed);
             return;
           }
           if (!isCanvasSyncMessage(parsed)) return;

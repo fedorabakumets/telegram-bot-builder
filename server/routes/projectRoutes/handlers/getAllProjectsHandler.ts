@@ -9,7 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
-import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegram/auth-middleware";
+import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 
 /**
  * Обрабатывает запрос на получение всех проектов
@@ -22,24 +22,10 @@ import { getOwnerIdFromRequest, getSessionIdFromRequest } from "../../../telegra
 export async function getAllProjectsHandler(req: Request, res: Response): Promise<void> {
     try {
         const ownerId = getOwnerIdFromRequest(req);
-        // DEBUG: диагностика сессии и авторизации
-        // const sessionUser = req.session?.telegramUser;
-        // console.log(`[projects] ownerId=${ownerId} typeof=${typeof ownerId}`);
-        // console.log(`[projects] session.telegramUser=${JSON.stringify(sessionUser)}`);
-        // console.log(`[projects] req.user=${JSON.stringify(req.user)}`);
-        // console.log(`[projects] session.id=${req.session?.id}`);
-        let projects;
-
-        if (ownerId !== null) {
-            // Авторизованный: только свои проекты, без гостевых
-            projects = await storage.getUserBotProjects(ownerId);
-        } else {
-            // Гость: свои по sessionId + старые общие (sessionId = NULL)
-            const sessionId = getSessionIdFromRequest(req);
-            projects = sessionId
-                ? await storage.getGuestBotProjectsBySession(sessionId)
-                : await storage.getGuestBotProjects();
-        }
+        // Личность гарантирована requireApiAuth; без владельца — пустой список (defense-in-depth)
+        const projects = ownerId !== null
+            ? await storage.getUserBotProjects(ownerId)
+            : [];
 
         res.json(projects);
     } catch (error) {

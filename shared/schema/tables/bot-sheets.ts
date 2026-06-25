@@ -29,10 +29,18 @@ export const canvasSheetSchema = z.object({
   nodes: z.array(nodeSchema).default([]),
   /** Состояние вида */
   viewState: sheetViewStateSchema.default({ pan: { x: 0, y: 0 }, zoom: 100 }),
-  /** Дата создания */
-  createdAt: z.date().optional(),
-  /** Дата обновления */
-  updatedAt: z.date().optional(),
+  /**
+   * Дата создания листа.
+   * z.coerce.date — данные листа хранятся в jsonb и после round-trip приходят
+   * ISO-строкой; coerce принимает и Date, и строку, чтобы валидация не падала.
+   */
+  createdAt: z.coerce.date().optional(),
+  /**
+   * Дата обновления листа.
+   * z.coerce.date — допускает Date и ISO-строку (jsonb round-trip), иначе
+   * валидация project.json через MCP/lib падала бы на строковой дате.
+   */
+  updatedAt: z.coerce.date().optional(),
 });
 
 /** Обновленная схема данных бота с поддержкой листов */

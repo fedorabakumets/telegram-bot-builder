@@ -27,12 +27,14 @@ export async function handleGetBotLogById(req: Request, res: Response): Promise<
     }
 
     const ownerId = getOwnerIdFromRequest(req);
-    if (ownerId !== null) {
-      const hasAccess = await storage.hasProjectAccess(log.projectId, ownerId);
-      if (!hasAccess) {
-        res.status(403).json({ error: "Нет прав доступа к проекту" });
-        return;
-      }
+    if (ownerId === null) {
+      res.status(403).json({ error: "Нет прав доступа" });
+      return;
+    }
+    const hasAccess = await storage.hasProjectAccess(log.projectId, ownerId);
+    if (!hasAccess) {
+      res.status(403).json({ error: "Нет прав доступа к проекту" });
+      return;
     }
 
     res.json(log);
