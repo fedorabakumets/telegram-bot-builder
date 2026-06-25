@@ -45,7 +45,7 @@ export function RevealTokenDialog({ token, onClose }: RevealTokenDialogProps) {
 
   return (
     <Dialog open={!!token} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Токен создан</DialogTitle>
           <DialogDescription>
