@@ -195,6 +195,23 @@ function gen(project: unknown, label: string): string {
   });
 }
 
+/**
+ * Генерация Python-кода с включённым hot-reload контента (projectId задан).
+ * В этом режиме parse_mode message-ноды определяется через _parse_mode,
+ * где статичный formatMode имеет приоритет, а HTML-автодетект — fallback.
+ * @param project - Объект project.json
+ * @param label - Метка теста для имени бота/временного файла
+ * @returns Сгенерированный Python-код
+ */
+function genWithProjectId(project: unknown, label: string): string {
+  return generatePythonCode(project as any, {
+    botName: `Phase1_${label}`,
+    userDatabaseEnabled: false,
+    enableComments: false,
+    projectId: 99999,
+  });
+}
+
 function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {
   const tmp = `_tmp_p1_${label}.py`;
   fs.writeFileSync(tmp, code, 'utf-8');
@@ -904,6 +921,46 @@ test('60', 'Спойлер на message-узле (не start)', () => {
   );
   assert(code.includes('tg-spoiler'), 'тег tg-spoiler должен быть в коде');
   assert(code.includes('финальный твист'), 'текст спойлера должен быть в коде');
+});
+
+// ── 61. projectId + formatMode:"markdown" → _parse_mode = "Markdown" ─────────
+test('61', 'projectId + formatMode:"markdown" → statiчный режим даёт _parse_mode="Markdown"', () => {
+  const code = genWithProjectId(
+    patchMessage({ messageText: '*Жирный* _курсив_', formatMode: 'markdown' }),
+    't61'
+  );
+  assertSyntax(code, 't61');
+  assert(
+    code.includes('_parse_mode = "Markdown"'),
+    'при projectId статичный formatMode:markdown должен давать _parse_mode = "Markdown"'
+  );
+});
+
+// ── 62. projectId + formatMode:"html" → _parse_mode = "HTML" ─────────────────
+test('62', 'projectId + formatMode:"html" → статичный режим даёт _parse_mode="HTML"', () => {
+  const code = genWithProjectId(
+    patchMessage({ messageText: '<b>Жирный</b>', formatMode: 'html' }),
+    't62'
+  );
+  assertSyntax(code, 't62');
+  assert(
+    code.includes('_parse_mode = "HTML"'),
+    'при projectId статичный formatMode:html должен давать _parse_mode = "HTML"'
+  );
+});
+
+// ── 63. projectId + formatMode:"none" → HTML-автодетект (регрессия) ──────────
+test('63', 'projectId + formatMode:"none" → остаётся HTML-автодетект по тексту', () => {
+  const p = deepClone(BASE_PROJECT);
+  p.sheets[0].nodes[0].data.formatMode = 'none';
+  p.sheets[0].nodes[1].data.messageText = '<b>Контент с тегами</b>';
+  p.sheets[0].nodes[1].data.formatMode = 'none';
+  const code = genWithProjectId(p, 't63');
+  assertSyntax(code, 't63');
+  assert(
+    code.includes('any(tag in text for tag'),
+    'при projectId + formatMode:none должен сохраняться HTML-автодетект из текста'
+  );
 });
 
 const passed = results.filter(r => r.passed).length;

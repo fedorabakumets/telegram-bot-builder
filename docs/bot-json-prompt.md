@@ -240,6 +240,8 @@
 - Символ `•` (bullet) безопасен, но не используйте его рядом с `<` или `>`
 - **HTML mention пользователя**: `<a href='tg://user?id={user_id}'>{user.nickname}</a>` — если в тексте используется HTML mention, обязательно ставить `"formatMode": "html"`
 
+> ℹ️ **Hot-reload и formatMode:** в режиме горячей перезагрузки контента (генерация с `projectId`/contentCache) статичный `formatMode` ноды учитывается напрямую: `markdown` → `parse_mode="Markdown"`, `html` → `parse_mode="HTML"`. При `formatMode: "none"` (или отсутствии поля) работает автодетект — `parse_mode="HTML"` подставляется, если в тексте найдены HTML-теги (`<b>`, `<i>`, `<u>`, `<s>`, `<code>`, `<pre>`, `<a `, `<tg-spoiler>`), иначе `parse_mode=None`.
+
 ### http_request — HTTP запрос
 
 ```json
@@ -1725,7 +1727,7 @@ GIN-индекс на `bot_table_rows.data` для быстрого поиска
 - ✅ `buttons[].text` — текст inline и reply кнопок
 - ✅ `buttons[].url` — URL кнопок
 - ✅ `mediaCaption` — подпись к медиа (через text=caption)
-- ✅ `formatMode` — определяется динамически из HTML-тегов в тексте
+- ✅ `formatMode` — статичный режим ноды (`markdown`/`html`) применяется напрямую; при `formatMode: "none"` parse_mode определяется автодетектом из HTML-тегов в тексте (fallback для совместимости со старыми нодами и горячей правкой текста)
 
 Поля требующие перезапуска бота:
 - Структура графа (связи, autoTransitionTo)

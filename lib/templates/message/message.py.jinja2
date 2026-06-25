@@ -273,8 +273,15 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
     {# из внешней области видимости обработчика.                           #}
     {# ------------------------------------------------------------------ #}
     {%- if projectId %}
+    {# Приоритет у статичного formatMode ноды; HTML-автодетект — fallback только при formatMode:none #}
+    {%- if formatMode == 'html' %}
+    _parse_mode = "HTML"
+    {%- elif formatMode == 'markdown' %}
+    _parse_mode = "Markdown"
+    {%- else %}
     {# Динамическое определение parse_mode из текста (для горячей перезагрузки контента) #}
     _parse_mode = "HTML" if any(tag in text for tag in ["<b>", "<i>", "<u>", "<s>", "<code>", "<pre>", "<a ", "<tg-spoiler>"]) else None
+    {%- endif %}
     {%- set parse_mode_arg = ', parse_mode=_parse_mode' %}
     {%- else %}
     {%- set parse_mode_arg = ', parse_mode="HTML"' if formatMode == 'html' else (', parse_mode="Markdown"' if formatMode == 'markdown' else '') %}
