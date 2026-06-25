@@ -401,3 +401,111 @@ export async function stopBotInDb(
 
   return { ok: true, message: body.message ?? 'Бот остановлен' };
 }
+
+/**
+ * Перезапускает текущий/дефолтный или КОНКРЕТНЫЙ бот проекта через
+ * POST /api/projects/:id/bot/restart в живой БД. Если передан tokenId — рестартится
+ * именно этот токен (для проектов с несколькими токенами); иначе текущий инстанс +
+ * дефолтный токен. Рестарт внутри сервера вызывает те же startBot/stopBot, которые САМИ
+ * пишут историю запусков (bot_launch_history) и шлют WebSocket-broadcast,
+ * обновляющий UI в реальном времени — здесь НИЧЕГО дополнительно для истории/realtime
+ * делать не нужно.
+ * ⚠️ Запуск асинхронный: успешный ответ означает лишь принятие команды — после успеха
+ * рекомендуется проверить состояние через botStatusInDb (db_bot_status). confirm не
+ * требуется: рестарт лишь кратко прерывает бота, который сам поднимается обратно.
+ * @param projectId - Числовой ID проекта из URL редактора
+ * @param tokenId - ID токена (опционально; без него — текущий/дефолтный бот проекта)
+ * @param options - Опции запроса (URL API)
+ * @returns Признак успеха { ok, message, processId } либо ошибка { error }
+ */
+export async function restartBotInDb(
+  projectId: number,
+  tokenId?: number,
+  options?: ReadDbOptions,
+): Promise<{ ok: true; message: string; processId: string | null } | { error: string }> {
+  let res: Response;
+  try {
+    res = await apiFetch(`/api/projects/${projectId}/bot/restart`, {
+      apiBaseUrl: options?.apiBaseUrl,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tokenId != null ? { tokenId } : {}),
+    });
+  } catch (err) {
+    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    if (res.status === 404) return { error: `HTTP 404: ${body || 'экземпляр бота или проект не найден'}` };
+    if (res.status === 400) return { error: body ? `HTTP 400: ${body}` : 'HTTP 400' };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+  }
+
+  let body: { message?: string; processId?: string | null };
+  try {
+    body = (await res.json()) as { message?: string; processId?: string | null };
+  } catch (err) {
+    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+  }
+
+  return { ok: true, message: body.message ?? 'Бот перезапущен', processId: body.processId ?? null };
+}
+
+/**
+ * Перезапускает ВСЕ запущенные боты проекта через POST /api/projects/:id/bot/restart-all
+ * в живой БД. Каждый рестарт внутри сервера вызывает те же startBot/stopBot, которые
+ * САМИ пишут историю запусков и шлют WebSocket-broadcast, обновляющий UI в реальном
+ * времени — здесь НИЧЕГО дополнительно делать не нужно.
+ * Защита от случайного вызова: confirm-gate первой строкой (затрагивает ВСЕ боты
+ * проекта — более широкий blast radius) — без confirm: true HTTP-запрос не отправляется.
+ * ⚠️ Запуск асинхронный: после успеха рекомендуется проверить состояние через
+ * botStatusInDb (db_bot_status). Если запущенных ботов нет — сервер вернёт
+ * { message, restarted: 0 } без results (в таком случае results будет []).
+ * @param projectId - Числовой ID проекта из URL редактора
+ * @param options - Опции запроса: URL API и обязательное подтверждение confirm
+ * @returns Сводка { ok, restarted, failed, results, message? } либо ошибка { error }
+ */
+export async function restartAllBotsInDb(
+  projectId: number,
+  options?: ReadDbOptions & { confirm?: boolean },
+): Promise<
+  { ok: true; restarted: number; failed: number; results: unknown[]; message?: string } | { error: string }
+> {
+  if (options?.confirm !== true) {
+    return { error: 'Перезапуск всех ботов проекта. Передайте confirm: true для подтверждения.' };
+  }
+
+  let res: Response;
+  try {
+    res = await apiFetch(`/api/projects/${projectId}/bot/restart-all`, {
+      apiBaseUrl: options?.apiBaseUrl,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+  } catch (err) {
+    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    if (res.status === 404) return { error: `HTTP 404: ${body || 'токены проекта не найдены'}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+  }
+
+  let body: { restarted?: number; failed?: number; results?: unknown[]; message?: string };
+  try {
+    body = (await res.json()) as { restarted?: number; failed?: number; results?: unknown[]; message?: string };
+  } catch (err) {
+    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+  }
+
+  return {
+    ok: true,
+    restarted: body.restarted ?? 0,
+    failed: body.failed ?? 0,
+    results: body.results ?? [],
+    message: body.message,
+  };
+}

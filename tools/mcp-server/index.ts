@@ -19,6 +19,8 @@ import {
   botLaunchHistoryInDb,
   startBotInDb,
   stopBotInDb,
+  restartBotInDb,
+  restartAllBotsInDb,
   connectNodes,
   connectNodesInDb,
   disconnectNodesInDb,
@@ -844,6 +846,30 @@ function registerTools(server: McpServer): void {
       },
     },
     async ({ project_id, token_id, confirm }) => textResult(await stopBotInDb(project_id, token_id, { confirm })),
+  );
+
+  server.registerTool(
+    'db_restart_bot',
+    {
+      description: 'Перезапустить бот проекта (stop+start). Если token_id не указан — текущий/дефолтный бот; если указан — конкретный токен (для проектов с несколькими токенами). История запусков и UI обновляются в реальном времени автоматически. Запуск асинхронный — после проверь db_bot_status.',
+      inputSchema: {
+        project_id: z.number().describe('ID проекта'),
+        token_id: z.number().optional().describe('ID токена (по умолчанию — текущий/дефолтный бот проекта)'),
+      },
+    },
+    async ({ project_id, token_id }) => textResult(await restartBotInDb(project_id, token_id)),
+  );
+
+  server.registerTool(
+    'db_restart_all_bots',
+    {
+      description: 'Перезапустить ВСЕ запущенные боты проекта. ТРЕБУЕТ confirm: true (затрагивает все боты). Возвращает сводку restarted/failed/results. История и UI обновляются автоматически.',
+      inputSchema: {
+        project_id: z.number(),
+        confirm: z.boolean().describe('Обязательное подтверждение перезапуска всех ботов проекта'),
+      },
+    },
+    async ({ project_id, confirm }) => textResult(await restartAllBotsInDb(project_id, { confirm })),
   );
 }
 
