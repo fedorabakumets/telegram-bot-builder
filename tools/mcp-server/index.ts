@@ -17,6 +17,8 @@ import {
   botStatusInDb,
   botLogsInDb,
   botLaunchHistoryInDb,
+  startBotInDb,
+  stopBotInDb,
   connectNodes,
   connectNodesInDb,
   disconnectNodesInDb,
@@ -817,6 +819,31 @@ function registerTools(server: McpServer): void {
       inputSchema: { token_id: z.number().describe('Числовой ID токена из db_list_bot_tokens') },
     },
     async ({ token_id }) => textResult(await botLaunchHistoryInDb(token_id)),
+  );
+
+  server.registerTool(
+    'db_start_bot',
+    {
+      description: 'Запустить бота проекта в БД живого приложения. Запуск асинхронный — после успеха проверь db_bot_status. Старт пишется в историю запусков и обновляет UI в реальном времени автоматически. botToken сервер берёт сам.',
+      inputSchema: {
+        project_id: z.number().describe('ID проекта'),
+        token_id: z.number().optional().describe('ID токена (по умолчанию — дефолтный токен проекта)'),
+      },
+    },
+    async ({ project_id, token_id }) => textResult(await startBotInDb(project_id, token_id)),
+  );
+
+  server.registerTool(
+    'db_stop_bot',
+    {
+      description: 'Остановить бота проекта. ТРЕБУЕТ confirm: true (останавливает работающего бота). Стоп пишется в историю запусков и обновляет UI в реальном времени автоматически.',
+      inputSchema: {
+        project_id: z.number(),
+        token_id: z.number().describe('ID токена (обязателен; из db_list_bot_tokens)'),
+        confirm: z.boolean().describe('Обязательное подтверждение остановки живого бота'),
+      },
+    },
+    async ({ project_id, token_id, confirm }) => textResult(await stopBotInDb(project_id, token_id, { confirm })),
   );
 }
 

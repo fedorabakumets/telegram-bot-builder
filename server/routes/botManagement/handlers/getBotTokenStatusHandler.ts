@@ -9,6 +9,7 @@ import { checkProcessExists, isPythonProcess, findBotProcessPid } from '../utils
 import { restoreProcessTracking } from '../utils/processRestorer';
 import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
 import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
+import { workerManager } from '../../../bots/botWorkerManager';
 
 /**
  * Нормализует tokenId — срезает префикс `token_` если он есть
@@ -146,7 +147,11 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
 
         const projectId = instance.projectId;
         const activeProcessInfo = findActiveProcessForToken(projectId, tokenId);
-        let actualStatus = activeProcessInfo ? 'running' : 'stopped';
+        // В режиме воркера статус проверяется через workerManager (как в handleBotStatusByToken),
+        // иначе воркерные боты ошибочно числятся остановленными.
+        const isRunningInWorker = process.env.USE_WORKER_POOL !== 'false'
+            && workerManager.isBotRunning(projectId, tokenId);
+        let actualStatus = (activeProcessInfo || isRunningInWorker) ? 'running' : 'stopped';
 
         // Получаем статистику пользователей
         let userStats = {

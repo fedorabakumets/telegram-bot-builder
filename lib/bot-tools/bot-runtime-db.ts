@@ -304,3 +304,100 @@ export async function botLaunchHistoryInDb(
 
   return { total: history.length, history };
 }
+
+/**
+ * Запускает бота проекта через POST /api/projects/:id/bot/start в живой БД.
+ * Серверный эндпоинт сам пишет историю запусков (bot_launch_history) и шлёт
+ * WebSocket-broadcast (bot-started), обновляющий UI в реальном времени — здесь
+ * НИЧЕГО дополнительно для истории/realtime делать не нужно.
+ * ⚠️ Запуск асинхронный (worker pool): успешный ответ означает лишь принятие
+ * команды — после успеха рекомендуется проверить состояние через botStatusInDb
+ * (db_bot_status). botToken сервер берёт сам по tokenId или по дефолтному токену.
+ * @param projectId - Числовой ID проекта из URL редактора
+ * @param tokenId - ID токена (опционально; без него сервер берёт дефолтный токен проекта)
+ * @param options - Опции запроса (URL API)
+ * @returns Признак успеха { ok, message, processId } либо ошибка { error }
+ */
+export async function startBotInDb(
+  projectId: number,
+  tokenId?: number,
+  options?: ReadDbOptions,
+): Promise<{ ok: true; message: string; processId: string | null } | { error: string }> {
+  let res: Response;
+  try {
+    res = await apiFetch(`/api/projects/${projectId}/bot/start`, {
+      apiBaseUrl: options?.apiBaseUrl,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tokenId != null ? { tokenId } : {}),
+    });
+  } catch (err) {
+    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    if (res.status === 404) return { error: `HTTP 404: проект не найден${body ? `: ${body}` : ''}` };
+    if (res.status === 400) return { error: body ? `HTTP 400: ${body}` : 'HTTP 400' };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+  }
+
+  let body: { message?: string; processId?: string | null };
+  try {
+    body = (await res.json()) as { message?: string; processId?: string | null };
+  } catch (err) {
+    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+  }
+
+  return { ok: true, message: body.message ?? 'Бот запущен', processId: body.processId ?? null };
+}
+
+/**
+ * Останавливает бота проекта через POST /api/projects/:id/bot/stop в живой БД.
+ * Серверный эндпоинт сам пишет историю запусков (bot_launch_history) и шлёт
+ * WebSocket-broadcast (bot-stopped), обновляющий UI в реальном времени — здесь
+ * НИЧЕГО дополнительно для истории/realtime делать не нужно.
+ * Защита от случайного вызова: confirm-gate первой строкой (останавливает живого
+ * бота) — без confirm: true HTTP-запрос не отправляется. tokenId обязателен.
+ * @param projectId - Числовой ID проекта из URL редактора
+ * @param tokenId - ID токена (обязателен; из db_list_bot_tokens)
+ * @param options - Опции запроса: URL API и обязательное подтверждение confirm
+ * @returns Признак успеха { ok, message } либо ошибка { error }
+ */
+export async function stopBotInDb(
+  projectId: number,
+  tokenId: number,
+  options?: ReadDbOptions & { confirm?: boolean },
+): Promise<{ ok: true; message: string } | { error: string }> {
+  if (options?.confirm !== true) {
+    return { error: 'Остановка живого бота. Передайте confirm: true для подтверждения.' };
+  }
+
+  let res: Response;
+  try {
+    res = await apiFetch(`/api/projects/${projectId}/bot/stop`, {
+      apiBaseUrl: options?.apiBaseUrl,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tokenId }),
+    });
+  } catch (err) {
+    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    if (res.status === 404) return { error: `HTTP 404: проект не найден${body ? `: ${body}` : ''}` };
+    if (res.status === 400) return { error: body ? `HTTP 400: ${body}` : 'HTTP 400' };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+  }
+
+  let body: { message?: string };
+  try {
+    body = (await res.json()) as { message?: string };
+  } catch (err) {
+    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+  }
+
+  return { ok: true, message: body.message ?? 'Бот остановлен' };
+}
