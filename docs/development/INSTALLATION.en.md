@@ -566,7 +566,21 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/telegram_bot_builder
 
 # Redis (Memurai on Windows, redis on Linux/macOS)
 REDIS_URL=redis://localhost:6379
+
+# Session signing secret
+SESSION_SECRET=any-random-string-for-local
 ```
+
+> 🔐 **SESSION_SECRET is mandatory in production.** In `development` you may use any string (or omit it entirely — a dev fallback with a warning is used). But in `NODE_ENV=production` the app **intentionally refuses to start** if `SESSION_SECRET` is missing: without it anyone could forge a session cookie and log in as another user. Generate a strong random value:
+>
+> ```bash
+> # Linux/macOS (or Git Bash on Windows)
+> openssl rand -hex 32
+> # Any OS with Node.js
+> node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+> ```
+>
+> Changing `SESSION_SECRET` invalidates all active sessions — users will need to log in again.
 
 > 💡 Telegram Login is configured via Setup Wizard on first launch — no manual setup needed.
 
@@ -637,6 +651,45 @@ On first launch in production, the Setup Wizard will appear — it will ask you 
 - **Bot Username** — bot name without @
 
 ✅ After saving, the application is ready to use!
+
+</details>
+
+---
+
+<details>
+<summary><strong>Step 11: Connect an AI agent via MCP (optional)</strong></summary>
+
+> 💡 You only need this step if you want to connect an AI agent (Kiro / Cursor / Claude Desktop) to edit bots on the canvas in real time. It is not required for normal use.
+
+The MCP agent is identified by a personal access token (PAT) — like a GitHub/n8n API key. The token is tied to your account and grants access only to your own projects.
+
+**1.** Open a project → **"Agent"** tab → **"Create token"** button.
+
+**2.** Set a name (e.g. "Kiro on laptop") → **"Create"**.
+
+**3.** The full `mcp_…` token is shown **exactly once** — copy it immediately. Only an sha-256 hash is stored in the database; the secret is never shown again.
+
+**4.** Copy the ready-made `mcp.json` snippet there (values are pre-filled) and paste it into your MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "botcraft-builder": {
+      "command": "npm",
+      "args": ["run", "mcp:bot-builder"],
+      "cwd": "<path to project directory>",
+      "env": {
+        "API_BASE_URL": "http://localhost:5000",
+        "MCP_AGENT_TOKEN": "mcp_..."
+      }
+    }
+  }
+}
+```
+
+> - `API_BASE_URL` — the app server address (locally `http://localhost:5000`, in production your `https://` domain).
+> - `MCP_AGENT_TOKEN` — the token from step 3. Treat it like a password, never commit it to public repos (it is not needed in the main app's `.env` — only in the MCP client config).
+> - You can **revoke the token instantly** on the "Agent" tab with the "Revoke" button — it stops working immediately.
 
 </details>
 

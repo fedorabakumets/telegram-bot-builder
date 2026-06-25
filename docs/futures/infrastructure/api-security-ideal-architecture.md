@@ -689,7 +689,7 @@ app.use((req, res, next) => {
 | Error handling | Может крашить процесс | Централизованный, безопасный |
 | Response filtering | Токены утекают | DTO, whitelist полей · 🟡 /api/projects/list готово, остальное позже |
 | Body limits | 50MB на всё | 1MB глобально, 20MB для upload |
-| Env validation | Fallback значения | Fail-fast при старте |
+| Env validation | Fallback значения · 🟡 SESSION_SECRET fail-fast в prod готово, остальные env позже | Fail-fast при старте |
 | Logging | console.log | Структурированные логи |
 
 
@@ -714,3 +714,44 @@ app.use((req, res, next) => {
 **Проверено:** свои ресурсы 200 (UI не сломан, 0 ошибок в консоли), несуществующий/чужой токен 404, `workers/stats` без `pid`, межпроектный рестарт 403.
 
 **Отложено (отдельная фаза, риск сломать bot-facing callbacks):** маршруты с авторизацией по query `telegram_id` (`/api/bot/tokens/:tokenId/users*`, `deleteBotTokenHandler`, token/project CRUD c `ownerId === req.user.id`) — перевести на личность из сессии/PAT. Также: `/api/telegram-settings` и `/api/telegram-client/group-members/:groupId` (общая база, не projectId-scoped); утечка полного значения `token` в `tokens/default`/`tokens/first` (нужен DTO/маскирование).
+
+---
+
+## Фикс публичного fallback SESSION_SECRET (2026-06-25)
+
+Репозиторий опенсорсный, а в `server/routes/routes.ts` был хардкод запасного секрета сессии:
+`secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production'`. Этот fallback виден всем. Если на проде `SESSION_SECRET` не задан, любой может подделать подпись session-cookie и войти под произвольным пользователем — полный обход всей авторизации (включая закрытые выше IDOR).
+
+**Сделано:**
+- Новый helper `server/utils/resolveSessionSecret.ts`: в `NODE_ENV === 'production'` бросает ошибку на старте (fail-fast), если `SESSION_SECRET` пуст/не задан; в dev — предупреждение в лог + явно помеченный dev-fallback.
+- `routes.ts` использует `resolveSessionSecret()` вместо хардкода.
+- `.env.example` — пометка «обязателен в production» + подсказка генерации (`openssl rand -hex 32` или `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`).
+
+**Проверено (Playwright, dev на localhost:5000):** после ротации секрета авторизация работает (`/api/projects/list` 200, редактор открылся), IDOR-проверки держатся (свой проект 200, чужой/несуществующий 403, несуществующий токен 404, `workers/stats` без `pid`). Коммит `ce6b559fc`.
+
+---
+
+## Что осталось незакрытым (актуально на 2026-06-25)
+
+Сводка по слоям из плана выше. 🔴 — критично, 🟡 — важно, 🟢 — желательно.
+
+### Авторизация / IDOR
+- 🔴 **Авторизация по query `telegram_id`** — `/api/bot/tokens/:tokenId/users*`, `deleteBotTokenHandler`, token/project CRUD с `ownerId === req.user.id`. Личность берётся из query-параметра, а не из сессии/PAT. Отложено намеренно: это bot-facing вызовы, прямой перевод на сессию может сломать обратные коллбэки. Нужна отдельная фаза с поддержкой PAT для bot-runtime.
+- 🟡 **`/api/telegram-settings`, `/api/telegram-client/group-members/:groupId`** — общая база (telegram client manager), не scoped по projectId. Сейчас доступ есть у любого аутентифицированного пользователя.
+
+### Утечка секретов в ответах (DTO/маскирование)
+- 🔴 **`GET /api/projects/:id/tokens/default` и `tokens/first`** — доступ закрыт `requireProjectAccess`, НО в теле ответа всё ещё отдаётся полное значение `token` бота. Нужен DTO/маскирование (отдавать только префикс).
+- 🟡 **Response filtering в целом** — DTO применён только к `/api/projects/list` и списку токенов агента. Остальные эндпоинты возвращают сырые записи БД (риск утечки полей).
+
+### Инфраструктурные слои (ещё не внедрены системно)
+- 🟡 **Валидация входа (Zod)** — покрыто ~20% эндпоинтов вместо 100%. Нет единого `validate()` на body/query/params.
+- 🟡 **Rate limiting** — отсутствует и глобальный, и per-endpoint (риск брутфорса/DoS на тяжёлых операциях).
+- 🟡 **Security headers** — нет `helmet` и строгого CORS (`ALLOWED_ORIGINS`).
+- 🟡 **Централизованный error handler** — часть ошибок бросается голым `throw`, может ронять процесс; нет единого `AppError` → безопасный JSON.
+- 🟢 **Body limits** — 50MB на все запросы; нужно 1MB глобально + повышенный лимит только на upload.
+- 🟢 **Env validation целиком** — fail-fast сделан только для `SESSION_SECRET`; остальные обязательные env (`DATABASE_URL` и т.д.) не валидируются Zod-схемой при старте (см. `server/config/env.ts` в плане выше).
+- 🟢 **Структурированное логирование** — сейчас `console.log`, нет единого формата с `userId`/`status`/`duration`.
+
+### Открытые наблюдения по опенсорсу
+- 🟢 **Деплой-обвязка в публичной монорепе** — `.github/workflows`, `.railway`, Dockerfile лежат в публичном репо. Секретов там быть не должно (env вынесены), но карта инфраструктуры видна. На будущее — рассмотреть вынос деплоя в приватную репу.
+- 🟢 **SECURITY.md** — нет файла с responsible disclosure (куда приватно сообщать об уязвимостях). Рекомендуется добавить перед широкой публичностью.
