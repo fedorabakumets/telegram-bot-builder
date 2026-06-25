@@ -11,6 +11,7 @@
 import { useRef, useCallback, useState, useEffect, useMemo } from 'react';
 import { CanvasSheets } from '@/components/editor/canvas/canvas-sheets';
 import { useTouchGestures } from './use-touch-gestures';
+import { useCanvasAutoFit } from './use-canvas-auto-fit';
 import { CanvasToolbar } from './canvas-toolbar';
 import { CanvasContent } from './canvas-content';
 import { MobileCanvasFab } from './mobile-canvas-fab';
@@ -350,56 +351,19 @@ export function Canvas({
   /** Групповой перенос выделенных узлов в другой проект (в новый лист) */
   const { moveNodesToProject } = useMoveNodesToProject({ projectId, botData, onBotDataUpdate, projects });
 
-  // Ref для отслеживания последнего набора узлов при autoFitOnLoad
-  const lastAutoFitNodesKeyRef = useRef<string>('');
+  /** Ref на актуальную функцию вписывания — используется хуком авто-FIT */
   const fitToContentRef = useRef<() => void>(() => {});
 
-  // Флаг что был запрошен принудительный fit (не ждём 50% nodeSizes)
-  const forceFitRef = useRef(false);
-
-  /**
-   * Флаг первой загрузки — при первом auto-fit всегда вписываем,
-   * при последующих (смена листа) проверяем localStorage
-   */
-  const isFirstAutoFitRef = useRef(true);
-
-  // Автоматически вписываем содержимое в экран при первой загрузке узлов
-  useEffect(() => {
-    if (!autoFitOnLoad || nodes.length === 0) return;
-
-    // Ключ текущего набора узлов — срабатываем только при смене набора
-    const nodesKey = nodes.map(n => n.id).join(',');
-
-    // Если suppressAutoFit — обновляем ключ чтобы не сработало позже, но не делаем fit
-    if (suppressAutoFit) {
-      lastAutoFitNodesKeyRef.current = nodesKey;
-      return;
-    }
-
-    if (nodesKey === lastAutoFitNodesKeyRef.current) return;
-
-    // При смене листа (не первая загрузка) проверяем localStorage
-    if (!isFirstAutoFitRef.current) {
-      try {
-        if (localStorage.getItem('canvas-auto-fit-sheet') === 'false') {
-          lastAutoFitNodesKeyRef.current = nodesKey;
-          return;
-        }
-      } catch { /* localStorage недоступен — разрешаем fit */ }
-    }
-
-    // Если был принудительный fit — не ждём nodeSizes, вписываем сразу
-    if (!forceFitRef.current) {
-      const coveredCount = nodes.filter(n => nodeSizes.has(n.id)).length;
-      if (coveredCount < Math.ceil(nodes.length * 0.5)) return;
-    }
-
-    forceFitRef.current = false;
-    lastAutoFitNodesKeyRef.current = nodesKey;
-    isFirstAutoFitRef.current = false;
-    const timer = setTimeout(() => fitToContentRef.current(), 150);
-    return () => clearTimeout(timer);
-  }, [autoFitOnLoad, nodes, nodeSizes, suppressAutoFit]);
+  // Авто-FIT вида камеры (автоуместить): логика вынесена в отдельный хук,
+  // см. use-canvas-auto-fit.ts — ожидание размеров узлов, debounce, single-fit.
+  useCanvasAutoFit({
+    autoFitOnLoad,
+    suppressAutoFit,
+    fitTrigger,
+    nodes,
+    nodeSizes,
+    fitToContentRef,
+  });
 
   /**
    * Запускает кратковременную плавную анимацию трансформации (для кнопочного
@@ -1080,22 +1044,13 @@ export function Canvas({
     }
   }, [nodes, nodeSizes, zoom, triggerTransformAnimation]);
 
-  // Держим ref актуальным чтобы autoFitOnLoad эффект не имел stale closure
+  // Держим ref актуальным чтобы хук авто-FIT не имел stale closure
   fitToContentRef.current = fitToContent;
 
-  // Принудительный fit по внешнему триггеру (например при переключении листа или применении шаблона)
-  useEffect(() => {
-    if (!fitTrigger) return;
-    // Выставляем флаг и сбрасываем ключ — autoFitOnLoad сработает без ожидания nodeSizes
-    forceFitRef.current = true;
-    lastAutoFitNodesKeyRef.current = '';
-    // Fallback: если nodes уже обновились но autoFitOnLoad не сработал
-    const timer = setTimeout(() => {
-      forceFitRef.current = false;
-      fitToContentRef.current();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [fitTrigger]);
+  // Принудительный fit по внешнему триггеру (смена листа / шаблон) полностью
+  // обрабатывается хуком useCanvasAutoFit: он сбрасывает ключ набора, дожидается
+  // готовности размеров узлов и делает РОВНО одно вписывание (с debounce и
+  // graceful-fallback). Отдельный setTimeout-повтор убран — он давал двойной fit.
 
   /** Синхронизируем ref-зеркала с состоянием при любых внешних изменениях */
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
