@@ -171,6 +171,16 @@ export default function Editor() {
   /** Триггер для принудительного fitToContent после применения шаблона */
   const [fitTrigger, setFitTrigger] = useState(0);
 
+  /**
+   * Подавление авто-FIT камеры на время remote/agent-синхронизации.
+   * Удалённые правки (коллаборатор, ИИ-агент, наши db_*-операции) меняют состав
+   * узлов листа, но НЕ должны дёргать вид пользователя. Флаг включается на время
+   * применения remote-данных и снимается по таймеру.
+   */
+  const [suppressRemoteAutoFit, setSuppressRemoteAutoFit] = useState(false);
+  /** Таймер снятия флага подавления авто-FIT после remote-апдейта */
+  const suppressRemoteAutoFitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   /** ID узла для фокусировки на канвасе */
   const {
     focusNodeId,
@@ -659,6 +669,25 @@ export default function Editor() {
   }, [setBotData, currentNodeSizes, setBotDataWithSheets]);
 
   /**
+   * Обёртка обновления данных для REMOTE/AGENT-синхронизации.
+   * Подавляет авто-FIT камеры на короткое окно, чтобы смена состава узлов от
+   * коллаборатора/ИИ-агента не дёргала вид пользователя во время его работы.
+   * Авто-FIT остаётся активным для смены листа, шаблона и первой загрузки.
+   * @param updatedData - Данные бота из remote-источника
+   */
+  const handleRemoteBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
+    setSuppressRemoteAutoFit(true);
+    if (suppressRemoteAutoFitTimerRef.current) {
+      clearTimeout(suppressRemoteAutoFitTimerRef.current);
+    }
+    suppressRemoteAutoFitTimerRef.current = setTimeout(() => {
+      setSuppressRemoteAutoFit(false);
+      suppressRemoteAutoFitTimerRef.current = null;
+    }, 600);
+    handleBotDataUpdate(updatedData);
+  }, [handleBotDataUpdate]);
+
+  /**
    * Live-синхронизация холста: вкладки, устройства, коллабораторы, ИИ-агент.
    * Для actor.kind='agent' данные уже записаны в БД — показываем бейдж, но НЕ
    * выставляем флаг «несохранённые изменения», а также инвалидируем список версий,
@@ -763,7 +792,7 @@ export default function Editor() {
     projectId: activeProject?.id,
     botDataWithSheets,
     localUser,
-    onRemoteUpdate: handleBotDataUpdate,
+    onRemoteUpdate: handleRemoteBotDataUpdate,
     onRemoteSync: handleRemoteCanvasSync,
     onRemoteReset: handleRemoteReset,
     onVersionsChanged: handleVersionsChanged,
@@ -1667,7 +1696,7 @@ export default function Editor() {
                 onConnectionDelete={handleConnectionDelete}
                 onConnectionCreate={saveToHistory}
                 autoFitOnLoad
-                suppressAutoFit={canvasView === 'json'}
+                suppressAutoFit={canvasView === 'json' || suppressRemoteAutoFit}
                 fitTrigger={fitTrigger}
                 focusNodeId={focusNodeId}
                 highlightNodeId={highlightNodeId}
@@ -2094,7 +2123,7 @@ export default function Editor() {
                   onConnectionDelete={handleConnectionDelete}
                   onConnectionCreate={saveToHistory}
                   autoFitOnLoad
-                  suppressAutoFit={canvasView === 'json'}
+                  suppressAutoFit={canvasView === 'json' || suppressRemoteAutoFit}
                   fitTrigger={fitTrigger}
                   focusNodeId={focusNodeId}
                   highlightNodeId={highlightNodeId}

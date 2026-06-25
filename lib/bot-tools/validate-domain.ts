@@ -34,6 +34,7 @@ export function validateDomainRules(project: Record<string, unknown>): Validatio
 
     validateConditionNode(node, sheetId, issues);
     validateForbiddenConditionFormat(node, issues);
+    validateMessageInlineKeyboard(node, issues);
   }
 
   for (const [id, count] of idCounts) {
@@ -139,6 +140,30 @@ function validateForbiddenConditionFormat(node: Node, issues: ValidationIssue[])
       path: `nodes[id=${node.id}].data`,
       message: 'Неверный формат condition: используйте branches, а не conditions/defaultTarget',
       code: 'condition_wrong_format',
+    });
+  }
+}
+
+/**
+ * Неблокирующее предупреждение: у message-ноды есть инлайн/reply-кнопки внутри
+ * самой ноды (непустой buttons и keyboardType != 'none'). При записи через
+ * API/MCP такие кнопки будут автоматически вынесены в отдельную keyboard-ноду
+ * (см. hoist-keyboard.ts). Это warn, а не error, чтобы не ломать легаси-проекты.
+ * @param node - Узел
+ * @param issues - Массив проблем
+ */
+function validateMessageInlineKeyboard(node: Node, issues: ValidationIssue[]): void {
+  if (node.type !== 'message') return;
+  const data = node.data as Record<string, unknown>;
+  const hasButtons = Array.isArray(data.buttons) && data.buttons.length > 0;
+  const keyboardType = data.keyboardType;
+  const isHoistableType = keyboardType === 'inline' || keyboardType === 'reply';
+  if (hasButtons && isHoistableType) {
+    issues.push({
+      severity: 'warning',
+      path: `nodes[id=${node.id}].data.buttons`,
+      message: `У message-ноды ${node.id} инлайн-кнопки будут вынесены в отдельную keyboard-ноду`,
+      code: 'inline_keyboard_will_hoist',
     });
   }
 }

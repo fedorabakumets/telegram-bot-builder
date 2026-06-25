@@ -50,6 +50,7 @@ import {
   removeNodeFromProject,
   removeNodeInDb,
   moveNodeInDb,
+  autoLayoutSheetInDb,
   duplicateNodeInDb,
   addSheetInDb,
   duplicateSheetInDb,
@@ -423,6 +424,20 @@ function registerTools(server: McpServer): void {
     },
     async ({ project_id, node_id, to_sheet_id, from_sheet_id, position, commit_message }) =>
       textResult(await moveNodeInDb(project_id, node_id, to_sheet_id, { fromSheetId: from_sheet_id, position }, { commitMessage: commit_message })),
+  );
+
+  server.registerTool(
+    'db_auto_layout',
+    {
+      description: 'Пересчитать позиции всех нод листа иерархической авто-раскладкой (как кнопка «Авто-расстановка»). Меняет только координаты, не трогает связи/данные. Live-обновление холста. Адресация по числовому projectId из URL редактора',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        sheet_id: z.string().optional().describe('ID листа (по умолчанию активный/первый)'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ project_id, sheet_id, commit_message }) =>
+      textResult(await autoLayoutSheetInDb(project_id, sheet_id, { commitMessage: commit_message })),
   );
 
   server.registerTool(

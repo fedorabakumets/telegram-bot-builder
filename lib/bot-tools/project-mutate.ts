@@ -7,7 +7,9 @@ import { nanoid } from 'nanoid';
 import type { BotDataWithSheets, Node } from '@shared/schema';
 import { collectAllNodes } from './collect-nodes.ts';
 import { minimizeNode } from './minimize-node-data.ts';
+import { hoistMessageKeyboards } from './hoist-keyboard.ts';
 import { validateBotProject } from './validate-project.ts';
+import { createHierarchicalLayout, DEFAULT_OPTIONS } from './hierarchical-layout.ts';
 import type { ValidateProjectResult } from './types.ts';
 
 /** Результат мутации проекта */
@@ -112,7 +114,8 @@ export function addNodeToProject(projectJson: unknown, node: Node, sheetId?: str
 
   const idx = resolveSheetIndex(project, sheetId);
   const sheets = [...(project.sheets ?? [])];
-  const sheet = { ...sheets[idx], nodes: [...(sheets[idx]?.nodes ?? []), minimizeNode(node)] };
+  const withAdded = [...(sheets[idx]?.nodes ?? []), minimizeNode(node)];
+  const sheet = { ...sheets[idx], nodes: hoistMessageKeyboards(withAdded) };
   sheets[idx] = sheet;
 
   const updated = { ...project, sheets };
@@ -146,7 +149,7 @@ export function updateNodeInProject(
       ...(patch.data ? { data: { ...n.data, ...patch.data } } : {}),
     };
   });
-  sheets[idx] = { ...sheets[idx], nodes };
+  sheets[idx] = { ...sheets[idx], nodes: hoistMessageKeyboards(nodes) };
 
   const updated = { ...project, sheets };
   return { project: updated, validation: validateBotProject(updated) };
@@ -447,6 +450,34 @@ export function moveNodeToProjectSheet(
     ...sheets[toIdx],
     nodes: [...(sheets[toIdx]?.nodes ?? []), movedNode],
   };
+
+  const updated = { ...project, sheets };
+  return { project: updated, validation: validateBotProject(updated) };
+}
+
+/**
+ * Пересчитывает позиции всех нод одного листа иерархической авто-раскладкой
+ * (аналог кнопки «Авто-расстановка» на холсте). Меняет ТОЛЬКО position нод —
+ * data, связи, состав нод и листов остаются нетронутыми. Связи выводятся
+ * алгоритмом из data нод (на вход передаётся пустой массив connections).
+ * @param projectJson - Текущий project.json (объект или JSON-строка)
+ * @param sheetId - ID листа (по умолчанию активный/первый)
+ * @returns project + validation или { error } для пустого/несуществующего листа
+ */
+export function autoLayoutSheetInProject(
+  projectJson: unknown,
+  sheetId?: string,
+): MutateProjectResult | { error: string } {
+  const project = parseProject(projectJson);
+  if (!project) return { error: 'Невалидный project_json' };
+
+  const idx = resolveSheetIndex(project, sheetId);
+  const sheets = [...(project.sheets ?? [])];
+  const nodes = sheets[idx]?.nodes ?? [];
+  if (nodes.length === 0) return { error: 'Лист пуст или не найден' };
+
+  const laidOut = createHierarchicalLayout(nodes, [], DEFAULT_OPTIONS);
+  sheets[idx] = { ...sheets[idx], nodes: laidOut };
 
   const updated = { ...project, sheets };
   return { project: updated, validation: validateBotProject(updated) };

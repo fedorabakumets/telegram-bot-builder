@@ -16,6 +16,7 @@ import {
   disconnectNodes,
   duplicateNodeInProject,
   moveNodeToProjectSheet,
+  autoLayoutSheetInProject,
   type ConnectPortType,
   type MutateProjectResult,
 } from './project-mutate.ts';
@@ -196,4 +197,23 @@ export async function moveNodeInDb(
   const fetched = await fetchProjectFromDb(projectId, options);
   if ('error' in fetched) return fetched;
   return applyAndSave(projectId, moveNodeToProjectSheet(fetched.data, nodeId, toSheetId, moveOptions), options);
+}
+
+/**
+ * Пересчитывает позиции всех нод листа иерархической авто-раскладкой в живой БД
+ * и обновляет холст (live). Меняет только координаты нод; data, связи и листы
+ * не затрагиваются. Один PUT = одна версия в истории.
+ * @param projectId - Числовой ID проекта
+ * @param sheetId - ID листа (опционально; по умолчанию активный/первый)
+ * @param options - Опции записи в БД
+ * @returns Результат записи или ошибка (пустой/несуществующий лист)
+ */
+export async function autoLayoutSheetInDb(
+  projectId: number,
+  sheetId?: string,
+  options?: NodeOpsDbOptions,
+): Promise<NodeOpsDbResult> {
+  const fetched = await fetchProjectFromDb(projectId, options);
+  if ('error' in fetched) return fetched;
+  return applyAndSave(projectId, autoLayoutSheetInProject(fetched.data, sheetId), options);
 }
