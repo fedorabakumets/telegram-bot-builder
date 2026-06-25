@@ -14,6 +14,9 @@ import {
   addNodeInDb,
   addNodeToProject,
   applyOpsInDb,
+  botStatusInDb,
+  botLogsInDb,
+  botLaunchHistoryInDb,
   connectNodes,
   connectNodesInDb,
   disconnectNodesInDb,
@@ -31,6 +34,7 @@ import {
   listConnectionsInDb,
   listOperators,
   listProjectsInDb,
+  listBotTokensInDb,
   createProjectInDb,
   duplicateProjectInDb,
   renameProjectInDb,
@@ -773,6 +777,46 @@ function registerTools(server: McpServer): void {
     },
     async ({ project_id, ops, commit_message }) =>
       textResult(await applyOpsInDb(project_id, ops as never, { commitMessage: commit_message })),
+  );
+
+  server.registerTool(
+    'db_list_bot_tokens',
+    {
+      description: 'Список токенов бота проекта (id/имя/username/флаги) БЕЗ самого токена. Нужен для получения token_id для db_bot_status/db_bot_logs.',
+      inputSchema: { project_id: z.number().describe('Числовой ID проекта из URL редактора') },
+    },
+    async ({ project_id }) => textResult(await listBotTokensInDb(project_id)),
+  );
+
+  server.registerTool(
+    'db_bot_status',
+    {
+      description: 'Статус бота по token_id (running/stopped, имя, username, uptime, статистика пользователей) БЕЗ секрета token. token_id берётся из db_list_bot_tokens.',
+      inputSchema: { token_id: z.number().describe('Числовой ID токена из db_list_bot_tokens') },
+    },
+    async ({ token_id }) => textResult(await botStatusInDb(token_id)),
+  );
+
+  server.registerTool(
+    'db_bot_logs',
+    {
+      description: 'Последние live-логи бота (stdout/stderr/status) — для отладки. token_id берётся из db_list_bot_tokens.',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        token_id: z.number().describe('Числовой ID токена из db_list_bot_tokens'),
+        limit: z.number().optional().describe('Максимум записей (по умолчанию 100)'),
+      },
+    },
+    async ({ project_id, token_id, limit }) => textResult(await botLogsInDb(project_id, token_id, limit)),
+  );
+
+  server.registerTool(
+    'db_bot_launch_history',
+    {
+      description: 'История запусков бота по token_id (статус, время старта/остановки, ошибка, pid) БЕЗ секрета token. token_id берётся из db_list_bot_tokens.',
+      inputSchema: { token_id: z.number().describe('Числовой ID токена из db_list_bot_tokens') },
+    },
+    async ({ token_id }) => textResult(await botLaunchHistoryInDb(token_id)),
   );
 }
 

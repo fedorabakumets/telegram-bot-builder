@@ -28,6 +28,7 @@ import { reorderProjectsHandler } from "./projectRoutes/handlers/reorderProjects
 import { exportProjectHandler } from "./projectRoutes/handlers/exportProjectHandler";
 import { duplicateProjectHandler } from "./projectRoutes/handlers/duplicateProjectHandler";
 import { getTokenHandler, clearTokenHandler } from "./projectRoutes/handlers/tokenHandlers";
+import { listBotTokensHandler } from "./projectRoutes/handlers/listBotTokensHandler";
 import { updateCommentsSettingsHandler } from "./projectRoutes/handlers/settingsHandler";
 import { exportToGoogleSheetsHandler, exportStructureToGoogleSheetsHandler } from "./projectRoutes/handlers/googleSheetsHandlers";
 import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHandler";
@@ -78,6 +79,9 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
     // Управление токеном
     app.get("/api/projects/:id/token", requireProjectAccess, getTokenHandler);
     app.delete("/api/projects/:id/token", requireProjectAccess, clearTokenHandler);
+
+    // Безопасный список токенов проекта (без секрета token) — для дискавери MCP-агентом
+    app.get("/api/projects/:id/tokens/list", requireDbReady, requireProjectAccess, listBotTokensHandler);
 
     // Настройки генерации комментариев
     app.post("/api/settings/comments-generation", updateCommentsSettingsHandler);
