@@ -52,6 +52,7 @@ import {
   setActiveSheetInDb,
   listSheetsInDb,
   reorderSheetsInDb,
+  moveSheetToProjectInDb,
   saveProject,
   scaffoldMinimalProject,
   summarizeProjectFromDb,
@@ -667,6 +668,28 @@ function registerTools(server: McpServer): void {
     },
     async ({ project_id, sheet_ids, commit_message }) =>
       textResult(await reorderSheetsInDb(project_id, sheet_ids, { commitMessage: commit_message })),
+  );
+
+  server.registerTool(
+    'db_move_sheet_to_project',
+    {
+      description: 'Перенести (move) или скопировать (copy) лист из одного проекта в другой в БД живого приложения с обновлением обоих холстов (live). Оригинальные id нод/веток и связи СОХРАНЯЮТСЯ как есть; id перегенерируется только при коллизии с целевым проектом. Кросс-листовые ссылки на ноды других листов источника обрываются. По умолчанию mode=copy (безопасно). В режиме move лист удаляется из источника (нельзя унести последний лист), а в оставшихся листах источника обрываются ссылки на унесённые ноды. Порядок записи безопасный: сначала целевой проект, затем источник. Адресация по числовым projectId из URL редактора',
+      inputSchema: {
+        source_project_id: z.number().describe('ID исходного проекта (откуда переносится лист)'),
+        target_project_id: z.number().describe('ID целевого проекта (куда переносится лист)'),
+        sheet_id: z.string().describe('ID переносимого листа в исходном проекте'),
+        mode: z.enum(['move', 'copy']).optional().describe('move — перенос с удалением из источника; copy — копирование (по умолчанию copy)'),
+        commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+      },
+    },
+    async ({ source_project_id, target_project_id, sheet_id, mode, commit_message }) =>
+      textResult(await moveSheetToProjectInDb(
+        source_project_id,
+        target_project_id,
+        sheet_id,
+        mode ?? 'copy',
+        { commitMessage: commit_message },
+      )),
   );
 
   server.registerTool(
