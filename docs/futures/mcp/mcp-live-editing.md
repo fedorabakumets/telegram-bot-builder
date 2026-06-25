@@ -223,6 +223,32 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 
 > План при реализации: общий файл `node-references.ts` (`collectAllNodeReferences`), `node-analysis-db.ts` (db-обёртки по образцу `node-query-db.ts`), регистрация рядом с `db_find_nodes`. Первые три — за один заход (шарят обход графа), переменные — позже под конкретный сценарий.
 
+### Рантайм бота (новый блок — В РАБОТЕ)
+**Цель:** замкнуть для агента петлю «собрал → запустил → почитал логи → починил → перезапустил» прямо из MCP, без переключения в UI. Сейчас MCP умеет только редактировать сценарий; управление живым процессом бота не покрыто.
+
+**Серверные эндпоинты уже есть** (`setupBotManagementRoutes.ts`, все под `requireProjectAccess` где есть `:id`/`:projectId`):
+- `POST /api/projects/:id/bot/start` — запуск бота проекта (сервер берёт сохранённый `botToken` сам — агенту секрет НЕ нужен).
+- `POST /api/projects/:id/bot/stop` — остановка.
+- `POST /api/projects/:id/bot/restart` — перезапуск.
+- `POST /api/projects/:id/bot/restart-all` — перезапуск всех токенов проекта.
+- `GET /api/tokens/:tokenId/bot-status` и `GET /api/bot/tokens/:tokenId/status` — статус.
+- `GET /api/projects/:projectId/tokens/:tokenId/logs` — live-логи (stdout/stderr).
+- `GET /api/tokens/:tokenId/launch-history`, `GET /api/launch/:launchId/logs`, `GET /api/bot-logs/:logId` — история запусков и логи по id.
+- `GET /api/workers/stats` — статистика воркеров.
+- `DELETE /api/projects/:projectId/tokens/:tokenId/logs` — очистка логов.
+
+**Предлагаемые MCP-тулы (фазировка: сначала read-only для отладки, потом управление):**
+- Read-only: `db_bot_status` (статус по проекту), `db_bot_logs` (последние live-логи — самое ценное для отладки), `db_bot_launch_history`.
+- Управление: `db_start_bot` / `db_stop_bot` / `db_restart_bot` (средний риск — трогают живой процесс).
+
+**Открытый вопрос (решить в сборе контекста):** start/stop адресуются по `projectId`, а логи/статус — по `tokenId`. Агент не знает `tokenId` (и не должен видеть `botToken`). Варианты: (а) start-ответ возвращает `tokenId` запущенной инстанции; (б) добавить лёгкий `db_list_bot_tokens(projectId)` — отдаёт `tokenId` + маскированное имя/username, БЕЗ самого токена (через DTO, как с проектами). Безопасность: `botToken` агенту не раскрывается ни в одном туле — сервер оперирует сохранённым токеном сам.
+
+**Контекст собран (2026-06-25).** Ключевые находки: start `tokenId` в ответе НЕ возвращает (вариант «а» не работает без доработки); оба существующих листинга токенов протекают секретом `token` → нужен безопасный DTO + `db_list_bot_tokens` (вариант «б»); запуск асинхронный (worker pool) → тулу start стоит поллить статус после успеха. Формат логов: массив `BotLog[]` (`content`/`type`/`timestamp`), история — `BotLaunchHistory[]`.
+
+**✅ Предусловие безопасности выполнено (IDOR-фикс).** До runtime-тулов закрыт IDOR на token-маршрутах: добавлена проверка `hasProjectAccess` по projectId токена/запуска в `botStatusByTokenHandler`/`getBotTokenStatusHandler`/`botLaunchHistoryHandler`/`botLaunchLogsHandler` (+ ужесточён `botLogByIdHandler`), убрана утечка поля `token` из статус-DTO. Подробности — в `../infrastructure/api-security-ideal-architecture.md` (раздел «Проверка ownership»). Проверено curl + Playwright. Остаток: `GET /api/workers/stats` без проверки владения — отдельная задача.
+
+**Следующий шаг:** серверный безопасный DTO токена + `db_list_bot_tokens` (дискавери tokenId), затем read-only тулы (`db_bot_status`/`db_bot_logs`/`db_bot_launch_history`), затем control (`db_start_bot`/`db_stop_bot`/`db_restart_bot` с поллом статуса). Новый lib-файл `bot-runtime-db.ts` (+ опц. `bot-tokens-db.ts`).
+
 ### UX / наблюдаемость
 - **Подсветка изменённой ноды (Фаза 2.3).** Поле `changedNodeId` в `canvas-sync` + подсветка/центрирование на холсте.
 - **Аудит схемы на `z.date()` ↔ jsonb.** Найти другие даты в jsonb-данных, которые ломаются после round-trip (как было с `updatedAt`).

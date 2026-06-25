@@ -8,6 +8,7 @@ import { storage } from '../../../storages/storage';
 import { checkProcessExists, isPythonProcess, findBotProcessPid } from '../utils/processChecker';
 import { restoreProcessTracking } from '../utils/processRestorer';
 import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
+import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 
 /**
  * Нормализует tokenId — срезает префикс `token_` если он есть
@@ -106,6 +107,23 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
 
         // Получаем имя и username бота из таблицы bot_tokens
         const tokenRecord = await storage.getBotToken(tokenId);
+        if (!tokenRecord) {
+            res.status(404).json({ message: 'Токен не найден' });
+            return;
+        }
+
+        // Проверка владения: projectId токена → доступ владельца/коллаборатора
+        const ownerId = getOwnerIdFromRequest(req);
+        if (ownerId === null) {
+            res.status(403).json({ message: 'Нет прав доступа' });
+            return;
+        }
+        const hasAccess = await storage.hasProjectAccess(tokenRecord.projectId, ownerId);
+        if (!hasAccess) {
+            res.status(403).json({ message: 'Нет прав доступа' });
+            return;
+        }
+
         const botName = tokenRecord?.name ?? 'Неизвестный бот';
         const botUsername = tokenRecord?.botUsername ?? null;
 
@@ -118,7 +136,6 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
                     botName,
                     botUsername,
                     tokenId,
-                    token: tokenRecord?.token ?? null,
                     status: 'stopped',
                     statusLabel: formatStatusLabel('stopped'),
                     uptime: null,
@@ -186,7 +203,6 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
                 botName,
                 botUsername,
                 tokenId,
-                token: tokenRecord?.token ?? null,
                 status: actualStatus,
                 statusLabel: formatStatusLabel(actualStatus),
                 uptime: actualStatus === 'running' ? formatUptime(instance.startedAt) : null,

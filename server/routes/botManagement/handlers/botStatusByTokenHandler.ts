@@ -13,6 +13,7 @@ import { checkProcessExists, isPythonProcess, findBotProcessPid } from '../utils
 import { restoreProcessTracking } from '../utils/processRestorer';
 import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
 import { workerManager } from '../../../bots/botWorkerManager';
+import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 
 /**
  * Обрабатывает запрос на получение статуса бота по токену
@@ -34,6 +35,23 @@ export async function handleBotStatusByToken(req: Request, res: Response): Promi
         res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.set('Pragma', 'no-cache');
         res.set('Expires', '0');
+
+        // Проверка владения: резолвим токен → projectId → доступ владельца/коллаборатора
+        const tokenRecord = await storage.getBotToken(tokenId);
+        if (!tokenRecord) {
+            res.status(404).json({ message: 'Токен не найден' });
+            return;
+        }
+        const ownerId = getOwnerIdFromRequest(req);
+        if (ownerId === null) {
+            res.status(403).json({ message: 'Нет прав доступа' });
+            return;
+        }
+        const hasAccess = await storage.hasProjectAccess(tokenRecord.projectId, ownerId);
+        if (!hasAccess) {
+            res.status(403).json({ message: 'Нет прав доступа' });
+            return;
+        }
 
         const instance = await storage.getBotInstanceByToken(tokenId);
 
