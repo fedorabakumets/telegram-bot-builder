@@ -49,7 +49,8 @@ export function CreateTokenDialog({ open, onOpenChange, onCreated }: CreateToken
   const { toast } = useToast();
   const createToken = useCreateAgentToken();
   const [label, setLabel] = useState("");
-  const [scopes, setScopes] = useState<CreateAgentTokenBody["scopes"]>("read,write");
+  // Права временно зафиксированы на read,write (селектор скрыт до включения enforcement scopes)
+  const scopes: CreateAgentTokenBody["scopes"] = "read,write";
   const [expiry, setExpiry] = useState("0");
 
   /** Отправляет форму создания токена */
@@ -67,7 +68,6 @@ export function CreateTokenDialog({ open, onOpenChange, onCreated }: CreateToken
       });
       onOpenChange(false);
       setLabel("");
-      setScopes("read,write");
       setExpiry("0");
       onCreated(res.token);
     } catch {
@@ -92,19 +92,6 @@ export function CreateTokenDialog({ open, onOpenChange, onCreated }: CreateToken
               value={label}
               onChange={(e) => setLabel(e.target.value)}
             />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Права</Label>
-            <Select value={scopes} onValueChange={(v) => setScopes(v as CreateAgentTokenBody["scopes"])}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="read,write">Чтение и запись</SelectItem>
-                <SelectItem value="read">Только чтение</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-1.5">
