@@ -691,3 +691,26 @@ app.use((req, res, next) => {
 | Body limits | 50MB на всё | 1MB глобально, 20MB для upload |
 | Env validation | Fallback значения | Fail-fast при старте |
 | Logging | console.log | Структурированные логи |
+
+
+---
+
+## Массовое закрытие IDOR (2026-06-25)
+
+После аудита всех роутов закрыт системный пробел авторизации: глобальный `requireApiAuth` давал только аутентификацию, а проверка владения ресурсом на многих маршрутах отсутствовала.
+
+**Новые переиспользуемые middleware (`server/middleware/`):**
+- `requireResourceOwnership(resolver, notFound)` — фабрика: резолвер `(req) => Promise<projectId|null>` → `hasProjectAccess(projectId, ownerId)`; `ownerId === null` → 403.
+- `requireTokenOwnership` — резолв `:tokenId` → `token.projectId` → доступ. Защищает и `/api/projects/:projectId/tokens/:tokenId/*` (проверяется РЕАЛЬНЫЙ projectId токена, не значение из URL).
+- `requireMediaOwnership` — резолв media `:id` → projectId.
+- `requireEnvVariableOwnership` — резолв env `:id` → tokenId → projectId (особенно для `/reveal`).
+
+**Закрыто:**
+- `routes.ts`: token-settings/userbot/launch-settings/set-default (`requireTokenOwnership`); env-variables web + env-batch + reveal (`requireTokenOwnership` + in-handler сверка `variable.tokenId === :tokenId`); `tokens/default` (`requireProjectAccess`); media upload/project/search (`requireProjectAccess`) и `/api/media/:id*` (`requireMediaOwnership`); user-data (`logs/all`, `launches/all`, `users/variables`, `messages/all`, `responses`, `users/:userId`, POST users) — `requireProjectAccess`; `/api/users/:id` (GET/PUT/DELETE/interaction/state) — in-handler скоуп под владельца; `/api/bots` — фильтр по проектам владельца.
+- `setupBotIntegrationRoutes.ts`: `requireProjectAccess` на ВСЕ 43 projectId-маршрута (сообщения/файлы/группы/модерация/рассылки/bot-info).
+- `setupBotManagementRoutes.ts`: `tokens/:tokenId/photo` (`requireTokenOwnership`); `workers/stats` — in-handler скоуп под владельца + удалён `pid`.
+- `setupUserProjectAndTokenRoutes.ts`: `tokens/:tokenId/stats|env` (`requireTokenOwnership`); `/api/bot/env/:id*` (`requireEnvVariableOwnership`).
+
+**Проверено:** свои ресурсы 200 (UI не сломан, 0 ошибок в консоли), несуществующий/чужой токен 404, `workers/stats` без `pid`, межпроектный рестарт 403.
+
+**Отложено (отдельная фаза, риск сломать bot-facing callbacks):** маршруты с авторизацией по query `telegram_id` (`/api/bot/tokens/:tokenId/users*`, `deleteBotTokenHandler`, token/project CRUD c `ownerId === req.user.id`) — перевести на личность из сессии/PAT. Также: `/api/telegram-settings` и `/api/telegram-client/group-members/:groupId` (общая база, не projectId-scoped); утечка полного значения `token` в `tokens/default`/`tokens/first` (нужен DTO/маскирование).

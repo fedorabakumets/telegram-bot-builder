@@ -9,6 +9,8 @@
 
 import type { Express } from "express";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
+import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
+import { requireEnvVariableOwnership } from "../middleware/requireEnvVariableOwnership";
 import { getProjectsHandler } from "./userProjectsTokens/handlers/projects/getProjectsHandler";
 import { getBotProjectsHandler } from "./userProjectsTokens/handlers/projects/getBotProjectsHandler";
 import { getBotProjectDetailHandler } from "./userProjectsTokens/handlers/projects/getBotProjectDetailHandler";
@@ -65,7 +67,7 @@ export function setupUserProjectAndTokenRoutes(app: Express): void {
     app.get("/api/bot/projects/:id/tokens", requireProjectAccess, getBotProjectTokensHandler);
     app.post("/api/bot/projects/:id/tokens", requireProjectAccess, createBotTokenHandler);
     app.delete("/api/bot/tokens/:tokenId", deleteBotTokenHandler);
-    app.get("/api/bot/tokens/:tokenId/stats", getTokenStatsHandler);
+    app.get("/api/bot/tokens/:tokenId/stats", requireTokenOwnership, getTokenStatsHandler);
     app.get("/api/bot/tokens/:tokenId/users", getBotTokenUsersHandler);
     app.get("/api/bot/tokens/:tokenId/users/:userId", getBotTokenUserHandler);
     app.post("/api/user/tokens", createTokenHandler);
@@ -76,10 +78,10 @@ export function setupUserProjectAndTokenRoutes(app: Express): void {
     app.patch("/api/user/tokens/:id", updateTokenHandler);
     app.delete("/api/user/tokens/:id", deleteTokenHandler);
 
-    // Переменные окружения бота
-    app.get("/api/bot/tokens/:tokenId/env", getEnvVariablesHandler);
-    app.post("/api/bot/tokens/:tokenId/env", createEnvVariableHandler);
-    app.patch("/api/bot/env/:id", updateEnvVariableHandler);
-    app.delete("/api/bot/env/:id", deleteEnvVariableHandler);
-    app.get("/api/bot/env/:id/reveal", revealEnvVariableHandler);
+    // Переменные окружения бота — защита владением по :tokenId и по :id переменной
+    app.get("/api/bot/tokens/:tokenId/env", requireTokenOwnership, getEnvVariablesHandler);
+    app.post("/api/bot/tokens/:tokenId/env", requireTokenOwnership, createEnvVariableHandler);
+    app.patch("/api/bot/env/:id", requireEnvVariableOwnership, updateEnvVariableHandler);
+    app.delete("/api/bot/env/:id", requireEnvVariableOwnership, deleteEnvVariableHandler);
+    app.get("/api/bot/env/:id/reveal", requireEnvVariableOwnership, revealEnvVariableHandler);
 }

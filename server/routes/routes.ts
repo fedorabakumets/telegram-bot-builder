@@ -39,6 +39,9 @@ import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/
 import { setupGuard } from "../middleware/setup-guard";
 import { identifyAgent } from "../middleware/agentTokenMiddleware";
 import { requireApiAuth } from "../middleware/requireApiAuth";
+import { requireProjectAccess } from "../middleware/requireProjectAccess";
+import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
+import { requireMediaOwnership } from "../middleware/mediaOwnership";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { handleTelegramError } from "../utils/telegram-error-handler";
 import { fetchWithProxy } from "../utils/telegram-proxy";
@@ -542,10 +545,18 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.use("/api/user-ids", createUserIdsRoutes(pgPool));
 
   // Get all bot instances
-  app.get("/api/bots", async (_req, res) => {
+  app.get("/api/bots", async (req, res) => {
     try {
       const instances = await storage.getAllBotInstances();
-      res.json(instances);
+      // Скоупинг под владельца: отдаём только инстансы проектов запросившего
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId === null) {
+        return res.json([]);
+      }
+      const ownProjects = await storage.getUserBotProjects(ownerId);
+      const ownProjectIds = new Set(ownProjects.map(p => p.id));
+      const scoped = instances.filter(inst => ownProjectIds.has(inst.projectId));
+      res.json(scoped);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch bot instances" });
     }
@@ -1110,7 +1121,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Переключение настроек автоперезапуска для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/auto-restart
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/auto-restart", async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/auto-restart", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { autoRestart, maxRestartAttempts } = req.body as {
@@ -1140,7 +1151,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Обновление защиты контента для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/protect-content
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/protect-content", async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/protect-content", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1201,7 +1212,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Обновление настройки сохранения входящих медиафайлов для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/save-incoming-media
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/save-incoming-media", async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/save-incoming-media", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1266,7 +1277,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * (handle_unhandled_message, handle_unhandled_photo, fallback_callback_handler).
    * Значение в .env пишется как 0/1 (как USER_DATABASE), а не true/false.
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/catch-all-handlers", async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/catch-all-handlers", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1332,7 +1343,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Аксессор get_content и кэш _content_cache генерируются всегда.
    * Значение в .env пишется как 0/1 (как CATCH_ALL_HANDLERS), а не true/false.
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/content-cache", async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/content-cache", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1393,7 +1404,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Обновление настроек Telethon userbot для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/userbot
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/userbot", async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/userbot", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1475,7 +1486,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Авторизация Telethon userbot — шаг 1: отправка кода
    * POST /api/projects/:projectId/tokens/:tokenId/userbot/send-code
    */
-  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/send-code", async (req, res) => {
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/send-code", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { apiId, apiHash, phone } = req.body as { apiId: string; apiHash: string; phone: string };
@@ -1501,7 +1512,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Авторизация Telethon userbot — шаг 2: ввод кода
    * POST /api/projects/:projectId/tokens/:tokenId/userbot/sign-in
    */
-  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in", async (req, res) => {
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { phone, code } = req.body as { phone: string; code: string };
@@ -1531,7 +1542,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Авторизация Telethon userbot — шаг 3: ввод 2FA пароля
    * POST /api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa
    */
-  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa", async (req, res) => {
+  app.post("/api/projects/:projectId/tokens/:tokenId/userbot/sign-in-2fa", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { password } = req.body as { password: string };
@@ -1561,7 +1572,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Обновление уровня логирования для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/log-level
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/log-level", async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/log-level", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const projectId = parseInt(req.params.projectId);
@@ -1608,7 +1619,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Обновление настроек режима запуска для токена бота
    * PUT /api/projects/:projectId/tokens/:tokenId/launch-settings
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/launch-settings", async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/launch-settings", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { launchMode, webhookBaseUrl, webhookSecretToken } = req.body as {
@@ -1655,7 +1666,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Set default token
-  app.post("/api/projects/:projectId/tokens/:tokenId/set-default", async (req, res) => {
+  app.post("/api/projects/:projectId/tokens/:tokenId/set-default", requireTokenOwnership, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const tokenId = parseInt(req.params.tokenId);
@@ -1672,7 +1683,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get default token for a project
-  app.get("/api/projects/:id/tokens/default", async (req, res) => {
+  app.get("/api/projects/:id/tokens/default", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
       const token = await storage.getDefaultBotToken(projectId);
@@ -1722,7 +1733,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // === МЕДИАФАЙЛЫ ===
 
   // Загрузка медиафайла (одиночная) с улучшенной обработкой
-  app.post("/api/media/upload/:projectId", upload.single('file'), fixUtf8Encoding, async (req, res) => {
+  app.post("/api/media/upload/:projectId", requireProjectAccess, upload.single('file'), fixUtf8Encoding, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const file = req.file;
@@ -1840,7 +1851,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Загрузка множественных медиафайлов с улучшенной обработкой
-  app.post("/api/media/upload-multiple/:projectId", upload.array('files', 20), async (req, res) => {
+  app.post("/api/media/upload-multiple/:projectId", requireProjectAccess, upload.array('files', 20), async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const files = req.files as Express.Multer.File[];
@@ -2032,7 +2043,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Загрузка файла по URL с расширенными возможностями
-  app.post("/api/media/download-url/:projectId", async (req, res) => {
+  app.post("/api/media/download-url/:projectId", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const { url, description, tags, isPublic, customFileName } = req.body;
@@ -2179,7 +2190,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Пакетная загрузка файлов по URL (множественная загрузка)
-  app.post("/api/media/download-urls/:projectId", async (req, res) => {
+  app.post("/api/media/download-urls/:projectId", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const { urls, isPublic, defaultDescription } = req.body;
@@ -2332,7 +2343,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Получение всех медиафайлов проекта
-  app.get("/api/media/project/:projectId", async (req, res) => {
+  app.get("/api/media/project/:projectId", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const fileType = req.query.type as string;
@@ -2352,7 +2363,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Получение конкретного медиафайла
-  app.get("/api/media/:id", async (req, res) => {
+  app.get("/api/media/:id", requireMediaOwnership, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const mediaFile = await storage.getMediaFile(id);
@@ -2369,7 +2380,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Обно��ление медиафайла
-  app.put("/api/media/:id", async (req, res) => {
+  app.put("/api/media/:id", requireMediaOwnership, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -2388,7 +2399,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Удаление медиафайла
-  app.delete("/api/media/:id", async (req, res) => {
+  app.delete("/api/media/:id", requireMediaOwnership, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
 
@@ -2420,7 +2431,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Поиск медиафайлов
-  app.get("/api/media/search/:projectId", async (req, res) => {
+  app.get("/api/media/search/:projectId", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const query = req.query.q as string;
@@ -2438,7 +2449,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Увеличение счетчика использования файла
-  app.post("/api/media/:id/use", async (req, res) => {
+  app.post("/api/media/:id/use", requireMediaOwnership, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.incrementMediaFileUsage(id);
@@ -3078,7 +3089,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @route GET /api/projects/:id/logs/all
    * @returns Массив логов [{level, message, timestamp}]
    */
-  app.get("/api/projects/:id/logs/all", async (req, res) => {
+  app.get("/api/projects/:id/logs/all", requireProjectAccess, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 200;
     const tokenId = getRequestTokenId(req);
@@ -3105,7 +3116,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @route GET /api/projects/:id/launches/all
    * @returns Массив запусков [{status, started_at, stopped_at, error_message}]
    */
-  app.get("/api/projects/:id/launches/all", async (req, res) => {
+  app.get("/api/projects/:id/launches/all", requireProjectAccess, async (req, res) => {
     const projectId = parseInt(req.params.id);
 
     try {
@@ -3132,7 +3143,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @query limit - Лимит записей (по умолчанию 200)
    * @returns {columns: string[], rows: Array<{user_id, ...переменные}>}
    */
-  app.get("/api/projects/:id/users/variables", async (req, res) => {
+  app.get("/api/projects/:id/users/variables", requireProjectAccess, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 200;
@@ -3193,7 +3204,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @query offset - Смещение (по умолчанию 0)
    * @returns Массив сообщений [{id, userId, messageType, messageText, chatType, createdAt}]
    */
-  app.get("/api/projects/:id/messages/all", async (req, res) => {
+  app.get("/api/projects/:id/messages/all", requireProjectAccess, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 200;
@@ -3439,7 +3450,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get detailed user responses for a project
-  app.get("/api/projects/:id/responses", async (req, res) => {
+  app.get("/api/projects/:id/responses", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
 
@@ -3573,6 +3584,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (result.rows.length === 0) {
         return res.status(404).json({ message: "User data not found" });
       }
+      // Скоупинг под владельца: отдаём строку только если её проект принадлежит запросившему
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const rowProjectId = Number(result.rows[0].project_id);
+        const hasAccess = await storage.hasProjectAccess(rowProjectId, ownerId);
+        if (!hasAccess) {
+          return res.status(404).json({ message: "User data not found" });
+        }
+      }
       res.json(result.rows[0]);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user data" });
@@ -3580,7 +3600,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Get user data by project and telegram user ID
-  app.get("/api/projects/:projectId/users/:userId", async (req, res) => {
+  app.get("/api/projects/:projectId/users/:userId", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const userId = req.params.userId;
@@ -3599,7 +3619,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Create new user data
-  app.post("/api/projects/:id/users", async (req, res) => {
+  app.post("/api/projects/:id/users", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
       const tokenId = getRequestTokenId(req) ?? 0;
@@ -3633,6 +3653,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       effectiveTokenId = await resolveEffectiveProjectTokenId(projectId, requestedTokenId);
       // Используем общий пул соединений для обновления bot_users
+
+      // Скоупинг под владельца: мутация только в проектах, к которым есть доступ
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Нет прав доступа к проекту" });
+        }
+      }
 
       // Проверяем какие поля можно обновить
       const updateFields = [];
@@ -3687,6 +3716,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const projectId = Number(req.body?.projectId ?? 0);
       const requestedTokenId = getRequestTokenId(req);
       const tokenId = await resolveEffectiveProjectTokenId(projectId, requestedTokenId);
+
+      // Скоупинг под владельца: удаление только в проектах, к которым есть доступ
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Нет прав доступа к проекту" });
+        }
+      }
 
       // Используем общий пул соединений для удаления
       try {
@@ -3822,6 +3860,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const id = req.params.id;
       const projectId = Number(req.body?.projectId ?? 0);
       const tokenId = getRequestTokenId(req) ?? 0;
+      // Скоупинг под владельца: мутация только в проектах, к которым есть доступ
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Нет прав доступа к проекту" });
+        }
+      }
       const result = await dbPool.query(
         `UPDATE bot_users SET interaction_count = interaction_count + 1, last_interaction = NOW()
          WHERE user_id = $1 AND project_id = $2 AND token_id = $3`,
@@ -3846,6 +3892,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       if (!state || typeof state !== 'string') {
         return res.status(400).json({ message: "State is required and must be a string" });
+      }
+
+      // Скоупинг под владельца: мутация только в проектах, к которым есть доступ
+      const ownerId = getOwnerIdFromRequest(req);
+      if (ownerId !== null) {
+        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+        if (!hasAccess) {
+          return res.status(403).json({ message: "Нет прав доступа к проекту" });
+        }
       }
 
       const result = await dbPool.query(
@@ -5143,7 +5198,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
    * Получение списка переменных окружения токена
    * GET /api/projects/:projectId/tokens/:tokenId/env-variables
    */
-  app.get("/api/projects/:projectId/tokens/:tokenId/env-variables", async (req, res) => {
+  app.get("/api/projects/:projectId/tokens/:tokenId/env-variables", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const items = await storage.getEnvVariables(tokenId);
@@ -5161,7 +5216,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
    * Создание переменной окружения
    * POST /api/projects/:projectId/tokens/:tokenId/env-variables
    */
-  app.post("/api/projects/:projectId/tokens/:tokenId/env-variables", async (req, res) => {
+  app.post("/api/projects/:projectId/tokens/:tokenId/env-variables", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
       const { key, value, isSecret } = req.body as { key: string; value?: string; isSecret?: number };
@@ -5191,7 +5246,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
    * Обновление переменной окружения
    * PUT /api/projects/:projectId/tokens/:tokenId/env-variables/:id
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/env-variables/:id", async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/env-variables/:id", requireTokenOwnership, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       // Пропускаем если это batch-запрос (обрабатывается отдельным роутом)
@@ -5204,6 +5259,10 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
 
       const variable = await storage.getEnvVariable(id);
       if (!variable) return res.status(404).json({ message: "Переменная не найдена" });
+      // Переменная должна принадлежать токену из URL (защита от подмены чужого id)
+      if (variable.tokenId !== parseInt(req.params.tokenId, 10)) {
+        return res.status(404).json({ message: "Переменная не найдена" });
+      }
 
       if (key && key !== variable.key) {
         const existing = await storage.getEnvVariables(variable.tokenId);
@@ -5229,9 +5288,14 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
    * Удаление переменной окружения
    * DELETE /api/projects/:projectId/tokens/:tokenId/env-variables/:id
    */
-  app.delete("/api/projects/:projectId/tokens/:tokenId/env-variables/:id", async (req, res) => {
+  app.delete("/api/projects/:projectId/tokens/:tokenId/env-variables/:id", requireTokenOwnership, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      // Переменная должна принадлежать токену из URL (защита от подмены чужого id)
+      const variable = await storage.getEnvVariable(id);
+      if (!variable || variable.tokenId !== parseInt(req.params.tokenId, 10)) {
+        return res.status(404).json({ message: "Переменная не найдена" });
+      }
       const deleted = await storage.deleteEnvVariable(id);
       if (!deleted) return res.status(404).json({ message: "Переменная не найдена" });
       res.json({ success: true });
@@ -5244,11 +5308,15 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
    * Раскрытие секретного значения переменной
    * GET /api/projects/:projectId/tokens/:tokenId/env-variables/:id/reveal
    */
-  app.get("/api/projects/:projectId/tokens/:tokenId/env-variables/:id/reveal", async (req, res) => {
+  app.get("/api/projects/:projectId/tokens/:tokenId/env-variables/:id/reveal", requireTokenOwnership, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const variable = await storage.getEnvVariable(id);
       if (!variable) return res.status(404).json({ message: "Переменная не найдена" });
+      // Защита от раскрытия секрета чужого токена: переменная должна принадлежать токену из URL
+      if (variable.tokenId !== parseInt(req.params.tokenId, 10)) {
+        return res.status(404).json({ message: "Переменная не найдена" });
+      }
       res.json({ value: variable.value });
     } catch (error) {
       res.status(500).json({ message: "Ошибка получения значения" });
@@ -5291,7 +5359,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
    * - MAX_RESTART_ATTEMPTS → bot_tokens.maxRestartAttempts
    * - Остальные → bot_env_variables (CRUD)
    */
-  app.put("/api/projects/:projectId/tokens/:tokenId/env-batch", async (req, res) => {
+  app.put("/api/projects/:projectId/tokens/:tokenId/env-batch", requireTokenOwnership, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const tokenId = parseInt(req.params.tokenId);
