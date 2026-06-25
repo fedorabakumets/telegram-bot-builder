@@ -80,7 +80,7 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 | # | Задача | Сложность | Статус |
 |---|--------|-----------|--------|
 | 0.1 | Зафиксировать решение «MCP → HTTP API сервера» и формат правки | Низкая | ✅ Готово (вариант 1A: адресация по числовому `projectId`, снапшот целиком) |
-| 0.2 | Аутентификация MCP к API — **персональные токены агента (per-user PAT)** + deny-by-default + удаление гостевых проектов | Средняя | 🟨 В работе: **0.2a ✅ Готово** (`8dd17ba23` — `agent_tokens` + `identifyAgent` Bearer + `requireApiAuth` deny-by-default + удаление гостей + MCP `api-fetch`; проверено: аноним 401, токен 200, именное авторство агента). 0.2b (вкладка «Агент» UI) и 0.2c (проектные тулы) — ⬜. Модель GitHub/Stripe + RFC 6750. См. раздел «Проектный блок». |
+| 0.2 | Аутентификация MCP к API — **персональные токены агента (per-user PAT)** + deny-by-default + удаление гостевых проектов | Средняя | ✅ **Готово** (`8dd17ba23` 0.2a auth-инфра + deny-by-default + удаление гостей; `63ceb047e` 0.2b вкладка «Агент»; `cf6a71275`+`567d1f9a3` 0.2c проектные тулы; `36385ec52`+`709ff5fdb` 0.2d live-sync списка проектов вкл. коллабораторов). Модель GitHub/Stripe + RFC 6750. **Остаётся**: enforcement scopes (read/write) — отложено, селектор скрыт. См. раздел «Проектный блок». |
 
 ### Фаза 1 — Полный снапшот через API + broadcast (MVP realtime)
 | # | Задача | Сложность | Статус |
@@ -241,21 +241,23 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 6. **Вкладка «Агент» в UI (0.2b)** — управление своими токенами: список (label, prefix, scopes, создан, last used), «Сгенерировать» (полный токен один раз + копирование + готовый сниппет настройки MCP), «Отозвать».
 
 **Отложено осознанно (не переинженерим первую версию):**
-- **Скоупы read/write в рантайме** — колонку `scopes` заводим сразу, но проверку прав (read-токен не может писать) включаем в 0.2b/0.2c.
+- **Скоупы read/write в рантайме** — колонка `scopes` заводится сразу, но проверку прав (read-токен не может писать) откладываем отдельным заходом (см. «0.2d / Скоупы» ниже). Селектор прав в UI временно скрыт — все токены `read,write`.
 - **Чек-сумма в префиксе токена** (как `ghp_` + CRC у GitHub для секрет-сканеров) — nice-to-have, позже.
 
 **Эндпоинты тулов проектного блока (после токен-инфры):**
 - `db_list_projects` → `GET /api/projects/list` — проекты владельца токена (`total` + метаданные id/name/nodeCount/sheetsCount/sortOrder, через DTO — без `botToken`). ✅ **Готово** (`lib/bot-tools/project-ops-db.ts` `listProjectsInDb` + тул `db_list_projects` без inputSchema; серверный DTO `5de9ec3d5`). Проверено вживую: 7 проектов с id, без секретов. Единственный db-тул без project_id — закрывает дискавери.
-- `db_create_project` → `POST /api/projects`, тело `{ name, data }` (`data` = `scaffoldMinimalProject().project` по умолчанию) → `{ ok, projectId }`.
-- `db_rename_project` → `PUT /api/projects/:id` с телом `{ name }` (без `data` — версии не плодятся).
-- `db_reorder_projects` → `PUT /api/projects/reorder`, тело `{ projectIds: number[] }`.
-- `db_export_project` → `POST /api/projects/:id/export` → `{ code }` (готовый Python `bot.py`).
-- `db_delete_project` → `DELETE /api/projects/:id`. **ДЕСТРУКТИВНО, необратимо** — обязательный флаг `confirm: true`.
+- `db_create_project` → `POST /api/projects`, тело `{ name, data }` (`data` = `scaffoldMinimalProject().project` по умолчанию) → `{ ok, projectId, name }`. ✅ **Готово** (`567d1f9a3`). Создаёт проект с дефолтным сценарием; возвращает только лёгкие поля (без `botToken`). Проверено вживую (проект 267).
+- `db_rename_project` → `PUT /api/projects/:id` с телом `{ name }` (без `data` — версии не плодятся). ✅ **Готово** (`567d1f9a3`). Возвращает `{ ok, projectId, name }`.
+- `db_reorder_projects` → `PUT /api/projects/reorder`, тело `{ projectIds: number[] }`. ✅ **Готово** (`567d1f9a3`).
+- `db_export_project` → `POST /api/projects/:id/export`. ✅ **Готово** (`567d1f9a3`). **Сохраняет `bot.py` на диск** (`bots/exported/project_<id>/bot.py` или `save_path`) и возвращает `{ ok, path, bytes, lines, preview }` — НЕ весь код (крупный bot.py раздул бы контекст); полный код по флагу `inline:true`. Заодно **починен серверный `exportProjectHandler`** (неверный путь импорта `bot-generator.ts`). Проверено: 78 КБ / 1576 строк сохранены, превью вернулось.
+- `db_delete_project` → `DELETE /api/projects/:id`. **ДЕСТРУКТИВНО, необратимо** — обязательный флаг `confirm: true` (confirm-gate в lib, без `confirm` запрос не уходит). ✅ **Готово** (`567d1f9a3`). Проверено: отказ без confirm, удаление с confirm.
 
 **Фазировка:**
 - **0.2a — серверная токен-инфра + deny-by-default + удаление гостей:** ✅ **Готово** (коммит `8dd17ba23`). Таблица `agent_tokens` (+миграция `0008`, sha-256 хеш, uniqueIndex, `scopes`-задел) + крипто-хелпер (`server/utils/agent-token-crypto.ts`) + storage (`createAgentToken`/`getAgentTokensByOwner`/`revokeAgentToken`/`resolveAgentToken`) + resolver `identifyAgent` (`server/middleware/agentTokenMiddleware.ts`, `Authorization: Bearer`) + **глобальный `requireApiAuth`** (deny-by-default с allowlist) + ужесточён `requireProjectAccess` (аноним → 403) + удалены гостевые ветки (`listProjectsHandler`/`getAllProjectsHandler`/guest-middleware/`ensureDefaultProject`). MCP: `lib/bot-tools/api-fetch.ts` (Bearer + `MCP_AGENT_TOKEN`) + рефактор 3 файлов + `dotenv` в точке входа MCP. Проверено вживую: без токена 401, валидный 200, неверный 401, агентские версии теперь под реальным владельцем (`authorId` + `authorKind='agent'`).
 - **0.2b — вкладка «Агент» (UI):** ✅ **Готово**. Серверные хендлеры `GET/POST/DELETE /api/agent-tokens` (`server/routes/agentTokens/`, DTO без `tokenHash`/`ownerId`, `setupAgentTokenRoutes`) + `createAgentToken` расширен под `expiresAt`. Клиент: вкладка «Агент» (`client/components/editor/agent/` — панель, таблица, диалоги создания/показа-один-раз/отзыва, сниппет mcp.json) + регистрация в `HeaderTab`/`NAV_ITEMS`/`editor.tsx`. Проверено вживую: список/создание (срок 30/90 дней)/отзыв, отозванный токен → 401, секрет не утекает, вкладка рендерится. Полная спецификация — [`../ui/agent-tab.md`](../ui/agent-tab.md). Enforcement scopes отложен в 0.2c.
-- **0.2c — проектный блок тулов:** ⬜ `project-ops-db.ts` (6 функций) + регистрация 6 тулов + экспорт в барель.
+- **0.2c — проектный блок тулов:** ✅ **Готово** (`cf6a71275` + `567d1f9a3`). `lib/bot-tools/project-ops-db.ts` (6 функций) + регистрация 6 тулов (`db_list_projects`/`db_create_project`/`db_rename_project`/`db_reorder_projects`/`db_export_project`/`db_delete_project`) + экспорт в барель. create/rename отдают только `{ok,projectId,name}` (без `botToken`); delete с confirm-gate; export сохраняет на диск + сводка. Проверено вживую на проектах 266/267/268.
+- **0.2d — live-синхронизация списка проектов:** ✅ **Готово** (`36385ec52` + `709ff5fdb`). Событие `projects-changed` на owner-канал `user_<id>` (переиспользован `shared-terminal-ws`, `projectId=0`); эмит из create/rename/reorder/delete; клиент `ProjectsChangedListener` глобально в `App` инвалидирует `['/api/projects/list']`. Список в шапке/home/сайдбаре обновляется без F5 — в т.ч. от действий MCP-агента. **Коллабораторы покрыты**: `broadcastProjectsChangedToUsers` + `getProjectMemberIds` (владелец + `project_collaborators`) для rename/delete; в delete получатели собираются до каскадного удаления. create/reorder — owner/actor-only. Проверено в браузере (create/rename/delete отражаются live).
+- **Скоупы (scopes) — отложено.** Колонка `scopes` хранится (`read,write` по умолчанию), но **enforcement не реализован** (read-токен пока фактически может писать). Селектор прав в UI **временно скрыт** (`fae3cd4e0`) — все токены `read,write`. Включение: пробросить `scopes` в `req` из `identifyAgent` + middleware `requireScope` (write для POST/PUT/PATCH/DELETE) на пишущих роутах, затем вернуть селектор. Тяжёлый кросс-срезный пункт.
 
 #### Удаление гостевых проектов + deny-by-default (security-фикс, часть 0.2a)
 
@@ -281,7 +283,7 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 
 ### Архитектурные ставки
 - **Дельты + арбитраж (Фазы 2.2 / 2.4).** Точечные `(nodeId, поле, значение)` вместо снапшота + сервер-арбитр — убирает гонки человек+агент и снижает трафик.
-- **Персональные токены агента (Фаза 0.2).** 🟦 Решено делать (per-user PAT, профессиональный состав: sha-256 хеш как GitHub/Stripe, `Authorization: Bearer` по RFC 6750, deny-by-default с allowlist, колонка `scopes` на будущее) — таблица `agent_tokens` + `identifyAgent`-резолвер + вкладка «Агент». Гостевые проекты убираются. Предусловие проектного блока и прод-безопасности. См. раздел «Проектный блок» выше.
+- **Персональные токены агента (Фаза 0.2).** ✅ Готово (per-user PAT: sha-256 хеш, `Authorization: Bearer`, deny-by-default с allowlist, удаление гостей, вкладка «Агент», проектный блок тулов, live-sync списка вкл. коллабораторов). Остаётся enforcement scopes (read/write) — отложено. См. раздел «Проектный блок».
 
 ## Открытые вопросы
 
