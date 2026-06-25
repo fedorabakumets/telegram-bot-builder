@@ -7,6 +7,7 @@ import { nanoid } from 'nanoid';
 import type { BotDataWithSheets, Node } from '@shared/schema';
 import { collectAllNodes } from './collect-nodes.ts';
 import { minimizeNode } from './minimize-node-data.ts';
+import { hoistMessageKeyboards } from './hoist-keyboard.ts';
 import { validateBotProject } from './validate-project.ts';
 import type { ValidateProjectResult } from './types.ts';
 
@@ -112,7 +113,8 @@ export function addNodeToProject(projectJson: unknown, node: Node, sheetId?: str
 
   const idx = resolveSheetIndex(project, sheetId);
   const sheets = [...(project.sheets ?? [])];
-  const sheet = { ...sheets[idx], nodes: [...(sheets[idx]?.nodes ?? []), minimizeNode(node)] };
+  const withAdded = [...(sheets[idx]?.nodes ?? []), minimizeNode(node)];
+  const sheet = { ...sheets[idx], nodes: hoistMessageKeyboards(withAdded) };
   sheets[idx] = sheet;
 
   const updated = { ...project, sheets };
@@ -146,7 +148,7 @@ export function updateNodeInProject(
       ...(patch.data ? { data: { ...n.data, ...patch.data } } : {}),
     };
   });
-  sheets[idx] = { ...sheets[idx], nodes };
+  sheets[idx] = { ...sheets[idx], nodes: hoistMessageKeyboards(nodes) };
 
   const updated = { ...project, sheets };
   return { project: updated, validation: validateBotProject(updated) };
