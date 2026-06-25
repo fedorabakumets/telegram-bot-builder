@@ -95,7 +95,7 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 ### Фаза 2 — Гранулярные правки нод (node-level)
 | # | Задача | Сложность | Статус |
 |---|--------|-----------|--------|
-| 2.1 | MCP-операции уровня ноды: add/update/remove node, connect/disconnect | Средняя | ✅ Готово + расширено. Ноды: `db_add_node`/`db_update_node`/`db_remove_node`/`db_connect_nodes`/`db_move_node` (перенос между листами, `lib/bot-tools/node-ops-db.ts`, `project-mutate.ts`). Чтение: `get_project_db`/`db_project_summary`/`db_list_nodes`/`db_get_node` (`project-db-read.ts`, `node-query-db.ts`). Листы: `db_add_sheet`/`db_rename_sheet`/`db_remove_sheet`/`db_set_active_sheet`/`db_list_sheets` (`sheet-ops.ts`, `sheet-ops-db.ts`). Фикс: `canvasSheetSchema.createdAt/updatedAt` → `z.coerce.date()` (jsonb round-trip). Не сделано: `db_duplicate_sheet` (нужна регенерация id нод + ремаппинг ссылок). |
+| 2.1 | MCP-операции уровня ноды: add/update/remove node, connect/disconnect | Средняя | ✅ Готово + расширено. Ноды: `db_add_node`/`db_update_node`/`db_remove_node`/`db_connect_nodes`/`db_move_node` (перенос между листами, `lib/bot-tools/node-ops-db.ts`, `project-mutate.ts`) + `db_auto_layout` (иерархическая авто-раскладка позиций нод листа, как кнопка «Авто-расстановка»; меняет только координаты, `lib/bot-tools/hierarchical-layout.ts`). Чтение: `get_project_db`/`db_project_summary`/`db_list_nodes`/`db_get_node` (`project-db-read.ts`, `node-query-db.ts`). Листы: `db_add_sheet`/`db_rename_sheet`/`db_remove_sheet`/`db_set_active_sheet`/`db_list_sheets` (`sheet-ops.ts`, `sheet-ops-db.ts`). Фикс: `canvasSheetSchema.createdAt/updatedAt` → `z.coerce.date()` (jsonb round-trip). Не сделано: `db_duplicate_sheet` (нужна регенерация id нод + ремаппинг ссылок). |
 | 2.2 | Дельта-протокол `(nodeId, property, value)` (общий с realtime-collaboration #4) | Высокая | ⬜ |
 | 2.3 | Точечное применение дельты на холсте (анимация/подсветка изменённой ноды) | Средняя | ⬜ |
 | 2.4 | Арбитраж порядка событий на сервере (общий с realtime-collaboration #6) | Высокая | ⬜ |
@@ -162,8 +162,10 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 - **MCP-запись в БД (Фаза 1)** — `lib/bot-tools/project-db.ts` (`updateProjectInDb`),
   тул `update_project_db` в `tools/mcp-server/index.ts`.
 - **Node-level операции над БД (Фаза 2.1)** — `lib/bot-tools/node-ops-db.ts`
-  (`addNodeInDb`/`updateNodeInDb`/`removeNodeInDb`/`connectNodesInDb`) поверх `project-mutate.ts`
-  и `updateProjectInDb`; тулы `db_add_node`/`db_update_node`/`db_remove_node`/`db_connect_nodes`.
+  (`addNodeInDb`/`updateNodeInDb`/`removeNodeInDb`/`connectNodesInDb`/`autoLayoutSheetInDb`) поверх `project-mutate.ts`
+  и `updateProjectInDb`; тулы `db_add_node`/`db_update_node`/`db_remove_node`/`db_connect_nodes`/`db_auto_layout`.
+  Авто-раскладка использует серверный порт алгоритма `lib/bot-tools/hierarchical-layout.ts`
+  (`createHierarchicalLayout`) и меняет только `position` нод листа.
 - **Read-тулы состояния из БД (Фаза 2.1)** — `lib/bot-tools/project-db-read.ts`
   (`fetchProjectFromDb`) и `lib/bot-tools/node-query-db.ts`
   (`listNodesInDb`/`getNodeFromDb`/`summarizeProjectFromDb`); тулы `get_project_db` (тяжёлый),

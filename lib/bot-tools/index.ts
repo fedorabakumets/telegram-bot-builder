@@ -18,6 +18,7 @@ export * from './create-node.ts';
 export * from './mcp-allowed-types.ts';
 export * from './minimize-node-data.ts';
 export * from './project-mutate.ts';
+export * from './hierarchical-layout.ts';
 export * from './project-io.ts';
 export { updateProjectInDb } from './project-db.ts';
 export * from './project-db-read.ts';
