@@ -345,3 +345,47 @@ export async function deleteProjectInDb(
 
   return { deleted: true, message: body.message ?? 'Проект удалён' };
 }
+
+/**
+ * Дублирует проект целиком через POST /api/projects/:id/duplicate.
+ * Сервер создаёт полную копию сценария со всеми листами и связями и возвращает
+ * безопасный DTO копии в форме элемента списка (без data/sessionId).
+ * ⚠️ Bot token НЕ копируется — копия создаётся без токена (это поведение сервера).
+ * Если name не передан — сервер сам подставит имя «{имя источника} (копия)».
+ * @param sourceProjectId - Числовой ID проекта-источника
+ * @param options - Опции запроса: URL API и опциональное имя копии
+ * @returns Признак успеха с id и именем копии и id источника, либо ошибка
+ */
+export async function duplicateProjectInDb(
+  sourceProjectId: number,
+  options?: { apiBaseUrl?: string; name?: string },
+): Promise<{ ok: true; projectId: number; name: string; sourceProjectId: number } | { error: string }> {
+  let res: Response;
+  try {
+    res = await apiFetch(`/api/projects/${sourceProjectId}/duplicate`, {
+      apiBaseUrl: options?.apiBaseUrl,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: options?.name }),
+    });
+  } catch (err) {
+    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    if (res.status === 404) return { error: `HTTP 404: проект-источник не найден${body ? `: ${body}` : ''}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+  }
+
+  let body: { id?: number; name?: string };
+  try {
+    body = (await res.json()) as { id?: number; name?: string };
+  } catch (err) {
+    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+  }
+
+  if (typeof body.id !== 'number') return { error: 'В ответе сервера нет id копии' };
+
+  return { ok: true, projectId: body.id, name: body.name ?? '', sourceProjectId };
+}

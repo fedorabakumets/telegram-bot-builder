@@ -32,6 +32,7 @@ import {
   listOperators,
   listProjectsInDb,
   createProjectInDb,
+  duplicateProjectInDb,
   renameProjectInDb,
   reorderProjectsInDb,
   exportProjectInDb,
@@ -469,6 +470,18 @@ function registerTools(server: McpServer): void {
       inputSchema: { name: z.string().describe('Название нового проекта') },
     },
     async ({ name }) => textResult(await createProjectInDb(name)),
+  );
+
+  server.registerTool(
+    'db_duplicate_project',
+    {
+      description: 'Дублировать проект целиком (полная копия сценария со всеми листами и связями) в БД живого приложения. Bot token НЕ копируется — копия создаётся без токена. Опционально имя копии (по умолчанию «{имя источника} (копия)»). Возвращает id новой копии.',
+      inputSchema: {
+        source_project_id: z.number().describe('ID проекта-источника'),
+        name: z.string().optional().describe('Имя копии (по умолчанию «{имя} (копия)»)'),
+      },
+    },
+    async ({ source_project_id, name }) => textResult(await duplicateProjectInDb(source_project_id, { name })),
   );
 
   server.registerTool(

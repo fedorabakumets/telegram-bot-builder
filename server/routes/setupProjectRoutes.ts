@@ -26,6 +26,7 @@ import { deleteProjectVersionHandler } from "./projectRoutes/handlers/deleteProj
 import { pruneProjectVersionsHandler } from "./projectRoutes/handlers/pruneProjectVersionsHandler";
 import { reorderProjectsHandler } from "./projectRoutes/handlers/reorderProjectsHandler";
 import { exportProjectHandler } from "./projectRoutes/handlers/exportProjectHandler";
+import { duplicateProjectHandler } from "./projectRoutes/handlers/duplicateProjectHandler";
 import { getTokenHandler, clearTokenHandler } from "./projectRoutes/handlers/tokenHandlers";
 import { updateCommentsSettingsHandler } from "./projectRoutes/handlers/settingsHandler";
 import { exportToGoogleSheetsHandler, exportStructureToGoogleSheetsHandler } from "./projectRoutes/handlers/googleSheetsHandlers";
@@ -67,6 +68,9 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
     // Экспорт проекта в Python
     app.post("/api/projects/:id/export", requireProjectAccess, exportProjectHandler);
+
+    // Дублирование проекта (полная копия без токена)
+    app.post("/api/projects/:id/duplicate", requireDbReady, requireProjectAccess, duplicateProjectHandler);
 
     // Генерация Python кода
     app.post("/api/projects/:id/generate", requireDbReady, requireProjectAccess, handleGenerateCode);

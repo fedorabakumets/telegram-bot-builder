@@ -28,6 +28,7 @@ import { useSidebarFileUpload } from './hooks/use-sidebar-file-upload';
 import { useProjectsQuery } from './hooks/use-projects-query';
 import { useCreateProjectMutation } from './hooks/use-create-project-mutation';
 import { useDeleteProjectMutation } from './hooks/use-delete-project-mutation';
+import { useDuplicateProjectMutation } from './hooks/use-duplicate-project-mutation';
 import { useSidebarSheetDrag } from './hooks/use-sidebar-sheet-drag';
 import { useProjectEditing } from './hooks/use-project-editing';
 import { createTouchHandlers, registerGlobalTouchHandlers } from './components/sidebar-touch-handlers';
@@ -177,6 +178,9 @@ export function ComponentsSidebar({
   // Хук для удаления проекта
   const { deleteProject } = useDeleteProjectMutation();
 
+  // Хук для дублирования проекта
+  const { duplicateProject } = useDuplicateProjectMutation();
+
   // Хук для управления перетаскиванием листов
   const { handleSheetDragStart, handleSheetDropOnProject } = useSidebarSheetDrag({
     setDraggedSheet,
@@ -206,6 +210,13 @@ export function ComponentsSidebar({
     }
     deleteProject(projectId);
   };
+
+  /**
+   * Обработчик дублирования проекта
+   * Запускает мутацию создания полной копии проекта
+   * @param projectId - Идентификатор дублируемого проекта
+   */
+  const handleDuplicateProject = (projectId: number) => duplicateProject(projectId);
 
   // Обработчики inline редактирования листов
   const handleStartEditingSheet = (sheetId: string, currentName: string) => {
@@ -420,6 +431,7 @@ export function ComponentsSidebar({
                     activeSheetId={activeSheetId}
                     onProjectSelect={onProjectSelect}
                     onProjectDelete={handleDeleteProject}
+                    onProjectDuplicate={handleDuplicateProject}
                     onSheetSelect={onSheetSelect}
                     onSheetRename={onSheetRename}
                     onSheetDuplicate={onSheetDuplicate}
