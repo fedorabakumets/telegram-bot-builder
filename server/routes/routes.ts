@@ -43,6 +43,7 @@ import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
 import { requireMediaOwnership } from "../middleware/mediaOwnership";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
+import { validateExternalUrl } from "../utils/validateExternalUrl";
 import { resolveSessionSecret } from "../utils/resolveSessionSecret";
 import { handleTelegramError } from "../utils/telegram-error-handler";
 import { fetchWithProxy } from "../utils/telegram-proxy";
@@ -1993,6 +1994,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({
           message: "URL не указан",
           code: "MISSING_URL"
+        });
+      }
+
+      // Защита от SSRF: блокируем внутренние адреса
+      const urlValidation = validateExternalUrl(url, req.headers.host);
+      if (!urlValidation.valid) {
+        return res.status(400).json({
+          message: urlValidation.reason,
+          code: "BLOCKED_URL"
         });
       }
 
