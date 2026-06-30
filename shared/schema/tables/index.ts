@@ -68,3 +68,9 @@ export type { ProjectVersion, InsertProjectVersion } from "./project-versions";
 
 export { agentTokens, insertAgentTokenSchema } from "./agent-tokens";
 export type { AgentToken, InsertAgentToken } from "./agent-tokens";
+
+export { storageConfigs } from "./storage-configs";
+export type { StorageConfig, InsertStorageConfig } from "./storage-configs";
+
+export { mediaFileTokens } from "./media-file-tokens";
+export type { MediaFileToken, InsertMediaFileToken } from "./media-file-tokens";

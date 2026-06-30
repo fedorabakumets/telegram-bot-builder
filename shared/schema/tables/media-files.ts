@@ -3,10 +3,12 @@
  * @module shared/schema/tables/media-files
  */
 
-import { pgTable, text, serial, integer, timestamp, uniqueIndex, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, bigint, timestamp, uniqueIndex, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
+import { storageConfigs } from "./storage-configs";
+import { telegramUsers } from "./telegram-users";
 
 /**
  * Таблица медиафайлов
@@ -42,6 +44,14 @@ export const mediaFiles = pgTable("media_files", {
   thumbnailMediaId: integer("thumbnail_media_id").references((): AnyPgColumn => mediaFiles.id, { onDelete: "set null" }),
   /** URL обложки видео (альтернатива thumbnailMediaId — для внешних URL без скачивания) */
   thumbnailUrl: text("thumbnail_url"),
+  /** ID пользователя Telegram, загрузившего файл (ссылка на telegram_users.id) */
+  uploadedBy: bigint("uploaded_by", { mode: "number" }).references(() => telegramUsers.id, { onDelete: "set null" }),
+  /** Бэкенд хранилища файла ("local" | "s3") */
+  storageBackend: text("storage_backend").default("local").notNull(),
+  /** ID конфигурации хранилища (ссылка на storage_configs.id) */
+  storageConfigId: text("storage_config_id").references(() => storageConfigs.id, { onDelete: "set null" }),
+  /** Уникальный идентификатор файла Telegram (file_unique_id) для дедупликации */
+  fileUniqueId: text("file_unique_id"),
   /** Дата создания файла */
   createdAt: timestamp("created_at").defaultNow(),
   /** Дата последнего обновления файла */

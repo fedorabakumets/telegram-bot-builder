@@ -82,6 +82,12 @@ export type { ProjectVersion, InsertProjectVersion } from "./schema/tables/proje
 export { agentTokens, insertAgentTokenSchema } from "./schema/tables/agent-tokens";
 export type { AgentToken, InsertAgentToken } from "./schema/tables/agent-tokens";
 
+export { storageConfigs } from "./schema/tables/storage-configs";
+export type { StorageConfig, InsertStorageConfig } from "./schema/tables/storage-configs";
+
+export { mediaFileTokens } from "./schema/tables/media-file-tokens";
+export type { MediaFileToken, InsertMediaFileToken } from "./schema/tables/media-file-tokens";
+
 export type TelegramUserDB = typeof telegramUsersTable.$inferSelect;
 
 // Импорты для обратной совместимости

@@ -12,15 +12,12 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { MediaManager } from "./media-manager";
-import { UrlDownloader } from "./url-downloader";
 import type { MediaFile } from "@shared/schema";
-import { Upload, X, Eye, LinkIcon } from "lucide-react";
+import { X, Eye } from "lucide-react";
 import { uploadImageFromUrl } from "@lib/bot-generator/media/uploadImageFromUrl";
 import { toast } from "@/hooks/use-toast";
+import { MediaFieldButton } from "./media-field-button";
 
 /**
  * Свойства компонента MediaSelector
@@ -42,6 +39,10 @@ interface MediaSelectorProps {
   placeholder?: string;
   label?: string;
   nodeName?: string;
+  /** ID текущей ноды (для режима прикрепления) */
+  nodeId?: string;
+  /** Переключение на вкладку Файлы */
+  onSwitchToFilesTab?: () => void;
 }
 
 /**
@@ -62,15 +63,12 @@ export function MediaSelector({
   fileType,
   placeholder = "Выберите файл или введите URL",
   label = "Медиафайл",
-  nodeName = "node"
+  nodeName = "node",
+  nodeId,
+  onSwitchToFilesTab,
 }: MediaSelectorProps) {
   /**
-   * Состояние открытия диалогового окна выбора файла
-   */
-  const [isOpen, setIsOpen] = useState(false);
-
-  /**
-   * Выбранный медиафайл
+   * Выбранный медиафайл (для карточки превью в текущей сессии)
    */
   const [selectedFile, setSelectedFile] = useState<MediaFile | null>(null);
 
@@ -78,20 +76,6 @@ export function MediaSelector({
    * Состояние загрузки изображения
    */
   const [isUploading, setIsUploading] = useState(false);
-
-  /**
-   * Обработчик выбора файла
-   *
-   * Обновляет состояние выбранным файлом, вызывает коллбэк onChange
-   * и закрывает диалоговое окно.
-   *
-   * @param {MediaFile} file - Выбранный медиафайл
-   */
-  const handleSelectFile = (file: MediaFile) => {
-    setSelectedFile(file);
-    onChange(file.url, file.fileName);
-    setIsOpen(false);
-  };
 
   /**
    * Обработчик очистки выбора файла
@@ -280,69 +264,21 @@ export function MediaSelector({
             <div className="flex-1 h-px bg-slate-300/30 dark:bg-slate-700/30"></div>
           </div>
 
-          {/* Media Browser Button */}
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button
-                className="w-full h-auto min-h-[2.5rem] sm:h-11 text-xs sm:text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-600 dark:to-cyan-600 hover:from-blue-600 hover:to-cyan-600 dark:hover:from-blue-700 dark:hover:to-cyan-700 shadow-md hover:shadow-lg transition-all px-2 sm:px-4 py-2 flex items-center justify-center gap-2"
-              >
-                <Upload className="w-4 h-4 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="truncate text-center">
-                  <span className="hidden lg:inline">Выбрать или загрузить файл</span>
-                  <span className="lg:hidden sm:inline">Загрузить файл</span>
-                  <span className="sm:hidden">Файл</span>
-                </span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="w-full sm:max-w-5xl p-3 sm:p-6">
-              <DialogHeader>
-                <DialogTitle className="text-sm sm:text-xl leading-tight">
-                  <i className="fas fa-folder-open mr-1.5 sm:mr-2 text-blue-600 dark:text-blue-400"></i>
-                  Управление медиафайлами
-                </DialogTitle>
-                <DialogDescription className="sr-only">
-                  Выберите или загрузите медиафайлы для использования в боте
-                </DialogDescription>
-              </DialogHeader>
-              
-              <Tabs defaultValue="upload" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 h-auto">
-                  <TabsTrigger value="upload" className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-sm py-2 px-1 sm:px-3">
-                    <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden sm:inline" />
-                    <span className="hidden sm:inline">Загрузить</span>
-                    <span className="sm:hidden">Файлы</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="url" className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-sm py-2 px-1 sm:px-3">
-                    <LinkIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden sm:inline" />
-                    <span className="hidden sm:inline">По URL</span>
-                    <span className="sm:hidden">URL</span>
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="upload" className="mt-4">
-                  <MediaManager
-                    projectId={projectId}
-                    onSelectFile={handleSelectFile}
-                    selectedType={fileType}
-                    showUploader={true}
-                  />
-                </TabsContent>
-
-                <TabsContent value="url" className="mt-4">
-                  <UrlDownloader
-                    projectId={projectId}
-                    onDownloadComplete={(files) => {
-                      if (files.length > 0) {
-                        handleSelectFile(files[0]);
-                      }
-                      setIsOpen(false);
-                    }}
-                    onClose={() => setIsOpen(false)}
-                  />
-                </TabsContent>
-              </Tabs>
-            </DialogContent>
-          </Dialog>
+          {/* Единая кнопка выбора файла из хранилища (Req 2.1) */}
+          <div className="flex gap-2">
+            <MediaFieldButton
+              projectId={projectId}
+              nodeId={nodeId ?? nodeName}
+              nodeName={nodeName}
+              field="attachedMedia"
+              multi={false}
+              onAttach={(refs) => {
+                // Одиночное поле: пишем первую выбранную ссылку через onChange
+                if (refs[0]) onChange(refs[0]);
+              }}
+              className="flex-1 h-auto min-h-[2.5rem] sm:h-11 gap-1.5"
+            />
+          </div>
         </div>
       )}
     </div>

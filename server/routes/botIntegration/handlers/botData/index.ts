@@ -8,3 +8,4 @@
 
 export { getBotDataHandler } from "./getBotDataHandler";
 export { getAvatarHandler } from "./getAvatarHandler";
+export { getStorageQuotaHandler } from "./getStorageQuotaHandler";

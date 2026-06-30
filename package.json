@@ -125,6 +125,8 @@
     "test:phase13": "node run-tests.js --pattern test-phase13-database"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1076.0",
+    "@aws-sdk/s3-request-presigner": "3.1076.0",
     "@hookform/resolvers": "^5.2.2",
     "@jridgewell/trace-mapping": "^0.3.31",
     "@modelcontextprotocol/sdk": "^1.29.0",
@@ -250,6 +252,7 @@
     "c8": "^11.0.0",
     "drizzle-kit": "^0.31.8",
     "esbuild": "^0.27.2",
+    "fast-check": "3.23.2",
     "jsdom": "^28.1.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",
