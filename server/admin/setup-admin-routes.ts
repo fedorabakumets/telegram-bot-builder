@@ -9,6 +9,7 @@ import { isAdminAuthenticated, requireAdminAuth } from "./admin-auth-middleware"
 import { clearAdminCookie, setAdminCookie } from "./admin-session";
 import { serveAdminHubPage } from "./pages/hub-page";
 import { serveAdminLoginPage } from "./pages/login-page";
+import { serveSchemaDocsIndex, serveSchemaDocsTable } from "./pages/schema-docs-page";
 import { isAdminEnabled, resolveAdminApiKey } from "./resolve-admin-key";
 
 /** Префикс защищённых admin-маршрутов */
@@ -59,6 +60,8 @@ export function setupAdminRoutes(app: Express): void {
   });
 
   app.get("/admin", requireAdminAuth, serveAdminHubPage);
+  app.get("/admin/schema", requireAdminAuth, serveSchemaDocsIndex);
+  app.get("/admin/schema/:tableName", requireAdminAuth, serveSchemaDocsTable);
 }
 
 /**

@@ -18,6 +18,11 @@ interface AdminSection {
 /** Разделы админ-панели */
 const ADMIN_SECTIONS: AdminSection[] = [
   {
+    title: "Database Schema",
+    description: "ER-диаграмма и описание таблиц из Drizzle-схемы (npm run docs:db).",
+    href: "/admin/schema",
+  },
+  {
     title: "API Documentation",
     description: "OpenAPI spec: Swagger, Scalar, Redoc, RapiDoc.",
     href: "/admin/docs",
