@@ -7,6 +7,7 @@ import type { Express, Request, Response } from "express";
 import express from "express";
 import { isAdminAuthenticated, requireAdminAuth } from "./admin-auth-middleware";
 import { clearAdminCookie, setAdminCookie } from "./admin-session";
+import { serveApiDocsIndex, serveApiDocsTag } from "./pages/api-docs-page";
 import { serveAdminHubPage } from "./pages/hub-page";
 import { serveAdminLoginPage } from "./pages/login-page";
 import { serveSchemaDocsIndex, serveSchemaDocsTable } from "./pages/schema-docs-page";
@@ -62,6 +63,8 @@ export function setupAdminRoutes(app: Express): void {
   app.get("/admin", requireAdminAuth, serveAdminHubPage);
   app.get("/admin/schema", requireAdminAuth, serveSchemaDocsIndex);
   app.get("/admin/schema/:tableName", requireAdminAuth, serveSchemaDocsTable);
+  app.get("/admin/api-docs", requireAdminAuth, serveApiDocsIndex);
+  app.get("/admin/api-docs/:slug", requireAdminAuth, serveApiDocsTag);
 }
 
 /**

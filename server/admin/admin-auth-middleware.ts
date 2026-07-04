@@ -34,7 +34,7 @@ export function requireAdminAuth(req: Request, res: Response, next: NextFunction
   }
 
   const acceptsHtml = req.headers.accept?.includes("text/html");
-  if (acceptsHtml || req.path === "/admin" || req.path.startsWith("/admin/docs") || req.path.startsWith("/admin/schema")) {
+  if (acceptsHtml || req.path === "/admin" || req.path.startsWith("/admin/docs") || req.path.startsWith("/admin/schema") || req.path.startsWith("/admin/api-docs")) {
     res.redirect(302, "/admin/login");
     return;
   }

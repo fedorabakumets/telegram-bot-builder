@@ -76,7 +76,7 @@ function mergeDocumentedPaths(base: OpenApiDocument, documented: OpenApiDocument
  * @param app - Экземпляр Express после registerRoutes
  * @returns OpenAPI 3.0 spec
  */
-function buildOpenApiDocument(app: Express): OpenApiDocument {
+export function buildOpenApiDocument(app: Express): OpenApiDocument {
   const routes = collectApiRoutes(app);
   const paths: OpenApiDocument["paths"] = {};
 

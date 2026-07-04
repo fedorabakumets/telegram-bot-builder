@@ -4,40 +4,24 @@
  */
 
 import type { Request, Response } from "express";
+import { getAdminHubSections } from "../admin-hub-sections";
 
-/** Карточка раздела админки */
-interface AdminSection {
-  /** Заголовок */
-  title: string;
-  /** Описание */
-  description: string;
-  /** Ссылка */
-  href: string;
+/**
+ * Собирает HTML карточек разделов admin hub.
+ * @returns HTML фрагмент ссылок-карточек
+ */
+function renderAdminHubCards(): string {
+  return getAdminHubSections()
+    .map((section) => {
+      const externalAttrs = section.external ? ' target="_blank" rel="noopener noreferrer"' : "";
+      return `
+      <a class="card" href="${section.href}"${externalAttrs}>
+        <h2>${section.title}</h2>
+        <p>${section.description}</p>
+      </a>`;
+    })
+    .join("");
 }
-
-/** Разделы админ-панели */
-const ADMIN_SECTIONS: AdminSection[] = [
-  {
-    title: "Database Schema",
-    description: "ER-диаграмма и описание таблиц из Drizzle-схемы (npm run docs:db).",
-    href: "/admin/schema",
-  },
-  {
-    title: "API Documentation",
-    description: "OpenAPI spec: Swagger, Scalar, Redoc, RapiDoc.",
-    href: "/admin/docs",
-  },
-  {
-    title: "Healthcheck",
-    description: "GET /api/health — статус БД, Redis, шаблонов.",
-    href: "/api/health",
-  },
-  {
-    title: "OpenAPI JSON",
-    description: "Сырой spec для экспорта и генерации клиентов.",
-    href: "/admin/openapi.json",
-  },
-];
 
 /**
  * Отдаёт hub админ-панели.
@@ -46,14 +30,6 @@ const ADMIN_SECTIONS: AdminSection[] = [
  * @returns void
  */
 export function serveAdminHubPage(_req: Request, res: Response): void {
-  const cards = ADMIN_SECTIONS.map(
-    (s) => `
-      <a class="card" href="${s.href}">
-        <h2>${s.title}</h2>
-        <p>${s.description}</p>
-      </a>`,
-  ).join("");
-
   res.type("html").send(`<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -66,7 +42,7 @@ export function serveAdminHubPage(_req: Request, res: Response): void {
     .wrap { max-width: 960px; margin: 0 auto; }
     .head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
     h1 { margin: 0; font-size: 1.75rem; }
-    .logout { color: #8b949e; text-decoration: none; font-size: .9rem; }
+    .logout { color: #8b949e; text-decoration: none; font-size: .9rem; background: none; border: none; cursor: pointer; font-family: inherit; }
     .logout:hover { color: #f85149; }
     .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
     .card {
@@ -85,7 +61,7 @@ export function serveAdminHubPage(_req: Request, res: Response): void {
       <h1>Admin</h1>
       <form method="post" action="/admin/api/logout"><button class="logout" type="submit">Выйти</button></form>
     </div>
-    <div class="grid">${cards}</div>
+    <div class="grid">${renderAdminHubCards()}</div>
   </div>
 </body>
 </html>`);
