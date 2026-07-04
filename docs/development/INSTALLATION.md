@@ -569,6 +569,9 @@ REDIS_URL=redis://localhost:6379
 
 # Секрет для подписи сессий
 SESSION_SECRET=любая-случайная-строка-для-локалки
+
+# Ключ входа в /admin (OpenAPI и ops-панель)
+ADMIN_API_KEY=любая-случайная-строка-для-локалки
 ```
 
 > 🔐 **SESSION_SECRET — обязателен в production.** В режиме `development` можно указать любую строку (или вовсе опустить — будет dev-fallback с предупреждением). Но в `NODE_ENV=production` приложение **специально не запустится**, если `SESSION_SECRET` не задан: без него любой смог бы подделать cookie сессии и войти под чужим аккаунтом. Сгенерируйте надёжное случайное значение:
@@ -581,6 +584,19 @@ SESSION_SECRET=любая-случайная-строка-для-локалки
 > ```
 >
 > При смене `SESSION_SECRET` все активные сессии становятся недействительными — пользователям нужно будет войти заново.
+
+> 🔑 **ADMIN_API_KEY — обязателен в production** для доступа к админ-панели и OpenAPI-документации. В `development` переменную можно не задавать — будет использоваться небезопасный dev-fallback `dev-only-insecure-admin-key` (с предупреждением в лог). В production без `ADMIN_API_KEY` маршруты `/admin` и `/admin/docs` **не монтируются**. Сгенерируйте отдельное значение тем же способом, что и для `SESSION_SECRET`.
+
+> 📖 **Документация API:**
+>
+> | Режим | Адрес | Доступ |
+> |-------|-------|--------|
+> | **Development** | `http://localhost:5000/docs` | Публично (удобно при разработке) |
+> | **Development** | `http://localhost:5000/admin` | По ключу `ADMIN_API_KEY` (или dev-fallback) |
+> | **Production** | `https://ваш-домен/admin/login` | Только по `ADMIN_API_KEY` |
+> | **Production** | `https://ваш-домен/admin/docs` | После входа: Swagger, Scalar, Redoc, RapiDoc |
+>
+> Спецификация OpenAPI: `/docs-json` (dev) или `/admin/openapi.json` (prod, после входа).
 
 > 💡 **Не хотите настраивать Telegram Login?** Добавьте `SKIP_AUTH=true` в `.env` — авторизация будет отключена в любом режиме (dev и production). Вместо Telegram виджета появится простая форма ввода ID.
 
@@ -619,6 +635,11 @@ npm run dev
 | **🚀 Продакшен** | `npm run build` → `npm run start` | Сборка и запуск готовой версии |
 
 ✅ **Готово!** Приложение доступно по адресу: `http://localhost:5000`
+
+После запуска также доступны:
+- **Редактор:** `http://localhost:5000`
+- **OpenAPI (dev):** `http://localhost:5000/docs` — hub с выбором UI
+- **Админка:** `http://localhost:5000/admin/login` — ключ из `ADMIN_API_KEY` (или `dev-only-insecure-admin-key`, если переменная не задана)
 
 </details>
 

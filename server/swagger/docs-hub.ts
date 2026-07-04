@@ -11,59 +11,63 @@ interface DocsUiOption {
   title: string;
   /** Краткое описание */
   description: string;
-  /** Путь к UI */
-  href: string;
+  /** Относительный путь UI */
+  suffix: string;
   /** CSS-класс бейджа */
   badge: string;
 }
 
-/** Доступные UI для просмотра OpenAPI spec */
-const DOCS_UI_OPTIONS: DocsUiOption[] = [
+/** Шаблоны UI (suffix дополняется basePath) */
+const DOCS_UI_TEMPLATES: DocsUiOption[] = [
   {
     title: "Swagger UI",
     description: "Классика: Try it out, Authorize, отправка запросов из браузера.",
-    href: "/docs/swagger",
+    suffix: "/swagger",
     badge: "interactive",
   },
   {
     title: "Scalar",
     description: "Современный UI: поиск, тёмная тема, удобный Try it out.",
-    href: "/docs/scalar",
+    suffix: "/scalar",
     badge: "interactive",
   },
   {
     title: "Redoc",
     description: "Read-only документация: трёхколоночный layout, удобно читать схемы.",
-    href: "/docs/redoc",
+    suffix: "/redoc",
     badge: "read-only",
   },
   {
     title: "RapiDoc",
     description: "Компактный read-only viewer с боковой навигацией.",
-    href: "/docs/rapidoc",
+    suffix: "/rapidoc",
     badge: "read-only",
   },
 ];
 
 /**
- * Рендерит HTML-страницу выбора UI документации.
- * @param _req - Запрос Express
- * @param res - Ответ Express
- * @returns void
+ * Создаёт handler hub-страницы документации с заданным basePath.
+ * @param basePath - Префикс, например /admin/docs или /docs
+ * @param specPath - URL JSON spec, например /admin/docs-json
+ * @returns Express handler
  */
-export function serveDocsHub(_req: Request, res: Response): void {
-  const cards = DOCS_UI_OPTIONS.map(
-    (ui) => `
-      <a class="card" href="${ui.href}">
+export function createDocsHubHandler(basePath: string, specPath: string) {
+  return (_req: Request, res: Response): void => {
+    const cards = DOCS_UI_TEMPLATES.map(
+      (ui) => `
+      <a class="card" href="${basePath}${ui.suffix}">
         <div class="card-head">
           <h2>${ui.title}</h2>
           <span class="badge ${ui.badge}">${ui.badge}</span>
         </div>
         <p>${ui.description}</p>
       </a>`,
-  ).join("");
+    ).join("");
 
-  res.type("html").send(`<!DOCTYPE html>
+    const backLink =
+      basePath.startsWith("/admin") ? `<p class="sub"><a href="/admin">← Admin</a></p>` : "";
+
+    res.type("html").send(`<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
@@ -77,7 +81,7 @@ export function serveDocsHub(_req: Request, res: Response): void {
     }
     .wrap { max-width: 960px; margin: 0 auto; }
     h1 { margin: 0 0 .5rem; font-size: 1.75rem; }
-    .sub { color: #8b949e; margin-bottom: 2rem; }
+    .sub { color: #8b949e; margin-bottom: 1rem; }
     .sub a { color: #58a6ff; }
     .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
     .card {
@@ -99,13 +103,15 @@ export function serveDocsHub(_req: Request, res: Response): void {
 </head>
 <body>
   <div class="wrap">
+    ${backLink}
     <h1>Telegram Bot Builder API</h1>
-    <p class="sub">
-      Один OpenAPI spec — несколько UI на выбор.
-      JSON: <a href="/docs-json">/docs-json</a>
-    </p>
+    <p class="sub">JSON: <a href="${specPath}">${specPath}</a></p>
     <div class="grid">${cards}</div>
   </div>
 </body>
 </html>`);
+  };
 }
+
+/** @deprecated Используйте createDocsHubHandler */
+export const serveDocsHub = createDocsHubHandler("/docs", "/docs-json");

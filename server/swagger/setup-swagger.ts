@@ -1,11 +1,14 @@
 /**
- * @fileoverview OpenAPI (Swagger) — сбор spec и подключение UI документации
- * Hub: GET /docs · JSON: GET /docs-json · UI: /docs/swagger | /docs/scalar | /docs/redoc | /docs/rapidoc
+ * @fileoverview OpenAPI — сбор spec, admin-зона и UI документации
+ * Hub: GET /admin · Docs: /admin/docs (prod) · Dev: /docs публично
  * @module server/swagger/setup-swagger
  */
 
 import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import type { Express } from "express";
+import { requireAdminAuth } from "../admin/admin-auth-middleware";
+import { setupAdminRoutes } from "../admin/setup-admin-routes";
+import { isAdminEnabled } from "../admin/resolve-admin-key";
 import { isPublicApiPath } from "../middleware/requireApiAuth";
 import { buildOpenApiTags, collectApiRoutes } from "./collect-routes";
 import { documentedRegistry } from "./register-documented-paths";
@@ -73,7 +76,7 @@ function mergeDocumentedPaths(base: OpenApiDocument, documented: OpenApiDocument
  * @param app - Экземпляр Express после registerRoutes
  * @returns OpenAPI 3.0 spec
  */
-function buildOpenApiDocument(app: Express): OpenApiDocument {
+export function buildOpenApiDocument(app: Express): OpenApiDocument {
   const routes = collectApiRoutes(app);
   const paths: OpenApiDocument["paths"] = {};
 
@@ -93,15 +96,18 @@ function buildOpenApiDocument(app: Express): OpenApiDocument {
     };
   }
 
+  const adminDocsHint = isAdminEnabled()
+    ? "Документация: /admin (вход по ADMIN_API_KEY) → /admin/docs."
+    : "Документация: /docs (задайте ADMIN_API_KEY для защиты в production).";
+
   const base: OpenApiDocument = {
     openapi: "3.0.3",
     info: {
       title: "Telegram Bot Builder API",
       description:
         "REST API визуального конструктора Telegram-ботов. " +
-        "Авторизация: сессионная cookie после POST /api/auth/telegram или " +
-        "Authorization: Bearer <agent-token> для MCP/CLI. " +
-        "UI документации: /docs (hub), /docs/swagger, /docs/scalar, /docs/redoc, /docs/rapidoc.",
+        "Авторизация: сессионная cookie или Bearer PAT. " +
+        adminDocsHint,
       version: "2.2.0",
     },
     tags: buildOpenApiTags(routes),
@@ -135,10 +141,24 @@ function buildOpenApiDocument(app: Express): OpenApiDocument {
 }
 
 /**
- * Собрать OpenAPI spec и подключить hub + UI документации.
+ * Собрать OpenAPI spec, admin-панель и UI документации.
  * @param app - Экземпляр Express
  * @returns void
  */
 export function setupSwagger(app: Express): void {
-  setupDocsUis(app, buildOpenApiDocument(app));
+  const document = buildOpenApiDocument(app);
+
+  setupAdminRoutes(app);
+
+  if (isAdminEnabled()) {
+    setupDocsUis(app, document, {
+      basePath: "/admin/docs",
+      specPath: "/admin/openapi.json",
+      protect: requireAdminAuth,
+    });
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    setupDocsUis(app, document);
+  }
 }

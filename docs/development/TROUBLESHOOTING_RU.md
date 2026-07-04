@@ -38,6 +38,9 @@ PGPASSWORD=postgres
 # Секретный ключ для сессий
 SESSION_SECRET=your-super-secret-session-key-here-change-this-in-production
 
+# Ключ входа в /admin (OpenAPI и ops-панель)
+ADMIN_API_KEY=your-admin-api-key-here-change-this-in-production
+
 # Режим работы
 NODE_ENV=development
 ```
@@ -175,7 +178,7 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/telegram_bot_builder?
 ## Рекомендации по безопасности:
 
 1. Не храните файл .env в системе контроля версий
-2. Используйте случайные значения для SESSION_SECRET в production
+2. Используйте случайные значения для `SESSION_SECRET` и `ADMIN_API_KEY` в production
 3. Не используйте пароль "postgres" в production среде
 4. Ограничьте доступ к файлу .env только необходимым пользователям
 

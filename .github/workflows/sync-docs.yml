@@ -1,0 +1,98 @@
+# Синхронизация docs/api и docs/database из OpenAPI и Drizzle-схемы.
+# PR: проверка актуальности (fail если нужен npm run docs).
+# Push: автокоммит сгенерированных файлов (paths без docs/* — без зацикливания).
+
+name: Sync generated docs
+
+on:
+  push:
+    paths:
+      - "shared/schema/**"
+      - "server/swagger/**"
+      - "server/routes/**"
+      - "lib/api-docs/**"
+      - "lib/db-docs/**"
+      - "scripts/generate-api-docs.ts"
+      - "scripts/postprocess-db-docs.ts"
+      - "package.json"
+      - "package-lock.json"
+  pull_request:
+    paths:
+      - "shared/schema/**"
+      - "server/swagger/**"
+      - "server/routes/**"
+      - "lib/api-docs/**"
+      - "lib/db-docs/**"
+      - "scripts/generate-api-docs.ts"
+      - "scripts/postprocess-db-docs.ts"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: telegram_bot_builder
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d telegram_bot_builder"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/telegram_bot_builder
+      NODE_ENV: development
+      SESSION_SECRET: ci-docs-sync-session-secret
+      ADMIN_API_KEY: ci-docs-sync-admin-key
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run migrations
+        run: npm run migrate
+
+      - name: Generate docs (database + API)
+        run: npm run docs
+
+      - name: Fail if docs are out of date (pull request)
+        if: github.event_name == 'pull_request'
+        run: |
+          if ! git diff --exit-code -- docs/api docs/database; then
+            echo "::error::Документация устарела. Локально выполните: npm run docs && git add docs/api docs/database"
+            exit 1
+          fi
+
+      - name: Commit and push updated docs (push)
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/api docs/database
+          if git diff --staged --quiet; then
+            echo "Generated docs are already up to date."
+            exit 0
+          fi
+          git commit -m "chore: sync generated API and database docs"
+          git push

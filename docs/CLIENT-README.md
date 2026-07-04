@@ -69,9 +69,8 @@ docker compose up -d
 # Секретный ключ для сессий (обязательно измените!)
 SESSION_SECRET=ваш-уникальный-секрет-здесь
 
-# Telegram API (получить на https://my.telegram.org)
-TELEGRAM_API_ID=ваш_api_id
-TELEGRAM_API_HASH=ваш_api_hash
+# Ключ входа в /admin (OpenAPI и ops-панель)
+ADMIN_API_KEY=ваш-ключ-админки-здесь
 
 # Порт (по умолчанию 5000)
 PORT=5000

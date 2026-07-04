@@ -47,6 +47,7 @@ services:
       PGPASSWORD: "${PGPASSWORD}"
       PGSSLMODE: "${PGSSLMODE}"
       SESSION_SECRET: "${SESSION_SECRET}"
+      ADMIN_API_KEY: "${ADMIN_API_KEY}"
       NODE_ENV: "${NODE_ENV}"
       PORT: "${PORT}"
       HOST: "${HOST}"

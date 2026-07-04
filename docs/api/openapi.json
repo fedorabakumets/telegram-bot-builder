@@ -1,0 +1,6234 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Telegram Bot Builder API",
+    "description": "REST API визуального конструктора Telegram-ботов. Авторизация: сессионная cookie или Bearer PAT. Документация: /admin (вход по ADMIN_API_KEY) → /admin/docs.",
+    "version": "2.2.0"
+  },
+  "tags": [
+    {
+      "name": "agent-tokens",
+      "description": "Персональные токены агента (MCP/CLI)"
+    },
+    {
+      "name": "auth",
+      "description": "Аутентификация через Telegram и dev-login"
+    },
+    {
+      "name": "bot",
+      "description": "Эндпоинты /api/bot"
+    },
+    {
+      "name": "bot-folders",
+      "description": "Эндпоинты /api/bot-folders"
+    },
+    {
+      "name": "bot-logs",
+      "description": "Эндпоинты /api/bot-logs"
+    },
+    {
+      "name": "bots",
+      "description": "Управление запуском ботов"
+    },
+    {
+      "name": "config",
+      "description": "Публичная конфигурация клиента"
+    },
+    {
+      "name": "database",
+      "description": "Таблицы контента проекта"
+    },
+    {
+      "name": "google-auth",
+      "description": "Эндпоинты /api/google-auth"
+    },
+    {
+      "name": "health",
+      "description": "Healthcheck и готовность компонентов"
+    },
+    {
+      "name": "launch",
+      "description": "Эндпоинты /api/launch"
+    },
+    {
+      "name": "media",
+      "description": "Загрузка и управление медиафайлами"
+    },
+    {
+      "name": "projects",
+      "description": "Проекты, версии, экспорт и дублирование"
+    },
+    {
+      "name": "push-to-github",
+      "description": "Эндпоинты /api/push-to-github"
+    },
+    {
+      "name": "root",
+      "description": "Корень API"
+    },
+    {
+      "name": "server",
+      "description": "Эндпоинты /api/server"
+    },
+    {
+      "name": "settings",
+      "description": "Эндпоинты /api/settings"
+    },
+    {
+      "name": "setup",
+      "description": "Первоначальная настройка приложения"
+    },
+    {
+      "name": "storage-configs",
+      "description": "Реестр внешних хранилищ"
+    },
+    {
+      "name": "telegram-auth",
+      "description": "Авторизация Telegram Client API (userbot)"
+    },
+    {
+      "name": "telegram-client",
+      "description": "Эндпоинты /api/telegram-client"
+    },
+    {
+      "name": "telegram-settings",
+      "description": "Эндпоинты /api/telegram-settings"
+    },
+    {
+      "name": "templates",
+      "description": "Шаблоны ботов"
+    },
+    {
+      "name": "tokens",
+      "description": "Токены ботов и настройки запуска"
+    },
+    {
+      "name": "user",
+      "description": "Эндпоинты /api/user"
+    },
+    {
+      "name": "user-ids",
+      "description": "Идентификаторы пользователей"
+    },
+    {
+      "name": "users",
+      "description": "Пользователи ботов и статистика"
+    },
+    {
+      "name": "webhook",
+      "description": "Webhook-эндпоинты Telegram"
+    },
+    {
+      "name": "workers",
+      "description": "Эндпоинты /api/workers"
+    }
+  ],
+  "paths": {
+    "/api": {
+      "get": {
+        "tags": [
+          "root"
+        ],
+        "summary": "GET /api",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/agent-tokens": {
+      "get": {
+        "tags": [
+          "agent-tokens"
+        ],
+        "summary": "Список токенов агента",
+        "description": "Требует session cookie. Возвращает PAT текущего пользователя без секрета (только prefix и метаданные).",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Массив токенов владельца",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTokenList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTokenError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "agent-tokens"
+        ],
+        "summary": "Создать токен агента",
+        "description": "Требует session cookie. Полный секрет `token` возвращается один раз — сохраните сразу.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAgentTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Токен создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateAgentTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateAgentTokenValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTokenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent-tokens/{id}": {
+      "delete": {
+        "tags": [
+          "agent-tokens"
+        ],
+        "summary": "Отозвать токен агента",
+        "description": "Требует session cookie. Отзывает только токен текущего пользователя.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID токена в БД",
+              "example": "1"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Токен отозван",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokeAgentTokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTokenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Токен не найден или чужой",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTokenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/dev-login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "POST /api/auth/dev-login",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "GET /api/auth/login",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/auth/telegram": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Вход через Telegram Login Widget",
+        "description": "Публичный. Создаёт/обновляет пользователя и устанавливает session cookie.",
+        "security": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelegramAuthRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Авторизация успешна, cookie установлена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelegramAuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не передан id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Невалидный id_token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/telegram/miniapp": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "POST /api/auth/telegram/miniapp",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/auth/telegram/user/{id}": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Получить пользователя Telegram по ID",
+        "description": "Публичный. Возвращает данные из таблицы telegram_users.",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Telegram user id",
+              "example": "123456789"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTelegramUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидный id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bot-folders/cleanup": {
+      "post": {
+        "tags": [
+          "bot-folders"
+        ],
+        "summary": "POST /api/bot-folders/cleanup",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot-logs/{logId}": {
+      "get": {
+        "tags": [
+          "bot-logs"
+        ],
+        "summary": "GET /api/bot-logs/{logId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/env/{id}": {
+      "delete": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "DELETE /api/bot/env/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "PATCH /api/bot/env/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/env/{id}/reveal": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/env/{id}/reveal",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/projects": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/projects",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "POST /api/bot/projects",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/projects/{id}": {
+      "delete": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "DELETE /api/bot/projects/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/projects/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "PATCH /api/bot/projects/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/projects/{id}/collaborators": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/projects/{id}/collaborators",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "POST /api/bot/projects/{id}/collaborators",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/projects/{id}/collaborators/{userId}": {
+      "delete": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "DELETE /api/bot/projects/{id}/collaborators/{userId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/projects/{id}/data": {
+      "put": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "PUT /api/bot/projects/{id}/data",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/projects/{id}/export": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/projects/{id}/export",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/projects/{id}/tokens": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/projects/{id}/tokens",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "POST /api/bot/projects/{id}/tokens",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/projects/import": {
+      "post": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "POST /api/bot/projects/import",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/tokens/{tokenId}": {
+      "delete": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "DELETE /api/bot/tokens/{tokenId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/tokens/{tokenId}/env": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/tokens/{tokenId}/env",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "POST /api/bot/tokens/{tokenId}/env",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/tokens/{tokenId}/photo": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/tokens/{tokenId}/photo",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/tokens/{tokenId}/stats": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/tokens/{tokenId}/stats",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/tokens/{tokenId}/status": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/tokens/{tokenId}/status",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/tokens/{tokenId}/users": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/tokens/{tokenId}/users",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bot/tokens/{tokenId}/users/{userId}": {
+      "get": {
+        "tags": [
+          "bot"
+        ],
+        "summary": "GET /api/bot/tokens/{tokenId}/users/{userId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/bots": {
+      "get": {
+        "tags": [
+          "bots"
+        ],
+        "summary": "GET /api/bots",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/config": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "GET /api/config",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/backup": {
+      "post": {
+        "tags": [
+          "database"
+        ],
+        "summary": "POST /api/database/backup",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/backup/{filename}": {
+      "delete": {
+        "tags": [
+          "database"
+        ],
+        "summary": "DELETE /api/database/backup/{filename}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "database"
+        ],
+        "summary": "GET /api/database/backup/{filename}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/backup/upload": {
+      "post": {
+        "tags": [
+          "database"
+        ],
+        "summary": "POST /api/database/backup/upload",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/backups": {
+      "get": {
+        "tags": [
+          "database"
+        ],
+        "summary": "GET /api/database/backups",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/cache/clear": {
+      "post": {
+        "tags": [
+          "database"
+        ],
+        "summary": "POST /api/database/cache/clear",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/cache/stats": {
+      "get": {
+        "tags": [
+          "database"
+        ],
+        "summary": "GET /api/database/cache/stats",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/cleanup": {
+      "post": {
+        "tags": [
+          "database"
+        ],
+        "summary": "POST /api/database/cleanup",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/health": {
+      "get": {
+        "tags": [
+          "database"
+        ],
+        "summary": "GET /api/database/health",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/maintenance": {
+      "post": {
+        "tags": [
+          "database"
+        ],
+        "summary": "POST /api/database/maintenance",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/metrics": {
+      "get": {
+        "tags": [
+          "database"
+        ],
+        "summary": "GET /api/database/metrics",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/optimize": {
+      "post": {
+        "tags": [
+          "database"
+        ],
+        "summary": "POST /api/database/optimize",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/pool": {
+      "get": {
+        "tags": [
+          "database"
+        ],
+        "summary": "GET /api/database/pool",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/restore": {
+      "post": {
+        "tags": [
+          "database"
+        ],
+        "summary": "POST /api/database/restore",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/stats": {
+      "get": {
+        "tags": [
+          "database"
+        ],
+        "summary": "GET /api/database/stats",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/database/stats/detailed": {
+      "get": {
+        "tags": [
+          "database"
+        ],
+        "summary": "GET /api/database/stats/detailed",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/google-auth/callback": {
+      "get": {
+        "tags": [
+          "google-auth"
+        ],
+        "summary": "GET /api/google-auth/callback",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/google-auth/start": {
+      "get": {
+        "tags": [
+          "google-auth"
+        ],
+        "summary": "GET /api/google-auth/start",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Healthcheck компонентов",
+        "description": "Публичный эндпоинт. Проверяет готовность БД, шаблонов и Telegram-клиента.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Статус компонентов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/launch/{launchId}/logs": {
+      "get": {
+        "tags": [
+          "launch"
+        ],
+        "summary": "GET /api/launch/{launchId}/logs",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/media/{id}": {
+      "delete": {
+        "tags": [
+          "media"
+        ],
+        "summary": "DELETE /api/media/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "media"
+        ],
+        "summary": "GET /api/media/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "media"
+        ],
+        "summary": "PUT /api/media/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/media/{id}/file-id": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "POST /api/media/{id}/file-id",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/media/{id}/use": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "POST /api/media/{id}/use",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/media/check-url": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "POST /api/media/check-url",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/media/download-url/{projectId}": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "POST /api/media/download-url/{projectId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/media/download-urls/{projectId}": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "POST /api/media/download-urls/{projectId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/media/project/{projectId}": {
+      "get": {
+        "tags": [
+          "media"
+        ],
+        "summary": "GET /api/media/project/{projectId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/media/search/{projectId}": {
+      "get": {
+        "tags": [
+          "media"
+        ],
+        "summary": "GET /api/media/search/{projectId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/media/upload-from-url": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "POST /api/media/upload-from-url",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/media/upload-multiple/{projectId}": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "POST /api/media/upload-multiple/{projectId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/media/upload/{projectId}": {
+      "post": {
+        "tags": [
+          "media"
+        ],
+        "summary": "POST /api/media/upload/{projectId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Создать проект",
+        "description": "Требует авторизацию. ownerId берётся из сессии, не из тела запроса.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Проект создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotProject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации Zod",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Гость без авторизации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProjectUnauthorized"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{id}": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Получить проект по ID",
+        "description": "Требует доступ к проекту (владелец или collaborator).",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Данные проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotProject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "id не число",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Проект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/admin-ids": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/admin-ids",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{id}/admin-ids",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/admin-ids/remove": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/admin-ids/remove",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/bot/description": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{id}/bot/description",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/bot/info": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/bot/info",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/bot/name": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{id}/bot/name",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/bot/restart": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/bot/restart",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/bot/restart-all": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/bot/restart-all",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/bot/short-description": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{id}/bot/short-description",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/bot/start": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/bot/start",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/bot/stop": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/bot/stop",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/duplicate": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/duplicate",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/export": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/export",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/export-structure-to-google-sheets": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/export-structure-to-google-sheets",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/export-to-google-sheets": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/export-to-google-sheets",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/generate": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/generate",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/groups": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/groups",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/groups",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/launches/all": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/launches/all",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/logs/all": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/logs/all",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/messages/activity": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/messages/activity",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/messages/all": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/messages/all",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/responses": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/responses",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/tables",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/tables",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/{tableId}": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{id}/tables/{tableId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{id}/tables/{tableId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/{tableId}/columns": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/tables/{tableId}/columns",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/tables/{tableId}/columns",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/{tableId}/columns/{columnId}": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{id}/tables/{tableId}/columns/{columnId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{id}/tables/{tableId}/columns/{columnId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/{tableId}/rows": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/tables/{tableId}/rows",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/tables/{tableId}/rows",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/{tableId}/rows/{rowId}": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{id}/tables/{tableId}/rows/{rowId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{id}/tables/{tableId}/rows/{rowId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tables/{tableId}/rows/reindex": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/tables/{tableId}/rows/reindex",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/token": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{id}/token",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/token",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tokens": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/tokens",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/tokens",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tokens/{tokenId}": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{id}/tokens/{tokenId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tokens/{tokenId}/bot-info": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{id}/tokens/{tokenId}/bot-info",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tokens/default": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/tokens/default",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tokens/first": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/tokens/first",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tokens/list": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/tokens/list",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/tokens/parse": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/tokens/parse",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/users": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{id}/users",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/users",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/users",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/users/growth": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/users/growth",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/users/growth-by-source": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/users/growth-by-source",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/users/popular-buttons": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/users/popular-buttons",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/users/search": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/users/search",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/users/stats": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/users/stats",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/users/traffic": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/users/traffic",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/users/variables": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/users/variables",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/versions": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/versions",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/versions/{versionId}": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{id}/versions/{versionId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{id}/versions/{versionId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/versions/{versionId}/restore": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/versions/{versionId}/restore",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/versions/commit": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/versions/commit",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/versions/prune": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{id}/versions/prune",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/admin-status/{groupId}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/bot/admin-status/{groupId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/ban-member": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/ban-member",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/check-member/{groupId}/{userId}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/bot/check-member/{groupId}/{userId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/create-invite-link": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/create-invite-link",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/data": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/bot/data",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/delete-message": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/delete-message",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/demote-member": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/demote-member",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/group-admins/{groupId}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/bot/group-admins/{groupId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/group-info/{groupId}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/bot/group-info/{groupId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/group-members-count/{groupId}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/bot/group-members-count/{groupId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/group-members/{groupId}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/bot/group-members/{groupId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/pin-message": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/pin-message",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/promote-member": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/promote-member",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/restrict-member": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/restrict-member",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/search-user/{query}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/bot/search-user/{query}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/send-group-message": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/send-group-message",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/set-group-description": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/set-group-description",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/set-group-photo": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/set-group-photo",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/set-group-title": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/set-group-title",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/set-group-username": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/set-group-username",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/unban-member": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/unban-member",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/bot/unpin-message": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/bot/unpin-message",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/broadcasts": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/broadcasts",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/broadcasts",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/broadcasts/{broadcastId}": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{projectId}/broadcasts/{broadcastId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/broadcasts/{broadcastId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/broadcasts/{broadcastId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/broadcasts/{broadcastId}/stop": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/broadcasts/{broadcastId}/stop",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/broadcasts/preview-audience": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/broadcasts/preview-audience",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/collaborators": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/collaborators",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/files": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{projectId}/files",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/files",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/files",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/groups/{groupId}": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{projectId}/groups/{groupId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/groups/{groupId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/groups/{groupId}/messages": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/groups/{groupId}/messages",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/groups/{groupId}/saved-members": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/groups/{groupId}/saved-members",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/groups/{groupId}/sync": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/groups/{groupId}/sync",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/messages": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/messages",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/messages/{messageId}": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{projectId}/messages/{messageId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PATCH /api/projects/{projectId}/messages/{messageId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/nodes": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/nodes",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/nodes/{nodeId}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/nodes/{nodeId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/storage-quota": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/storage-quota",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/telegram-client/ban-member": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/telegram-client/ban-member",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/telegram-client/demote-member": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/telegram-client/demote-member",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/telegram-client/kick-member": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/telegram-client/kick-member",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/telegram-client/promote-member": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/telegram-client/promote-member",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/telegram-client/restrict-member": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/telegram-client/restrict-member",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/telegram-file": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/telegram-file",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{projectId}/tokens/{tokenId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/auto-restart": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/auto-restart",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/catch-all-handlers": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/catch-all-handlers",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/content-cache": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/content-cache",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/env-batch": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/env-batch",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/env-variables": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/tokens/{tokenId}/env-variables",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/tokens/{tokenId}/env-variables",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/launch-settings": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/launch-settings",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/log-level": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/log-level",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/logs": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{projectId}/tokens/{tokenId}/logs",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/tokens/{tokenId}/logs",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/protect-content": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/protect-content",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/save-incoming-media": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/save-incoming-media",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/set-default": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/tokens/{tokenId}/set-default",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/userbot": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/userbot",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/userbot/send-code": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/tokens/{tokenId}/userbot/send-code",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/users/{userId}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/users/{userId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/users/{userId}/avatar": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/users/{userId}/avatar",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/users/{userId}/messages": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "DELETE /api/projects/{projectId}/users/{userId}/messages",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/{projectId}/users/{userId}/messages",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/users/{userId}/send-message": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/users/{userId}/send-message",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/users/{userId}/send-node-message": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "POST /api/projects/{projectId}/users/{userId}/send-node-message",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/import-from-files": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/import-from-files",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/list": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "GET /api/projects/list",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/projects/reorder": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "PUT /api/projects/reorder",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/push-to-github": {
+      "post": {
+        "tags": [
+          "push-to-github"
+        ],
+        "summary": "POST /api/push-to-github",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/server/env-keys": {
+      "get": {
+        "tags": [
+          "server"
+        ],
+        "summary": "GET /api/server/env-keys",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/settings/comments-generation": {
+      "post": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "POST /api/settings/comments-generation",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/setup": {
+      "post": {
+        "tags": [
+          "setup"
+        ],
+        "summary": "POST /api/setup",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/setup/status": {
+      "get": {
+        "tags": [
+          "setup"
+        ],
+        "summary": "GET /api/setup/status",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/storage-configs": {
+      "get": {
+        "tags": [
+          "storage-configs"
+        ],
+        "summary": "GET /api/storage-configs",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "storage-configs"
+        ],
+        "summary": "POST /api/storage-configs",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/storage-configs/{id}": {
+      "delete": {
+        "tags": [
+          "storage-configs"
+        ],
+        "summary": "DELETE /api/storage-configs/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "storage-configs"
+        ],
+        "summary": "PATCH /api/storage-configs/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/storage-configs/{id}/test": {
+      "post": {
+        "tags": [
+          "storage-configs"
+        ],
+        "summary": "POST /api/storage-configs/{id}/test",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/logout": {
+      "post": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "POST /api/telegram-auth/logout",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/qr-check": {
+      "post": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "POST /api/telegram-auth/qr-check",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/qr-generate": {
+      "post": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "POST /api/telegram-auth/qr-generate",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/qr-refresh": {
+      "post": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "POST /api/telegram-auth/qr-refresh",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/resend-code": {
+      "post": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "POST /api/telegram-auth/resend-code",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/resend-sms": {
+      "post": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "POST /api/telegram-auth/resend-sms",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/reset-credentials": {
+      "post": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "POST /api/telegram-auth/reset-credentials",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/save-credentials": {
+      "post": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "POST /api/telegram-auth/save-credentials",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/send-code": {
+      "post": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "POST /api/telegram-auth/send-code",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/status": {
+      "get": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "GET /api/telegram-auth/status",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/verify-code": {
+      "post": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "POST /api/telegram-auth/verify-code",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-auth/verify-password": {
+      "post": {
+        "tags": [
+          "telegram-auth"
+        ],
+        "summary": "POST /api/telegram-auth/verify-password",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-client/group-members/{groupId}": {
+      "get": {
+        "tags": [
+          "telegram-client"
+        ],
+        "summary": "GET /api/telegram-client/group-members/{groupId}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/telegram-settings": {
+      "post": {
+        "tags": [
+          "telegram-settings"
+        ],
+        "summary": "POST /api/telegram-settings",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates": {
+      "get": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "GET /api/templates",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "POST /api/templates",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}": {
+      "delete": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "DELETE /api/templates/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "GET /api/templates/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "PUT /api/templates/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}/bookmark": {
+      "post": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "POST /api/templates/{id}/bookmark",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}/download": {
+      "post": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "POST /api/templates/{id}/download",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}/like": {
+      "post": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "POST /api/templates/{id}/like",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}/rate": {
+      "post": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "POST /api/templates/{id}/rate",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}/use": {
+      "post": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "POST /api/templates/{id}/use",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/{id}/view": {
+      "post": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "POST /api/templates/{id}/view",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/category/{category}": {
+      "get": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "GET /api/templates/category/{category}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/featured": {
+      "get": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "GET /api/templates/featured",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/recreate": {
+      "post": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "POST /api/templates/recreate",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/refresh": {
+      "post": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "POST /api/templates/refresh",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/templates/search": {
+      "get": {
+        "tags": [
+          "templates"
+        ],
+        "summary": "GET /api/templates/search",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/tokens/{id}": {
+      "delete": {
+        "tags": [
+          "tokens"
+        ],
+        "summary": "DELETE /api/tokens/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "tokens"
+        ],
+        "summary": "PUT /api/tokens/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/tokens/{tokenId}/bot-status": {
+      "get": {
+        "tags": [
+          "tokens"
+        ],
+        "summary": "GET /api/tokens/{tokenId}/bot-status",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/tokens/{tokenId}/launch-history": {
+      "get": {
+        "tags": [
+          "tokens"
+        ],
+        "summary": "GET /api/tokens/{tokenId}/launch-history",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/user-ids": {
+      "get": {
+        "tags": [
+          "user-ids"
+        ],
+        "summary": "GET /api/user-ids",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "user-ids"
+        ],
+        "summary": "POST /api/user-ids",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/user-ids/{id}": {
+      "delete": {
+        "tags": [
+          "user-ids"
+        ],
+        "summary": "DELETE /api/user-ids/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/user-ids/stats": {
+      "get": {
+        "tags": [
+          "user-ids"
+        ],
+        "summary": "GET /api/user-ids/stats",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/user/projects": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "GET /api/user/projects",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "POST /api/user/projects",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/user/projects/{id}": {
+      "delete": {
+        "tags": [
+          "user"
+        ],
+        "summary": "DELETE /api/user/projects/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "user"
+        ],
+        "summary": "PATCH /api/user/projects/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/user/templates": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "GET /api/user/templates",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "POST /api/user/templates",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/user/templates/{id}": {
+      "delete": {
+        "tags": [
+          "user"
+        ],
+        "summary": "DELETE /api/user/templates/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "user"
+        ],
+        "summary": "PATCH /api/user/templates/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/user/tokens": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "GET /api/user/tokens",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "POST /api/user/tokens",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/user/tokens/{id}": {
+      "delete": {
+        "tags": [
+          "user"
+        ],
+        "summary": "DELETE /api/user/tokens/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "user"
+        ],
+        "summary": "PATCH /api/user/tokens/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "delete": {
+        "tags": [
+          "users"
+        ],
+        "summary": "DELETE /api/users/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "GET /api/users/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "users"
+        ],
+        "summary": "PUT /api/users/{id}",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/users/{id}/interaction": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "POST /api/users/{id}/interaction",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/users/{id}/state": {
+      "put": {
+        "tags": [
+          "users"
+        ],
+        "summary": "PUT /api/users/{id}/state",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/webhook/{projectId}/{tokenId}": {
+      "post": {
+        "tags": [
+          "webhook"
+        ],
+        "summary": "POST /api/webhook/{projectId}/{tokenId}",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    },
+    "/api/workers/stats": {
+      "get": {
+        "tags": [
+          "workers"
+        ],
+        "summary": "GET /api/workers/stats",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "connect.sid",
+        "description": "Сессия после POST /api/auth/telegram"
+      },
+      "agentToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "PAT",
+        "description": "Персональный токен агента (MCP/CLI)"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "database": {
+            "type": "boolean",
+            "example": true
+          },
+          "templates": {
+            "type": "boolean",
+            "example": true
+          },
+          "telegram": {
+            "type": "boolean",
+            "example": false
+          },
+          "ready": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "database",
+          "templates",
+          "telegram",
+          "ready"
+        ]
+      },
+      "TelegramUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 123456789
+          },
+          "firstName": {
+            "type": "string",
+            "example": "Иван"
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true,
+            "example": "Петров"
+          },
+          "username": {
+            "type": "string",
+            "nullable": true,
+            "example": "ivan_p"
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "authDate": {
+            "type": "number",
+            "nullable": true
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "firstName"
+        ]
+      },
+      "TelegramAuthResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string",
+            "example": "Авторизация успешна"
+          },
+          "user": {
+            "$ref": "#/components/schemas/TelegramUser"
+          }
+        },
+        "required": [
+          "success",
+          "message",
+          "user"
+        ]
+      },
+      "AuthError": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              false
+            ]
+          },
+          "error": {
+            "type": "string",
+            "example": "Пользователь не найден"
+          }
+        },
+        "required": [
+          "success",
+          "error"
+        ]
+      },
+      "TelegramAuthRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 123456789
+          },
+          "first_name": {
+            "type": "string",
+            "example": "Иван"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Петров"
+          },
+          "username": {
+            "type": "string",
+            "example": "ivan_p"
+          },
+          "photo_url": {
+            "type": "string"
+          },
+          "auth_date": {
+            "type": "number",
+            "example": 1710000000
+          },
+          "id_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "first_name"
+        ]
+      },
+      "GetTelegramUserResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "user": {
+            "$ref": "#/components/schemas/TelegramUser"
+          }
+        },
+        "required": [
+          "success",
+          "user"
+        ]
+      },
+      "BotProject": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 42
+          },
+          "ownerId": {
+            "type": "number",
+            "nullable": true,
+            "example": 123456789
+          },
+          "name": {
+            "type": "string",
+            "example": "Мой бот"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "nullable": true,
+            "example": {
+              "sheets": []
+            }
+          },
+          "botToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "userDatabaseEnabled": {
+            "type": "number"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "ownerId",
+          "name"
+        ]
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Неверные данные"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            },
+            "example": [
+              {
+                "path": [
+                  "name"
+                ],
+                "message": "Required"
+              }
+            ]
+          }
+        },
+        "required": [
+          "message",
+          "errors"
+        ]
+      },
+      "CreateProjectUnauthorized": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Требуется авторизация через Telegram"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "CreateProjectRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "nullable": true
+          },
+          "botToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "userDatabaseEnabled": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1
+          },
+          "sortOrder": {
+            "type": "number",
+            "default": 0
+          },
+          "adminIds": {
+            "type": "string",
+            "default": ""
+          },
+          "restartOnUpdate": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "example": {
+          "name": "Мой бот",
+          "description": "Приветственный бот",
+          "data": {
+            "sheets": [
+              {
+                "id": "main",
+                "nodes": [],
+                "edges": []
+              }
+            ]
+          },
+          "userDatabaseEnabled": 1,
+          "sortOrder": 0
+        }
+      },
+      "MessageError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Проект не найден"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "UnauthorizedError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "UNAUTHORIZED"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "AgentToken": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "label": {
+            "type": "string",
+            "example": "Cursor MCP"
+          },
+          "prefix": {
+            "type": "string",
+            "example": "mcp_a1b2"
+          },
+          "scopes": {
+            "type": "string",
+            "example": "read,write"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "lastUsedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "revokedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "prefix",
+          "scopes"
+        ]
+      },
+      "AgentTokenList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/AgentToken"
+        }
+      },
+      "AgentTokenError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Пользователь не аутентифицирован"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "CreateAgentTokenResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "mcp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          },
+          "record": {
+            "$ref": "#/components/schemas/AgentToken"
+          }
+        },
+        "required": [
+          "token",
+          "record"
+        ]
+      },
+      "CreateAgentTokenValidationError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Некорректные данные"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            }
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "CreateAgentTokenRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Cursor MCP"
+          },
+          "scopes": {
+            "type": "string",
+            "enum": [
+              "read",
+              "read,write"
+            ],
+            "default": "read,write",
+            "description": "read — только чтение; read,write — чтение и запись",
+            "example": "read,write"
+          },
+          "expiresInDays": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 90
+          }
+        },
+        "required": [
+          "label"
+        ]
+      },
+      "RevokeAgentTokenResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "success"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "security": [
+    {
+      "cookieAuth": []
+    },
+    {
+      "agentToken": []
+    }
+  ]
+}

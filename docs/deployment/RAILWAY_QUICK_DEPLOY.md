@@ -23,11 +23,17 @@
 2. Добавь переменные:
 
 ```
-SESSION_SECRET=railway-super-secret-session-key-change-this-12345
+SESSION_SECRET=<openssl rand -hex 32>
+ADMIN_API_KEY=<openssl rand -hex 32>
 NODE_ENV=production
 ```
 
+> 🔐 **SESSION_SECRET** — без него приложение не запустится в production.  
+> 🔑 **ADMIN_API_KEY** — ключ входа в `/admin` и защищённую OpenAPI-документацию (`/admin/docs`). Без него docs в production недоступны. Сгенерируйте отдельные значения для каждой переменной (`openssl rand -hex 32`).
+
 **DATABASE_URL** создастся автоматически при добавлении PostgreSQL!
+
+> 💡 Добавьте также **Redis** (New → Database → Redis) и переменную `REDIS_URL` — без Redis кэш переменных и FSM ботов не работают.
 
 ### 5. Проверка деплоя
 1. Перейди в **"Deployments"**

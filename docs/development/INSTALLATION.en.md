@@ -569,6 +569,9 @@ REDIS_URL=redis://localhost:6379
 
 # Session signing secret
 SESSION_SECRET=any-random-string-for-local
+
+# Admin panel and OpenAPI docs login key
+ADMIN_API_KEY=any-random-string-for-local
 ```
 
 > 🔐 **SESSION_SECRET is mandatory in production.** In `development` you may use any string (or omit it entirely — a dev fallback with a warning is used). But in `NODE_ENV=production` the app **intentionally refuses to start** if `SESSION_SECRET` is missing: without it anyone could forge a session cookie and log in as another user. Generate a strong random value:
@@ -581,6 +584,19 @@ SESSION_SECRET=any-random-string-for-local
 > ```
 >
 > Changing `SESSION_SECRET` invalidates all active sessions — users will need to log in again.
+
+> 🔑 **ADMIN_API_KEY is required in production** for the admin panel and protected OpenAPI docs. In `development` you may omit it — the insecure dev fallback `dev-only-insecure-admin-key` is used (with a log warning). In production without `ADMIN_API_KEY`, `/admin` and `/admin/docs` are **not mounted**. Generate a separate value the same way as `SESSION_SECRET`.
+
+> 📖 **API documentation:**
+>
+> | Mode | URL | Access |
+> |------|-----|--------|
+> | **Development** | `http://localhost:5000/docs` | Public (for local work) |
+> | **Development** | `http://localhost:5000/admin` | Key from `ADMIN_API_KEY` (or dev fallback) |
+> | **Production** | `https://your-domain/admin/login` | `ADMIN_API_KEY` only |
+> | **Production** | `https://your-domain/admin/docs` | After login: Swagger, Scalar, Redoc, RapiDoc |
+>
+> OpenAPI spec: `/docs-json` (dev) or `/admin/openapi.json` (prod, after login).
 
 > 💡 Telegram Login is configured via Setup Wizard on first launch — no manual setup needed.
 
@@ -609,6 +625,11 @@ pip install -r requirements.txt
 | **🚀 Production** | `npm run build` → `npm run start` | Build and run the production version |
 
 ✅ **Done!** App available at: `http://localhost:5000`
+
+After startup you also have:
+- **Editor:** `http://localhost:5000`
+- **OpenAPI (dev):** `http://localhost:5000/docs` — UI hub
+- **Admin:** `http://localhost:5000/admin/login` — key from `ADMIN_API_KEY` (or `dev-only-insecure-admin-key` if unset)
 
 </details>
 

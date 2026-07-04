@@ -211,7 +211,10 @@ app.use((req, res, next) => {
     // Отображаем localhost в логах даже при привязке к 0.0.0.0 для внешних подключений
     const displayHost = host === '0.0.0.0' ? 'localhost' : host;
     log(`сервер запущен на http://${displayHost}:${port}`);
-    log(`OpenAPI docs: http://${displayHost}:${port}/docs`);
+    log(`Admin panel: http://${displayHost}:${port}/admin`);
+    if (process.env.NODE_ENV !== "production") {
+      log(`OpenAPI docs (dev): http://${displayHost}:${port}/docs`);
+    }
 
     // Восстанавливаем боты, которые были запущены до рестарта/редеплоя
     restoreRunningBots().catch((err) =>

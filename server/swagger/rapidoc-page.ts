@@ -5,17 +5,14 @@
 
 import type { Request, Response } from "express";
 
-/** URL OpenAPI JSON spec */
-const SPEC_URL = "/docs-json";
-
 /**
- * Отдаёт HTML-страницу с RapiDoc viewer.
- * @param _req - Запрос Express
- * @param res - Ответ Express
- * @returns void
+ * Создаёт handler RapiDoc с указанным URL spec.
+ * @param specPath - Путь к OpenAPI JSON
+ * @returns Express handler
  */
-export function serveRapidocPage(_req: Request, res: Response): void {
-  res.type("html").send(`<!DOCTYPE html>
+export function createRapidocHandler(specPath: string) {
+  return (_req: Request, res: Response): void => {
+    res.type("html").send(`<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
@@ -26,7 +23,7 @@ export function serveRapidocPage(_req: Request, res: Response): void {
 </head>
 <body>
   <rapi-doc
-    spec-url="${SPEC_URL}"
+    spec-url="${specPath}"
     render-style="read"
     show-header="true"
     theme="dark"
@@ -41,4 +38,8 @@ export function serveRapidocPage(_req: Request, res: Response): void {
   ></rapi-doc>
 </body>
 </html>`);
+  };
 }
+
+/** @deprecated Используйте createRapidocHandler */
+export const serveRapidocPage = createRapidocHandler("/docs-json");
