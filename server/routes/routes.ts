@@ -43,6 +43,7 @@ import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
 import { requireMediaOwnership } from "../middleware/mediaOwnership";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
+import { validateExternalUrl } from "../utils/validateExternalUrl";
 import { resolveSessionSecret } from "../utils/resolveSessionSecret";
 import { handleTelegramError } from "../utils/telegram-error-handler";
 import { fetchWithProxy } from "../utils/telegram-proxy";
@@ -54,12 +55,23 @@ import { getRedisPublisher, waitForRedisInit } from "../redis/redisClient";
 import { setupProjectRoutes } from "./setupProjectRoutes";
 import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes";
 import { setupAgentTokenRoutes } from "./setupAgentTokenRoutes";
+import { setupStorageConfigRoutes } from "./setupStorageConfigRoutes";
 import { setupUserTemplateRoutes } from "./setupUserTemplateRoutes";
 import type { StorageBotTokenInput, StorageBotTokenUpdate } from "../storages/storageTypes";
+import { ensureStorageRegistryLoaded } from "../storage/storage-registry";
+import { readStorageLimitBytes } from "../storage/storage-config";
+import {
+  computeLocalUsedBytes,
+  isQuotaExceeded,
+  persistUploadToBackend,
+  resolveUploadBackend,
+  StorageBackendWriteError,
+} from "./media/upload-storage-helper";
 import { createUserIdsRoutes } from "./user-ids-routes";
 import { broadcastProjectEvent } from "../terminal";
 import { getRequestTokenId, resolveEffectiveProjectTokenId } from "./utils/resolve-request-token";
 import { getTelegramProxyAgent } from "../utils/telegram-proxy";
+import { setupSwagger } from "../swagger/setup-swagger";
 
 /**
  * Глобальное хранилище активных процессов ботов
@@ -1738,7 +1750,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       const projectId = parseInt(req.params.projectId);
       const file = req.file;
-      const { description, tags, isPublic } = req.body;
+      const { description, tags, isPublic, storageConfigId } = req.body;
 
       if (!file) {
         return res.status(400).json({
@@ -1773,13 +1785,35 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         });
       }
 
-      // Создаем относительный путь для file_path и URL
+      // Создаем относительный путь для file_path и URL (исторический локальный путь)
       // file.path имеет вид: C:\...\uploads\{projectId}\{date}\{filename}
       // Нам нужно: uploads/{projectId}/{date}/{filename} для file_path
       // и /uploads/{projectId}/{date}/{filename} для url
       const uploadsDir = join(process.cwd(), 'uploads');
       const relativePath = file.path.replace(uploadsDir, 'uploads').replace(/\\/g, '/');
       const fileUrl = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+
+      // Выбираем целевой бэкенд: запрошенный writable storageConfigId либо активный (Req 11.7)
+      const registry = await ensureStorageRegistryLoaded();
+      const targetBackend = resolveUploadBackend(registry, storageConfigId);
+
+      // Записываем файл в целевой бэкенд (локальный дефолт остаётся на диске; S3 — через put)
+      let persisted;
+      try {
+        persisted = await persistUploadToBackend(targetBackend, file, file.path, fileUrl);
+      } catch (storageError) {
+        // Сбой записи во внешнее хранилище (например, недоступность S3) → 502 + очистка (Req 12.6)
+        if (storageError instanceof StorageBackendWriteError && storageError.backend === "s3") {
+          if (existsSync(file.path)) {
+            try { unlinkSync(file.path); } catch { /* очистка best-effort */ }
+          }
+          return res.status(502).json({
+            message: "Хранилище S3 недоступно, файл не сохранён",
+            code: "STORAGE_UNREACHABLE",
+          });
+        }
+        throw storageError;
+      }
 
       // Обрабатываем теги
       const processedTags = tags ?
@@ -1806,23 +1840,34 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       // Определяем тип файла
       const fileType = getFileType(file.mimetype);
 
+      // ID загрузившего коллаборатора (telegram_users.id) либо null для гостей (Req 9.2)
+      const uploadedBy = getOwnerIdFromRequest(req);
+
       // Сохраняем информацию о файле в базе данных
       const mediaFile = await storage.createMediaFile({
         projectId,
         fileName: file.originalname,
         fileType: fileType,
-        filePath: file.path,
+        filePath: persisted.filePath,
         fileSize: file.size,
         mimeType: file.mimetype,
-        url: fileUrl,
+        url: persisted.url,
         description: description || `${validation.category || 'Файл'} - ${file.originalname}`,
         tags: finalTags,
-        isPublic: isPublic === 'true' || isPublic === true ? 1 : 0
+        isPublic: isPublic === 'true' || isPublic === true ? 1 : 0,
+        uploadedBy: uploadedBy ?? undefined,
+        storageBackend: persisted.storageBackend,
+        storageConfigId: persisted.storageConfigId,
       });
+
+      // Мягкая квота локального хранилища: считаем флаг, но не блокируем загрузку (Req 4.7)
+      const usedBytes = await computeLocalUsedBytes(projectId);
+      const quotaExceeded = isQuotaExceeded(usedBytes, readStorageLimitBytes());
 
       // Возвращаем подробную информацию о загруженном файле
       res.json({
         ...mediaFile,
+        quotaExceeded,
         uploadInfo: {
           category: validation.category,
           sizeMB: Math.round(file.size / (1024 * 1024) * 100) / 100,
@@ -1993,6 +2038,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({
           message: "URL не указан",
           code: "MISSING_URL"
+        });
+      }
+
+      // Защита от SSRF: блокируем внутренние адреса
+      const urlValidation = validateExternalUrl(url, req.headers.host);
+      if (!urlValidation.valid) {
+        return res.status(400).json({
+          message: urlValidation.reason,
+          code: "BLOCKED_URL"
         });
       }
 
@@ -4768,6 +4822,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Персональные токены агента (PAT) для MCP
   setupAgentTokenRoutes(app);
 
+  // CRUD реестра хранилищ (/api/storage-configs)
+  setupStorageConfigRoutes(app);
+
   // Get user's templates
   setupUserTemplateRoutes(app);
 
@@ -4776,6 +4833,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Webhook роут: приём апдейтов от Telegram и проксирование в Python-процесс бота
   setupWebhookRoutes(app);
+
+  // OpenAPI / Swagger UI — после всех маршрутов, до Vite catch-all
+  setupSwagger(app);
 
   // Если сервер передан извне, используем его, иначе создаем новый
   if (httpServer) {

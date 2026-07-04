@@ -59,7 +59,7 @@ import { UserDatabasePanel } from '@/components/editor/database/user-database/us
 import { BroadcastPanel } from '@/components/editor/broadcast';
 import { AnalyticsPanel } from '@/components/editor/analytics';
 import { TablesPanel } from '@/components/editor/tables';
-import { FilesPanel } from '@/components/editor/files';
+import { FilesTabPage, type AttachTarget } from '@/components/editor/files';
 import { VersionsPanel } from '@/components/editor/versions';
 import { AgentTokensPanel } from '@/components/editor/agent';
 import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
@@ -616,6 +616,19 @@ export default function Editor() {
 
   // Вычисляем selectedNode из selectedNodeId и nodes
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
+
+  /**
+   * Цель прикрепления для вкладки «Файлы»: выбранная нода (единый формат
+   * attachedMedia, множественный режим). null — прикрепление недоступно (Req 3.7).
+   */
+  const filesAttachTarget: AttachTarget | null = selectedNode
+    ? {
+        nodeId: selectedNode.id,
+        nodeLabel: ((selectedNode.data?.messageText as string | undefined)?.slice(0, 30)) || selectedNode.id,
+        field: 'attachedMedia',
+        multi: true,
+      }
+    : null;
 
   // Реактивно открываем/закрываем панель свойств при выборе/снятии выбора узла
   // useLayoutEffect — синхронно до отрисовки, чтобы не было мигания пустой панели
@@ -1822,7 +1835,7 @@ export default function Editor() {
           )}
           {currentTab === 'files' && (
             <div className="h-full overflow-hidden">
-              <FilesPanel
+              <FilesTabPage
                 projectId={activeProject.id}
                 selectedTokenId={selectedDatabaseTokenId}
                 onSelectToken={setSelectedDatabaseTokenId}
@@ -1831,6 +1844,15 @@ export default function Editor() {
                   setSelectedDatabaseTokenId(null);
                   setLocation(`/projects/${projectId}`);
                 }}
+                onNodeUpdate={handleNodeUpdateWithSheets}
+                allSheets={botDataWithSheets?.sheets}
+                attachTarget={filesAttachTarget}
+                onSwitchToCanvas={() => setCurrentTab('editor')}
+                onFocusNode={(nodeId) => { setCurrentTab('editor'); navigateToPortalNode(nodeId); }}
+                onSetActiveSheet={(sheetId) => {
+                  if (botDataWithSheets) setBotDataWithSheets({ ...botDataWithSheets, activeSheetId: sheetId });
+                }}
+                onSelectNode={(nodeId) => setSelectedNodeId(nodeId)}
               />
             </div>
           )}
@@ -2198,7 +2220,7 @@ export default function Editor() {
                 </div>
               ) : currentTab === 'files' ? (
                 <div className="h-full overflow-hidden">
-                  <FilesPanel
+                  <FilesTabPage
                     projectId={activeProject.id}
                     selectedTokenId={selectedDatabaseTokenId}
                     onSelectToken={setSelectedDatabaseTokenId}
@@ -2207,6 +2229,15 @@ export default function Editor() {
                       setSelectedDatabaseTokenId(null);
                       setLocation(`/projects/${projectId}`);
                     }}
+                    onNodeUpdate={handleNodeUpdateWithSheets}
+                    allSheets={botDataWithSheets?.sheets}
+                    attachTarget={filesAttachTarget}
+                    onSwitchToCanvas={() => setCurrentTab('editor')}
+                    onFocusNode={(nodeId) => { setCurrentTab('editor'); navigateToPortalNode(nodeId); }}
+                    onSetActiveSheet={(sheetId) => {
+                      if (botDataWithSheets) setBotDataWithSheets({ ...botDataWithSheets, activeSheetId: sheetId });
+                    }}
+                    onSelectNode={(nodeId) => setSelectedNodeId(nodeId)}
                   />
                 </div>
               ) : currentTab === 'export' ? null : null}

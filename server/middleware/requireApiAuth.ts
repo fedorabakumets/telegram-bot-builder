@@ -34,7 +34,7 @@ const PUBLIC_EXACT = ["", "/"];
  * @param path - Путь запроса (req.path, без префикса /api)
  * @returns true, если путь публичный и не требует авторизации
  */
-function isPublic(path: string): boolean {
+export function isPublicApiPath(path: string): boolean {
   if (PUBLIC_EXACT.includes(path)) return true;
   return PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
@@ -49,7 +49,7 @@ function isPublic(path: string): boolean {
  * @returns void
  */
 export function requireApiAuth(req: Request, res: Response, next: NextFunction): void {
-  if (isPublic(req.path)) {
+  if (isPublicApiPath(req.path)) {
     next();
     return;
   }

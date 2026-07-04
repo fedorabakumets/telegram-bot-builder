@@ -10,9 +10,13 @@
 
 import type { Express } from "express";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
+import { requireMediaFileOwnership } from "../middleware/requireMediaFileOwnership";
 import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/botData";
 import { getTelegramFileHandler } from "./botIntegration/handlers/botData/getTelegramFileHandler";
 import { getProjectFilesHandler, addProjectFileHandler, deleteProjectFilesHandler } from "./botIntegration/handlers/botData/getProjectFilesHandler";
+import { updateMediaFileIdHandler } from "./botIntegration/handlers/botData/updateMediaFileIdHandler";
+import { getStorageQuotaHandler } from "./botIntegration/handlers/botData/getStorageQuotaHandler";
+import { getCollaboratorsInfoHandler } from "./botIntegration/handlers/botData/getCollaboratorsInfoHandler";
 import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, saveMessageHandler, deleteMessagesHandler, deleteSingleMessageHandler, editSingleMessageHandler, getGroupMessagesHandler } from "./botIntegration/handlers/messages";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler, syncGroupHandler } from "./botIntegration/handlers/groups";
 import { getBotInfoHandler, updateBotNameHandler, updateBotDescriptionHandler, updateBotShortDescriptionHandler } from "./botIntegration/handlers/botInfo";
@@ -95,6 +99,18 @@ export function setupBotIntegrationRoutes(app: Express) {
     app.post("/api/projects/:projectId/files", requireProjectAccess, addProjectFileHandler);
 
     /**
+     * Обработчик маршрута POST /api/media/:id/file-id
+     *
+     * Точечно добавляет/обновляет file_id медиафайла для одного или нескольких
+     * ботов. Принимает { tokenId, fileId } или { fileIdsByToken }, денормализует
+     * в media_file_tokens и синхронизирует JSON-кэш url. Доступ проверяется по
+     * владению медиафайлом (резолв projectId по :id).
+     *
+     * @route POST /api/media/:id/file-id
+     */
+    app.post("/api/media/:id/file-id", requireMediaFileOwnership, updateMediaFileIdHandler);
+
+    /**
      * Обработчик маршрута DELETE /api/projects/:projectId/files
      *
      * Массовое удаление файлов проекта.
@@ -104,6 +120,28 @@ export function setupBotIntegrationRoutes(app: Express) {
      * @route DELETE /api/projects/:projectId/files
      */
     app.delete("/api/projects/:projectId/files", requireProjectAccess, deleteProjectFilesHandler);
+
+    /**
+     * Обработчик маршрута GET /api/projects/:projectId/storage-quota
+     *
+     * Возвращает квоту локального хранилища проекта: занятое место (сумма по
+     * локальным бэкендам), лимит из ENV (null = безлимит) и флаг мягкого
+     * превышения `{ usedBytes, limitBytes, quotaExceeded }`.
+     *
+     * @route GET /api/projects/:projectId/storage-quota
+     */
+    app.get("/api/projects/:projectId/storage-quota", requireProjectAccess, getStorageQuotaHandler);
+
+    /**
+     * Обработчик маршрута GET /api/projects/:projectId/collaborators
+     *
+     * Возвращает список коллабораторов проекта (`CollaboratorInfo[]`): владелец
+     * и приглашённые участники с именем и аватаркой. Используется фильтром
+     * «Сотрудник» и столбцом-аватаром в таблице файлов.
+     *
+     * @route GET /api/projects/:projectId/collaborators
+     */
+    app.get("/api/projects/:projectId/collaborators", requireProjectAccess, getCollaboratorsInfoHandler);
 
     /**
      * Обработчик маршрута GET /api/projects/:projectId/users/:userId/messages

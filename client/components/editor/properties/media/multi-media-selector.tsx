@@ -9,18 +9,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MediaManager } from "./media-manager";
-import { UrlDownloader } from "./url-downloader";
 import { MediaFilesList } from "./media-files-list";
-import { FileIdInput } from "./file-id-input";
-import type { MediaFile } from "@shared/schema";
 import type { MediaFileData } from "./media-files-list";
-import { Upload, Plus, LinkIcon, Hash } from "lucide-react";
+import { Plus } from "lucide-react";
 import { uploadImageFromUrl } from "@lib/bot-generator/media/uploadImageFromUrl";
 import { toast } from "@/hooks/use-toast";
 import { useMediaFiles } from "../hooks/use-media";
+import { MediaFieldButton } from "./media-field-button";
+import { mergeAttachedMedia } from "../../files/panel/attach-node-refs";
 
 /** Пропсы компонента MultiMediaSelector */
 export interface MultiMediaSelectorProps {
@@ -37,6 +33,8 @@ export interface MultiMediaSelectorProps {
   thumbnailsMap?: Record<string, string>;
   /** Callback при изменении обложек в ноде */
   onThumbnailsChange?: (thumbnails: Record<string, string>) => void;
+  /** Переключение на вкладку Файлы */
+  onSwitchToFilesTab?: () => void;
 }
 
 /**
@@ -54,12 +52,10 @@ export function MultiMediaSelector({
   nodeId,
   thumbnailsMap = {},
   onThumbnailsChange,
+  onSwitchToFilesTab,
 }: MultiMediaSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const [urlInput, setUrlInput] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  /** Тип медиа для вкладки Telegram file_id */
-  const [fileIdMediaType, setFileIdMediaType] = useState<'photo' | 'video' | 'audio' | 'document'>('photo');
 
   // Проверяем, включена ли клавиатура (для определения скрытых файлов)
   const hasKeyboard = keyboardType === 'inline' || keyboardType === 'reply';
@@ -151,9 +147,13 @@ export function MultiMediaSelector({
     }
   };
 
-  const handleSelectFile = (file: MediaFile) => {
-    onChange([...value, file.url]);
-    setIsOpen(false);
+  /**
+   * Прикрепление выбранных в модалке файлов в attachedMedia с дедупликацией
+   * (идемпотентность прикрепления — Req 3.8).
+   * @param refs - Ссылки/идентификаторы выбранных файлов
+   */
+  const handleAttach = (refs: string[]) => {
+    onChange(mergeAttachedMedia(value, refs, true));
   };
 
   // Количество скрытых файлов
@@ -237,68 +237,18 @@ export function MultiMediaSelector({
           <div className="flex-1 h-px bg-slate-300/30"></div>
         </div>
 
-        {/* Media Browser Button */}
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full h-10 text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600">
-              <Upload className="w-4 h-4 mr-2" />
-              Выбрать или загрузить файл
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-5xl p-3 sm:p-6">
-            <DialogHeader>
-              <DialogTitle className="text-sm sm:text-lg leading-tight">
-                <i className="fas fa-folder-open mr-1.5 sm:mr-2 text-blue-600"></i>
-                Управление медиафайлами
-              </DialogTitle>
-            </DialogHeader>
-
-            <Tabs defaultValue="upload" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="upload" className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-sm px-1 sm:px-3">
-                  <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Загрузить</span>
-                </TabsTrigger>
-                <TabsTrigger value="url" className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-sm px-1 sm:px-3">
-                  <LinkIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden xs:inline">По </span>URL
-                </TabsTrigger>
-                <TabsTrigger value="fileid" className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-sm px-1 sm:px-3">
-                  <Hash className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Telegram </span>file_id
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="upload" className="mt-4">
-                <MediaManager projectId={projectId} onSelectFile={handleSelectFile} />
-              </TabsContent>
-
-              <TabsContent value="url" className="mt-4">
-                <UrlDownloader
-                  projectId={projectId}
-                  onDownloadComplete={(files) => {
-                    const newUrls = files.map(f => f.url);
-                    onChange([...value, ...newUrls]);
-                    setIsOpen(false);
-                  }}
-                  onClose={() => setIsOpen(false)}
-                />
-              </TabsContent>
-
-              <TabsContent value="fileid" className="mt-4">
-                <FileIdInput
-                  projectId={projectId}
-                  mediaType={fileIdMediaType}
-                  onMediaTypeChange={setFileIdMediaType}
-                  onAdd={(entry) => {
-                    onChange([...value, entry]);
-                    setIsOpen(false);
-                  }}
-                />
-              </TabsContent>
-            </Tabs>
-          </DialogContent>
-        </Dialog>
+        {/* Единая кнопка выбора файла из хранилища (Req 2.1, 2.2, 2.3) */}
+        <div className="flex gap-2">
+          <MediaFieldButton
+            projectId={projectId}
+            nodeId={nodeId ?? nodeName}
+            nodeName={nodeName}
+            field="attachedMedia"
+            multi={true}
+            onAttach={handleAttach}
+            className="flex-1 h-10 gap-1.5"
+          />
+        </div>
       </div>
     </div>
   );
