@@ -1,20 +1,33 @@
 /**
  * @fileoverview Шапка панели файлового хранилища (`FileStorageHeader`).
- * Общая для страницы и модалки: иконка + заголовок «Файлы», селектор проекта,
- * селектор бота, кнопка «Обновить» (принудительный refetch списка), краткое
- * описание назначения страницы и кнопка-ссылка на документацию (новая вкладка).
- * Переиспуёт существующие ProjectSelector / BotTokenSelector и TabHeader,
- * иконки — только смысловые из lucide-react (Req 1.3, 14.1, 14.2, 14.3, 13.2).
+ * Общая для страницы и модалки: иконка-круг с primary-градиентом
+ * (`--gradient-primary-start/end`), заголовок «Файлы», селекторы проекта/бота,
+ * кнопки «Хранилища», «Документация» и «Обновить» — единых размеров `h-8`.
+ * Режим `modal` использует плотнее отступы и компактнее круг/заголовок, но
+ * сохраняет ровно те же токены темы (Req 1.4, 13.1, 14.1, 14.3).
+ * Иконки — только смысловые из `lucide-react`, без эмодзи (Req 13.2).
  * @module components/editor/files/panel/file-storage-header
  */
 
-import { BotToken } from '@shared/schema';
+import type { BotToken } from '@shared/schema';
 import { FolderOpen, RefreshCw, BookOpen } from 'lucide-react';
-import { TabHeader } from '@/components/ui/tab-header';
+
 import { Button } from '@/components/ui/button';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
+
 import { StorageManagerButton } from './storage/storage-manager-button';
+import {
+  HEADER_ACTIONS_CLASS,
+  HEADER_CONTAINER_CLASS,
+  HEADER_CONTAINER_MODAL_CLASS,
+  HEADER_DESCRIPTION_CLASS,
+  HEADER_ICON_CIRCLE_CLASS,
+  HEADER_ICON_CIRCLE_MODAL_CLASS,
+  HEADER_ICON_CIRCLE_STYLE,
+  HEADER_TITLE_CLASS,
+  HEADER_TITLE_MODAL_CLASS,
+} from './panel-styles';
 import type { PanelMode } from './panel-types';
 
 /** URL документации по интерфейсу файлового хранилища */
@@ -24,7 +37,7 @@ const DOCS_URL = 'https://fedorabakumets.github.io/wikinest/interface/files';
 export interface FileStorageHeaderProps {
   /** Режим панели: страница или модалка */
   mode: PanelMode;
-  /** ID проекта */
+  /** ID текущего проекта */
   projectId: number;
   /** Токены проекта (для селектора бота и приоритезации file_id) */
   tokens: BotToken[];
@@ -47,7 +60,7 @@ export interface FileStorageHeaderProps {
  */
 export function FileStorageHeader({
   mode,
-  projectId: _projectId,
+  projectId,
   tokens,
   selectedTokenId,
   onSelectToken,
@@ -55,21 +68,52 @@ export function FileStorageHeader({
   onProjectChange,
   onRefresh,
 }: FileStorageHeaderProps): React.JSX.Element {
+  const isModal = mode === 'modal';
   return (
     <div className="shrink-0" data-testid="file-storage-header">
-      <TabHeader
-        icon={<FolderOpen className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
-        title="Файлы"
-        actions={
-          <div className="flex items-center gap-1">
-            <StorageManagerButton />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8"
-              asChild
+      <div className={isModal ? HEADER_CONTAINER_MODAL_CLASS : HEADER_CONTAINER_CLASS}>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span
+              className={isModal ? HEADER_ICON_CIRCLE_MODAL_CLASS : HEADER_ICON_CIRCLE_CLASS}
+              style={HEADER_ICON_CIRCLE_STYLE}
+              aria-hidden
             >
+              <FolderOpen
+                className={
+                  isModal
+                    ? 'h-3.5 w-3.5 text-primary-foreground'
+                    : 'h-4 w-4 text-primary-foreground'
+                }
+              />
+            </span>
+            <h2 className={isModal ? HEADER_TITLE_MODAL_CLASS : HEADER_TITLE_CLASS}>
+              Файлы
+            </h2>
+          </div>
+
+          {(allProjects.length > 1 || tokens.length > 0) && (
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
+              {allProjects.length > 1 && (
+                <ProjectSelector
+                  projects={allProjects}
+                  selectedProjectId={projectId}
+                  onSelect={onProjectChange}
+                />
+              )}
+              {tokens.length > 0 && (
+                <BotTokenSelector
+                  tokens={tokens}
+                  selectedTokenId={selectedTokenId}
+                  onSelect={onSelectToken}
+                />
+              )}
+            </div>
+          )}
+
+          <div className={HEADER_ACTIONS_CLASS}>
+            <StorageManagerButton />
+            <Button type="button" variant="outline" size="sm" className="h-8" asChild>
               <a
                 href={DOCS_URL}
                 target="_blank"
@@ -93,27 +137,12 @@ export function FileStorageHeader({
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
-        }
-      >
-        {allProjects.length > 1 && (
-          <ProjectSelector
-            projects={allProjects}
-            selectedProjectId={_projectId}
-            onSelect={onProjectChange}
-          />
-        )}
-        {tokens.length > 0 && (
-          <BotTokenSelector
-            tokens={tokens}
-            selectedTokenId={selectedTokenId}
-            onSelect={onSelectToken}
-          />
-        )}
-      </TabHeader>
+        </div>
+      </div>
 
-      {/* Краткое описание назначения страницы (Req 14.3); компактнее в модалке */}
-      {mode === 'page' && (
-        <p className="px-4 sm:px-6 py-2 text-xs text-muted-foreground border-b">
+      {/* Краткое описание показываем только на странице (модалка плотнее, Req 1.4) */}
+      {!isModal && (
+        <p className={HEADER_DESCRIPTION_CLASS}>
           Единое хранилище медиафайлов проекта: загрузка, фильтрация по категориям и
           хранилищам, привязка file_id к ботам и прикрепление файлов к нодам.
         </p>

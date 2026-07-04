@@ -28,8 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/utils/utils';
 import type { StorageConfigDto } from '../../hooks/use-storage-configs';
 import type { StorageBackendKind } from './storage-info';
+import {
+  STORAGE_TEST_RESULT_BASE,
+  STORAGE_TEST_RESULT_ERROR_CLASS,
+  STORAGE_TEST_RESULT_OK_CLASS,
+} from '../panel-styles';
 import { StorageConfigFormFields } from './storage-config-form-fields';
 import { useStorageConfigForm } from './use-storage-config-form';
 
@@ -116,9 +122,10 @@ export function StorageConfigForm({ open, onOpenChange, editing }: StorageConfig
 
           {testResult && (
             <div
-              className={`flex items-center gap-2 rounded-md border p-2 text-sm ${
-                testResult.ok ? 'text-emerald-600' : 'text-destructive'
-              }`}
+              className={cn(
+                STORAGE_TEST_RESULT_BASE,
+                testResult.ok ? STORAGE_TEST_RESULT_OK_CLASS : STORAGE_TEST_RESULT_ERROR_CLASS,
+              )}
               data-testid="storage-test-result"
             >
               {testResult.ok ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}

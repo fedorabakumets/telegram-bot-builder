@@ -18,6 +18,12 @@ import type { CollaboratorInfo } from '../../hooks/use-project-collaborators';
 import type { SheetInfo } from '../panel-types';
 import { getSizeColor, formatSize, getExtension, formatDate } from './files-table-utils';
 import { getDownloadHref } from './file-download';
+import {
+  STICKY_COLUMN_NAME,
+  STICKY_COLUMN_SELECT,
+  TABLE_ROW_CLASS,
+  TABLE_ROW_SELECTED_CLASS,
+} from '../panel-styles';
 import { CellPreviewName } from './cell-preview-name';
 import { CellFileIds } from './cell-file-ids';
 import { CellUploader } from './cell-uploader';
@@ -51,8 +57,8 @@ export interface FileRowProps {
 }
 
 /** Sticky-классы для закреплённых столбцов при горизонтальном скролле */
-const STICKY_SELECT = 'sticky left-0 z-10 bg-background';
-const STICKY_NAME = 'sticky left-9 z-10 bg-background';
+const STICKY_SELECT = STICKY_COLUMN_SELECT;
+const STICKY_NAME = STICKY_COLUMN_NAME;
 
 /**
  * Строка таблицы файлов (десктоп) со всеми столбцами Req 7.1.
@@ -67,9 +73,9 @@ export function FileRow({
   const downloadHref = getDownloadHref(file, projectId, selectedTokenId);
 
   return (
-    <tr className={cn('hover:bg-muted/30 transition-colors', selected && 'bg-primary/5')}>
+    <tr className={cn(TABLE_ROW_CLASS, selected && TABLE_ROW_SELECTED_CLASS)}>
       {/* 1. Выбор (закреплён) */}
-      <td className={cn('p-2 text-center', STICKY_SELECT, selected && 'bg-primary/5')}>
+      <td className={cn('p-2 text-center', STICKY_SELECT, selected && TABLE_ROW_SELECTED_CLASS)}>
         <Checkbox checked={selected} onCheckedChange={onToggle} />
       </td>
       {/* 2. Превью + название (закреплён) */}
@@ -77,7 +83,7 @@ export function FileRow({
         file={file}
         projectId={projectId}
         onPreviewClick={onPreviewClick}
-        className={cn(STICKY_NAME, selected && 'bg-primary/5')}
+        className={cn(STICKY_NAME, selected && TABLE_ROW_SELECTED_CLASS)}
       />
       {/* 3. Внутренний ID */}
       <td className="p-2 text-muted-foreground">{file.id}</td>

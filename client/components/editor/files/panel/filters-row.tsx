@@ -10,6 +10,7 @@ import type { FileFilters } from '../hooks/project-files-query-params';
 import type { CollaboratorInfo } from '../hooks/use-project-collaborators';
 import { FiltersButton } from './filters-button';
 import { ActiveFilterChips } from './active-filter-chips';
+import { PANEL_SECTION_CLASS } from './panel-styles';
 import type { FilterKey, StorageOption } from './active-filter-chips-labels';
 
 /** Пропсы ряда фильтров */
@@ -46,7 +47,7 @@ export function FiltersRow({
 }: FiltersRowProps) {
   return (
     <div
-      className="flex flex-wrap items-center gap-2 px-4 py-2 border-b"
+      className={`flex flex-wrap items-center gap-2 ${PANEL_SECTION_CLASS}`}
       data-testid="filters-row"
     >
       <FiltersButton activeCount={activeCount} onOpen={onOpen} />

@@ -20,6 +20,7 @@ import { FiltersRow } from './filters-row';
 import { FiltersModal } from './filters-modal';
 import { SelectionActionBar } from './selection-action-bar';
 import { FilesTable } from './table/files-table';
+import { PANEL_SECTION_CLASS } from './panel-styles';
 import type { FileStoragePanelProps } from './panel-types';
 
 /**
@@ -81,7 +82,7 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
 
       {/* Кнопка включения режима прикрепления доступна на странице ВСЕГДА (Req 3.7) */}
       {mode === 'page' && (
-        <div className="flex items-center gap-2 px-4 py-2 border-b">
+        <div className={`flex items-center gap-2 ${PANEL_SECTION_CLASS}`}>
           <Button
             type="button"
             variant={s.attachModeEnabled ? 'default' : 'outline'}

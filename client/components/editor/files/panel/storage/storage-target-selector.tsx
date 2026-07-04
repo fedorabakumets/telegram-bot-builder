@@ -4,11 +4,10 @@
  * Select) доступных для записи хранилищ (`listWritable` — не readOnly),
  * по умолчанию выбрано активное. Каждый пункт — бейдж с типом (local/S3)
  * и именем. При выборе цели файл сохраняется именно туда (Req 11.7).
- * Только смысловые иконки lucide-react (HardDrive/Cloud), без эмодзи (Req 13.2).
+ * Стиль бейджа берётся из общего helper'а `panel-styles` (задача 12.1).
+ * Только смысловые иконки lucide-react, без эмодзи (Req 13.2).
  * @module components/editor/files/panel/storage/storage-target-selector
  */
-
-import { HardDrive, Cloud } from 'lucide-react';
 
 import {
   Select,
@@ -18,6 +17,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import {
+  getStorageBadgeStyle,
+  STORAGE_BADGE_LABEL_WIDE,
+} from '../panel-styles';
 import { listWritable, type StorageInfo } from './storage-info';
 
 /** Пропсы селектора целевого хранилища при загрузке */
@@ -34,16 +37,17 @@ export interface StorageTargetSelectorProps {
 
 /**
  * Бейдж типа хранилища (local/S3) с именем — для пункта списка и значения.
+ * Стили берутся из единого helper'а `panel-styles` (Req 13.1).
  * @param props - Хранилище для отображения
  * @returns JSX элемент с иконкой типа и именем
  */
 function StorageBadge({ storage }: { storage: StorageInfo }) {
-  const isS3 = storage.backend === 's3';
-  const Icon = isS3 ? Cloud : HardDrive;
+  const style = getStorageBadgeStyle(storage.backend);
+  const Icon = style.icon;
   return (
-    <Badge variant={isS3 ? 'default' : 'secondary'} className="text-[10px] gap-1" title={storage.name}>
-      <Icon className="h-3 w-3" />
-      <span className="truncate max-w-[120px]">{storage.name}</span>
+    <Badge variant={style.variant} className={style.className} title={storage.name}>
+      <Icon className={style.iconClassName} />
+      <span className={STORAGE_BADGE_LABEL_WIDE}>{storage.name}</span>
     </Badge>
   );
 }

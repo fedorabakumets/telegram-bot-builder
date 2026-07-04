@@ -13,6 +13,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import type { ProjectFile } from '../../hooks/use-project-files';
 import type { CollaboratorInfo } from '../../hooks/use-project-collaborators';
 import type { SheetInfo } from '../panel-types';
+import {
+  EMPTY_STATE_CLASS,
+  STICKY_COLUMN_NAME_HEADER,
+  STICKY_COLUMN_SELECT_HEADER,
+  TABLE_HEAD_CLASS,
+} from '../panel-styles';
 import { FILES_TABLE_COLUMNS, FILES_TABLE_COLUMN_COUNT } from './files-table-columns';
 import { FileRow } from './file-row';
 import { FileCardPlaceholder } from './file-card-placeholder';
@@ -60,10 +66,10 @@ export function FilesTable(props: FilesTableProps) {
   const allSelected = isAllSelected(files, selectedIds);
 
   if (isLoading) {
-    return <div className="flex h-full items-center justify-center text-sm text-muted-foreground" data-testid="files-table-loading">Загрузка…</div>;
+    return <div className={EMPTY_STATE_CLASS} data-testid="files-table-loading">Загрузка…</div>;
   }
   if (files.length === 0) {
-    return <div className="flex h-full items-center justify-center text-sm text-muted-foreground" data-testid="files-table-empty">Файлы не найдены</div>;
+    return <div className={EMPTY_STATE_CLASS} data-testid="files-table-empty">Файлы не найдены</div>;
   }
 
   /** Общие пропсы строки/карточки для каждого файла */
@@ -78,15 +84,15 @@ export function FilesTable(props: FilesTableProps) {
       {/* Десктоп: таблица с горизонтальным скроллом и закреплёнными столбцами (Req 7.8) */}
       <div className="hidden sm:block h-full overflow-auto">
         <table className="w-full text-xs border-collapse">
-          <thead className="sticky top-0 z-20 bg-muted/60 border-b">
+          <thead className={TABLE_HEAD_CLASS}>
             <tr>
               {FILES_TABLE_COLUMNS.map((col) => (
                 <th
                   key={col.id}
                   className={[
                     'p-2 font-medium whitespace-nowrap', col.className ?? '',
-                    col.id === 'select' ? 'sticky left-0 z-30 bg-muted/60' : '',
-                    col.id === 'previewName' ? 'sticky left-9 z-30 bg-muted/60' : '',
+                    col.id === 'select' ? STICKY_COLUMN_SELECT_HEADER : '',
+                    col.id === 'previewName' ? STICKY_COLUMN_NAME_HEADER : '',
                   ].join(' ')}
                 >
                   {col.id === 'select' ? (

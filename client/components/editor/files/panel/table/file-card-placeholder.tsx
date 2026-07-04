@@ -1,8 +1,9 @@
 /**
  * @fileoverview Временная карточка файла (узкие экраны) — каркасный плейсхолдер
  * компактного/карточного режима таблицы (Req 7.8, 13.3). Показывает превью+имя,
- * тип, размер, дату, хранилище, сотрудника и действия. TODO(task 7.3): вынести
- * ячейки (превью+имя, file_id, сотрудник, хранилище, использования).
+ * тип, размер, дату, хранилище, сотрудника и действия. Бейдж хранилища и
+ * цветовая индикация размера берутся из общего helper'а `panel-styles`
+ * (задача 12.1 — единый источник стилей).
  * @module components/editor/files/panel/table/file-card-placeholder
  */
 
@@ -13,13 +14,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/utils/utils';
 import type { FileRowProps } from './file-row';
 import {
-  MEDIA_ICONS, MEDIA_TYPE_LABELS, getSizeColor, formatSize, formatDate,
+  MEDIA_ICONS, MEDIA_TYPE_LABELS, formatSize, formatDate,
   getPreviewUrl, shouldShowPreview,
 } from './files-table-utils';
 import { getDownloadHref } from './file-download';
+import {
+  getFileSizeTextClass,
+  getStorageBadgeStyle,
+  STORAGE_BADGE_LABEL_WIDE,
+} from '../panel-styles';
 
 /**
- * Каркасная карточка файла (узкий экран). Будет заменена в задаче 7.3.
+ * Каркасная карточка файла (узкий экран).
  * @param props - Свойства карточки (совпадают со строкой таблицы `FileRow`)
  * @returns JSX элемент карточки
  */
@@ -32,6 +38,11 @@ export function FileCardPlaceholder({
   const uploader = collaborators.find((c) => c.userId === file.uploadedBy);
   /** Ссылка скачивания: прямой url либо прокси по file_id; null = недоступно (Req 15.4) */
   const downloadHref = getDownloadHref(file, projectId, selectedTokenId);
+  /** Стиль бейджа хранилища из общего helper'а (Req 13.1) */
+  const storageStyle = getStorageBadgeStyle(file.storageBackend);
+  const StorageIcon = storageStyle.icon;
+  /** Текст бейджа: имя конфига → тип бэкенда → «local» */
+  const storageLabel = file.storageName ?? file.storageBackend ?? 'local';
 
   return (
     <div className={cn('rounded-xl border p-3 flex gap-3 items-start', selected && 'border-primary/50 bg-primary/5')}>
@@ -48,9 +59,12 @@ export function FileCardPlaceholder({
         <p className="text-xs font-medium truncate">{file.fileName ?? '—'}</p>
         <div className="flex flex-wrap gap-1.5 text-[10px] text-muted-foreground items-center">
           <Badge variant="secondary" className="text-[10px]">{MEDIA_TYPE_LABELS[file.mediaType ?? ''] ?? file.mediaType ?? '?'}</Badge>
-          <span className={getSizeColor(file.fileSize)}>{formatSize(file.fileSize)}</span>
+          <span className={getFileSizeTextClass(file.fileSize)}>{formatSize(file.fileSize)}</span>
           <span>{formatDate(file.createdAt)}</span>
-          <Badge variant="outline" className="text-[10px]">{file.storageName ?? file.storageBackend ?? 'local'}</Badge>
+          <Badge variant={storageStyle.variant} className={storageStyle.className} title={storageLabel}>
+            <StorageIcon className={storageStyle.iconClassName} />
+            <span className={STORAGE_BADGE_LABEL_WIDE}>{storageLabel}</span>
+          </Badge>
           {/* ID + сотрудник */}
           <span>ID {file.id}</span>
           <span className="truncate max-w-[90px]">{uploader?.name ?? '—'}</span>

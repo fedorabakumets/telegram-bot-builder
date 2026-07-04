@@ -9,6 +9,7 @@
 
 import { Image, Film, Music, FileText, Sticker } from 'lucide-react';
 import type { ProjectFile } from '../../hooks/use-project-files';
+import { getFileSizeTextClass } from '../panel-styles';
 
 /** Иконка-компонент по типу медиа (для не-изображений) */
 export const MEDIA_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -36,16 +37,15 @@ const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
 const VIDEO_EXTENSIONS = new Set(['mp4', 'avi', 'mov', 'webm', 'mkv']);
 
 /**
- * Возвращает цветовой класс размера файла (зелёный→красный).
+ * Возвращает цветовой класс размера файла на токенах темы (success/warning/
+ * destructive). Реальная классификация уровня и сопоставление с классами
+ * вынесены в общий helper `panel-styles` (задача 12.1 — единый источник
+ * стилей панели). Сигнатура сохранена для обратной совместимости.
  * @param size - Размер в байтах или null
  * @returns Tailwind-класс цвета текста
  */
 export function getSizeColor(size: number | null): string {
-  if (!size) return 'text-muted-foreground';
-  if (size < 1_048_576) return 'text-green-500';
-  if (size < 10_485_760) return 'text-yellow-500';
-  if (size < 52_428_800) return 'text-orange-500';
-  return 'text-red-500';
+  return getFileSizeTextClass(size);
 }
 
 /**

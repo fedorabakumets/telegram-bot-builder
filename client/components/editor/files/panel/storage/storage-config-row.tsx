@@ -3,15 +3,17 @@
  * Презентационная строка одного конфига `storage_configs`: бейдж типа
  * (local/S3), имя, индикатор активности и режима только-чтения (Req 11.2),
  * действия «Сделать активным» (Req 11.6) и «Удалить» с подтверждением
- * (Req 11.8 — серверный 409 обрабатывается на уровне менеджера). Только
- * смысловые иконки lucide-react, без декоративных эмодзи (Req 13.2).
+ * (Req 11.8 — серверный 409 обрабатывается на уровне менеджера). Стиль
+ * бейджа типа хранилища берёт из общего helper'а `panel-styles` (задача 12.1).
+ * Только смысловые иконки lucide-react, без декоративных эмодзи (Req 13.2).
  * @module components/editor/files/panel/storage/storage-config-row
  */
 
-import { HardDrive, Cloud, Star, Lock, Trash2, Pencil } from 'lucide-react';
+import { Star, Lock, Trash2, Pencil } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { getStorageBadgeStyle } from '../panel-styles';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,9 +53,9 @@ export function StorageConfigRow({
   onEdit,
   isMutating = false,
 }: StorageConfigRowProps) {
-  /** Является ли хранилище S3-объектом (иконка/вариант бейджа) */
-  const isS3 = storage.backend === 's3';
-  const TypeIcon = isS3 ? Cloud : HardDrive;
+  /** Стиль бейджа типа хранилища (вариант, иконка, базовые классы) */
+  const badgeStyle = getStorageBadgeStyle(storage.backend);
+  const TypeIcon = badgeStyle.icon;
 
   return (
     <div
@@ -61,9 +63,9 @@ export function StorageConfigRow({
       data-testid={`storage-config-row-${storage.configId}`}
     >
       <div className="flex min-w-0 items-center gap-2">
-        <Badge variant={isS3 ? 'default' : 'secondary'} className="gap-1 text-[10px]">
-          <TypeIcon className="h-3 w-3" />
-          {isS3 ? 'S3' : 'Локально'}
+        <Badge variant={badgeStyle.variant} className={badgeStyle.className}>
+          <TypeIcon className={badgeStyle.iconClassName} />
+          {storage.backend === 's3' ? 'S3' : 'Локально'}
         </Badge>
         <span className="truncate text-sm font-medium" title={storage.name}>
           {storage.name}

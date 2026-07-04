@@ -3,8 +3,9 @@
  * «Все», «Входящие», «Исходящие», «Загруженные» (Req 5.1). Категории
  * «Из конструктора», «Файлы оператора», «Сертификаты» сознательно
  * исключены (Req 5.6). Использует shadcn/ui Tabs и смысловые иконки
- * lucide-react (без декоративных эмодзи, Req 13.2). Опциональные счётчики
- * на табах (Req 5.* — поле counts необязательно).
+ * lucide-react (без декоративных эмодзи, Req 13.2). Активная вкладка
+ * подсвечивается через токен `primary` (см. CATEGORY_TAB_TRIGGER_CLASS),
+ * счётчик автоматически меняет фон/текст по состоянию таба.
  * @module components/editor/files/panel/category-tabs
  */
 
@@ -12,8 +13,12 @@ import type { LucideIcon } from 'lucide-react';
 import { Layers, Inbox, Send, Upload } from 'lucide-react';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/utils/utils';
 import type { FileCategory } from '../hooks/project-files-query-params';
+import {
+  CATEGORY_TAB_COUNT_CLASS,
+  CATEGORY_TAB_TRIGGER_CLASS,
+  PANEL_SECTION_CLASS,
+} from './panel-styles';
 
 /** Пропсы табов категорий */
 export interface CategoryTabsProps {
@@ -56,7 +61,7 @@ export function CategoryTabs({ category, onCategoryChange, counts }: CategoryTab
     <Tabs
       value={category}
       onValueChange={(value) => onCategoryChange(value as FileCategory)}
-      className="px-4 py-2 border-b"
+      className={PANEL_SECTION_CLASS}
       data-testid="category-tabs"
     >
       <TabsList className="h-auto flex-wrap justify-start gap-1 bg-transparent p-0">
@@ -66,17 +71,14 @@ export function CategoryTabs({ category, onCategoryChange, counts }: CategoryTab
             <TabsTrigger
               key={value}
               value={value}
-              className="data-[state=active]:bg-muted"
+              className={CATEGORY_TAB_TRIGGER_CLASS}
               data-testid={`category-tab-${value}`}
             >
-              <Icon className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+              <Icon className="mr-1.5 h-3.5 w-3.5 shrink-0" />
               {label}
               {count !== undefined && (
                 <span
-                  className={cn(
-                    'ml-1.5 rounded-full px-1.5 text-xs tabular-nums',
-                    'bg-muted text-muted-foreground data-[state=active]:bg-background',
-                  )}
+                  className={CATEGORY_TAB_COUNT_CLASS}
                   data-testid={`category-count-${value}`}
                 >
                   {count}

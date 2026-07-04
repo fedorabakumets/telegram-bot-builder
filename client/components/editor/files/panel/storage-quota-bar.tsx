@@ -1,23 +1,36 @@
 /**
  * @fileoverview Индикатор квоты хранилища `StorageQuotaBar`.
  * Показывает прогресс-бар и текст в стиле «3% — Места достаточно —
- * 37.56 Kb / 1 Gb» (Req 4.1). Цвет полосы: зелёный < 70%, жёлтый 70–90%,
- * красный > 90% (Req 4.6, пороги совпадают с server/compute-quota-warning).
- * При безлимите (limitBytes === null) — аккуратный блок «Безлимитно» без
- * процента и заполнения (Req 4.3). При превышении лимита — красный
- * индикатор и предупреждающая подпись, без жёсткой блокировки (Req 4.8).
+ * 37.56 Kb / 1 Gb» (Req 4.1). Цвета и пороги (success < 70%, warning 70–90%,
+ * destructive > 90%) берутся из единого helper'а `panel-styles` (Req 4.6 —
+ * пороги синхронны с сервером compute-quota-warning). Ширина и цвет
+ * заливки анимируются плавно через CSS-transition (Req 13.1). При безлимите
+ * (limitBytes === null) — аккуратный бейдж «Безлимитно» с иконкой Infinity,
+ * без процента и заполнения, рядом — приглушённая подпись с занятым объёмом
+ * (Req 4.3). При превышении лимита — `destructive`-индикатор и
+ * предупреждающая подпись, без жёсткой блокировки (Req 4.8). Все цифры
+ * выводятся моноширинными (`tabular-nums`) — основная цифра в `text-foreground`
+ * с плотным трекингом, вторичная — в `text-muted-foreground`.
  * @module components/editor/files/panel/storage-quota-bar
  */
 
 import { HardDrive, AlertTriangle, Infinity as InfinityIcon } from 'lucide-react';
 import { cn } from '@/utils/utils';
 import { formatBytes } from './format-bytes';
-
-/** Порог перехода к жёлтому уровню (warn), в процентах (синхронно с сервером) */
-const QUOTA_WARN_PERCENT = 70;
-
-/** Порог перехода к красному уровню (critical), в процентах (синхронно с сервером) */
-const QUOTA_CRITICAL_PERCENT = 90;
+import {
+  PANEL_DENSE_SECTION_CLASS,
+  QUOTA_CAPTION_MUTED_CLASS,
+  QUOTA_CAPTION_PRIMARY_CLASS,
+  QUOTA_EXCEEDED_ICON_CLASS,
+  QUOTA_EXCEEDED_TEXT_CLASS,
+  QUOTA_FILL_CLASS,
+  QUOTA_FILL_TRANSITION_CLASS,
+  QUOTA_TRACK_CLASS,
+  QUOTA_UNLIMITED_BADGE_CLASS,
+  QUOTA_UNLIMITED_BADGE_ICON_CLASS,
+  resolveQuotaLevel,
+  type QuotaLevel,
+} from './panel-styles';
 
 /** Пропсы индикатора квоты */
 export interface StorageQuotaBarProps {
@@ -27,27 +40,6 @@ export interface StorageQuotaBarProps {
   limitBytes: number | null;
   /** Состояние загрузки квоты */
   isLoading?: boolean;
-}
-
-/** Уровень заполнения для выбора цвета полосы */
-type QuotaLevel = 'ok' | 'warn' | 'critical';
-
-/** CSS-классы заливки полосы по уровню заполнения */
-const FILL_CLASS: Record<QuotaLevel, string> = {
-  ok: 'bg-green-500',
-  warn: 'bg-yellow-500',
-  critical: 'bg-red-500',
-};
-
-/**
- * Определяет уровень-индикатор по проценту заполнения (Req 4.6).
- * @param percent - Процент заполнения квоты
- * @returns Уровень: `ok` (<70%), `warn` (70–90%), `critical` (>90%)
- */
-function resolveLevel(percent: number): QuotaLevel {
-  if (percent > QUOTA_CRITICAL_PERCENT) return 'critical';
-  if (percent >= QUOTA_WARN_PERCENT) return 'warn';
-  return 'ok';
 }
 
 /**
@@ -71,8 +63,12 @@ function levelLabel(level: QuotaLevel, exceeded: boolean): string {
 export function StorageQuotaBar({ usedBytes, limitBytes, isLoading }: StorageQuotaBarProps) {
   if (isLoading) {
     return (
-      <div className="px-4 py-2.5 border-b" data-testid="storage-quota-bar" data-state="loading">
-        <div className="h-2 w-full animate-pulse rounded-full bg-muted" />
+      <div
+        className={PANEL_DENSE_SECTION_CLASS}
+        data-testid="storage-quota-bar"
+        data-state="loading"
+      >
+        <div className={cn(QUOTA_TRACK_CLASS, 'animate-pulse')} />
       </div>
     );
   }
@@ -81,52 +77,54 @@ export function StorageQuotaBar({ usedBytes, limitBytes, isLoading }: StorageQuo
   if (limitBytes === null) {
     return (
       <div
-        className="flex items-center gap-2 px-4 py-2.5 border-b text-sm text-muted-foreground"
+        className={cn('flex items-center gap-2 text-xs', PANEL_DENSE_SECTION_CLASS)}
         data-testid="storage-quota-bar"
         data-state="unlimited"
       >
-        <InfinityIcon className="h-4 w-4 shrink-0" />
-        <span className="font-medium text-foreground">Безлимитно</span>
-        <span className="text-muted-foreground">— занято {formatBytes(usedBytes)}</span>
+        <span className={QUOTA_UNLIMITED_BADGE_CLASS}>
+          <InfinityIcon className={QUOTA_UNLIMITED_BADGE_ICON_CLASS} aria-hidden />
+          Безлимитно
+        </span>
+        <span className={QUOTA_CAPTION_MUTED_CLASS}>занято {formatBytes(usedBytes)}</span>
       </div>
     );
   }
 
   const exceeded = usedBytes > limitBytes;
   const percent = limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
-  const level = resolveLevel(percent);
+  const level = resolveQuotaLevel(percent);
   const fillWidth = Math.min(100, Math.max(0, percent));
   const percentLabel = `${Math.round(percent)}%`;
 
   return (
     <div
-      className="px-4 py-2.5 border-b"
+      className={PANEL_DENSE_SECTION_CLASS}
       data-testid="storage-quota-bar"
       data-state={exceeded ? 'exceeded' : level}
     >
       <div className="flex items-center gap-2 text-xs">
         {exceeded ? (
-          <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-500" />
+          <AlertTriangle className={QUOTA_EXCEEDED_ICON_CLASS} aria-hidden />
         ) : (
-          <HardDrive className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <HardDrive className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
         )}
-        <span className="font-medium text-foreground">{percentLabel}</span>
-        <span className="text-muted-foreground">— {levelLabel(level, exceeded)} —</span>
-        <span className="text-muted-foreground">
+        <span className={QUOTA_CAPTION_PRIMARY_CLASS}>{percentLabel}</span>
+        <span className={QUOTA_CAPTION_MUTED_CLASS}>— {levelLabel(level, exceeded)} —</span>
+        <span className={QUOTA_CAPTION_MUTED_CLASS}>
           {formatBytes(usedBytes)} / {formatBytes(limitBytes)}
         </span>
       </div>
 
-      <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted">
+      <div className={cn('mt-1.5', QUOTA_TRACK_CLASS)}>
         <div
-          className={cn('h-full rounded-full transition-all', FILL_CLASS[level])}
+          className={cn(QUOTA_FILL_TRANSITION_CLASS, QUOTA_FILL_CLASS[level])}
           style={{ width: `${fillWidth}%` }}
           data-testid="storage-quota-fill"
         />
       </div>
 
       {exceeded && (
-        <p className="mt-1 text-xs text-red-500" data-testid="storage-quota-warning">
+        <p className={QUOTA_EXCEEDED_TEXT_CLASS} data-testid="storage-quota-warning">
           Хранилище переполнено. Загрузка остаётся доступной, но освободите место.
         </p>
       )}

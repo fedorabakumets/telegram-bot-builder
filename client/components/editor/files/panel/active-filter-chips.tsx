@@ -3,8 +3,10 @@
  * (Req 6.8). Для каждого применённого фильтра (имя, дата, тип, сотрудник,
  * размер, хранилище) рендерит чип с крестиком для точечного снятия, плюс
  * кнопку «Сбросить всё». Подписи чипов строятся в active-filter-chips-labels.
- * Использует shadcn/ui Badge/Button и иконку lucide-react X (без эмодзи,
- * Req 13.2). Если активных фильтров нет — ничего не рендерит.
+ * Стили чипов берутся из общего helper'а `panel-styles` (задача 12.1 —
+ * единый источник стилей). Использует shadcn/ui Badge/Button и иконку
+ * lucide-react X (без эмодзи, Req 13.2). Если активных фильтров нет —
+ * ничего не рендерит.
  * @module components/editor/files/panel/active-filter-chips
  */
 
@@ -19,6 +21,11 @@ import {
   type FilterKey,
   type StorageOption,
 } from './active-filter-chips-labels';
+import {
+  ACTIVE_FILTER_CHIP_CLASS,
+  ACTIVE_FILTER_CHIP_LABEL_CLASS,
+  ACTIVE_FILTER_CHIP_REMOVE_CLASS,
+} from './panel-styles';
 
 /** Пропсы чипов активных фильтров */
 export interface ActiveFilterChipsProps {
@@ -55,14 +62,14 @@ export function ActiveFilterChips({
         <Badge
           key={chip.id}
           variant="secondary"
-          className="gap-1 pl-2 pr-1"
+          className={ACTIVE_FILTER_CHIP_CLASS}
           data-testid={`filter-chip-${chip.id}`}
         >
-          <span className="truncate max-w-[16rem]">{chip.label}</span>
+          <span className={ACTIVE_FILTER_CHIP_LABEL_CLASS}>{chip.label}</span>
           <button
             type="button"
             onClick={() => onRemove(chip.keys)}
-            className="rounded-sm p-0.5 hover:bg-background/60"
+            className={ACTIVE_FILTER_CHIP_REMOVE_CLASS}
             aria-label={`Снять фильтр: ${chip.label}`}
             data-testid={`filter-chip-remove-${chip.id}`}
           >

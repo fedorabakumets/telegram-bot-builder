@@ -11,6 +11,7 @@
 import { Paperclip, Trash2, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { SELECTION_BAR_CLASS } from './panel-styles';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,7 +55,7 @@ export function SelectionActionBar({
 }: SelectionActionBarProps) {
   return (
     <div
-      className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-2 border-t bg-background/95 px-4 py-2.5 backdrop-blur"
+      className={SELECTION_BAR_CLASS}
       data-testid="selection-action-bar"
     >
       <span className="text-sm text-muted-foreground tabular-nums" data-testid="selection-count">
