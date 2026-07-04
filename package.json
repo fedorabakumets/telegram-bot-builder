@@ -125,6 +125,7 @@
     "test:phase13": "node run-tests.js --pattern test-phase13-database"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.3.4",
     "@aws-sdk/client-s3": "3.1076.0",
     "@aws-sdk/s3-request-presigner": "3.1076.0",
     "@hookform/resolvers": "^5.2.2",
@@ -177,6 +178,7 @@
     "drizzle-zod": "^0.7.0",
     "embla-carousel-react": "^8.6.0",
     "express": "^4.22.1",
+    "express-list-endpoints": "^7.1.1",
     "express-session": "^1.19.0",
     "form-data": "^4.0.5",
     "framer-motion": "^11.18.2",
@@ -212,6 +214,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "socks-proxy-agent": "^9.0.0",
+    "swagger-ui-express": "^5.0.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "telegram": "^2.26.22",
@@ -244,6 +247,7 @@
     "@types/react": "^18.3.27",
     "@types/react-dnd-html5-backend": "^3.0.2",
     "@types/react-dom": "^18.3.7",
+    "@types/swagger-ui-express": "^4.1.8",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^4.6.0",
     "@vitest/coverage-v8": "^2.1.9",

@@ -71,6 +71,7 @@ import { createUserIdsRoutes } from "./user-ids-routes";
 import { broadcastProjectEvent } from "../terminal";
 import { getRequestTokenId, resolveEffectiveProjectTokenId } from "./utils/resolve-request-token";
 import { getTelegramProxyAgent } from "../utils/telegram-proxy";
+import { setupSwagger } from "../swagger/setup-swagger";
 
 /**
  * Глобальное хранилище активных процессов ботов
@@ -4832,6 +4833,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Webhook роут: приём апдейтов от Telegram и проксирование в Python-процесс бота
   setupWebhookRoutes(app);
+
+  // OpenAPI / Swagger UI — после всех маршрутов, до Vite catch-all
+  setupSwagger(app);
 
   // Если сервер передан извне, используем его, иначе создаем новый
   if (httpServer) {
