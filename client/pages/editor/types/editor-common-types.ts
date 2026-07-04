@@ -19,7 +19,6 @@ export type EditorTab =
   | 'editor'
   | 'bot'
   | 'users'
-  | 'user-ids'
   | 'client-api'
   | 'groups'
   | 'export'

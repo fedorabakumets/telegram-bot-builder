@@ -92,7 +92,7 @@ export function useTabNavigation({
       if (projectId) {
         onSaveProject?.();
       }
-    } else if (tab === 'bot' || tab === 'users' || tab === 'user-ids') {
+    } else if (tab === 'bot' || tab === 'users') {
       // Не вызываем onSaveProject — сохранение происходит при уходе с editor
     }
   }, [currentTab, setCurrentTab, setPreviousTab, onSaveProject, onOpenCodePanel, onCloseCodePanel, onRestoreCanvas, setLocation, projectId]);

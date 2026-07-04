@@ -37,7 +37,6 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   groups: "Telegram-группы и модерация",
   github: "GitHub commit/push",
   "google-sheets": "Интеграция Google Sheets",
-  "user-ids": "Идентификаторы пользователей",
   root: "Корень API",
 };
 

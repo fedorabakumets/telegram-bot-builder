@@ -35,7 +35,6 @@ REST API визуального конструктора Telegram-ботов. А
 | [templates](./templates.md) | 16 |
 | [tokens](./tokens.md) | 4 |
 | [user](./user.md) | 12 |
-| [user-ids](./user-ids.md) | 4 |
 | [users](./users.md) | 5 |
 | [webhook](./webhook.md) | 1 |
 | [workers](./workers.md) | 1 |

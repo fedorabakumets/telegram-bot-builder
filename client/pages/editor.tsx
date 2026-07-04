@@ -63,7 +63,6 @@ import { FilesTabPage, type AttachTarget } from '@/components/editor/files';
 import { VersionsPanel } from '@/components/editor/versions';
 import { AgentTokensPanel } from '@/components/editor/agent';
 import { UserDetailsPanel } from '@/components/editor/database/user-details/user-details-panel';
-import { UserIdsDatabase } from '@/components/editor/user-ids-db';
 import { ProjectNotFound } from '@/components/editor/project-not-found';
 import { AdaptiveHeader } from '@/components/editor/header/adaptive-header';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
@@ -1790,7 +1789,6 @@ export default function Editor() {
               </UserMessagesLiveProvider>
             </div>
           )}
-          {currentTab === 'user-ids' && <UserIdsDatabase />}
           {currentTab === 'broadcast' && (
             <div className="h-full overflow-hidden">
               <BroadcastPanel

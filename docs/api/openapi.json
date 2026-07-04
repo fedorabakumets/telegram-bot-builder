@@ -107,10 +107,6 @@
       "description": "Эндпоинты /api/user"
     },
     {
-      "name": "user-ids",
-      "description": "Идентификаторы пользователей"
-    },
-    {
       "name": "users",
       "description": "Пользователи ботов и статистика"
     },
@@ -5237,80 +5233,6 @@
           "tokens"
         ],
         "summary": "GET /api/tokens/{tokenId}/launch-history",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
-    "/api/user-ids": {
-      "get": {
-        "tags": [
-          "user-ids"
-        ],
-        "summary": "GET /api/user-ids",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "user-ids"
-        ],
-        "summary": "POST /api/user-ids",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
-    "/api/user-ids/{id}": {
-      "delete": {
-        "tags": [
-          "user-ids"
-        ],
-        "summary": "DELETE /api/user-ids/{id}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
-    "/api/user-ids/stats": {
-      "get": {
-        "tags": [
-          "user-ids"
-        ],
-        "summary": "GET /api/user-ids/stats",
         "responses": {
           "200": {
             "description": "Успешный ответ"
