@@ -1,18 +1,17 @@
 /**
- * @fileoverview OpenAPI (Swagger) — интерактивная документация HTTP API
- * UI: GET /docs · JSON: GET /docs-json
+ * @fileoverview OpenAPI (Swagger) — сбор spec и подключение UI документации
+ * Hub: GET /docs · JSON: GET /docs-json · UI: /docs/swagger | /docs/scalar | /docs/redoc | /docs/rapidoc
  * @module server/swagger/setup-swagger
  */
 
 import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import type { Express } from "express";
-import swaggerUi from "swagger-ui-express";
 import { isPublicApiPath } from "../middleware/requireApiAuth";
 import { buildOpenApiTags, collectApiRoutes } from "./collect-routes";
 import { documentedRegistry } from "./register-documented-paths";
+import { setupDocsUis } from "./setup-docs-uis";
 
-/** Пути Swagger UI / OpenAPI JSON — вне префикса /api, без session auth */
-export const SWAGGER_PATHS = ["/docs", "/docs-json"] as const;
+export { DOCS_PATHS, SWAGGER_PATHS } from "./setup-docs-uis";
 
 /** OpenAPI 3 document (минимальная типизация для сборки spec) */
 interface OpenApiDocument {
@@ -102,7 +101,7 @@ function buildOpenApiDocument(app: Express): OpenApiDocument {
         "REST API визуального конструктора Telegram-ботов. " +
         "Авторизация: сессионная cookie после POST /api/auth/telegram или " +
         "Authorization: Bearer <agent-token> для MCP/CLI. " +
-        "Эталонные эндпоинты (health, auth, projects) содержат полные схемы request/response.",
+        "UI документации: /docs (hub), /docs/swagger, /docs/scalar, /docs/redoc, /docs/rapidoc.",
       version: "2.2.0",
     },
     tags: buildOpenApiTags(routes),
@@ -136,28 +135,10 @@ function buildOpenApiDocument(app: Express): OpenApiDocument {
 }
 
 /**
- * Подключить Swagger UI и JSON spec к Express-приложению.
+ * Собрать OpenAPI spec и подключить hub + UI документации.
  * @param app - Экземпляр Express
  * @returns void
  */
 export function setupSwagger(app: Express): void {
-  const document = buildOpenApiDocument(app);
-
-  app.get("/docs-json", (_req, res) => {
-    res.json(document);
-  });
-
-  app.use(
-    "/docs",
-    swaggerUi.serve,
-    swaggerUi.setup(document, {
-      customSiteTitle: "Telegram Bot Builder API",
-      swaggerOptions: {
-        persistAuthorization: true,
-        tagsSorter: "alpha",
-        operationsSorter: "alpha",
-        url: "/docs-json",
-      },
-    }),
-  );
+  setupDocsUis(app, buildOpenApiDocument(app));
 }
