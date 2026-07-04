@@ -7,7 +7,7 @@
       "CLIENT-README"
     ],
     "folder_titles": {},
-    "updated_at": "2026-05-25T05:23:53+03:00",
+    "updated_at": "2026-07-04T07:28:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -48,6 +48,891 @@
     "author": ""
   },
   {
+    "path": "api/README",
+    "title": "Telegram Bot Builder API — API Reference",
+    "excerpt": "REST API визуального конструктора Telegram-ботов. Авторизация: сессионная cookie или Bearer PAT. Документация: /admin (вход по ADMIN_API_KEY",
+    "parts": [
+      "api",
+      "README"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/agent-tokens",
+    "title": "agent-tokens",
+    "excerpt": "Эндпоинтов: **3**",
+    "parts": [
+      "api",
+      "agent-tokens"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/auth",
+    "title": "auth",
+    "excerpt": "Эндпоинтов: **5**",
+    "parts": [
+      "api",
+      "auth"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/bot-folders",
+    "title": "bot-folders",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "bot-folders"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/bot-logs",
+    "title": "bot-logs",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "bot-logs"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/bot",
+    "title": "bot",
+    "excerpt": "Эндпоинтов: **24**",
+    "parts": [
+      "api",
+      "bot"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/bots",
+    "title": "bots",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "bots"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/config",
+    "title": "config",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "config"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/database",
+    "title": "database",
+    "excerpt": "Эндпоинтов: **16**",
+    "parts": [
+      "api",
+      "database"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/google-auth",
+    "title": "google-auth",
+    "excerpt": "Эндпоинтов: **2**",
+    "parts": [
+      "api",
+      "google-auth"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/health",
+    "title": "health",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "health"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/launch",
+    "title": "launch",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "launch"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/media",
+    "title": "media",
+    "excerpt": "Эндпоинтов: **13**",
+    "parts": [
+      "api",
+      "media"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/projects",
+    "title": "projects",
+    "excerpt": "Эндпоинтов: **147**",
+    "parts": [
+      "api",
+      "projects"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/push-to-github",
+    "title": "push-to-github",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "push-to-github"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/root",
+    "title": "root",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "root"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/server",
+    "title": "server",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "server"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/settings",
+    "title": "settings",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "settings"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/setup",
+    "title": "setup",
+    "excerpt": "Эндпоинтов: **2**",
+    "parts": [
+      "api",
+      "setup"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/storage-configs",
+    "title": "storage-configs",
+    "excerpt": "Эндпоинтов: **5**",
+    "parts": [
+      "api",
+      "storage-configs"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/telegram-auth",
+    "title": "telegram-auth",
+    "excerpt": "Эндпоинтов: **12**",
+    "parts": [
+      "api",
+      "telegram-auth"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/telegram-client",
+    "title": "telegram-client",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "telegram-client"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/telegram-settings",
+    "title": "telegram-settings",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "telegram-settings"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/templates",
+    "title": "templates",
+    "excerpt": "Эндпоинтов: **16**",
+    "parts": [
+      "api",
+      "templates"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/tokens",
+    "title": "tokens",
+    "excerpt": "Эндпоинтов: **4**",
+    "parts": [
+      "api",
+      "tokens"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/user-ids",
+    "title": "user-ids",
+    "excerpt": "Эндпоинтов: **4**",
+    "parts": [
+      "api",
+      "user-ids"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/user",
+    "title": "user",
+    "excerpt": "Эндпоинтов: **12**",
+    "parts": [
+      "api",
+      "user"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/users",
+    "title": "users",
+    "excerpt": "Эндпоинтов: **5**",
+    "parts": [
+      "api",
+      "users"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/webhook",
+    "title": "webhook",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "webhook"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/workers",
+    "title": "workers",
+    "excerpt": "Эндпоинтов: **1**",
+    "parts": [
+      "api",
+      "workers"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/README",
+    "title": "Tables",
+    "excerpt": "| Name | Columns | Comment |",
+    "parts": [
+      "database",
+      "README"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/agent_tokens",
+    "title": "agent_tokens",
+    "excerpt": "Таблица персональных токенов агента.",
+    "parts": [
+      "database",
+      "agent_tokens"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/app_settings",
+    "title": "app_settings",
+    "excerpt": "Таблица настроек приложения в формате ключ-значение.",
+    "parts": [
+      "database",
+      "app_settings"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_env_variables",
+    "title": "bot_env_variables",
+    "excerpt": "Таблица пользовательских переменных окружения бота",
+    "parts": [
+      "database",
+      "bot_env_variables"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_groups",
+    "title": "bot_groups",
+    "excerpt": "Таблица групп бота",
+    "parts": [
+      "database",
+      "bot_groups"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_instances",
+    "title": "bot_instances",
+    "excerpt": "Таблица запущенных экземпляров ботов",
+    "parts": [
+      "database",
+      "bot_instances"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_launch_history",
+    "title": "bot_launch_history",
+    "excerpt": "Таблица истории запусков ботов — накапливает все запуски",
+    "parts": [
+      "database",
+      "bot_launch_history"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_logs",
+    "title": "bot_logs",
+    "excerpt": "Таблица логов ботов — хранит строки вывода stdout/stderr/status",
+    "parts": [
+      "database",
+      "bot_logs"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_message_media",
+    "title": "bot_message_media",
+    "excerpt": "Таблица связи сообщений с медиафайлами",
+    "parts": [
+      "database",
+      "bot_message_media"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_messages",
+    "title": "bot_messages",
+    "excerpt": "Таблица истории сообщений между ботом и пользователями",
+    "parts": [
+      "database",
+      "bot_messages"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_projects",
+    "title": "bot_projects",
+    "excerpt": "Таблица проектов ботов",
+    "parts": [
+      "database",
+      "bot_projects"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_table_columns",
+    "title": "bot_table_columns",
+    "excerpt": "Таблица bot_table_columns — колонки пользовательской таблицы",
+    "parts": [
+      "database",
+      "bot_table_columns"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_table_rows",
+    "title": "bot_table_rows",
+    "excerpt": "Таблица bot_table_rows — строки пользовательской таблицы (данные в JSONB)",
+    "parts": [
+      "database",
+      "bot_table_rows"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_tables",
+    "title": "bot_tables",
+    "excerpt": "Таблица bot_tables — пользовательские таблицы проекта",
+    "parts": [
+      "database",
+      "bot_tables"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_templates",
+    "title": "bot_templates",
+    "excerpt": "Таблица сценариев ботов",
+    "parts": [
+      "database",
+      "bot_templates"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_tokens",
+    "title": "bot_tokens",
+    "excerpt": "Таблица токенов ботов",
+    "parts": [
+      "database",
+      "bot_tokens"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/bot_users",
+    "title": "bot_users",
+    "excerpt": "Таблица пользователей бота",
+    "parts": [
+      "database",
+      "bot_users"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/broadcast_results",
+    "title": "broadcast_results",
+    "excerpt": "Таблица результатов рассылки — по одной записи на каждого получателя",
+    "parts": [
+      "database",
+      "broadcast_results"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/broadcasts",
+    "title": "broadcasts",
+    "excerpt": "Таблица рассылок — хранит задания на массовую отправку сообщений",
+    "parts": [
+      "database",
+      "broadcasts"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/group_members",
+    "title": "group_members",
+    "excerpt": "Таблица участников групп",
+    "parts": [
+      "database",
+      "group_members"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/media_file_tokens",
+    "title": "media_file_tokens",
+    "excerpt": "Таблица file_id медиафайла по токенам ботов (денормализация fileIdsByToken).",
+    "parts": [
+      "database",
+      "media_file_tokens"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/media_files",
+    "title": "media_files",
+    "excerpt": "Таблица медиафайлов",
+    "parts": [
+      "database",
+      "media_files"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/project_collaborators",
+    "title": "project_collaborators",
+    "excerpt": "Таблица коллабораторов проекта.",
+    "parts": [
+      "database",
+      "project_collaborators"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/project_versions",
+    "title": "project_versions",
+    "excerpt": "Таблица версий проектов — хранит снимки данных проекта (BotDataWithSheets)",
+    "parts": [
+      "database",
+      "project_versions"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/storage_configs",
+    "title": "storage_configs",
+    "excerpt": "Таблица реестра хранилищ: несколько S3 (разные бакеты/endpoint'ы/креды)",
+    "parts": [
+      "database",
+      "storage_configs"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/telegram_users",
+    "title": "telegram_users",
+    "excerpt": "Таблица аутентифицированных пользователей Telegram",
+    "parts": [
+      "database",
+      "telegram_users"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/user_ids",
+    "title": "user_ids",
+    "excerpt": "Таблица ID пользователей для рассылки (общая база на все проекты)",
+    "parts": [
+      "database",
+      "user_ids"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/user_telegram_settings",
+    "title": "user_telegram_settings",
+    "excerpt": "Таблица пользовательских настроек для Telegram Client API",
+    "parts": [
+      "database",
+      "user_telegram_settings"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/worker_processes",
+    "title": "worker_processes",
+    "excerpt": "Таблица процессов воркеров — мониторинг Python worker pool",
+    "parts": [
+      "database",
+      "worker_processes"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "deployment/RAILWAY_QUICK_DEPLOY",
     "title": "🚀 Быстрый деплой на Railway",
     "excerpt": "1. Иди на [railway.app](https://railway.app)",
@@ -58,7 +943,7 @@
     "folder_titles": {
       "deployment": "🚀 Деплой"
     },
-    "updated_at": "2026-01-25T21:46:11+03:00",
+    "updated_at": "2026-07-04T07:28:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -133,7 +1018,7 @@
     "folder_titles": {
       "development": "🛠️ Разработка"
     },
-    "updated_at": "2026-06-25T16:24:19+03:00",
+    "updated_at": "2026-07-04T07:28:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -148,7 +1033,7 @@
     "folder_titles": {
       "development": "🛠️ Разработка"
     },
-    "updated_at": "2026-06-25T16:24:19+03:00",
+    "updated_at": "2026-07-04T07:28:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -163,7 +1048,7 @@
     "folder_titles": {
       "development": "🛠️ Разработка"
     },
-    "updated_at": "2026-05-19T22:58:04+03:00",
+    "updated_at": "2026-07-04T07:28:20+03:00",
     "tags": [],
     "author": ""
   },
