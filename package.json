@@ -50,6 +50,8 @@
     "docs:db:generate": "drizzle-docs generate ./shared/schema/tables -d postgresql -o ./docs/database --force",
     "docs:db": "npm run docs:db:generate && tsx --tsconfig tsconfig.node.json scripts/postprocess-db-docs.ts",
     "docs:api": "tsx --tsconfig tsconfig.node.json scripts/generate-api-docs.ts",
+    "docs": "npm run docs:db && npm run docs:api",
+    "docs:check": "npm run docs && git diff --exit-code -- docs/api docs/database",
     "db:test": "tsx --tsconfig tsconfig.node.json server/test-db-connection.ts",
     "railway:setup": "npm run migrate",
     "railway:build": "npm run build:fast",
