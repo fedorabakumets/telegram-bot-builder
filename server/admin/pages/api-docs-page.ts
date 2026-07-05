@@ -7,6 +7,7 @@ import fs from "fs";
 import path from "path";
 import type { Request, Response } from "express";
 import { API_DOCS_INDEX, isSafeApiDocSlug, resolveApiDocsDir } from "../api-docs-path";
+import { sendApiDocsMissingPage } from "./docs-missing-page";
 
 /**
  * Читает markdown-файл API-документации.
@@ -94,9 +95,7 @@ function sendApiDocsHtml(res: Response, title: string, markdown: string, backHre
 export function serveApiDocsIndex(_req: Request, res: Response): void {
   const markdown = readApiDocFile(API_DOCS_INDEX);
   if (!markdown) {
-    res.status(503).type("html").send(
-      "<p>API docs не найдены. Выполните: <code>npm run docs:api</code></p>",
-    );
+    sendApiDocsMissingPage(res);
     return;
   }
   sendApiDocsHtml(res, "API Reference", markdown, "/admin");

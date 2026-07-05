@@ -8,6 +8,7 @@ import path from "path";
 import type { Request, Response } from "express";
 import { simplifyMermaidErInMarkdown } from "../../../lib/db-docs/simplify-mermaid-er";
 import { DB_DOCS_INDEX, isSafeDbDocTableName, resolveDbDocsDir } from "../db-docs-path";
+import { sendDbDocsMissingPage } from "./docs-missing-page";
 
 /**
  * Читает markdown-файл документации таблицы или индекс.
@@ -108,9 +109,7 @@ function sendSchemaDocsHtml(res: Response, title: string, markdown: string, back
 export function serveSchemaDocsIndex(_req: Request, res: Response): void {
   const markdown = readDbDocFile(DB_DOCS_INDEX);
   if (!markdown) {
-    res.status(503).type("html").send(
-      "<p>Документация БД не найдена. Выполните: <code>npm run docs:db</code></p>",
-    );
+    sendDbDocsMissingPage(res);
     return;
   }
   sendSchemaDocsHtml(res, "Database Schema", simplifyMermaidErInMarkdown(markdown), "/admin");
