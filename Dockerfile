@@ -10,8 +10,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --ignore-scripts
 
-# Копируем исходный код и собираем клиент
+# Копируем исходный код, генерируем docs для /admin/schema и /admin/api-docs, собираем клиент
 COPY . .
+# DATABASE_URL нужен только для импорта registerRoutes при docs:api; к БД на build не подключаемся
+ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build
+RUN npm run docs
 RUN npm run build:client
 
 # ── Runtime stage ─────────────────────────────────────────────────────────────
@@ -39,6 +42,10 @@ COPY scripts ./scripts
 COPY tsconfig*.json ./
 COPY drizzle.config.ts* ./
 COPY migrations ./migrations
+
+# Документация для /admin/schema и /admin/api-docs (генерируется на build-stage)
+COPY --from=builder /app/docs/database ./docs/database
+COPY --from=builder /app/docs/api ./docs/api
 
 # Устанавливаем Python-зависимости для пользовательских ботов
 COPY requirements.txt* ./

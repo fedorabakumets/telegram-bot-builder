@@ -15,7 +15,9 @@ storybook-static
 .env.local
 .env.*.local
 README*.md
-docs/
+docs/*
+!docs/database
+!docs/api
 assets/images/
 comparison_report.txt
 DEPENDENCY_UPDATE_REPORT.md
