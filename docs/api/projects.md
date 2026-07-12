@@ -1,6 +1,6 @@
 # projects
 
-Эндпоинтов: **147**
+Эндпоинтов: **146**
 
 ### `GET` /api/projects
 
@@ -36,17 +36,21 @@ GET /api/projects
 
 ### `DELETE` /api/projects/{id}
 
-DELETE /api/projects/{id}
+Удалить проект
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+Останавливает бота, удаляет токены, медиа, user data и сам проект. Требует прав владельца или collaborator.
+
+**Параметры:** 1
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 200 | Проект удалён |
+| 403 | Нет прав на удаление |
+| 404 | Проект не найден |
 
 ### `GET` /api/projects/{id}
 
@@ -69,17 +73,23 @@ DELETE /api/projects/{id}
 
 ### `PUT` /api/projects/{id}
 
-PUT /api/projects/{id}
+Обновить проект
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+Частичное обновление полей проекта. При изменении data создаётся снимок версии. Поля commitMessage, agentEdit — для истории версий и live-редактирования MCP.
+
+**Тело запроса:** `UpdateProjectRequest`
+
+**Параметры:** 1
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 200 | Обновлённый проект |
+| 400 | Невалидный id или тело запроса |
+| 404 | Проект не найден |
 
 ### `GET` /api/projects/{id}/admin-ids
 
@@ -237,17 +247,23 @@ POST /api/projects/{id}/bot/stop
 
 ### `POST` /api/projects/{id}/duplicate
 
-POST /api/projects/{id}/duplicate
+Дублировать проект
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+Создаёт копию сценария без botToken (два бота не могут делить токен). Ответ — безопасный ProjectListItem.
+
+**Тело запроса:** `DuplicateProjectRequest`
+
+**Параметры:** 1
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 201 | Копия создана |
+| 401 | Гость без авторизации |
+| 404 | Проект-источник не найден |
 
 ### `POST` /api/projects/{id}/export
 
@@ -392,20 +408,6 @@ GET /api/projects/{id}/messages/all
 ### `GET` /api/projects/{id}/responses
 
 GET /api/projects/{id}/responses
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
-### `GET` /api/projects/{id}/tables
-
-GET /api/projects/{id}/tables
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
@@ -867,17 +869,20 @@ GET /api/projects/{id}/users/variables
 
 ### `GET` /api/projects/{id}/versions
 
-GET /api/projects/{id}/versions
+Список версий проекта
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+Метаданные снимков для истории и отката. Поле snapshot не включается.
+
+**Параметры:** 1
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 200 | Массив версий |
+| 400 | Невалидный ID проекта |
 
 ### `DELETE` /api/projects/{id}/versions/{versionId}
 
@@ -2043,17 +2048,18 @@ GET /api/projects/import-from-files
 
 ### `GET` /api/projects/list
 
-GET /api/projects/list
+Список проектов пользователя
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+Возвращает метаданные проектов владельца без секретов (botToken, sessionId). Включает nodeCount и sheetsCount, вычисленные из data.
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 200 | Массив проектов |
+| 401 | Не авторизован |
 
 ### `PUT` /api/projects/reorder
 

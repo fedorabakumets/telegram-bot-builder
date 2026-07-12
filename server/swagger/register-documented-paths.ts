@@ -24,6 +24,10 @@ import {
   CreateProjectUnauthorizedSchema,
 } from "./schemas/projects";
 import { registerAgentTokenPaths } from "./paths/agent-token-paths";
+import { registerConfigSetupPaths } from "./paths/config-setup-paths";
+import { registerDatabasePaths } from "./paths/database-paths";
+import { registerProjectsPaths } from "./paths/projects-paths";
+import { registerStorageConfigPaths } from "./paths/storage-config-paths";
 
 /** Реестр Zod-схем и paths для генерации OpenAPI */
 export const documentedRegistry = new OpenAPIRegistry();
@@ -175,3 +179,7 @@ documentedRegistry.registerPath({
 });
 
 registerAgentTokenPaths(documentedRegistry, cookieSecurity);
+registerProjectsPaths(documentedRegistry, cookieSecurity);
+registerConfigSetupPaths(documentedRegistry, publicSecurity);
+registerStorageConfigPaths(documentedRegistry, cookieSecurity);
+registerDatabasePaths(documentedRegistry, cookieSecurity);

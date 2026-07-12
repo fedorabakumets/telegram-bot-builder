@@ -960,17 +960,19 @@
         "tags": [
           "config"
         ],
-        "summary": "GET /api/config",
+        "summary": "Публичная конфигурация клиента",
+        "description": "Отдаёт Telegram Client ID, имя бота и флаг skipAuth для Login Widget. Читает app_settings с fallback на process.env.",
         "security": [],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+            "description": "Публичные параметры для фронтенда",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicConfig"
+                }
+              }
+            }
           }
         }
       }
@@ -1676,16 +1678,55 @@
         "tags": [
           "projects"
         ],
-        "summary": "DELETE /api/projects/{id}",
+        "summary": "Удалить проект",
+        "description": "Останавливает бота, удаляет токены, медиа, user data и сам проект. Требует прав владельца или collaborator.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Проект удалён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteProjectResponse"
+                }
+              }
+            }
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          "403": {
+            "description": "Нет прав на удаление",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "404": {
+            "description": "Проект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           }
         }
       },
@@ -1759,16 +1800,64 @@
         "tags": [
           "projects"
         ],
-        "summary": "PUT /api/projects/{id}",
+        "summary": "Обновить проект",
+        "description": "Частичное обновление полей проекта. При изменении data создаётся снимок версии. Поля commitMessage, agentEdit — для истории версий и live-редактирования MCP.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Обновлённый проект",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotProject"
+                }
+              }
+            }
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          "400": {
+            "description": "Невалидный id или тело запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "404": {
+            "description": "Проект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           }
         }
       }
@@ -1985,16 +2074,64 @@
         "tags": [
           "projects"
         ],
-        "summary": "POST /api/projects/{id}/duplicate",
+        "summary": "Дублировать проект",
+        "description": "Создаёт копию сценария без botToken (два бота не могут делить токен). Ответ — безопасный ProjectListItem.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DuplicateProjectRequest"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Успешный ответ"
+          "201": {
+            "description": "Копия создана",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectListItem"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Гость без авторизации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "404": {
+            "description": "Проект-источник не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           }
         }
       }
@@ -2209,18 +2346,47 @@
     "/api/projects/{id}/tables": {
       "get": {
         "tags": [
-          "projects"
+          "database"
         ],
-        "summary": "GET /api/projects/{id}/tables",
+        "summary": "Список таблиц контента проекта",
+        "description": "Возвращает пользовательские таблицы bot_tables для редактора Database. Требует доступ к проекту (requireProjectAccess).",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив таблиц",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTableList"
+                }
+              }
+            }
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "400": {
+            "description": "Некорректный ID проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           }
         }
       },
@@ -2818,16 +2984,45 @@
         "tags": [
           "projects"
         ],
-        "summary": "GET /api/projects/{id}/versions",
+        "summary": "Список версий проекта",
+        "description": "Метаданные снимков для истории и отката. Поле snapshot не включается.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив версий",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectVersionList"
+                }
+              }
+            }
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "400": {
+            "description": "Невалидный ID проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           }
         }
       }
@@ -4391,16 +4586,33 @@
         "tags": [
           "projects"
         ],
-        "summary": "GET /api/projects/list",
+        "summary": "Список проектов пользователя",
+        "description": "Возвращает метаданные проектов владельца без секретов (botToken, sessionId). Включает nodeCount и sheetsCount, вычисленные из data.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив проектов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectList"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           }
         }
       }
@@ -4506,17 +4718,19 @@
         "tags": [
           "setup"
         ],
-        "summary": "GET /api/setup/status",
+        "summary": "Статус первоначальной настройки",
+        "description": "Публичный. Показывает, пройден ли setup wizard (telegram credentials в БД).",
         "security": [],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+            "description": "configured=true — приложение настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupStatus"
+                }
+              }
+            }
           }
         }
       }
@@ -4526,16 +4740,23 @@
         "tags": [
           "storage-configs"
         ],
-        "summary": "GET /api/storage-configs",
+        "summary": "Список конфигов хранилищ",
+        "description": "Все записи storage_configs в безопасном DTO: без secretsEnc и расшифрованных кредов, только флаг hasSecrets.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+            "description": "Массив конфигов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigList"
+                }
+              }
+            }
           }
         }
       },
@@ -4543,16 +4764,52 @@
         "tags": [
           "storage-configs"
         ],
-        "summary": "POST /api/storage-configs",
+        "summary": "Создать конфиг хранилища",
+        "description": "Регистрирует local или S3 бэкенд. Креды S3 шифруются в secretsEnc. После создания перестраивается storage registry.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStorageConfigRequest"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Успешный ответ"
+          "201": {
+            "description": "Конфиг создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigDto"
+                }
+              }
+            }
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          "400": {
+            "description": "Невалидные данные или нет STORAGE_ENCRYPTION_KEY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigValidationError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "409": {
+            "description": "Конфиг с таким id уже существует",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
           }
         }
       }
@@ -6219,6 +6476,513 @@
         "required": [
           "success"
         ]
+      },
+      "ProjectListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 42
+          },
+          "ownerId": {
+            "type": "number",
+            "nullable": true,
+            "example": 123456789
+          },
+          "name": {
+            "type": "string",
+            "example": "Мой бот"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Приветственный бот"
+          },
+          "userDatabaseEnabled": {
+            "type": "number",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "number",
+            "nullable": true
+          },
+          "adminIds": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "lastExportedGoogleSheetId": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedGoogleSheetUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "lastExportedStructureSheetId": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedStructureSheetUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedStructureAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "nodeCount": {
+            "type": "number",
+            "example": 12
+          },
+          "sheetsCount": {
+            "type": "number",
+            "example": 2
+          }
+        },
+        "required": [
+          "id",
+          "ownerId",
+          "name",
+          "description",
+          "nodeCount",
+          "sheetsCount"
+        ]
+      },
+      "ProjectList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ProjectListItem"
+        }
+      },
+      "UpdateProjectRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "nullable": true
+          },
+          "botToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "userDatabaseEnabled": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1
+          },
+          "lastExportedGoogleSheetId": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedGoogleSheetUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedStructureSheetId": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedStructureSheetUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedStructureAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "number",
+            "default": 0
+          },
+          "adminIds": {
+            "type": "string",
+            "default": ""
+          },
+          "restartOnUpdate": {
+            "type": "boolean"
+          },
+          "commitMessage": {
+            "type": "string",
+            "example": "Добавил приветствие"
+          },
+          "agentEdit": {
+            "type": "boolean"
+          },
+          "agentSessionId": {
+            "type": "string"
+          },
+          "agentDisplayName": {
+            "type": "string"
+          }
+        }
+      },
+      "DeleteProjectResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Проект успешно удалён"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "ForbiddenError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Нет прав на удаление проекта"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "DuplicateProjectRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Мой бот (копия)"
+          }
+        }
+      },
+      "ProjectVersionMeta": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 7
+          },
+          "projectId": {
+            "type": "number",
+            "example": 42
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorId": {
+            "type": "number",
+            "nullable": true
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "authorKind": {
+            "type": "string",
+            "nullable": true
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "manual"
+            ]
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "projectId"
+        ]
+      },
+      "ProjectVersionList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ProjectVersionMeta"
+        }
+      },
+      "PublicConfig": {
+        "type": "object",
+        "properties": {
+          "telegramClientId": {
+            "type": "number",
+            "example": 12345678
+          },
+          "telegramBotUsername": {
+            "type": "string",
+            "example": "my_bot"
+          },
+          "skipAuth": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "telegramClientId",
+          "telegramBotUsername",
+          "skipAuth"
+        ]
+      },
+      "SetupStatus": {
+        "type": "object",
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "configured"
+        ]
+      },
+      "StorageConfigDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "s3-main"
+          },
+          "name": {
+            "type": "string",
+            "example": "Основное S3"
+          },
+          "backend": {
+            "type": "string",
+            "enum": [
+              "local",
+              "s3"
+            ],
+            "example": "s3"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": false
+          },
+          "config": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "example": {
+              "bucket": "media"
+            }
+          },
+          "readOnly": {
+            "type": "boolean",
+            "example": false
+          },
+          "hasSecrets": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "type": "string",
+            "nullable": true,
+            "example": "2026-01-15T10:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "backend",
+          "isActive",
+          "config",
+          "readOnly",
+          "hasSecrets",
+          "createdAt"
+        ]
+      },
+      "StorageConfigList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/StorageConfigDto"
+        }
+      },
+      "StorageConfigValidationError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Некорректные данные"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            }
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "ErrorBody": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Некорректные данные"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "CreateStorageConfigRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "example": "Локальное хранилище"
+          },
+          "backend": {
+            "type": "string",
+            "enum": [
+              "local",
+              "s3"
+            ],
+            "example": "local"
+          },
+          "config": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "example": {
+              "rootPath": "./uploads"
+            }
+          },
+          "s3AccessKeyId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "s3SecretAccessKey": {
+            "type": "string",
+            "minLength": 1
+          },
+          "readOnly": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "name",
+          "backend"
+        ]
+      },
+      "BotTable": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "projectId": {
+            "type": "number",
+            "example": 42
+          },
+          "name": {
+            "type": "string",
+            "example": "Товары"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "name"
+        ]
+      },
+      "BotTableList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BotTable"
+        }
       }
     },
     "parameters": {}

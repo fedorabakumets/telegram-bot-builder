@@ -43,3 +43,19 @@ export const AuthErrorSchema = z
     error: z.string().openapi({ example: "Пользователь не найден" }),
   })
   .openapi("AuthError");
+
+/** Простая ошибка с полем error */
+export const ErrorBodySchema = z
+  .object({
+    /** Текст или код ошибки */
+    error: z.string().openapi({ example: "Некорректные данные" }),
+  })
+  .openapi("ErrorBody");
+
+/** Ошибка доступа (403) */
+export const ForbiddenSchema = z
+  .object({
+    /** Сообщение об отказе в доступе */
+    message: z.string().openapi({ example: "Нет прав на удаление проекта" }),
+  })
+  .openapi("ForbiddenError");
