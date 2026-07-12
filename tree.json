@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-04T19:32:54+03:00",
+    "updated_at": "2026-07-12T22:17:04+03:00",
     "tags": [],
     "author": ""
   },
@@ -163,14 +163,14 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-04T19:32:54+03:00",
+    "updated_at": "2026-07-12T22:17:04+03:00",
     "tags": [],
     "author": ""
   },
   {
     "path": "api/database",
     "title": "database",
-    "excerpt": "Эндпоинтов: **16**",
+    "excerpt": "Эндпоинтов: **17**",
     "parts": [
       "api",
       "database"
@@ -178,7 +178,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-04T19:32:54+03:00",
+    "updated_at": "2026-07-12T22:17:04+03:00",
     "tags": [],
     "author": ""
   },
@@ -245,7 +245,7 @@
   {
     "path": "api/projects",
     "title": "projects",
-    "excerpt": "Эндпоинтов: **147**",
+    "excerpt": "Эндпоинтов: **146**",
     "parts": [
       "api",
       "projects"
@@ -253,7 +253,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-04T19:32:54+03:00",
+    "updated_at": "2026-07-12T22:17:04+03:00",
     "tags": [],
     "author": ""
   },
@@ -328,7 +328,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-04T19:32:54+03:00",
+    "updated_at": "2026-07-12T22:17:04+03:00",
     "tags": [],
     "author": ""
   },
@@ -343,7 +343,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-04T19:32:54+03:00",
+    "updated_at": "2026-07-12T22:17:04+03:00",
     "tags": [],
     "author": ""
   },
@@ -508,7 +508,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-04T19:19:59+03:00",
+    "updated_at": "2026-07-05T13:02:50Z",
     "tags": [],
     "author": ""
   },
@@ -538,7 +538,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-04T19:19:59+03:00",
+    "updated_at": "2026-07-05T13:02:50Z",
     "tags": [],
     "author": ""
   },
