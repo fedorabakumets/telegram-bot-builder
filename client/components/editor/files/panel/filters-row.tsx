@@ -29,6 +29,8 @@ export interface FiltersRowProps {
   collaborators?: CollaboratorInfo[];
   /** Хранилища для подписи чипа «Хранилище» */
   storages?: StorageOption[];
+  /** Встроенный режим — без отдельной секции с border-b */
+  embedded?: boolean;
 }
 
 /**
@@ -44,10 +46,15 @@ export function FiltersRow({
   onResetAll,
   collaborators,
   storages,
+  embedded = false,
 }: FiltersRowProps) {
   return (
     <div
-      className={`flex flex-wrap items-center gap-2 ${PANEL_SECTION_CLASS}`}
+      className={
+        embedded
+          ? 'flex min-w-0 flex-1 flex-wrap items-center gap-2'
+          : `flex flex-wrap items-center gap-2 ${PANEL_SECTION_CLASS}`
+      }
       data-testid="filters-row"
     >
       <FiltersButton activeCount={activeCount} onOpen={onOpen} />

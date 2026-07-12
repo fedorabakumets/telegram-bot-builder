@@ -1,16 +1,12 @@
 /**
  * @fileoverview Группы полей формы конфига хранилища (`StorageConfigFormFields`).
- * Презентационные блоки полей для local (rootPath) и S3 (endpointUrl, region,
- * bucket, forcePathStyle, publicUrlBase + креды s3AccessKeyId/s3SecretAccessKey).
- * Креды собираются только при создании/смене; на правке пустые поля = «оставить
- * текущие» (Req 11.4). Управляются извне через onConfigChange/onCredChange.
- * Только смысловые иконки lucide-react, без эмодзи (Req 13.2).
  * @module components/editor/files/panel/storage/storage-config-form-fields
  */
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { STORAGE_CONFIG_FORM_SECTION_TITLE_CLASS, STORAGE_CONFIG_FORM_SETTING_ROW_CLASS } from '../panel-styles';
 import { configStr, type StorageConfigDraft } from './storage-config-draft';
 
 /** Пропсы групп полей формы хранилища */
@@ -33,7 +29,7 @@ export interface StorageConfigFormFieldsProps {
 function LocalFields({ draft, onConfigChange }: StorageConfigFormFieldsProps) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor="storage-root-path">Путь к папке (rootPath)</Label>
+      <Label htmlFor="storage-root-path">Путь к папке</Label>
       <Input
         id="storage-root-path"
         value={configStr(draft.config, 'rootPath')}
@@ -41,6 +37,7 @@ function LocalFields({ draft, onConfigChange }: StorageConfigFormFieldsProps) {
         placeholder="uploads"
         data-testid="storage-field-rootPath"
       />
+      <p className="text-xs text-muted-foreground">Относительный путь от корня проекта на сервере</p>
     </div>
   );
 }
@@ -52,7 +49,7 @@ function LocalFields({ draft, onConfigChange }: StorageConfigFormFieldsProps) {
  */
 function S3Fields({ draft, hasSecrets, onConfigChange, onCredChange }: StorageConfigFormFieldsProps) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="storage-endpoint">Endpoint URL</Label>
@@ -88,7 +85,7 @@ function S3Fields({ draft, hasSecrets, onConfigChange, onCredChange }: StorageCo
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="storage-public-url">Публичный URL (опц.)</Label>
+          <Label htmlFor="storage-public-url">Публичный URL</Label>
           <Input
             id="storage-public-url"
             value={configStr(draft.config, 'publicUrlBase')}
@@ -96,42 +93,51 @@ function S3Fields({ draft, hasSecrets, onConfigChange, onCredChange }: StorageCo
             placeholder="https://cdn.example.com"
             data-testid="storage-field-publicUrlBase"
           />
+          <p className="text-xs text-muted-foreground">Необязательно — для прямых ссылок на файлы</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className={STORAGE_CONFIG_FORM_SETTING_ROW_CLASS}>
+        <div className="space-y-0.5">
+          <Label htmlFor="storage-force-path-style" className="text-sm font-medium">
+            Path-style адресация
+          </Label>
+          <p className="text-xs text-muted-foreground">Включите для MinIO и совместимых серверов</p>
+        </div>
         <Switch
           id="storage-force-path-style"
           checked={Boolean(draft.config.forcePathStyle)}
           onCheckedChange={(v) => onConfigChange('forcePathStyle', v)}
           data-testid="storage-field-forcePathStyle"
         />
-        <Label htmlFor="storage-force-path-style">Path-style адресация (для MinIO)</Label>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 border-t pt-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="storage-access-key">Access Key ID</Label>
-          <Input
-            id="storage-access-key"
-            value={draft.s3AccessKeyId ?? ''}
-            onChange={(e) => onCredChange('s3AccessKeyId', e.target.value)}
-            placeholder={hasSecrets ? 'оставьте пустым — сохранить текущий' : 'AKIA…'}
-            autoComplete="off"
-            data-testid="storage-field-accessKeyId"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="storage-secret-key">Secret Access Key</Label>
-          <Input
-            id="storage-secret-key"
-            type="password"
-            value={draft.s3SecretAccessKey ?? ''}
-            onChange={(e) => onCredChange('s3SecretAccessKey', e.target.value)}
-            placeholder={hasSecrets ? 'оставьте пустым — сохранить текущий' : '••••••••'}
-            autoComplete="new-password"
-            data-testid="storage-field-secretAccessKey"
-          />
+      <div className="space-y-3 pt-1">
+        <p className={STORAGE_CONFIG_FORM_SECTION_TITLE_CLASS}>Ключи доступа</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="storage-access-key">Access Key ID</Label>
+            <Input
+              id="storage-access-key"
+              value={draft.s3AccessKeyId ?? ''}
+              onChange={(e) => onCredChange('s3AccessKeyId', e.target.value)}
+              placeholder={hasSecrets ? 'оставьте пустым — сохранить текущий' : 'AKIA…'}
+              autoComplete="off"
+              data-testid="storage-field-accessKeyId"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="storage-secret-key">Secret Access Key</Label>
+            <Input
+              id="storage-secret-key"
+              type="password"
+              value={draft.s3SecretAccessKey ?? ''}
+              onChange={(e) => onCredChange('s3SecretAccessKey', e.target.value)}
+              placeholder={hasSecrets ? 'оставьте пустым — сохранить текущий' : '••••••••'}
+              autoComplete="new-password"
+              data-testid="storage-field-secretAccessKey"
+            />
+          </div>
         </div>
       </div>
     </div>

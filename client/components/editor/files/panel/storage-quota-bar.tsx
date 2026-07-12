@@ -1,16 +1,6 @@
 /**
  * @fileoverview Индикатор квоты хранилища `StorageQuotaBar`.
- * Показывает прогресс-бар и текст в стиле «3% — Места достаточно —
- * 37.56 Kb / 1 Gb» (Req 4.1). Цвета и пороги (success < 70%, warning 70–90%,
- * destructive > 90%) берутся из единого helper'а `panel-styles` (Req 4.6 —
- * пороги синхронны с сервером compute-quota-warning). Ширина и цвет
- * заливки анимируются плавно через CSS-transition (Req 13.1). При безлимите
- * (limitBytes === null) — аккуратный бейдж «Безлимитно» с иконкой Infinity,
- * без процента и заполнения, рядом — приглушённая подпись с занятым объёмом
- * (Req 4.3). При превышении лимита — `destructive`-индикатор и
- * предупреждающая подпись, без жёсткой блокировки (Req 4.8). Все цифры
- * выводятся моноширинными (`tabular-nums`) — основная цифра в `text-foreground`
- * с плотным трекингом, вторичная — в `text-muted-foreground`.
+ * Полный и компактный (`compact`) варианты для toolbar и модалки.
  * @module components/editor/files/panel/storage-quota-bar
  */
 
@@ -21,6 +11,7 @@ import {
   PANEL_DENSE_SECTION_CLASS,
   QUOTA_CAPTION_MUTED_CLASS,
   QUOTA_CAPTION_PRIMARY_CLASS,
+  QUOTA_COMPACT_CARD_CLASS,
   QUOTA_EXCEEDED_ICON_CLASS,
   QUOTA_EXCEEDED_TEXT_CLASS,
   QUOTA_FILL_CLASS,
@@ -40,6 +31,8 @@ export interface StorageQuotaBarProps {
   limitBytes: number | null;
   /** Состояние загрузки квоты */
   isLoading?: boolean;
+  /** Компактная карточка для toolbar */
+  compact?: boolean;
 }
 
 /**
@@ -56,11 +49,87 @@ function levelLabel(level: QuotaLevel, exceeded: boolean): string {
 }
 
 /**
+ * Компактная карточка квоты для верхней панели.
+ * @param props - Занятое место, лимит и состояние
+ * @returns JSX компактного индикатора
+ */
+function CompactQuotaBar({
+  usedBytes,
+  limitBytes,
+  isLoading,
+}: StorageQuotaBarProps): React.JSX.Element {
+  if (isLoading) {
+    return (
+      <div className={QUOTA_COMPACT_CARD_CLASS} data-testid="storage-quota-bar" data-state="loading">
+        <div className={cn(QUOTA_TRACK_CLASS, 'h-1.5 animate-pulse')} />
+      </div>
+    );
+  }
+
+  if (limitBytes === null) {
+    return (
+      <div className={QUOTA_COMPACT_CARD_CLASS} data-testid="storage-quota-bar" data-state="unlimited">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1 font-medium text-foreground">
+            <InfinityIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            Безлимитно
+          </span>
+          <span className="text-border/60">·</span>
+          <span className={QUOTA_CAPTION_MUTED_CLASS}>{formatBytes(usedBytes)}</span>
+        </div>
+      </div>
+    );
+  }
+
+  const exceeded = usedBytes > limitBytes;
+  const percent = limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
+  const level = resolveQuotaLevel(percent);
+  const fillWidth = Math.min(100, Math.max(0, percent));
+
+  return (
+    <div
+      className={QUOTA_COMPACT_CARD_CLASS}
+      data-testid="storage-quota-bar"
+      data-state={exceeded ? 'exceeded' : level}
+    >
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex min-w-0 items-center gap-1.5">
+          {exceeded ? (
+            <AlertTriangle className={QUOTA_EXCEEDED_ICON_CLASS} aria-hidden />
+          ) : (
+            <HardDrive className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          )}
+          <span className={QUOTA_CAPTION_PRIMARY_CLASS}>{Math.round(percent)}%</span>
+          <span className={cn('truncate hidden sm:inline')}>{levelLabel(level, exceeded)}</span>
+        </div>
+        <span className="text-border/60 hidden sm:inline">·</span>
+        <span className={cn(QUOTA_CAPTION_MUTED_CLASS, 'shrink-0 tabular-nums')}>
+          {formatBytes(usedBytes)} / {formatBytes(limitBytes)}
+        </span>
+      </div>
+      <div className={cn('h-1', QUOTA_TRACK_CLASS)}>
+        <div
+          className={cn(QUOTA_FILL_TRANSITION_CLASS, QUOTA_FILL_CLASS[level])}
+          style={{ width: `${fillWidth}%` }}
+          data-testid="storage-quota-fill"
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
  * Индикатор квоты хранилища — прогресс-бар с текстом и цветовой индикацией.
  * @param props - Занятое место, лимит и состояние загрузки
  * @returns JSX элемент индикатора квоты
  */
-export function StorageQuotaBar({ usedBytes, limitBytes, isLoading }: StorageQuotaBarProps) {
+export function StorageQuotaBar(props: StorageQuotaBarProps) {
+  const { usedBytes, limitBytes, isLoading, compact } = props;
+
+  if (compact) {
+    return <CompactQuotaBar {...props} />;
+  }
+
   if (isLoading) {
     return (
       <div
@@ -73,7 +142,6 @@ export function StorageQuotaBar({ usedBytes, limitBytes, isLoading }: StorageQuo
     );
   }
 
-  // Безлимитный режим (Req 4.3): без процента и без заполнения полосы.
   if (limitBytes === null) {
     return (
       <div

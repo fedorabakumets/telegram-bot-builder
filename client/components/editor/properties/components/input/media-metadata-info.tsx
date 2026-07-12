@@ -1,12 +1,14 @@
 /**
  * @fileoverview Блок выбора метаданных медиа для сохранения.
- * Позволяет включать/выключать каждую переменную и редактировать имя.
+ * @module components/editor/properties/components/input/media-metadata-info
  */
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/utils';
 import { MEDIA_METADATA_SUFFIXES } from './media-metadata-suffixes';
+import { getMetadataSuffixIcon } from './media-metadata-suffix-icons';
 import { VariableSelector } from '../variables/variable-selector';
 import type { Variable } from '../../../inline-rich/types';
 
@@ -34,29 +36,30 @@ interface MediaMetadataInfoProps {
  * @returns JSX элемент
  */
 export function MediaMetadataInfo({
-  inputType, variableName, enabledSuffixes,
-  onSuffixesChange, customNames = {}, onCustomNamesChange,
+  inputType,
+  variableName,
+  enabledSuffixes,
+  onSuffixesChange,
+  customNames = {},
+  onCustomNamesChange,
   availableVariables = [],
 }: MediaMetadataInfoProps) {
   const suffixes = MEDIA_METADATA_SUFFIXES[inputType] || [];
   const baseName = variableName || 'variable';
 
-  /** Переключение суффикса */
   const toggleSuffix = (suffix: string) => {
     if (enabledSuffixes.includes(suffix)) {
-      onSuffixesChange(enabledSuffixes.filter(s => s !== suffix));
-    } else {
-      onSuffixesChange([...enabledSuffixes, suffix]);
+      onSuffixesChange(enabledSuffixes.filter((s) => s !== suffix));
+      return;
     }
+    onSuffixesChange([...enabledSuffixes, suffix]);
   };
 
-  /** Выбрать все / снять все */
-  const allSelected = suffixes.length > 0 && suffixes.every(s => enabledSuffixes.includes(s.suffix));
+  const allSelected = suffixes.length > 0 && suffixes.every((s) => enabledSuffixes.includes(s.suffix));
   const toggleAll = () => {
-    onSuffixesChange(allSelected ? [] : suffixes.map(s => s.suffix));
+    onSuffixesChange(allSelected ? [] : suffixes.map((s) => s.suffix));
   };
 
-  /** Обновить кастомное имя переменной */
   const updateName = (suffix: string, value: string) => {
     if (!onCustomNamesChange) return;
     const updated = { ...customNames };
@@ -71,60 +74,85 @@ export function MediaMetadataInfo({
   };
 
   return (
-    <div className="rounded-lg border border-cyan-200/60 dark:border-cyan-700/40 bg-cyan-50/20 dark:bg-cyan-950/20 p-2.5 space-y-2">
-      <div className="flex items-center justify-between">
-        <p className="text-[11px] text-cyan-600 dark:text-cyan-400 font-medium">
-          Метаданные для сохранения:
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Дополнительные переменные
         </p>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
           onClick={toggleAll}
-          className="text-[10px] text-cyan-500 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors"
         >
           {allSelected ? 'Снять все' : 'Выбрать все'}
-        </button>
+        </Button>
       </div>
-      <div className="space-y-1">
-        {suffixes.map(({ suffix, description, icon }) => {
+
+      <div className="max-h-[280px] space-y-1 overflow-y-auto pr-0.5">
+        {suffixes.map(({ suffix, description }) => {
           const isEnabled = enabledSuffixes.includes(suffix);
+          const Icon = getMetadataSuffixIcon(suffix);
+          const defaultVarName = `${baseName}_${suffix}`;
+
           return (
-            <div key={suffix} className="flex items-center gap-2 py-0.5">
+            <div
+              key={suffix}
+              role="button"
+              tabIndex={0}
+              onClick={(event) => {
+                const target = event.target as HTMLElement;
+                if (target.closest('input, button, [role="combobox"]')) return;
+                toggleSuffix(suffix);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  toggleSuffix(suffix);
+                }
+              }}
+              className={cn(
+                'flex cursor-pointer items-start gap-2.5 rounded-xl px-2.5 py-2 transition-colors',
+                isEnabled ? 'bg-primary/10 ring-1 ring-primary/20' : 'hover:bg-muted/25',
+              )}
+            >
               <Checkbox
                 checked={isEnabled}
                 onCheckedChange={() => toggleSuffix(suffix)}
-                className="shrink-0 !h-[16px] !w-[16px] !rounded-sm"
+                className="pointer-events-none mt-0.5 shrink-0 !h-5 !w-5 !rounded-md shadow-sm"
                 style={{
-                  border: isEnabled ? '2px solid var(--primary)' : '2px solid hsl(215, 20%, 50%)',
-                  background: isEnabled ? 'var(--primary)' : 'transparent',
+                  border: isEnabled ? '2px solid var(--primary)' : '2px solid hsl(215, 20%, 55%)',
+                  background: isEnabled ? 'var(--primary)' : 'hsl(var(--background))',
                 }}
               />
-              <span className="shrink-0 text-xs">{icon}</span>
-              {isEnabled ? (
-                <div className="flex items-center gap-1 flex-1 min-w-0">
-                  <Input
-                    value={customNames[suffix] || `${baseName}_${suffix}`}
-                    onChange={(e) => updateName(suffix, e.target.value)}
-                    className="h-6 text-[11px] font-mono px-1.5 flex-1 min-w-0"
-                    placeholder={`${baseName}_${suffix}`}
-                  />
-                  {availableVariables.length > 0 && (
-                    <VariableSelector
-                      availableVariables={availableVariables}
-                      onSelect={(v) => updateName(suffix, v)}
+
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <Icon className="h-3.5 w-3.5 text-primary" />
+              </div>
+
+              <div className="min-w-0 flex-1 space-y-1">
+                {isEnabled ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={customNames[suffix] || defaultVarName}
+                      onChange={(e) => updateName(suffix, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-7 flex-1 min-w-0 font-mono text-[11px]"
+                      placeholder={defaultVarName}
                     />
-                  )}
-                </div>
-              ) : (
-                <code className="font-mono text-[11px] text-slate-400 dark:text-slate-500 truncate flex-1 min-w-0">
-                  {baseName}_{suffix}
-                </code>
-              )}
-              <span className={cn(
-                'text-[10px] shrink-0 hidden lg:inline max-w-[90px] truncate',
-                isEnabled ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400/60'
-              )}>
-                {description}
-              </span>
+                    {availableVariables.length > 0 && (
+                      <VariableSelector
+                        availableVariables={availableVariables}
+                        onSelect={(v) => updateName(suffix, v)}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <p className="truncate font-mono text-[11px] text-muted-foreground">{defaultVarName}</p>
+                )}
+                <p className="text-[10px] leading-snug text-muted-foreground">{description}</p>
+              </div>
             </div>
           );
         })}

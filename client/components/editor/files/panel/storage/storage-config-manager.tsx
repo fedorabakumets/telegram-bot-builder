@@ -1,18 +1,9 @@
 /**
- * @fileoverview Менеджер конфигов хранилищ (`StorageConfigManager`, компонент 10).
- * Самодостаточная shadcn-модалка: показывает список всех `storage_configs`
- * (тип, имя, активность, только-чтение — Req 11.2), позволяет пометить
- * хранилище активным (Req 11.6) и удалить (Req 11.8 — серверный 409
- * «есть файлы» дружелюбно показывается тостом). Данные берутся из хука
- * useStorageConfigs, действия — из useStorageManagerActions (self-contained).
- * Доступен из шапки панели (Req 11.1). Создание/правка local-папки и S3
- * (ввод кредов + тест доступности) — через StorageConfigForm (задача 8.3),
- * состояние открытия — в useStorageFormState. Только смысловые иконки
- * lucide-react, без эмодзи (Req 13.2).
+ * @fileoverview Менеджер конфигов хранилищ (`StorageConfigManager`).
  * @module components/editor/files/panel/storage/storage-config-manager
  */
 
-import { Plus, HardDrive } from 'lucide-react';
+import { Database, HardDrive, Plus } from 'lucide-react';
 
 import {
   Dialog,
@@ -49,29 +40,41 @@ export function StorageConfigManager({
   const { configs, isLoading } = useStorageConfigs();
   const { handleSetActive, handleDelete, isMutating } = useStorageManagerActions();
   const { formOpen, setFormOpen, editing, openCreate, openEdit } = useStorageFormState(configs);
-
-  /** Хранилища для отображения (нормализованные StorageInfo) */
   const storages = configs.map(toStorageInfo);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl" data-testid="storage-config-manager">
-        <DialogHeader>
-          <DialogTitle>Хранилища</DialogTitle>
-          <DialogDescription>
-            Список всех хранилищ проекта. Отметьте активное для новых загрузок или удалите ненужное.
-          </DialogDescription>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-lg" data-testid="storage-config-manager">
+        <DialogHeader className="space-y-0 border-b px-6 pb-4 pt-6">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <Database className="h-5 w-5 text-primary" />
+            </div>
+            <div className="space-y-1.5 pt-0.5">
+              <DialogTitle className="text-lg leading-none">Хранилища</DialogTitle>
+              <DialogDescription className="text-xs leading-relaxed">
+                Выберите активное для новых загрузок или добавьте S3 / локальную папку.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="flex max-h-[55vh] flex-col gap-2 overflow-auto py-1">
+        <div className="flex max-h-[50vh] flex-col gap-1 overflow-auto px-3 py-3">
           {isLoading && (
-            <p className="py-6 text-center text-sm text-muted-foreground">Загрузка хранилищ…</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">Загрузка хранилищ…</p>
           )}
 
           {!isLoading && storages.length === 0 && (
-            <div className="flex flex-col items-center gap-2 py-8 text-center text-sm text-muted-foreground">
-              <HardDrive className="h-6 w-6" />
-              <span>Хранилища не настроены</span>
+            <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <HardDrive className="h-6 w-6 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Хранилища не настроены</p>
+                <p className="text-xs text-muted-foreground">
+                  Добавьте локальную папку или S3 для загрузки медиафайлов.
+                </p>
+              </div>
             </div>
           )}
 
@@ -87,16 +90,16 @@ export function StorageConfigManager({
           ))}
         </div>
 
-        <div className="flex justify-end border-t pt-3">
+        <div className="border-t px-6 py-4">
           <Button
             type="button"
-            variant="outline"
             size="sm"
+            className="h-9 w-full gap-2 sm:w-auto"
             onClick={openCreate}
             title="Добавить новое хранилище"
             data-testid="storage-add-config"
           >
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            <Plus className="h-4 w-4" />
             Добавить хранилище
           </Button>
         </div>

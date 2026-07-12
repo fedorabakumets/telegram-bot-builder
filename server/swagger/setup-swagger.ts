@@ -108,7 +108,7 @@ export function buildOpenApiDocument(app: Express): OpenApiDocument {
         "REST API визуального конструктора Telegram-ботов. " +
         "Авторизация: сессионная cookie или Bearer PAT. " +
         adminDocsHint,
-      version: "2.2.0",
+      version: "2.2.0.5",
     },
     tags: buildOpenApiTags(routes),
     paths,

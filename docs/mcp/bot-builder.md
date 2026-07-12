@@ -387,4 +387,4 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 
 ## Версия
 
-MCP-сервер: `botcraft-builder` v2.2.0.4 (поле `SERVER_INFO` в `tools/mcp-server/index.ts`).
+MCP-сервер: `botcraft-builder` v2.2.0.5 (поле `SERVER_INFO` в `tools/mcp-server/index.ts`).

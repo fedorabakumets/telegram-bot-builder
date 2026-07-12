@@ -1,19 +1,19 @@
 /**
  * @fileoverview Строка списка менеджера хранилищ (`StorageConfigRow`).
- * Презентационная строка одного конфига `storage_configs`: бейдж типа
- * (local/S3), имя, индикатор активности и режима только-чтения (Req 11.2),
- * действия «Сделать активным» (Req 11.6) и «Удалить» с подтверждением
- * (Req 11.8 — серверный 409 обрабатывается на уровне менеджера). Стиль
- * бейджа типа хранилища берёт из общего helper'а `panel-styles` (задача 12.1).
- * Только смысловые иконки lucide-react, без декоративных эмодзи (Req 13.2).
  * @module components/editor/files/panel/storage/storage-config-row
  */
 
 import { Star, Lock, Trash2, Pencil } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { cn } from '@/utils/utils';
 import { getStorageBadgeStyle } from '../panel-styles';
+import {
+  STORAGE_CONFIG_ROW_ACTIVE_CLASS,
+  STORAGE_CONFIG_ROW_BASE_CLASS,
+  STORAGE_CONFIG_ROW_ICON_CLASS,
+  STORAGE_CONFIG_ROW_IDLE_CLASS,
+} from '../panel-styles';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,13 +31,13 @@ import type { StorageInfo } from './storage-info';
 export interface StorageConfigRowProps {
   /** Данные хранилища для отображения */
   storage: StorageInfo;
-  /** Сделать хранилище активным для новых загрузок (Req 11.6) */
+  /** Сделать хранилище активным для новых загрузок */
   onSetActive: (configId: string) => void;
-  /** Удалить хранилище (Req 11.8) */
+  /** Удалить хранилище */
   onDelete: (configId: string) => void;
-  /** Открыть форму правки конфига (задача 8.3) */
+  /** Открыть форму правки конфига */
   onEdit?: (configId: string) => void;
-  /** Идёт ли изменяющая операция (дизейблит действия) */
+  /** Идёт ли изменяющая операция */
   isMutating?: boolean;
 }
 
@@ -53,58 +53,71 @@ export function StorageConfigRow({
   onEdit,
   isMutating = false,
 }: StorageConfigRowProps) {
-  /** Стиль бейджа типа хранилища (вариант, иконка, базовые классы) */
   const badgeStyle = getStorageBadgeStyle(storage.backend);
   const TypeIcon = badgeStyle.icon;
+  const backendLabel = storage.backend === 's3' ? 'S3' : 'Локальное хранилище';
 
   return (
     <div
-      className="flex items-center justify-between gap-2 rounded-md border p-3"
+      className={cn(
+        STORAGE_CONFIG_ROW_BASE_CLASS,
+        storage.isActive ? STORAGE_CONFIG_ROW_ACTIVE_CLASS : STORAGE_CONFIG_ROW_IDLE_CLASS,
+      )}
       data-testid={`storage-config-row-${storage.configId}`}
     >
-      <div className="flex min-w-0 items-center gap-2">
-        <Badge variant={badgeStyle.variant} className={badgeStyle.className}>
-          <TypeIcon className={badgeStyle.iconClassName} />
-          {storage.backend === 's3' ? 'S3' : 'Локально'}
-        </Badge>
-        <span className="truncate text-sm font-medium" title={storage.name}>
-          {storage.name}
-        </span>
-        {storage.isActive && (
-          <Badge variant="outline" className="gap-1 text-[10px] text-primary" data-testid="storage-active-badge">
-            <Star className="h-3 w-3 fill-current" />
-            Активно
-          </Badge>
-        )}
-        {storage.readOnly && (
-          <Badge variant="outline" className="gap-1 text-[10px] text-muted-foreground" data-testid="storage-readonly-badge">
-            <Lock className="h-3 w-3" />
-            Только чтение
-          </Badge>
-        )}
+      <div className={STORAGE_CONFIG_ROW_ICON_CLASS}>
+        <TypeIcon className="h-4 w-4 text-primary" />
       </div>
 
-      <div className="flex shrink-0 items-center gap-1">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-8"
-          disabled={storage.isActive || storage.readOnly || isMutating}
-          onClick={() => onSetActive(storage.configId)}
-          title={storage.readOnly ? 'Только чтение: нельзя сделать активным' : 'Сделать активным для загрузок'}
-          data-testid={`storage-set-active-${storage.configId}`}
-        >
-          <Star className="mr-1 h-3.5 w-3.5" />
-          Активным
-        </Button>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-sm font-medium" title={storage.name}>
+            {storage.name}
+          </span>
+          {storage.isActive && (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary"
+              data-testid="storage-active-badge"
+            >
+              <Star className="h-3 w-3 fill-current" />
+              Активно
+            </span>
+          )}
+        </div>
+        <p className="truncate text-xs text-muted-foreground">
+          {backendLabel}
+          {storage.readOnly && (
+            <>
+              <span className="mx-1 text-border/70">·</span>
+              <Lock className="mr-0.5 inline h-3 w-3 align-[-2px]" />
+              Только чтение
+            </>
+          )}
+        </p>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-0.5">
+        {!storage.isActive && !storage.readOnly && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-primary"
+            disabled={isMutating}
+            onClick={() => onSetActive(storage.configId)}
+            title="Сделать активным для загрузок"
+            data-testid={`storage-set-active-${storage.configId}`}
+          >
+            <Star className="h-4 w-4" />
+          </Button>
+        )}
 
         {onEdit && (
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
             disabled={isMutating}
             onClick={() => onEdit(storage.configId)}
             title="Изменить хранилище"
@@ -120,7 +133,7 @@ export function StorageConfigRow({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-destructive hover:text-destructive"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive"
               disabled={isMutating}
               title="Удалить хранилище"
               data-testid={`storage-delete-${storage.configId}`}
