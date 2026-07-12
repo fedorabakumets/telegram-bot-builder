@@ -11,7 +11,6 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { HardDrive, Cloud } from 'lucide-react';
-import type { CSSProperties } from 'react';
 import type { BadgeProps } from '@/components/ui/badge';
 
 /** Тип бэкенда хранилища, используемый в UI панели */
@@ -82,11 +81,15 @@ export const STORAGE_BADGE_LABEL_WIDE = 'truncate max-w-[120px]';
  * родителя через `group-data-[state=active]`.
  */
 export const CATEGORY_TAB_TRIGGER_CLASS =
-  'group h-8 rounded-md px-3 text-xs font-medium text-muted-foreground transition-colors ' +
-  'hover:bg-muted/60 hover:text-foreground ' +
+  'group h-8 rounded-md px-3 text-xs font-medium text-muted-foreground transition-all ' +
+  'hover:bg-background/80 hover:text-foreground ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ' +
-  'data-[state=active]:bg-primary/15 data-[state=active]:text-primary ' +
-  'data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-primary/20';
+  'data-[state=active]:bg-background data-[state=active]:text-primary ' +
+  'data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-primary/25';
+
+/** Обёртка табов в toolbar — мягкая «пилюля» */
+export const CATEGORY_TABS_EMBEDDED_LIST_CLASS =
+  'h-auto flex-wrap justify-start gap-1 rounded-lg border border-border/50 bg-background/70 p-1 shadow-sm';
 
 /**
  * Класс пилюли-счётчика на табе категории. По умолчанию — нейтральный
@@ -266,7 +269,7 @@ export const TABLE_ROW_CLASS = 'hover:bg-muted/30 transition-colors';
 export const TABLE_HEAD_CLASS = 'sticky top-0 z-20 bg-muted/60 border-b';
 
 /** Класс контейнера секции панели (стандартный отступ + разделитель снизу) */
-export const PANEL_SECTION_CLASS = 'px-4 py-2 border-b';
+export const PANEL_SECTION_CLASS = 'px-4 py-2.5 border-b sm:px-6';
 
 /** Класс плотной секции панели (квота / шапка) */
 export const PANEL_DENSE_SECTION_CLASS = 'px-4 py-2.5 border-b';
@@ -279,59 +282,64 @@ export const PANEL_DENSE_SECTION_CLASS = 'px-4 py-2.5 border-b';
 export const SELECTION_BAR_CLASS =
   'sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-2 border-t bg-background/95 px-4 py-2.5 backdrop-blur';
 
-/** Класс блока результата проверки доступности хранилища (успех/ошибка) */
-export const STORAGE_TEST_RESULT_BASE = 'flex items-center gap-2 rounded-md border p-2 text-sm';
+/** Класс блока результата проверки хранилища (успех/ошибка) */
+export const STORAGE_TEST_RESULT_BASE =
+  'flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm';
 
 /** Цветовой класс блока успеха проверки хранилища */
-export const STORAGE_TEST_RESULT_OK_CLASS = 'text-success';
+export const STORAGE_TEST_RESULT_OK_CLASS = 'bg-success/10 text-success';
 
 /** Цветовой класс блока ошибки проверки хранилища */
-export const STORAGE_TEST_RESULT_ERROR_CLASS = 'text-destructive';
+export const STORAGE_TEST_RESULT_ERROR_CLASS = 'bg-destructive/10 text-destructive';
+
+/** Заголовок секции в форме хранилища */
+export const STORAGE_CONFIG_FORM_SECTION_TITLE_CLASS =
+  'text-[11px] font-semibold uppercase tracking-wide text-muted-foreground';
+
+/** Строка переключателя в форме хранилища */
+export const STORAGE_CONFIG_FORM_SETTING_ROW_CLASS =
+  'flex items-center justify-between gap-3 rounded-xl px-3 py-2.5';
 
 /** Класс пустого состояния таблицы (центр, приглушённый текст) */
 export const EMPTY_STATE_CLASS =
   'flex h-full items-center justify-center text-sm text-muted-foreground';
 
 /* ────────────────────────────────────────────────────────────────────────── */
-/*  Шапка панели (FileStorageHeader)                                          */
+/*  Шапка и верхняя панель (FileStorageHeader / FileStorageToolbar)         */
 /* ────────────────────────────────────────────────────────────────────────── */
 
-/** Контейнер шапки на странице: стандартные отступы + лёгкий горизонт-градиент */
-export const HEADER_CONTAINER_CLASS =
-  'px-4 sm:px-6 py-3 border-b bg-gradient-to-r from-muted/40 to-background';
-
-/** Контейнер шапки в модалке: плотнее, без бокового градиента */
+/** Контейнер шапки в модалке: плотные отступы */
 export const HEADER_CONTAINER_MODAL_CLASS = 'px-3 sm:px-4 py-2 border-b bg-background';
 
-/** Иконка-круг с primary-градиентом (страница) */
-export const HEADER_ICON_CIRCLE_CLASS =
-  'inline-flex h-8 w-8 items-center justify-center rounded-full shadow-sm ring-1 ring-primary/20 shrink-0';
+/** Подзаголовок под TabHeader на странице «Файлы» */
+export const HEADER_SUBTITLE_CLASS =
+  'px-4 sm:px-6 pb-2.5 text-xs leading-relaxed text-muted-foreground max-w-3xl';
 
-/** Иконка-круг с primary-градиентом (модалка, плотнее) */
-export const HEADER_ICON_CIRCLE_MODAL_CLASS =
-  'inline-flex h-7 w-7 items-center justify-center rounded-full shadow-sm ring-1 ring-primary/20 shrink-0';
+/** Верхняя панель: категории слева, квота справа */
+export const FILE_STORAGE_TOOLBAR_CLASS =
+  'flex flex-col gap-3 border-b px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-3 ' +
+  'bg-muted/15';
 
-/**
- * Инлайн-стиль фона иконки-круга шапки: primary-градиент из токенов темы
- * (`--gradient-primary-start/end`, заданы в `client/index.css`). Tailwind
- * не знает про эти CSS-переменные, поэтому фон задаём через `style`.
- */
-export const HEADER_ICON_CIRCLE_STYLE: CSSProperties = {
-  backgroundImage:
-    'linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-end))',
-};
+/** Строка фильтров и режима прикрепления */
+export const FILE_STORAGE_ACTIONS_ROW_CLASS =
+  'flex flex-col gap-2 border-b px-4 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-2.5 ' +
+  'bg-background/80';
 
-/** Класс заголовка шапки (страница) */
-export const HEADER_TITLE_CLASS =
-  'text-base font-semibold leading-none tracking-tight text-foreground';
+/** Карточка компактной квоты в toolbar — без фона и рамки */
+export const QUOTA_COMPACT_CARD_CLASS =
+  'flex min-w-0 flex-col gap-1 shrink-0 text-xs sm:min-w-[10rem]';
 
-/** Класс заголовка шапки (модалка, плотнее) */
-export const HEADER_TITLE_MODAL_CLASS =
-  'text-sm font-semibold leading-none tracking-tight text-foreground';
+/** Строка списка в менеджере хранилищ */
+export const STORAGE_CONFIG_ROW_BASE_CLASS =
+  'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors';
 
-/** Класс краткого описания страницы под шапкой (приглушённый текст) */
-export const HEADER_DESCRIPTION_CLASS =
-  'px-4 sm:px-6 py-2 text-xs text-muted-foreground border-b';
+/** Активное хранилище в менеджере */
+export const STORAGE_CONFIG_ROW_ACTIVE_CLASS =
+  'bg-primary/10 ring-1 ring-primary/20';
 
-/** Класс группы контролов справа в шапке (единые размеры, прижата к правому краю) */
-export const HEADER_ACTIONS_CLASS = 'ml-auto flex items-center gap-1.5 shrink-0';
+/** Неактивное хранилище в менеджере */
+export const STORAGE_CONFIG_ROW_IDLE_CLASS = 'hover:bg-muted/25';
+
+/** Иконка типа хранилища в строке менеджера */
+export const STORAGE_CONFIG_ROW_ICON_CLASS =
+  'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10';

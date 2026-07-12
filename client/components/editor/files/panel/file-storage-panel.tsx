@@ -14,13 +14,14 @@ import { Button } from '@/components/ui/button';
 
 import { useFileStoragePanelState } from './use-file-storage-panel-state';
 import { FileStorageHeader } from './file-storage-header';
+import { FileStorageToolbar } from './file-storage-toolbar';
 import { StorageQuotaBar } from './storage-quota-bar';
 import { CategoryTabs } from './category-tabs';
 import { FiltersRow } from './filters-row';
 import { FiltersModal } from './filters-modal';
 import { SelectionActionBar } from './selection-action-bar';
 import { FilesTable } from './table/files-table';
-import { PANEL_SECTION_CLASS } from './panel-styles';
+import { FILE_STORAGE_ACTIONS_ROW_CLASS } from './panel-styles';
 import type { FileStoragePanelProps } from './panel-types';
 
 /**
@@ -51,26 +52,58 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         onRefresh={s.refresh}
       />
 
-      <StorageQuotaBar
-        usedBytes={s.quota.usedBytes}
-        limitBytes={s.quota.limitBytes}
-        isLoading={s.quota.isLoading}
-      />
+      {mode === 'page' ? (
+        <FileStorageToolbar
+          category={s.category}
+          onCategoryChange={s.setCategory}
+          usedBytes={s.quota.usedBytes}
+          limitBytes={s.quota.limitBytes}
+          quotaLoading={s.quota.isLoading}
+        />
+      ) : (
+        <>
+          <StorageQuotaBar
+            usedBytes={s.quota.usedBytes}
+            limitBytes={s.quota.limitBytes}
+            isLoading={s.quota.isLoading}
+          />
+          <CategoryTabs category={s.category} onCategoryChange={s.setCategory} />
+        </>
+      )}
 
-      {/* Категории-табы: Все / Входящие / Исходящие / Загруженные (Req 5.1, 5.6) */}
-      <CategoryTabs category={s.category} onCategoryChange={s.setCategory} />
+      {/* Фильтры + режим прикрепления в одной строке */}
+      <div className={FILE_STORAGE_ACTIONS_ROW_CLASS}>
+        <FiltersRow
+          embedded
+          filters={s.filters}
+          activeCount={s.activeFilterCount}
+          onOpen={() => s.setFiltersOpen(true)}
+          onRemove={s.removeFilter}
+          onResetAll={s.resetFilters}
+          collaborators={s.collaborators}
+        />
+        {mode === 'page' && (
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant={s.attachModeEnabled ? 'default' : 'outline'}
+              size="sm"
+              className="h-8"
+              onClick={() => s.setAttachModeEnabled((v) => !v)}
+              data-testid="toggle-attach-mode"
+            >
+              <Paperclip className="mr-1.5 h-3.5 w-3.5" />
+              {s.attachModeEnabled ? 'Прикрепление вкл.' : 'Режим прикрепления'}
+            </Button>
+            {s.attachModeEnabled && attachTarget && (
+              <span className="max-w-[12rem] truncate text-xs text-muted-foreground sm:max-w-xs">
+                Цель: <strong className="text-foreground">{attachTarget.nodeLabel}</strong>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
 
-      {/* Кнопка фильтров + чипы активных фильтров над таблицей (Req 6.1, 6.8) */}
-      <FiltersRow
-        filters={s.filters}
-        activeCount={s.activeFilterCount}
-        onOpen={() => s.setFiltersOpen(true)}
-        onRemove={s.removeFilter}
-        onResetAll={s.resetFilters}
-        collaborators={s.collaborators}
-      />
-
-      {/* Модалка фильтров: имя/дата/тип/сотрудник/хранилище/размер + валидация (Req 6.2–6.9) */}
       <FiltersModal
         open={s.filtersOpen}
         value={s.filters}
@@ -79,27 +112,6 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         onOpenChange={s.setFiltersOpen}
         collaborators={s.collaborators}
       />
-
-      {/* Кнопка включения режима прикрепления доступна на странице ВСЕГДА (Req 3.7) */}
-      {mode === 'page' && (
-        <div className={`flex items-center gap-2 ${PANEL_SECTION_CLASS}`}>
-          <Button
-            type="button"
-            variant={s.attachModeEnabled ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => s.setAttachModeEnabled((v) => !v)}
-            data-testid="toggle-attach-mode"
-          >
-            <Paperclip className="h-3.5 w-3.5 mr-1.5" />
-            {s.attachModeEnabled ? 'Режим прикрепления включён' : 'Режим прикрепления'}
-          </Button>
-          {s.attachModeEnabled && attachTarget && (
-            <span className="text-xs text-muted-foreground truncate">
-              Цель: <strong>{attachTarget.nodeLabel}</strong>
-            </span>
-          )}
-        </div>
-      )}
 
       {/* Таблица файлов: каркас + множественный выбор + адаптивность (Req 3.1, 7.1, 7.8, 13.3) */}
       <div className="flex-1 overflow-auto" data-testid="files-table-slot">

@@ -1,18 +1,14 @@
 /**
  * @fileoverview Форма создания/правки конфига хранилища (`StorageConfigForm`).
- * shadcn-модалка с общими полями (имя, тип бэкенда, только-чтение), группами
- * полей local/S3 (через StorageConfigFormFields), кнопкой «Проверить»
- * доступность (Req 11.3) и сохранением create/update с surfacing 400-
- * диагностики (Req 11.9). Креды S3 вводятся только при создании/смене (Req 11.4).
- * Логика — в useStorageConfigForm; здесь — разметка. Иконки lucide-react (Req 13.2).
  * @module components/editor/files/panel/storage/storage-config-form
  */
 
-import { CheckCircle2, XCircle, PlugZap } from 'lucide-react';
+import { CheckCircle2, Cloud, HardDrive, Pencil, PlugZap, XCircle } from 'lucide-react';
 
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -32,6 +28,7 @@ import { cn } from '@/utils/utils';
 import type { StorageConfigDto } from '../../hooks/use-storage-configs';
 import type { StorageBackendKind } from './storage-info';
 import {
+  STORAGE_CONFIG_FORM_SETTING_ROW_CLASS,
   STORAGE_TEST_RESULT_BASE,
   STORAGE_TEST_RESULT_ERROR_CLASS,
   STORAGE_TEST_RESULT_OK_CLASS,
@@ -58,22 +55,34 @@ export function StorageConfigForm({ open, onOpenChange, editing }: StorageConfig
   const { draft, setField, setConfig, testResult, isTesting, runTest, save, isSaving } =
     useStorageConfigForm(editing);
 
-  /** Режим правки (id уже есть) — тип бэкенда не меняется */
   const isEdit = Boolean(draft.configId);
+  const isS3 = draft.backend === 's3';
+  const HeaderIcon = isEdit ? Pencil : isS3 ? Cloud : HardDrive;
+  const title = isEdit ? 'Изменить хранилище' : 'Новое хранилище';
+  const subtitle = isS3
+    ? 'Подключение к S3-совместимому хранилищу (MinIO, AWS и др.)'
+    : 'Файлы сохраняются в локальную папку на сервере';
 
-  /** Сохранить и закрыть форму при успехе */
   const handleSave = async () => {
     if (await save()) onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg" data-testid="storage-config-form">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? 'Изменить хранилище' : 'Новое хранилище'}</DialogTitle>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-lg" data-testid="storage-config-form">
+        <DialogHeader className="space-y-0 border-b px-6 pb-4 pt-6">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <HeaderIcon className="h-5 w-5 text-primary" />
+            </div>
+            <div className="space-y-1.5 pt-0.5">
+              <DialogTitle className="text-lg leading-none">{title}</DialogTitle>
+              <DialogDescription className="text-xs leading-relaxed">{subtitle}</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-1">
+        <div className="max-h-[55vh] space-y-4 overflow-auto px-6 py-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="storage-name">Имя</Label>
@@ -110,14 +119,19 @@ export function StorageConfigForm({ open, onOpenChange, editing }: StorageConfig
             onCredChange={(key, value) => setField(key, value)}
           />
 
-          <div className="flex items-center gap-2">
+          <div className={STORAGE_CONFIG_FORM_SETTING_ROW_CLASS}>
+            <div className="space-y-0.5">
+              <Label htmlFor="storage-readonly" className="text-sm font-medium">
+                Только чтение
+              </Label>
+              <p className="text-xs text-muted-foreground">Загрузка в это хранилище будет недоступна</p>
+            </div>
             <Switch
               id="storage-readonly"
               checked={Boolean(draft.readOnly)}
               onCheckedChange={(v) => setField('readOnly', v)}
               data-testid="storage-field-readonly"
             />
-            <Label htmlFor="storage-readonly">Только чтение</Label>
           </div>
 
           {testResult && (
@@ -128,27 +142,39 @@ export function StorageConfigForm({ open, onOpenChange, editing }: StorageConfig
               )}
               data-testid="storage-test-result"
             >
-              {testResult.ok ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-              <span>{testResult.message ?? (testResult.ok ? 'Хранилище доступно' : 'Хранилище недоступно')}</span>
+              {testResult.ok ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+              ) : (
+                <XCircle className="h-4 w-4 shrink-0" />
+              )}
+              <span>
+                {testResult.message ?? (testResult.ok ? 'Хранилище доступно' : 'Хранилище недоступно')}
+              </span>
             </div>
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-2">
+        <DialogFooter className="gap-2 border-t px-6 py-4 sm:justify-between">
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
+            className="gap-2 text-muted-foreground hover:text-foreground"
             onClick={runTest}
             disabled={isTesting || !isEdit}
             title={isEdit ? 'Проверить доступность' : 'Доступно после сохранения'}
             data-testid="storage-test-button"
           >
-            <PlugZap className="mr-1.5 h-4 w-4" />
+            <PlugZap className="h-4 w-4" />
             {isTesting ? 'Проверка…' : 'Проверить'}
           </Button>
-          <Button type="button" onClick={handleSave} disabled={isSaving} data-testid="storage-save-button">
-            {isSaving ? 'Сохранение…' : 'Сохранить'}
-          </Button>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Отмена
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={isSaving} data-testid="storage-save-button">
+              {isSaving ? 'Сохранение…' : isEdit ? 'Сохранить' : 'Создать'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

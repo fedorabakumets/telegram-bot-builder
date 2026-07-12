@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { InputNavigationGrid } from '../navigation/input-navigation-grid';
 import { PropertyCheckbox } from '../common/property-checkbox';
 import { MediaMetadataInfo } from './media-metadata-info';
+import { SaveAnswerStorageHint } from './save-answer-storage-hint';
 import type { Variable } from '../../../inline-rich/types';
 
 /**
@@ -80,9 +81,7 @@ export function SaveAnswerProperties({
             Сохранение ответа
           </span>
         </div>
-        <p className="text-xs text-cyan-600/90 dark:text-cyan-400/90">
-          Нода сохраняет полученный ответ в переменную и позволяет выбрать следующий узел.
-        </p>
+        <SaveAnswerStorageHint inputType={inputType} />
       </div>
 
       <div className="space-y-2">
