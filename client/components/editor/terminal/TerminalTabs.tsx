@@ -2,7 +2,7 @@
  * @fileoverview Компонент вкладок терминалов
  *
  * Select для переключения между живыми терминалами и историями запусков.
- * В подписи — проект и число пользователей бота.
+ * В подписи — проект и число пользователей бота; список отсортирован по убыванию пользователей.
  *
  * @module bot/TerminalTabs
  */
@@ -81,6 +81,38 @@ function getTerminalLabel(
 }
 
 /**
+ * Возвращает число пользователей для сортировки; неизвестные значения — в конец списка.
+ * @param terminal - Данные вкладки
+ * @param userCounts - Карта числа пользователей
+ * @returns Число для сравнения
+ */
+function getSortableUserCount(terminal: TerminalInfo, userCounts: Map<string, number>): number {
+  return userCounts.get(`${terminal.projectId}_${terminal.tokenId}`) ?? -1;
+}
+
+/**
+ * Сортирует терминалы: сначала с большим числом пользователей, затем live, затем по имени бота.
+ * @param terminals - Список вкладок
+ * @param userCounts - Карта числа пользователей
+ * @returns Отсортированная копия списка
+ */
+function sortTerminalsByUserCount(
+  terminals: TerminalInfo[],
+  userCounts: Map<string, number>,
+): TerminalInfo[] {
+  return [...terminals].sort((left, right) => {
+    const userDiff =
+      getSortableUserCount(right, userCounts) - getSortableUserCount(left, userCounts);
+    if (userDiff !== 0) return userDiff;
+
+    const liveDiff = Number(right.tabType === 'history') - Number(left.tabType === 'history');
+    if (liveDiff !== 0) return liveDiff;
+
+    return left.botName.localeCompare(right.botName, 'ru');
+  });
+}
+
+/**
  * Вкладки терминалов с поддержкой live и history вкладок.
  * @param props - Свойства компонента
  * @returns JSX элемент или null
@@ -93,6 +125,11 @@ export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
   const projectNames = useMemo(
     () => new Map(projects.map((project) => [project.id, project.name])),
     [projects],
+  );
+
+  const sortedTerminals = useMemo(
+    () => sortTerminalsByUserCount(terminals, userCounts),
+    [terminals, userCounts],
   );
 
   if (terminals.length === 0) return null;
@@ -108,7 +145,7 @@ export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
         <SelectValue placeholder="Выберите терминал" />
       </SelectTrigger>
       <SelectContent>
-        {terminals.map((terminal) => {
+        {sortedTerminals.map((terminal) => {
           const key = getTabKey(terminal);
           return (
             <SelectItem key={key} value={key} className="text-xs">
