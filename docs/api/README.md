@@ -2,7 +2,7 @@
 
 REST API визуального конструктора Telegram-ботов. Авторизация: сессионная cookie или Bearer PAT. Документация: /admin (вход по ADMIN_API_KEY) → /admin/docs.
 
-**Версия OpenAPI:** 2.2.0
+**Версия OpenAPI:** 2.2.0.5
 
 > Сгенерировано из OpenAPI spec (`npm run docs:api`). Интерактивная документация: `/admin/docs`.
 

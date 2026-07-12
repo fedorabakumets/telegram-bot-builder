@@ -76,7 +76,7 @@ import {
 /** Имя и версия MCP-сервера */
 const SERVER_INFO = {
   name: 'botcraft-builder',
-  version: '2.2.0.4',
+  version: '2.2.0.5',
 };
 
 /**

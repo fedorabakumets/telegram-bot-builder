@@ -3,7 +3,7 @@
   "info": {
     "title": "Telegram Bot Builder API",
     "description": "REST API визуального конструктора Telegram-ботов. Авторизация: сессионная cookie или Bearer PAT. Документация: /admin (вход по ADMIN_API_KEY) → /admin/docs.",
-    "version": "2.2.0"
+    "version": "2.2.0.5"
   },
   "tags": [
     {
