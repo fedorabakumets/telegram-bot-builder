@@ -32,3 +32,5 @@ https://fedorabakumets.github.io/telegram-bot-builder/
 - Контент **не копируется** — `docusaurus.config.ts` смотрит на `../docs`
 - `futures/`, `roadmaps/`, `smm/` исключены из сайта
 - Markdown режим (`format: 'md'`), чтобы `{variables}` не ломали MDX
+- WikiNest-ссылки `[[path]]` → обычные через `src/remark/wiki-links.ts`
+  (`futures/` и др. исключённые разделы ведут на GitHub)
