@@ -1,6 +1,7 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import remarkWikiLinks from './src/remark/wiki-links';
 
 /**
  * Конфиг сайта документации BotCraft на Docusaurus.
@@ -48,6 +49,7 @@ const config: Config = {
           routeBasePath: 'docs',
           editUrl:
             'https://github.com/fedorabakumets/telegram-bot-builder/edit/main/docs/',
+          beforeDefaultRemarkPlugins: [remarkWikiLinks],
           exclude: [
             'futures/**',
             'roadmaps/**',
