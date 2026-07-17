@@ -2,37 +2,40 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
-// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
-
+/**
+ * Конфиг сайта документации BotCraft на Docusaurus.
+ * Контент берётся из ../docs (единый источник правды в репозитории).
+ */
 const config: Config = {
-  title: 'My Site',
-  tagline: 'Dinosaurs are cool',
+  title: 'BotCraft',
+  tagline: 'Визуальный конструктор Telegram-ботов',
   favicon: 'img/favicon.ico',
 
-  // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
-    v4: true, // Improve compatibility with the upcoming Docusaurus v4
+    v4: true,
   },
 
-  // Set the production url of your site here
-  url: 'https://your-docusaurus-site.example.com',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  url: 'https://fedorabakumets.github.io',
+  baseUrl: '/telegram-bot-builder/',
 
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  organizationName: 'fedorabakumets',
+  projectName: 'telegram-bot-builder',
+  trailingSlash: false,
 
-  onBrokenLinks: 'throw',
+  // Существующие md часто ссылаются на futures/ и относительные пути WikiNest
+  onBrokenLinks: 'warn',
 
-  // Even if you don't use internationalization, you can use this field to set
-  // useful metadata like html lang. For example, if your site is Chinese, you
-  // may want to replace "en" with "zh-Hans".
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+    defaultLocale: 'ru',
+    locales: ['ru'],
+  },
+
+  // Обычный Markdown: `{var}` в docs не ломает сборку как MDX-выражения
+  markdown: {
+    format: 'md',
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
   },
 
   presets: [
@@ -40,27 +43,21 @@ const config: Config = {
       'classic',
       {
         docs: {
+          path: '../docs',
           sidebarPath: './sidebars.ts',
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
+          routeBasePath: 'docs',
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/fedorabakumets/telegram-bot-builder/edit/main/docs/',
+          exclude: [
+            'futures/**',
+            'roadmaps/**',
+            'smm/**',
+            'bots/**',
+            'assets/**',
+            '**/_meta.json',
+          ],
         },
-        blog: {
-          showReadingTime: true,
-          feedOptions: {
-            type: ['rss', 'atom'],
-            xslt: true,
-          },
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
-          // Useful options to enforce blogging best practices
-          onInlineTags: 'warn',
-          onInlineAuthors: 'warn',
-          onUntruncatedBlogPosts: 'warn',
-        },
+        blog: false,
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -68,28 +65,40 @@ const config: Config = {
     ],
   ],
 
+  themes: [
+    [
+      require.resolve('@easyops-cn/docusaurus-search-local'),
+      {
+        hashed: true,
+        language: ['ru', 'en'],
+        indexDocs: true,
+        docsRouteBasePath: 'docs',
+        highlightSearchTermsOnTargetPage: true,
+      },
+    ],
+  ],
+
   themeConfig: {
-    // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
     colorMode: {
+      defaultMode: 'dark',
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'My Site',
+      title: 'BotCraft',
       logo: {
-        alt: 'My Site Logo',
+        alt: 'BotCraft',
         src: 'img/logo.svg',
       },
       items: [
         {
           type: 'docSidebar',
-          sidebarId: 'tutorialSidebar',
+          sidebarId: 'docsSidebar',
           position: 'left',
-          label: 'Tutorial',
+          label: 'Документация',
         },
-        {to: '/blog', label: 'Blog', position: 'left'},
         {
-          href: 'https://github.com/facebook/docusaurus',
+          href: 'https://github.com/fedorabakumets/telegram-bot-builder',
           label: 'GitHub',
           position: 'right',
         },
@@ -99,50 +108,40 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Docs',
+          title: 'Документация',
           items: [
+            {label: 'Быстрый старт', to: '/docs/development/INSTALLATION'},
+            {label: 'Интерфейс', to: '/docs/interface/overview'},
+            {label: 'Ноды', to: '/docs/nodes/overview'},
+          ],
+        },
+        {
+          title: 'Разработчикам',
+          items: [
+            {label: 'MCP', to: '/docs/mcp/overview'},
+            {label: 'API', to: '/docs/api'},
             {
-              label: 'Tutorial',
-              to: '/docs/intro',
+              label: 'Contributing',
+              to: '/docs/development/CONTRIBUTING',
             },
           ],
         },
         {
-          title: 'Community',
+          title: 'Ещё',
           items: [
-            {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-            },
-            {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
-            },
-            {
-              label: 'X',
-              href: 'https://x.com/docusaurus',
-            },
-          ],
-        },
-        {
-          title: 'More',
-          items: [
-            {
-              label: 'Blog',
-              to: '/blog',
-            },
             {
               label: 'GitHub',
-              href: 'https://github.com/facebook/docusaurus',
+              href: 'https://github.com/fedorabakumets/telegram-bot-builder',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} BotCraft. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
+      additionalLanguages: ['bash', 'json', 'python', 'typescript'],
     },
   } satisfies Preset.ThemeConfig,
 };

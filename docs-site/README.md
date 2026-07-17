@@ -1,43 +1,34 @@
-# Website
+# Документация-сайт BotCraft (Docusaurus)
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+Статический сайт из markdown в корневом `../docs`.
 
-## Installation
+## Локально
 
 ```bash
+cd docs-site
 npm install
+npm start
 ```
 
-**Note**: feel free to use the package manager of your choice.
+Откроется http://localhost:3000/telegram-bot-builder/
 
-## Local Development
-
-```bash
-npm run start
-```
-
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
-
-## Build
+## Сборка
 
 ```bash
 npm run build
+npm run serve
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+## Деплой
 
-## Deployment
+GitHub Actions (`.github/workflows/deploy-docs-site.yml`) собирает сайт и публикует на GitHub Pages:
 
-Using SSH:
+https://fedorabakumets.github.io/telegram-bot-builder/
 
-```bash
-USE_SSH=true npm run deploy
-```
+В настройках репозитория: **Settings → Pages → Source: GitHub Actions**.
 
-Not using SSH:
+## Важно
 
-```bash
-GIT_USER=<Your GitHub username> npm run deploy
-```
-
-If you are using GitHub Pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+- Контент **не копируется** — `docusaurus.config.ts` смотрит на `../docs`
+- `futures/`, `roadmaps/`, `smm/` исключены из сайта
+- Markdown режим (`format: 'md'`), чтобы `{variables}` не ломали MDX
