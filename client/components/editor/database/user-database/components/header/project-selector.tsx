@@ -38,13 +38,13 @@ export function ProjectSelector({
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 min-w-0 flex-1">
       <FolderOpen className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
       <Select
         value={String(selectedProjectId)}
         onValueChange={(value) => onSelect(Number(value))}
       >
-        <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px] max-w-[180px]">
+        <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px] w-full max-w-[min(100%,280px)]">
           <SelectValue placeholder="Проект">{selectedProject?.name}</SelectValue>
         </SelectTrigger>
         <SelectContent className="min-w-[220px]">

@@ -9,6 +9,7 @@ import { ImageIcon } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { IncomingMediaStorageHint } from '../incoming-media-storage-hint';
 
 /** Пропсы переключателя сохранения медиафайлов */
 interface BotSaveMediaToggleProps {
@@ -117,11 +118,7 @@ export function BotSaveMediaToggle({
           >
             {localEnabled ? 'Сохранять входящие фото' : 'Фото не сохраняются'}
           </Label>
-          <p className="text-xs text-muted-foreground/70 mt-0.5">
-            {localEnabled
-              ? 'Фото от пользователей будут скачиваться и храниться на сервере'
-              : 'Фото от пользователей не сохраняются на сервере'}
-          </p>
+          <IncomingMediaStorageHint projectId={projectId} enabled={localEnabled} />
         </div>
         <Switch
           id={`save-media-${tokenId}`}
