@@ -2815,16 +2815,155 @@
         "tags": [
           "projects"
         ],
-        "summary": "GET /api/projects/{id}/users",
+        "summary": "Список пользователей и диалогов проекта",
+        "description": "Вкладка «Диалоги» / «Пользователи». С `limit` — страница `{ users, total, hasMore }`. Без `limit` — плоский массив (обратная совместимость). `dialogKind` фильтрует личные / группы / каналы на сервере.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Фильтр по токену бота. Без него — все токены проекта (где применимо).",
+              "example": "7"
+            },
+            "required": false,
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Лимит записей (пагинация)",
+              "example": "50"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "0"
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "иван"
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "filterActive",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "lastInteraction"
+            },
+            "required": false,
+            "name": "sortBy",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "example": "desc"
+            },
+            "required": false,
+            "name": "sortDir",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "users",
+                "groups",
+                "channels"
+              ],
+              "example": "all"
+            },
+            "required": false,
+            "name": "dialogKind",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "example": "true"
+            },
+            "required": false,
+            "name": "includeGroups",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Пагинированный список или массив пользователей",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotUsersPage"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
           }
         }
       },
@@ -2832,16 +2971,102 @@
         "tags": [
           "projects"
         ],
-        "summary": "POST /api/projects/{id}/users",
+        "summary": "Создать или обновить пользователя бота",
+        "description": "INSERT в `bot_users` по (user_id, project_id, token_id). При конфликте обновляет `last_interaction` (upsert). `tokenId` — в query или в теле; иначе подставляется 0.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID токена бота (альтернатива полю в body)",
+              "example": "7"
+            },
+            "required": false,
+            "name": "tokenId",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBotUserRequest"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Успешный ответ"
+          "201": {
+            "description": "Пользователь создан или обновлён (строка bot_users)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotUserRow"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет userId или невалидные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MessageError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ValidationError"
+                    }
+                  ]
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           }
         }
       }
@@ -6477,6 +6702,218 @@
           "success"
         ]
       },
+      "BotUserDialogItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "userId": {
+            "type": "string",
+            "example": "123456789"
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true,
+            "example": "ivan"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true,
+            "example": "Иван"
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true,
+            "example": "Петров"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "registeredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastInteraction": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "interactionCount": {
+            "type": "integer",
+            "example": 12
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "isGroup": {
+            "type": "boolean",
+            "example": false
+          },
+          "chatType": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "lastMessageText": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastMessageAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "BotUsersPage": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BotUserDialogItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 120
+          },
+          "hasMore": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "users",
+          "total",
+          "hasMore"
+        ]
+      },
+      "ForbiddenError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Нет прав на удаление проекта"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "BotUserRow": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "example": "123456789"
+          },
+          "project_id": {
+            "type": "integer",
+            "example": 42
+          },
+          "token_id": {
+            "type": "integer",
+            "example": 7
+          },
+          "username": {
+            "type": "string",
+            "nullable": true
+          },
+          "first_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "language_code": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_bot": {
+            "type": "integer"
+          },
+          "is_premium": {
+            "type": "integer"
+          },
+          "registered_at": {
+            "type": "string"
+          },
+          "last_interaction": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "project_id",
+          "token_id"
+        ]
+      },
+      "CreateBotUserRequest": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "description": "ID пользователя в Telegram",
+            "example": "123456789"
+          },
+          "tokenId": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 7
+          },
+          "username": {
+            "type": "string",
+            "example": "ivan"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "Иван"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Петров"
+          },
+          "languageCode": {
+            "type": "string",
+            "example": "ru"
+          },
+          "isBot": {
+            "type": "integer",
+            "example": 0
+          },
+          "isPremium": {
+            "type": "integer",
+            "example": 0
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
       "ProjectListItem": {
         "type": "object",
         "properties": {
@@ -6682,18 +7119,6 @@
           "message": {
             "type": "string",
             "example": "Проект успешно удалён"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "ForbiddenError": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Нет прав на удаление проекта"
           }
         },
         "required": [
