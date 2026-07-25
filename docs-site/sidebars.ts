@@ -20,7 +20,7 @@ const sidebars: SidebarsConfig = {
         'development/HOW_TO_UPDATE',
         'development/TROUBLESHOOTING_RU',
         'deployment/RAILWAY_QUICK_DEPLOY',
-        'deployment/VERCEL_DEPLOY',
+        'deployment/RAILWAY_TROUBLESHOOTING',
       ],
     },
     {

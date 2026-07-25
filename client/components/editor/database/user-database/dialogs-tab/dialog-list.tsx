@@ -1,7 +1,7 @@
 /**
  * @fileoverview Левая колонка со списком диалогов
- * @description Поиск, бесконечная прокрутка и список карточек диалогов.
- * Содержит виртуальный элемент «Рассылка» сверху списка.
+ * @description Поиск, сегменты Все/Личные/Группы/Каналы, infinite scroll.
+ * Виртуальный элемент «Рассылка» — только в сегменте «Все».
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -13,6 +13,8 @@ import { useBroadcasts } from '@/components/editor/broadcast/hooks/use-broadcast
 import { useBroadcastLiveProgress } from '@/components/editor/broadcast/hooks/use-broadcast-live-progress';
 import type { Broadcast } from '@/components/editor/broadcast/types';
 import { DialogListItem } from './dialog-list-item';
+import { DialogSegmentChips } from './dialog-segment-chips';
+import type { DialogKind } from './dialog-kind';
 
 /**
  * Пропсы компонента DialogList
@@ -53,7 +55,7 @@ function BroadcastRunningProgress({ broadcast }: { broadcast: Broadcast }): Reac
 }
 
 /**
- * Левая колонка списка диалогов с поиском и infinite scroll
+ * Левая колонка списка диалогов с поиском, сегментами и infinite scroll
  * @param props - Пропсы компонента
  * @returns JSX элемент списка диалогов
  */
@@ -66,6 +68,7 @@ export function DialogList({
   isBroadcastSelected,
 }: DialogListProps): React.JSX.Element {
   const [search, setSearch] = useState('');
+  const [dialogKind, setDialogKind] = useState<DialogKind>('all');
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const { allUsers, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
@@ -75,7 +78,7 @@ export function DialogList({
       search,
       sortBy: 'lastInteraction',
       sortDir: 'desc',
-      includeGroups: true,
+      dialogKind,
     });
 
   /** Последняя рассылка для превью в виртуальном элементе */
@@ -84,6 +87,8 @@ export function DialogList({
   const broadcastPreview = lastBroadcast
     ? lastBroadcast.messageText.replace(/<[^>]*>/g, '').slice(0, 40)
     : 'Нет рассылок';
+
+  const showBroadcastRow = dialogKind === 'all' && !!onSelectBroadcast;
 
   /** Infinite scroll через IntersectionObserver */
   useEffect(() => {
@@ -105,7 +110,6 @@ export function DialogList({
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Поле поиска */}
       <div className="p-3 border-b border-border/50 flex-shrink-0">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -118,10 +122,10 @@ export function DialogList({
         </div>
       </div>
 
-      {/* Список диалогов */}
+      <DialogSegmentChips value={dialogKind} onChange={setDialogKind} />
+
       <div className="flex-1 overflow-y-auto min-h-0">
-        {/* Виртуальный элемент «Рассылка» — всегда первый */}
-        {onSelectBroadcast && (
+        {showBroadcastRow && (
           <button
             type="button"
             onClick={onSelectBroadcast}
@@ -169,7 +173,6 @@ export function DialogList({
               />
             ))}
 
-            {/* Sentinel для infinite scroll */}
             <div ref={sentinelRef} className="h-1" />
 
             {isFetchingNextPage && (

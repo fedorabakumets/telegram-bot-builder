@@ -48,6 +48,13 @@ import { resolveSessionSecret } from "../utils/resolveSessionSecret";
 import { handleTelegramError } from "../utils/telegram-error-handler";
 import { fetchWithProxy } from "../utils/telegram-proxy";
 import { setupAuthRoutes } from "./setupAuthRoutes";
+import {
+  resolveDialogKind,
+  wantsUsers,
+  wantsGroups,
+  groupChatTypesSql,
+  buildGroupsSelectSql,
+} from "./botUsers/dialogListKind";
 import { setupBotIntegrationRoutes } from "./setupBotIntegrationRoutes";
 import { setupGithubPushRoute } from './setupGithubPushRoute';
 import { setupWebhookRoutes } from './setupWebhookRoutes';
@@ -2595,48 +2602,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         AND ($2::integer IS NULL OR u.token_id = $2)
     `;
 
-    // Флаг включения групп в список диалогов
-    const includeGroups = req.query.includeGroups === 'true';
-
-    /**
-     * SQL-запрос для групп как диалогов (UNION ALL с основным запросом пользователей).
-     * Строится на основе bot_messages (chat_type IN group/supergroup/channel) —
-     * не требует записи в bot_groups. Группируем по chat_id, берём последнее сообщение.
-     */
-    const groupsUnionSql = `
-      UNION ALL
-      SELECT
-        (-(ROW_NUMBER() OVER (ORDER BY MAX(bm.created_at) DESC))::bigint) AS id,
-        bm.chat_id AS "userId",
-        NULL AS "userName",
-        COALESCE(bg.name, bm.chat_id) AS "firstName",
-        NULL AS "lastName",
-        bg.avatar_url AS "avatarUrl",
-        MIN(bm.created_at) AS "registeredAt",
-        MIN(bm.created_at) AS "createdAt",
-        MAX(bm.created_at) AS "lastInteraction",
-        COUNT(*)::integer AS "interactionCount",
-        TRUE AS "isActive",
-        FALSE AS "isPremium",
-        FALSE AS "isBlocked",
-        FALSE AS "isBot",
-        NULL AS "languageCode",
-        NULL AS "deepLinkParam",
-        NULL AS "referrerId",
-        NULL AS "userData",
-        (ARRAY_AGG(bm.message_text ORDER BY bm.created_at DESC))[1] AS "lastMessageText",
-        MAX(bm.created_at) AS "lastMessageAt",
-        TRUE AS "isGroup",
-        bm.chat_type AS "chatType"
-      FROM bot_messages bm
-      LEFT JOIN bot_groups bg
-        ON bg.group_id = bm.chat_id AND bg.project_id = bm.project_id
-      WHERE bm.project_id = $1
-        AND bm.chat_type IN ('group', 'supergroup', 'channel')
-        AND bm.chat_id IS NOT NULL
-        AND ($2::integer IS NULL OR bm.token_id = $2)
-      GROUP BY bm.chat_id, bm.chat_type, bg.name, bg.avatar_url
-    `;
+    // Фильтр вкладки «Диалоги»: all | users | groups | channels (includeGroups — legacy)
+    const dialogKind = resolveDialogKind(req.query as Record<string, unknown>);
+    const includeUsers = wantsUsers(dialogKind);
+    const includeGroupsPart = wantsGroups(dialogKind);
+    const groupsSelectSql = buildGroupsSelectSql(groupChatTypesSql(dialogKind));
+    const groupsUnionSql = includeGroupsPart ? ` UNION ALL ${groupsSelectSql}` : '';
 
     try {
       if (limit !== null) {
@@ -2645,7 +2616,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         let paramIdx = 3;
         const conditions: string[] = [];
 
-        if (search) {
+        if (search && includeUsers) {
           const searchParam = `%${search}%`;
           /**
            * Ищем не только по данным пользователя, но и по тексту сообщений диалога.
@@ -2674,15 +2645,27 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
         const whereExtra = conditions.length ? ' AND ' + conditions.join(' AND ') : '';
 
-        // При includeGroups оборачиваем UNION в подзапрос для корректной пагинации
-        const unionPart = includeGroups ? groupsUnionSql : '';
-        const dataSql = includeGroups
-          ? `SELECT * FROM (${selectBase}${whereExtra} ${unionPart}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`
-          : `${selectBase}${whereExtra} ORDER BY ${sortColumn} ${sortOrder} LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+        /** Поиск по названию группы/канала (внешний WHERE после GROUP BY) */
+        let groupsSearchOuter = '';
+        if (search && includeGroupsPart && !includeUsers) {
+          groupsSearchOuter = ` WHERE dialogs."firstName" ILIKE $${paramIdx}`;
+          params.push(`%${search}%`);
+          paramIdx++;
+        }
 
-        const countSql = includeGroups
-          ? `SELECT COUNT(*)::integer AS total FROM (${selectBase}${whereExtra} ${unionPart}) AS dialogs`
-          : `SELECT COUNT(*)::integer AS total FROM bot_users u WHERE u.is_bot = 0 AND u.project_id = $1 AND ($2::integer IS NULL OR u.token_id = $2)${whereExtra}`;
+        let dataSql: string;
+        let countSql: string;
+
+        if (includeUsers && includeGroupsPart) {
+          dataSql = `SELECT * FROM (${selectBase}${whereExtra}${groupsUnionSql}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+          countSql = `SELECT COUNT(*)::integer AS total FROM (${selectBase}${whereExtra}${groupsUnionSql}) AS dialogs`;
+        } else if (includeGroupsPart) {
+          dataSql = `SELECT * FROM (${groupsSelectSql}) AS dialogs${groupsSearchOuter} ORDER BY "lastInteraction" DESC NULLS LAST LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+          countSql = `SELECT COUNT(*)::integer AS total FROM (${groupsSelectSql}) AS dialogs${groupsSearchOuter}`;
+        } else {
+          dataSql = `${selectBase}${whereExtra} ORDER BY ${sortColumn} ${sortOrder} LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`;
+          countSql = `SELECT COUNT(*)::integer AS total FROM bot_users u WHERE u.is_bot = 0 AND u.project_id = $1 AND ($2::integer IS NULL OR u.token_id = $2)${whereExtra}`;
+        }
 
         const dataParams = [...params, limit, offset];
         const countParams = [...params];
@@ -2694,17 +2677,19 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
         const total: number = countResult.rows[0]?.total ?? 0;
         const users = dataResult.rows;
-        console.log(`Paginated: project ${projectId}, offset=${offset}, limit=${limit}, total=${total}`);
+        console.log(`Paginated: project ${projectId}, kind=${dialogKind}, offset=${offset}, limit=${limit}, total=${total}`);
         return res.json({ users, total, hasMore: offset + users.length < total });
       }
 
       // Обратная совместимость: возвращаем массив без пагинации (без фильтров)
-      const unionPart = includeGroups ? groupsUnionSql : '';
-      const selectSql = includeGroups
-        ? `SELECT * FROM (${selectBase} ${unionPart}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST`
-        : `${selectBase} ORDER BY u.last_interaction DESC`;
+      const selectSql =
+        includeUsers && includeGroupsPart
+          ? `SELECT * FROM (${selectBase}${groupsUnionSql}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST`
+          : includeGroupsPart
+            ? `SELECT * FROM (${groupsSelectSql}) AS dialogs ORDER BY "lastInteraction" DESC NULLS LAST`
+            : `${selectBase} ORDER BY u.last_interaction DESC`;
       const result = await dbPool.query(selectSql, [projectId, tokenId]);
-      console.log(`Found ${result.rows.length} users for project ${projectId}`);
+      console.log(`Found ${result.rows.length} users for project ${projectId} (kind=${dialogKind})`);
       res.json(result.rows);
     } catch (error) {
       console.error("Error fetching user data:", error);
