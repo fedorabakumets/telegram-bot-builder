@@ -1,0 +1,27 @@
+/**
+ * Глобальные стили Infima / Docusaurus для BotCraft.
+ * Палитра: Telegram-синий вместо дефолтного зелёного.
+ */
+
+:root {
+  --ifm-color-primary: #2aabee;
+  --ifm-color-primary-dark: #1a9ddd;
+  --ifm-color-primary-darker: #1994d1;
+  --ifm-color-primary-darkest: #157aac;
+  --ifm-color-primary-light: #44b6f0;
+  --ifm-color-primary-lighter: #50bbf1;
+  --ifm-color-primary-lightest: #76caf4;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #5ac8fa;
+  --ifm-color-primary-dark: #3bbcf9;
+  --ifm-color-primary-darker: #2bb6f8;
+  --ifm-color-primary-darkest: #0899dd;
+  --ifm-color-primary-light: #79d4fb;
+  --ifm-color-primary-lighter: #89d9fc;
+  --ifm-color-primary-lightest: #b8e9fd;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}

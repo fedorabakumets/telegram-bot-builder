@@ -5,7 +5,6 @@
 ## 🚀 Деплой и развертывание
 - [Быстрый деплой на Railway](deployment/RAILWAY_QUICK_DEPLOY.md)
 - [Устранение проблем Railway](deployment/RAILWAY_TROUBLESHOOTING.md)
-- [Деплой на Vercel](deployment/VERCEL_DEPLOY.md)
 
 ## 🛠️ Разработка
 - [Руководство по установке](development/INSTALLATION.md)

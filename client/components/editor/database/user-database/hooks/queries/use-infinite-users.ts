@@ -39,8 +39,10 @@ interface UseInfiniteUsersParams {
   sortBy?: string;
   /** Направление сортировки */
   sortDir?: 'asc' | 'desc';
-  /** Включать группы в список диалогов */
+  /** Включать группы в список диалогов (legacy; предпочтительнее dialogKind) */
   includeGroups?: boolean;
+  /** Фильтр вкладки «Диалоги»: all | users | groups | channels */
+  dialogKind?: 'all' | 'users' | 'groups' | 'channels';
 }
 
 /**
@@ -67,7 +69,16 @@ export interface UseInfiniteUsersResult {
  * @returns Объект с данными и функциями управления пагинацией
  */
 export function useInfiniteUsers(params: UseInfiniteUsersParams): UseInfiniteUsersResult {
-  const { projectId, selectedTokenId, search, filterActive, sortBy, sortDir, includeGroups } = params;
+  const {
+    projectId,
+    selectedTokenId,
+    search,
+    filterActive,
+    sortBy,
+    sortDir,
+    includeGroups,
+    dialogKind,
+  } = params;
 
   const basePath = `/api/projects/${projectId}/users`;
 
@@ -79,7 +90,17 @@ export function useInfiniteUsers(params: UseInfiniteUsersParams): UseInfiniteUse
     isLoading,
     refetch,
   } = useInfiniteQuery<UsersPageResponse>({
-    queryKey: ['infinite-users', projectId, selectedTokenId, search, filterActive, sortBy, sortDir, includeGroups],
+    queryKey: [
+      'infinite-users',
+      projectId,
+      selectedTokenId,
+      search,
+      filterActive,
+      sortBy,
+      sortDir,
+      includeGroups,
+      dialogKind,
+    ],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       const offset = pageParam as number;
@@ -93,7 +114,11 @@ export function useInfiniteUsers(params: UseInfiniteUsersParams): UseInfiniteUse
       }
       if (sortBy) extraParams.sortBy = sortBy;
       if (sortDir) extraParams.sortDir = sortDir;
-      if (includeGroups) extraParams.includeGroups = 'true';
+      if (dialogKind) {
+        extraParams.dialogKind = dialogKind;
+      } else if (includeGroups) {
+        extraParams.includeGroups = 'true';
+      }
 
       const url = buildUsersApiUrl(basePath, selectedTokenId, extraParams);
       const response = await fetch(url, { credentials: 'include' });

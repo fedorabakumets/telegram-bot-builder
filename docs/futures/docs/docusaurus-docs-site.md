@@ -1,5 +1,9 @@
 # Документация-сайт на Docusaurus
 
+## Статус: MVP готов ✅
+
+Сайт инициализирован в `docs-site/`, контент читается из корневого `docs/` (без копирования).
+
 ## Идея
 
 Создать красивый сайт документации на Docusaurus с автодеплоем на GitHub Pages.
@@ -12,6 +16,31 @@ URL: `fedorabakumets.github.io/telegram-bot-builder/`
 - Бесплатный хостинг на GitHub Pages
 - Версионирование документации
 - Поддержка i18n (RU/EN)
+
+## Что уже сделано
+
+1. ✅ `docs-site/` на Docusaurus 3 + TypeScript
+2. ✅ Контент из `../docs` (единый источник)
+3. ✅ Исключены `futures/`, `roadmaps/`, `smm/`, `bots/`
+4. ✅ Локальный поиск (`@easyops-cn/docusaurus-search-local`)
+5. ✅ Тёмная тема по умолчанию, RU locale
+6. ✅ GitHub Actions: `.github/workflows/deploy-docs-site.yml`
+7. ✅ Скрипты в корне: `npm run docs:site`, `docs:site:build`, `docs:site:serve`
+
+## Локальный запуск
+
+```bash
+npm run docs:site
+# или: cd docs-site && npm start
+```
+
+## Что осталось
+
+- [ ] Включить GitHub Pages (Settings → Pages → Source: GitHub Actions)
+- [ ] Починить битые ссылки в md (на `futures/`, ещё не написанные ноды, `lib/templates/`)
+- [ ] Скриншоты UI
+- [ ] Getting-started страницы (introduction, first-bot-in-5-minutes)
+- [ ] Версионирование docs / i18n EN
 
 ## Структура сайта
 
@@ -30,42 +59,10 @@ URL: `fedorabakumets.github.io/telegram-bot-builder/`
 - API reference
 - Contributing
 
-## План реализации
-
-1. Инициализировать Docusaurus в `docs-site/`
-2. Перенести существующую документацию из `docs/`
-3. Добавить скриншоты UI
-4. Настроить GitHub Actions для автодеплоя на push в main
-5. Добавить поиск (Algolia или local search)
-6. Настроить тёмную тему по умолчанию
-
 ## Технические детали
 
 - Папка: `docs-site/` (отдельно от основного проекта)
-- Деплой: GitHub Actions → gh-pages branch
-- Контент: markdown файлы в `docs-site/docs/`
-- Сайдбар: автогенерация из структуры папок
-
-## Что такое Docusaurus
-
-Генератор статических сайтов документации от Meta (Facebook). Пишешь markdown — получаешь сайт с навигацией, поиском, тёмной темой. Используют React, Redux, Jest, Babel и сотни других проектов.
-
-Чистая статика — `npm run build` → HTML/CSS/JS → хостинг бесплатно на GitHub Pages. Никакого сервера или БД.
-
-## Формат файлов
-
-Тот же markdown что уже есть в `docs/`. Единственное отличие — front-matter в начале:
-
-```md
----
-sidebar_position: 5
-title: Удалить сообщение
-description: Action-нода для удаления сообщений
----
-
-# Удалить сообщение
-
-Обычный markdown дальше...
-```
-
-Существующие `.md` файлы переносятся почти без изменений — добавляется только 3 строки метаданных сверху.
+- Деплой: GitHub Actions → GitHub Pages
+- Контент: `docs/` в корне репо (`path: '../docs'`)
+- Сайдбар: ручной в `docs-site/sidebars.ts`
+- Markdown mode (`format: 'md'`), чтобы `{variables}` не ломали MDX
