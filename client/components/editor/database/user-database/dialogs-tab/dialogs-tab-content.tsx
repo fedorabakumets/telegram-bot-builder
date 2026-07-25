@@ -16,8 +16,6 @@ import { DialogList } from './dialog-list';
 import { useLiveInvalidate } from '../hooks/use-live-invalidate';
 import { useBroadcastLiveInvalidate } from '@/components/editor/broadcast/hooks/use-broadcast-live-invalidate';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
-import { useSyncGroups } from '../hooks/use-sync-groups';
-import { useInfiniteUsers } from '../hooks/queries/use-infinite-users';
 import { BotTokenSelector, ProjectSelector } from '../components/header';
 import { NewBroadcastModal } from '@/components/editor/broadcast/wizard/new-broadcast-modal';
 import { formatUserName } from '../../utils';
@@ -100,18 +98,6 @@ export function DialogsTabContent({
   useLiveInvalidate({ projectId, selectedTokenId: resolvedTokenId });
   // Подписываемся на WS-события broadcast-progress: обновляет кэш рассылок
   useBroadcastLiveInvalidate({ projectId, selectedTokenId: resolvedTokenId });
-
-  // Загружаем первую страницу диалогов чтобы передать группы в useSyncGroups
-  const { allUsers: dialogs } = useInfiniteUsers({
-    projectId,
-    selectedTokenId: resolvedTokenId,
-    includeGroups: true,
-    sortBy: 'lastInteraction',
-    sortDir: 'desc',
-  });
-
-  // Синкаем названия и аватарки групп из Telegram при появлении групп в списке
-  useSyncGroups(projectId, resolvedTokenId, dialogs);
 
   /** Сброс выбранного пользователя */
   const handleClose = () => {
