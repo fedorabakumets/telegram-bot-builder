@@ -63,7 +63,7 @@ function getTerminalLabel(
   const projectName = projectNames.get(terminal.projectId) ?? `Проект #${terminal.projectId}`;
   const statsKey = `${terminal.projectId}_${terminal.tokenId}`;
   const userCount = userCounts.get(statsKey);
-  const usersSuffix = userCount !== undefined ? ` · ${formatUserCount(userCount)} польз.` : '';
+  const usersSuffix = userCount !== undefined ? ` · ${formatUserCount(userCount)}` : '';
 
   if (terminal.tabType === 'history') {
     const dateLabel = terminal.launchStartedAt
