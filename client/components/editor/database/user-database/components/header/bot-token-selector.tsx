@@ -1,8 +1,9 @@
 /**
  * @fileoverview Компактный inline-селектор токена бота
- * @description Отображает Select с иконкой бота без лишних блоков и описаний
+ * @description Сортирует ботов по убыванию числа пользователей (как терминал)
  */
 
+import { useMemo } from 'react';
 import { BotToken } from '@shared/schema';
 import { Bot } from 'lucide-react';
 import {
@@ -12,11 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  sortTokensByUserCountDesc,
+  useTokenUserCounts,
+} from './use-token-user-counts';
 
 /**
  * Пропсы селектора токена бота
  */
 interface BotTokenSelectorProps {
+  /** ID проекта — нужен для статистики пользователей */
+  projectId: number;
   /** Список токенов проекта */
   tokens: BotToken[];
   /** Идентификатор выбранного токена */
@@ -40,15 +47,23 @@ function getTokenLabel(token: BotToken): string {
 }
 
 /**
- * Компактный inline-селектор бота для панели базы данных
+ * Компактный inline-селектор бота: порядок по числу пользователей ↓
  * @param props - Пропсы компонента
  * @returns JSX элемент селектора или заглушка при отсутствии ботов
  */
 export function BotTokenSelector({
+  projectId,
   tokens,
   selectedTokenId,
   onSelect,
 }: BotTokenSelectorProps): React.JSX.Element {
+  const tokenIds = useMemo(() => tokens.map((t) => t.id), [tokens]);
+  const userCounts = useTokenUserCounts(projectId, tokenIds);
+  const sortedTokens = useMemo(
+    () => sortTokensByUserCountDesc(tokens, userCounts),
+    [tokens, userCounts],
+  );
+
   if (tokens.length === 0) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -70,11 +85,18 @@ export function BotTokenSelector({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Все боты</SelectItem>
-          {tokens.map((token) => (
-            <SelectItem key={token.id} value={String(token.id)}>
-              {getTokenLabel(token)}
-            </SelectItem>
-          ))}
+          {sortedTokens.map((token) => {
+            const count = userCounts.get(token.id);
+            const label =
+              count !== undefined
+                ? `${getTokenLabel(token)} · ${count}`
+                : getTokenLabel(token);
+            return (
+              <SelectItem key={token.id} value={String(token.id)}>
+                {label}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
     </div>

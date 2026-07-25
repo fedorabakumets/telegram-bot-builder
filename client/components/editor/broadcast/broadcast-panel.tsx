@@ -95,6 +95,7 @@ export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allP
         )}
         {tokens.length > 0 && (
           <BotTokenSelector
+            projectId={projectId}
             tokens={tokens}
             selectedTokenId={selectedTokenId ?? null}
             onSelect={(id) => onSelectToken?.(id)}

@@ -105,6 +105,7 @@ function HeaderSelectors({
       )}
       {tokens.length > 0 && (
         <BotTokenSelector
+          projectId={projectId}
           tokens={tokens}
           selectedTokenId={selectedTokenId}
           onSelect={onSelectToken}
