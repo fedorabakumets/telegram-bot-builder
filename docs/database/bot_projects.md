@@ -8,7 +8,7 @@
 
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 |------|------|---------|----------|----------|---------|---------|
-| **id** | serial | - | NO | [bot_groups.project_id](./bot_groups.md), [bot_instances.project_id](./bot_instances.md), [bot_launch_history.project_id](./bot_launch_history.md), [bot_logs.project_id](./bot_logs.md), [bot_messages.project_id](./bot_messages.md), [bot_tables.project_id](./bot_tables.md), [bot_tokens.project_id](./bot_tokens.md), [broadcasts.project_id](./broadcasts.md), [media_files.project_id](./media_files.md), [project_collaborators.project_id](./project_collaborators.md), [project_versions.project_id](./project_versions.md) | - | Уникальный идентификатор проекта |
+| **id** | serial | - | NO | [bot_groups.project_id](./bot_groups.md), [bot_instances.project_id](./bot_instances.md), [bot_launch_history.project_id](./bot_launch_history.md), [bot_logs.project_id](./bot_logs.md), [bot_messages.project_id](./bot_messages.md), [bot_tables.project_id](./bot_tables.md), [bot_tokens.project_id](./bot_tokens.md), [broadcasts.project_id](./broadcasts.md), [media_files.project_id](./media_files.md), [message_activity_daily.project_id](./message_activity_daily.md), [project_collaborators.project_id](./project_collaborators.md), [project_versions.project_id](./project_versions.md) | - | Уникальный идентификатор проекта |
 | owner_id | bigint | - | YES | - | [telegram_users.id](./telegram_users.md) | Идентификатор владельца проекта (ссылка на telegram_users.id) |
 | name | text | - | NO | - | - | Название проекта |
 | description | text | - | YES | - | - | Описание проекта |
@@ -47,5 +47,6 @@
 | **[bot_projects.id](./bot_projects.md)** | [bot_tokens.project_id](./bot_tokens.md) | Many to One |
 | **[bot_projects.id](./bot_projects.md)** | [broadcasts.project_id](./broadcasts.md) | Many to One |
 | **[bot_projects.id](./bot_projects.md)** | [media_files.project_id](./media_files.md) | Many to One |
+| **[bot_projects.id](./bot_projects.md)** | [message_activity_daily.project_id](./message_activity_daily.md) | Many to One |
 | **[bot_projects.id](./bot_projects.md)** | [project_collaborators.project_id](./project_collaborators.md) | Many to One |
 | **[bot_projects.id](./bot_projects.md)** | [project_versions.project_id](./project_versions.md) | Many to One |
