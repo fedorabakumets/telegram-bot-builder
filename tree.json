@@ -43,7 +43,7 @@
       "home"
     ],
     "folder_titles": {},
-    "updated_at": "2026-06-22T16:22:21+03:00",
+    "updated_at": "2026-07-26T00:10:15+03:00",
     "tags": [],
     "author": ""
   },
@@ -963,21 +963,6 @@
     "author": ""
   },
   {
-    "path": "deployment/VERCEL_DEPLOY",
-    "title": "🚀 Деплой Telegram Bot Builder на Vercel",
-    "excerpt": "1. Создайте аккаунт на [Vercel](https://vercel.com/)",
-    "parts": [
-      "deployment",
-      "VERCEL_DEPLOY"
-    ],
-    "folder_titles": {
-      "deployment": "🚀 Деплой"
-    },
-    "updated_at": "2026-01-25T21:46:11+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
     "path": "development/CONTRIBUTING",
     "title": "🤝 Как внести вклад в проект",
     "excerpt": "Спасибо за интерес к развитию Telegram Bot Builder! Мы рады любой помощи.",
@@ -1237,7 +1222,7 @@
   {
     "path": "futures/docs/docusaurus-docs-site",
     "title": "Документация-сайт на Docusaurus",
-    "excerpt": "Создать красивый сайт документации на Docusaurus с автодеплоем на GitHub Pages.",
+    "excerpt": "Сайт инициализирован в `docs-site/`, контент читается из корневого `docs/` (без копирования).",
     "parts": [
       "futures",
       "docs",
@@ -1247,7 +1232,7 @@
       "futures": "🔮 Планы развития",
       "docs": "📚 Документация"
     },
-    "updated_at": "2026-06-23T14:36:15+03:00",
+    "updated_at": "2026-07-17T07:19:49+03:00",
     "tags": [],
     "author": ""
   },
@@ -2310,7 +2295,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-06-15T19:18:04+03:00",
+    "updated_at": "2026-07-26T00:10:15+03:00",
     "tags": [],
     "author": ""
   },
@@ -2872,6 +2857,36 @@
       "releases": "📝 Релизы"
     },
     "updated_at": "2026-06-23T14:36:15+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "roadmaps/ai-agent-tab-roadmap",
+    "title": "Вкладка ИИ-агента в конструкторе — Roadmap",
+    "excerpt": "Документ фиксирует идею встроенного чата с ИИ внутри BotCraft: пользователь правит сценарий бота из браузера, без Cursor. Агент думает через",
+    "parts": [
+      "roadmaps",
+      "ai-agent-tab-roadmap"
+    ],
+    "folder_titles": {
+      "roadmaps": "🗺️ Roadmaps"
+    },
+    "updated_at": "2026-07-17T07:11:47+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "roadmaps/media-and-s3-storage-roadmap",
+    "title": "Медиа и хранилище (S3) — Roadmap",
+    "excerpt": "Документ описывает развитие работы с медиафайлами в платформе: входящие/исходящие файлы, вкладка «Файлы», сохранение на диск и в S3, связь с",
+    "parts": [
+      "roadmaps",
+      "media-and-s3-storage-roadmap"
+    ],
+    "folder_titles": {
+      "roadmaps": "🗺️ Roadmaps"
+    },
+    "updated_at": "2026-07-17T07:11:47+03:00",
     "tags": [],
     "author": ""
   },
