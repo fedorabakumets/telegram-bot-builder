@@ -93,6 +93,7 @@ export function DatabaseHeaderSection(props: DatabaseHeaderSectionProps): React.
 
       {/* Селектор бота */}
       <BotTokenSelector
+        projectId={projectId}
         tokens={availableTokens}
         selectedTokenId={selectedTokenId}
         onSelect={onSelectToken}

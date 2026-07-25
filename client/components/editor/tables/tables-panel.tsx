@@ -78,6 +78,7 @@ export function TablesPanel({ projectId, allProjects, onProjectChange, selectedT
         )}
         {tokens.length > 0 && onSelectToken && (
           <BotTokenSelector
+            projectId={projectId}
             tokens={tokens}
             selectedTokenId={selectedTokenId ?? null}
             onSelect={(id) => onSelectToken(id)}
