@@ -8,6 +8,7 @@ import { IStorage } from "../storages/storage";
 import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
 import { db } from "./db";
 import { generateAgentToken, hashAgentToken } from "../utils/agent-token-crypto";
+import { incrementMessageActivityDaily } from "./incrementMessageActivityDaily";
 
 /**
  * Реализация хранилища данных с использованием базы данных
@@ -1052,6 +1053,17 @@ export class DatabaseStorage implements IStorage {
         );
     } catch (err) {
       console.warn('[createBotMessage] не удалось обновить interaction_count:', err);
+    }
+
+    // Дневной агрегат активности: +1, удаление сообщения его не уменьшает
+    try {
+      await incrementMessageActivityDaily({
+        projectId: insertMessage.projectId,
+        tokenId: insertMessage.tokenId,
+        messageType: insertMessage.messageType,
+      });
+    } catch (err) {
+      console.warn('[createBotMessage] не удалось обновить message_activity_daily:', err);
     }
 
     return message;

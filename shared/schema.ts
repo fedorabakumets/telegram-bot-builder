@@ -37,6 +37,9 @@ export type { UserTelegramSettings, InsertUserTelegramSettings } from "./schema/
 export { botMessages, botMessageMedia, insertBotMessageSchema, insertBotMessageMediaSchema } from "./schema/tables/bot-messages";
 export type { BotMessage, InsertBotMessage, BotMessageMedia, InsertBotMessageMedia } from "./schema/tables/bot-messages";
 
+export { messageActivityDaily } from "./schema/tables/message-activity-daily";
+export type { MessageActivityDaily, InsertMessageActivityDaily } from "./schema/tables/message-activity-daily";
+
 export { userIds, insertUserIdSchema } from "./schema/tables/user-ids";
 export type { UserId, InsertUserId } from "./schema/tables/user-ids";
 

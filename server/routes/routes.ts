@@ -79,6 +79,11 @@ import { broadcastProjectEvent } from "../terminal";
 import { getRequestTokenId, resolveEffectiveProjectTokenId } from "./utils/resolve-request-token";
 import { getTelegramProxyAgent } from "../utils/telegram-proxy";
 import { setupSwagger } from "../swagger/setup-swagger";
+import {
+  isDailyActivityGranularity,
+  queryActivityFromDaily,
+} from "./messages/queryActivityFromDaily";
+import { queryActivityFromDailyPeriod } from "./messages/queryActivityFromDailyPeriod";
 
 /**
  * Глобальное хранилище активных процессов ботов
@@ -3296,25 +3301,31 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       // Режим гранулярности — новый параметр
       if (granularity) {
+        // Длинные окна — immutable дневные агрегаты (не зависят от удаления bot_messages)
+        if (isDailyActivityGranularity(granularity)) {
+          const points = await queryActivityFromDaily(
+            dbPool,
+            projectId,
+            tokenId,
+            granularity,
+            split,
+          );
+          return res.json(points);
+        }
+
         /**
          * Маппинг гранулярности на SQL-параметры для активности сообщений.
          * 1m  — последний час с шагом 1 минута (60 точек)
          * 5m  — последние 3 часа с шагом 5 минут (36 точек)
          * 1h  — последние 24 часа с шагом 1 час (24 точки)
-         * 1d  — последние 30 дней с шагом 1 день (30 точек)
-         * 7d  — последние 12 недель с шагом 1 неделя (~12 точек)
-         * 30d — последние 12 месяцев с шагом 1 месяц (12 точек)
          * fillGaps=true означает заполнение пустых интервалов нулями через generate_series.
          */
         const granularityConfig: Record<string, { window: string; truncate: string | null; step: string; fillGaps: boolean }> = {
           "1m":  { window: "1 hour",   truncate: "minute", step: "1 minute",  fillGaps: true },
           "5m":  { window: "3 hours",  truncate: null,     step: "5 minutes", fillGaps: true },
           "1h":  { window: "24 hours", truncate: "hour",   step: "1 hour",    fillGaps: true },
-          "1d":  { window: "30 days",  truncate: "day",    step: "1 day",     fillGaps: true },
-          "7d":  { window: "91 days",  truncate: "week",   step: "1 week",    fillGaps: true },
-          "30d": { window: "365 days", truncate: "month",  step: "1 month",   fillGaps: true },
         };
-        const cfg = granularityConfig[granularity] ?? granularityConfig["1d"];
+        const cfg = granularityConfig[granularity] ?? granularityConfig["1h"];
 
         let queryText: string;
 
@@ -3442,47 +3453,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         })));
       }
 
-      // Режим period — старый параметр (обратная совместимость)
-      const intervalMap: Record<string, string> = {
-        "7d": "7 days",
-        "30d": "30 days",
-        "90d": "90 days",
-      };
-      const interval = intervalMap[period] ?? "30 days";
-
-      let result = await dbPool.query(`
-        SELECT
-          DATE(created_at) as date,
-          COUNT(*) as count
-        FROM bot_messages
-        WHERE project_id = $1
-          AND ($2::integer IS NULL OR token_id = $2)
-          AND created_at >= NOW() - INTERVAL '${interval}'
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-      `, [projectId, tokenId]);
-
-      // Если данных нет — берём за 90 дней (fallback)
-      if (result.rows.length === 0) {
-        result = await dbPool.query(`
-          SELECT
-            DATE(created_at) as date,
-            COUNT(*) as count
-          FROM bot_messages
-          WHERE project_id = $1
-            AND ($2::integer IS NULL OR token_id = $2)
-            AND created_at >= NOW() - INTERVAL '90 days'
-          GROUP BY DATE(created_at)
-          ORDER BY date ASC
-        `, [projectId, tokenId]);
-      }
-
-      res.json(result.rows.map(row => ({
-        date: row.date instanceof Date
-          ? row.date.toISOString().split('T')[0]
-          : String(row.date),
-        count: Number(row.count),
-      })));
+      // Режим period — старый параметр (обратная совместимость) из дневных агрегатов
+      const points = await queryActivityFromDailyPeriod(dbPool, projectId, tokenId, period);
+      res.json(points);
     } catch (error) {
       console.error("Error fetching messages activity:", error);
       res.status(500).json({ message: "Ошибка при получении данных активности сообщений" });
