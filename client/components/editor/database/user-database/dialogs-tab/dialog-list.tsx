@@ -15,6 +15,7 @@ import type { Broadcast } from '@/components/editor/broadcast/types';
 import { DialogListItem } from './dialog-list-item';
 import { DialogSegmentChips } from './dialog-segment-chips';
 import type { DialogKind } from './dialog-kind';
+import { useSyncGroups } from '../hooks/use-sync-groups';
 
 /**
  * Пропсы компонента DialogList
@@ -80,6 +81,9 @@ export function DialogList({
       sortDir: 'desc',
       dialogKind,
     });
+
+  /** Синк названий/аватарок для групп, видимых в текущем списке */
+  useSyncGroups(projectId, selectedTokenId, allUsers);
 
   /** Последняя рассылка для превью в виртуальном элементе */
   const { broadcasts } = useBroadcasts(projectId, selectedTokenId);
