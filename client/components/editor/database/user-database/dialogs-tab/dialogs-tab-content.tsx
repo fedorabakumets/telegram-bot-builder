@@ -154,6 +154,7 @@ export function DialogsTabContent({
           ) : null}
           {projectTokens.length > 0 && (
             <BotTokenSelector
+              projectId={projectId}
               tokens={projectTokens}
               selectedTokenId={resolvedTokenId}
               onSelect={(id) => {
@@ -250,6 +251,7 @@ export function DialogsTabContent({
             )}
             {projectTokens.length > 0 && (
               <BotTokenSelector
+                projectId={projectId}
                 tokens={projectTokens}
                 selectedTokenId={resolvedTokenId}
                 onSelect={(id) => {
