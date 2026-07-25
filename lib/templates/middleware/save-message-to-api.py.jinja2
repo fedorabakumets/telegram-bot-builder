@@ -38,6 +38,26 @@ async def save_message_to_api(user_id: str, message_type: str, message_text: str
             chat_str = f", chat_type={chat_type}" + (f", chat_id={chat_id}" if chat_id else "")
             logging.info(f"✅ Сообщение сохранено в БД: {message_type} от {user_id} (id={result['id']}{tg_mid_str}{chat_str})")
 
+            # Дневной агрегат активности (immutable): удаление сообщения счётчик не уменьшает
+            try:
+                _incoming = 1 if message_type == "user" else 0
+                _outgoing = 0 if message_type == "user" else 1
+                await conn.execute(
+                    """
+                    INSERT INTO message_activity_daily (project_id, token_id, day, incoming_count, outgoing_count)
+                    VALUES ($1, $2, CURRENT_DATE, $3, $4)
+                    ON CONFLICT (project_id, token_id, day) DO UPDATE SET
+                      incoming_count = message_activity_daily.incoming_count + EXCLUDED.incoming_count,
+                      outgoing_count = message_activity_daily.outgoing_count + EXCLUDED.outgoing_count
+                    """,
+                    PROJECT_ID,
+                    TOKEN_ID,
+                    _incoming,
+                    _outgoing,
+                )
+            except Exception as _agg_err:
+                logging.warning(f"⚠️ Не удалось обновить message_activity_daily: {_agg_err}")
+
             # Публикуем событие в Redis для мгновенного уведомления UI (fire-and-forget)
             if _redis_client:
                 try:

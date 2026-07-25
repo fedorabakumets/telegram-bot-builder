@@ -36,6 +36,9 @@ export type { UserTelegramSettings, InsertUserTelegramSettings } from "./user-te
 export { botMessages, botMessageMedia, insertBotMessageSchema, insertBotMessageMediaSchema } from "./bot-messages";
 export type { BotMessage, InsertBotMessage, BotMessageMedia, InsertBotMessageMedia } from "./bot-messages";
 
+export { messageActivityDaily } from "./message-activity-daily";
+export type { MessageActivityDaily, InsertMessageActivityDaily } from "./message-activity-daily";
+
 export { userIds, insertUserIdSchema } from "./user-ids";
 export type { UserId, InsertUserId } from "./user-ids";
 
