@@ -31,7 +31,7 @@ export interface UserSectionProps {
 export function UserSection({ user, onLogout, isVertical, className }: UserSectionProps) {
   return (
     <div className={cn(
-      'flex items-center space-x-2.5 bg-gradient-to-r from-blue-500/15 to-cyan-500/10 dark:from-blue-700/25 dark:to-cyan-600/20 px-3 py-1.5 rounded-lg backdrop-blur-md border border-blue-400/20 dark:border-blue-500/30 shadow-md shadow-blue-500/10',
+      'flex min-w-0 items-center space-x-1.5 rounded-lg border border-blue-400/20 bg-gradient-to-r from-blue-500/15 to-cyan-500/10 px-2 py-1.5 shadow-md shadow-blue-500/10 backdrop-blur-md dark:border-blue-500/30 dark:from-blue-700/25 dark:to-cyan-600/20 xl:space-x-2.5 xl:px-3',
       isVertical ? 'w-full' : '',
       className
     )}>

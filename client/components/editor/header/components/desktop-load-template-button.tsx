@@ -28,7 +28,7 @@ export function DesktopLoadTemplateButton({ onClick, isVertical }: DesktopLoadTe
       onClick={onClick}
       className={cn(
         isVertical ? 'w-full justify-center' : 'flex items-center justify-center',
-        'px-3 py-1.5 text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md hover:shadow-indigo-500/20',
+        'px-2 py-1.5 text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md hover:shadow-indigo-500/20 xl:px-3',
         'bg-gradient-to-r from-indigo-500/10 to-indigo-400/5 hover:from-indigo-600/20 hover:to-indigo-500/15',
         'border border-indigo-400/30 dark:border-indigo-500/30 hover:border-indigo-500/50 dark:hover:border-indigo-400/50',
         'text-indigo-700 dark:text-indigo-300',
@@ -36,7 +36,7 @@ export function DesktopLoadTemplateButton({ onClick, isVertical }: DesktopLoadTe
       )}
     >
       <FolderOpen className="h-3.5 w-3.5 max-sm:mx-auto" />
-      <span className="max-sm:hidden ml-1">Сценарии</span>
+      <span className="ml-1 hidden xl:inline">Сценарии</span>
     </Button>
   );
 }

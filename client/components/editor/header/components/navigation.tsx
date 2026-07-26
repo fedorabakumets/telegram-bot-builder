@@ -46,7 +46,7 @@ export function Navigation({ currentTab, onTabChange, isVertical, isCompact, cla
   return (
     <nav
       className={cn(
-        isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden md:flex flex-wrap items-center gap-0.5 lg:gap-1',
+        isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden shrink-0 flex-nowrap items-center gap-0.5 md:flex xl:gap-1',
         className
       )}
     >
@@ -55,7 +55,7 @@ export function Navigation({ currentTab, onTabChange, isVertical, isCompact, cla
           key={tab.key}
           onClick={() => onTabChange(tab.key)}
           className={cn(
-            'px-2 md:px-2.5 lg:px-3 py-1 text-xs md:text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap',
+            'whitespace-nowrap rounded-lg px-2 py-1 text-xs font-semibold transition-all duration-200 md:px-2.5 md:text-sm xl:px-3',
             currentTab === tab.key
               ? 'text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-md shadow-blue-500/20'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted/60 dark:hover:bg-slate-800/50',
