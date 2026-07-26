@@ -50,6 +50,7 @@ export function BotControlPanelHeader({
     <TabHeader
       icon={<Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
       title="Боты"
+      singleLine
       actions={
         <>
           <BotViewModeToggle mode={viewMode} onModeChange={onViewModeChange} />
@@ -57,24 +58,26 @@ export function BotControlPanelHeader({
             <Button
               variant="outline"
               onClick={onConnectBot}
-              className="gap-1.5 h-7 sm:h-8 px-2 sm:px-3 text-xs sm:text-sm flex-shrink-0"
+              className="gap-1.5 h-8 px-2 @[560px]:px-3 text-sm flex-shrink-0"
               data-testid="button-connect-bot"
             >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Подключить бот</span>
+              <Plus className="h-4 w-4" />
+              <span className="hidden @[560px]:inline">Подключить бот</span>
             </Button>
           )}
-          <WorkerPoolStatus projects={allProjects} />
         </>
       }
     >
-      {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId && (
-        <ProjectSelector
-          projects={allProjects}
-          selectedProjectId={currentProjectId}
-          onSelect={onProjectChange}
-        />
-      )}
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId ? (
+          <ProjectSelector
+            projects={allProjects}
+            selectedProjectId={currentProjectId}
+            onSelect={onProjectChange}
+          />
+        ) : null}
+        <WorkerPoolStatus projects={allProjects} />
+      </div>
     </TabHeader>
   );
 }

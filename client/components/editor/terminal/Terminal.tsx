@@ -9,8 +9,7 @@
 
 import { forwardRef, useImperativeHandle, useCallback, useState, useRef, useEffect } from 'react';
 import { TerminalOutput } from './TerminalOutput';
-import { TerminalFilterBar } from './TerminalFilterBar';
-import { TerminalSearchBar } from './TerminalSearchBar';
+import { TerminalLogsToolbar } from './TerminalLogsToolbar';
 import { TerminalLogDetail } from './TerminalLogDetail';
 import { TerminalLogNotFound } from './TerminalLogNotFound';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
@@ -169,7 +168,13 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
     <div
       className={`overflow-hidden ${themeClasses.terminalBgClass} ${themeClasses.terminalTextClass} font-mono text-sm w-full h-full flex flex-col ${isVisible ? 'opacity-100' : 'hidden'}`}
     >
-      <TerminalFilterBar
+      <TerminalLogsToolbar
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        currentMatch={currentMatchIndex}
+        totalMatches={matchIndices.length}
+        onNext={handleNextMatch}
+        onPrev={handlePrevMatch}
         filter={filter}
         onFilterChange={setFilter}
         stderrCount={stderrCount(lines)}
@@ -178,14 +183,6 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>((props, ref) =
         onClear={clearTerminal}
         onCopy={(format) => copyTerminalOutput(visibleLines, format)}
         onSave={(format) => saveTerminalOutput(visibleLines, format)}
-      />
-      <TerminalSearchBar
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        currentMatch={currentMatchIndex}
-        totalMatches={matchIndices.length}
-        onNext={handleNextMatch}
-        onPrev={handlePrevMatch}
       />
       <div className="flex-1 overflow-hidden min-h-0 flex">
         <div className="flex-1 min-w-0">

@@ -8,6 +8,7 @@ import { BotServiceNode } from './BotServiceNode';
 import { BotsCanvasToolbar } from './BotsCanvasToolbar';
 import { useCanvasFullscreen } from './use-canvas-fullscreen';
 import { useBotNodeLayout } from './use-bot-node-layout';
+import { useFocusSelectedBot } from './use-focus-selected-bot';
 import { useCanvasViewport } from '@/components/editor/canvas/canvas/use-canvas-viewport';
 import type { BotToken } from '@shared/schema';
 
@@ -23,6 +24,8 @@ interface BotsCanvasProps {
   selectedTokenId: number | null;
   /** Выбор ноды */
   onSelectToken: (tokenId: number) => void;
+  /** Ширина правого overlay (0 = закрыт); для фокуса камеры */
+  overlayPanelWidth?: number;
 }
 
 /**
@@ -36,6 +39,7 @@ export function BotsCanvas({
   runningByTokenId,
   selectedTokenId,
   onSelectToken,
+  overlayPanelWidth = 0,
 }: BotsCanvasProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -50,8 +54,12 @@ export function BotsCanvas({
   const {
     pan,
     zoom,
+    setPan,
+    panRef,
+    zoomRef,
     isPanning,
     animateTransform,
+    triggerTransformAnimation,
     zoomIn,
     zoomOut,
     resetZoom,
@@ -61,6 +69,17 @@ export function BotsCanvas({
   } = useCanvasViewport({
     canvasRef,
     isEmptyTarget,
+  });
+
+  useFocusSelectedBot({
+    selectedTokenId,
+    positions,
+    canvasRef,
+    zoomRef,
+    panRef,
+    setPan,
+    triggerTransformAnimation,
+    overlayPanelWidth,
   });
 
   const scale = zoom / 100;
@@ -73,8 +92,10 @@ export function BotsCanvas({
     <div
       ref={rootRef}
       className={[
-        'relative h-full min-h-0 w-full bg-muted/20',
-        cssFullscreen ? 'fixed inset-0 z-[200] bg-background' : '',
+        'relative h-full min-h-0 w-full',
+        'bg-gradient-to-br from-white via-blue-50/35 to-blue-100/30',
+        'dark:from-slate-950 dark:via-slate-950 dark:to-blue-950/35',
+        cssFullscreen ? 'fixed inset-0 z-[200]' : '',
       ].join(' ')}
     >
       <div
@@ -83,27 +104,24 @@ export function BotsCanvas({
         style={{
           cursor: isPanning ? 'grabbing' : 'grab',
           touchAction: 'none',
+          backgroundImage: `radial-gradient(circle, rgb(59 130 246 / 0.34) ${Math.max(1, scale)}px, transparent ${Math.max(1, scale)}px)`,
+          backgroundSize: `${20 * scale}px ${20 * scale}px`,
+          backgroundPosition: `${pan.x}px ${pan.y}px`,
         }}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onContextMenu={handleContextMenu}
       >
         <div
-          className="origin-top-left will-change-transform"
+          className="origin-top-left"
           style={{
             width: contentSize.width,
             height: contentSize.height,
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+            transform: `translate3d(${Math.round(pan.x)}px, ${Math.round(pan.y)}px, 0) scale(${scale})`,
             transition: animateTransform ? 'transform 200ms ease-out' : 'none',
+            backfaceVisibility: 'hidden',
           }}
         >
-          <div
-            className="pointer-events-none absolute inset-0 opacity-40"
-            style={{
-              backgroundImage: 'radial-gradient(circle, hsl(var(--muted-foreground) / 0.35) 1px, transparent 1px)',
-              backgroundSize: '20px 20px',
-            }}
-          />
           <div className="relative" style={{ width: contentSize.width, height: contentSize.height }}>
             {tokens.map((token) => {
               const pos = positions[token.id];
@@ -131,6 +149,7 @@ export function BotsCanvas({
         )}
       </div>
       <BotsCanvasToolbar
+        zoom={zoom}
         canZoomIn={zoom < 200}
         canZoomOut={zoom > 1}
         onZoomIn={zoomIn}

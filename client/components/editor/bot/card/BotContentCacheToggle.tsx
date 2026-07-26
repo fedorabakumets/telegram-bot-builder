@@ -10,12 +10,12 @@
  * @module BotContentCacheToggle
  */
 
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { RefreshCw } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { SettingCard } from './SettingCard';
 
 /** Пропсы переключателя живого обновления контента */
 interface BotContentCacheToggleProps {
@@ -103,36 +103,20 @@ export function BotContentCacheToggle({
   }
 
   return (
-    <div
-      className={`flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border transition-all ${className} ${
+    <SettingCard
+      icon={RefreshCw}
+      title="Живое обновление контента"
+      description={
         localEnabled
-          ? 'bg-sky-500/8 border-sky-500/30 dark:bg-sky-500/10 dark:border-sky-500/40'
-          : 'bg-muted/40 border-border/50'
-      }`}
-    >
-      <div className="flex items-center gap-2 sm:gap-3">
-        <RefreshCw
-          className={`w-4 h-4 flex-shrink-0 ${
-            localEnabled ? 'text-sky-600 dark:text-sky-400' : 'text-muted-foreground'
-          }`}
-        />
-        <div className="flex-1 min-w-0">
-          <Label
-            htmlFor={`content-cache-${tokenId}`}
-            className={`text-xs sm:text-sm font-semibold cursor-pointer block ${
-              localEnabled ? 'text-sky-700 dark:text-sky-300' : 'text-muted-foreground'
-            }`}
-          >
-            {localEnabled ? 'Живое обновление контента' : 'Контент статичный'}
-          </Label>
-          <p className="text-xs text-muted-foreground/70 mt-0.5">
-            {localEnabled
-              ? 'Бот подхватывает правки таблицы _content без перезапуска'
-              : 'Тексты обновляются только после перезапуска (меньше кода)'}
-          </p>
-        </div>
+          ? 'Бот подхватывает правки таблицы _content без перезапуска'
+          : 'Тексты обновляются только после перезапуска (меньше кода)'
+      }
+      active={localEnabled}
+      className={className}
+      action={
         <Switch
           id={`content-cache-${tokenId}`}
+          aria-label="Живое обновление контента"
           checked={localEnabled}
           onCheckedChange={(checked) => {
             setLocalEnabled(checked);
@@ -144,7 +128,7 @@ export function BotContentCacheToggle({
           }}
           disabled={mutation.isPending}
         />
-      </div>
-    </div>
+      }
+    />
   );
 }

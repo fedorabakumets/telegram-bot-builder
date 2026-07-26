@@ -1,10 +1,9 @@
 /**
- * @fileoverview Горизонтальные вкладки detail-панели бота
+ * @fileoverview Горизонтальные вкладки detail-панели в стиле Railway
  * @module bot/canvas/BotDetailTabs
  */
 
 import { History, Settings, Braces, Terminal } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { BotDetailTabId } from './bot-detail-tab-context';
 
 /** Описание вкладки */
@@ -24,21 +23,48 @@ interface BotDetailTabsProps {
 }
 
 /**
- * Вкладки История / Настройки / Переменные / Терминал
+ * Underline-вкладки: липкая полоса, hover-подложка, индикатор активной
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function BotDetailTabs({ value, onChange }: BotDetailTabsProps) {
   return (
-    <Tabs value={value} onValueChange={(v) => onChange(v as BotDetailTabId)} className="w-full">
-      <TabsList className="h-9 w-full grid grid-cols-4 bg-muted/50 p-0.5">
-        {TABS.map(({ id, label, icon: Icon }) => (
-          <TabsTrigger key={id} value={id} className="h-8 text-[11px] sm:text-xs gap-1 px-1">
-            <Icon className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="truncate hidden xs:inline sm:inline">{label}</span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
+    <div className="@container sticky top-0 z-10 shrink-0 border-b border-border/60 bg-background/95 backdrop-blur">
+      <nav className="flex gap-1 px-4 overflow-x-auto" role="tablist" aria-label="Разделы бота">
+        {TABS.map(({ id, label, icon: Icon }) => {
+          const active = value === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => onChange(id)}
+              className={[
+                'group relative flex h-10 items-center gap-1.5 px-3',
+                'text-xs font-medium whitespace-nowrap transition-colors',
+                'outline-none focus-visible:bg-muted/50',
+                active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
+              ].join(' ')}
+            >
+              <Icon
+                className={[
+                  'hidden h-3.5 w-3.5 shrink-0 @[320px]:block',
+                  active ? 'opacity-100' : 'opacity-50 group-hover:opacity-80',
+                ].join(' ')}
+              />
+              <span>{label}</span>
+              <span
+                aria-hidden
+                className={[
+                  'absolute inset-x-2 -bottom-px h-0.5 rounded-full transition-colors',
+                  active ? 'bg-blue-500' : 'bg-transparent',
+                ].join(' ')}
+              />
+            </button>
+          );
+        })}
+      </nav>
+    </div>
   );
 }

@@ -9,12 +9,12 @@
  * @module BotCatchAllToggle
  */
 
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Inbox } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { SettingCard } from './SettingCard';
 
 /** Пропсы переключателя catch-all обработчиков */
 interface BotCatchAllToggleProps {
@@ -93,36 +93,20 @@ export function BotCatchAllToggle({
   });
 
   return (
-    <div
-      className={`flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border transition-all ${className} ${
+    <SettingCard
+      icon={Inbox}
+      title="Catch-all обработчики"
+      description={
         localEnabled
-          ? 'bg-amber-500/8 border-amber-500/30 dark:bg-amber-500/10 dark:border-amber-500/40'
-          : 'bg-muted/40 border-border/50'
-      }`}
-    >
-      <div className="flex items-center gap-2 sm:gap-3">
-        <Inbox
-          className={`w-4 h-4 flex-shrink-0 ${
-            localEnabled ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'
-          }`}
-        />
-        <div className="flex-1 min-w-0">
-          <Label
-            htmlFor={`catch-all-${tokenId}`}
-            className={`text-xs sm:text-sm font-semibold cursor-pointer block ${
-              localEnabled ? 'text-amber-700 dark:text-amber-300' : 'text-muted-foreground'
-            }`}
-          >
-            {localEnabled ? 'Catch-all обработчики' : 'Catch-all выключены'}
-          </Label>
-          <p className="text-xs text-muted-foreground/70 mt-0.5">
-            {localEnabled
-              ? 'Бот ловит и логирует необработанные сообщения и нажатия'
-              : 'Необработанные сообщения игнорируются (меньше кода)'}
-          </p>
-        </div>
+          ? 'Бот ловит и логирует необработанные сообщения и нажатия'
+          : 'Необработанные сообщения игнорируются (меньше кода)'
+      }
+      active={localEnabled}
+      className={className}
+      action={
         <Switch
           id={`catch-all-${tokenId}`}
+          aria-label="Catch-all обработчики"
           checked={localEnabled}
           onCheckedChange={(checked) => {
             setLocalEnabled(checked);
@@ -134,7 +118,7 @@ export function BotCatchAllToggle({
           }}
           disabled={mutation.isPending}
         />
-      </div>
-    </div>
+      }
+    />
   );
 }

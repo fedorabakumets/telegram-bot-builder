@@ -16,7 +16,7 @@ const SYNC_EVENT = 'bot-tab-view-mode-change';
 
 /**
  * Читает сохранённый режим из localStorage
- * @returns Режим list или canvas
+ * @returns Сохранённый режим или холст по умолчанию
  */
 function readStoredMode(): BotViewMode {
   try {
@@ -25,7 +25,7 @@ function readStoredMode(): BotViewMode {
   } catch {
     /* ignore */
   }
-  return 'list';
+  return 'canvas';
 }
 
 /**

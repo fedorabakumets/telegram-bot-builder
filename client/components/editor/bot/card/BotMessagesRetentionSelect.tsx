@@ -19,6 +19,7 @@ import {
   normalizeRetentionDays,
   RETENTION_OPTIONS,
 } from './messages-retention-options';
+import { SettingCard } from './SettingCard';
 
 /** Пропсы селекта срока хранения сообщений */
 interface BotMessagesRetentionSelectProps {
@@ -93,44 +94,35 @@ export function BotMessagesRetentionSelect({
   if (userDatabaseEnabled !== 1) return null;
 
   return (
-    <div className="flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border bg-muted/40 border-border/50 transition-all">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-          <History className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-          <div className="min-w-0">
-            <span className="text-xs sm:text-sm font-semibold text-muted-foreground block">
-              Хранить сообщения
-            </span>
-            <p className="text-xs text-muted-foreground/70 mt-0.5">
-              Старые диалоги чистятся автоматически; длинный график активности не пострадает
-            </p>
-          </div>
-        </div>
-        <Select
-          value={String(localDays)}
-          onValueChange={(val) => {
-            const days = normalizeRetentionDays(parseInt(val, 10));
-            setLocalDays(days);
-            if (onPendingChange) {
-              onPendingChange('MESSAGES_RETENTION_DAYS', String(days));
-            } else {
-              mutation.mutate(days);
-            }
-          }}
-          disabled={mutation.isPending}
-        >
-          <SelectTrigger className="h-7 w-full sm:w-36 text-xs">
-            <SelectValue placeholder="Срок" />
-          </SelectTrigger>
-          <SelectContent>
-            {RETENTION_OPTIONS.map(({ value, label }) => (
-              <SelectItem key={value} value={String(value)} className="text-xs">
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <SettingCard
+      icon={History}
+      title="Хранить сообщения"
+      description="Старые диалоги чистятся автоматически; длинный график активности не пострадает"
+    >
+      <Select
+        value={String(localDays)}
+        onValueChange={(val) => {
+          const days = normalizeRetentionDays(parseInt(val, 10));
+          setLocalDays(days);
+          if (onPendingChange) {
+            onPendingChange('MESSAGES_RETENTION_DAYS', String(days));
+          } else {
+            mutation.mutate(days);
+          }
+        }}
+        disabled={mutation.isPending}
+      >
+        <SelectTrigger className="h-7 w-full text-xs">
+          <SelectValue placeholder="Срок" />
+        </SelectTrigger>
+        <SelectContent>
+          {RETENTION_OPTIONS.map(({ value, label }) => (
+            <SelectItem key={value} value={String(value)} className="text-xs">
+              {label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </SettingCard>
   );
 }

@@ -1,20 +1,19 @@
 /**
- * @fileoverview Просмотрщик логов истории запуска бота
- *
- * Отображает статичные логи из БД в стиле терминала.
- * При первой загрузке логов автоматически прокручивает контейнер вниз.
- *
+ * @fileoverview Просмотрщик логов истории запуска в стиле Railway Logs
  * @module bot/terminal/LaunchHistoryViewer
  */
 
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLaunchLogs } from '../bot/hooks/use-launch-logs';
 import { useTerminalTheme } from './useTerminalTheme';
 import { useActiveTerminals } from '../bot/contexts/ActiveTerminalsContext';
+import { useTerminalFilter } from './useTerminalFilter';
+import { useTerminalSearch } from './useTerminalSearch';
 import { TerminalOutput } from './TerminalOutput';
+import { TerminalLogsToolbar } from './TerminalLogsToolbar';
+import { TerminalLogsContextBar } from './TerminalLogsContextBar';
 import { copyTerminalOutput, saveTerminalOutput } from './terminalUtils';
 import { botLogToTerminalLine } from './bot-log-utils';
-import { Button } from '@/components/ui/button';
 
 /** Пропсы компонента просмотра истории запуска */
 interface LaunchHistoryViewerProps {
@@ -40,55 +39,71 @@ function formatStartedAt(startedAt: string | null): string {
 }
 
 /**
- * Компонент просмотра логов истории запуска
+ * Статичные логи запуска: context + toolbar + таблица (как Deploy Logs)
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewerProps) {
   const { logs, isLoading } = useLaunchLogs(launchId);
   const {
-    terminalBgClass, terminalTextClass, headerBgClass,
-    buttonTextColorClass, buttonHoverClass, placeholderTextClass, stderrTextClass,
+    terminalBgClass, terminalTextClass, placeholderTextClass, stderrTextClass,
   } = useTerminalTheme();
   const { getTabScale, adjustTabScale, removeTerminalById } = useActiveTerminals();
   const historyTabId = `history_${launchId}`;
   const scale = getTabScale(historyTabId);
-  const adjustScale = useCallback((factor: number) => adjustTabScale(historyTabId, factor), [historyTabId, adjustTabScale]);
-
-  /** Закрывает вкладку истории запуска и убирает её из селектора */
+  const adjustScale = useCallback(
+    (factor: number) => adjustTabScale(historyTabId, factor),
+    [historyTabId, adjustTabScale],
+  );
   const handleClose = useCallback(() => {
     removeTerminalById(historyTabId);
   }, [historyTabId, removeTerminalById]);
+
   const containerRef = useRef<HTMLDivElement>(null);
+  const lines = useMemo(() => logs.map(botLogToTerminalLine), [logs]);
+  const { filter, setFilter, filterLines, stderrCount } = useTerminalFilter();
+  const visibleLines = useMemo(() => filterLines(lines), [filterLines, lines]);
+  const {
+    searchQuery, matchIndices, currentMatchIndex,
+    setSearchQuery, goToNextMatch, goToPrevMatch,
+  } = useTerminalSearch(visibleLines);
+  const [shouldScrollToMatch, setShouldScrollToMatch] = useState(false);
 
-  const lines = logs.map(botLogToTerminalLine);
-
-  // Прокрутка вниз при первой загрузке логов
   useEffect(() => {
     if (!isLoading && logs.length > 0) {
       const el = containerRef.current;
       if (el) el.scrollTo({ top: el.scrollHeight });
     }
   }, [isLoading, logs.length]);
-  const title = `Запуск · ${formatStartedAt(startedAt)}`;
+
+  const currentMatchLineId = matchIndices.length > 0
+    ? visibleLines[matchIndices[currentMatchIndex]]?.id
+    : undefined;
 
   return (
     <div className={`h-full flex flex-col font-mono text-sm ${terminalBgClass}`}>
-      <div className={`${headerBgClass} px-4 py-2 flex justify-between items-center`}>
-        <h3 className="font-semibold text-sm">{title}</h3>
-        <div className="flex space-x-1 flex-wrap justify-end">
-          <Button variant="ghost" size="sm" onClick={() => adjustScale(1.1)}
-            className={`${buttonTextColorClass} ${buttonHoverClass}`}>Увеличить</Button>
-          <Button variant="ghost" size="sm" onClick={() => adjustScale(0.9)}
-            className={`${buttonTextColorClass} ${buttonHoverClass}`}>Уменьшить</Button>
-          <Button variant="ghost" size="sm" onClick={() => copyTerminalOutput(lines)}
-            className={`${buttonTextColorClass} ${buttonHoverClass}`}>Копировать</Button>
-          <Button variant="ghost" size="sm" onClick={() => saveTerminalOutput(lines)}
-            className={`${buttonTextColorClass} ${buttonHoverClass}`}>Сохранить</Button>
-          <Button variant="ghost" size="sm" onClick={handleClose}
-            className={`${buttonTextColorClass} ${buttonHoverClass}`}>Закрыть</Button>
-        </div>
-      </div>
+      <TerminalLogsContextBar
+        title={formatStartedAt(startedAt)}
+        subtitle={`#${launchId}`}
+        statusLabel="История"
+        statusClassName="bg-muted text-muted-foreground border-border"
+      />
+      <TerminalLogsToolbar
+        searchQuery={searchQuery}
+        onSearchChange={(q) => { setSearchQuery(q); setShouldScrollToMatch(false); }}
+        currentMatch={currentMatchIndex}
+        totalMatches={matchIndices.length}
+        onNext={() => { goToNextMatch(); setShouldScrollToMatch(true); }}
+        onPrev={() => { goToPrevMatch(); setShouldScrollToMatch(true); }}
+        filter={filter}
+        onFilterChange={setFilter}
+        stderrCount={stderrCount(lines)}
+        onZoomIn={() => adjustScale(1.1)}
+        onZoomOut={() => adjustScale(0.9)}
+        onCopy={(format) => copyTerminalOutput(visibleLines, format)}
+        onSave={(format) => saveTerminalOutput(visibleLines, format)}
+        onClose={handleClose}
+      />
       {isLoading ? (
         <div className={`flex-1 flex items-center justify-center ${placeholderTextClass} italic`}>
           Загрузка логов...
@@ -98,14 +113,17 @@ export function LaunchHistoryViewer({ launchId, startedAt }: LaunchHistoryViewer
           Логи не сохранены
         </div>
       ) : (
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden min-h-0">
           <TerminalOutput
-            lines={lines}
+            lines={visibleLines}
             containerRef={containerRef}
             scale={scale}
             terminalTextClass={terminalTextClass}
             stderrTextClass={stderrTextClass}
             placeholderTextClass={placeholderTextClass}
+            searchQuery={searchQuery || undefined}
+            currentMatchLineId={currentMatchLineId}
+            shouldScrollToMatch={shouldScrollToMatch}
           />
         </div>
       )}

@@ -4,8 +4,6 @@
  */
 
 import { useState } from 'react';
-import { X, Play, Square, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { BotSettingsGrid } from '../card/BotSettingsGrid';
 import { BotEnvPanel } from '../card/BotEnvPanel';
 import { BotEnvStagingBar } from '../card/BotEnvStagingBar';
@@ -16,6 +14,7 @@ import { LaunchHistoryViewer } from '../../terminal/LaunchHistoryViewer';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 import { useBotControl } from '../bot-control-context';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { BotDetailHeader } from './BotDetailHeader';
 import { BotDetailTabs } from './BotDetailTabs';
 import { BotDetailTabProvider, type BotDetailTabId } from './bot-detail-tab-context';
 import type { BotProject, BotToken } from '@shared/schema';
@@ -44,11 +43,11 @@ export function BotDetailPanel({
   token,
   isRunning,
   onClose,
-  compact = false,
 }: BotDetailPanelProps) {
-  const [tab, setTab] = useState<BotDetailTabId>('settings');
+  const [tab, setTab] = useState<BotDetailTabId>('history');
   const pending = useEnvPendingChanges(project.id, token.id);
-  const { startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation } = useBotControl();
+  const { startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation } =
+    useBotControl();
   const { user, isTelegramUser } = useTelegramAuth();
   const { terminals, activeTerminalId } = useActiveTerminals();
   const canManage = !!(user && isTelegramUser(user));
@@ -63,37 +62,25 @@ export function BotDetailPanel({
 
   return (
     <BotDetailTabProvider setTab={setTab}>
-      <div className={['flex flex-col h-full bg-background border-l border-border', compact ? '' : 'min-w-0'].join(' ')}>
-        <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border flex-shrink-0">
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold truncate">{title}</div>
-            {token.botUsername && (
-              <div className="text-xs text-muted-foreground truncate">@{token.botUsername}</div>
-            )}
-          </div>
-          <Button type="button" size="icon" variant="ghost" className="h-8 w-8" disabled={startBotMutation.isPending || stopBotMutation.isPending}
-            onClick={() => isRunning
+      <div className="flex h-full min-w-0 flex-col bg-background">
+        <BotDetailHeader
+          token={token}
+          projectId={project.id}
+          title={title}
+          isRunning={isRunning}
+          controlPending={startBotMutation.isPending || stopBotMutation.isPending}
+          deletePending={deleteBotMutation.isPending}
+          onToggleRun={() =>
+            isRunning
               ? stopBotMutation.mutate({ tokenId: token.id, projectId: project.id })
-              : startBotMutation.mutate({ tokenId: token.id, projectId: project.id })}
-            aria-label={isRunning ? 'Остановить' : 'Запустить'}
-          >
-            {isRunning ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          </Button>
-          <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-destructive" disabled={deleteBotMutation.isPending}
-            onClick={() => deleteBotMutation.mutate(token.id)}
-            aria-label="Удалить"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-          <Button type="button" size="icon" variant="ghost" className="h-8 w-8" onClick={onClose} aria-label="Закрыть">
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="px-3 py-2 border-b border-border flex-shrink-0">
-          <BotDetailTabs value={tab} onChange={setTab} />
-        </div>
+              : startBotMutation.mutate({ tokenId: token.id, projectId: project.id })
+          }
+          onDelete={() => deleteBotMutation.mutate(token.id)}
+          onClose={onClose}
+        />
+        <BotDetailTabs value={tab} onChange={setTab} />
         {pending.changesCount > 0 && (
-          <div className="px-3 pt-2 flex-shrink-0">
+          <div className="px-4 pt-3 shrink-0">
             <BotEnvStagingBar
               changesCount={pending.changesCount}
               isSaving={pending.isSaving}
@@ -103,12 +90,14 @@ export function BotDetailPanel({
             />
           </div>
         )}
-        <div className="flex-1 min-h-0 overflow-auto p-3">
+        <div
+          className={[
+            'flex-1 min-h-0 overflow-auto',
+            tab === 'terminal' ? 'p-0' : 'bg-background px-4 py-4',
+          ].join(' ')}
+        >
           {tab === 'history' && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">История</p>
-              <BotLaunchHistory tokenId={token.id} projectId={project.id} botName={title} />
-            </div>
+            <BotLaunchHistory tokenId={token.id} projectId={project.id} botName={title} />
           )}
           {tab === 'settings' && (
             <BotSettingsGrid
@@ -122,7 +111,10 @@ export function BotDetailPanel({
               webhookBaseUrl={token.webhookBaseUrl ?? null}
               webhookSecretToken={token.webhookSecretToken ?? null}
               canManage={canManage}
-              onPendingChange={(key, value) => pending.addChange({ action: 'update', type: 'system', key, value })}
+              showLaunchHistory={false}
+              onPendingChange={(key, value) =>
+                pending.addChange({ action: 'update', type: 'system', key, value })
+              }
             />
           )}
           {tab === 'variables' && (
