@@ -17,6 +17,7 @@ import { BotAutoRestartToggle } from './BotAutoRestartToggle';
 import { BotLogLevelSelect } from './BotLogLevelSelect';
 import { BotProtectContentToggle } from './BotProtectContentToggle';
 import { BotSaveMediaToggle } from './BotSaveMediaToggle';
+import { BotMessagesRetentionSelect } from './BotMessagesRetentionSelect';
 import { BotCatchAllToggle } from './BotCatchAllToggle';
 import { BotContentCacheToggle } from './BotContentCacheToggle';
 import { BotAdminIds } from '../profile/BotAdminIds';
@@ -39,7 +40,7 @@ interface BotSettingsGridProps {
   /** Включена ли база данных пользователей (1 — да, 0/null — нет) */
   userDatabaseEnabled: number | null;
   /** Данные токена для настроек автоперезапуска */
-  token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia' | 'catchAllHandlers' | 'contentCache' | 'userbotEnabled' | 'userbotApiId' | 'userbotApiHash' | 'userbotSessionString'>;
+  token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia' | 'messagesRetentionDays' | 'catchAllHandlers' | 'contentCache' | 'userbotEnabled' | 'userbotApiId' | 'userbotApiHash' | 'userbotSessionString'>;
   /** Мутация переключения базы данных */
   toggleDatabaseMutation: {
     /** Флаг ожидания ответа */
@@ -121,6 +122,13 @@ export function BotSettingsGrid({
         projectId={projectId}
         tokenId={tokenId}
         saveIncomingMedia={token.saveIncomingMedia ?? 0}
+        userDatabaseEnabled={userDatabaseEnabled}
+        onPendingChange={onPendingChange}
+      />
+      <BotMessagesRetentionSelect
+        projectId={projectId}
+        tokenId={tokenId}
+        messagesRetentionDays={token.messagesRetentionDays ?? 0}
         userDatabaseEnabled={userDatabaseEnabled}
         onPendingChange={onPendingChange}
       />

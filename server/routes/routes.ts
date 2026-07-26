@@ -84,6 +84,7 @@ import {
   queryActivityFromDaily,
 } from "./messages/queryActivityFromDaily";
 import { queryActivityFromDailyPeriod } from "./messages/queryActivityFromDailyPeriod";
+import { updateMessagesRetentionHandler } from "./userProjectsTokens/handlers/tokens/updateMessagesRetentionHandler";
 
 /**
  * Глобальное хранилище активных процессов ботов
@@ -1232,6 +1233,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(500).json({ message: "Ошибка обновления защиты контента" });
     }
   });
+
+  /**
+   * Срок хранения сообщений диалога для токена бота.
+   * 0 — без автоочистки; N — удалять bot_messages старше N дней (аналитика не трогается).
+   * @route PUT /api/projects/:projectId/tokens/:tokenId/messages-retention
+   */
+  app.put(
+    "/api/projects/:projectId/tokens/:tokenId/messages-retention",
+    requireTokenOwnership,
+    updateMessagesRetentionHandler,
+  );
 
   /**
    * Обновление настройки сохранения входящих медиафайлов для токена бота
@@ -5373,6 +5385,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
    * - LOG_LEVEL → bot_tokens.logLevel
    * - PROTECT_CONTENT → bot_tokens.protectContent
    * - SAVE_INCOMING_MEDIA → bot_tokens.saveIncomingMedia
+   * - MESSAGES_RETENTION_DAYS → bot_tokens.messagesRetentionDays
    * - CATCH_ALL_HANDLERS → bot_tokens.catchAllHandlers
    * - AUTO_RESTART → bot_tokens.autoRestart
    * - MAX_RESTART_ATTEMPTS → bot_tokens.maxRestartAttempts
@@ -5396,6 +5409,7 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
         LOG_LEVEL: 'logLevel',
         PROTECT_CONTENT: 'protectContent',
         SAVE_INCOMING_MEDIA: 'saveIncomingMedia',
+        MESSAGES_RETENTION_DAYS: 'messagesRetentionDays',
         CATCH_ALL_HANDLERS: 'catchAllHandlers',
         CONTENT_CACHE: 'contentCache',
         AUTO_RESTART: 'autoRestart',
@@ -5457,6 +5471,10 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
             }
             if (key === 'MAX_RESTART_ATTEMPTS') {
               dbValue = parseInt(value!) || 3;
+            }
+            if (key === 'MESSAGES_RETENTION_DAYS') {
+              dbValue = parseInt(value!, 10);
+              if (Number.isNaN(dbValue)) dbValue = 0;
             }
             if (key === 'WEBHOOK_BASE_URL' || key === 'WEBHOOK_SECRET_TOKEN') {
               dbValue = value || null;

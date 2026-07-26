@@ -50,6 +50,10 @@ export function useSystemEnvUpdate(projectId: number, tokenId: number) {
           return apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}/protect-content`, { protectContent: value === 'true' ? 1 : 0 });
         case 'SAVE_INCOMING_MEDIA':
           return apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}/save-incoming-media`, { saveIncomingMedia: value === 'true' ? 1 : 0 });
+        case 'MESSAGES_RETENTION_DAYS':
+          return apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}/messages-retention`, {
+            messagesRetentionDays: parseInt(value, 10) || 0,
+          });
         default:
           throw new Error(`Неизвестная системная переменная: ${key}`);
       }

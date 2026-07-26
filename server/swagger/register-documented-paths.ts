@@ -25,6 +25,7 @@ import {
 } from "./schemas/projects";
 import { registerAgentTokenPaths } from "./paths/agent-token-paths";
 import { registerBotUsersPaths } from "./paths/bot-users-paths";
+import { registerBotTokensPaths } from "./paths/bot-tokens-paths";
 import { registerConfigSetupPaths } from "./paths/config-setup-paths";
 import { registerDatabasePaths } from "./paths/database-paths";
 import { registerProjectsPaths } from "./paths/projects-paths";
@@ -181,6 +182,7 @@ documentedRegistry.registerPath({
 
 registerAgentTokenPaths(documentedRegistry, cookieSecurity);
 registerBotUsersPaths(documentedRegistry, cookieSecurity);
+registerBotTokensPaths(documentedRegistry, cookieSecurity);
 registerProjectsPaths(documentedRegistry, cookieSecurity);
 registerConfigSetupPaths(documentedRegistry, publicSecurity);
 registerStorageConfigPaths(documentedRegistry, cookieSecurity);

@@ -23,6 +23,7 @@
 | [group_members](./group_members.md) | 18 | Таблица участников групп |
 | [media_file_tokens](./media_file_tokens.md) | 5 | Таблица file_id медиафайла по токенам ботов (денормализация fileIdsByToken). Уникальность пары (медиафайл, токен) гарантирует один file_id на бота. |
 | [media_files](./media_files.md) | 21 | Таблица медиафайлов |
+| [message_activity_daily](./message_activity_daily.md) | 5 | Дневные счётчики входящих/исходящих сообщений. Увеличиваются при записи сообщения; удаление из bot_messages их не уменьшает. |
 | [project_collaborators](./project_collaborators.md) | 4 | Таблица коллабораторов проекта. Хранит связи между проектами и пользователями, имеющими доступ к ним. |
 | [project_versions](./project_versions.md) | 8 | Таблица версий проектов — хранит снимки данных проекта (BotDataWithSheets) |
 | [storage_configs](./storage_configs.md) | 8 | Таблица реестра хранилищ: несколько S3 (разные бакеты/endpoint'ы/креды) и несколько локальных папок. Одно хранилище помечено активным для новых загрузок; читать можно из всех. |
@@ -67,6 +68,7 @@ erDiagram
     media_files }o--o| media_files : "thumbnail_media_id"
     media_files }o--o| telegram_users : "uploaded_by"
     media_files }o--o| storage_configs : "storage_config_id"
+    message_activity_daily }o--|| bot_projects : "project_id"
     project_collaborators }o--|| bot_projects : "project_id"
     project_collaborators }o--|| telegram_users : "user_id"
     project_collaborators }o--o| telegram_users : "invited_by"
