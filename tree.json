@@ -508,7 +508,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-05T13:02:50Z",
+    "updated_at": "2026-07-25T23:07:27Z",
     "tags": [],
     "author": ""
   },
@@ -658,7 +658,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-04T19:19:59+03:00",
+    "updated_at": "2026-07-25T23:07:27Z",
     "tags": [],
     "author": ""
   },
@@ -733,7 +733,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-04T19:19:59+03:00",
+    "updated_at": "2026-07-26T03:09:59+03:00",
     "tags": [],
     "author": ""
   },
@@ -824,6 +824,21 @@
       "database": "Database"
     },
     "updated_at": "2026-07-04T19:19:59+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "database/message_activity_daily",
+    "title": "message_activity_daily",
+    "excerpt": "Дневные счётчики входящих/исходящих сообщений.",
+    "parts": [
+      "database",
+      "message_activity_daily"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-07-25T23:07:27Z",
     "tags": [],
     "author": ""
   },
@@ -2265,7 +2280,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-06-21T02:37:51+03:00",
+    "updated_at": "2026-07-26T03:09:59+03:00",
     "tags": [],
     "author": ""
   },
