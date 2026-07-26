@@ -104,27 +104,33 @@ export function useTelegramLogin() {
   const clientId = appConfig?.telegramClientId || CLIENT_ID_FALLBACK;
   const isDev = import.meta.env?.MODE === 'development' || appConfig?.skipAuth === true;
 
+  /**
+   * Обрабатывает результат Telegram Login и сохраняет пользователя.
+   * @param data - Ответ Telegram Login SDK
+   * @returns Ничего не возвращает
+   */
+  const handleTelegramAuth = useCallback((data: any): void => {
+    if (!data || data.error) return;
+    const user = data.user ?? data;
+    login({
+      id: user.id ?? user.sub,
+      firstName: user.first_name ?? user.name ?? '',
+      lastName: user.last_name,
+      username: user.username ?? user.preferred_username,
+      photoUrl: user.photo_url ?? user.picture,
+    });
+  }, [login]);
+
   const init = useCallback(() => {
     if (didInit.current) return;
     if (typeof window.Telegram?.Login?.init !== 'function') return;
     if (!clientId) return;
     window.Telegram.Login.init(
       { client_id: clientId, request_access: ['write'] },
-      (data: any) => {
-        if (!data || data.error) return;
-        // Маппим поля из id_token payload или user объекта
-        const user = data.user ?? data;
-        login({
-          id: user.id ?? user.sub,
-          firstName: user.first_name ?? user.name ?? '',
-          lastName: user.last_name,
-          username: user.username ?? user.preferred_username,
-          photoUrl: user.photo_url ?? user.picture,
-        });
-      }
+      handleTelegramAuth
     );
     didInit.current = true;
-  }, [login, clientId]);
+  }, [clientId, handleTelegramAuth]);
 
   useEffect(() => {
     if (typeof window.Telegram?.Login?.init === 'function' && clientId) {
@@ -190,8 +196,8 @@ export function useTelegramLogin() {
     }
 
     init();
-    window.Telegram.Login.open();
-  }, [init, isDev, login, toast, clientId]);
+    window.Telegram.Login.open(handleTelegramAuth);
+  }, [handleTelegramAuth, init, isDev, login, toast]);
 
   return { handleTelegramLogin };
 }
