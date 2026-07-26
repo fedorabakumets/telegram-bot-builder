@@ -4541,6 +4541,110 @@
         }
       }
     },
+    "/api/projects/{projectId}/tokens/{tokenId}/messages-retention": {
+      "put": {
+        "tags": [
+          "tokens"
+        ],
+        "summary": "Срок хранения сообщений диалога",
+        "description": "Обновляет `messages_retention_days` у токена. `0` — без автоочистки; иначе сервер раз в час удаляет из `bot_messages` сообщения этого токена старше N дней. Таблица `message_activity_daily` (длинный график «Активность») не трогается. Требуется владение токеном (`requireTokenOwnership`).",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID токена бота",
+              "example": "7"
+            },
+            "required": true,
+            "name": "tokenId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMessagesRetentionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Настройка сохранена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateMessagesRetentionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный ID или значение вне whitelist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/MessageError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ValidationError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Токен не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/{projectId}/tokens/{tokenId}/protect-content": {
       "put": {
         "tags": [
@@ -6912,6 +7016,82 @@
         },
         "required": [
           "userId"
+        ]
+      },
+      "UpdateMessagesRetentionResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          },
+          "messagesRetentionDays": {
+            "type": "integer",
+            "example": 60
+          }
+        },
+        "required": [
+          "success",
+          "messagesRetentionDays"
+        ]
+      },
+      "UpdateMessagesRetentionRequest": {
+        "type": "object",
+        "properties": {
+          "messagesRetentionDays": {
+            "anyOf": [
+              {
+                "type": "number",
+                "enum": [
+                  0
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  7
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  30
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  60
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  90
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  180
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  365
+                ]
+              }
+            ],
+            "description": "0 = безлимит; иначе 7/30/60/90/180/365. Чистится только bot_messages, не аналитика.",
+            "example": 60
+          }
+        },
+        "required": [
+          "messagesRetentionDays"
         ]
       },
       "ProjectListItem": {

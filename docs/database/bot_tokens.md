@@ -33,7 +33,7 @@
 | log_level | text | `'DEBUG'` | YES | - | - | Уровень логирования Python-бота (DEBUG, INFO, WARNING, ERROR) |
 | protect_content | integer | `0` | YES | - | - | Защита контента от копирования/пересылки (0 = выключено, 1 = включено) |
 | save_incoming_media | integer | `0` | YES | - | - | Флаг сохранения входящих медиафайлов от пользователей (0 = выключено, 1 = включено) |
-| messages_retention_days | integer | `0` | NO | - | - | Срок хранения сообщений в bot_messages (дни). 0 = без автоочистки; иначе сервер удаляет сообщения токена старше N дней. Аналитика (message_activity_daily) не затрагивается |
+| messages_retention_days | integer | `0` | NO | - | - | Срок хранения сообщений в bot_messages (дни). 0 = без автоочистки; иначе сервер удаляет сообщения токена старше N дней. Дневные агрегаты аналитики не затрагиваются. |
 | catch_all_handlers | integer | `1` | YES | - | - | Генерировать catch-all обработчики необработанных сообщений/callback (0 = выключено, 1 = включено). При наличии incoming-триггеров/динамических кнопок генератор включает их принудительно независимо от флага. |
 | content_cache | integer | `1` | YES | - | - | Живое обновление контента из таблицы _content без перезапуска (0 = выключено, 1 = включено). Управляет генерацией load_content/ reload_content/_content_reload_loop/_content_subscribe_redis. |
 | launch_mode | text | `'polling'` | YES | - | - | Режим запуска бота: 'polling' (по умолчанию) или 'webhook' |

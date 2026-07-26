@@ -8,6 +8,7 @@ import type { BotLaunchHistory as BotLaunchHistoryType } from '@shared/schema';
 import { useLaunchHistory } from '../hooks/use-launch-history';
 import { formatExecutionTime } from '../contexts/bot-control-utils';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
+import { useBotDetailTabOptional } from '../canvas/bot-detail-tab-context';
 
 /** Пропсы компонента истории запусков */
 interface BotLaunchHistoryProps {
@@ -113,6 +114,7 @@ function LaunchRow({ record, onShowLogs }: LaunchRowProps) {
 export function BotLaunchHistory({ tokenId, projectId, botName }: BotLaunchHistoryProps) {
   const { history } = useLaunchHistory(tokenId);
   const { openHistoryTab } = useActiveTerminals();
+  const detailTab = useBotDetailTabOptional();
 
   if (history.length === 0) return null;
 
@@ -129,6 +131,7 @@ export function BotLaunchHistory({ tokenId, projectId, botName }: BotLaunchHisto
       launchId: id,
       launchStartedAt: startedAt ? String(startedAt) : null,
     });
+    detailTab?.setTab('terminal');
   };
 
   return (
