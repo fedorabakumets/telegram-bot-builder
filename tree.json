@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-12T22:22:41+03:00",
+    "updated_at": "2026-07-26T00:10:59Z",
     "tags": [],
     "author": ""
   },
@@ -410,7 +410,7 @@
   {
     "path": "api/tokens",
     "title": "tokens",
-    "excerpt": "Эндпоинтов: **4**",
+    "excerpt": "Эндпоинтов: **5**",
     "parts": [
       "api",
       "tokens"
@@ -418,7 +418,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-04T19:32:54+03:00",
+    "updated_at": "2026-07-26T00:10:59Z",
     "tags": [],
     "author": ""
   },
@@ -508,7 +508,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-25T23:07:27Z",
+    "updated_at": "2026-07-26T00:10:59Z",
     "tags": [],
     "author": ""
   },
@@ -733,7 +733,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-26T03:09:59+03:00",
+    "updated_at": "2026-07-26T00:10:59Z",
     "tags": [],
     "author": ""
   },
@@ -2280,7 +2280,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-07-26T03:09:59+03:00",
+    "updated_at": "2026-07-26T04:18:39+03:00",
     "tags": [],
     "author": ""
   },
