@@ -62,7 +62,7 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
 
   if (useSheet) {
     return (
-      <div className="h-full min-h-[320px]">
+      <div className="h-full min-h-0">
         {canvas}
         <Sheet
           open={!!selectedToken}
@@ -88,14 +88,14 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
 
   if (!selectedToken) {
     return (
-      <div className="h-full min-h-[360px] rounded-lg border border-border overflow-hidden">
+      <div className="h-full min-h-0 rounded-lg border border-border overflow-hidden">
         {canvas}
       </div>
     );
   }
 
   return (
-    <div className="h-full min-h-[360px] rounded-lg border border-border overflow-hidden">
+    <div className="h-full min-h-0 rounded-lg border border-border overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
         <ResizablePanel defaultSize={55} minSize={25} className="min-w-0">
           {canvas}

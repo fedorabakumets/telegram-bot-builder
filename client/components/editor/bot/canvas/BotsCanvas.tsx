@@ -1,30 +1,21 @@
 /**
- * @fileoverview Холст с нодами ботов (фон-сетка, pan/zoom)
+ * @fileoverview Холст ботов на viewport редактора (pan/zoom/pinch)
  * @module bot/canvas/BotsCanvas
  */
 
-import { useMemo, useState } from 'react';
-import { Minus, Plus, Maximize2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useCallback, useMemo, useRef } from 'react';
 import { BotServiceNode } from './BotServiceNode';
+import { BotsCanvasToolbar } from './BotsCanvasToolbar';
+import { useCanvasFullscreen } from './use-canvas-fullscreen';
+import { useBotNodeLayout } from './use-bot-node-layout';
+import { useCanvasViewport } from '@/components/editor/canvas/canvas/use-canvas-viewport';
 import type { BotToken } from '@shared/schema';
-
-/** Ширина ноды */
-const NODE_W = 220;
-/** Высота ноды с зазором */
-const NODE_H = 100;
-/** Горизонтальный зазор */
-const GAP_X = 48;
-/** Вертикальный зазор */
-const GAP_Y = 40;
-/** Колонок в раскладке */
-const COLS = 3;
 
 /** Пропсы холста ботов */
 interface BotsCanvasProps {
   /** ID проекта */
   projectId: number;
-  /** Токены для отображения */
+  /** Токены */
   tokens: BotToken[];
   /** tokenId → running */
   runningByTokenId: Record<number, boolean>;
@@ -35,7 +26,7 @@ interface BotsCanvasProps {
 }
 
 /**
- * Холст с точечной сеткой и нодами ботов
+ * Холст ботов: жесты как у редактора + карточки токенов
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
@@ -46,63 +37,108 @@ export function BotsCanvas({
   selectedTokenId,
   onSelectToken,
 }: BotsCanvasProps) {
-  const [scale, setScale] = useState(1);
-  const [pan, setPan] = useState({ x: 40, y: 40 });
+  const rootRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const { isFullscreen, cssFullscreen, toggleFullscreen } = useCanvasFullscreen(rootRef);
+  const tokenIds = useMemo(() => tokens.map((t) => t.id), [tokens]);
+  const { positions, setNodePos, contentSize } = useBotNodeLayout(projectId, tokenIds);
 
-  const positions = useMemo(
-    () =>
-      tokens.map((_, i) => ({
-        left: (i % COLS) * (NODE_W + GAP_X),
-        top: Math.floor(i / COLS) * (NODE_H + GAP_Y),
-      })),
-    [tokens],
-  );
+  const isEmptyTarget = useCallback((target: HTMLElement) => (
+    !target.closest('[data-canvas-node]') && !target.closest('[data-canvas-controls]')
+  ), []);
+
+  const {
+    pan,
+    zoom,
+    isPanning,
+    animateTransform,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    handleMouseDown,
+    handleMouseUp,
+    handleContextMenu,
+  } = useCanvasViewport({
+    canvasRef,
+    isEmptyTarget,
+  });
+
+  const scale = zoom / 100;
+
+  const fitToContent = useCallback(() => {
+    resetZoom();
+  }, [resetZoom]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-muted/20">
+    <div
+      ref={rootRef}
+      className={[
+        'relative h-full min-h-0 w-full bg-muted/20',
+        cssFullscreen ? 'fixed inset-0 z-[200] bg-background' : '',
+      ].join(' ')}
+    >
       <div
-        className="absolute inset-0 opacity-40"
+        ref={canvasRef}
+        className="bots-canvas-grid absolute inset-0 overflow-hidden"
         style={{
-          backgroundImage: 'radial-gradient(circle, hsl(var(--muted-foreground) / 0.35) 1px, transparent 1px)',
-          backgroundSize: '20px 20px',
+          cursor: isPanning ? 'grabbing' : 'grab',
+          touchAction: 'none',
         }}
-      />
-      <div
-        className="absolute origin-top-left"
-        style={{
-          transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
-          width: COLS * (NODE_W + GAP_X),
-          height: Math.max(1, Math.ceil(tokens.length / COLS)) * (NODE_H + GAP_Y),
-        }}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onContextMenu={handleContextMenu}
       >
-        {tokens.map((token, i) => (
-          <BotServiceNode
-            key={token.id}
-            token={token}
-            projectId={projectId}
-            isRunning={!!runningByTokenId[token.id]}
-            selected={selectedTokenId === token.id}
-            onSelect={() => onSelectToken(token.id)}
-            style={{ left: positions[i].left, top: positions[i].top }}
+        <div
+          className="origin-top-left will-change-transform"
+          style={{
+            width: contentSize.width,
+            height: contentSize.height,
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+            transition: animateTransform ? 'transform 200ms ease-out' : 'none',
+          }}
+        >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-40"
+            style={{
+              backgroundImage: 'radial-gradient(circle, hsl(var(--muted-foreground) / 0.35) 1px, transparent 1px)',
+              backgroundSize: '20px 20px',
+            }}
           />
-        ))}
-      </div>
-      <div className="absolute bottom-3 left-3 flex flex-col gap-1 z-10">
-        <Button type="button" size="icon" variant="secondary" className="h-8 w-8" onClick={() => setScale((s) => Math.min(1.6, s + 0.1))} aria-label="Приблизить">
-          <Plus className="h-4 w-4" />
-        </Button>
-        <Button type="button" size="icon" variant="secondary" className="h-8 w-8" onClick={() => setScale((s) => Math.max(0.5, s - 0.1))} aria-label="Отдалить">
-          <Minus className="h-4 w-4" />
-        </Button>
-        <Button type="button" size="icon" variant="secondary" className="h-8 w-8" onClick={() => { setScale(1); setPan({ x: 40, y: 40 }); }} aria-label="Сбросить вид">
-          <Maximize2 className="h-4 w-4" />
-        </Button>
-      </div>
-      {tokens.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-          Нет ботов в проекте
+          <div className="relative" style={{ width: contentSize.width, height: contentSize.height }}>
+            {tokens.map((token) => {
+              const pos = positions[token.id];
+              if (!pos) return null;
+              return (
+                <BotServiceNode
+                  key={token.id}
+                  token={token}
+                  projectId={projectId}
+                  isRunning={!!runningByTokenId[token.id]}
+                  selected={selectedTokenId === token.id}
+                  onSelect={() => onSelectToken(token.id)}
+                  position={pos}
+                  scale={scale}
+                  onMove={(next, persist) => setNodePos(token.id, next, persist)}
+                />
+              );
+            })}
+          </div>
         </div>
-      )}
+        {tokens.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground pointer-events-none">
+            Нет ботов в проекте
+          </div>
+        )}
+      </div>
+      <BotsCanvasToolbar
+        canZoomIn={zoom < 200}
+        canZoomOut={zoom > 1}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        onFit={fitToContent}
+        onToggleFullscreen={toggleFullscreen}
+        isFullscreen={isFullscreen}
+      />
     </div>
   );
 }
