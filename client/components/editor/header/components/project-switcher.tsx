@@ -38,10 +38,10 @@ export function ProjectSwitcher({ projects, currentProjectId, onSelect }: Projec
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="h-8 px-1.5 gap-1 text-sm font-medium border-none shadow-none focus-visible:ring-0"
+          className="h-8 min-w-0 max-w-28 gap-1 border-none px-1.5 text-sm font-medium shadow-none focus-visible:ring-0 xl:max-w-44"
         >
-          <span>{current?.name ?? 'Проект'}</span>
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="truncate">{current?.name ?? 'Проект'}</span>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
 

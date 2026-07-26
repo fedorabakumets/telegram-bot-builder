@@ -66,7 +66,12 @@ export function AppSidebar({
       </div>
 
       {/* Основной контент */}
-      <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1">
+      <div
+        className={cn(
+          'flex flex-1 flex-col gap-1 overflow-y-auto p-2',
+          isCollapsed && '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+        )}
+      >
         <SidebarNav
           currentTab={currentTab}
           onTabChange={onTabChange}
@@ -80,7 +85,9 @@ export function AppSidebar({
         />
       </div>
 
-      <SidebarSeparator />
+      <div className="px-2">
+        <SidebarSeparator />
+      </div>
 
       {/* Футер */}
       <div className="p-2">

@@ -63,7 +63,9 @@ export function DesktopActions({
   return (
     <div className={cn(
       'flex',
-      isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-1 lg:w-auto lg:order-none lg:ml-auto'
+      isVertical
+        ? 'flex-col space-y-2 p-2'
+        : 'ml-auto hidden shrink-0 flex-nowrap items-center gap-1 lg:flex lg:w-auto lg:order-none'
     )}>
       {/* Кнопки управления состоянием панелей — ЗАКОММЕНТИРОВАНО
       {onToggleHeader && (
