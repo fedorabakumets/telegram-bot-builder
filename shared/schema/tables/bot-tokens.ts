@@ -64,6 +64,12 @@ export const botTokens = pgTable("bot_tokens", {
   /** Флаг сохранения входящих медиафайлов от пользователей (0 = выключено, 1 = включено) */
   saveIncomingMedia: integer("save_incoming_media").default(0),
   /**
+   * Срок хранения сообщений в bot_messages (дни).
+   * 0 = без автоочистки; иначе сервер удаляет сообщения токена старше N дней.
+   * Дневные агрегаты аналитики не затрагиваются.
+   */
+  messagesRetentionDays: integer("messages_retention_days").notNull().default(0),
+  /**
    * Генерировать catch-all обработчики необработанных сообщений/callback
    * (0 = выключено, 1 = включено). При наличии incoming-триггеров/динамических
    * кнопок генератор включает их принудительно независимо от флага.
@@ -133,6 +139,21 @@ export const insertBotTokenSchema = z.object({
   protectContent: z.number().min(0).max(1).default(0),
   /** Флаг сохранения входящих медиафайлов от пользователей (0 = выключено, 1 = включено) */
   saveIncomingMedia: z.number().min(0).max(1).default(0),
+  /**
+   * Срок хранения сообщений в днях (0 = безлимит; иначе 7/30/60/90/180/365)
+   */
+  messagesRetentionDays: z
+    .union([
+      z.literal(0),
+      z.literal(7),
+      z.literal(30),
+      z.literal(60),
+      z.literal(90),
+      z.literal(180),
+      z.literal(365),
+    ])
+    .default(0)
+    .optional(),
   /** Генерировать catch-all обработчики (0 = выключено, 1 = включено) */
   catchAllHandlers: z.number().min(0).max(1).default(1),
   /** Живое обновление контента из таблицы _content (0 = выключено, 1 = включено) */

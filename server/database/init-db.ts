@@ -597,6 +597,16 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при проверке/добавлении колонки content_cache в bot_tokens:', error);
     }
 
+    // Миграция: срок хранения сообщений диалога
+    try {
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_tokens
+        ADD COLUMN IF NOT EXISTS messages_retention_days INTEGER NOT NULL DEFAULT 0;
+      `, "Миграция: добавление messages_retention_days в bot_tokens");
+    } catch (error) {
+      console.log('⚠️ Ошибка при проверке/добавлении колонки messages_retention_days в bot_tokens:', error);
+    }
+
     // Миграция: добавить project_id в bot_users и обновить первичный ключ
     try {
       const columnCheck = await db.execute(sql`

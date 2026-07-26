@@ -7,6 +7,7 @@ import { db } from "../database/db";
 import { botLogs } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import { startLogsCleanupTimer, stopLogsCleanupTimer } from "../database/cleanupOldLogs";
+import { startMessagesCleanupTimer, stopMessagesCleanupTimer } from "../database/cleanupOldMessages";
 import type { StorageBotLogInput } from "../storages/storageTypes";
 
 /** Структура слота буфера для одного процесса */
@@ -200,6 +201,8 @@ export function startFlushTimer(): void {
 
   // Запускаем периодическую TTL-очистку логов
   startLogsCleanupTimer();
+  // Очистка bot_messages по messages_retention_days токенов
+  startMessagesCleanupTimer();
 
   console.log("[BotLogsBuffer] Таймер сброса буфера запущен");
 }
@@ -213,6 +216,7 @@ export function stopFlushTimer(): void {
     clearInterval(flushTimerId);
     flushTimerId = null;
     stopLogsCleanupTimer();
+    stopMessagesCleanupTimer();
     console.log("[BotLogsBuffer] Таймер сброса буфера остановлен");
   }
 }
