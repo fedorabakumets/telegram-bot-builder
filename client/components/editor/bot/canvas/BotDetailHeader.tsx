@@ -51,16 +51,15 @@ export function BotDetailHeader({
   onClose,
 }: BotDetailHeaderProps) {
   return (
-    <div className="flex items-center gap-3 border-b border-border px-4 py-3.5 shrink-0">
-      <div className="overflow-hidden rounded-lg ring-1 ring-border/60 shrink-0">
-        <BotAvatar
-          tokenId={token.id}
-          projectId={projectId}
-          photoUrl={token.botPhotoUrl}
-          botName={title}
-          size={40}
-        />
-      </div>
+    <div className="flex items-center gap-3 border-b border-border/60 bg-background px-4 py-3.5 shrink-0">
+      <BotAvatar
+        tokenId={token.id}
+        projectId={projectId}
+        photoUrl={token.botPhotoUrl}
+        botName={title}
+        size={40}
+        variant="service"
+      />
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
           <h2 className="truncate text-[15px] font-semibold leading-tight tracking-tight">

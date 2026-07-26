@@ -92,8 +92,10 @@ export function BotsCanvas({
     <div
       ref={rootRef}
       className={[
-        'relative h-full min-h-0 w-full bg-muted/20',
-        cssFullscreen ? 'fixed inset-0 z-[200] bg-background' : '',
+        'relative h-full min-h-0 w-full',
+        'bg-gradient-to-br from-white via-blue-50/35 to-blue-100/30',
+        'dark:from-slate-950 dark:via-slate-950 dark:to-blue-950/35',
+        cssFullscreen ? 'fixed inset-0 z-[200]' : '',
       ].join(' ')}
     >
       <div
@@ -102,6 +104,9 @@ export function BotsCanvas({
         style={{
           cursor: isPanning ? 'grabbing' : 'grab',
           touchAction: 'none',
+          backgroundImage: `radial-gradient(circle, rgb(59 130 246 / 0.34) ${Math.max(1, scale)}px, transparent ${Math.max(1, scale)}px)`,
+          backgroundSize: `${20 * scale}px ${20 * scale}px`,
+          backgroundPosition: `${pan.x}px ${pan.y}px`,
         }}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
@@ -117,13 +122,6 @@ export function BotsCanvas({
             backfaceVisibility: 'hidden',
           }}
         >
-          <div
-            className="pointer-events-none absolute inset-0 opacity-40"
-            style={{
-              backgroundImage: 'radial-gradient(circle, hsl(var(--muted-foreground) / 0.35) 1px, transparent 1px)',
-              backgroundSize: '20px 20px',
-            }}
-          />
           <div className="relative" style={{ width: contentSize.width, height: contentSize.height }}>
             {tokens.map((token) => {
               const pos = positions[token.id];

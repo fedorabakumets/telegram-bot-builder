@@ -58,7 +58,9 @@ export function SettingCard({
         <div
           className={cn(
             'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
-            active ? 'bg-muted text-foreground' : 'bg-muted/50 text-muted-foreground',
+            active
+              ? 'bg-blue-500/15 text-blue-600 dark:text-blue-300'
+              : 'bg-blue-50 text-blue-700/60 dark:bg-blue-950/45 dark:text-blue-200/55',
           )}
         >
           <Icon className="h-3.5 w-3.5" />

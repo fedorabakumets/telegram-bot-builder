@@ -34,13 +34,14 @@ interface BotsCanvasToolbarProps {
 
 /** Общие классы квадратной кнопки */
 const BTN =
-  'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground ' +
-  'hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30';
+  'flex h-9 w-9 items-center justify-center rounded-lg text-blue-700/65 dark:text-blue-200/65 ' +
+  'hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-200 transition-colors disabled:opacity-30';
 
 /** Обёртка группы кнопок */
 const GROUP =
-  'flex flex-col items-center gap-0.5 rounded-xl border border-border/60 ' +
-  'bg-card/95 p-1 shadow-sm';
+  'flex flex-col items-center gap-0.5 rounded-xl border border-blue-500/20 ' +
+  'bg-white/90 p-1 shadow-[0_6px_20px_rgba(37,99,235,0.1)] backdrop-blur ' +
+  'dark:border-blue-400/15 dark:bg-slate-950/90';
 
 /**
  * Левый вертикальный тулбар как у Railway

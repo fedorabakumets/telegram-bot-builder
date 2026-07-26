@@ -6,8 +6,10 @@
 import { useEffect, type RefObject } from 'react';
 import type { NodePos } from './use-bot-node-layout';
 
-const NODE_W = 220;
-const NODE_H = 88;
+/** Фактическая ширина ноды BotServiceNode */
+const NODE_W = 240;
+/** Приблизительная высота ноды BotServiceNode */
+const NODE_H = 96;
 
 /** Опции фокуса на выбранном боте */
 interface UseFocusSelectedBotOptions {
@@ -59,7 +61,9 @@ export function useFocusSelectedBot({
       if (w < 40 || h < 40) return;
 
       const scale = zoomRef.current / 100;
-      const panel = Math.min(overlayPanelWidth, w * 0.55);
+      // Учитываем фактическую ширину overlay. Старый лимит в 55% занижал
+      // широкую панель, поэтому выбранная нода частично оставалась под ней.
+      const panel = Math.min(overlayPanelWidth, Math.max(0, w - 32));
       const visibleRight = w - panel;
       const gap = 24;
       const targetScreenX = Math.max(16, visibleRight - gap - NODE_W * scale);

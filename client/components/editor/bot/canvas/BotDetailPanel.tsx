@@ -62,7 +62,7 @@ export function BotDetailPanel({
 
   return (
     <BotDetailTabProvider setTab={setTab}>
-      <div className="flex flex-col h-full bg-transparent min-w-0">
+      <div className="flex h-full min-w-0 flex-col bg-background">
         <BotDetailHeader
           token={token}
           projectId={project.id}
@@ -93,7 +93,7 @@ export function BotDetailPanel({
         <div
           className={[
             'flex-1 min-h-0 overflow-auto',
-            tab === 'terminal' ? 'p-0' : 'px-4 py-4',
+            tab === 'terminal' ? 'p-0' : 'bg-background px-4 py-4',
           ].join(' ')}
         >
           {tab === 'history' && (

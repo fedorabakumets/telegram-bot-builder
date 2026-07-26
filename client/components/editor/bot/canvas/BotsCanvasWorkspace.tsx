@@ -48,7 +48,7 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
   const overlayOpen = !!selectedToken && !useSheet;
 
   return (
-    <div className="relative h-full min-h-0 rounded-lg border border-border overflow-hidden">
+    <div className="relative h-full min-h-0 overflow-hidden rounded-lg border border-border">
       <BotsCanvas
         projectId={project.id}
         tokens={tokens}
@@ -62,8 +62,8 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
         <aside
           className={[
             'absolute inset-y-0 right-0 z-20 flex flex-col',
-            'bg-background border-l border-border',
-            'shadow-[-8px_0_24px_rgba(0,0,0,0.18)]',
+            'border-l border-border bg-background',
+            'shadow-[-10px_0_28px_rgba(0,0,0,0.16)] dark:shadow-[-10px_0_32px_rgba(0,0,0,0.38)]',
             'animate-in slide-in-from-right duration-200',
           ].join(' ')}
           style={{ width: panelWidth }}
@@ -81,7 +81,7 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
               'flex items-center justify-center',
             ].join(' ')}
           >
-            <span className="h-10 w-1 rounded-full bg-border transition-colors group-hover/resize:bg-primary/70 group-active/resize:bg-primary" />
+            <span className="h-10 w-1 rounded-full bg-blue-500/25 transition-colors group-hover/resize:bg-blue-500/70 group-active/resize:bg-blue-500" />
           </div>
           <BotDetailPanel
             project={project}

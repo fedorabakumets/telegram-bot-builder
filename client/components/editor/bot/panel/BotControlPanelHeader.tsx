@@ -50,6 +50,7 @@ export function BotControlPanelHeader({
     <TabHeader
       icon={<Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
       title="Боты"
+      singleLine
       actions={
         <>
           <BotViewModeToggle mode={viewMode} onModeChange={onViewModeChange} />

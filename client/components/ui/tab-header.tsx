@@ -19,6 +19,8 @@ export interface TabHeaderProps {
   actions?: React.ReactNode;
   /** Дополнительные CSS классы */
   className?: string;
+  /** На десктопе всегда держать содержимое в одной строке */
+  singleLine?: boolean;
 }
 
 /**
@@ -29,7 +31,15 @@ export interface TabHeaderProps {
  * @param props - Свойства компонента
  * @returns JSX элемент заголовка вкладки
  */
-export function TabHeader({ icon, title, leading, children, actions, className }: TabHeaderProps) {
+export function TabHeader({
+  icon,
+  title,
+  leading,
+  children,
+  actions,
+  className,
+  singleLine = false,
+}: TabHeaderProps) {
   const titleBlock = (
     <div className="flex items-center gap-2.5 shrink-0 min-w-0">
       <div className="rounded-lg bg-primary/10 p-2 shrink-0">{icon}</div>
@@ -58,8 +68,20 @@ export function TabHeader({ icon, title, leading, children, actions, className }
         className,
       )}
     >
+      {/* Десктоп: принудительная компактная строка */}
+      {singleLine && (
+        <div className="hidden min-w-0 items-center gap-2 sm:flex">
+          {titleBlock}
+          {leadingBlock}
+          {children && (
+            <div className="flex min-w-0 flex-1 items-center gap-2">{children}</div>
+          )}
+          {actionsBlock && <div className="ml-auto shrink-0">{actionsBlock}</div>}
+        </div>
+      )}
+
       {/* Десктоп: узкая панель — заголовок + leading + actions сверху, children снизу */}
-      <div className="hidden sm:flex @[720px]:hidden flex-col gap-2">
+      <div className={cn('hidden flex-col gap-2', !singleLine && 'sm:flex @[720px]:hidden')}>
         <div className="flex items-center justify-between gap-2 min-w-0">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {titleBlock}
@@ -71,7 +93,7 @@ export function TabHeader({ icon, title, leading, children, actions, className }
       </div>
 
       {/* Десктоп: широкая панель — одна строка */}
-      <div className="hidden @[720px]:flex flex-wrap items-center gap-2">
+      <div className={cn('hidden flex-wrap items-center gap-2', !singleLine && '@[720px]:flex')}>
         {titleBlock}
         {leadingBlock}
         {children}
