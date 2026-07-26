@@ -25,6 +25,7 @@ import { ProjectCollaborators } from '../profile/ProjectCollaborators';
 import { BotLaunchHistory } from './BotLaunchHistory';
 import { BotLaunchSettings } from './BotLaunchSettings';
 import { BotUserbotSettings } from './BotUserbotSettings';
+import { SettingsSection } from './SettingsSection';
 import type { BotToken } from '@shared/schema';
 
 /** Пропсы сетки настроек бота */
@@ -56,6 +57,8 @@ interface BotSettingsGridProps {
   webhookSecretToken: string | null;
   /** Колбэк для добавления изменения в pending */
   onPendingChange?: (key: string, value: string) => void;
+  /** Показывать блок истории запусков (на холсте история — отдельная вкладка) */
+  showLaunchHistory?: boolean;
 }
 
 /**
@@ -75,92 +78,112 @@ export function BotSettingsGrid({
   webhookSecretToken,
   canManage,
   onPendingChange,
+  showLaunchHistory = true,
 }: BotSettingsGridProps) {
   const resolvedBotName = botName ?? `Бот ${tokenId}`;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-      <BotLaunchSettings
-        tokenId={tokenId}
-        projectId={projectId}
-        launchMode={launchMode}
-        webhookBaseUrl={webhookBaseUrl}
-        webhookSecretToken={webhookSecretToken}
-        className="sm:col-span-2"
-        onPendingChange={onPendingChange}
-      />
-      <BotDatabaseToggle
-        projectId={projectId}
-        tokenId={tokenId}
-        userDatabaseEnabled={userDatabaseEnabled}
-        toggleDatabaseMutation={toggleDatabaseMutation}
-        onPendingChange={onPendingChange}
-      />
-      <BotAutoRestartToggle
-        projectId={projectId}
-        tokenId={tokenId}
-        autoRestart={token.autoRestart}
-        maxRestartAttempts={token.maxRestartAttempts}
-        onPendingChange={onPendingChange ? (ar, ma) => {
-          onPendingChange('AUTO_RESTART', ar);
-          onPendingChange('MAX_RESTART_ATTEMPTS', ma);
-        } : undefined}
-      />
-      <BotLogLevelSelect
-        projectId={projectId}
-        tokenId={tokenId}
-        logLevel={token.logLevel ?? 'WARNING'}
-        onPendingChange={onPendingChange}
-      />
-      <BotProtectContentToggle
-        projectId={projectId}
-        tokenId={tokenId}
-        protectContent={token.protectContent ?? 0}
-        onPendingChange={onPendingChange}
-      />
-      <BotSaveMediaToggle
-        projectId={projectId}
-        tokenId={tokenId}
-        saveIncomingMedia={token.saveIncomingMedia ?? 0}
-        userDatabaseEnabled={userDatabaseEnabled}
-        onPendingChange={onPendingChange}
-      />
-      <BotMessagesRetentionSelect
-        projectId={projectId}
-        tokenId={tokenId}
-        messagesRetentionDays={token.messagesRetentionDays ?? 0}
-        userDatabaseEnabled={userDatabaseEnabled}
-        onPendingChange={onPendingChange}
-      />
-      <BotCatchAllToggle
-        projectId={projectId}
-        tokenId={tokenId}
-        catchAllHandlers={token.catchAllHandlers ?? 1}
-        onPendingChange={onPendingChange}
-      />
-      <BotContentCacheToggle
-        projectId={projectId}
-        tokenId={tokenId}
-        contentCache={token.contentCache ?? 1}
-        userDatabaseEnabled={userDatabaseEnabled}
-        onPendingChange={onPendingChange}
-      />
-      <BotAdminIds projectId={projectId} onPendingChange={onPendingChange} />
-      <ProjectCollaborators projectId={projectId} canManage={canManage} />
-      <BotLaunchHistory
-        tokenId={tokenId}
-        projectId={projectId}
-        botName={resolvedBotName}
-      />
-      <BotUserbotSettings
-        projectId={projectId}
-        tokenId={tokenId}
-        userbotEnabled={token.userbotEnabled ?? 0}
-        userbotApiId={token.userbotApiId ?? null}
-        userbotApiHash={token.userbotApiHash ?? null}
-        userbotSessionString={token.userbotSessionString ?? null}
-        onPendingChange={onPendingChange}
-      />
+    <div className="space-y-6">
+      <SettingsSection title="Запуск">
+        <BotLaunchSettings
+          tokenId={tokenId}
+          projectId={projectId}
+          launchMode={launchMode}
+          webhookBaseUrl={webhookBaseUrl}
+          webhookSecretToken={webhookSecretToken}
+          onPendingChange={onPendingChange}
+        />
+        <BotAutoRestartToggle
+          projectId={projectId}
+          tokenId={tokenId}
+          autoRestart={token.autoRestart}
+          maxRestartAttempts={token.maxRestartAttempts}
+          onPendingChange={onPendingChange ? (ar, ma) => {
+            onPendingChange('AUTO_RESTART', ar);
+            onPendingChange('MAX_RESTART_ATTEMPTS', ma);
+          } : undefined}
+        />
+      </SettingsSection>
+
+      <SettingsSection title="Данные">
+        <BotDatabaseToggle
+          projectId={projectId}
+          tokenId={tokenId}
+          userDatabaseEnabled={userDatabaseEnabled}
+          toggleDatabaseMutation={toggleDatabaseMutation}
+          onPendingChange={onPendingChange}
+        />
+        <BotSaveMediaToggle
+          projectId={projectId}
+          tokenId={tokenId}
+          saveIncomingMedia={token.saveIncomingMedia ?? 0}
+          userDatabaseEnabled={userDatabaseEnabled}
+          onPendingChange={onPendingChange}
+        />
+        <BotMessagesRetentionSelect
+          projectId={projectId}
+          tokenId={tokenId}
+          messagesRetentionDays={token.messagesRetentionDays ?? 0}
+          userDatabaseEnabled={userDatabaseEnabled}
+          onPendingChange={onPendingChange}
+        />
+        <BotContentCacheToggle
+          projectId={projectId}
+          tokenId={tokenId}
+          contentCache={token.contentCache ?? 1}
+          userDatabaseEnabled={userDatabaseEnabled}
+          onPendingChange={onPendingChange}
+        />
+      </SettingsSection>
+
+      <SettingsSection title="Логи и поведение">
+        <BotLogLevelSelect
+          projectId={projectId}
+          tokenId={tokenId}
+          logLevel={token.logLevel ?? 'WARNING'}
+          onPendingChange={onPendingChange}
+        />
+        <BotCatchAllToggle
+          projectId={projectId}
+          tokenId={tokenId}
+          catchAllHandlers={token.catchAllHandlers ?? 1}
+          onPendingChange={onPendingChange}
+        />
+        <BotProtectContentToggle
+          projectId={projectId}
+          tokenId={tokenId}
+          protectContent={token.protectContent ?? 0}
+          onPendingChange={onPendingChange}
+        />
+      </SettingsSection>
+
+      <SettingsSection title="Доступ">
+        <BotAdminIds projectId={projectId} onPendingChange={onPendingChange} />
+        <ProjectCollaborators projectId={projectId} canManage={canManage} />
+      </SettingsSection>
+
+      <SettingsSection title="Дополнительно">
+        <BotUserbotSettings
+          projectId={projectId}
+          tokenId={tokenId}
+          userbotEnabled={token.userbotEnabled ?? 0}
+          userbotApiId={token.userbotApiId ?? null}
+          userbotApiHash={token.userbotApiHash ?? null}
+          userbotSessionString={token.userbotSessionString ?? null}
+          onPendingChange={onPendingChange}
+        />
+      </SettingsSection>
+
+      {showLaunchHistory && (
+        <SettingsSection title="История запусков">
+          <BotLaunchHistory
+            tokenId={tokenId}
+            projectId={projectId}
+            botName={resolvedBotName}
+            compact
+          />
+        </SettingsSection>
+      )}
     </div>
   );
 }

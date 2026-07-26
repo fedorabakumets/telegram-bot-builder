@@ -1,10 +1,5 @@
 /**
  * @fileoverview Компонент для редактирования списка ID администраторов бота
- *
- * Динамический список полей: одно поле — один Telegram ID.
- * Поддерживает добавление, удаление и сохранение.
- * Использует стабильные ключи вместо индексов массива.
- *
  * @module BotAdminIds
  */
 
@@ -23,24 +18,21 @@ interface BotAdminIdsProps {
 
 /**
  * Генерирует уникальный строковый ключ
+ * @returns Случайная строка
  */
 function uid() {
   return Math.random().toString(36).slice(2);
 }
 
 /**
- * Блок редактирования ID администраторов бота (динамический список)
+ * Блок редактирования ID администраторов бота
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
 export function BotAdminIds({ projectId, onPendingChange }: BotAdminIdsProps) {
   const { ids, setIds, isSaving, isSaved, save } = useAdminIds(projectId);
-
-  /**
-   * Стабильные ключи для каждого элемента списка.
-   * Ключи не меняются при редактировании значений.
-   */
   const keysRef = useRef<string[]>([]);
 
-  // Синхронизируем длину массива ключей с длиной ids
   while (keysRef.current.length < ids.length) {
     keysRef.current.push(uid());
   }
@@ -50,8 +42,7 @@ export function BotAdminIds({ projectId, onPendingChange }: BotAdminIdsProps) {
 
   /** Обновить конкретный элемент списка */
   const update = useCallback(
-    (i: number, val: string) =>
-      setIds(ids.map((id, idx) => (idx === i ? val : id))),
+    (i: number, val: string) => setIds(ids.map((id, idx) => (idx === i ? val : id))),
     [ids, setIds],
   );
 
@@ -72,70 +63,67 @@ export function BotAdminIds({ projectId, onPendingChange }: BotAdminIdsProps) {
   }, [ids, setIds]);
 
   return (
-    <div className="flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border transition-all bg-purple-500/8 border-purple-500/30 dark:bg-purple-500/10 dark:border-purple-500/40 col-span-full">
-      <div className="flex items-center gap-2">
-        <ShieldCheck className="w-4 h-4 flex-shrink-0 text-purple-600 dark:text-purple-400" aria-hidden="true" />
-        <span className="text-xs font-medium text-purple-700 dark:text-purple-300 flex-1">
-          Администраторы
-        </span>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-6 w-6 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20"
-          onClick={add}
-          aria-label="Добавить администратора"
-          title="Добавить администратора"
-        >
-          <Plus className="w-3.5 h-3.5" aria-hidden="true" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          className={`h-6 w-6 hover:bg-purple-500/20 transition-colors ${
-            isSaved
-              ? 'text-green-500'
-              : 'text-purple-600 dark:text-purple-400'
-          }`}
-          onClick={() => {
-            if (onPendingChange) {
-              const joined = ids.filter(Boolean).join(',');
-              onPendingChange('ADMIN_IDS', joined);
-            } else {
-              save();
-            }
-          }}
-          disabled={isSaving}
-          aria-label="Сохранить список администраторов"
-          title="Сохранить"
-        >
-          {isSaving
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-            : <Check className="w-3.5 h-3.5" aria-hidden="true" />
-          }
-        </Button>
-      </div>
-
-      {ids.map((id, i) => (
-        <div key={keysRef.current[i]} className="flex items-center gap-1.5">
-          <Input
-            className="h-7 text-xs flex-1 bg-transparent border-purple-500/30 focus-visible:ring-purple-500/40 text-purple-700 dark:text-purple-300 placeholder:text-purple-400/60"
-            placeholder="Telegram ID администратора"
-            value={id}
-            aria-label={`Telegram ID администратора ${i + 1}`}
-            onChange={(e) => update(i, e.target.value)}
-          />
+    <div className="flex flex-col gap-2.5 px-3.5 py-3">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted/50 text-muted-foreground">
+          <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+        </div>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <p className="text-sm font-medium text-foreground">Администраторы</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Telegram ID с правами админа</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-0.5">
           <Button
             size="icon"
             variant="ghost"
-            className="h-6 w-6 flex-shrink-0 text-purple-400 hover:text-purple-600 hover:bg-purple-500/20"
-            onClick={() => remove(i)}
-            aria-label={`Удалить администратора ${i + 1}`}
-            title="Удалить"
+            className="h-7 w-7 text-muted-foreground"
+            onClick={add}
+            aria-label="Добавить администратора"
           >
-            <X className="w-3 h-3" aria-hidden="true" />
+            <Plus className="h-3.5 w-3.5" aria-hidden />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className={`h-7 w-7 ${isSaved ? 'text-emerald-500' : 'text-muted-foreground'}`}
+            onClick={() => {
+              if (onPendingChange) {
+                onPendingChange('ADMIN_IDS', ids.filter(Boolean).join(','));
+              } else {
+                save();
+              }
+            }}
+            disabled={isSaving}
+            aria-label="Сохранить список администраторов"
+          >
+            {isSaving
+              ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+              : <Check className="h-3.5 w-3.5" aria-hidden />}
           </Button>
         </div>
-      ))}
+      </div>
+      <div className="space-y-1.5 pl-10">
+        {ids.map((id, i) => (
+          <div key={keysRef.current[i]} className="flex items-center gap-1.5">
+            <Input
+              className="h-8 flex-1 text-xs"
+              placeholder="Telegram ID"
+              value={id}
+              aria-label={`Telegram ID администратора ${i + 1}`}
+              onChange={(e) => update(i, e.target.value)}
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+              onClick={() => remove(i)}
+              aria-label={`Удалить администратора ${i + 1}`}
+            >
+              <X className="h-3.5 w-3.5" aria-hidden />
+            </Button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,14 +1,12 @@
 /**
  * @fileoverview Компонент терминала для конкретного бота
- *
- * Этот компонент предоставляет терминал для вывода логов бота.
- *
  * @module bot/BotTerminal
  */
 
 import { useTerminalWebSocket } from './use-terminal-websocket';
 import { useEffect, useRef } from 'react';
 import { Terminal as TerminalComponent, type TerminalHandle } from './Terminal';
+import { TerminalLogsContextBar } from './TerminalLogsContextBar';
 
 interface BotTerminalProps {
   /** Идентификатор проекта */
@@ -16,42 +14,50 @@ interface BotTerminalProps {
   /** Идентификатор токена бота */
   tokenId: number;
   /** Флаг, указывающий, запущен ли бот */
-  isBotRunning: boolean;
+  isBotRunning?: boolean;
 }
 
 /**
- * Компонент терминала для конкретного бота
- * @param projectId - Идентификатор проекта
- * @param tokenId - Идентификатор токена бота
- * @param isBotRunning - Флаг, указывающий, запущен ли бот
+ * Живые логи бота: context bar + Terminal
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
-export function BotTerminal({ projectId, tokenId }: Omit<BotTerminalProps, 'isBotRunning'> & { isBotRunning?: boolean }) {
+export function BotTerminal({ projectId, tokenId, isBotRunning = false }: BotTerminalProps) {
   const terminalRef = useRef<TerminalHandle>(null);
 
-  // WebSocket для получения вывода бота
   const { status: wsStatus, wsConnection, connect } = useTerminalWebSocket({
     terminalRef,
     projectId: projectId || null,
-    tokenId: tokenId || null
+    tokenId: tokenId || null,
   });
 
-  // Подключаемся при монтировании и переподключаемся при изменении статуса на disconnected
   useEffect(() => {
     if (wsStatus === 'disconnected') {
-      console.log('Подключение к терминалу, статус:', wsStatus);
       connect();
     }
   }, [wsStatus, connect]);
 
   return (
-    <div className="h-full w-full">
-      <TerminalComponent
-        ref={terminalRef}
-        isVisible={true}
-        wsConnection={wsConnection}
-        projectId={projectId}
-        tokenId={tokenId}
+    <div className="h-full w-full flex flex-col min-h-0">
+      <TerminalLogsContextBar
+        title="Живые логи"
+        subtitle={`token #${tokenId}`}
+        statusLabel={isBotRunning ? 'Онлайн' : 'Офлайн'}
+        statusClassName={
+          isBotRunning
+            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+            : 'bg-muted text-muted-foreground border-border'
+        }
       />
+      <div className="flex-1 min-h-0">
+        <TerminalComponent
+          ref={terminalRef}
+          isVisible={true}
+          wsConnection={wsConnection}
+          projectId={projectId}
+          tokenId={tokenId}
+        />
+      </div>
     </div>
   );
 }

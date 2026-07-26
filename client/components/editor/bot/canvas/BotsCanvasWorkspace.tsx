@@ -1,5 +1,5 @@
 /**
- * @fileoverview Рабочая область холста: canvas + resizable detail справа / sheet на узких экранах
+ * @fileoverview Рабочая область: холст + resizable overlay detail справа
  * @module bot/canvas/BotsCanvasWorkspace
  */
 
@@ -7,13 +7,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { BotsCanvas } from './BotsCanvas';
 import { BotDetailPanel } from './BotDetailPanel';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from '@/components/ui/resizable';
 import { useMediaQuery } from '@/components/editor/properties/hooks/use-media-query';
 import { useBotControl } from '../bot-control-context';
+import { useBotDetailPanelWidth } from './use-bot-detail-panel-width';
 import type { BotProject, BotToken } from '@shared/schema';
 
 /** Пропсы workspace холста */
@@ -25,15 +21,15 @@ interface BotsCanvasWorkspaceProps {
 }
 
 /**
- * Холст ботов: справа resizable detail (как Railway); sheet только &lt;640px
+ * Холст на весь контейнер; detail — overlay справа с ручкой ширины; sheet &lt;640px
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProps) {
   const { allBotStatuses } = useBotControl();
-  /** Узкий экран — bottom sheet; иначе правая панель с ручкой */
   const useSheet = useMediaQuery('(max-width: 639px)');
   const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
+  const { width: panelWidth, onResizePointerDown } = useBotDetailPanelWidth();
 
   useEffect(() => {
     setSelectedTokenId(null);
@@ -49,21 +45,54 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
   }, [allBotStatuses]);
 
   const selectedToken = tokens.find((t) => t.id === selectedTokenId) ?? null;
+  const overlayOpen = !!selectedToken && !useSheet;
 
-  const canvas = (
-    <BotsCanvas
-      projectId={project.id}
-      tokens={tokens}
-      runningByTokenId={runningByTokenId}
-      selectedTokenId={selectedTokenId}
-      onSelectToken={setSelectedTokenId}
-    />
-  );
+  return (
+    <div className="relative h-full min-h-0 rounded-lg border border-border overflow-hidden">
+      <BotsCanvas
+        projectId={project.id}
+        tokens={tokens}
+        runningByTokenId={runningByTokenId}
+        selectedTokenId={selectedTokenId}
+        onSelectToken={setSelectedTokenId}
+        overlayPanelWidth={overlayOpen ? panelWidth : 0}
+      />
 
-  if (useSheet) {
-    return (
-      <div className="h-full min-h-0">
-        {canvas}
+      {overlayOpen && selectedToken && (
+        <aside
+          className={[
+            'absolute inset-y-0 right-0 z-20 flex flex-col',
+            'bg-background border-l border-border',
+            'shadow-[-8px_0_24px_rgba(0,0,0,0.18)]',
+            'animate-in slide-in-from-right duration-200',
+          ].join(' ')}
+          style={{ width: panelWidth }}
+          data-bot-detail-overlay="true"
+        >
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Изменить ширину панели"
+            title="Потяните, чтобы изменить ширину"
+            onPointerDown={onResizePointerDown}
+            className={[
+              'group/resize absolute inset-y-0 left-0 z-30 w-3 -translate-x-1/2',
+              'cursor-col-resize touch-none',
+              'flex items-center justify-center',
+            ].join(' ')}
+          >
+            <span className="h-10 w-1 rounded-full bg-border transition-colors group-hover/resize:bg-primary/70 group-active/resize:bg-primary" />
+          </div>
+          <BotDetailPanel
+            project={project}
+            token={selectedToken}
+            isRunning={!!runningByTokenId[selectedToken.id]}
+            onClose={() => setSelectedTokenId(null)}
+          />
+        </aside>
+      )}
+
+      {useSheet && (
         <Sheet
           open={!!selectedToken}
           onOpenChange={(open) => {
@@ -82,34 +111,7 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
             )}
           </SheetContent>
         </Sheet>
-      </div>
-    );
-  }
-
-  if (!selectedToken) {
-    return (
-      <div className="h-full min-h-0 rounded-lg border border-border overflow-hidden">
-        {canvas}
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-full min-h-0 rounded-lg border border-border overflow-hidden">
-      <ResizablePanelGroup direction="horizontal" className="h-full">
-        <ResizablePanel defaultSize={55} minSize={25} className="min-w-0">
-          {canvas}
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={45} minSize={25} maxSize={75} className="min-w-0">
-          <BotDetailPanel
-            project={project}
-            token={selectedToken}
-            isRunning={!!runningByTokenId[selectedToken.id]}
-            onClose={() => setSelectedTokenId(null)}
-          />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+      )}
     </div>
   );
 }

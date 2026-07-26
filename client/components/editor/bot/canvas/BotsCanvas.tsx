@@ -8,6 +8,7 @@ import { BotServiceNode } from './BotServiceNode';
 import { BotsCanvasToolbar } from './BotsCanvasToolbar';
 import { useCanvasFullscreen } from './use-canvas-fullscreen';
 import { useBotNodeLayout } from './use-bot-node-layout';
+import { useFocusSelectedBot } from './use-focus-selected-bot';
 import { useCanvasViewport } from '@/components/editor/canvas/canvas/use-canvas-viewport';
 import type { BotToken } from '@shared/schema';
 
@@ -23,6 +24,8 @@ interface BotsCanvasProps {
   selectedTokenId: number | null;
   /** Выбор ноды */
   onSelectToken: (tokenId: number) => void;
+  /** Ширина правого overlay (0 = закрыт); для фокуса камеры */
+  overlayPanelWidth?: number;
 }
 
 /**
@@ -36,6 +39,7 @@ export function BotsCanvas({
   runningByTokenId,
   selectedTokenId,
   onSelectToken,
+  overlayPanelWidth = 0,
 }: BotsCanvasProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -50,8 +54,12 @@ export function BotsCanvas({
   const {
     pan,
     zoom,
+    setPan,
+    panRef,
+    zoomRef,
     isPanning,
     animateTransform,
+    triggerTransformAnimation,
     zoomIn,
     zoomOut,
     resetZoom,
@@ -61,6 +69,17 @@ export function BotsCanvas({
   } = useCanvasViewport({
     canvasRef,
     isEmptyTarget,
+  });
+
+  useFocusSelectedBot({
+    selectedTokenId,
+    positions,
+    canvasRef,
+    zoomRef,
+    panRef,
+    setPan,
+    triggerTransformAnimation,
+    overlayPanelWidth,
   });
 
   const scale = zoom / 100;
@@ -89,12 +108,13 @@ export function BotsCanvas({
         onContextMenu={handleContextMenu}
       >
         <div
-          className="origin-top-left will-change-transform"
+          className="origin-top-left"
           style={{
             width: contentSize.width,
             height: contentSize.height,
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+            transform: `translate3d(${Math.round(pan.x)}px, ${Math.round(pan.y)}px, 0) scale(${scale})`,
             transition: animateTransform ? 'transform 200ms ease-out' : 'none',
+            backfaceVisibility: 'hidden',
           }}
         >
           <div
@@ -131,6 +151,7 @@ export function BotsCanvas({
         )}
       </div>
       <BotsCanvasToolbar
+        zoom={zoom}
         canZoomIn={zoom < 200}
         canZoomOut={zoom > 1}
         onZoomIn={zoomIn}

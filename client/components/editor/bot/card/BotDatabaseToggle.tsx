@@ -8,10 +8,10 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Database, ChevronDown } from 'lucide-react';
+import { SettingCard } from './SettingCard';
 
 interface BotDatabaseToggleProps {
   /** ID проекта */
@@ -55,20 +55,18 @@ export function BotDatabaseToggle({
   }, [isEnabled]);
 
   return (
-    <div className={`flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border transition-all ${className} ${
-      localEnabled ? 'bg-green-500/8 border-green-500/30 dark:bg-green-500/10 dark:border-green-500/40' 
-      : 'bg-red-500/8 border-red-500/30 dark:bg-red-500/10 dark:border-red-500/40'
-    }`} data-testid="database-toggle-container-bot-card">
-      <div className="flex items-center gap-2 sm:gap-3">
-        <Database className={`w-4 h-4 flex-shrink-0 ${localEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
-        <Label htmlFor={`db-toggle-bot-${tokenId}`} className={`text-xs sm:text-sm font-semibold cursor-pointer flex-1 ${
-          localEnabled ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
-        }`}>
-          {localEnabled ? 'БД включена' : 'БД выключена'}
-        </Label>
+    <SettingCard
+      icon={Database}
+      title="База данных пользователей"
+      description={localEnabled ? 'Профили и история сообщений сохраняются' : 'Бот работает без базы данных'}
+      active={localEnabled}
+      className={className}
+      testId="database-toggle-container-bot-card"
+      action={
         <Switch
           id={`db-toggle-bot-${tokenId}`}
           data-testid="switch-database-toggle-bot-card"
+          aria-label="База данных пользователей"
           checked={localEnabled}
           onCheckedChange={(checked) => {
             setLocalEnabled(checked);
@@ -80,8 +78,8 @@ export function BotDatabaseToggle({
           }}
           disabled={toggleDatabaseMutation.isPending}
         />
-      </div>
-
+      }
+    >
       <Collapsible open={infoOpen} onOpenChange={setInfoOpen}>
         <CollapsibleTrigger
           className="flex items-center gap-1 text-[11px] text-muted-foreground/80 hover:text-muted-foreground transition-colors"
@@ -108,6 +106,6 @@ export function BotDatabaseToggle({
           </div>
         </CollapsibleContent>
       </Collapsible>
-    </div>
+    </SettingCard>
   );
 }

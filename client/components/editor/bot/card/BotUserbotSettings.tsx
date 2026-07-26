@@ -204,30 +204,24 @@ export function BotUserbotSettings({
   }
 
   return (
-    <div
-      className={`flex flex-col gap-3 p-2.5 sm:p-3 rounded-lg border transition-all sm:col-span-2 ${
-        enabled
-          ? 'bg-violet-500/8 border-violet-500/30 dark:bg-violet-500/10 dark:border-violet-500/40'
-          : 'bg-muted/40 border-border/50'
-      }`}
-    >
-      {/* Заголовок + переключатель */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        <Bot
-          className={`w-4 h-4 flex-shrink-0 ${
-            enabled ? 'text-violet-600 dark:text-violet-400' : 'text-muted-foreground'
-          }`}
-        />
-        <div className="flex-1 min-w-0">
+    <div className="flex flex-col gap-2.5 px-3.5 py-3">
+      <div className="flex items-start gap-3">
+        <div
+          className={[
+            'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
+            enabled ? 'bg-muted text-foreground' : 'bg-muted/50 text-muted-foreground',
+          ].join(' ')}
+        >
+          <Bot className="h-3.5 w-3.5" />
+        </div>
+        <div className="min-w-0 flex-1 pt-0.5">
           <Label
             htmlFor={`userbot-toggle-${tokenId}`}
-            className={`text-xs sm:text-sm font-semibold cursor-pointer block ${
-              enabled ? 'text-violet-700 dark:text-violet-300' : 'text-muted-foreground'
-            }`}
+            className="block cursor-pointer text-sm font-medium text-foreground"
           >
             Telethon Userbot
           </Label>
-          <p className="text-xs text-muted-foreground/70 mt-0.5">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {enabled
               ? 'Юзербот работает параллельно с основным ботом'
               : 'Подключить аккаунт пользователя через Telethon'}
@@ -235,14 +229,14 @@ export function BotUserbotSettings({
         </div>
         <Switch
           id={`userbot-toggle-${tokenId}`}
+          className="mt-0.5 shrink-0"
           checked={enabled}
           onCheckedChange={handleToggle}
         />
       </div>
 
-      {/* Контент при включении */}
       {enabled && (
-        <div className="space-y-3 rounded-md border border-dashed border-violet-500/30 bg-background/70 p-3">
+        <div className="space-y-3 rounded-md border border-border/50 bg-muted/20 p-3 ml-10">
           {/* Ссылка на my.telegram.org */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <ExternalLink className="h-3.5 w-3.5" />
@@ -250,7 +244,7 @@ export function BotUserbotSettings({
               href="https://my.telegram.org/apps"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-violet-500 transition-colors"
+              className="underline hover:text-foreground transition-colors"
             >
               Получить API ID и Hash на my.telegram.org
             </a>

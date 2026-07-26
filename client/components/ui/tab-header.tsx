@@ -11,6 +11,8 @@ export interface TabHeaderProps {
   icon: React.ReactNode;
   /** Заголовок вкладки */
   title: string;
+  /** Элементы сразу после заголовка на 1-й строке (селектор проекта и т.п.) */
+  leading?: React.ReactNode;
   /** Элементы между заголовком и действиями (селекторы, бейджи) */
   children?: React.ReactNode;
   /** Кнопки действий справа */
@@ -21,19 +23,23 @@ export interface TabHeaderProps {
 
 /**
  * Универсальный заголовок вкладки.
- * Мобильный: строка 1 — заголовок + actions, строка 2 — children.
- * Десктоп: одна строка в широкой панели; в узкой (split/resizable) — две строки.
+ * Мобильный: строка 1 — заголовок + leading + actions, строка 2 — children.
+ * Десктоп: одна строка в широкой панели; в узкой — заголовок/leading/actions сверху, children снизу.
  *
  * @param props - Свойства компонента
  * @returns JSX элемент заголовка вкладки
  */
-export function TabHeader({ icon, title, children, actions, className }: TabHeaderProps) {
+export function TabHeader({ icon, title, leading, children, actions, className }: TabHeaderProps) {
   const titleBlock = (
     <div className="flex items-center gap-2.5 shrink-0 min-w-0">
       <div className="rounded-lg bg-primary/10 p-2 shrink-0">{icon}</div>
       <h2 className="text-base font-semibold leading-none shrink-0">{title}</h2>
     </div>
   );
+
+  const leadingBlock = leading ? (
+    <div className="flex items-center gap-1.5 min-w-0 shrink">{leading}</div>
+  ) : null;
 
   const actionsBlock = actions ? (
     <div className="flex items-center gap-2 shrink-0">{actions}</div>
@@ -52,18 +58,22 @@ export function TabHeader({ icon, title, children, actions, className }: TabHead
         className,
       )}
     >
-      {/* Десктоп: узкая панель — заголовок и actions сверху, children снизу */}
+      {/* Десктоп: узкая панель — заголовок + leading + actions сверху, children снизу */}
       <div className="hidden sm:flex @[720px]:hidden flex-col gap-2">
         <div className="flex items-center justify-between gap-2 min-w-0">
-          {titleBlock}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {titleBlock}
+            {leadingBlock}
+          </div>
           {actionsBlock}
         </div>
         {childrenBlock}
       </div>
 
-      {/* Десктоп: широкая панель — одна строка с переносом при нехватке места */}
+      {/* Десктоп: широкая панель — одна строка */}
       <div className="hidden @[720px]:flex flex-wrap items-center gap-2">
         {titleBlock}
+        {leadingBlock}
         {children}
         {actionsBlock && <div className="ml-auto flex items-center gap-2 shrink-0">{actions}</div>}
       </div>
@@ -71,13 +81,14 @@ export function TabHeader({ icon, title, children, actions, className }: TabHead
       {/* Мобильный: 2 строки */}
       <div className="sm:hidden space-y-1.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="rounded-lg bg-primary/10 p-1.5 shrink-0">
               {icon}
             </div>
             <h2 className="text-sm font-semibold leading-none shrink-0">
               {title}
             </h2>
+            {leadingBlock}
           </div>
           {actions && (
             <div className="flex items-center gap-2">

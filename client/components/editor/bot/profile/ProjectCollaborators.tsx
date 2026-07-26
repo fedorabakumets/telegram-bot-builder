@@ -1,9 +1,5 @@
 /**
  * @fileoverview Компонент управления участниками проекта
- *
- * Отображает список коллабораторов проекта с возможностью
- * добавления и удаления (для владельца и коллабораторов проекта).
- *
  * @module ProjectCollaborators
  */
 
@@ -17,26 +13,21 @@ import { useCollaborators } from './use-collaborators';
 interface ProjectCollaboratorsProps {
   /** ID проекта */
   projectId: number;
-  /** Имеет ли текущий пользователь права управления (владелец или коллаборатор) */
+  /** Имеет ли текущий пользователь права управления */
   canManage: boolean;
 }
 
 /**
  * Блок управления участниками проекта
- *
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
 export function ProjectCollaborators({ projectId, canManage }: ProjectCollaboratorsProps) {
   const { collaborators, isLoading, isAdding, isRemoving, add, remove } =
     useCollaborators(projectId);
-
-  /** Значение поля ввода нового участника */
   const [inputValue, setInputValue] = useState('');
 
-  /**
-   * Обработчик добавления участника
-   */
+  /** Добавить участника по Telegram ID */
   const handleAdd = async () => {
     const userId = parseInt(inputValue.trim(), 10);
     if (!userId || isNaN(userId)) return;
@@ -45,7 +36,7 @@ export function ProjectCollaborators({ projectId, canManage }: ProjectCollaborat
   };
 
   /**
-   * Обработчик нажатия Enter в поле ввода
+   * Enter в поле ввода — добавить
    * @param e - Событие клавиатуры
    */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -53,83 +44,69 @@ export function ProjectCollaborators({ projectId, canManage }: ProjectCollaborat
   };
 
   return (
-    <div className="flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border transition-all bg-blue-500/8 border-blue-500/30 dark:bg-blue-500/10 dark:border-blue-500/40 col-span-full">
-      {/* Заголовок блока */}
-      <div className="flex items-center gap-2">
-        <Users
-          className="w-4 h-4 flex-shrink-0 text-blue-600 dark:text-blue-400"
-          aria-hidden="true"
-        />
-        <span className="text-xs font-medium text-blue-700 dark:text-blue-300 flex-1">
-          Коллабораторы
-        </span>
+    <div className="flex flex-col gap-2.5 px-3.5 py-3">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted/50 text-muted-foreground">
+          <Users className="h-3.5 w-3.5" aria-hidden />
+        </div>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <p className="text-sm font-medium text-foreground">Коллабораторы</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Доступ к проекту</p>
+        </div>
         {isLoading && (
-          <Loader2
-            className="w-3.5 h-3.5 animate-spin text-blue-500"
-            aria-label="Загрузка участников"
-          />
+          <Loader2 className="mt-1 h-3.5 w-3.5 animate-spin text-muted-foreground" aria-label="Загрузка" />
         )}
       </div>
 
-      {/* Список коллабораторов */}
-      {collaborators.length === 0 && !isLoading && (
-        <p className="text-xs text-blue-500/60 dark:text-blue-400/50 pl-0.5">
-          Нет коллабораторов
-        </p>
-      )}
-
-      {collaborators.map((collab) => (
-        <div key={collab.userId} className="flex items-center gap-1.5">
-          <span className="text-xs flex-1 text-blue-700 dark:text-blue-300 truncate">
-            {collab.userId}
-          </span>
-          {canManage && (
+      <div className="space-y-1.5 pl-10">
+        {collaborators.length === 0 && !isLoading && (
+          <p className="text-xs text-muted-foreground/70">Нет коллабораторов</p>
+        )}
+        {collaborators.map((collab) => (
+          <div key={collab.userId} className="flex items-center gap-1.5">
+            <span className="flex-1 truncate text-xs text-foreground">{collab.userId}</span>
+            {canManage && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                onClick={() => remove(collab.userId)}
+                disabled={isRemoving}
+                aria-label={`Удалить коллаборатора ${collab.userId}`}
+              >
+                {isRemoving
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                  : <X className="h-3.5 w-3.5" aria-hidden />}
+              </Button>
+            )}
+          </div>
+        ))}
+        {canManage && (
+          <div className="flex items-center gap-1.5">
+            <Input
+              className="h-8 flex-1 text-xs"
+              placeholder="Telegram ID"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              aria-label="Telegram ID нового коллаборатора"
+              type="number"
+            />
             <Button
               size="icon"
               variant="ghost"
-              className="h-6 w-6 flex-shrink-0 text-blue-400 hover:text-blue-600 hover:bg-blue-500/20"
-              onClick={() => remove(collab.userId)}
-              disabled={isRemoving}
-              aria-label={`Удалить коллаборатора ${collab.userId}`}
-              title="Удалить коллаборатора"
+              className="h-7 w-7 shrink-0 text-muted-foreground"
+              onClick={handleAdd}
+              disabled={isAdding || !inputValue.trim()}
+              aria-label="Добавить коллаборатора"
             >
-              {isRemoving
-                ? <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
-                : <X className="w-3 h-3" aria-hidden="true" />
-              }
+              {isAdding
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                : <Plus className="h-3.5 w-3.5" aria-hidden />}
             </Button>
-          )}
-        </div>
-      ))}
-
-      {/* Поле добавления нового участника (для владельца и коллабораторов) */}
-      {canManage && (
-        <div className="flex items-center gap-1.5">
-          <Input
-            className="h-7 text-xs flex-1 bg-transparent border-blue-500/30 focus-visible:ring-blue-500/40 text-blue-700 dark:text-blue-300 placeholder:text-blue-400/60"
-            placeholder="Telegram ID коллаборатора"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            aria-label="Telegram ID нового коллаборатора"
-            type="number"
-          />
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6 flex-shrink-0 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20"
-            onClick={handleAdd}
-            disabled={isAdding || !inputValue.trim()}
-            aria-label="Добавить коллаборатора"
-            title="Добавить коллаборатора"
-          >
-            {isAdding
-              ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
-              : <Plus className="w-3.5 h-3.5" aria-hidden="true" />
-            }
-          </Button>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

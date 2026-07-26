@@ -3,12 +3,12 @@
  * @module BotProtectContentToggle
  */
 
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ShieldCheck } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { SettingCard } from './SettingCard';
 
 interface BotProtectContentToggleProps {
   projectId: number;
@@ -67,36 +67,20 @@ export function BotProtectContentToggle({
   });
 
   return (
-    <div
-      className={`flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border transition-all ${className} ${
+    <SettingCard
+      icon={ShieldCheck}
+      title="Защита от копирования"
+      description={
         localEnabled
-          ? 'bg-emerald-500/8 border-emerald-500/30 dark:bg-emerald-500/10 dark:border-emerald-500/40'
-          : 'bg-muted/40 border-border/50'
-      }`}
-    >
-      <div className="flex items-center gap-2 sm:gap-3">
-        <ShieldCheck
-          className={`w-4 h-4 flex-shrink-0 ${
-            localEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'
-          }`}
-        />
-        <div className="flex-1 min-w-0">
-          <Label
-            htmlFor={`protect-content-${tokenId}`}
-            className={`text-xs sm:text-sm font-semibold cursor-pointer block ${
-              localEnabled ? 'text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground'
-            }`}
-          >
-            Защита от копирования
-          </Label>
-          <p className="text-xs text-muted-foreground/70 mt-0.5">
-            {localEnabled
-              ? 'Telegram запретит пересылку и сохранение сообщений этого бота'
-              : 'Сообщения этого бота можно пересылать и сохранять'}
-          </p>
-        </div>
+          ? 'Telegram запретит пересылку и сохранение сообщений этого бота'
+          : 'Сообщения этого бота можно пересылать и сохранять'
+      }
+      active={localEnabled}
+      className={className}
+      action={
         <Switch
           id={`protect-content-${tokenId}`}
+          aria-label="Защита от копирования"
           checked={localEnabled}
           onCheckedChange={(checked) => {
             setLocalEnabled(checked);
@@ -108,7 +92,7 @@ export function BotProtectContentToggle({
           }}
           disabled={mutation.isPending}
         />
-      </div>
-    </div>
+      }
+    />
   );
 }

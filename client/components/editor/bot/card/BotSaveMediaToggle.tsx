@@ -3,13 +3,13 @@
  * @module BotSaveMediaToggle
  */
 
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ImageIcon } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { IncomingMediaStorageHint } from '../incoming-media-storage-hint';
+import { SettingCard } from './SettingCard';
 
 /** Пропсы переключателя сохранения медиафайлов */
 interface BotSaveMediaToggleProps {
@@ -96,32 +96,16 @@ export function BotSaveMediaToggle({
   });
 
   return (
-    <div
-      className={`flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border transition-all ${className} ${
-        localEnabled
-          ? 'bg-blue-500/8 border-blue-500/30 dark:bg-blue-500/10 dark:border-blue-500/40'
-          : 'bg-muted/40 border-border/50'
-      }`}
-    >
-      <div className="flex items-center gap-2 sm:gap-3">
-        <ImageIcon
-          className={`w-4 h-4 flex-shrink-0 ${
-            localEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'
-          }`}
-        />
-        <div className="flex-1 min-w-0">
-          <Label
-            htmlFor={`save-media-${tokenId}`}
-            className={`text-xs sm:text-sm font-semibold cursor-pointer block ${
-              localEnabled ? 'text-blue-700 dark:text-blue-300' : 'text-muted-foreground'
-            }`}
-          >
-            {localEnabled ? 'Сохранять входящие фото' : 'Фото не сохраняются'}
-          </Label>
-          <IncomingMediaStorageHint projectId={projectId} enabled={localEnabled} />
-        </div>
+    <SettingCard
+      icon={ImageIcon}
+      title="Сохранять входящие фото"
+      description={<IncomingMediaStorageHint projectId={projectId} enabled={localEnabled} />}
+      active={localEnabled}
+      className={className}
+      action={
         <Switch
           id={`save-media-${tokenId}`}
+          aria-label="Сохранять входящие фото"
           checked={localEnabled}
           onCheckedChange={(checked) => {
             setLocalEnabled(checked);
@@ -133,7 +117,7 @@ export function BotSaveMediaToggle({
           }}
           disabled={mutation.isPending}
         />
-      </div>
-    </div>
+      }
+    />
   );
 }

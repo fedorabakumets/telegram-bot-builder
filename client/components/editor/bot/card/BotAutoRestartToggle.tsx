@@ -4,7 +4,6 @@
  * @module BotAutoRestartToggle
  */
 
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
   Select,
@@ -16,6 +15,7 @@ import {
 import { RefreshCw } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { SettingCard } from './SettingCard';
 
 /** Пропсы компонента переключателя автоперезапуска */
 interface BotAutoRestartToggleProps {
@@ -86,35 +86,20 @@ export function BotAutoRestartToggle({
   });
 
   return (
-    <div
-      className={`flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border transition-all col-span-full ${className} ${
+    <SettingCard
+      icon={RefreshCw}
+      title="Перезапуск при сбое"
+      description={
         localEnabled
-          ? 'bg-blue-500/8 border-blue-500/30 dark:bg-blue-500/10 dark:border-blue-500/40'
-          : 'bg-muted/40 border-border/50'
-      }`}
-    >
-      {/* Верхняя строка: иконка + заголовок + переключатель */}
-      <div className="flex items-center gap-2 sm:gap-3">
-        <RefreshCw
-          className={`w-4 h-4 flex-shrink-0 ${localEnabled ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}
-        />
-        <div className="flex-1 min-w-0">
-          <Label
-            htmlFor={`auto-restart-${tokenId}`}
-            className={`text-xs sm:text-sm font-semibold cursor-pointer block ${
-              localEnabled ? 'text-blue-700 dark:text-blue-300' : 'text-muted-foreground'
-            }`}
-          >
-            Перезапуск при сбое
-          </Label>
-          <p className="text-xs text-muted-foreground/70 mt-0.5">
-            {localEnabled
-              ? 'Бот автоматически перезапустится если упадёт с ошибкой'
-              : 'Бот останется выключенным после сбоя'}
-          </p>
-        </div>
+          ? 'Бот автоматически перезапустится если упадёт с ошибкой'
+          : 'Бот останется выключенным после сбоя'
+      }
+      active={localEnabled}
+      className={className}
+      action={
         <Switch
           id={`auto-restart-${tokenId}`}
+          aria-label="Перезапуск при сбое"
           checked={localEnabled}
           onCheckedChange={(checked) => {
             setLocalEnabled(checked);
@@ -126,12 +111,11 @@ export function BotAutoRestartToggle({
           }}
           disabled={mutation.isPending}
         />
-      </div>
-
-      {/* Нижняя строка: выбор попыток (только когда включено) */}
+      }
+    >
       {localEnabled && (
-        <div className="flex items-center gap-2 pl-6">
-          <span className="text-xs text-blue-600/70 dark:text-blue-400/70">Максимум попыток:</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">Максимум попыток</span>
           <Select
             value={String(localAttempts)}
             onValueChange={(val) => {
@@ -145,7 +129,7 @@ export function BotAutoRestartToggle({
             }}
             disabled={mutation.isPending}
           >
-            <SelectTrigger className="h-6 w-28 text-xs border-blue-500/30 bg-transparent text-blue-700 dark:text-blue-300">
+            <SelectTrigger className="h-7 w-28 text-xs">
               <SelectValue placeholder="Попыток" />
             </SelectTrigger>
             <SelectContent>
@@ -158,6 +142,6 @@ export function BotAutoRestartToggle({
           </Select>
         </div>
       )}
-    </div>
+    </SettingCard>
   );
 }

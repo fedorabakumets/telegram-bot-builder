@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SettingCard } from './SettingCard';
 
 /** Доступные уровни логирования */
 const LOG_LEVELS = [
@@ -75,46 +76,35 @@ export function BotLogLevelSelect({ projectId, tokenId, logLevel, onPendingChang
     },
   });
 
-  const current = LOG_LEVELS.find(l => l.value === localLevel) ?? LOG_LEVELS[1];
-
   return (
-    <div className="flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg border bg-muted/40 border-border/50 transition-all">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-          <FileText className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-          <div className="min-w-0">
-            <span className="text-xs sm:text-sm font-semibold text-muted-foreground block">
-              Уровень логирования
-            </span>
-            <p className="text-xs text-muted-foreground/70 mt-0.5">
-              Детализация вывода в терминал
-            </p>
-          </div>
-        </div>
-        <Select
-          value={localLevel}
-          onValueChange={(val) => {
-            setLocalLevel(val as LogLevel);
-            if (onPendingChange) {
-              onPendingChange('LOG_LEVEL', val);
-            } else {
-              mutation.mutate(val);
-            }
-          }}
-          disabled={mutation.isPending}
-        >
-          <SelectTrigger className="h-7 w-full sm:w-36 text-xs">
-            <SelectValue placeholder="Уровень" />
-          </SelectTrigger>
-          <SelectContent>
-            {LOG_LEVELS.map(({ value, label }) => (
-              <SelectItem key={value} value={value} className="text-xs">
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <SettingCard
+      icon={FileText}
+      title="Уровень логирования"
+      description="Детализация вывода в терминал"
+    >
+      <Select
+        value={localLevel}
+        onValueChange={(val) => {
+          setLocalLevel(val as LogLevel);
+          if (onPendingChange) {
+            onPendingChange('LOG_LEVEL', val);
+          } else {
+            mutation.mutate(val);
+          }
+        }}
+        disabled={mutation.isPending}
+      >
+        <SelectTrigger className="h-7 w-full text-xs">
+          <SelectValue placeholder="Уровень" />
+        </SelectTrigger>
+        <SelectContent>
+          {LOG_LEVELS.map(({ value, label }) => (
+            <SelectItem key={value} value={value} className="text-xs">
+              {label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </SettingCard>
   );
 }

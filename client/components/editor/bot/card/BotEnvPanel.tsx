@@ -163,7 +163,7 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds, pending }: Bo
   }
 
   return (
-    <div className="mt-3 space-y-2">
+    <div className="space-y-3">
       {/* Заголовок */}
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">{totalCount} переменных</span>
@@ -202,8 +202,8 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds, pending }: Bo
           )}
 
           {/* Системные переменные */}
-          <div className="space-y-0.5">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2">Системные</span>
+          <div className="space-y-1">
+            <h3 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Системные</h3>
             {filteredSystem.map(v => (
               <BotEnvRow
                 key={v.key} id={null} envKey={v.key} value={v.value}
@@ -219,8 +219,8 @@ export function BotEnvPanel({ projectId, tokenId, token, adminIds, pending }: Bo
           {(filteredCustom.length > 0 || !showSearch) && (
             <>
               <Separator className="opacity-30" />
-              <div className="space-y-0.5">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 px-2">Пользовательские</span>
+              <div className="space-y-1">
+                <h3 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Пользовательские</h3>
                 {filteredCustom.map(v => (
                   <BotEnvRow
                     key={v.id} id={v.id} envKey={v.key} value={v.value}

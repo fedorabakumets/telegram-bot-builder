@@ -8,6 +8,7 @@ export { TerminalOutput } from './TerminalOutput';
 export { TerminalPanel } from './TerminalPanel';
 export { TerminalTabs } from './TerminalTabs';
 export { TerminalSearchBar } from './TerminalSearchBar';
+export { TerminalLogsToolbar } from './TerminalLogsToolbar';
 export { BotTerminal } from './BotTerminal';
 export { useTerminalLines } from './useTerminalLines';
 export { useTerminalMethods } from './useTerminalMethods';
