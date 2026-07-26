@@ -21,6 +21,7 @@ import { useBotControl } from '../bot-control-context';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
 import { isGuest } from '@/types/telegram-user';
+import { useBotViewMode } from '../canvas/use-bot-view-mode';
 import type { BotProject, BotToken } from '@shared/schema';
 
 /**
@@ -76,11 +77,13 @@ export function BotControlPanel({
   const { setShowAddBot, setProjectForNewBot, allTokensFlat, allBotStatuses } = useBotControl();
   const { user, isLoading: authLoading } = useTelegramAuth();
   const { handleTelegramLogin } = useTelegramLogin();
+  const { viewMode, setViewMode } = useBotViewMode();
 
   /** Является ли текущий пользователь гостем */
   const isGuestUser = !authLoading && (!user || isGuest(user));
   /** Есть ли хотя бы один запущенный бот */
   const hasRunningBot = allBotStatuses.some(s => s?.status === 'running');
+  const isCanvas = viewMode === 'canvas';
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -89,10 +92,18 @@ export function BotControlPanel({
         allProjects={allProjects}
         currentProjectId={currentProjectId}
         onProjectChange={onProjectChange}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
 
-      <div className="flex-1 overflow-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
-        {isGuestUser && (
+      <div
+        className={
+          isCanvas
+            ? 'flex-1 min-h-0 overflow-hidden p-0 sm:p-0'
+            : 'flex-1 overflow-auto p-4 sm:p-6 space-y-4 sm:space-y-6'
+        }
+      >
+        {isGuestUser && !isCanvas && (
           <GuestBanner
             hasRunningBot={hasRunningBot}
             onLogin={handleTelegramLogin}
@@ -108,6 +119,7 @@ export function BotControlPanel({
             projects={projects}
             allTokens={allTokens}
             currentProjectId={currentProjectId}
+            viewMode={viewMode}
           />
         )}
       </div>

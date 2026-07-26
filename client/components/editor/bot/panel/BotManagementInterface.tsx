@@ -1,9 +1,7 @@
 /**
  * @fileoverview Интерфейс управления ботами
  *
- * Отображает список проектов с их ботами.
- * Хранит состояние сворачивания карточек по tokenId.
- * Передаёт колбэки сворачивания в ProjectHeader и ProjectBotsList.
+ * Отображает список проектов с их ботами или холст активного проекта.
  *
  * @module BotManagementInterface
  */
@@ -13,16 +11,20 @@ import { ProjectHeader } from '../project/ProjectHeader';
 import { EmptyBotsState } from './EmptyBotsState';
 import { ProjectBotsList } from '../project/ProjectBotsList';
 import { useBotControl } from '../bot-control-context';
+import { BotsCanvasWorkspace } from '../canvas/BotsCanvasWorkspace';
+import type { BotViewMode } from '../canvas/use-bot-view-mode';
 import type { BotProject, BotToken } from '@shared/schema';
 
 /** Свойства интерфейса управления ботами */
 interface BotManagementInterfaceProps {
   /** Список проектов */
   projects: BotProject[];
-  /** Токены по каждому проекту (индекс совпадает с projects) */
+  /** Токены по каждому проекту */
   allTokens: BotToken[][];
-  /** ID активного проекта — будет показан первым */
+  /** ID активного проекта */
   currentProjectId?: number;
+  /** Режим Список / Холст */
+  viewMode?: BotViewMode;
 }
 
 /**
@@ -30,15 +32,15 @@ interface BotManagementInterfaceProps {
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function BotManagementInterface({ projects, allTokens, currentProjectId }: BotManagementInterfaceProps) {
+export function BotManagementInterface({
+  projects,
+  allTokens,
+  currentProjectId,
+  viewMode = 'list',
+}: BotManagementInterfaceProps) {
   const { setProjectForNewBot, setShowAddBot, allBotInfos, restartAllBotsMutation } = useBotControl();
-
-  /** Состояние сворачивания карточек: tokenId → collapsed */
   const [collapsedState, setCollapsedState] = useState<Record<number, boolean>>({});
 
-  /**
-   * Проекты отсортированы: активный проект идёт первым
-   */
   const sortedEntries = projects
     .map((project, index) => ({ project, tokens: allTokens[index] || [], botInfo: allBotInfos[index] }))
     .sort((a, b) => {
@@ -47,35 +49,45 @@ export function BotManagementInterface({ projects, allTokens, currentProjectId }
       return 0;
     });
 
-  /**
-   * Обновить состояние сворачивания одного токена
-   * @param tokenId - ID токена
-   * @param collapsed - Новое состояние
-   */
-  function handleCollapseChange(tokenId: number, collapsed: boolean) {
-    setCollapsedState(prev => ({ ...prev, [tokenId]: collapsed }));
+  const activeEntry =
+    sortedEntries.find((e) => e.project.id === currentProjectId) ?? sortedEntries[0];
+
+  if (viewMode === 'canvas' && activeEntry) {
+    if (activeEntry.tokens.length === 0) {
+      return (
+        <div className="h-full p-4 sm:p-6">
+          <EmptyBotsState
+            onAddBot={() => {
+              setProjectForNewBot(activeEntry.project.id);
+              setShowAddBot(true);
+            }}
+          />
+        </div>
+      );
+    }
+    return (
+      <div className="h-full">
+        <BotsCanvasWorkspace project={activeEntry.project} tokens={activeEntry.tokens} />
+      </div>
+    );
   }
 
-  /**
-   * Свернуть все карточки проекта
-   * @param tokens - Токены проекта
-   */
+  function handleCollapseChange(tokenId: number, collapsed: boolean) {
+    setCollapsedState((prev) => ({ ...prev, [tokenId]: collapsed }));
+  }
+
   function handleCollapseAll(tokens: BotToken[]) {
-    setCollapsedState(prev => {
+    setCollapsedState((prev) => {
       const next = { ...prev };
-      tokens.forEach(t => { next[t.id] = true; });
+      tokens.forEach((t) => { next[t.id] = true; });
       return next;
     });
   }
 
-  /**
-   * Развернуть все карточки проекта
-   * @param tokens - Токены проекта
-   */
   function handleExpandAll(tokens: BotToken[]) {
-    setCollapsedState(prev => {
+    setCollapsedState((prev) => {
       const next = { ...prev };
-      tokens.forEach(t => { next[t.id] = false; });
+      tokens.forEach((t) => { next[t.id] = false; });
       return next;
     });
   }
@@ -83,10 +95,8 @@ export function BotManagementInterface({ projects, allTokens, currentProjectId }
   return (
     <div className="space-y-6 sm:space-y-8">
       {sortedEntries.map(({ project, tokens: projectTokens, botInfo: projectBotInfo }) => {
-
-        /** Все ли карточки проекта свёрнуты */
         const defaultCollapsedFallback = projectTokens.length > 3;
-        const allCollapsed = projectTokens.length > 0 && projectTokens.every(t => {
+        const allCollapsed = projectTokens.length > 0 && projectTokens.every((t) => {
           const val = collapsedState[t.id];
           return val === undefined ? defaultCollapsedFallback : val;
         });
@@ -103,7 +113,6 @@ export function BotManagementInterface({ projects, allTokens, currentProjectId }
               onRestartAll={() => restartAllBotsMutation.mutate(project.id)}
               isRestartingAll={restartAllBotsMutation.isPending}
             />
-
             {projectTokens.length === 0 ? (
               <EmptyBotsState
                 onAddBot={() => {

@@ -11,6 +11,8 @@ import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-a
 import { isGuest } from '@/types/telegram-user';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 import { WorkerPoolStatus } from './WorkerPoolStatus';
+import { BotViewModeToggle } from '../canvas/BotViewModeToggle';
+import type { BotViewMode } from '../canvas/use-bot-view-mode';
 
 /** Свойства заголовка панели управления ботами */
 interface BotControlPanelHeaderProps {
@@ -22,6 +24,10 @@ interface BotControlPanelHeaderProps {
   currentProjectId?: number;
   /** Обработчик смены проекта */
   onProjectChange?: (projectId: number) => void;
+  /** Режим Список / Холст */
+  viewMode: BotViewMode;
+  /** Смена режима вида */
+  onViewModeChange: (mode: BotViewMode) => void;
 }
 
 /**
@@ -29,7 +35,14 @@ interface BotControlPanelHeaderProps {
  * @param props - Свойства компонента
  * @returns JSX элемент заголовка
  */
-export function BotControlPanelHeader({ onConnectBot, allProjects, currentProjectId, onProjectChange }: BotControlPanelHeaderProps) {
+export function BotControlPanelHeader({
+  onConnectBot,
+  allProjects,
+  currentProjectId,
+  onProjectChange,
+  viewMode,
+  onViewModeChange,
+}: BotControlPanelHeaderProps) {
   const { user, isLoading: authLoading } = useTelegramAuth();
   const isGuestUser = !authLoading && (!user || isGuest(user));
 
@@ -39,6 +52,7 @@ export function BotControlPanelHeader({ onConnectBot, allProjects, currentProjec
       title="Боты"
       actions={
         <>
+          <BotViewModeToggle mode={viewMode} onModeChange={onViewModeChange} />
           {!isGuestUser && (
             <Button
               variant="outline"
