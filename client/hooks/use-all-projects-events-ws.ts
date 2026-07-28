@@ -10,7 +10,8 @@ import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
 import { useActiveTerminals } from '@/components/editor/bot/contexts/ActiveTerminalsContext';
 import { resolveBotDisplayNameFromCache } from '@/components/editor/bot/contexts/bot-control-utils';
 import { subscribeSharedTerminalWs, onSharedTerminalWsReconnect } from '@/lib/shared-terminal-ws';
-import type { ProjectEvent } from '@shared/project-sync/project-event';
+import type { ProjectEvent, StartOfflineProgressPayload } from '@shared/project-sync/project-event';
+import { startOfflineProgressQueryKey } from '@/components/editor/bot/start-offline-progress-query';
 
 /**
  * Структура события проекта, получаемого по WebSocket
@@ -70,6 +71,23 @@ function handleBotEvent(
     queryClient.invalidateQueries({ queryKey: [`/api/tokens/${msg.tokenId}/bot-status`] });
   }
   queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/bot/info`] });
+}
+
+/**
+ * Сохраняет прогресс bulk start-offline в React Query (без тостов)
+ * @param queryClient - React Query client
+ * @param msg - Событие проекта
+ */
+function handleStartOfflineProgress(
+  queryClient: ReturnType<typeof useQueryClient>,
+  msg: AllProjectsWsEvent,
+): void {
+  const data = msg.data as StartOfflineProgressPayload | undefined;
+  if (!data || typeof data.total !== 'number') return;
+  queryClient.setQueryData(startOfflineProgressQueryKey(msg.projectId), data);
+  if (msg.tokenId) {
+    queryClient.invalidateQueries({ queryKey: [`/api/tokens/${msg.tokenId}/bot-status`] });
+  }
 }
 
 /**
@@ -152,6 +170,9 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
         }
         if (msg.type === 'bot-started' && msg.tokenId) {
           onBotStartedRef.current?.(msg.projectId, msg.tokenId);
+        }
+        if (msg.type === 'start-offline-progress') {
+          handleStartOfflineProgress(queryClient, msg);
         }
       } catch {
         // Игнорируем некорректные сообщения

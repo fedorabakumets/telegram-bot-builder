@@ -13,6 +13,7 @@ import { setupProcessOutputListener } from './setupProcessOutputListener';
 import { workerManager } from '../bots/botWorkerManager';
 import { sendOutputToTerminals } from './sendOutputToTerminals';
 import { getActiveLaunchId } from './activeLaunchIds';
+import { handleWorkerBotExited } from '../bots/handleWorkerBotExited';
 
 /**
  * Хранилище функций очистки слушателей для каждого процесса.
@@ -85,7 +86,11 @@ export function setupBotProcessListeners() {
         sendOutputToTerminals(content, streamType, projectId, tokenId, launchId);
       });
 
-      console.log('[Terminal] Подписка на логи воркеров настроена');
+      workerManager.on('bot-exited', (projectId: number, tokenId: number, exitStatus: string | number) => {
+        void handleWorkerBotExited(projectId, tokenId, exitStatus);
+      });
+
+      console.log('[Terminal] Подписка на логи и exit воркеров настроена');
     } else {
       console.log('[Terminal] USE_WORKER_POOL=false — подписка на воркеры пропущена');
     }

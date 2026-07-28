@@ -514,3 +514,72 @@ export async function restartAllBotsInDb(
     message: body.message,
   };
 }
+
+/**
+ * Запускает всех офлайн-ботов проекта через POST .../bot/start-offline-all.
+ * Уже running не трогает. confirm: true обязателен. UI обновляется через WS bot-started
+ * и start-offline-progress.
+ * @param projectId - ID проекта
+ * @param options - apiBaseUrl и confirm
+ * @returns Сводка или ошибка
+ */
+export async function startOfflineBotsInDb(
+  projectId: number,
+  options?: ReadDbOptions & { confirm?: boolean },
+): Promise<
+  | {
+    ok: true;
+    started: number;
+    failed: number;
+    skippedRunning: number;
+    results: unknown[];
+    message?: string;
+  }
+  | { error: string }
+> {
+  if (options?.confirm !== true) {
+    return {
+      error: 'Запуск всех офлайн-ботов проекта. Передайте confirm: true для подтверждения.',
+    };
+  }
+
+  let res: Response;
+  try {
+    res = await apiFetch(`/api/projects/${projectId}/bot/start-offline-all`, {
+      apiBaseUrl: options?.apiBaseUrl,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+  } catch (err) {
+    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    if (res.status === 404) return { error: `HTTP 404: ${body || 'токены проекта не найдены'}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+  }
+
+  let body: {
+    started?: number;
+    failed?: number;
+    skippedRunning?: number;
+    results?: unknown[];
+    message?: string;
+  };
+  try {
+    body = (await res.json()) as typeof body;
+  } catch (err) {
+    return { error: `Не удалось разобрать ответ сервера: ${(err as Error).message}` };
+  }
+
+  return {
+    ok: true,
+    started: body.started ?? 0,
+    failed: body.failed ?? 0,
+    skippedRunning: body.skippedRunning ?? 0,
+    results: body.results ?? [],
+    message: body.message,
+  };
+}

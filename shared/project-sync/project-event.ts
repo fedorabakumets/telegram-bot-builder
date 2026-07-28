@@ -74,9 +74,56 @@ export type ProjectEventType =
   | 'message-edited'
   | 'new-user'
   | 'broadcast-progress'
+  | 'start-offline-progress'
   | 'stdout'
   | 'stderr'
   | 'status';
+
+/** Источник bulk-операции старта офлайн-ботов */
+export type StartOfflineSource = 'ui' | 'mcp' | 'api';
+
+/** Статус bulk-запуска офлайн-ботов */
+export type StartOfflineProgressStatus = 'running' | 'done';
+
+/**
+ * Безопасный payload прогресса start-offline-all (без секретов).
+ * Не включает token, env, cmdline процесса.
+ */
+export interface StartOfflineProgressPayload {
+  /** Успешно запущено */
+  started: number;
+  /** Ошибок запуска */
+  failed: number;
+  /** Пропущено (уже running) */
+  skipped: number;
+  /** Всего кандидатов (offline на старте операции) */
+  total: number;
+  /** Текущий обрабатываемый tokenId */
+  currentTokenId?: number;
+  /** Фаза операции */
+  status: StartOfflineProgressStatus;
+  /** Источник вызова */
+  source?: StartOfflineSource;
+}
+
+/**
+ * Собирает whitelist payload прогресса start-offline (без секретов)
+ * @param input - Счётчики и статус
+ * @returns Безопасный payload для WS
+ */
+export function toStartOfflineProgressPayload(
+  input: StartOfflineProgressPayload,
+): StartOfflineProgressPayload {
+  return {
+    started: input.started,
+    failed: input.failed,
+    skipped: input.skipped,
+    total: input.total,
+    currentTokenId: input.currentTokenId,
+    status: input.status,
+    source: input.source,
+  };
+}
 
 /**
  * Событие проекта, рассылаемое подключённым клиентам

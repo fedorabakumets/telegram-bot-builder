@@ -37,7 +37,7 @@ Python бот публикует события в Redis, сервер подп�
 - Канал: `platform:project_event:{projectId}`
 - Publisher: `broadcastProjectEvent` → local WS + Redis publish
 - Subscriber: `redisProjectEventBridge` → только `broadcastProjectEventLocal` (anti-loop по `originInstanceId`)
-- Используется для `token-updated`, start/stop и прочих ProjectEvent
+- Используется для `token-updated`, `start-offline-progress`, start/stop и прочих ProjectEvent
 - Fallback без Redis: local only (single-node / dev)
 - Файлы: `server/redis/publishProjectEvent.ts`, `server/redis/redisProjectEventBridge.ts`, `server/terminal/broadcastProjectEvent.ts`
 - Документация: `docs/api/realtime-events.md`, `docs/features/token-settings-realtime.md`

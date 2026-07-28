@@ -232,7 +232,8 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 - `POST /api/projects/:id/bot/start` — запуск бота проекта (сервер берёт сохранённый `botToken` сам — агенту секрет НЕ нужен).
 - `POST /api/projects/:id/bot/stop` — остановка.
 - `POST /api/projects/:id/bot/restart` — перезапуск.
-- `POST /api/projects/:id/bot/restart-all` — перезапуск всех токенов проекта.
+- `POST /api/projects/:id/bot/restart-all` — перезапуск всех **запущенных** токенов проекта.
+- `POST /api/projects/:id/bot/start-offline-all` — запуск всех **офлайн** токенов (см. [[features/start-offline-bots]]).
 - `GET /api/tokens/:tokenId/bot-status` и `GET /api/bot/tokens/:tokenId/status` — статус.
 - `GET /api/projects/:projectId/tokens/:tokenId/logs` — live-логи (stdout/stderr).
 - `GET /api/tokens/:tokenId/launch-history`, `GET /api/launch/:launchId/logs`, `GET /api/bot-logs/:logId` — история запусков и логи по id.
@@ -254,6 +255,8 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 **✅ Настройки токена:** `db_set_messages_retention(project_id, token_id, messages_retention_days)` в `bot-token-settings-db.ts` — срок хранения `bot_messages` (`0/7/30/60/90/180/365`). Текущее значение отдаёт `db_list_bot_tokens` → `messagesRetentionDays`. Перезапуск бота не нужен.
 
 **✅ Live token settings:** после любого settings PUT (в т.ч. MCP retention) сервер эмитит WS `token-updated` (whitelist без секретов) + Redis fan-out `platform:project_event:{projectId}` между репликами. UI-карточки обновляются без F5. Документация: [[features/token-settings-realtime]], [[api/realtime-events]], [[api/tokens]].
+
+**✅ Start offline bots:** `db_start_offline_bots` + UI «Запустить офлайн» + `POST .../bot/start-offline-all`; прогресс WS `start-offline-progress`, статусы через `bot-started`. [[features/start-offline-bots]].
 
 ### UX / наблюдаемость
 - **Подсветка изменённой ноды (Фаза 2.3).** Поле `changedNodeId` в `canvas-sync` + подсветка/центрирование на холсте.
