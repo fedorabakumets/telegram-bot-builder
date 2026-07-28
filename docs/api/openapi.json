@@ -4362,18 +4362,96 @@
     "/api/projects/{projectId}/tokens/{tokenId}": {
       "delete": {
         "tags": [
-          "projects"
+          "tokens"
         ],
-        "summary": "DELETE /api/projects/{projectId}/tokens/{tokenId}",
+        "summary": "Удалить токен бота проекта",
+        "description": "Удаляет токен из проекта. Доступ: **владелец или коллаборатор** проекта (`requireTokenOwnership` → `hasProjectAccess`). Сверяет `token.projectId` с `:projectId` (защита от IDOR). Перед удалением останавливает бота. **Side-effect:** WebSocket `token-deleted` (UI обновляет список без F5). Ответы list/status токенов не содержат сырой Telegram token.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID токена бота",
+              "example": "7"
+            },
+            "required": true,
+            "name": "tokenId",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Токен удалён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Token deleted successfully"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный projectId или tokenId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "403": {
+            "description": "Нет доступа к проекту токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Токен не найден в этом проекте",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           }
         }
       }

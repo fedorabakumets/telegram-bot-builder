@@ -22,7 +22,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [health](./health.md) | 1 |
 | [launch](./launch.md) | 1 |
 | [media](./media.md) | 13 |
-| [projects](./projects.md) | 146 |
+| [projects](./projects.md) | 145 |
 | [push-to-github](./push-to-github.md) | 1 |
 | [root](./root.md) | 1 |
 | [server](./server.md) | 1 |
@@ -33,7 +33,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [telegram-client](./telegram-client.md) | 1 |
 | [telegram-settings](./telegram-settings.md) | 1 |
 | [templates](./templates.md) | 16 |
-| [tokens](./tokens.md) | 5 |
+| [tokens](./tokens.md) | 6 |
 | [user](./user.md) | 12 |
 | [user-ids](./user-ids.md) | 4 |
 | [users](./users.md) | 5 |
@@ -45,31 +45,3 @@ REST API визуального конструктора Telegram-ботов. А
 - **Cookie** — сессия после Telegram Login Widget (`connect.sid`)
 - **Bearer PAT** — персональный токен агента (MCP/CLI)
 - Публичные эндпоинты помечены «Публичный»
-
-## Realtime side-effects настроек токена
-
-После PUT настроек токена (срок хранения, auto-restart, protect-content, …) сервер шлёт WebSocket `token-updated`. Карточки ботов обновляются без F5.
-
-- [tokens.md](./tokens.md) — HTTP settings
-- [realtime-events.md](./realtime-events.md) — контракт WS / Redis fan-out / whitelist payload
-- [features/token-settings-realtime.md](../features/token-settings-realtime.md) — продуктовый обзор
-
-## Массовый запуск офлайн-ботов
-
-`POST /api/projects/{id}/bot/start-offline-all` поднимает только offline; UI и MCP с confirm. Live через `bot-started` + `start-offline-progress`.
-
-- [projects.md](./projects.md) — HTTP
-- [realtime-events.md](./realtime-events.md) — WS
-- [features/start-offline-bots.md](../features/start-offline-bots.md) — обзор
-
-## Удаление токена (project access)
-
-`DELETE /api/projects/{projectId}/tokens/{tokenId}` — владелец или коллаборатор. WS `token-deleted`. List/status без сырого Telegram token.
-
-- [features/token-project-access-delete.md](../features/token-project-access-delete.md)
-
-## Сверка истории запусков
-
-GET launch-history / bot-status закрывают orphan `running`, если процесс не live.
-
-- [features/launch-history-status-reconciliation.md](../features/launch-history-status-reconciliation.md)

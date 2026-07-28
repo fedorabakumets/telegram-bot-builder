@@ -1,6 +1,6 @@
 # projects
 
-Эндпоинтов: **146**
+Эндпоинтов: **145**
 
 ### `GET` /api/projects
 
@@ -1655,20 +1655,6 @@ POST /api/projects/{projectId}/telegram-client/restrict-member
 ### `GET` /api/projects/{projectId}/telegram-file
 
 GET /api/projects/{projectId}/telegram-file
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
-### `DELETE` /api/projects/{projectId}/tokens/{tokenId}
-
-DELETE /api/projects/{projectId}/tokens/{tokenId}
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
