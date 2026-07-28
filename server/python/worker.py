@@ -237,6 +237,9 @@ class BotWorker:
                 emit_log(token_id, "Вызов main()...", "stdout")
                 await module.main()
                 emit_log(token_id, "main() завершился", "stdout")
+                # Старые bot.py глотали CancelledError → статус оставался running
+                if ctx.status == "running":
+                    ctx.status = "stopped"
             else:
                 emit_log(token_id, "Функция main() не найдена в bot.py", "stderr")
                 ctx.status = "error"
@@ -275,8 +278,16 @@ class BotWorker:
         if ctx.task and not ctx.task.done():
             ctx.task.cancel()
             try:
-                await asyncio.wait_for(ctx.task, timeout=5.0)
-            except (asyncio.CancelledError, asyncio.TimeoutError):
+                await asyncio.wait_for(asyncio.shield(ctx.task), timeout=5.0)
+            except asyncio.TimeoutError:
+                # Не эмитим bot_stopped пока task жив — иначе UI думает что стоп успешен
+                emit_log(
+                    token_id,
+                    "Таймаут остановки: задача бота ещё выполняется (orphan)",
+                    "stderr",
+                )
+                return
+            except asyncio.CancelledError:
                 pass
         ctx.status = "stopped"
         if token_id in self.bots:

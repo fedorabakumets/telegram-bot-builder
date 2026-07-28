@@ -212,6 +212,9 @@ async def main():
         print("⚠️ Системное завершение, завершаем работу...")
     except asyncio.CancelledError:
         print("⚠️ Бот остановлен воркером (CancelledError)")
+        # Пробрасываем cancel воркеру: иначе _run_bot видит нормальный выход и
+        # эмитит bot_exited:{id}:running вместо stopped
+        raise
     except Exception as e:
         logging.error(f"Ошибка: {e}")
     finally:

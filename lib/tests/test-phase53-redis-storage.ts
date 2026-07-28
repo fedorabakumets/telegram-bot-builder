@@ -181,6 +181,15 @@ test('B07', '_lock_acquired инициализируется до try', () => {
   ok(lockIndex < tryIndex, '_lock_acquired должен инициализироваться до try');
 });
 
+test('B08', 'init_redis_client делает retry с backoff', () => {
+  const idx = codeNoDb.indexOf('async def init_redis_client');
+  ok(idx !== -1, 'init_redis_client не найден');
+  const body = codeNoDb.slice(idx, idx + 2000);
+  ok(body.includes('_max_attempts'), 'retry _max_attempts не найден');
+  ok(body.includes('socket_connect_timeout'), 'socket_connect_timeout не найден');
+  ok(body.includes('_asyncio_redis.sleep'), 'backoff sleep не найден');
+});
+
 // ══ Блок C: Redis кэш переменных ══════════════════════════════════════════════
 console.log('\n══ Блок C: Redis кэш переменных ══════════════════════════════════════');
 
