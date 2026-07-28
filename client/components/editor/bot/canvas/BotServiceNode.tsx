@@ -5,6 +5,7 @@
 
 import { useRef } from 'react';
 import { BotAvatar } from '../card/BotAvatar';
+import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
 import type { BotToken } from '@shared/schema';
 import type { NodePos } from './use-bot-node-layout';
 
@@ -119,7 +120,10 @@ export function BotServiceNode({
           className="shadow-sm"
         />
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold truncate leading-tight">{title}</div>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <div className="text-sm font-semibold truncate leading-tight">{title}</div>
+            <IdBadge id={token.id} className="text-[10px] shrink-0" />
+          </div>
           <div className="text-[11px] text-muted-foreground truncate mt-0.5">{username}</div>
         </div>
       </div>

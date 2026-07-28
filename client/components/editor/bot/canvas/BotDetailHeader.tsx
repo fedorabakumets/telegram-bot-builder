@@ -6,6 +6,7 @@
 import { Play, Square, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotAvatar } from '../card/BotAvatar';
+import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
 import type { BotToken } from '@shared/schema';
 
 /** Пропсы шапки detail-панели */
@@ -65,6 +66,7 @@ export function BotDetailHeader({
           <h2 className="truncate text-[15px] font-semibold leading-tight tracking-tight">
             {title}
           </h2>
+          <IdBadge id={token.id} className="text-[11px] shrink-0" />
           <span
             className={[
               'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5',
