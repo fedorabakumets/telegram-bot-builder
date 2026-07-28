@@ -16,8 +16,8 @@
 
 ## Ключи Redis
 
-- `fsm:state:{user_id}` — FSM состояние пользователя (TTL 24ч)
-- `fsm:data:{user_id}` — FSM данные пользователя (TTL 24ч)
+- `fsm:state:{token_id}:{user_id}` — FSM состояние пользователя (TTL 24ч), изолировано по токену
+- `fsm:data:{token_id}:{user_id}` — FSM данные пользователя (TTL 24ч), изолировано по токену
 - `vars_cache:{user_id}` — кэш переменных из БД (TTL VARS_CACHE_TTL)
 
 ## Пример использования

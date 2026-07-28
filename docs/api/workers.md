@@ -6,6 +6,8 @@
 
 GET /api/workers/stats
 
+Возвращает число воркеров, ботов и RSS (без секретов токенов). Учёт `botsCount` опирается на `activeBots` после `bot_started` / `bot_exited` — см. [[features/bot-worker-pool-isolation]].
+
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 #### Ответы

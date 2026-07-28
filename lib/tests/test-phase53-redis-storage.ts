@@ -126,8 +126,8 @@ test('A02', 'async def set_state присутствует минимум 2 ра�
   ok(count >= 2, `set_state найден ${count} раз, ожидалось >= 2`);
 });
 
-test('A03', 'fsm:state: ключ присутствует', () => {
-  ok(codeNoDb.includes('fsm:state:'), 'ключ fsm:state: не найден');
+test('A03', 'fsm:state с _token_id — изоляция токена', () => {
+  ok(codeNoDb.includes('fsm:state:{self._token_id}:') || codeNoDb.includes('fsm:state:{TOKEN_ID}:'), 'ключ fsm:state с token id не найден');
 });
 
 test('A04', 'fsm:data: ключ присутствует', () => {
@@ -168,7 +168,7 @@ test('B05', 'PostgresStorage() используется в else ветке', () 
 test('B06', 'при Redis storage Dispatcher не пересоздаётся и хендлеры не теряются', () => {
   ok(!codeNoDb.includes('dp = Dispatcher(storage=RedisStorage(_redis_client))'), 'найдено пересоздание Dispatcher для Redis');
   ok(!codeNoDb.includes('dp.storage = RedisStorage(_redis_client)'), 'найдена запись в property dp.storage без setter');
-  ok(codeNoDb.includes('dp.fsm.storage = RedisStorage(_redis_client)'), 'переключение dp.fsm.storage на RedisStorage не найдено');
+  ok(codeNoDb.includes('dp.fsm.storage = RedisStorage(_redis_client, TOKEN_ID)'), 'переключение dp.fsm.storage на RedisStorage(TOKEN_ID) не найдено');
 });
 
 test('B07', '_lock_acquired инициализируется до try', () => {
@@ -252,6 +252,10 @@ test('F05', 'lock освобождается в finally', () => {
 
 test('F06', 'lock не блокирует запуск если Redis недоступен', () => {
   ok(codeNoDb.includes('if _redis_connected and _redis_client is not None'), 'проверка доступности Redis не найдена');
+});
+
+test('F06b', 'warning lock содержит TOKEN_ID для отладки', () => {
+  ok(codeNoDb.includes('TOKEN_ID='), 'TOKEN_ID в warning lock не найден');
 });
 
 test('F07', 'синтаксис Python OK с distributed lock', () => {

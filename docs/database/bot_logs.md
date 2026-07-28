@@ -16,6 +16,12 @@
 | type | text | `'stdout'` | NO | - | - | Тип строки лога: stdout, stderr или status |
 | timestamp | timestamp | `now()` | YES | - | - | Временная метка создания записи |
 
+### Live-логи (API)
+
+`getLatestLaunchLogs` берёт **последний** launch из `bot_launch_history` (не из самих логов).
+Для `status=running` дополнительно подмешиваются строки с `launch_id IS NULL` (live после сбоя binding).
+См. [[features/bot-worker-pool-isolation]].
+
 ### Constraints
 
 | Name | Type | Definition |

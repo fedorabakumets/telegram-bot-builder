@@ -27,8 +27,8 @@ import { processCleanups } from "../terminal/setupBotProcessListeners";
 import { storage } from '../storages/storage';
 import { flushBuffer } from '../terminal/botLogsBuffer';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
-import { getRedisPublisher } from '../redis/redisClient';
 import { clearActiveLaunchId } from '../terminal/activeLaunchIds';
+import { clearBotRedisLockByTokenId } from './clearBotRedisLock';
 
 /**
  * Останавливает запущенный экземпляр Telegram-бота по идентификатору проекта и токена
@@ -73,6 +73,7 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
       });
       clearActiveLaunchId(tokenId);
       await storage.stopBotInstanceByToken(tokenId);
+      await clearBotRedisLockByTokenId((id) => storage.getBotToken(id), tokenId);
 
       void broadcastProjectEvent(projectId, {
         type: 'bot-stopped',
@@ -184,16 +185,7 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
 
     // Удаляем Redis lock чтобы следующий запуск не блокировался
     // (finally в Python может не выполниться при SIGKILL)
-    try {
-      const tokenRecord = await storage.getBotToken(tokenId);
-      if (tokenRecord?.token && getRedisPublisher()) {
-        const lockKey = `bot:lock:${tokenRecord.token.slice(-10)}`;
-        await getRedisPublisher()!.del(lockKey);
-        console.log(`🔓 Redis lock удалён сервером для токена ${tokenId}`);
-      }
-    } catch {
-      // Не критично — lock истечёт сам через 60 секунд
-    }
+    await clearBotRedisLockByTokenId((id) => storage.getBotToken(id), tokenId);
 
     // Рассылаем событие об остановке бота всем клиентам проекта
     void broadcastProjectEvent(projectId, {

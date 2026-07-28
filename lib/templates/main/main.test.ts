@@ -289,7 +289,7 @@ describe('main.py.jinja2 шаблон', () => {
         const result = generateMain({ userDatabaseEnabled: false });
         assert.ok(!result.includes('dp = Dispatcher(storage=RedisStorage(_redis_client))'));
         assert.ok(!result.includes('dp.storage = RedisStorage(_redis_client)'));
-        assert.ok(result.includes('dp.fsm.storage = RedisStorage(_redis_client)'));
+        assert.ok(result.includes('dp.fsm.storage = RedisStorage(_redis_client, TOKEN_ID)'));
       });
 
       it('должен инициализировать _lock_acquired до try, чтобы finally не падал', () => {

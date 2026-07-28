@@ -1,5 +1,8 @@
 # Bot Worker Pool — масштабируемый запуск ботов
 
+> **Статус изоляции (runtime):** реализовано — см. [[features/bot-worker-pool-isolation]]
+> (уникальные модули/config, contextvars-логи, Redis lock на stop, lifecycle `bot_started`/`bot_exited`, `getLatestLaunchLogs`).
+
 ## Проблема
 
 Текущая архитектура запускает каждого Telegram-бота как отдельный Python процесс (`spawn python3 bot.py`).

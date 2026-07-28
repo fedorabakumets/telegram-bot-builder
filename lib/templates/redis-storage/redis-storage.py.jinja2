@@ -4,21 +4,24 @@
   @fileoverview Класс RedisStorage — хранит FSM состояния в Redis с TTL 24 часа.
   Используется когда REDIS_URL задан в .env бота.
   Обратно совместим с PostgresStorage: при отсутствии REDIS_URL не используется.
+  Ключи изолированы по token_id: fsm:state:{token_id}:{uid}
 #}
 class RedisStorage(BaseStorage):
     """Хранит FSM состояния в Redis. Используется когда REDIS_URL задан в .env."""
 
-    def __init__(self, redis_client):
+    def __init__(self, redis_client, token_id: int = 0):
         """
         @param redis_client - Клиент redis.asyncio
+        @param token_id - ID токена для изоляции FSM-ключей между ботами одного воркера
         """
         self._redis = redis_client
+        self._token_id = int(token_id) if token_id else int(__import__("os").getenv("TOKEN_ID", "0") or 0)
 
     async def set_state(self, key: StorageKey, state: StateType = None) -> None:
         """Сохраняет FSM состояние в Redis с TTL 24 часа."""
         uid = key.user_id
         val = state.state if state else ""
-        await self._redis.setex(f"fsm:state:{uid}", 86400, val or "")
+        await self._redis.setex(f"fsm:state:{self._token_id}:{uid}", 86400, val or "")
         # Синхронизируем с user_data для совместимости
         if uid not in user_data:
             user_data[uid] = {}
@@ -27,7 +30,7 @@ class RedisStorage(BaseStorage):
     async def get_state(self, key: StorageKey) -> str | None:
         """Читает FSM состояние из Redis."""
         uid = key.user_id
-        val = await self._redis.get(f"fsm:state:{uid}")
+        val = await self._redis.get(f"fsm:state:{self._token_id}:{uid}")
         if val is None:
             return None
         decoded = val.decode() if isinstance(val, bytes) else val
@@ -38,7 +41,7 @@ class RedisStorage(BaseStorage):
         import json as _j
         uid = key.user_id
         val = _j.dumps(data, ensure_ascii=False)
-        await self._redis.setex(f"fsm:data:{uid}", 86400, val)
+        await self._redis.setex(f"fsm:data:{self._token_id}:{uid}", 86400, val)
         if uid not in user_data:
             user_data[uid] = {}
         user_data[uid]["__fsm_data__"] = val
@@ -47,7 +50,7 @@ class RedisStorage(BaseStorage):
         """Читает FSM данные из Redis."""
         import json as _j
         uid = key.user_id
-        raw = await self._redis.get(f"fsm:data:{uid}")
+        raw = await self._redis.get(f"fsm:data:{self._token_id}:{uid}")
         if not raw:
             return {}
         try:

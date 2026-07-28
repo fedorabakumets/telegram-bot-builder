@@ -7,6 +7,7 @@
 import { storage } from '../storages/storage';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { getActiveLaunchId, clearActiveLaunchId } from '../terminal/activeLaunchIds';
+import { clearBotRedisLockByTokenId } from './clearBotRedisLock';
 
 /**
  * Обновляет БД и шлёт WS после выхода бота из воркера
@@ -55,6 +56,8 @@ export async function handleWorkerBotExited(
           errorMessage,
         });
       }
+
+      await clearBotRedisLockByTokenId((id) => storage.getBotToken(id), tokenId);
     }
   } catch (err) {
     console.error(`[WorkerExit] Ошибка обновления БД project=${projectId} token=${tokenId}:`, err);
