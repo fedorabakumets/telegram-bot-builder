@@ -230,10 +230,21 @@ export function useBotMutations({
     mutationFn: async ({ tokenId, targetProjectId }: { tokenId: number; targetProjectId: number }) => {
       const source = allTokensFlatFull.find(t => t.id === tokenId);
       if (!source) throw new Error('Токен не найден');
-      // Не передаём ownerId — сервер сам определит из сессии или проекта
-      const { projectId: _pid, ownerId: _oid, id: _id, ...tokenData } = source;
+      // Только поля insert-схемы: без id/ownerId/дат и без null в числовых флагах
+      // (иначе Zod на сервере отвечает "Invalid data")
       return apiRequest('POST', `/api/projects/${targetProjectId}/tokens`, {
-        ...tokenData,
+        name: source.name,
+        token: source.token,
+        description: source.description ?? undefined,
+        botFirstName: source.botFirstName ?? undefined,
+        botUsername: source.botUsername ?? undefined,
+        botDescription: source.botDescription ?? undefined,
+        botShortDescription: source.botShortDescription ?? undefined,
+        botPhotoUrl: source.botPhotoUrl ?? undefined,
+        botCanJoinGroups: source.botCanJoinGroups ?? undefined,
+        botCanReadAllGroupMessages: source.botCanReadAllGroupMessages ?? undefined,
+        botSupportsInlineQueries: source.botSupportsInlineQueries ?? undefined,
+        botHasMainWebApp: source.botHasMainWebApp ?? undefined,
         isDefault: 0,
         isActive: 1,
         projectId: targetProjectId,
