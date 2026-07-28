@@ -1,6 +1,6 @@
 /**
  * @fileoverview Обработка bot-exited из worker pool: синхронизация БД и WS
- * @description Без этого UI остаётся «Активный» после падения бота (невалидный токен и т.п.)
+ * @description Закрывает launch history даже без in-memory launchId (fallback на DB).
  * @module server/bots/handleWorkerBotExited
  */
 
@@ -32,15 +32,21 @@ export async function handleWorkerBotExited(
     if ((globalThis as { __dbPoolActive?: boolean }).__dbPoolActive === false) {
       console.log(`[WorkerExit] Пропуск БД (пул закрыт) project=${projectId} token=${tokenId}`);
     } else {
-      const launchId = getActiveLaunchId(tokenId);
-      if (launchId !== undefined) {
-        await storage.updateLaunchHistory(launchId, {
+      const memLaunchId = getActiveLaunchId(tokenId);
+      if (memLaunchId !== undefined) {
+        await storage.updateLaunchHistory(memLaunchId, {
           status: launchStatus,
           stoppedAt: new Date(),
           errorMessage,
         });
-        clearActiveLaunchId(tokenId);
       }
+      // Закрываем все оставшиеся orphans (в т.ч. если mem launchId пуст)
+      await storage.closeAllRunningLaunchHistory(tokenId, {
+        status: launchStatus,
+        stoppedAt: new Date(),
+        errorMessage,
+      });
+      clearActiveLaunchId(tokenId);
 
       const instance = await storage.getBotInstanceByToken(tokenId);
       if (instance && instance.errorMessage !== '__server_restart__') {

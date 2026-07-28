@@ -309,6 +309,8 @@ async function requireTokenOwnership(req: Request, res: Response, next: NextFunc
 
 **Статус реализации (2026-06-25):** проверка ownership по `tokenId` внедрена в хендлерах token-маршрутов рантайма бота (резолв `storage.getBotToken(tokenId).projectId` → `hasProjectAccess`, `ownerId === null` → 403). Закрыт **IDOR**: `GET /api/tokens/:tokenId/bot-status`, `GET /api/bot/tokens/:tokenId/status`, `GET /api/tokens/:tokenId/launch-history`, `GET /api/launch/:launchId/logs` (projectId резолвится из логов запуска), ужесточён `GET /api/bot-logs/:logId`. Заодно убрана **утечка секрета** — поле `token` удалено из ответа `getBotTokenStatusHandler`. Проверено: свой токен → 200 без поля `token`, несуществующий → 404, легитимный UI (все bot-status свои) → 200. ⚠️ Остаётся `GET /api/workers/stats` без проверки владения (info-leak: сводка по всем проектам) — отдельная задача.
 
+**Дополнение (2026-07-28):** `DELETE /api/projects/:projectId/tokens/:tokenId` и `DELETE /api/tokens/:id` переведены на `requireTokenOwnership` / `hasProjectAccess` (коллабораторы могут удалять). `GET /api/projects/:id/tokens` и `bot-status.instance` отдают маску/`omit` вместо сырого Telegram token. См. [[features/token-project-access-delete]].
+
 ---
 
 ## 6. Validation (Валидация входных данных)

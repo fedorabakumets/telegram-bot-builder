@@ -6,22 +6,23 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
 import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
+import { workerManager } from "../../../bots/botWorkerManager";
+import { reconcileLaunchHistoryForToken } from "../../../bots/reconcileLaunchHistory";
+import { findActiveProcessForToken } from "../../../utils/findActiveProcessForToken";
 
 /**
  * Обрабатывает GET /api/tokens/:tokenId/launch-history
- * Резолвит projectId токена, проверяет владение и возвращает последние 10 запусков
+ * Перед ответом сверняет orphans с live-статусом (self-heal).
  * @param req - HTTP запрос с параметром tokenId
  * @param res - HTTP ответ
- * @returns JSON массив записей истории запусков
  */
 export async function handleGetLaunchHistory(req: Request, res: Response): Promise<void> {
-  const tokenId = parseInt(req.params.tokenId);
+  const tokenId = parseInt(req.params.tokenId, 10);
   if (isNaN(tokenId)) {
     res.status(400).json({ error: "Некорректный tokenId" });
     return;
   }
   try {
-    // Проверка владения: резолвим токен → projectId → доступ владельца/коллаборатора
     const tokenRecord = await storage.getBotToken(tokenId);
     if (!tokenRecord) {
       res.status(404).json({ error: "Токен не найден" });
@@ -37,6 +38,14 @@ export async function handleGetLaunchHistory(req: Request, res: Response): Promi
       res.status(403).json({ error: "Нет прав доступа" });
       return;
     }
+
+    const projectId = tokenRecord.projectId;
+    const activeProcess = findActiveProcessForToken(projectId, tokenId);
+    const isRunningInWorker = process.env.USE_WORKER_POOL !== 'false'
+      && workerManager.isBotRunning(projectId, tokenId);
+    const isLiveRunning = !!(activeProcess || isRunningInWorker);
+
+    await reconcileLaunchHistoryForToken(tokenId, isLiveRunning);
 
     const history = await storage.getLaunchHistory(tokenId, 10);
     res.json(history);

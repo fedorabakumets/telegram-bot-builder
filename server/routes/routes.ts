@@ -42,6 +42,9 @@ import { requireApiAuth } from "../middleware/requireApiAuth";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
 import { requireMediaOwnership } from "../middleware/mediaOwnership";
+import { deleteProjectTokenHandler } from "./botTokens/handlers/deleteProjectTokenHandler";
+import { deleteTokenByIdHandler } from "./botTokens/handlers/deleteTokenByIdHandler";
+import { isMaskedOrPlaceholderToken, toPublicBotToken } from "./botTokens/to-public-bot-token";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { validateExternalUrl } from "../utils/validateExternalUrl";
 import { resolveSessionSecret } from "../utils/resolveSessionSecret";
@@ -615,9 +618,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
       const tokens = await storage.getBotTokensByProject(projectId);
 
-      const safeTokens = tokens.map(token => {
+      const safeTokens = tokens.map((token) => {
+        const publicToken = toPublicBotToken(token);
         const botId = token.token ? token.token.split(':')[0] : null;
-        return { ...token, botId };
+        return { ...publicToken, botId };
       });
 
       res.json(safeTokens);
@@ -823,7 +827,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Update bot information via Telegram API
-  app.put("/api/projects/:id/tokens/:tokenId/bot-info", async (req, res) => {
+  app.put("/api/projects/:id/tokens/:tokenId/bot-info", requireTokenOwnership, async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
       const tokenId = parseInt(req.params.tokenId);
@@ -837,12 +841,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       const token = await storage.getBotToken(tokenId);
       if (!token || token.projectId !== projectId) {
         return res.status(404).json({ message: "Token not found" });
-      }
-
-      // Check ownership if user is authenticated
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null && token.ownerId !== ownerId) {
-        return res.status(403).json({ message: "You don't have permission to modify this token" });
       }
 
       // Update bot information via Telegram API
@@ -1004,23 +1002,14 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   });
 
   // Update a token
-  app.put("/api/tokens/:id", async (req, res) => {
+  app.put("/api/tokens/:id", requireTokenOwnership, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
 
-      // Check ownership if user is authenticated
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const existingToken = await storage.getBotToken(id);
-        if (!existingToken) {
-          return res.status(404).json({ message: "Token not found" });
-        }
-        if (existingToken.ownerId !== ownerId) {
-          return res.status(403).json({ message: "You don't have permission to modify this token" });
-        }
-      }
-
       const updateData = insertBotTokenSchema.partial().parse(req.body) as StorageBotTokenUpdate;
+      if (updateData.token && isMaskedOrPlaceholderToken(updateData.token)) {
+        delete (updateData as { token?: string }).token;
+      }
 
       const token = await storage.updateBotToken(id, updateData);
       if (!token) {
@@ -1033,7 +1022,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         source: 'api',
       }).catch((err) => console.error('[put-token] emitTokenUpdated:', err));
 
-      res.json(token);
+      res.json(toPublicBotToken(token));
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
@@ -1068,6 +1057,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
 
       const updateData = insertBotTokenSchema.partial().parse(req.body) as StorageBotTokenUpdate;
+      if (updateData.token && isMaskedOrPlaceholderToken(updateData.token)) {
+        delete (updateData as { token?: string }).token;
+      }
 
       const updatedToken = await storage.updateBotToken(tokenId, updateData);
       if (!updatedToken) {
@@ -1081,7 +1073,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         source: 'api',
       }).catch((err) => console.error('[put-project-token] emitTokenUpdated:', err));
 
-      res.json(updatedToken);
+      res.json(toPublicBotToken(updatedToken));
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
@@ -1090,71 +1082,15 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Delete a token
-  app.delete("/api/tokens/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
+  // Delete a token (владелец или коллаборатор проекта токена)
+  app.delete("/api/tokens/:id", requireTokenOwnership, deleteTokenByIdHandler);
 
-      // Check ownership if user is authenticated
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const existingToken = await storage.getBotToken(id);
-        if (!existingToken) {
-          return res.status(404).json({ message: "Token not found" });
-        }
-        if (existingToken.ownerId !== ownerId) {
-          return res.status(403).json({ message: "You don't have permission to delete this token" });
-        }
-      }
-
-      const success = await storage.deleteBotToken(id);
-
-      if (!success) {
-        return res.status(404).json({ message: "Token not found" });
-      }
-
-      res.json({ message: "Token deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete token" });
-    }
-  });
-
-  // Delete a token for a specific project
-  app.delete("/api/projects/:projectId/tokens/:tokenId", async (req, res) => {
-    try {
-      const tokenId = parseInt(req.params.tokenId);
-      const projectId = parseInt(req.params.projectId);
-
-      // Check ownership if user is authenticated
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const existingToken = await storage.getBotToken(tokenId);
-        if (!existingToken) {
-          return res.status(404).json({ message: "Token not found" });
-        }
-        if (existingToken.ownerId !== ownerId) {
-          return res.status(403).json({ message: "You don't have permission to delete this token" });
-        }
-      }
-
-      // Останавливаем процесс бота перед удалением токена
-      try {
-        await stopBot(projectId, tokenId);
-      } catch (stopError) {
-        console.warn(`[DeleteToken] Не удалось остановить бота ${tokenId} перед удалением:`, stopError);
-      }
-
-      const success = await storage.deleteBotToken(tokenId);
-
-      if (!success) {
-        return res.status(404).json({ message: "Token not found" });
-      }
-
-      res.json({ message: "Token deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete token" });
-    }
-  });
+  // Delete a token for a specific project (hasProjectAccess + сверка projectId)
+  app.delete(
+    "/api/projects/:projectId/tokens/:tokenId",
+    requireTokenOwnership,
+    deleteProjectTokenHandler,
+  );
 
   /**
    * Переключение настроек автоперезапуска для токена бота

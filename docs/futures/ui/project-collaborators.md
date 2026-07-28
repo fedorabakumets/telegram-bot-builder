@@ -62,7 +62,8 @@ async function hasProjectAccess(projectId: number, userId: number): Promise<bool
 | `server/routes/userProjectsTokens/handlers/projects/getBotProjectsHandler.ts` | Возвращать проекты где юзер коллаборатор |
 | `server/routes/userProjectsTokens/handlers/projects/getBotProjectDetailHandler.ts` | Проверка доступа |
 | `server/routes/userProjectsTokens/handlers/projects/updateBotProjectHandler.ts` | Проверка доступа |
-| `server/routes/userProjectsTokens/handlers/projects/deleteBotProjectHandler.ts` | Только owner может удалять |
+| `server/routes/userProjectsTokens/handlers/projects/deleteBotProjectHandler.ts` | Owner или коллаборатор (`hasProjectAccess`) |
+| `DELETE /api/projects/:projectId/tokens/:tokenId` | Owner или коллаборатор (`requireTokenOwnership`) — см. [[features/token-project-access-delete]] |
 | `server/routes/userProjectsTokens/handlers/tokens/getBotProjectTokensHandler.ts` | Проверка доступа |
 | `server/routes/userProjectsTokens/handlers/tokens/createBotTokenHandler.ts` | Проверка доступа |
 | `server/routes/userProjectsTokens/handlers/tokens/deleteBotTokenHandler.ts` | Проверка доступа |

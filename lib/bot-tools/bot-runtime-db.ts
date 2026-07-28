@@ -583,3 +583,51 @@ export async function startOfflineBotsInDb(
     message: body.message,
   };
 }
+
+/**
+ * Удаляет токен бота проекта. confirm: true обязателен (необратимо).
+ * @param projectId - ID проекта
+ * @param tokenId - ID токена
+ * @param options - apiBaseUrl и confirm
+ * @returns ok или ошибка
+ */
+export async function deleteBotTokenInDb(
+  projectId: number,
+  tokenId: number,
+  options?: ReadDbOptions & { confirm?: boolean },
+): Promise<{ ok: true; message?: string } | { error: string }> {
+  if (options?.confirm !== true) {
+    return {
+      error: 'Удаление токена необратимо. Передайте confirm: true для подтверждения.',
+    };
+  }
+
+  let res: Response;
+  try {
+    res = await apiFetch(`/api/projects/${projectId}/tokens/${tokenId}`, {
+      apiBaseUrl: options?.apiBaseUrl,
+      method: 'DELETE',
+    });
+  } catch (err) {
+    return { error: `Не удалось соединиться с сервером: ${(err as Error).message}` };
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    if (res.status === 403) {
+      return { error: `HTTP 403: нет доступа к проекту токена${body ? `: ${body}` : ''}` };
+    }
+    if (res.status === 404) return { error: `HTTP 404: ${body || 'токен не найден'}` };
+    return { error: body ? `HTTP ${res.status}: ${body}` : `HTTP ${res.status}` };
+  }
+
+  let message: string | undefined;
+  try {
+    const body = (await res.json()) as { message?: string };
+    message = body.message;
+  } catch {
+    /* ignore */
+  }
+
+  return { ok: true, message };
+}

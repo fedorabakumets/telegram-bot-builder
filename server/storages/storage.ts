@@ -740,6 +740,23 @@ export interface IStorage {
   getActiveLaunchHistory(tokenId: number): Promise<BotLaunchHistory | undefined>;
 
   /**
+   * Закрыть все незавершённые (status=running) записи истории запуска токена
+   * @param tokenId - ID токена
+   * @param data - status/stoppedAt/errorMessage для всех открытых записей
+   * @returns Число обновлённых строк
+   */
+  closeAllRunningLaunchHistory(
+    tokenId: number,
+    data: StorageBotLaunchHistoryUpdate,
+  ): Promise<number>;
+
+  /**
+   * Список tokenId, у которых есть незакрытые running-записи в launch history
+   * @returns Массив tokenId
+   */
+  listTokenIdsWithRunningLaunchHistory(): Promise<number[]>;
+
+  /**
    * Получить статистику пользователей по токену
    * @param tokenId - ID токена
    * @returns Объект со статистикой: total_users, active_24h, active_7d, new_today

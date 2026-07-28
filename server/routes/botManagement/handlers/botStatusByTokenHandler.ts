@@ -14,6 +14,8 @@ import { restoreProcessTracking } from '../utils/processRestorer';
 import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
 import { workerManager } from '../../../bots/botWorkerManager';
 import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
+import { toPublicBotInstance } from '../../botTokens/to-public-bot-token';
+import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
 
 /**
  * Обрабатывает запрос на получение статуса бота по токену
@@ -102,12 +104,14 @@ export async function handleBotStatusByToken(req: Request, res: Response): Promi
                 status: actualStatus,
                 errorMessage: actualStatus === 'stopped' ? 'Процесс завершен' : null
             });
+            await reconcileLaunchHistoryForToken(tokenId, actualStatus === 'running');
             const updatedInstance = { ...instance, status: actualStatus };
-            res.json({ status: actualStatus, instance: updatedInstance });
+            res.json({ status: actualStatus, instance: toPublicBotInstance(updatedInstance) });
             return;
         }
 
-        res.json({ status: instance.status, instance });
+        await reconcileLaunchHistoryForToken(tokenId, actualStatus === 'running');
+        res.json({ status: instance.status, instance: toPublicBotInstance(instance) });
     } catch (error: any) {
         console.error('[BotStatus] Полная ошибка:', {
             message: error.message,

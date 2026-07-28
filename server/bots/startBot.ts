@@ -50,7 +50,7 @@ import { storage } from "../storages/storage";
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { pendingLaunchIds } from '../terminal/setupBotProcessListeners';
 import { clearBotLogs } from '../terminal/botLogsBuffer';
-import { setActiveLaunchId } from '../terminal/activeLaunchIds';
+import { setActiveLaunchId, clearActiveLaunchId } from '../terminal/activeLaunchIds';
 import { closeActiveLaunchHistory } from './closeActiveLaunchHistory';
 import {
   getRestartDelay,
@@ -342,7 +342,20 @@ export async function startBot(projectId: number, token: string, tokenId: number
         console.log(`🏭 [WorkerPool] Бот ${projectId}/${tokenId} отправлен в воркер`);
       } catch (workerError) {
         console.error(`🏭 [WorkerPool] Ошибка запуска бота через воркер:`, workerError);
-        return { success: false, error: workerError instanceof Error ? workerError.message : 'Ошибка воркера' };
+        const errMsg = workerError instanceof Error ? workerError.message : 'Ошибка воркера';
+        if (launchId !== undefined) {
+          try {
+            await storage.updateLaunchHistory(launchId, {
+              status: 'error',
+              stoppedAt: new Date(),
+              errorMessage: errMsg,
+            });
+          } catch (histErr) {
+            console.error('[startBot] Не удалось закрыть launch history после ошибки воркера:', histErr);
+          }
+          clearActiveLaunchId(tokenId);
+        }
+        return { success: false, error: errMsg };
       }
 
       // Сохраняем в БД как обычно

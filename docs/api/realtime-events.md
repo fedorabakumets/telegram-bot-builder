@@ -20,6 +20,11 @@
 
 Каналы `bot:*` — отдельный контур (Python-бот → сервер), не путать с `platform:project_event`.
 
+## Тип `token-deleted`
+
+Эмитится после успешного удаления токена (`DELETE /api/projects/.../tokens/...`, `DELETE /api/tokens/:id`, user/bot delete handlers).
+`data`: `{ tokenId, tokenName }`. UI инвалидирует список токенов. Секреты не передаются.
+
 ## Тип `token-updated`
 
 Эмитится после успешного изменения настроек токена (PUT messages-retention, auto-restart, protect-content, save-incoming-media, catch-all, content-cache, userbot, log-level, launch-settings, generic PUT token, set-default, env-batch при изменении полей токена).

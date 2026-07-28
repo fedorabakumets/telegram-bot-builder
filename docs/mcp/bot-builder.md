@@ -333,6 +333,7 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 #### `db_bot_status` / `db_bot_logs` / `db_bot_launch_history`
 
 Статус, live-логи и история запусков по `token_id` из `db_list_bot_tokens`.
+`db_bot_launch_history` после сверки не отдаёт «зомби» running, если бот offline ([[features/launch-history-status-reconciliation]]).
 
 #### `db_start_bot` / `db_stop_bot` / `db_restart_bot` / `db_restart_all_bots`
 
@@ -352,6 +353,21 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 Карточки обновляются live через WS `bot-started` + `start-offline-progress` ([[api/realtime-events]]).
 
 Код: `lib/bot-tools/bot-runtime-db.ts` → `startOfflineBotsInDb`.
+
+#### `db_delete_bot_token`
+
+Удалить токен бота из проекта (**необратимо**). Доступен владельцу и коллабораторам.
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `project_id` | number | ID проекта |
+| `token_id` | number | ID токена из `db_list_bot_tokens` |
+| `confirm` | boolean | Обязательно `true` |
+
+Эквивалент UI «Удалить» и `DELETE /api/projects/{projectId}/tokens/{tokenId}` ([[features/token-project-access-delete]]).
+WS: `token-deleted`.
+
+Код: `lib/bot-tools/bot-runtime-db.ts` → `deleteBotTokenInDb`.
 
 #### `db_set_messages_retention`
 
@@ -406,8 +422,8 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 | Срок хранения сообщений | ✅ | `db_set_messages_retention` |
 | Live UI после настроек токена | ✅ | WS `token-updated`, [[features/token-settings-realtime]] |
 | Запуск всех офлайн | ✅ | `db_start_offline_bots`, [[features/start-offline-bots]] |
+| Удаление токена бота | ✅ | `db_delete_bot_token` (`confirm: true`), [[features/token-project-access-delete]] |
 | `db_auto_layout` | ✅ | слой 5 |
-| Запуск **всех офлайн** одной кнопкой/тулом | ❌ | только per-token `db_start_bot` |
 | Вкладка ИИ-агента в UI | частично | [[futures/features/ai-agent-tab-vision]] |
 
 ---

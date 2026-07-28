@@ -3,6 +3,9 @@ import express, { NextFunction, type Request, Response } from "express";
 import { createServer } from "http";
 import { startFileMonitoring } from "./files/file-monitoring";
 import { restoreRunningBots } from "./bots/restoreRunningBots";
+import { reconcileOrphanLaunchHistories } from "./bots/reconcileLaunchHistory";
+import { workerManager } from "./bots/botWorkerManager";
+import { findActiveProcessForToken } from "./utils/findActiveProcessForToken";
 import { registerRoutes } from "./routes/routes";
 import { log, serveStatic, setupVite } from "./routes/vite";
 import { storage } from "./storages/storage";
@@ -220,9 +223,24 @@ app.use((req, res, next) => {
     }
 
     // Восстанавливаем боты, которые были запущены до рестарта/редеплоя
-    restoreRunningBots().catch((err) =>
-      log(`Ошибка при восстановлении ботов: ${err.message}`)
-    );
+    restoreRunningBots()
+      .then(async () => {
+        const closed = await reconcileOrphanLaunchHistories(async (tokenId) => {
+          const token = await storage.getBotToken(tokenId);
+          if (!token) return false;
+          if (process.env.USE_WORKER_POOL !== 'false'
+            && workerManager.isBotRunning(token.projectId, tokenId)) {
+            return true;
+          }
+          return !!findActiveProcessForToken(token.projectId, tokenId);
+        });
+        if (closed > 0) {
+          log(`Закрыто сиротских launch-history записей: ${closed}`);
+        }
+      })
+      .catch((err) =>
+        log(`Ошибка при восстановлении ботов: ${err.message}`)
+      );
   });
 
   // Корректное завершение работы

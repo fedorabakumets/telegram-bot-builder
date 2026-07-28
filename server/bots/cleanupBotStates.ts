@@ -7,6 +7,7 @@
 
 import { storage } from "../storages/storage";
 import { findActiveProcessForProject } from "../utils/findActiveProcessForProject";
+import { closeActiveLaunchHistory } from "./closeActiveLaunchHistory";
 
 /**
  * Функция для очистки несоответствий состояний ботов при запуске сервера
@@ -23,11 +24,13 @@ export async function cleanupBotStates(): Promise<void> {
 
     for (const instance of allInstances) {
       if (instance.status === 'running') {
-        // Если в базе бот помечен как запущенный, но процесса нет в памяти
         const activeProcessInfo = findActiveProcessForProject(instance.projectId);
         if (!activeProcessInfo) {
           console.log(`Найден бот ${instance.projectId} в статусе "running" без активного процесса. Исправляем состояние.`);
           await storage.updateBotInstance(instance.id, { status: 'stopped' });
+          if (instance.tokenId != null) {
+            await closeActiveLaunchHistory(instance.tokenId, 'Синхронизация: процесс не найден');
+          }
         }
       }
     }

@@ -91,4 +91,48 @@ export function registerBotTokensPaths(
       },
     },
   });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/projects/{projectId}/tokens/{tokenId}",
+    tags: ["tokens"],
+    summary: "Удалить токен бота проекта",
+    description:
+      "Удаляет токен из проекта. Доступ: **владелец или коллаборатор** проекта " +
+      "(`requireTokenOwnership` → `hasProjectAccess`). " +
+      "Сверяет `token.projectId` с `:projectId` (защита от IDOR). " +
+      "Перед удалением останавливает бота. " +
+      "**Side-effect:** WebSocket `token-deleted` (UI обновляет список без F5). " +
+      "Ответы list/status токенов не содержат сырой Telegram token.",
+    security: cookieSecurity,
+    request: { params },
+    responses: {
+      200: {
+        description: "Токен удалён",
+        content: {
+          "application/json": {
+            schema: z.object({
+              message: z.string().openapi({ example: "Token deleted successfully" }),
+            }),
+          },
+        },
+      },
+      400: {
+        description: "Некорректный projectId или tokenId",
+        content: { "application/json": { schema: MessageErrorSchema } },
+      },
+      401: {
+        description: "Не авторизован",
+        content: { "application/json": { schema: UnauthorizedSchema } },
+      },
+      403: {
+        description: "Нет доступа к проекту токена",
+        content: { "application/json": { schema: ForbiddenSchema } },
+      },
+      404: {
+        description: "Токен не найден в этом проекте",
+        content: { "application/json": { schema: MessageErrorSchema } },
+      },
+    },
+  });
 }
