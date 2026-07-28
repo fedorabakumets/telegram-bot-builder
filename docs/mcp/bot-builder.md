@@ -1,4 +1,4 @@
-# MCP-сервер конструктора (botcraft-builder)
+﻿# MCP-сервер конструктора (botcraft-builder)
 
 > Подробное руководство по MCP-серверу BotCraft Studio для сборки `project.json` и генерации Python-кода через внешние ИИ-клиенты (Cursor, Claude Desktop, Kiro).
 
@@ -20,8 +20,9 @@ MCP **не заменяет** визуальный редактор. Он доп
 |--------|----------------|
 | Черновик бота по описанию в чате | MCP |
 | Тонкая настройка, медиа, сложный граф | Сайт (`npm run dev`) |
-| Запуск бота, токен, деплой | Конструктор / сервер |
-| Заливка в БД | Скрипты (`push-bot-project-json.ts`), не MCP |
+| Live-правка сценария в БД, статус/логи | MCP (`db_*`, `update_project_db`) |
+| Срок хранения сообщений токена | MCP (`db_set_messages_retention`) или UI |
+| Запуск/стоп/рестарт бота | MCP или UI вкладки «Бот» |
 
 Связанные документы:
 
@@ -50,8 +51,8 @@ lib/bot-tools/                ← ядро: validate, create, mutate, generate
 
 **Важно:**
 
-- Сервер **stateless** — не хранит проект между вызовами. Агент держит `project_json` в контексте и сам сохраняет файлы.
-- В БД и на диск MCP **сам ничего не пишет** (по умолчанию).
+- Файловые тулы **stateless** — агент держит `project_json` в контексте (или пишет через `save_project`).
+- Live-тулы (`update_project_db`, `db_*`) ходят в HTTP API запущенного приложения с `Authorization: Bearer` из `MCP_AGENT_TOKEN`.
 - Ответ каждого тула — JSON в текстовом блоке MCP.
 
 ---
@@ -176,8 +177,9 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 Тулы `add_node`, `update_node`, `connect_nodes`, `scaffold_minimal_project` возвращают поле `validation` — проверяй его сразу.
 
 ---
+## Справочник инструментов
 
-## Справочник инструментов (15 тулов)
+> Ниже — основные группы. Актуальный полный список всегда в `tools/mcp-server/index.ts` (и в Cursor MCP inspector).
 
 ### Слой 1 — Introspection (только чтение)
 
@@ -255,7 +257,7 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 
 ---
 
-### Слой 4 — Конструирование
+### Слой 4 — Конструирование (файлы / project.json)
 
 #### `create_node`
 
@@ -302,6 +304,62 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 | `button-goto` | `target` на кнопке/ветке с `branch` |
 | `input-target` | `inputTargetNodeId` |
 
+#### `load_project` / `save_project`
+
+Чтение/запись `bots/<имя>/project.json` на диске.
+
+---
+
+### Слой 5 — Живая БД (сценарий)
+
+Требуют `MCP_AGENT_TOKEN` и доступ к проекту. Пишут в БД приложения и обновляют открытый холст (live).
+
+Ключевые тулы: `get_project_db`, `update_project_db`, `db_project_summary`, `db_list_projects`, `db_create_project`, `db_list_nodes`, `db_find_nodes`, `db_get_node`, `db_add_node`, `db_update_node`, `db_remove_node`, `db_connect_nodes`, `db_disconnect_nodes`, `db_move_node`, `db_duplicate_node`, `db_auto_layout`, `db_list_sheets`, `db_add_sheet`, `db_rename_sheet`, `db_remove_sheet`, `db_duplicate_sheet`, `db_set_active_sheet`, `db_reorder_sheets`, `db_move_sheet_to_project`, `db_list_versions`, `db_restore_version`, `db_delete_version`, `db_prune_versions`, `db_apply_ops`, …
+
+Подробнее: [[futures/mcp/mcp-live-editing]].
+
+---
+
+### Слой 6 — Runtime ботов и настройки токена
+
+#### `db_list_bot_tokens`
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `project_id` | number | ID проекта из URL |
+
+Список токенов **без секрета** `token`: `id`, `name`, `botUsername`, флаги, **`messagesRetentionDays`**.
+
+#### `db_bot_status` / `db_bot_logs` / `db_bot_launch_history`
+
+Статус, live-логи и история запусков по `token_id` из `db_list_bot_tokens`.
+
+#### `db_start_bot` / `db_stop_bot` / `db_restart_bot` / `db_restart_all_bots`
+
+Управление процессом. `db_stop_bot` и `db_restart_all_bots` требуют `confirm: true`.
+`db_restart_all_bots` перезапускает только **уже запущенные** боты (офлайн не поднимает).
+
+#### `db_set_messages_retention`
+
+Установить срок хранения сообщений диалога (`bot_messages`) для одного токена.
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `project_id` | number | ID проекта |
+| `token_id` | number | ID токена из `db_list_bot_tokens` |
+| `messages_retention_days` | number | `0`, `7`, `30`, `60`, `90`, `180` или `365` |
+
+- `0` — без автоочистки (безлимит)
+- иначе сервер раз в час удаляет сообщения этого токена старше N дней
+- таблица `message_activity_daily` (график «Активность») **не** трогается
+- перезапуск бота **не** нужен
+
+Эквивалент UI «Хранить сообщения» и API `PUT /api/projects/{projectId}/tokens/{tokenId}/messages-retention` ([[api/tokens]]).
+
+**Пример (массово на 50 ботов):** сначала `db_list_bot_tokens`, затем цикл `db_set_messages_retention` по каждому `token_id`.
+
+Код: `lib/bot-tools/bot-token-settings-db.ts`.
+
 ---
 
 ## Пример: простой бот
@@ -325,14 +383,14 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 
 ## Чего в MCP пока нет
 
-| Возможность | Статус | Где в roadmap |
+| Возможность | Статус | Где смотреть |
 |-------------|--------|----------------|
-| `lint_bot_project` | ❌ | [[futures/features/ai-agent-tab-vision]] слой 2 |
-| `auto_layout` | ❌ | слой 4; логика в `client/utils/hierarchical-layout.ts` |
-| `generate_project_files` | ❌ | Dockerfile, requirements, README |
-| `list_bots` / `save_bot` / push в БД | ❌ | слой 5 |
-| `start_bot` / `deploy_bot` | ❌ | слой 6 |
-| Вкладка ИИ-агента в UI | ❌ | тот же слой инструментов, другое «лицо» |
+| Live-правки сценария в БД | ✅ | слой 5, [[futures/mcp/mcp-live-editing]] |
+| Старт/стоп/рестарт, логи, статус | ✅ | слой 6 |
+| Срок хранения сообщений | ✅ | `db_set_messages_retention` |
+| `db_auto_layout` | ✅ | слой 5 |
+| Запуск **всех офлайн** одной кнопкой/тулом | ❌ | только per-token `db_start_bot` |
+| Вкладка ИИ-агента в UI | частично | [[futures/features/ai-agent-tab-vision]] |
 
 ---
 
@@ -342,6 +400,8 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 |------|------------|
 | `tools/mcp-server/index.ts` | Регистрация MCP-тулов |
 | `lib/bot-tools/` | Реализация инструментов |
+| `lib/bot-tools/bot-runtime-db.ts` | Статус/логи/старт/стоп |
+| `lib/bot-tools/bot-token-settings-db.ts` | Настройки токена (retention) |
 | `lib/bot-tools/mcp-allowed-types.ts` | Whitelist типов |
 | `lib/bot-tools/minimize-node-data.ts` | Компактный JSON |
 | `lib/bot-tools/project-mutate.ts` | scaffold, add, connect, … |
@@ -363,9 +423,11 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 | Симптом | Решение |
 |---------|---------|
 | MCP не подключается | Проверь `cwd` в mcp.json, `npm install`, Refresh в Cursor |
+| `401` / `403` на `db_*` | Задай `MCP_AGENT_TOKEN` (вкладка «Агент»), перезапусти MCP |
 | `mcp_forbidden_node_type` | `list_node_types` — не используй legacy (`start`, `photo`, …) |
 | `condition_wrong_format` | `branches`, не `conditions` |
 | `broken_target` | `connect_nodes` или проверь id целевой ноды |
+| `messages_retention_days` rejected | Только `0/7/30/60/90/180/365` |
 | `get_prompt_guide` съедает контекст | Вызывай реже; для одной ноды хватит `get_node_schema` |
 
 ---
@@ -377,14 +439,19 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 1. scaffold_minimal_project
 2. Добавь нужные ноды через create_node + add_node
 3. Свяжи connect_nodes
-4. validate_bot_project до valid: true
-5. Сохрани в bots/<имя>/project.json
-Не используй start/command/photo — только типы из list_node_types.
-Для condition — branches + else, операторы из list_operators.
+4. validate_bot_project — исправь issues
+5. При необходимости update_project_db / db_apply_ops
+```
+
+Для срока хранения на проде:
+
+```
+1. db_list_bot_tokens(project_id)
+2. Для каждого token_id: db_set_messages_retention(project_id, token_id, 60)
 ```
 
 ---
 
 ## Версия
 
-MCP-сервер: `botcraft-builder` v2.2.0.5 (поле `SERVER_INFO` в `tools/mcp-server/index.ts`).
+MCP-сервер: `botcraft-builder` (поле `SERVER_INFO` в `tools/mcp-server/index.ts`).

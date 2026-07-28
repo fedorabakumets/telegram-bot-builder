@@ -36,7 +36,7 @@ command_trigger (/help)   ──►  message (справка)
 6. `validate_bot_project` → `valid: true`
 7. Сохранить JSON в `bots/<имя>/project.json`
 
-Подробнее о тулах: [[mcp/bot-builder#Справочник инструментов (15 тулов)]].
+Подробнее о тулах: [[mcp/bot-builder#Справочник инструментов]].
 
 ---
 

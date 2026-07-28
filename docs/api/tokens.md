@@ -6,9 +6,13 @@
 
 Срок хранения сообщений диалога
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT (`MCP_AGENT_TOKEN`)
 
 Обновляет `messages_retention_days` у токена. `0` — без автоочистки; иначе сервер раз в час удаляет из `bot_messages` сообщения этого токена старше N дней. Таблица `message_activity_daily` (длинный график «Активность») не трогается. Требуется владение токеном (`requireTokenOwnership`).
+
+Допустимые значения: `0`, `7`, `30`, `60`, `90`, `180`, `365` (`shared/messages-retention.ts`).
+
+**MCP:** тул `db_set_messages_retention` (`lib/bot-tools/bot-token-settings-db.ts`). Текущее значение видно в `db_list_bot_tokens` → `messagesRetentionDays`.
 
 **Тело запроса:** `UpdateMessagesRetentionRequest`
 
