@@ -68,26 +68,32 @@ export async function handleBotStatusByToken(req: Request, res: Response): Promi
 
         let actualStatus = (activeProcessInfo || isRunningInWorker) ? 'running' : 'stopped';
 
-        // Если процесс не найден в активных, но есть в БД, проверяем его существование
-        if (!activeProcessInfo && instance.processId && checkProcessExists(instance.processId)) {
+        // PID-эвристики только для отдельного spawn-процесса (не worker_<projectId>)
+        const isWorkerPoolPid = typeof instance.processId === 'string'
+          && instance.processId.startsWith('worker_');
+
+        if (!isWorkerPoolPid) {
+          // Если процесс не найден в активных, но есть в БД, проверяем его существование
+          if (!activeProcessInfo && instance.processId && checkProcessExists(instance.processId)) {
             console.log(`Процесс ${instance.processId} для токена ${tokenId} найден в системе`);
             restoreProcessTracking(projectId, instance.tokenId, parseInt(instance.processId));
             actualStatus = 'running';
-        }
+          }
 
-        // Дополнительная проверка для Python процессов
-        if (!activeProcessInfo && instance.processId && actualStatus === 'stopped' && isPythonProcess(instance.processId)) {
+          // Дополнительная проверка для Python процессов
+          if (!activeProcessInfo && instance.processId && actualStatus === 'stopped' && isPythonProcess(instance.processId)) {
             restoreProcessTracking(projectId, instance.tokenId, parseInt(instance.processId));
             actualStatus = 'running';
-        }
+          }
 
-        // Поиск PID если не найден
-        if (!activeProcessInfo && actualStatus === 'stopped') {
+          // Поиск PID если не найден
+          if (!activeProcessInfo && actualStatus === 'stopped') {
             const realPid = findBotProcessPid(projectId);
             if (realPid) {
-                await storage.updateBotInstance(instance.id, { processId: realPid.toString() });
-                actualStatus = 'running';
+              await storage.updateBotInstance(instance.id, { processId: realPid.toString() });
+              actualStatus = 'running';
             }
+          }
         }
 
         // Обновляем статус в БД если он изменился

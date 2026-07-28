@@ -339,6 +339,20 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 Управление процессом. `db_stop_bot` и `db_restart_all_bots` требуют `confirm: true`.
 `db_restart_all_bots` перезапускает только **уже запущенные** боты (офлайн не поднимает).
 
+#### `db_start_offline_bots`
+
+Запустить всех **офлайн** ботов проекта (уже running не трогает).
+
+| Параметр | Тип | Описание |
+|----------|-----|----------|
+| `project_id` | number | ID проекта |
+| `confirm` | boolean | Обязательно `true` |
+
+Эквивалент UI «Запустить офлайн» и `POST /api/projects/{id}/bot/start-offline-all` ([[api/projects]], [[features/start-offline-bots]]).
+Карточки обновляются live через WS `bot-started` + `start-offline-progress` ([[api/realtime-events]]).
+
+Код: `lib/bot-tools/bot-runtime-db.ts` → `startOfflineBotsInDb`.
+
 #### `db_set_messages_retention`
 
 Установить срок хранения сообщений диалога (`bot_messages`) для одного токена.
@@ -391,6 +405,7 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 | Старт/стоп/рестарт, логи, статус | ✅ | слой 6 |
 | Срок хранения сообщений | ✅ | `db_set_messages_retention` |
 | Live UI после настроек токена | ✅ | WS `token-updated`, [[features/token-settings-realtime]] |
+| Запуск всех офлайн | ✅ | `db_start_offline_bots`, [[features/start-offline-bots]] |
 | `db_auto_layout` | ✅ | слой 5 |
 | Запуск **всех офлайн** одной кнопкой/тулом | ❌ | только per-token `db_start_bot` |
 | Вкладка ИИ-агента в UI | частично | [[futures/features/ai-agent-tab-vision]] |

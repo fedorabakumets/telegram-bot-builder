@@ -71,8 +71,38 @@
 
 Клиенты (`use-project-events-ws`, `use-all-projects-events-ws`) при `token-updated` инвалидируют `GET /api/projects/{id}/tokens` — карточки ботов подтягивают новые настройки без перезагрузки. Toast на чужие/агентские обновления не показывается.
 
+## Тип `start-offline-progress`
+
+Эмитится во время `POST /api/projects/{id}/bot/start-offline-all` (и MCP `db_start_offline_bots`). Параллельно каждый успешный старт шлёт обычный `bot-started` (карточки зеленеют live).
+
+### Пример payload
+
+```json
+{
+  "type": "start-offline-progress",
+  "projectId": 1,
+  "tokenId": 70,
+  "timestamp": "2026-07-28T04:00:00.000Z",
+  "data": {
+    "started": 12,
+    "failed": 0,
+    "skipped": 26,
+    "total": 38,
+    "currentTokenId": 70,
+    "status": "running",
+    "source": "api"
+  }
+}
+```
+
+Whitelist только счётчики/статус — без `token` и env. UI показывает прогресс в шапке; итоговый toast один на операцию.
+
+Контракт: `shared/project-sync/project-event.ts` (`toStartOfflineProgressPayload`).
+
 ## Связанные документы
 
 - [tokens.md](./tokens.md) — HTTP settings PUT
-- [features/token-settings-realtime.md](../features/token-settings-realtime.md) — обзор
-- [mcp/bot-builder.md](../mcp/bot-builder.md) — MCP `db_set_messages_retention`
+- [projects.md](./projects.md) — `start-offline-all` / `restart-all`
+- [features/token-settings-realtime.md](../features/token-settings-realtime.md) — live настройки токена
+- [features/start-offline-bots.md](../features/start-offline-bots.md) — массовый старт офлайн
+- [mcp/bot-builder.md](../mcp/bot-builder.md) — MCP runtime тулы

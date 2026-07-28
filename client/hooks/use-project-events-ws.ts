@@ -6,7 +6,8 @@
 
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { ProjectEvent } from '@shared/project-sync/project-event';
+import type { ProjectEvent, StartOfflineProgressPayload } from '@shared/project-sync/project-event';
+import { startOfflineProgressQueryKey } from '@/components/editor/bot/start-offline-progress-query';
 
 /**
  * Опции хука подписки на события проекта
@@ -109,6 +110,18 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
               queryClient.invalidateQueries({ queryKey: [`/api/tokens/${msg.tokenId}/bot-status`] });
             }
             queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/bot/info`] });
+          }
+
+          if (msg.type === 'start-offline-progress') {
+            const data = msg.data as StartOfflineProgressPayload | undefined;
+            if (data && typeof data.total === 'number') {
+              queryClient.setQueryData(startOfflineProgressQueryKey(msg.projectId), data);
+              if (msg.tokenId) {
+                queryClient.invalidateQueries({
+                  queryKey: [`/api/tokens/${msg.tokenId}/bot-status`],
+                });
+              }
+            }
           }
         } catch {
           // Игнорируем некорректные сообщения

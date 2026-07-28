@@ -66,6 +66,12 @@ interface BotControlContextValue {
     isPending: boolean;
     mutate: (projectId: number) => void;
   };
+  /** Мутация запуска всех офлайн-ботов проекта */
+  startOfflineAllMutation: {
+    isPending: boolean;
+    variables?: number;
+    mutate: (projectId: number) => void;
+  };
 
   /** Установить выбранный проект для редактирования профиля */
   setSelectedProject: (project: BotProject | null) => void;

@@ -53,6 +53,16 @@ export async function handleBotStop(req: Request, res: Response): Promise<void> 
             return;
         }
 
+        const tokenRow = await storage.getBotToken(tokenId);
+        if (!tokenRow) {
+            res.status(404).json({ message: "Токен не найден" });
+            return;
+        }
+        if (tokenRow.projectId !== projectId) {
+            res.status(403).json({ message: "Токен не принадлежит этому проекту" });
+            return;
+        }
+
         const result = await stopBot(projectId, tokenId);
         if (result.success) {
             res.json({ message: "Бот успешно остановлен" });
