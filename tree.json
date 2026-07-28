@@ -253,7 +253,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T09:54:28+03:00",
+    "updated_at": "2026-07-28T09:55:38+03:00",
     "tags": [],
     "author": ""
   },
@@ -425,7 +425,7 @@
   {
     "path": "api/tokens",
     "title": "tokens",
-    "excerpt": "Эндпоинтов настроек токена (settings) + общие CRUD токена.",
+    "excerpt": "Эндпоинтов: **5**",
     "parts": [
       "api",
       "tokens"
@@ -433,7 +433,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T07:17:20+03:00",
+    "updated_at": "2026-07-28T04:18:43Z",
     "tags": [],
     "author": ""
   },
