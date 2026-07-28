@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T07:17:20+03:00",
+    "updated_at": "2026-07-28T09:54:28+03:00",
     "tags": [],
     "author": ""
   },
@@ -253,7 +253,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T07:17:20+03:00",
+    "updated_at": "2026-07-28T09:54:28+03:00",
     "tags": [],
     "author": ""
   },
@@ -283,7 +283,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T07:17:20+03:00",
+    "updated_at": "2026-07-28T09:54:28+03:00",
     "tags": [],
     "author": ""
   },
@@ -1218,6 +1218,21 @@
     "author": ""
   },
   {
+    "path": "features/start-offline-bots",
+    "title": "Массовый запуск офлайн-ботов",
+    "excerpt": "Кнопка **«Запустить офлайн»** в шапке проекта и MCP `db_start_offline_bots` поднимают только остановленных ботов текущего проекта. Уже **run",
+    "parts": [
+      "features",
+      "start-offline-bots"
+    ],
+    "folder_titles": {
+      "features": "🧩 Возможности"
+    },
+    "updated_at": "2026-07-28T09:54:28+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "features/telegram-buttons-new-features",
     "title": "План новых фич кнопок для Telegram бот-редактора",
     "excerpt": "> Дата обновления: 4 апреля 2026",
@@ -1736,7 +1751,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-07-28T07:17:20+03:00",
+    "updated_at": "2026-07-28T09:54:28+03:00",
     "tags": [],
     "author": ""
   },
@@ -1787,7 +1802,7 @@
       "futures": "🔮 Планы развития",
       "mcp": "🤖 MCP"
     },
-    "updated_at": "2026-07-28T07:17:20+03:00",
+    "updated_at": "2026-07-28T09:54:28+03:00",
     "tags": [],
     "author": ""
   },
@@ -2310,7 +2325,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-07-28T07:17:20+03:00",
+    "updated_at": "2026-07-28T09:54:28+03:00",
     "tags": [],
     "author": ""
   },
@@ -2651,7 +2666,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-07-28T07:17:20+03:00",
+    "updated_at": "2026-07-28T09:54:28+03:00",
     "tags": [],
     "author": ""
   },
@@ -2681,7 +2696,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-07-28T07:17:20+03:00",
+    "updated_at": "2026-07-28T09:54:28+03:00",
     "tags": [],
     "author": ""
   },
