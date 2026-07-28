@@ -10,6 +10,7 @@
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 import { BotControl } from '../bot-control';
 import { useBotLogs } from '../contexts/bot-logs-context';
+import { clearBotLogsOnce } from '../contexts/clear-bot-logs-once';
 import { useEffect } from 'react';
 import { getBotDisplayName } from '../contexts/bot-control-utils';
 import { useBotQueries } from '../hooks/use-bot-queries';
@@ -59,16 +60,15 @@ export function BotsPanel({ projectId, projectName, allProjects, onProjectChange
     JSON.stringify(allBotStatuses.map(s => ({ id: s.tokenId, status: s.status }))),
   ]);
 
-  // Обработчик запуска бота
+  // Обработчик запуска бота (mutation) — очищаем старые логи один раз
   const handleBotStarted = (projectId: number, tokenId: number, botName: string) => {
-    const logKey = `${projectId}-${tokenId}`;
-    clearLogs(logKey);
+    clearBotLogsOnce(clearLogs, projectId, tokenId);
     addTerminal({ projectId, tokenId, botName, isRunning: true });
   };
 
-  // Очистка логов при получении bot-started через WebSocket (срабатывает на всех вкладках)
+  // WS bot-started: тот же clear с cooldown — Redis шлёт второе событие после main()
   const handleBotStartedWs = (projectId: number, tokenId: number) => {
-    clearLogs(`${projectId}-${tokenId}`);
+    clearBotLogsOnce(clearLogs, projectId, tokenId);
   };
 
   // Обработчик остановки бота — очищаем логи и обновляем статус терминала

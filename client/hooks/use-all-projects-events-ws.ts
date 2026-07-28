@@ -69,6 +69,10 @@ function handleBotEvent(
   if (msg.tokenId) {
     queryClient.invalidateQueries({ queryKey: ['launch-history', msg.tokenId] });
     queryClient.invalidateQueries({ queryKey: [`/api/tokens/${msg.tokenId}/bot-status`] });
+    // Подтянуть логи из БД без F5 (если live-WS пропустил строки)
+    queryClient.invalidateQueries({
+      queryKey: ['/api/projects', msg.projectId, 'tokens', msg.tokenId, 'logs'],
+    });
   }
   queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/bot/info`] });
 }
