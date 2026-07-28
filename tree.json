@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T11:22:23+03:00",
+    "updated_at": "2026-07-28T08:23:40Z",
     "tags": [],
     "author": ""
   },
@@ -245,7 +245,7 @@
   {
     "path": "api/projects",
     "title": "projects",
-    "excerpt": "Эндпоинтов: **146**",
+    "excerpt": "Эндпоинтов: **145**",
     "parts": [
       "api",
       "projects"
@@ -253,7 +253,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T06:56:51Z",
+    "updated_at": "2026-07-28T08:23:40Z",
     "tags": [],
     "author": ""
   },
@@ -425,7 +425,7 @@
   {
     "path": "api/tokens",
     "title": "tokens",
-    "excerpt": "Эндпоинтов: **5**",
+    "excerpt": "Эндпоинтов: **6**",
     "parts": [
       "api",
       "tokens"
@@ -433,7 +433,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T04:18:43Z",
+    "updated_at": "2026-07-28T08:23:40Z",
     "tags": [],
     "author": ""
   },
@@ -508,7 +508,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-04T19:32:54+03:00",
+    "updated_at": "2026-07-28T20:24:40+03:00",
     "tags": [],
     "author": ""
   },
@@ -613,7 +613,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-28T11:22:23+03:00",
+    "updated_at": "2026-07-28T08:23:40Z",
     "tags": [],
     "author": ""
   },
@@ -628,7 +628,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-04T19:19:59+03:00",
+    "updated_at": "2026-07-28T20:24:40+03:00",
     "tags": [],
     "author": ""
   },
@@ -1143,6 +1143,21 @@
     "author": ""
   },
   {
+    "path": "features/bot-worker-pool-isolation",
+    "title": "Изоляция ботов в worker-pool",
+    "excerpt": "/**",
+    "parts": [
+      "features",
+      "bot-worker-pool-isolation"
+    ],
+    "folder_titles": {
+      "features": "🧩 Возможности"
+    },
+    "updated_at": "2026-07-28T20:24:40+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "features/buttons-roadmap",
     "title": "Roadmap: Улучшение системы кнопок",
     "excerpt": "| Задача | Статус |",
@@ -1154,21 +1169,6 @@
       "features": "🧩 Возможности"
     },
     "updated_at": "2026-04-04T08:01:13+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "features/bot-worker-pool-isolation",
-    "title": "Изоляция ботов в worker-pool",
-    "excerpt": "В одном Python-процессе крутятся все боты проекта. Без изоляции:",
-    "parts": [
-      "features",
-      "bot-worker-pool-isolation"
-    ],
-    "folder_titles": {
-      "features": "🧩 Возможности"
-    },
-    "updated_at": "2026-07-28T20:00:00+03:00",
     "tags": [],
     "author": ""
   },
@@ -1213,7 +1213,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-07-28T11:22:23+03:00",
+    "updated_at": "2026-07-28T20:24:40+03:00",
     "tags": [],
     "author": ""
   },
@@ -1735,7 +1735,7 @@
   {
     "path": "futures/infrastructure/bot-worker-pool",
     "title": "Bot Worker Pool — масштабируемый запуск ботов",
-    "excerpt": "Текущая архитектура запускает каждого Telegram-бота как отдельный Python процесс (`spawn python3 bot.py`).",
+    "excerpt": "> **Статус изоляции (runtime):** реализовано — см. [[features/bot-worker-pool-isolation]]",
     "parts": [
       "futures",
       "infrastructure",
@@ -1745,7 +1745,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-06-23T14:36:15+03:00",
+    "updated_at": "2026-07-28T20:24:40+03:00",
     "tags": [],
     "author": ""
   },
@@ -1796,7 +1796,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-07-28T09:54:28+03:00",
+    "updated_at": "2026-07-28T20:24:40+03:00",
     "tags": [],
     "author": ""
   },
@@ -2460,7 +2460,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-07-26T06:44:15+03:00",
+    "updated_at": "2026-07-28T20:24:40+03:00",
     "tags": [],
     "author": ""
   },
@@ -2711,7 +2711,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-07-28T11:22:23+03:00",
+    "updated_at": "2026-07-28T20:24:40+03:00",
     "tags": [],
     "author": ""
   },
