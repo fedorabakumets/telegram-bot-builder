@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T09:54:28+03:00",
+    "updated_at": "2026-07-28T11:22:23+03:00",
     "tags": [],
     "author": ""
   },
@@ -140,7 +140,7 @@
   {
     "path": "api/bots",
     "title": "bots",
-    "excerpt": "Эндпоинтов: **1**",
+    "excerpt": "Эндпоинтов: **2**",
     "parts": [
       "api",
       "bots"
@@ -148,7 +148,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-04T19:32:54+03:00",
+    "updated_at": "2026-07-28T06:56:51Z",
     "tags": [],
     "author": ""
   },
@@ -253,7 +253,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T09:55:38+03:00",
+    "updated_at": "2026-07-28T06:56:51Z",
     "tags": [],
     "author": ""
   },
@@ -283,7 +283,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T09:54:28+03:00",
+    "updated_at": "2026-07-28T11:22:23+03:00",
     "tags": [],
     "author": ""
   },
@@ -613,7 +613,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-04T19:19:59+03:00",
+    "updated_at": "2026-07-28T11:22:23+03:00",
     "tags": [],
     "author": ""
   },
@@ -1188,6 +1188,21 @@
     "author": ""
   },
   {
+    "path": "features/launch-history-status-reconciliation",
+    "title": "Launch history status reconciliation",
+    "excerpt": "/**",
+    "parts": [
+      "features",
+      "launch-history-status-reconciliation"
+    ],
+    "folder_titles": {
+      "features": "🧩 Возможности"
+    },
+    "updated_at": "2026-07-28T11:22:23+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "features/project-versioning",
     "title": "Версионирование проекта",
     "excerpt": "Версионирование — это автоматическая история снимков проекта с возможностью отката к любой сохранённой версии. По принципу работы напоминает",
@@ -1244,6 +1259,21 @@
       "features": "🧩 Возможности"
     },
     "updated_at": "2026-04-04T18:35:48+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/token-project-access-delete",
+    "title": "Token project access delete",
+    "excerpt": "/**",
+    "parts": [
+      "features",
+      "token-project-access-delete"
+    ],
+    "folder_titles": {
+      "features": "🧩 Возможности"
+    },
+    "updated_at": "2026-07-28T11:22:23+03:00",
     "tags": [],
     "author": ""
   },
@@ -1615,7 +1645,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-06-25T16:24:19+03:00",
+    "updated_at": "2026-07-28T11:22:23+03:00",
     "tags": [],
     "author": ""
   },
@@ -2210,7 +2240,7 @@
       "futures": "🔮 Планы развития",
       "ui": "🎨 Интерфейс"
     },
-    "updated_at": "2026-06-23T14:36:15+03:00",
+    "updated_at": "2026-07-28T11:22:23+03:00",
     "tags": [],
     "author": ""
   },
@@ -2325,7 +2355,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-07-28T09:54:28+03:00",
+    "updated_at": "2026-07-28T11:22:23+03:00",
     "tags": [],
     "author": ""
   },
@@ -2666,7 +2696,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-07-28T09:54:28+03:00",
+    "updated_at": "2026-07-28T11:22:23+03:00",
     "tags": [],
     "author": ""
   },
@@ -2696,7 +2726,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-07-28T09:54:28+03:00",
+    "updated_at": "2026-07-28T11:22:23+03:00",
     "tags": [],
     "author": ""
   },
