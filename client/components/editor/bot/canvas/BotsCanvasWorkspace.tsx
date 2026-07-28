@@ -10,6 +10,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useMediaQuery } from '@/components/editor/properties/hooks/use-media-query';
 import { useBotControl } from '../bot-control-context';
 import { useBotDetailPanelWidth } from './use-bot-detail-panel-width';
+import { buildFailureByTokenId } from './bot-service-failure';
 import type { BotProject, BotToken } from '@shared/schema';
 
 /** Пропсы workspace холста */
@@ -44,6 +45,11 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
     return map;
   }, [allBotStatuses]);
 
+  const failureByTokenId = useMemo(
+    () => buildFailureByTokenId(allBotStatuses),
+    [allBotStatuses],
+  );
+
   const selectedToken = tokens.find((t) => t.id === selectedTokenId) ?? null;
   const overlayOpen = !!selectedToken && !useSheet;
 
@@ -53,6 +59,7 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
         projectId={project.id}
         tokens={tokens}
         runningByTokenId={runningByTokenId}
+        failureByTokenId={failureByTokenId}
         selectedTokenId={selectedTokenId}
         onSelectToken={setSelectedTokenId}
         overlayPanelWidth={overlayOpen ? panelWidth : 0}
