@@ -45,13 +45,12 @@ import { execSync } from "node:child_process";
  *
  * @description
  * Алгоритм работы функции:
- * - Перебирает все процессы из коллекции botProcesses
- * - Отправляет каждому процессу сигнал SIGTERM для мягкого завершения
- * - Ждет 2 секунды для корректного завершения
- * - При необходимости отправляет сигнал SIGKILL для принудительного завершения
- * - Выполняет поиск и уничтожение всех Python-процессов, содержащих 'bot_' в имени файла
- * - Очищает коллекцию botProcesses
- * - Обновляет статусы ботов в базе данных, если пул соединений все еще активен
+ * - Сначала пишет маркер `__server_restart__` всем running-инстансам в БД
+ * - Затем останавливает worker pool (`shutdownAll`)
+ * - Перебирает процессы из коллекции botProcesses (spawn-режим)
+ * - Отправляет каждому процессу сигнал SIGTERM, затем при необходимости SIGKILL
+ * - Убивает зависшие Python-процессы с 'bot_' в имени
+ * - Очищает коллекцию botProcesses и закрывает пул БД
  *
  * @example
  * ```typescript
@@ -68,23 +67,17 @@ import { execSync } from "node:child_process";
  * @since 1.0.0
  */
 export async function shutdownAllBots(): Promise<void> {
-  // ─── Режим воркера: останавливаем все воркеры через менеджер ───
-  if (process.env.USE_WORKER_POOL !== 'false') {
-    await workerManager.shutdownAll();
-  }
-
+  /**
+   * Маркер `__server_restart__` пишем ДО остановки воркеров.
+   * Иначе `workerManager.shutdownAll()` → `bot_exited` → handleWorkerBotExited
+   * ставит status=stopped без маркера, и цикл ниже уже не находит running —
+   * после редеплоя restore видит «Нет ботов для восстановления».
+   */
   if (globalThis.__dbPoolActive !== false) {
     try {
       const allInstances = await storage.getAllBotInstances();
       for (const instance of allInstances) {
         if (instance.status === 'running') {
-          /**
-           * Записываем маркер ДО убийства процессов — иначе обработчик exit
-           * в startBot.ts перезапишет errorMessage своим кодом ошибки.
-           * Используем специальный маркер вместо обычного сообщения об остановке,
-           * чтобы `restoreRunningBots` мог отличить "остановлен сервером" от
-           * "остановлен пользователем вручную" и восстановить бота после рестарта.
-           */
           await storage.updateBotInstance(instance.id, {
             status: 'stopped',
             stoppedAt: new Date(),
@@ -96,7 +89,8 @@ export async function shutdownAllBots(): Promise<void> {
               stoppedAt: new Date(),
               errorMessage: '__server_restart__',
             });
-          }        }
+          }
+        }
       }
     } catch (error) {
       console.error('Ошибка обновления статуса экземпляров ботов:', error);
@@ -106,6 +100,11 @@ export async function shutdownAllBots(): Promise<void> {
   }
 
   console.log('🛑 Начинаем корректное завершение всех ботов...');
+
+  // После маркера — гасим worker pool (exit-handler не затрёт __server_restart__)
+  if (process.env.USE_WORKER_POOL !== 'false') {
+    await workerManager.shutdownAll();
+  }
 
   /**
    * Этап 1: Завершение процессов ботов из глобальной коллекции

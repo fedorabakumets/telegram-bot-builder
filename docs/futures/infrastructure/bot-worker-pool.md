@@ -68,7 +68,8 @@ Node.js → Worker проекта (Python asyncio) → bot_1, bot_2, bot_3  (150
 - Для каждого вызывает `startBot()`
 
 ### Graceful Shutdown (`server/utils/graceful-shutdown.ts`)
-- Маркер `__server_restart__` → SIGTERM/SIGKILL всех → очищает Map → закрывает БД
+- Маркер `__server_restart__` в БД **до** `shutdownAll()` → затем SIGTERM воркеров → очищает Map → закрывает БД
+  (иначе `bot_exited` успевает сбросить running без маркера и restore после редеплоя ничего не находит)
 
 ---
 
