@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-26T00:10:59Z",
+    "updated_at": "2026-07-28T07:17:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -253,7 +253,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T06:31:44+03:00",
+    "updated_at": "2026-07-28T07:17:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -269,6 +269,21 @@
       "api": "Api"
     },
     "updated_at": "2026-07-04T19:32:54+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "api/realtime-events",
+    "title": "Realtime events (WebSocket)",
+    "excerpt": "События проекта доставляются клиентам через terminal WebSocket и (между репликами Node) через Redis.",
+    "parts": [
+      "api",
+      "realtime-events"
+    ],
+    "folder_titles": {
+      "api": "Api"
+    },
+    "updated_at": "2026-07-28T07:17:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -410,7 +425,7 @@
   {
     "path": "api/tokens",
     "title": "tokens",
-    "excerpt": "Эндпоинтов: **5**",
+    "excerpt": "Эндпоинтов настроек токена (settings) + общие CRUD токена.",
     "parts": [
       "api",
       "tokens"
@@ -418,7 +433,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T06:31:44+03:00",
+    "updated_at": "2026-07-28T07:17:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -1218,6 +1233,21 @@
     "author": ""
   },
   {
+    "path": "features/token-settings-realtime",
+    "title": "Live-синхронизация настроек токена",
+    "excerpt": "После изменения настроек бота (срок хранения сообщений, auto-restart, protect-content и др.) карточки на вкладке «Боты» обновляются **без F5",
+    "parts": [
+      "features",
+      "token-settings-realtime"
+    ],
+    "folder_titles": {
+      "features": "🧩 Возможности"
+    },
+    "updated_at": "2026-07-28T07:17:20+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "futures/docs/docs-restructuring-plan",
     "title": "Реструктуризация документации: идеальная структура docs/",
     "excerpt": "| Проблема | Описание | Влияние |",
@@ -1689,7 +1719,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-06-23T14:36:15+03:00",
+    "updated_at": "2026-07-28T07:17:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -1706,7 +1736,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-06-23T14:36:15+03:00",
+    "updated_at": "2026-07-28T07:17:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -1757,7 +1787,7 @@
       "futures": "🔮 Планы развития",
       "mcp": "🤖 MCP"
     },
-    "updated_at": "2026-07-28T06:31:44+03:00",
+    "updated_at": "2026-07-28T07:17:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -2280,7 +2310,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-07-28T06:31:44+03:00",
+    "updated_at": "2026-07-28T07:17:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -2621,7 +2651,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-07-28T06:31:44+03:00",
+    "updated_at": "2026-07-28T07:17:20+03:00",
     "tags": [],
     "author": ""
   },
@@ -2651,7 +2681,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-07-28T06:31:44+03:00",
+    "updated_at": "2026-07-28T07:17:20+03:00",
     "tags": [],
     "author": ""
   },
