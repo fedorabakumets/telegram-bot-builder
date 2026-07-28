@@ -225,6 +225,42 @@ export function useBotMutations({
     },
   });
 
+  /** Мутация массового запуска офлайн-ботов проекта */
+  const startOfflineAllMutation = useMutation({
+    mutationFn: (pid: number) =>
+      apiRequest('POST', `/api/projects/${pid}/bot/start-offline-all`),
+    onSuccess: (
+      data: {
+        started: number;
+        failed: number;
+        skippedRunning?: number;
+        message?: string;
+        results?: { tokenId: number; success: boolean }[];
+      },
+      pid: number,
+    ) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${pid}/tokens`] });
+      if (data.results) {
+        data.results.filter((r) => r.success).forEach((r) => {
+          onBotStarted?.(pid, r.tokenId, '');
+          queryClient.invalidateQueries({ queryKey: [`/api/tokens/${r.tokenId}/bot-status`] });
+        });
+      }
+      if (data.message && data.started === 0) {
+        toast({ title: data.message });
+        return;
+      }
+      toast({
+        title: 'Офлайн-боты запущены',
+        description: `Успешно: ${data.started}`
+          + (data.failed ? `, ошибок: ${data.failed}` : ''),
+      });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Ошибка запуска', description: error.message, variant: 'destructive' });
+    },
+  });
+
   /** Мутация привязки существующего токена к новому проекту */
   const attachExistingTokenMutation = useMutation({
     mutationFn: async ({ tokenId, targetProjectId }: { tokenId: number; targetProjectId: number }) => {
@@ -276,6 +312,7 @@ export function useBotMutations({
     updateBotInfoMutation,
     attachExistingTokenMutation,
     restartAllBotsMutation,
+    startOfflineAllMutation,
     isParsingBot,
   };
 }

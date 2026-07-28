@@ -38,7 +38,14 @@ export function BotManagementInterface({
   currentProjectId,
   viewMode = 'list',
 }: BotManagementInterfaceProps) {
-  const { setProjectForNewBot, setShowAddBot, allBotInfos, restartAllBotsMutation } = useBotControl();
+  const {
+    setProjectForNewBot,
+    setShowAddBot,
+    allBotInfos,
+    allBotStatuses,
+    restartAllBotsMutation,
+    startOfflineAllMutation,
+  } = useBotControl();
   const [collapsedState, setCollapsedState] = useState<Record<number, boolean>>({});
 
   const sortedEntries = projects
@@ -65,9 +72,31 @@ export function BotManagementInterface({
         </div>
       );
     }
+
+    const canvasTokens = activeEntry.tokens;
+    const canvasOfflineCount = canvasTokens.filter((t) => {
+      const st = allBotStatuses.find((s) => s.tokenId === t.id);
+      return st?.status !== 'running';
+    }).length;
+    const canvasStarting =
+      startOfflineAllMutation.isPending
+      && startOfflineAllMutation.variables === activeEntry.project.id;
+
     return (
-      <div className="h-full">
-        <BotsCanvasWorkspace project={activeEntry.project} tokens={activeEntry.tokens} />
+      <div className="flex h-full min-h-0 flex-col gap-3 p-4 sm:p-6">
+        <ProjectHeader
+          projectId={activeEntry.project.id}
+          projectName={activeEntry.project.name}
+          botsCount={canvasTokens.length}
+          onRestartAll={() => restartAllBotsMutation.mutate(activeEntry.project.id)}
+          isRestartingAll={restartAllBotsMutation.isPending}
+          offlineCount={canvasOfflineCount}
+          onStartOfflineAll={() => startOfflineAllMutation.mutate(activeEntry.project.id)}
+          isStartingOffline={canvasStarting}
+        />
+        <div className="min-h-0 flex-1">
+          <BotsCanvasWorkspace project={activeEntry.project} tokens={canvasTokens} />
+        </div>
       </div>
     );
   }
@@ -101,6 +130,14 @@ export function BotManagementInterface({
           return val === undefined ? defaultCollapsedFallback : val;
         });
 
+        const offlineCount = projectTokens.filter((t) => {
+          const st = allBotStatuses.find((s) => s.tokenId === t.id);
+          return st?.status !== 'running';
+        }).length;
+        const startingThis =
+          startOfflineAllMutation.isPending
+          && startOfflineAllMutation.variables === project.id;
+
         return (
           <div key={project.id} className="space-y-4">
             <ProjectHeader
@@ -112,6 +149,9 @@ export function BotManagementInterface({
               onExpandAll={() => handleExpandAll(projectTokens)}
               onRestartAll={() => restartAllBotsMutation.mutate(project.id)}
               isRestartingAll={restartAllBotsMutation.isPending}
+              offlineCount={offlineCount}
+              onStartOfflineAll={() => startOfflineAllMutation.mutate(project.id)}
+              isStartingOffline={startingThis}
             />
             {projectTokens.length === 0 ? (
               <EmptyBotsState

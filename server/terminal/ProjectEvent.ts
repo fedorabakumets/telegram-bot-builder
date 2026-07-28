@@ -8,6 +8,9 @@ export type {
   BroadcastProgressEvent,
   ProjectEvent,
   ProjectEventType,
+  StartOfflineProgressPayload,
+  StartOfflineProgressStatus,
+  StartOfflineSource,
   TokenUpdatedEventData,
   TokenUpdatedFieldKey,
   TokenUpdatedPayload,
@@ -20,5 +23,6 @@ export {
   isProjectEvent,
   pickChangedSettings,
   shouldSkipBridgedProjectEvent,
+  toStartOfflineProgressPayload,
   toTokenUpdatedPayload,
 } from '@shared/project-sync/project-event';

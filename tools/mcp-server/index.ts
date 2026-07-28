@@ -22,6 +22,7 @@ import {
   restartBotInDb,
   restartAllBotsInDb,
   setMessagesRetentionInDb,
+  startOfflineBotsInDb,
   connectNodes,
   connectNodesInDb,
   disconnectNodesInDb,
@@ -905,6 +906,21 @@ function registerTools(server: McpServer): void {
       },
     },
     async ({ project_id, confirm }) => textResult(await restartAllBotsInDb(project_id, { confirm })),
+  );
+
+  server.registerTool(
+    'db_start_offline_bots',
+    {
+      description:
+        'Запустить всех ОФЛАЙН ботов проекта (уже running не трогает). ТРЕБУЕТ confirm: true. '
+        + 'Последовательно вызывает startBot; UI обновляется live через WS bot-started и start-offline-progress. '
+        + 'Эквивалент кнопки «Запустить офлайн» и POST /api/projects/:id/bot/start-offline-all.',
+      inputSchema: {
+        project_id: z.number().describe('ID проекта'),
+        confirm: z.boolean().describe('Обязательное подтверждение массового запуска офлайн-ботов'),
+      },
+    },
+    async ({ project_id, confirm }) => textResult(await startOfflineBotsInDb(project_id, { confirm })),
   );
 }
 
