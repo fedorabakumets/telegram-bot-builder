@@ -13,7 +13,7 @@
 ## Особенности
 
 ### Distributed lock (Redis)
-Если `REDIS_URL` задан — при старте бот ставит Redis lock `bot:lock:{последние 10 символов токена}` с TTL 60 секунд. Если lock уже занят — бот завершается (защита от двойного запуска). Фоновая задача `_refresh_lock` обновляет TTL каждые 30 секунд. При завершении lock удаляется.
+Если `REDIS_URL` задан — при старте бот ставит Redis lock `bot:lock:{последние 10 символов токена}` с TTL 60 секунд. Если lock уже занят — бот завершается (в warning пишется `TOKEN_ID` для отладки). Фоновая задача `_refresh_lock` обновляет TTL каждые 30 секунд. При завершении lock удаляется. На стороне Node worker-path `stopBot` тоже удаляет lock (если Python finally не успел).
 
 ### Stale update filter
 Middleware `stale_update_filter_middleware` регистрируется первым — отсеивает апдейты старше `MAX_UPDATE_AGE_SECONDS` секунд (по умолчанию 300).

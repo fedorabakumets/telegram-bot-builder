@@ -1,6 +1,26 @@
 # tokens
 
-Эндпоинтов: **5**
+Эндпоинтов: **6**
+
+### `DELETE` /api/projects/{projectId}/tokens/{tokenId}
+
+Удалить токен бота проекта
+
+**Авторизация:** Cookie (`connect.sid`)
+
+Удаляет токен из проекта. Доступ: **владелец или коллаборатор** проекта (`requireTokenOwnership` → `hasProjectAccess`). Сверяет `token.projectId` с `:projectId` (защита от IDOR). Перед удалением останавливает бота. **Side-effect:** WebSocket `token-deleted` (UI обновляет список без F5). Ответы list/status токенов не содержат сырой Telegram token.
+
+**Параметры:** 2
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Токен удалён |
+| 400 | Некорректный projectId или tokenId |
+| 401 | Не авторизован |
+| 403 | Нет доступа к проекту токена |
+| 404 | Токен не найден в этом проекте |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/messages-retention
 

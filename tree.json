@@ -1158,6 +1158,21 @@
     "author": ""
   },
   {
+    "path": "features/bot-worker-pool-isolation",
+    "title": "Изоляция ботов в worker-pool",
+    "excerpt": "В одном Python-процессе крутятся все боты проекта. Без изоляции:",
+    "parts": [
+      "features",
+      "bot-worker-pool-isolation"
+    ],
+    "folder_titles": {
+      "features": "🧩 Возможности"
+    },
+    "updated_at": "2026-07-28T20:00:00+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "features/flow-input-architecture-plan",
     "title": "План: Новая Flow-модель для ввода и сохранения данных",
     "excerpt": "Текущая модель смешивает в одной ноде несколько разных ролей:",

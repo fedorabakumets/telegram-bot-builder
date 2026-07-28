@@ -5,7 +5,7 @@
 
 import { storage } from "../storages/storage";
 import { startBot } from "./startBot";
-import { getRedisPublisher } from "../redis/redisClient";
+import { clearBotRedisLock } from "./clearBotRedisLock";
 
 /**
  * Определяет, был ли бот остановлен внезапно (не вручную пользователем).
@@ -76,16 +76,7 @@ export async function restoreRunningBots(): Promise<void> {
         );
 
         // Удаляем Redis lock перед запуском — старый процесс мог держать lock
-        // и не успел его освободить при внезапном завершении
-        const pub = getRedisPublisher();
-        if (pub) {
-          try {
-            const lockKey = `bot:lock:${instance.token.slice(-10)}`;
-            await pub.del(lockKey);
-          } catch {
-            // Не критично — lock истечёт сам через 60 секунд
-          }
-        }
+        await clearBotRedisLock(instance.token, instance.tokenId);
 
         const result = await startBot(instance.projectId, instance.token, instance.tokenId, { clearLogs: false });
 

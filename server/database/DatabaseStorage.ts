@@ -9,6 +9,7 @@ import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInp
 import { db } from "./db";
 import { generateAgentToken, hashAgentToken } from "../utils/agent-token-crypto";
 import { incrementMessageActivityDaily } from "./incrementMessageActivityDaily";
+import { resolveLaunchIdsForLogs, mergeLogsByTimestampAsc } from "../bots/selectLatestLaunchLogs";
 
 /**
  * Реализация хранилища данных с использованием базы данных
@@ -1338,47 +1339,49 @@ export class DatabaseStorage implements IStorage {
    * @returns Массив записей логов последнего запуска
    */
   async getLatestLaunchLogs(projectId: number, tokenId: number, limit = 500): Promise<BotLog[]> {
-    // Находим последний launchId для этого токена
-    const lastLaunch = await this.db
-      .select({ launchId: botLogs.launchId })
-      .from(botLogs)
-      .where(and(
-        eq(botLogs.projectId, projectId),
-        eq(botLogs.tokenId, tokenId),
-        sql`${botLogs.launchId} IS NOT NULL`
-      ))
-      .orderBy(desc(botLogs.timestamp))
+    // Последний launch из истории (не из bot_logs) — устойчивее к mis-routed строкам
+    const [lastLaunch] = await this.db
+      .select({ id: botLaunchHistory.id, status: botLaunchHistory.status })
+      .from(botLaunchHistory)
+      .where(eq(botLaunchHistory.tokenId, tokenId))
+      .orderBy(desc(botLaunchHistory.startedAt))
       .limit(1);
 
-    const launchId = lastLaunch[0]?.launchId;
+    const launchIds = resolveLaunchIdsForLogs(
+      lastLaunch ? { id: lastLaunch.id, status: lastLaunch.status } : null,
+    );
 
-    // Если нет запусков — возвращаем логи без launch_id (live-логи)
-    if (!launchId) {
+    const fetchForLaunch = async (lid: number | null): Promise<BotLog[]> => {
       const rows = await this.db
         .select()
         .from(botLogs)
-        .where(and(
-          eq(botLogs.projectId, projectId),
-          eq(botLogs.tokenId, tokenId),
-          sql`${botLogs.launchId} IS NULL`
-        ))
+        .where(
+          lid === null
+            ? and(
+              eq(botLogs.projectId, projectId),
+              eq(botLogs.tokenId, tokenId),
+              sql`${botLogs.launchId} IS NULL`,
+            )
+            : and(
+              eq(botLogs.projectId, projectId),
+              eq(botLogs.tokenId, tokenId),
+              eq(botLogs.launchId, lid),
+            ),
+        )
         .orderBy(desc(botLogs.timestamp))
         .limit(limit);
       return rows.reverse();
+    };
+
+    if (launchIds.length === 1) {
+      return fetchForLaunch(launchIds[0]);
     }
 
-    // Возвращаем логи последнего запуска
-    const rows = await this.db
-      .select()
-      .from(botLogs)
-      .where(and(
-        eq(botLogs.projectId, projectId),
-        eq(botLogs.tokenId, tokenId),
-        eq(botLogs.launchId, launchId)
-      ))
-      .orderBy(desc(botLogs.timestamp))
-      .limit(limit);
-    return rows.reverse();
+    const [a, b] = await Promise.all([
+      fetchForLaunch(launchIds[0]),
+      fetchForLaunch(launchIds[1]),
+    ]);
+    return mergeLogsByTimestampAsc(a, b, limit);
   }
 
   /** Максимальное количество записей истории запусков на один токен */

@@ -1,5 +1,6 @@
 /**
  * @fileoverview Загрузка live-логов из bot_logs при открытии терминала
+ * @description Периодический refetch подстраховывает пропуски WebSocket без F5
  * @module terminal/use-terminal-logs-hydration
  */
 
@@ -30,7 +31,8 @@ export function useTerminalLogsHydration({ projectId, tokenId }: UseTerminalLogs
     queryKey: ['/api/projects', projectId, 'tokens', tokenId, 'logs'],
     queryFn: () => apiRequest('GET', `/api/projects/${projectId}/tokens/${tokenId}/logs`),
     enabled: !!projectId && !!tokenId,
-    staleTime: 10_000,
+    staleTime: 3_000,
+    refetchInterval: 8_000,
   });
 
   useEffect(() => {

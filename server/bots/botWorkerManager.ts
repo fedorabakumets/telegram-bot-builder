@@ -8,6 +8,7 @@ import { spawn, ChildProcess, execSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { EventEmitter } from "node:events";
+import { parseWorkerSystemMessage } from "./parseWorkerSystemMessage";
 
 /** Эквивалент __dirname для ES modules */
 const __filename = fileURLToPath(import.meta.url);
@@ -156,14 +157,10 @@ class BotWorkerManager extends EventEmitter {
               resolve(worker);
             }
           } catch {
-            // Не JSON — это raw логи от Python (aiogram, root logger)
-            // Маршрутизируем как stdout лог для всех активных ботов воркера
-            if (worker.activeBots.size === 0) {
-              console.warn(`[WorkerPool:${projectId}] ⚠️ Raw лог, но activeBots пуст: "${line.slice(0, 80)}"`);
-            }
-            for (const tokenId of worker.activeBots) {
-              this.emit("bot-log", projectId, tokenId, "stdout", line);
-            }
+            // Не JSON — не фан-аутим на все боты (ломало изоляцию логов)
+            console.warn(
+              `[WorkerPool:${projectId}] Raw non-JSON stdout (игнор fanout): "${line.slice(0, 80)}"`,
+            );
           }
         }
       });
@@ -261,21 +258,27 @@ class BotWorkerManager extends EventEmitter {
    * @param content - Содержимое системного сообщения
    */
   private handleSystemMessage(projectId: number, content: string): void {
-    if (content.startsWith("bot_exited:") || content.startsWith("bot_stopped:")) {
-      const parts = content.split(":");
-      const tokenId = parseInt(parts[1]);
-      const status = parts[2] || "stopped";
+    const ev = parseWorkerSystemMessage(content);
+    const worker = this.workers.get(projectId);
 
-      const worker = this.workers.get(projectId);
-      if (worker) {
-        worker.activeBots.delete(tokenId);
+    if (ev.kind === "bot_started" && ev.tokenId !== undefined) {
+      worker?.activeBots.add(ev.tokenId);
+      this.emit("bot-started", projectId, ev.tokenId);
+      return;
+    }
+
+    if ((ev.kind === "bot_exited" || ev.kind === "bot_stopped") && ev.tokenId !== undefined) {
+      worker?.activeBots.delete(ev.tokenId);
+      this.emit("bot-exited", projectId, ev.tokenId, ev.status || "stopped");
+      // Убиваем воркер только когда Python подтвердил пустой набор
+      if (worker && worker.activeBots.size === 0 && worker.status === "ready") {
+        void this.killWorker(projectId);
       }
+      return;
+    }
 
-      this.emit("bot-exited", projectId, tokenId, status);
-    } else if (content === "stdin_closed" || content === "worker_exited") {
-      // Воркер завершается
-    } else if (content === "shutting_down") {
-      // Воркер начал shutdown
+    if (content === "stdin_closed" || content === "worker_exited" || content === "shutting_down") {
+      return;
     }
   }
 
@@ -317,11 +320,13 @@ class BotWorkerManager extends EventEmitter {
       ...(webhook ? { webhook_url: webhook.webhookUrl, webhook_port: webhook.webhookPort } : {}),
     });
 
+    // Optimistic: статус «запускается» до bot_started; kill-on-empty ждёт Python exit
     worker.activeBots.add(tokenId);
   }
 
   /**
-   * Останавливает бота в воркере
+   * Останавливает бота в воркере.
+   * Не удаляет из activeBots и не убивает воркер здесь — ждём bot_exited/bot_stopped.
    * @param projectId - ID проекта
    * @param tokenId - ID токена
    */
@@ -334,12 +339,19 @@ class BotWorkerManager extends EventEmitter {
       token_id: tokenId,
     });
 
-    worker.activeBots.delete(tokenId);
-
-    // Если последний бот — убиваем воркер
-    if (worker.activeBots.size === 0) {
-      await this.killWorker(projectId);
-    }
+    // Таймаут: если Python не подтвердил выход — снимаем учёт и гасим пустой воркер
+    setTimeout(() => {
+      const w = this.workers.get(projectId);
+      if (!w || !w.activeBots.has(tokenId)) return;
+      console.warn(
+        `[WorkerPool:${projectId}] stop timeout token=${tokenId} — снимаем из activeBots`,
+      );
+      w.activeBots.delete(tokenId);
+      this.emit("bot-exited", projectId, tokenId, "stopped");
+      if (w.activeBots.size === 0 && w.status === "ready") {
+        void this.killWorker(projectId);
+      }
+    }, 8000);
   }
 
   /**

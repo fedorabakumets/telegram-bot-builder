@@ -1,20 +1,17 @@
 """
 Bot Worker — asyncio мастер-процесс для запуска нескольких ботов в одном event loop.
 
-Принимает JSON-команды через stdin, управляет ботами внутри одного процесса.
-Каждый бот изолирован: свой Dispatcher, свои переменные, свой namespace.
-
 Протокол:
   stdin  → {"cmd": "start_bot", "token": "...", "token_id": 42, "bot_file": "/path/to/bot.py"}
   stdin  → {"cmd": "stop_bot", "token_id": 42}
-  stdin  → {"cmd": "status"}
-  stdin  → {"cmd": "shutdown"}
-  stdout ← {"token_id": 42, "type": "stdout", "content": "..."}
-  stdout ← {"type": "system", "content": "worker_ready"}
+  stdin  → {"cmd": "status"} | {"cmd": "shutdown"}
+  stdout ← {"token_id": 42, "type": "stdout"|"stderr", "content": "..."}
+  stdout ← {"type": "system", "content": "worker_ready|bot_started:ID|bot_exited:ID:status|..."}
 """
 
+from __future__ import annotations
+
 import asyncio
-import importlib.util
 import json
 import logging
 import os
@@ -23,42 +20,61 @@ import sys
 import traceback
 import types
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, Optional
 
-# ─── Конфигурация ────────────────────────────────────────────────────────────
+import worker_isolation as iso
 
 PROJECT_ID = int(os.environ.get("PROJECT_ID", "0"))
 
-# ─── Логирование ─────────────────────────────────────────────────────────────
+# Локальные модули бота, которые часто конфликтуют по короткому имени
+_SIBLING_PRIORITY = ("config", "utils", "redis_storage", "database", "middlewares", "handlers")
 
 
 class WorkerLogHandler(logging.Handler):
-    """Перенаправляет логи Python в stdout как JSON с token_id."""
-
-    def __init__(self, token_id: int = 0):
-        super().__init__()
-        self.token_id = token_id
+    """Root handler: token_id из contextvars (изоляция логов между ботами)."""
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
             msg = self.format(record)
-            emit_log(self.token_id, msg, "stderr" if record.levelno >= logging.WARNING else "stdout")
+            tid = iso.current_token_id.get()
+            emit_log(tid, msg, "stderr" if record.levelno >= logging.WARNING else "stdout")
         except Exception:
             pass
+
+
+_root_handler_installed = False
+
+
+def ensure_root_log_handler() -> None:
+    """Ставит один process-level handler без clear() на каждый старт бота."""
+    global _root_handler_installed
+    if _root_handler_installed:
+        return
+    root = logging.getLogger()
+    # Убираем только дефолтные StreamHandler'ы, не трогая чужие при повторном вызове
+    root.handlers.clear()
+    root.addHandler(WorkerLogHandler())
+    root.setLevel(logging.DEBUG)
+    _root_handler_installed = True
 
 
 def emit_log(token_id: int, content: str, stream: str = "stdout") -> None:
     """Отправляет строку лога в stdout как JSON с timestamp."""
     try:
-        from datetime import datetime
         ts = datetime.now().strftime("%H:%M:%S")
-        line = json.dumps({"token_id": token_id, "type": stream, "content": f"[{ts}] {content}"}, ensure_ascii=False)
+        line = json.dumps(
+            {"token_id": token_id, "type": stream, "content": f"[{ts}] {content}"},
+            ensure_ascii=False,
+        )
         sys.stdout.write(line + "\n")
         sys.stdout.flush()
     except Exception:
-        # Fallback: ASCII-safe вывод
         try:
-            line = json.dumps({"token_id": token_id, "type": stream, "content": content}, ensure_ascii=True)
+            line = json.dumps(
+                {"token_id": token_id, "type": stream, "content": content},
+                ensure_ascii=True,
+            )
             sys.stdout.write(line + "\n")
             sys.stdout.flush()
         except Exception:
@@ -66,13 +82,10 @@ def emit_log(token_id: int, content: str, stream: str = "stdout") -> None:
 
 
 def emit_system(content: str) -> None:
-    """Отправляет системное сообщение воркера."""
+    """Системное сообщение воркера (без token_id)."""
     line = json.dumps({"type": "system", "content": content}, ensure_ascii=False)
     sys.stdout.write(line + "\n")
     sys.stdout.flush()
-
-
-# ─── Контекст бота ───────────────────────────────────────────────────────────
 
 
 class BotContext:
@@ -87,6 +100,7 @@ class BotContext:
         self.status: str = "starting"
         self.webhook_url: Optional[str] = None
         self.webhook_port: Optional[int] = None
+        self.bot_dir: Optional[Path] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Сериализация для команды status."""
@@ -98,20 +112,17 @@ class BotContext:
         }
 
 
-# ─── Воркер ──────────────────────────────────────────────────────────────────
-
-
 class BotWorker:
-    """Мастер-процесс, управляющий несколькими ботами в одном event loop."""
+    """Мастер-процесс: N ботов в одном asyncio loop."""
 
     def __init__(self):
         self.bots: Dict[int, BotContext] = {}
         self._shutdown_event = asyncio.Event()
+        ensure_root_log_handler()
 
     async def handle_command(self, data: Dict[str, Any]) -> None:
         """Обрабатывает одну JSON-команду из stdin."""
         cmd = data.get("cmd")
-
         if cmd == "start_bot":
             await self._start_bot(data)
         elif cmd == "stop_bot":
@@ -124,7 +135,7 @@ class BotWorker:
             emit_system(f"unknown_command: {cmd}")
 
     async def _start_bot(self, data: Dict[str, Any]) -> None:
-        """Запускает бота в event loop."""
+        """Регистрирует и запускает задачу бота."""
         token_id = data.get("token_id")
         token = data.get("token", "")
         bot_file = data.get("bot_file", "")
@@ -135,7 +146,6 @@ class BotWorker:
             emit_log(token_id or 0, "Ошибка: не указаны token_id, token или bot_file", "stderr")
             return
 
-        # Если бот уже запущен — сначала останавливаем
         if token_id in self.bots:
             emit_log(token_id, "Бот уже запущен, перезапускаем...", "stdout")
             await self._stop_bot({"token_id": token_id})
@@ -145,90 +155,84 @@ class BotWorker:
         ctx.webhook_url = webhook_url
         ctx.webhook_port = webhook_port
         self.bots[token_id] = ctx
-
-        # Запускаем бота как asyncio Task
         ctx.task = asyncio.create_task(self._run_bot(ctx))
         emit_log(token_id, f"Бот добавлен в воркер (project={PROJECT_ID})", "stdout")
 
     async def _run_bot(self, ctx: BotContext) -> None:
-        """Загружает и запускает bot.py в изолированном контексте."""
+        """Загружает bot.py в изолированном namespace и вызывает main()."""
         token_id = ctx.token_id
+        token_token = iso.current_token_id.set(token_id)
         _original_signal = None
+        alias_prev: Dict[str, Any] = {}
 
         try:
             emit_log(token_id, "─── Начало загрузки бота ───", "stdout")
-
-            # Динамическая загрузка модуля бота
-            from pathlib import Path
             bot_path = Path(ctx.bot_file)
-            
             emit_log(token_id, f"Путь к файлу: {bot_path}", "stdout")
-            emit_log(token_id, f"Файл существует: {bot_path.exists()}", "stdout")
-            
             if not bot_path.exists():
                 emit_log(token_id, f"Файл не найден: {bot_path}", "stderr")
                 ctx.status = "error"
                 return
 
-            # Читаем и компилируем код напрямую (обходим проблемы importlib с кириллицей)
-            emit_log(token_id, "Чтение исходного кода...", "stdout")
-            source_code = bot_path.read_text(encoding="utf-8")
-            emit_log(token_id, f"Код прочитан: {len(source_code)} символов", "stdout")
-            
-            emit_log(token_id, "Компиляция кода...", "stdout")
-            compiled = compile(source_code, str(bot_path), "exec")
-            emit_log(token_id, "Код скомпилирован", "stdout")
-            
-            module = types.ModuleType(f"bot_{token_id}")
-            module.__file__ = str(bot_path)
-            module.__loader__ = None
+            bot_dir = bot_path.parent
+            ctx.bot_dir = bot_dir
+            iso.install_bot_package(token_id, bot_dir)
 
-            # Добавляем папку бота в sys.path (вместо os.chdir — он глобальный и сломает другие боты)
-            bot_dir = str(bot_path.parent)
-            if bot_dir not in sys.path:
-                sys.path.insert(0, bot_dir)
-            emit_log(token_id, f"Директория бота добавлена в sys.path: {bot_dir}", "stdout")
+            main_stem = bot_path.stem
+            siblings = list(_SIBLING_PRIORITY)
+            for stem in iso.list_local_py_stems(bot_dir, exclude={main_stem, *siblings}):
+                siblings.append(stem)
 
-            # Подменяем переменные окружения для этого бота
-            os.environ["BOT_TOKEN"] = ctx.token
-            os.environ["TOKEN_ID"] = str(token_id)
-            # Webhook параметры — уникальные для каждого бота
-            if ctx.webhook_url:
-                os.environ["WEBHOOK_URL"] = ctx.webhook_url
-                os.environ["WEBHOOK_PORT"] = str(ctx.webhook_port or (9000 + token_id))
-            else:
-                os.environ.pop("WEBHOOK_URL", None)
-                os.environ.pop("WEBHOOK_PORT", None)
-            emit_log(token_id, f"Env: PROJECT_ID={PROJECT_ID}, TOKEN_ID={token_id}", "stdout")
+            async with iso.get_env_lock():
+                env_prev = iso.apply_bot_env(
+                    ctx.token, token_id, ctx.webhook_url, ctx.webhook_port
+                )
+                emit_log(token_id, f"Env: PROJECT_ID={PROJECT_ID}, TOKEN_ID={token_id}", "stdout")
 
-            # Перехватываем print для маршрутизации логов
-            def patched_print(*args, **kwargs):
-                content = " ".join(str(a) for a in args)
-                emit_log(token_id, content, "stdout")
+                loaded = iso.load_sibling_modules(token_id, bot_dir, siblings)
+                iso.apply_short_aliases(loaded, alias_prev)
 
-            module.__builtins__ = {**(__builtins__ if isinstance(__builtins__, dict) else vars(__builtins__))}
-            module.__builtins__["print"] = patched_print
+                source_code = bot_path.read_text(encoding="utf-8")
+                emit_log(token_id, f"Код прочитан: {len(source_code)} символов", "stdout")
+                compiled = compile(source_code, str(bot_path), "exec")
 
-            # Перехватываем root logger — все logging.info/warning/error идут через emit_log
-            root_logger = logging.getLogger()
-            root_logger.handlers.clear()
-            root_logger.addHandler(WorkerLogHandler(token_id))
-            root_logger.setLevel(logging.DEBUG)
+                module = types.ModuleType(f"bot_{token_id}")
+                module.__file__ = str(bot_path)
+                module.__package__ = f"bot_{token_id}_pkg"
 
-            # Перехватываем signal.signal — бот не должен менять обработчики сигналов воркера
-            import signal as _signal_module
-            _original_signal = _signal_module.signal
-            _signal_module.signal = lambda *args, **kwargs: None
+                def patched_print(*args, **kwargs):
+                    content = " ".join(str(a) for a in args)
+                    emit_log(token_id, content, "stdout")
 
-            # Загружаем модуль (выполняет top-level код: создание bot, dp, хендлеров)
-            emit_log(token_id, "Выполнение top-level кода бота...", "stdout")
-            exec(compiled, module.__dict__)
-            emit_log(token_id, "Top-level код выполнен", "stdout")
+                module.__builtins__ = {
+                    **(__builtins__ if isinstance(__builtins__, dict) else vars(__builtins__))
+                }
+                module.__builtins__["print"] = patched_print
+
+                import signal as _signal_module
+
+                _original_signal = _signal_module.signal
+                _signal_module.signal = lambda *args, **kwargs: None
+
+                emit_log(token_id, "Выполнение top-level кода бота...", "stdout")
+                exec(compiled, module.__dict__)
+                iso.inject_bot_constants(
+                    module, ctx.token, token_id, ctx.webhook_url, ctx.webhook_port
+                )
+                # Проставляем константы и в загруженные sibling-модули
+                for _name, smod in loaded.items():
+                    smod.__dict__["BOT_TOKEN"] = ctx.token
+                    smod.__dict__["TOKEN_ID"] = token_id
+                emit_log(token_id, "Top-level код выполнен", "stdout")
+
+                iso.restore_short_aliases(alias_prev)
+                alias_prev = {}
+                iso.restore_env(env_prev)
 
             ctx.status = "running"
             ctx.started_at = datetime.now()
+            emit_system(f"bot_started:{token_id}")
 
-            # Вызываем main() бота
             if hasattr(module, "main"):
                 emit_log(token_id, "Вызов main()...", "stdout")
                 await module.main()
@@ -243,50 +247,45 @@ class BotWorker:
         except Exception as e:
             tb = traceback.format_exc()
             emit_log(token_id, f"Ошибка бота: {e}\n{tb}", "stderr")
-            # Дублируем в stderr процесса на случай если emit_log не работает
             sys.stderr.write(f"[bot_{token_id}] ERROR: {e}\n{tb}\n")
             sys.stderr.flush()
             ctx.status = "error"
         finally:
-            # Восстанавливаем signal.signal после завершения бота
+            if alias_prev:
+                iso.restore_short_aliases(alias_prev)
             if _original_signal is not None:
                 import signal as _signal_module
-                _signal_module.signal = _original_signal
 
-            # Убираем бота из активных если он ещё там
+                _signal_module.signal = _original_signal
+            iso.cleanup_bot_modules(token_id, ctx.bot_dir)
             if token_id in self.bots and self.bots[token_id] is ctx:
                 del self.bots[token_id]
-
-            # Уведомляем Node.js что бот завершился
             emit_system(f"bot_exited:{token_id}:{ctx.status}")
+            iso.current_token_id.reset(token_token)
 
     async def _stop_bot(self, data: Dict[str, Any]) -> None:
-        """Останавливает конкретного бота."""
+        """Останавливает конкретного бота (cancel task)."""
         token_id = data.get("token_id")
         if not token_id:
             return
-
         ctx = self.bots.get(token_id)
         if not ctx:
             emit_log(token_id, "Бот не найден в воркере", "stderr")
             return
-
         if ctx.task and not ctx.task.done():
             ctx.task.cancel()
             try:
                 await asyncio.wait_for(ctx.task, timeout=5.0)
             except (asyncio.CancelledError, asyncio.TimeoutError):
                 pass
-
         ctx.status = "stopped"
         if token_id in self.bots:
             del self.bots[token_id]
-
         emit_log(token_id, "Бот остановлен", "stdout")
         emit_system(f"bot_stopped:{token_id}")
 
     def _emit_status(self) -> None:
-        """Отправляет статус всех ботов."""
+        """Статус всех ботов."""
         status = {
             "project_id": PROJECT_ID,
             "bots_count": len(self.bots),
@@ -297,29 +296,20 @@ class BotWorker:
         sys.stdout.flush()
 
     async def _shutdown(self) -> None:
-        """Останавливает все боты и завершает воркер."""
+        """Останавливает все боты."""
         emit_system("shutting_down")
-
-        # Останавливаем все боты
-        tasks = []
-        for token_id in list(self.bots.keys()):
-            tasks.append(self._stop_bot({"token_id": token_id}))
-
+        tasks = [self._stop_bot({"token_id": tid}) for tid in list(self.bots.keys())]
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
-
         self._shutdown_event.set()
 
     async def run(self) -> None:
-        """Главный цикл воркера: читает stdin, обрабатывает команды."""
+        """Главный цикл: stdin → команды."""
         emit_system("worker_ready")
-
-        # Читаем stdin в отдельном потоке (Windows не поддерживает asyncio read_pipe для stdin)
         loop = asyncio.get_event_loop()
         stdin_queue: asyncio.Queue = asyncio.Queue()
 
         def _stdin_reader():
-            """Читает stdin в блокирующем режиме из отдельного потока."""
             try:
                 for line in sys.stdin:
                     loop.call_soon_threadsafe(stdin_queue.put_nowait, line.strip())
@@ -329,60 +319,45 @@ class BotWorker:
                 loop.call_soon_threadsafe(stdin_queue.put_nowait, None)
 
         import threading
-        reader_thread = threading.Thread(target=_stdin_reader, daemon=True)
-        reader_thread.start()
+
+        threading.Thread(target=_stdin_reader, daemon=True).start()
 
         while not self._shutdown_event.is_set():
             try:
                 line_str = await asyncio.wait_for(stdin_queue.get(), timeout=1.0)
-
                 if line_str is None:
-                    # stdin закрыт — Node.js процесс завершился
                     emit_system("stdin_closed")
                     break
-
                 if not line_str:
                     continue
-
                 try:
                     data = json.loads(line_str)
                     await self.handle_command(data)
                 except json.JSONDecodeError as e:
                     emit_system(f"json_error: {e}")
-
             except asyncio.TimeoutError:
-                # Нет данных — продолжаем цикл (проверяем shutdown_event)
                 continue
             except Exception as e:
                 emit_system(f"read_error: {e}")
                 break
 
-        # Финальная очистка
         if self.bots:
             await self._shutdown()
-
         emit_system("worker_exited")
 
 
-# ─── Точка входа ─────────────────────────────────────────────────────────────
-
-
 def main():
-    """Запуск воркера."""
-    # Принудительно устанавливаем UTF-8 для stdin/stdout/stderr на Windows
+    """Точка входа воркера."""
     if sys.platform == "win32":
-        sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1, closefd=False)
-        sys.stderr = open(sys.stderr.fileno(), mode='w', encoding='utf-8', buffering=1, closefd=False)
-        sys.stdin = open(sys.stdin.fileno(), mode='r', encoding='utf-8', closefd=False)
+        sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1, closefd=False)
+        sys.stderr = open(sys.stderr.fileno(), mode="w", encoding="utf-8", buffering=1, closefd=False)
+        sys.stdin = open(sys.stdin.fileno(), mode="r", encoding="utf-8", closefd=False)
     else:
         sys.stdout.reconfigure(line_buffering=True)
 
-    # Игнорируем SIGTERM/SIGINT — управление через stdin команду shutdown
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-    worker = BotWorker()
-    asyncio.run(worker.run())
+    asyncio.run(BotWorker().run())
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@
 - [bot_launch_history.md](../database/bot_launch_history.md)
 - [bot.md](../interface/bot.md)
 - [tokens.md](../api/tokens.md) — GET launch-history (self-heal)
+- [bot-worker-pool-isolation.md](./bot-worker-pool-isolation.md) — изоляция воркера / activeBots / логи
 
 ## Ключевые файлы
 

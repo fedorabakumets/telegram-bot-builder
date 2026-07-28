@@ -17,13 +17,6 @@
 | error_message | text | - | YES | - | - | Сообщение об ошибке (null если нет ошибки) |
 | process_id | text | - | YES | - | - | Идентификатор системного процесса |
 
-### Lifecycle и сверка
-
-- `running` — процесс/воркер жив (или только что стартовал).
-- При stop / worker exit / shutdown / failed start — **все** running-записи токена закрываются (`stopped`/`error` + `stoppedAt`).
-- Self-heal: GET status / GET launch-history / startup sweep вызывают `reconcileLaunchHistoryForToken`, если live offline.
-- UI не показывает orphan `running` как «Онлайн», если live-статус offline. См. [[features/launch-history-status-reconciliation]].
-
 ### Constraints
 
 | Name | Type | Definition |

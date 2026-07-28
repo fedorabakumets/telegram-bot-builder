@@ -40,7 +40,7 @@ async def main():
         
         # Если Redis успешно подключился — переключаем storage у уже созданного Dispatcher
         if _redis_connected and _redis_client is not None:
-            dp.fsm.storage = RedisStorage(_redis_client)
+            dp.fsm.storage = RedisStorage(_redis_client, TOKEN_ID)
             logging.info("🔴 FSM хранилище: Redis")
         else:
             logging.info("🐘 FSM хранилище: PostgreSQL")
@@ -51,7 +51,9 @@ async def main():
             _lock_key = f"bot:lock:{BOT_TOKEN[-10:]}"
             _lock_acquired = await _redis_client.set(_lock_key, "1", nx=True, ex=60)
             if not _lock_acquired:
-                logging.warning("⚠️ Бот уже запущен (Redis lock занят). Завершаем дублирующий процесс.")
+                logging.warning(
+                    f"⚠️ Бот уже запущен (Redis lock занят, TOKEN_ID={TOKEN_ID}). Завершаем дублирующий процесс."
+                )
                 return
             logging.info("🔒 Redis lock получен — бот запускается")
 

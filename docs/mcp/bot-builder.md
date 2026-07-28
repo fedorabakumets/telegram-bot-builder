@@ -334,6 +334,7 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 
 Статус, live-логи и история запусков по `token_id` из `db_list_bot_tokens`.
 `db_bot_launch_history` после сверки не отдаёт «зомби» running, если бот offline ([[features/launch-history-status-reconciliation]]).
+`db_bot_logs` / live-логи: последний launch из history + live `launch_id IS NULL` для running; изоляция `token_id` в воркере — [[features/bot-worker-pool-isolation]].
 
 #### `db_start_bot` / `db_stop_bot` / `db_restart_bot` / `db_restart_all_bots`
 

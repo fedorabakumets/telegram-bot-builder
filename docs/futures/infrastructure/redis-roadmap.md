@@ -8,9 +8,10 @@
 
 ### FSM хранилище (RedisStorage)
 Состояния aiogram FSM хранятся в Redis с TTL 24 часа.
-- Ключи: `fsm:state:{user_id}`, `fsm:data:{user_id}`
+- Ключи: `fsm:state:{token_id}:{user_id}`, `fsm:data:{token_id}:{user_id}` (изоляция между ботами одного воркера)
 - Переживают перезапуск бота
 - Синхронизируются с `user_data` для совместимости
+- См. [[features/bot-worker-pool-isolation]]
 
 ### Кэш переменных пользователя
 `init_all_user_vars` использует Redis как кэш вместо `_vars_cache` в памяти.
@@ -24,6 +25,7 @@
 - Атомарный `SET NX` — только один процесс получает lock
 - Фоновая задача `_refresh_lock` обновляет TTL каждые 30 секунд
 - Lock освобождается в `finally` при завершении
+- **Также** Node удаляет lock в worker-path `stopBot` / `handleWorkerBotExited` / `restoreRunningBots` (`clearBotRedisLock`)
 
 ### Pub/Sub для событий платформы
 Python бот публикует события в Redis, сервер подписан и рассылает через WebSocket.

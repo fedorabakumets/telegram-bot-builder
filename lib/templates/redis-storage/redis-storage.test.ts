@@ -40,14 +40,14 @@ describe('generateRedisStorage()', () => {
     assert.ok(result.includes('async def close'));
   });
 
-  it('fsm:state:{uid} — ключ Redis для состояния', () => {
+  it('fsm:state:{self._token_id}:{uid} — ключ Redis для состояния с изоляцией токена', () => {
     const result = generateRedisStorage(validParamsEnabled);
-    assert.ok(result.includes('fsm:state:{uid}'));
+    assert.ok(result.includes('fsm:state:{self._token_id}:{uid}'));
   });
 
-  it('fsm:data:{uid} — ключ Redis для данных', () => {
+  it('fsm:data:{self._token_id}:{uid} — ключ Redis для данных с изоляцией токена', () => {
     const result = generateRedisStorage(validParamsEnabled);
-    assert.ok(result.includes('fsm:data:{uid}'));
+    assert.ok(result.includes('fsm:data:{self._token_id}:{uid}'));
   });
 
   it('setex — используется TTL', () => {

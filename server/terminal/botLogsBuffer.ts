@@ -65,8 +65,12 @@ export async function persistLogLine(
 
     if (!row) return undefined;
 
-    if (launchId !== undefined) await trimLogsByLaunch(launchId);
-    await trimOldLogs(projectId, tokenId);
+    // Trim в фоне — иначе каждая строка блокирует live-broadcast в терминал
+    void (async () => {
+      if (launchId !== undefined) await trimLogsByLaunch(launchId);
+      await trimOldLogs(projectId, tokenId);
+    })();
+
     return row.id;
   } catch (err) {
     console.error("[BotLogsBuffer] Ошибка записи лога:", err);
