@@ -23,6 +23,8 @@ export interface BotTokenListDto {
   isDefault: number | null;
   /** Флаг активности токена (0 = неактивен, 1 = активен) */
   isActive: number | null;
+  /** Срок хранения сообщений в днях (0 = безлимит) */
+  messagesRetentionDays: number;
 }
 
 /** Сырой элемент ответа GET /api/projects/:id/tokens/list (после серверного DTO, без секретов) */
@@ -37,6 +39,8 @@ interface RawBotTokenListItem {
   isDefault?: number | null;
   /** Флаг активности */
   isActive?: number | null;
+  /** Срок хранения сообщений в днях */
+  messagesRetentionDays?: number | null;
 }
 
 /**
@@ -77,6 +81,7 @@ export async function listBotTokensInDb(
     botUsername: t.botUsername ?? null,
     isDefault: t.isDefault ?? null,
     isActive: t.isActive ?? null,
+    messagesRetentionDays: t.messagesRetentionDays ?? 0,
   }));
 
   return { total: tokens.length, tokens };

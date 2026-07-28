@@ -29,6 +29,11 @@ export interface BotTokenListItem {
     isActive: number | null;
     /** Идентификатор проекта, которому принадлежит токен */
     projectId: number;
+    /**
+     * Срок хранения сообщений в bot_messages (дни).
+     * 0 = без автоочистки; иначе 7/30/60/90/180/365.
+     */
+    messagesRetentionDays: number;
 }
 
 /**
@@ -45,5 +50,6 @@ export function toBotTokenListItem(token: BotToken): BotTokenListItem {
         isDefault: token.isDefault,
         isActive: token.isActive,
         projectId: token.projectId,
+        messagesRetentionDays: token.messagesRetentionDays ?? 0,
     };
 }

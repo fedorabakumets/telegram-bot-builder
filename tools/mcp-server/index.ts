@@ -21,6 +21,7 @@ import {
   stopBotInDb,
   restartBotInDb,
   restartAllBotsInDb,
+  setMessagesRetentionInDb,
   connectNodes,
   connectNodesInDb,
   disconnectNodesInDb,
@@ -801,10 +802,29 @@ function registerTools(server: McpServer): void {
   server.registerTool(
     'db_list_bot_tokens',
     {
-      description: 'Список токенов бота проекта (id/имя/username/флаги) БЕЗ самого токена. Нужен для получения token_id для db_bot_status/db_bot_logs.',
+      description: 'Список токенов бота проекта (id/имя/username/флаги/messagesRetentionDays) БЕЗ самого токена. Нужен для получения token_id для db_bot_status/db_bot_logs/db_set_messages_retention.',
       inputSchema: { project_id: z.number().describe('Числовой ID проекта из URL редактора') },
     },
     async ({ project_id }) => textResult(await listBotTokensInDb(project_id)),
+  );
+
+  server.registerTool(
+    'db_set_messages_retention',
+    {
+      description:
+        'Установить срок хранения сообщений диалога для токена (bot_messages). 0 = безлимит; иначе 7/30/60/90/180/365 дней. Сервер раз в час удаляет старые сообщения токена; агрегаты аналитики не трогаются. Перезапуск бота не нужен. token_id — из db_list_bot_tokens (там же текущее messagesRetentionDays).',
+      inputSchema: {
+        project_id: z.number().describe('Числовой ID проекта из URL редактора'),
+        token_id: z.number().describe('ID токена из db_list_bot_tokens'),
+        messages_retention_days: z
+          .number()
+          .describe('Срок в днях: 0, 7, 30, 60, 90, 180 или 365'),
+      },
+    },
+    async ({ project_id, token_id, messages_retention_days }) =>
+      textResult(
+        await setMessagesRetentionInDb(project_id, token_id, messages_retention_days),
+      ),
   );
 
   server.registerTool(

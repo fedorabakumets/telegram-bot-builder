@@ -34,3 +34,4 @@ export * from './sheet-move-ops-db.ts';
 export * from './batch-ops.ts';
 export * from './project-ops-db.ts';
 export * from './bot-runtime-db.ts';
+export * from './bot-token-settings-db.ts';
