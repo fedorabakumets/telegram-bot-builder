@@ -9,6 +9,7 @@
 | `bot:logs:{pid}:{tid}` | Каждая строка лога | level, message, timestamp |
 | `bot:started:{pid}:{tid}` | Запуск бота | projectId, tokenId, timestamp |
 | `bot:stopped:{pid}:{tid}` | Остановка бота | projectId, tokenId, timestamp |
+| `platform:project_event:{pid}` | ProjectEvent с любого Node (settings, start/stop, …) | JSON `ProjectEvent` + `originInstanceId` (fan-out между репликами; см. realtime-events.md) |
 
 ---
 

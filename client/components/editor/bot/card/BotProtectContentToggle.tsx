@@ -6,7 +6,7 @@
 import { Switch } from '@/components/ui/switch';
 import { ShieldCheck } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SettingCard } from './SettingCard';
 
@@ -45,6 +45,10 @@ export function BotProtectContentToggle({
   const [localEnabled, setLocalEnabled] = useState(protectContent === 1);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setLocalEnabled(protectContent === 1);
+  }, [protectContent]);
 
   const mutation = useMutation({
     mutationFn: (enabled: boolean) =>

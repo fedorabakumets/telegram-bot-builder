@@ -5,7 +5,7 @@
 
 import { FileText } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Select,
@@ -63,6 +63,10 @@ export function BotLogLevelSelect({ projectId, tokenId, logLevel, onPendingChang
   const [localLevel, setLocalLevel] = useState<LogLevel>((logLevel as LogLevel) ?? 'WARNING');
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setLocalLevel((logLevel as LogLevel) ?? 'WARNING');
+  }, [logLevel]);
 
   /** Мутация обновления уровня логирования */
   const mutation = useMutation({

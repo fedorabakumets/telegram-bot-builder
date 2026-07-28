@@ -75,7 +75,7 @@ import {
   StorageBackendWriteError,
 } from "./media/upload-storage-helper";
 import { createUserIdsRoutes } from "./user-ids-routes";
-import { broadcastProjectEvent } from "../terminal";
+import { broadcastProjectEvent, emitTokenUpdated } from "../terminal";
 import { getRequestTokenId, resolveEffectiveProjectTokenId } from "./utils/resolve-request-token";
 import { getTelegramProxyAgent } from "../utils/telegram-proxy";
 import { setupSwagger } from "../swagger/setup-swagger";
@@ -1027,6 +1027,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(404).json({ message: "Token not found" });
       }
 
+      void emitTokenUpdated({
+        projectId: token.projectId,
+        tokenId: id,
+        source: 'api',
+      }).catch((err) => console.error('[put-token] emitTokenUpdated:', err));
+
       res.json(token);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1067,6 +1073,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (!updatedToken) {
         return res.status(404).json({ message: "Token not found" });
       }
+
+      void emitTokenUpdated({
+        projectId,
+        tokenId,
+        before: undefined,
+        source: 'api',
+      }).catch((err) => console.error('[put-project-token] emitTokenUpdated:', err));
 
       res.json(updatedToken);
     } catch (error) {
@@ -1150,6 +1163,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.put("/api/projects/:projectId/tokens/:tokenId/auto-restart", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
       const { autoRestart, maxRestartAttempts } = req.body as {
         autoRestart: number;
         maxRestartAttempts: number;
@@ -1166,6 +1180,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (!updated) {
         return res.status(404).json({ message: "Токен не найден" });
       }
+
+      void emitTokenUpdated({
+        projectId,
+        tokenId,
+        changedFields: ['autoRestart', 'maxRestartAttempts'],
+        source: 'api',
+      }).catch((err) => console.error('[auto-restart] emitTokenUpdated:', err));
 
       res.json({ success: true, autoRestart, maxRestartAttempts });
     } catch (error) {
@@ -1227,6 +1248,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       } catch (envErr) {
         console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
       }
+
+      void emitTokenUpdated({
+        projectId,
+        tokenId,
+        changedFields: ['protectContent'],
+        source: 'api',
+      }).catch((err) => console.error('[protect-content] emitTokenUpdated:', err));
 
       res.json({ success: true, protectContent });
     } catch (error) {
@@ -1300,6 +1328,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
       }
 
+      void emitTokenUpdated({
+        projectId,
+        tokenId,
+        changedFields: ['saveIncomingMedia'],
+        source: 'api',
+      }).catch((err) => console.error('[save-incoming-media] emitTokenUpdated:', err));
+
       res.json({ success: true, saveIncomingMedia });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настройки сохранения медиа" });
@@ -1364,6 +1399,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       } catch (envErr) {
         console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
       }
+
+      void emitTokenUpdated({
+        projectId,
+        tokenId,
+        changedFields: ['catchAllHandlers'],
+        source: 'api',
+      }).catch((err) => console.error('[catch-all-handlers] emitTokenUpdated:', err));
 
       res.json({ success: true, catchAllHandlers });
     } catch (error) {
@@ -1430,6 +1472,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       } catch (envErr) {
         console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
       }
+
+      void emitTokenUpdated({
+        projectId,
+        tokenId,
+        changedFields: ['contentCache'],
+        source: 'api',
+      }).catch((err) => console.error('[content-cache] emitTokenUpdated:', err));
 
       res.json({ success: true, contentCache });
     } catch (error) {
@@ -1512,6 +1561,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       } catch (envErr) {
         console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
       }
+
+      void emitTokenUpdated({
+        projectId,
+        tokenId,
+        changedFields: ['userbotEnabled'],
+        source: 'api',
+      }).catch((err) => console.error('[userbot] emitTokenUpdated:', err));
 
       res.json({ success: true, userbotEnabled });
     } catch (error) {
@@ -1646,6 +1702,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         console.warn('⚠️ Не удалось обновить .env файл бота:', envErr);
       }
 
+      void emitTokenUpdated({
+        projectId,
+        tokenId,
+        changedFields: ['logLevel'],
+        source: 'api',
+      }).catch((err) => console.error('[log-level] emitTokenUpdated:', err));
+
       res.json({ success: true, logLevel });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления уровня логирования" });
@@ -1659,6 +1722,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   app.put("/api/projects/:projectId/tokens/:tokenId/launch-settings", requireTokenOwnership, async (req, res) => {
     try {
       const tokenId = parseInt(req.params.tokenId);
+      const projectId = parseInt(req.params.projectId);
       const { launchMode, webhookBaseUrl, webhookSecretToken } = req.body as {
         launchMode: 'polling' | 'webhook';
         webhookBaseUrl?: string | null;
@@ -1696,6 +1760,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         }
       }
 
+      void emitTokenUpdated({
+        projectId,
+        tokenId,
+        changedFields: ['launchMode', 'webhookBaseUrl'],
+        source: 'api',
+      }).catch((err) => console.error('[launch-settings] emitTokenUpdated:', err));
+
       res.json({ success: true, launchMode, webhookBaseUrl, webhookSecretToken });
     } catch (error) {
       res.status(500).json({ message: "Ошибка обновления настроек запуска" });
@@ -1712,6 +1783,13 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (!success) {
         return res.status(404).json({ message: "Token not found" });
       }
+
+      void emitTokenUpdated({
+        projectId,
+        tokenId,
+        changedFields: ['isDefault'],
+        source: 'api',
+      }).catch((err) => console.error('[set-default] emitTokenUpdated:', err));
 
       res.json({ message: "Default token set successfully" });
     } catch (error) {
@@ -5506,6 +5584,17 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
 
           results.push(`skipped:${key}`);
         }
+      }
+
+      const tokenFieldUpdated = results.some((r) =>
+        r.startsWith('updated:') && !r.includes('ADMIN_IDS') && !r.includes('USER_DATABASE'),
+      );
+      if (tokenFieldUpdated) {
+        void emitTokenUpdated({
+          projectId,
+          tokenId,
+          source: 'api',
+        }).catch((err) => console.error('[env-batch] emitTokenUpdated:', err));
       }
 
       res.json({ success: true, applied: results.length, results });

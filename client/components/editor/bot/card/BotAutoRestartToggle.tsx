@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { RefreshCw } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SettingCard } from './SettingCard';
 
 /** Пропсы компонента переключателя автоперезапуска */
@@ -70,6 +70,11 @@ export function BotAutoRestartToggle({
   const [localEnabled, setLocalEnabled] = useState(autoRestart === 1);
   const [localAttempts, setLocalAttempts] = useState(maxRestartAttempts ?? 3);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    setLocalEnabled(autoRestart === 1);
+    setLocalAttempts(maxRestartAttempts ?? 3);
+  }, [autoRestart, maxRestartAttempts]);
 
   /** Мутация обновления настроек автоперезапуска */
   const mutation = useMutation({

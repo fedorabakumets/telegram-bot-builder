@@ -45,3 +45,11 @@ REST API визуального конструктора Telegram-ботов. А
 - **Cookie** — сессия после Telegram Login Widget (`connect.sid`)
 - **Bearer PAT** — персональный токен агента (MCP/CLI)
 - Публичные эндпоинты помечены «Публичный»
+
+## Realtime side-effects настроек токена
+
+После PUT настроек токена (срок хранения, auto-restart, protect-content, …) сервер шлёт WebSocket `token-updated`. Карточки ботов обновляются без F5.
+
+- [tokens.md](./tokens.md) — HTTP settings
+- [realtime-events.md](./realtime-events.md) — контракт WS / Redis fan-out / whitelist payload
+- [features/token-settings-realtime.md](../features/token-settings-realtime.md) — продуктовый обзор

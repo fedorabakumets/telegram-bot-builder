@@ -5,7 +5,7 @@
 
 import { History } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Select,
@@ -74,6 +74,11 @@ export function BotMessagesRetentionSelect({
   );
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  /** Синхронизация с props после live refetch (MCP / другая вкладка) */
+  useEffect(() => {
+    setLocalDays(normalizeRetentionDays(messagesRetentionDays));
+  }, [messagesRetentionDays]);
 
   const mutation = useMutation({
     mutationFn: (days: number) => updateMessagesRetention(projectId, tokenId, days),

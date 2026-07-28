@@ -707,7 +707,7 @@ GET /api/projects/{id}/tokens/list
 
 Безопасный список токенов проекта **без секрета** `token`. Поля: `id`, `name`, `botUsername`, `botFirstName`, `isDefault`, `isActive`, `projectId`, **`messagesRetentionDays`**.
 
-Используется UI и MCP (`db_list_bot_tokens`).
+Используется UI и MCP (`db_list_bot_tokens`). После изменения настроек через PUT клиенты получают WS `token-updated` и обычно рефетчат полный `GET /api/projects/{id}/tokens` (см. [realtime-events.md](./realtime-events.md)).
 
 #### Ответы
 

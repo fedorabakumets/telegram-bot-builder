@@ -3,7 +3,6 @@
  * @module server/terminal
  */
 
-// Terminal module exports
 export { activeConnections } from './activeConnections';
 export { getTerminalWss } from './getTerminalWss';
 export { initializeTerminalWebSocket } from './initializeTerminalWebSocket';
@@ -15,5 +14,6 @@ export { setupBotProcessListeners } from './setupBotProcessListeners';
 export { setupProcessOutputListener } from './setupProcessOutputListener';
 export { globalWssContainer } from './terminal-websocket';
 export type { TerminalMessage } from './TerminalMessage';
-export { broadcastProjectEvent } from './broadcastProjectEvent';
+export { broadcastProjectEvent, broadcastProjectEventLocal } from './broadcastProjectEvent';
+export { emitTokenUpdated } from './emitTokenUpdated';
 export type { ProjectEvent } from './ProjectEvent';

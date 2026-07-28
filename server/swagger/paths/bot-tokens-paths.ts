@@ -12,9 +12,15 @@ import {
   ValidationErrorSchema,
 } from "../schemas/common";
 import {
+  TokenUpdatedEventDataSchema,
+  TokenUpdatedPayloadSchema,
   UpdateMessagesRetentionRequestSchema,
   UpdateMessagesRetentionResponseSchema,
 } from "../schemas/bot-tokens";
+
+/** Регистрация схем token-updated в OpenAPI (side-effect import) */
+void TokenUpdatedPayloadSchema;
+void TokenUpdatedEventDataSchema;
 
 /**
  * Регистрирует OpenAPI path PUT messages-retention
@@ -43,7 +49,10 @@ export function registerBotTokensPaths(
       "`0` — без автоочистки; иначе сервер раз в час удаляет из `bot_messages` " +
       "сообщения этого токена старше N дней. " +
       "Таблица `message_activity_daily` (длинный график «Активность») не трогается. " +
-      "Требуется владение токеном (`requireTokenOwnership`).",
+      "Требуется владение токеном (`requireTokenOwnership`). " +
+      "**Side-effect:** после успеха эмитит WebSocket `token-updated` " +
+      "(безопасный снимок токена без секретов; см. docs/api/realtime-events.md). " +
+      "UI и другие клиенты обновляются без F5.",
     security: cookieSecurity,
     request: {
       params,

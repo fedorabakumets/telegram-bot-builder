@@ -1,5 +1,5 @@
 /**
- * @fileoverview OpenAPI-схемы настройки срока хранения сообщений токена
+ * @fileoverview OpenAPI-схемы настроек токена и события token-updated
  * @module server/swagger/schemas/bot-tokens
  */
 
@@ -41,3 +41,41 @@ export const UpdateMessagesRetentionResponseSchema = z
     messagesRetentionDays: z.number().int().openapi({ example: 60 }),
   })
   .openapi("UpdateMessagesRetentionResponse");
+
+/**
+ * Безопасный снимок токена в WS token-updated (без секретов).
+ * Не содержит token, webhookSecretToken, userbotApiHash, userbotSessionString.
+ */
+export const TokenUpdatedPayloadSchema = z
+  .object({
+    id: z.number().int(),
+    projectId: z.number().int(),
+    name: z.string(),
+    botUsername: z.string().nullable(),
+    botFirstName: z.string().nullable(),
+    isDefault: z.number().nullable(),
+    isActive: z.number().nullable(),
+    messagesRetentionDays: z.number().int(),
+    autoRestart: z.number().nullable(),
+    maxRestartAttempts: z.number().nullable(),
+    logLevel: z.string().nullable(),
+    protectContent: z.number().nullable(),
+    saveIncomingMedia: z.number().nullable(),
+    catchAllHandlers: z.number().nullable(),
+    contentCache: z.number().nullable(),
+    launchMode: z.string().nullable(),
+    webhookBaseUrl: z.string().nullable(),
+    userbotEnabled: z.number().nullable(),
+  })
+  .openapi("TokenUpdatedPayload");
+
+/** data события ProjectEvent type=token-updated */
+export const TokenUpdatedEventDataSchema = z
+  .object({
+    changedFields: z.array(z.string()).openapi({
+      example: ["messagesRetentionDays"],
+    }),
+    token: TokenUpdatedPayloadSchema,
+    source: z.enum(["ui", "mcp", "api"]).optional(),
+  })
+  .openapi("TokenUpdatedEventData");

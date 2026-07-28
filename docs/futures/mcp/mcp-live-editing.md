@@ -253,6 +253,8 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 
 **✅ Настройки токена:** `db_set_messages_retention(project_id, token_id, messages_retention_days)` в `bot-token-settings-db.ts` — срок хранения `bot_messages` (`0/7/30/60/90/180/365`). Текущее значение отдаёт `db_list_bot_tokens` → `messagesRetentionDays`. Перезапуск бота не нужен.
 
+**✅ Live token settings:** после любого settings PUT (в т.ч. MCP retention) сервер эмитит WS `token-updated` (whitelist без секретов) + Redis fan-out `platform:project_event:{projectId}` между репликами. UI-карточки обновляются без F5. Документация: [[features/token-settings-realtime]], [[api/realtime-events]], [[api/tokens]].
+
 ### UX / наблюдаемость
 - **Подсветка изменённой ноды (Фаза 2.3).** Поле `changedNodeId` в `canvas-sync` + подсветка/центрирование на холсте.
 - **Аудит схемы на `z.date()` ↔ jsonb.** Найти другие даты в jsonb-данных, которые ломаются после round-trip (как было с `updatedAt`).
