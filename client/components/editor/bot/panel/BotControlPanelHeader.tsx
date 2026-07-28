@@ -1,6 +1,6 @@
 /**
  * @fileoverview Заголовок панели управления ботами
- * @description Компактный заголовок с иконкой, переключателем проекта и кнопкой подключения бота
+ * @description Компактный TabHeader с проектом, worker pool и bulk-действиями
  * @module BotControlPanelHeader
  */
 
@@ -12,7 +12,10 @@ import { isGuest } from '@/types/telegram-user';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 import { WorkerPoolStatus } from './WorkerPoolStatus';
 import { BotViewModeToggle } from '../canvas/BotViewModeToggle';
+import { ProjectBotBulkActions } from '../project/ProjectBotBulkActions';
+import { useBotControl } from '../bot-control-context';
 import type { BotViewMode } from '../canvas/use-bot-view-mode';
+import type { BotToken } from '@shared/schema';
 
 /** Свойства заголовка панели управления ботами */
 interface BotControlPanelHeaderProps {
@@ -28,6 +31,8 @@ interface BotControlPanelHeaderProps {
   viewMode: BotViewMode;
   /** Смена режима вида */
   onViewModeChange: (mode: BotViewMode) => void;
+  /** Токены текущего проекта (для offline-счётчика) */
+  currentProjectTokens?: BotToken[];
 }
 
 /**
@@ -42,9 +47,26 @@ export function BotControlPanelHeader({
   onProjectChange,
   viewMode,
   onViewModeChange,
+  currentProjectTokens = [],
 }: BotControlPanelHeaderProps) {
   const { user, isLoading: authLoading } = useTelegramAuth();
   const isGuestUser = !authLoading && (!user || isGuest(user));
+  const {
+    allBotStatuses,
+    restartAllBotsMutation,
+    startOfflineAllMutation,
+  } = useBotControl();
+
+  const projectName =
+    allProjects?.find((p) => p.id === currentProjectId)?.name ?? '';
+  const offlineCount = currentProjectTokens.filter((t) => {
+    const st = allBotStatuses.find((s) => s.tokenId === t.id);
+    return st?.status !== 'running';
+  }).length;
+  const startingThis =
+    !!currentProjectId
+    && startOfflineAllMutation.isPending
+    && startOfflineAllMutation.variables === currentProjectId;
 
   return (
     <TabHeader
@@ -68,7 +90,7 @@ export function BotControlPanelHeader({
         </>
       }
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
         {allProjects && allProjects.length > 1 && onProjectChange && currentProjectId ? (
           <ProjectSelector
             projects={allProjects}
@@ -77,6 +99,18 @@ export function BotControlPanelHeader({
           />
         ) : null}
         <WorkerPoolStatus projects={allProjects} />
+        {currentProjectId != null && (
+          <ProjectBotBulkActions
+            projectId={currentProjectId}
+            projectName={projectName}
+            botsCount={currentProjectTokens.length}
+            onRestartAll={() => restartAllBotsMutation.mutate(currentProjectId)}
+            isRestartingAll={restartAllBotsMutation.isPending}
+            offlineCount={offlineCount}
+            onStartOfflineAll={() => startOfflineAllMutation.mutate(currentProjectId)}
+            isStartingOffline={startingThis}
+          />
+        )}
       </div>
     </TabHeader>
   );

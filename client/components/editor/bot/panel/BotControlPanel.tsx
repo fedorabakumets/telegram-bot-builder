@@ -85,6 +85,10 @@ export function BotControlPanel({
   const hasRunningBot = allBotStatuses.some(s => s?.status === 'running');
   const isCanvas = viewMode === 'canvas';
 
+  const currentProjectIndex = projects.findIndex((p) => p.id === currentProjectId);
+  const currentProjectTokens =
+    currentProjectIndex >= 0 ? (allTokens[currentProjectIndex] || []) : [];
+
   return (
     <div className="flex flex-col h-full bg-background">
       <BotControlPanelHeader
@@ -94,6 +98,7 @@ export function BotControlPanel({
         onProjectChange={onProjectChange}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        currentProjectTokens={currentProjectTokens}
       />
 
       <div

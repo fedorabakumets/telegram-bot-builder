@@ -10,6 +10,7 @@ import { useCanvasFullscreen } from './use-canvas-fullscreen';
 import { useBotNodeLayout } from './use-bot-node-layout';
 import { useFocusSelectedBot } from './use-focus-selected-bot';
 import { useCanvasViewport } from '@/components/editor/canvas/canvas/use-canvas-viewport';
+import type { BotServiceFailure } from './bot-service-failure';
 import type { BotToken } from '@shared/schema';
 
 /** Пропсы холста ботов */
@@ -20,6 +21,8 @@ interface BotsCanvasProps {
   tokens: BotToken[];
   /** tokenId → running */
   runningByTokenId: Record<number, boolean>;
+  /** tokenId → последний failed запуск */
+  failureByTokenId?: Record<number, BotServiceFailure>;
   /** Выбранный tokenId */
   selectedTokenId: number | null;
   /** Выбор ноды */
@@ -37,6 +40,7 @@ export function BotsCanvas({
   projectId,
   tokens,
   runningByTokenId,
+  failureByTokenId = {},
   selectedTokenId,
   onSelectToken,
   overlayPanelWidth = 0,
@@ -132,6 +136,7 @@ export function BotsCanvas({
                   token={token}
                   projectId={projectId}
                   isRunning={!!runningByTokenId[token.id]}
+                  failure={failureByTokenId[token.id] ?? null}
                   selected={selectedTokenId === token.id}
                   onSelect={() => onSelectToken(token.id)}
                   position={pos}

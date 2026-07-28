@@ -2,6 +2,7 @@
  * @fileoverview Интерфейс управления ботами
  *
  * Отображает список проектов с их ботами или холст активного проекта.
+ * Bulk-кнопки текущего проекта — в TabHeader (BotControlPanelHeader).
  *
  * @module BotManagementInterface
  */
@@ -73,29 +74,10 @@ export function BotManagementInterface({
       );
     }
 
-    const canvasTokens = activeEntry.tokens;
-    const canvasOfflineCount = canvasTokens.filter((t) => {
-      const st = allBotStatuses.find((s) => s.tokenId === t.id);
-      return st?.status !== 'running';
-    }).length;
-    const canvasStarting =
-      startOfflineAllMutation.isPending
-      && startOfflineAllMutation.variables === activeEntry.project.id;
-
     return (
-      <div className="flex h-full min-h-0 flex-col gap-3 p-4 sm:p-6">
-        <ProjectHeader
-          projectId={activeEntry.project.id}
-          projectName={activeEntry.project.name}
-          botsCount={canvasTokens.length}
-          onRestartAll={() => restartAllBotsMutation.mutate(activeEntry.project.id)}
-          isRestartingAll={restartAllBotsMutation.isPending}
-          offlineCount={canvasOfflineCount}
-          onStartOfflineAll={() => startOfflineAllMutation.mutate(activeEntry.project.id)}
-          isStartingOffline={canvasStarting}
-        />
+      <div className="flex h-full min-h-0 flex-col p-0 sm:p-0">
         <div className="min-h-0 flex-1">
-          <BotsCanvasWorkspace project={activeEntry.project} tokens={canvasTokens} />
+          <BotsCanvasWorkspace project={activeEntry.project} tokens={activeEntry.tokens} />
         </div>
       </div>
     );
@@ -124,6 +106,7 @@ export function BotManagementInterface({
   return (
     <div className="space-y-6 sm:space-y-8">
       {sortedEntries.map(({ project, tokens: projectTokens, botInfo: projectBotInfo }) => {
+        const isCurrent = project.id === currentProjectId;
         const defaultCollapsedFallback = projectTokens.length > 3;
         const allCollapsed = projectTokens.length > 0 && projectTokens.every((t) => {
           const val = collapsedState[t.id];
@@ -140,19 +123,34 @@ export function BotManagementInterface({
 
         return (
           <div key={project.id} className="space-y-4">
-            <ProjectHeader
-              projectId={project.id}
-              projectName={project.name}
-              botsCount={projectTokens.length}
-              allCollapsed={allCollapsed}
-              onCollapseAll={() => handleCollapseAll(projectTokens)}
-              onExpandAll={() => handleExpandAll(projectTokens)}
-              onRestartAll={() => restartAllBotsMutation.mutate(project.id)}
-              isRestartingAll={restartAllBotsMutation.isPending}
-              offlineCount={offlineCount}
-              onStartOfflineAll={() => startOfflineAllMutation.mutate(project.id)}
-              isStartingOffline={startingThis}
-            />
+            {!isCurrent && (
+              <ProjectHeader
+                projectId={project.id}
+                projectName={project.name}
+                botsCount={projectTokens.length}
+                allCollapsed={allCollapsed}
+                onCollapseAll={() => handleCollapseAll(projectTokens)}
+                onExpandAll={() => handleExpandAll(projectTokens)}
+                onRestartAll={() => restartAllBotsMutation.mutate(project.id)}
+                isRestartingAll={restartAllBotsMutation.isPending}
+                offlineCount={offlineCount}
+                onStartOfflineAll={() => startOfflineAllMutation.mutate(project.id)}
+                isStartingOffline={startingThis}
+                showBulkActions
+              />
+            )}
+            {isCurrent && projectTokens.length > 1 && (
+              <ProjectHeader
+                projectId={project.id}
+                projectName={project.name}
+                botsCount={projectTokens.length}
+                allCollapsed={allCollapsed}
+                onCollapseAll={() => handleCollapseAll(projectTokens)}
+                onExpandAll={() => handleExpandAll(projectTokens)}
+                showBulkActions={false}
+                hideTitle
+              />
+            )}
             {projectTokens.length === 0 ? (
               <EmptyBotsState
                 onAddBot={() => {

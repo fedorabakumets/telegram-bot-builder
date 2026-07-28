@@ -5,6 +5,9 @@
 
 import { useRef } from 'react';
 import { BotAvatar } from '../card/BotAvatar';
+import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
+import { BotServiceNodeFooter } from './BotServiceNodeFooter';
+import type { BotServiceFailure } from './bot-service-failure';
 import type { BotToken } from '@shared/schema';
 import type { NodePos } from './use-bot-node-layout';
 
@@ -16,6 +19,8 @@ interface BotServiceNodeProps {
   projectId: number;
   /** Запущен ли бот */
   isRunning: boolean;
+  /** Последний запуск с ошибкой */
+  failure?: BotServiceFailure | null;
   /** Выбрана ли нода */
   selected: boolean;
   /** Выбор ноды (клик без drag) */
@@ -37,6 +42,7 @@ export function BotServiceNode({
   token,
   projectId,
   isRunning,
+  failure,
   selected,
   onSelect,
   position,
@@ -54,6 +60,7 @@ export function BotServiceNode({
     top: number;
     moved: boolean;
   } | null>(null);
+  const hasFailure = !isRunning && !!failure;
 
   return (
     <button
@@ -69,7 +76,9 @@ export function BotServiceNode({
         'hover:-translate-y-0.5 hover:shadow-md',
         selected
           ? 'z-10 border-blue-500/70 ring-1 ring-blue-500/30 shadow-[0_8px_24px_rgba(37,99,235,0.12)]'
-          : 'border-border/70 hover:border-blue-500/35',
+          : hasFailure
+            ? 'border-red-500/40 hover:border-red-500/55'
+            : 'border-border/70 hover:border-blue-500/35',
         'cursor-grab active:cursor-grabbing',
       ].join(' ')}
       onPointerDown={(e) => {
@@ -119,31 +128,14 @@ export function BotServiceNode({
           className="shadow-sm"
         />
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold truncate leading-tight">{title}</div>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <div className="text-sm font-semibold truncate leading-tight">{title}</div>
+            <IdBadge id={token.id} className="text-[10px] shrink-0" />
+          </div>
           <div className="text-[11px] text-muted-foreground truncate mt-0.5">{username}</div>
         </div>
       </div>
-      <div className="flex items-center justify-between gap-2 border-t border-border/50 bg-muted/20 px-3 py-2 pointer-events-none">
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground/80 font-medium">
-          Bot
-        </span>
-        <span
-          className={[
-            'inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-            isRunning
-              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-              : 'border-border bg-muted text-muted-foreground',
-          ].join(' ')}
-        >
-          <span
-            className={[
-              'w-1.5 h-1.5 rounded-full',
-              isRunning ? 'bg-emerald-400' : 'bg-muted-foreground/50',
-            ].join(' ')}
-          />
-          {isRunning ? 'Онлайн' : 'Офлайн'}
-        </span>
-      </div>
+      <BotServiceNodeFooter isRunning={isRunning} failure={failure} />
     </button>
   );
 }
