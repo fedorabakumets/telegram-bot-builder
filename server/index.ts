@@ -11,6 +11,7 @@ import { initializeCanvasWebSocket } from './canvas/initializeCanvasWebSocket';
 import { registerWebSocketUpgrade } from './websocket/registerWebSocketUpgrade';
 import { initRedisPlatformSubscriber } from './redis/redisPlatformSubscriber';
 import { initRedisLogsSubscriber } from './redis/redisLogsSubscriber';
+import { initRedisProjectEventBridge } from './redis/redisProjectEventBridge';
 import { stopCleanup } from "./utils/cache";
 import { shutdownAllBots } from "./utils/graceful-shutdown";
 import { runMigrations } from "./database/runMigrations";
@@ -142,6 +143,8 @@ app.use((req, res, next) => {
   });
   // Подписываемся на Redis Pub/Sub события платформы
   initRedisPlatformSubscriber();
+  // Fan-out ProjectEvent между репликами Node (настройки токена и пр.)
+  initRedisProjectEventBridge();
   // Подписываемся на Redis Pub/Sub логи ботов (дополнительный канал к stdout)
   initRedisLogsSubscriber();
 

@@ -1,13 +1,13 @@
 /**
  * @fileoverview Подписчик Redis Pub/Sub для событий платформы.
  * Слушает каналы bot:started, bot:stopped, bot:error, bot:message и пробрасывает
- * события в broadcastProjectEvent для рассылки WebSocket-клиентам.
+ * события в broadcastProjectEventLocal для рассылки WebSocket-клиентам.
  * При получении bot:message от нового пользователя — дополнительно рассылает new-user.
  * @module server/redis/redisPlatformSubscriber
  */
 
 import { getRedisSubscriber } from './redisClient';
-import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
+import { broadcastProjectEventLocal } from '../terminal/broadcastProjectEvent';
 import { waitForRedis } from './waitForRedis';
 import type { ProjectEvent } from '../terminal/ProjectEvent';
 
@@ -116,7 +116,7 @@ async function maybeEmitNewUser(projectId: number, tokenId: number, data: unknow
       timestamp: new Date().toISOString(),
     };
 
-    await broadcastProjectEvent(projectId, newUserEvent);
+    await broadcastProjectEventLocal(projectId, newUserEvent);
   } catch {
     // Не критично — просто не рассылаем new-user
   }
@@ -154,8 +154,8 @@ function handleMessage(_pattern: string, channel: string, message: string): void
     timestamp: new Date().toISOString(),
   };
 
-  broadcastProjectEvent(parsed.projectId, event).catch((err) =>
-    console.error(`[RedisSub] Ошибка broadcastProjectEvent:`, err)
+  broadcastProjectEventLocal(parsed.projectId, event).catch((err) =>
+    console.error(`[RedisSub] Ошибка broadcastProjectEventLocal:`, err)
   );
 
   // Если это сообщение от пользователя — проверяем новый ли он и рассылаем new-user

@@ -1,14 +1,17 @@
 /**
  * @fileoverview Рассылка событий проекта всем подключённым WebSocket-клиентам.
- * Рассылает событие как клиентам конкретного проекта, так и клиентам
- * подписанным на все проекты пользователя (ключ user_${ownerId}).
+ * Local fan-out + опциональный Redis publish для multi-instance.
  * @module server/terminal/broadcastProjectEvent
  */
 
+import { randomUUID } from 'crypto';
 import { WebSocket } from 'ws';
 import { activeConnections } from './activeConnections';
 import type { ProjectEvent } from './ProjectEvent';
 import { storage } from '../storages/storage';
+import { getInstanceId } from '../redis/instanceId';
+import { isRedisAvailable } from '../redis/redisClient';
+import { publishProjectEvent } from '../redis/publishProjectEvent';
 
 /**
  * Отправляет payload всем открытым соединениям из набора
@@ -24,42 +27,38 @@ function sendToConnections(connections: Set<WebSocket>, payload: string): void {
 }
 
 /**
- * Рассылает событие проекта всем WebSocket-соединениям данного проекта,
- * а также соединениям пользователя, подписанным на все проекты (user_${ownerId}).
- *
+ * Локальная рассылка события по WS этого инстанса (без Redis publish).
+ * Используется Redis-подписчиками (bot:* и platform:project_event), чтобы не зациклить pub/sub.
  * @param projectId - Идентификатор проекта
  * @param event - Событие для рассылки
  */
-export async function broadcastProjectEvent(projectId: number, event: ProjectEvent): Promise<void> {
+export async function broadcastProjectEventLocal(
+  projectId: number,
+  event: ProjectEvent,
+): Promise<void> {
   const prefix = `${projectId}_`;
   const payload = JSON.stringify(event);
 
-  // Рассылаем клиентам конкретного проекта
-  let sentToProject = 0;
   for (const [key, connections] of activeConnections.entries()) {
     if (key.startsWith(prefix)) {
       sendToConnections(connections, payload);
-      sentToProject += connections.size;
     }
   }
 
-  // Рассылаем клиентам подписанным на все проекты пользователя
   try {
     const project = await storage.getBotProject(projectId);
-    const allKeys = [...activeConnections.keys()];
-
-    // Рассылаем владельцу проекта
     const ownerKey = project?.ownerId ? `user_${project.ownerId}` : `user_global`;
     const ownerConns = activeConnections.get(ownerKey);
-    console.log(`[broadcast] event=${event.type} projectId=${projectId} ownerKey=${ownerKey} ownerConns=${ownerConns?.size ?? 0} allKeys=[${allKeys.join(',')}]`);
+    console.log(
+      `[broadcast] event=${event.type} projectId=${projectId} ownerKey=${ownerKey} ownerConns=${ownerConns?.size ?? 0}`,
+    );
     if (ownerConns) {
       sendToConnections(ownerConns, payload);
     }
 
-    // Рассылаем всем остальным подключённым пользователям у которых есть доступ к проекту
     for (const [key, connections] of activeConnections.entries()) {
       if (!key.startsWith('user_')) continue;
-      if (key === ownerKey) continue; // уже отправили
+      if (key === ownerKey) continue;
       const userIdStr = key.replace('user_', '');
       const userId = parseInt(userIdStr, 10);
       if (isNaN(userId)) continue;
@@ -69,6 +68,29 @@ export async function broadcastProjectEvent(projectId: number, event: ProjectEve
       }
     }
   } catch (err) {
-    console.error(`[broadcastProjectEvent] Ошибка получения проекта ${projectId}:`, err);
+    console.error(`[broadcastProjectEventLocal] Ошибка получения проекта ${projectId}:`, err);
+  }
+}
+
+/**
+ * Рассылает событие локально и (если Redis доступен) публикует для других реплик.
+ * @param projectId - Идентификатор проекта
+ * @param event - Событие для рассылки
+ */
+export async function broadcastProjectEvent(
+  projectId: number,
+  event: ProjectEvent,
+): Promise<void> {
+  const enriched: ProjectEvent = {
+    ...event,
+    eventId: event.eventId ?? randomUUID(),
+    originInstanceId: event.originInstanceId ?? getInstanceId(),
+    timestamp: event.timestamp || new Date().toISOString(),
+  };
+
+  await broadcastProjectEventLocal(projectId, enriched);
+
+  if (isRedisAvailable()) {
+    await publishProjectEvent(projectId, enriched);
   }
 }

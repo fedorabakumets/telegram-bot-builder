@@ -10,26 +10,13 @@ import { useBotLogs } from '@/components/editor/bot/contexts/bot-logs-context';
 import { useActiveTerminals } from '@/components/editor/bot/contexts/ActiveTerminalsContext';
 import { resolveBotDisplayNameFromCache } from '@/components/editor/bot/contexts/bot-control-utils';
 import { subscribeSharedTerminalWs, onSharedTerminalWsReconnect } from '@/lib/shared-terminal-ws';
+import type { ProjectEvent } from '@shared/project-sync/project-event';
 
 /**
  * Структура события проекта, получаемого по WebSocket
+ * (реэкспорт shared; локальный alias для логов stdout/stderr)
  */
-interface ProjectEvent {
-  /** Тип события */
-  type: 'token-created' | 'token-deleted' | 'bot-started' | 'bot-stopped' | 'bot-error' | 'stdout' | 'stderr' | 'status';
-  /** Идентификатор проекта */
-  projectId: number;
-  /** ID токена (для событий бота) */
-  tokenId?: number;
-  /** Содержимое лога (для stdout/stderr) */
-  content?: string;
-  /** Дополнительные данные */
-  data?: unknown;
-  /** Временная метка */
-  timestamp: string;
-  /** ID записи в bot_logs */
-  logId?: number;
-}
+type AllProjectsWsEvent = ProjectEvent;
 
 /**
  * Опции хука подписки на события всех проектов
@@ -58,13 +45,13 @@ export interface UseAllProjectsEventsWsOptions {
  */
 function handleTokenEvent(
   queryClient: ReturnType<typeof useQueryClient>,
-  msg: ProjectEvent,
+  msg: AllProjectsWsEvent,
   onTokenCreated?: UseAllProjectsEventsWsOptions['onTokenCreated'],
 ): void {
   queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/tokens`] });
   queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
   if (msg.type === 'token-created' && msg.tokenId) {
-    const tokenName = (msg.data as any)?.tokenName ?? '';
+    const tokenName = (msg.data as { tokenName?: string } | undefined)?.tokenName ?? '';
     onTokenCreated?.(msg.projectId, msg.tokenId, tokenName);
   }
 }
@@ -76,7 +63,7 @@ function handleTokenEvent(
  */
 function handleBotEvent(
   queryClient: ReturnType<typeof useQueryClient>,
-  msg: ProjectEvent,
+  msg: AllProjectsWsEvent,
 ): void {
   if (msg.tokenId) {
     queryClient.invalidateQueries({ queryKey: ['launch-history', msg.tokenId] });
@@ -120,7 +107,7 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
 
     const unsubscribe = subscribeSharedTerminalWs((raw) => {
       try {
-        const msg = raw as ProjectEvent;
+        const msg = raw as AllProjectsWsEvent;
 
         // Логи бота (stdout/stderr) — всегда записываем в BotLogsContext.
         // Дедупликация в addLog (500ms окно) предотвращает дубли с live-терминалом.
@@ -153,7 +140,11 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
           return;
         }
 
-        if (msg.type === 'token-created' || msg.type === 'token-deleted') {
+        if (
+          msg.type === 'token-created'
+          || msg.type === 'token-deleted'
+          || msg.type === 'token-updated'
+        ) {
           handleTokenEvent(queryClient, msg, onTokenCreatedRef.current);
         }
         if (msg.type === 'bot-started' || msg.type === 'bot-stopped' || msg.type === 'bot-error') {

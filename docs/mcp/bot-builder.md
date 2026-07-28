@@ -356,6 +356,8 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 
 Эквивалент UI «Хранить сообщения» и API `PUT /api/projects/{projectId}/tokens/{tokenId}/messages-retention` ([[api/tokens]]).
 
+После успеха UI получает WS `token-updated` и обновляет карточки **без F5** (см. [[api/realtime-events]], [[features/token-settings-realtime]]). Toast на массовый апдейт не спамится.
+
 **Пример (массово на 50 ботов):** сначала `db_list_bot_tokens`, затем цикл `db_set_messages_retention` по каждому `token_id`.
 
 Код: `lib/bot-tools/bot-token-settings-db.ts`.
@@ -388,6 +390,7 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 | Live-правки сценария в БД | ✅ | слой 5, [[futures/mcp/mcp-live-editing]] |
 | Старт/стоп/рестарт, логи, статус | ✅ | слой 6 |
 | Срок хранения сообщений | ✅ | `db_set_messages_retention` |
+| Live UI после настроек токена | ✅ | WS `token-updated`, [[features/token-settings-realtime]] |
 | `db_auto_layout` | ✅ | слой 5 |
 | Запуск **всех офлайн** одной кнопкой/тулом | ❌ | только per-token `db_start_bot` |
 | Вкладка ИИ-агента в UI | частично | [[futures/features/ai-agent-tab-vision]] |

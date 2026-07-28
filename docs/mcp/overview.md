@@ -52,7 +52,7 @@
 
 **Runtime ботов:** `db_list_bot_tokens`, `db_bot_status`, `db_bot_logs`, `db_bot_launch_history`, `db_start_bot`, `db_stop_bot`, `db_restart_bot`, `db_restart_all_bots`
 
-**Настройки токена:** `db_set_messages_retention` — срок хранения сообщений (`0` / `7` / `30` / `60` / `90` / `180` / `365`)
+**Настройки токена:** `db_set_messages_retention` — срок хранения сообщений (`0` / `7` / `30` / `60` / `90` / `180` / `365`). UI обновляется live через WS `token-updated` ([[features/token-settings-realtime]], [[api/realtime-events]]).
 
 Полный список: [[mcp/bot-builder#Справочник инструментов]].
 

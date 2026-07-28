@@ -13,7 +13,7 @@
 import { Switch } from '@/components/ui/switch';
 import { RefreshCw } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SettingCard } from './SettingCard';
 
@@ -75,6 +75,10 @@ export function BotContentCacheToggle({
   const [localEnabled, setLocalEnabled] = useState(contentCache !== 0);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setLocalEnabled(contentCache !== 0);
+  }, [contentCache]);
 
   const mutation = useMutation({
     mutationFn: (enabled: boolean) =>

@@ -12,7 +12,7 @@
 import { Switch } from '@/components/ui/switch';
 import { Inbox } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { SettingCard } from './SettingCard';
 
@@ -71,6 +71,10 @@ export function BotCatchAllToggle({
   const [localEnabled, setLocalEnabled] = useState(catchAllHandlers !== 0);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setLocalEnabled(catchAllHandlers !== 0);
+  }, [catchAllHandlers]);
 
   const mutation = useMutation({
     mutationFn: (enabled: boolean) =>

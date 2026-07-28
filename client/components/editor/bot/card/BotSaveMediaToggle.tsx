@@ -6,7 +6,7 @@
 import { Switch } from '@/components/ui/switch';
 import { ImageIcon } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { IncomingMediaStorageHint } from '../incoming-media-storage-hint';
 import { SettingCard } from './SettingCard';
@@ -69,6 +69,10 @@ export function BotSaveMediaToggle({
   const [localEnabled, setLocalEnabled] = useState(saveIncomingMedia === 1);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setLocalEnabled(saveIncomingMedia === 1);
+  }, [saveIncomingMedia]);
 
   // Показываем только если база данных пользователей включена
   if (userDatabaseEnabled !== 1) {

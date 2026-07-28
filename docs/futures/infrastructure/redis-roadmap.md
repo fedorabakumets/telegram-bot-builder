@@ -32,6 +32,16 @@ Python бот публикует события в Redis, сервер подп�
 - Fallback: если `REDIS_URL` не задан — события идут напрямую через `broadcastProjectEvent` в `startBot.ts`/`stopBot.ts`
 - Файлы: `server/redis/redisClient.ts`, `server/redis/redisPlatformSubscriber.ts`, `lib/templates/main/main.py.jinja2`
 
+### Platform project_event fan-out (Node → Node)
+Горизонтальная рассылка project/WS-событий между репликами Node (не путать с `bot:*` от Python).
+- Канал: `platform:project_event:{projectId}`
+- Publisher: `broadcastProjectEvent` → local WS + Redis publish
+- Subscriber: `redisProjectEventBridge` → только `broadcastProjectEventLocal` (anti-loop по `originInstanceId`)
+- Используется для `token-updated`, start/stop и прочих ProjectEvent
+- Fallback без Redis: local only (single-node / dev)
+- Файлы: `server/redis/publishProjectEvent.ts`, `server/redis/redisProjectEventBridge.ts`, `server/terminal/broadcastProjectEvent.ts`
+- Документация: `docs/api/realtime-events.md`, `docs/features/token-settings-realtime.md`
+
 ### Pub/Sub для real-time логов
 Python бот публикует каждую строку лога в Redis через `_RedisLogHandler`, сервер подписан и рассылает в WebSocket-терминалы.
 - Канал: `bot:logs:{projectId}:{tokenId}`

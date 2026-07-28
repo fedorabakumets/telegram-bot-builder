@@ -6,22 +6,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-
-/**
- * Структура события проекта, получаемого по WebSocket
- */
-interface ProjectEvent {
-  /** Тип события */
-  type: 'token-created' | 'token-deleted' | 'bot-started' | 'bot-stopped' | 'bot-error';
-  /** Идентификатор проекта */
-  projectId: number;
-  /** ID токена (для событий бота) */
-  tokenId?: number;
-  /** Дополнительные данные */
-  data?: unknown;
-  /** Временная метка */
-  timestamp: string;
-}
+import type { ProjectEvent } from '@shared/project-sync/project-event';
 
 /**
  * Опции хука подписки на события проекта
@@ -37,11 +22,24 @@ interface UseProjectEventsWsOptions {
 }
 
 /**
+ * Инвалидирует кэш токенов при create/delete/update
+ * @param queryClient - React Query client
+ * @param projectId - ID проекта
+ */
+function invalidateProjectTokens(
+  queryClient: ReturnType<typeof useQueryClient>,
+  projectId: number,
+): void {
+  queryClient.invalidateQueries({
+    queryKey: [`/api/projects/${projectId}/tokens`],
+  });
+  queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+}
+
+/**
  * Подключается к WebSocket терминала с tokenId=0 и слушает события проекта.
- * При token-created/token-deleted инвалидирует кэш токенов.
+ * При token-created/token-deleted/token-updated инвалидирует кэш токенов.
  * При bot-started/bot-stopped/bot-error инвалидирует историю запусков и статус бота.
- * При token-created вызывает опциональный callback onTokenCreated.
- * Автоматически переподключается при разрыве соединения.
  *
  * @param projectId - Идентификатор проекта для подписки
  * @param options - Опциональные callback-и для событий
@@ -57,8 +55,7 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
   /**
    * Флаг первого подключения.
    * При первом onopen данные уже загружены при монтировании — рефетч не нужен.
-   * При каждом последующем onopen (реконнект) инвалидируем все статусы,
-   * чтобы синхронизироваться с событиями, пропущенными во время обрыва.
+   * При каждом последующем onopen (реконнект) инвалидируем все статусы.
    */
   const isFirstConnectRef = useRef(true);
 
@@ -78,12 +75,9 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
 
       ws.onopen = () => {
         if (isFirstConnectRef.current) {
-          // Первое подключение — данные уже загружены при монтировании, рефетч не нужен
           isFirstConnectRef.current = false;
           return;
         }
-        // Реконнект после обрыва — инвалидируем все bot-status запросы проекта,
-        // чтобы подтянуть статусы, изменившиеся пока соединение было разорвано
         queryClient.invalidateQueries({
           predicate: (query) =>
             typeof query.queryKey[0] === 'string' &&
@@ -96,30 +90,24 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
         try {
           const msg: ProjectEvent = JSON.parse(event.data);
 
-          if (msg.type === 'token-created' || msg.type === 'token-deleted') {
-            queryClient.invalidateQueries({
-              queryKey: [`/api/projects/${projectId}/tokens`],
-            });
-            // Также инвалидируем список проектов на случай изменения счётчиков
-            queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+          if (
+            msg.type === 'token-created'
+            || msg.type === 'token-deleted'
+            || msg.type === 'token-updated'
+          ) {
+            invalidateProjectTokens(queryClient, projectId);
 
-            // Вызываем callback при создании нового токена
             if (msg.type === 'token-created' && msg.tokenId) {
-              const tokenName = (msg.data as any)?.tokenName ?? '';
+              const tokenName = (msg.data as { tokenName?: string } | undefined)?.tokenName ?? '';
               onTokenCreatedRef.current?.(msg.projectId, msg.tokenId, tokenName);
             }
           }
 
           if (msg.type === 'bot-started' || msg.type === 'bot-stopped' || msg.type === 'bot-error') {
-            // Инвалидируем историю запусков для конкретного токена
             if (msg.tokenId) {
               queryClient.invalidateQueries({ queryKey: ['launch-history', msg.tokenId] });
-            }
-            // Инвалидируем статус бота
-            if (msg.tokenId) {
               queryClient.invalidateQueries({ queryKey: [`/api/tokens/${msg.tokenId}/bot-status`] });
             }
-            // Инвалидируем общую информацию о боте
             queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/bot/info`] });
           }
         } catch {
@@ -130,7 +118,6 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
       ws.onclose = () => {
         wsRef.current = null;
         if (!destroyed) {
-          // Переподключаемся через 3 секунды
           reconnectTimerRef.current = setTimeout(connect, 3000);
         }
       };
@@ -147,8 +134,6 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       wsRef.current?.close();
       wsRef.current = null;
-      // Сбрасываем флаг, чтобы при повторном монтировании первое подключение
-      // снова считалось первым и не вызывало лишний рефетч
       isFirstConnectRef.current = true;
     };
   }, [projectId, queryClient]);
