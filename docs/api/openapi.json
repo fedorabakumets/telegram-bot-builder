@@ -4547,7 +4547,7 @@
           "tokens"
         ],
         "summary": "Срок хранения сообщений диалога",
-        "description": "Обновляет `messages_retention_days` у токена. `0` — без автоочистки; иначе сервер раз в час удаляет из `bot_messages` сообщения этого токена старше N дней. Таблица `message_activity_daily` (длинный график «Активность») не трогается. Требуется владение токеном (`requireTokenOwnership`).",
+        "description": "Обновляет `messages_retention_days` у токена. `0` — без автоочистки; иначе сервер раз в час удаляет из `bot_messages` сообщения этого токена старше N дней. Таблица `message_activity_daily` (длинный график «Активность») не трогается. Требуется владение токеном (`requireTokenOwnership`). **Side-effect:** после успеха эмитит WebSocket `token-updated` (безопасный снимок токена без секретов; см. docs/api/realtime-events.md). UI и другие клиенты обновляются без F5.",
         "security": [
           {
             "cookieAuth": []
