@@ -15,7 +15,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [bot](./bot.md) | 24 |
 | [bot-folders](./bot-folders.md) | 1 |
 | [bot-logs](./bot-logs.md) | 1 |
-| [bots](./bots.md) | 1 |
+| [bots](./bots.md) | 2 |
 | [config](./config.md) | 1 |
 | [database](./database.md) | 17 |
 | [google-auth](./google-auth.md) | 2 |
@@ -45,19 +45,3 @@ REST API визуального конструктора Telegram-ботов. А
 - **Cookie** — сессия после Telegram Login Widget (`connect.sid`)
 - **Bearer PAT** — персональный токен агента (MCP/CLI)
 - Публичные эндпоинты помечены «Публичный»
-
-## Realtime side-effects настроек токена
-
-После PUT настроек токена (срок хранения, auto-restart, protect-content, …) сервер шлёт WebSocket `token-updated`. Карточки ботов обновляются без F5.
-
-- [tokens.md](./tokens.md) — HTTP settings
-- [realtime-events.md](./realtime-events.md) — контракт WS / Redis fan-out / whitelist payload
-- [features/token-settings-realtime.md](../features/token-settings-realtime.md) — продуктовый обзор
-
-## Массовый запуск офлайн-ботов
-
-`POST /api/projects/{id}/bot/start-offline-all` поднимает только offline; UI и MCP с confirm. Live через `bot-started` + `start-offline-progress`.
-
-- [projects.md](./projects.md) — HTTP
-- [realtime-events.md](./realtime-events.md) — WS
-- [features/start-offline-bots.md](../features/start-offline-bots.md) — обзор

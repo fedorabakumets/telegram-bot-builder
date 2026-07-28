@@ -195,8 +195,6 @@ POST /api/projects/{id}/bot/restart-all
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Перезапускает только **уже запущенные** боты проекта (офлайн не поднимает).
-
 #### Ответы
 
 | Код | Описание |
@@ -204,40 +202,6 @@ POST /api/projects/{id}/bot/restart-all
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
 | 503 | Приложение не настроено (/setup) |
-
-### `POST` /api/projects/{id}/bot/start-offline-all
-
-Массовый запуск **офлайн** ботов проекта (`status !== running`). Уже работающие не трогает.
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT + `requireProjectAccess`.
-
-**Тело:** пустое `{}` (токены берутся только из проекта URL).
-
-**Ответ 200:**
-```json
-{
-  "started": 12,
-  "failed": 0,
-  "skippedRunning": 26,
-  "results": [{ "tokenId": 70, "success": true, "processId": "..." }]
-}
-```
-Если офлайн нет: `{ "message": "Нет офлайн-ботов", "started": 0, "failed": 0, "skippedRunning": N, "results": [] }`.
-
-**Side-effects:** WS `bot-started` на каждый успех; `start-offline-progress` во время цикла (см. [realtime-events.md](./realtime-events.md)). Секреты token в ответе и WS не передаются.
-
-**MCP:** `db_start_offline_bots` (требует `confirm: true`). UI: кнопка «Запустить офлайн» в шапке проекта.
-
-При 100+ токенах HTTP может быть долгим; прогресс виден по WS.
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Сводка запуска |
-| 400 | Неверный ID |
-| 401 / 403 / 404 | Auth / доступ / нет токенов |
-| 500 | Внутренняя ошибка |
 
 ### `PUT` /api/projects/{id}/bot/short-description
 

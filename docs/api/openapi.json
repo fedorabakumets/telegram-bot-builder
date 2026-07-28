@@ -2050,6 +2050,84 @@
         }
       }
     },
+    "/api/projects/{id}/bot/start-offline-all": {
+      "post": {
+        "tags": [
+          "bots"
+        ],
+        "summary": "Запустить всех офлайн-ботов проекта",
+        "description": "Последовательно запускает токены проекта, у которых status !== running. Уже работающие не трогает (в отличие от restart-all). Требуется доступ к проекту (`requireProjectAccess`). **Side-effects:** WS `bot-started` на каждый успешный старт и `start-offline-progress` (whitelist без секретов; см. docs/api/realtime-events.md). UI обновляется без F5. При большом числе токенов HTTP может быть долгим.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "1"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Сводка запуска",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartOfflineAllResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный ID проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Токены не найдены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/{id}/bot/stop": {
       "post": {
         "tags": [
@@ -7092,6 +7170,57 @@
         },
         "required": [
           "messagesRetentionDays"
+        ]
+      },
+      "StartOfflineTokenResult": {
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "type": "integer"
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "processId": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tokenId",
+          "success"
+        ]
+      },
+      "StartOfflineAllResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Нет офлайн-ботов"
+          },
+          "started": {
+            "type": "integer"
+          },
+          "failed": {
+            "type": "integer"
+          },
+          "skippedRunning": {
+            "type": "integer"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StartOfflineTokenResult"
+            }
+          }
+        },
+        "required": [
+          "started",
+          "failed",
+          "skippedRunning",
+          "results"
         ]
       },
       "ProjectListItem": {
