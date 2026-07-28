@@ -148,4 +148,19 @@ describe('интеграция: shutdown → exit handler → маркер со�
     assert.strictEqual(toRestore.length, 1);
     assert.strictEqual(toRestore[0].errorMessage, RESTART_MARKER);
   });
+
+  it('регрессия worker-pool: exit ДО маркера → restore пустой', () => {
+    // Старый порядок: shutdownAll → bot_exited обнуляет running, маркер не пишется
+    let instance = { status: 'running', errorMessage: null as string | null };
+    instance = { status: 'stopped', errorMessage: null };
+    assert.strictEqual(filterInstancesToRestore([instance]).length, 0);
+  });
+
+  it('worker-pool: маркер ДО exit → restore находит бота', () => {
+    let instance = { status: 'running', errorMessage: null as string | null };
+    instance = { status: 'stopped', errorMessage: RESTART_MARKER };
+    const kept = simulateExitHandler(instance.errorMessage, null);
+    instance = { ...instance, errorMessage: kept };
+    assert.strictEqual(filterInstancesToRestore([instance]).length, 1);
+  });
 });
