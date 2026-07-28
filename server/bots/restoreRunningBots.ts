@@ -6,6 +6,10 @@
 import { storage } from "../storages/storage";
 import { startBot } from "./startBot";
 import { clearBotRedisLock } from "./clearBotRedisLock";
+import {
+  RESTORE_START_STAGGER_MS,
+  waitRestoreStagger,
+} from "./restoreStartStagger";
 
 /**
  * Определяет, был ли бот остановлен внезапно (не вручную пользователем).
@@ -69,7 +73,8 @@ export async function restoreRunningBots(): Promise<void> {
 
     console.log(`🤖 Найдено ${runningInstances.length} бот(ов) для восстановления.`);
 
-    for (const instance of runningInstances) {
+    for (let i = 0; i < runningInstances.length; i++) {
+      const instance = runningInstances[i];
       try {
         console.log(
           `▶️ Восстанавливаем бота: projectId=${instance.projectId}, tokenId=${instance.tokenId}`
@@ -103,6 +108,11 @@ export async function restoreRunningBots(): Promise<void> {
           status: "error",
           errorMessage: String(err),
         });
+      }
+
+      // Stagger: не бить Redis одновременным ping от всех ботов
+      if (i < runningInstances.length - 1) {
+        await waitRestoreStagger(RESTORE_START_STAGGER_MS);
       }
     }
 

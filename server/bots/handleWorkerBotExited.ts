@@ -8,6 +8,7 @@ import { storage } from '../storages/storage';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { getActiveLaunchId, clearActiveLaunchId } from '../terminal/activeLaunchIds';
 import { clearBotRedisLockByTokenId } from './clearBotRedisLock';
+import { isWorkerCleanExit } from './isWorkerCleanExit';
 
 /**
  * Обновляет БД и шлёт WS после выхода бота из воркера
@@ -21,8 +22,7 @@ export async function handleWorkerBotExited(
   exitStatus: string | number,
 ): Promise<void> {
   const statusStr = String(exitStatus);
-  const isError = statusStr === 'error'
-    || (statusStr !== 'stopped' && statusStr !== '0' && statusStr !== 'null');
+  const isError = statusStr === 'error' || !isWorkerCleanExit(exitStatus);
   const launchStatus = isError ? 'error' : 'stopped';
   const wsType = isError ? 'bot-error' : 'bot-stopped';
   const errorMessage = isError

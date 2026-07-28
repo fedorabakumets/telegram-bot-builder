@@ -164,3 +164,11 @@ describe('интеграция: shutdown → exit handler → маркер со�
     assert.strictEqual(filterInstancesToRestore([instance]).length, 1);
   });
 });
+
+describe('restoreRunningBots — stagger анти-stampede', () => {
+  it('RESTORE_START_STAGGER_MS экспортируется и >= 100', async () => {
+    const { RESTORE_START_STAGGER_MS } = await import('./restoreStartStagger');
+    assert.ok(RESTORE_START_STAGGER_MS >= 100);
+    assert.ok(RESTORE_START_STAGGER_MS <= 1000);
+  });
+});

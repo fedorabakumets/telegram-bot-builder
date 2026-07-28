@@ -314,6 +314,16 @@ describe('main.py.jinja2 шаблон', () => {
         const result = generateMain({ userDatabaseEnabled: false });
         assert.ok(result.includes('if _redis_connected and _redis_client is not None'), 'проверка доступности Redis не найдена');
       });
+
+      it('CancelledError из воркера должен re-raise (статус stopped в worker)', () => {
+        const result = generateMain({ userDatabaseEnabled: false });
+        const idx = result.indexOf('except asyncio.CancelledError:');
+        assert.ok(idx >= 0, 'except asyncio.CancelledError не найден');
+        const snippet = result.slice(idx, idx + 500);
+        const nextExcept = snippet.indexOf('except ', 10);
+        const block = nextExcept > 0 ? snippet.slice(0, nextExcept) : snippet;
+        assert.ok(/\n\s+raise\b/.test(block), 'CancelledError должен пробрасываться (raise)');
+      });
     });
   });
 });

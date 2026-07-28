@@ -9,6 +9,10 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { EventEmitter } from "node:events";
 import { parseWorkerSystemMessage } from "./parseWorkerSystemMessage";
+import {
+  waitForWorkerBotStop,
+  WORKER_STOP_CONFIRM_TIMEOUT_MS,
+} from "./waitForWorkerBotStop";
 
 /** Эквивалент __dirname для ES modules */
 const __filename = fileURLToPath(import.meta.url);
@@ -325,33 +329,46 @@ class BotWorkerManager extends EventEmitter {
   }
 
   /**
-   * Останавливает бота в воркере.
-   * Не удаляет из activeBots и не убивает воркер здесь — ждём bot_exited/bot_stopped.
+   * Останавливает бота в воркере и ждёт bot_exited/bot_stopped.
    * @param projectId - ID проекта
    * @param tokenId - ID токена
+   * @returns true если Python подтвердил выход, false при таймауте
    */
-  async stopBot(projectId: number, tokenId: number): Promise<void> {
+  async stopBot(projectId: number, tokenId: number): Promise<boolean> {
     const worker = this.workers.get(projectId);
-    if (!worker) return;
+    if (!worker) return true;
 
-    this.sendCommand(projectId, {
+    const confirmed = waitForWorkerBotStop(
+      this,
+      projectId,
+      tokenId,
+      WORKER_STOP_CONFIRM_TIMEOUT_MS,
+    );
+
+    const sent = this.sendCommand(projectId, {
       cmd: "stop_bot",
       token_id: tokenId,
     });
-
-    // Таймаут: если Python не подтвердил выход — снимаем учёт и гасим пустой воркер
-    setTimeout(() => {
-      const w = this.workers.get(projectId);
-      if (!w || !w.activeBots.has(tokenId)) return;
-      console.warn(
-        `[WorkerPool:${projectId}] stop timeout token=${tokenId} — снимаем из activeBots`,
-      );
-      w.activeBots.delete(tokenId);
+    if (!sent) {
+      // Разблокируем waiter без зависания на таймере
       this.emit("bot-exited", projectId, tokenId, "stopped");
-      if (w.activeBots.size === 0 && w.status === "ready") {
-        void this.killWorker(projectId);
+      return true;
+    }
+
+    const ok = await confirmed;
+    if (!ok) {
+      const w = this.workers.get(projectId);
+      if (w?.activeBots.has(tokenId)) {
+        console.warn(
+          `[WorkerPool:${projectId}] stop timeout token=${tokenId} — снимаем из activeBots без fake exit`,
+        );
+        w.activeBots.delete(tokenId);
+        if (w.activeBots.size === 0 && w.status === "ready") {
+          void this.killWorker(projectId);
+        }
       }
-    }, 8000);
+    }
+    return ok;
   }
 
   /**

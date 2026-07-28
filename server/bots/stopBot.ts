@@ -64,7 +64,16 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
   try {
     // ─── Режим воркера: остановка бота через worker pool ───
     if (process.env.USE_WORKER_POOL !== 'false') {
-      await workerManager.stopBot(projectId, tokenId);
+      const confirmed = await workerManager.stopBot(projectId, tokenId);
+      if (!confirmed) {
+        console.error(
+          `[stopBot] Таймаут подтверждения остановки project=${projectId} token=${tokenId}`,
+        );
+        return {
+          success: false,
+          error: 'Таймаут остановки бота в воркере — процесс мог не завершиться',
+        };
+      }
 
       await storage.closeAllRunningLaunchHistory(tokenId, {
         status: 'stopped',
