@@ -90,7 +90,13 @@ export async function shutdownAllBots(): Promise<void> {
             stoppedAt: new Date(),
             errorMessage: '__server_restart__'
           });
-        }
+          if (instance.tokenId != null) {
+            await storage.closeAllRunningLaunchHistory(instance.tokenId, {
+              status: 'stopped',
+              stoppedAt: new Date(),
+              errorMessage: '__server_restart__',
+            });
+          }        }
       }
     } catch (error) {
       console.error('Ошибка обновления статуса экземпляров ботов:', error);

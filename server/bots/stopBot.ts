@@ -66,15 +66,11 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
     if (process.env.USE_WORKER_POOL !== 'false') {
       await workerManager.stopBot(projectId, tokenId);
 
-      // Обновляем БД как обычно
-      const activeHistory = await storage.getActiveLaunchHistory(tokenId);
-      if (activeHistory) {
-        await storage.updateLaunchHistory(activeHistory.id, {
-          status: 'stopped',
-          stoppedAt: new Date(),
-          errorMessage: null,
-        });
-      }
+      await storage.closeAllRunningLaunchHistory(tokenId, {
+        status: 'stopped',
+        stoppedAt: new Date(),
+        errorMessage: null,
+      });
       clearActiveLaunchId(tokenId);
       await storage.stopBotInstanceByToken(tokenId);
 
@@ -176,15 +172,12 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
 
     await flushBuffer(processKey);
 
-    // Получаем последний активный запуск для этого токена и закрываем его
-    const activeHistory = await storage.getActiveLaunchHistory(tokenId);
-    if (activeHistory) {
-      await storage.updateLaunchHistory(activeHistory.id, {
-        status: 'stopped',
-        stoppedAt: new Date(),
-        errorMessage: null,
-      });
-    }
+    // Закрываем все незавершённые запуски для этого токена
+    await storage.closeAllRunningLaunchHistory(tokenId, {
+      status: 'stopped',
+      stoppedAt: new Date(),
+      errorMessage: null,
+    });
     clearActiveLaunchId(tokenId);
 
     await storage.stopBotInstanceByToken(tokenId);

@@ -97,7 +97,12 @@ export function BotDetailPanel({
           ].join(' ')}
         >
           {tab === 'history' && (
-            <BotLaunchHistory tokenId={token.id} projectId={project.id} botName={title} />
+            <BotLaunchHistory
+              tokenId={token.id}
+              projectId={project.id}
+              botName={title}
+              isLiveRunning={isRunning}
+            />
           )}
           {tab === 'settings' && (
             <BotSettingsGrid

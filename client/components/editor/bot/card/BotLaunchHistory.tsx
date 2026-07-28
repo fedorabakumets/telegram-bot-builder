@@ -9,6 +9,9 @@ import { useLaunchHistory } from '../hooks/use-launch-history';
 import { useActiveTerminals } from '../contexts/ActiveTerminalsContext';
 import { useBotDetailTabOptional } from '../canvas/bot-detail-tab-context';
 import { BotLaunchCard } from './BotLaunchCard';
+import { selectCurrentAndPast } from './select-current-launch';
+
+export { selectCurrentAndPast } from './select-current-launch';
 
 /** Пропсы компонента истории запусков */
 interface BotLaunchHistoryProps {
@@ -20,6 +23,8 @@ interface BotLaunchHistoryProps {
   botName: string;
   /** Компактный вид (внутри сетки настроек) */
   compact?: boolean;
+  /** Live-статус из bot-status (защита от orphan running) */
+  isLiveRunning?: boolean;
 }
 
 /**
@@ -32,20 +37,17 @@ export function BotLaunchHistory({
   projectId,
   botName,
   compact = false,
+  isLiveRunning = false,
 }: BotLaunchHistoryProps) {
   const { history, isLoading } = useLaunchHistory(tokenId);
   const { openHistoryTab } = useActiveTerminals();
   const detailTab = useBotDetailTabOptional();
   const [historyOpen, setHistoryOpen] = useState(true);
 
-  const { current, past } = useMemo(() => {
-    const running = history.find((h) => h.status === 'running');
-    const current = running ?? history[0] ?? null;
-    const past = current
-      ? history.filter((h) => h.id !== current.id).slice(0, compact ? 4 : 20)
-      : [];
-    return { current, past };
-  }, [history, compact]);
+  const { current, past } = useMemo(
+    () => selectCurrentAndPast(history ?? [], isLiveRunning, compact),
+    [history, isLiveRunning, compact],
+  );
 
   const handleShowLogs = (id: number, startedAt: Date | string | null) => {
     openHistoryTab({

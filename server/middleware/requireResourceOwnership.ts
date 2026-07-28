@@ -62,12 +62,13 @@ export function requireResourceOwnership(
 }
 
 /**
- * Резолвит projectId токена бота по числовому :tokenId из пути.
- * @param req - Запрос с параметром tokenId
+ * Резолвит projectId токена бота по :tokenId или :id из пути.
+ * @param req - Запрос с параметром tokenId или id
  * @returns projectId токена или null, если токен не найден/некорректен
  */
 async function resolveProjectIdByTokenParam(req: Request): Promise<number | null> {
-    const tokenId = parseInt(req.params.tokenId, 10);
+    const raw = req.params.tokenId ?? req.params.id;
+    const tokenId = parseInt(raw, 10);
     if (isNaN(tokenId)) return null;
     const token = await storage.getBotToken(tokenId);
     return token ? token.projectId : null;

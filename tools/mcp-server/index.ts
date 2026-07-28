@@ -23,6 +23,7 @@ import {
   restartAllBotsInDb,
   setMessagesRetentionInDb,
   startOfflineBotsInDb,
+  deleteBotTokenInDb,
   connectNodes,
   connectNodesInDb,
   disconnectNodesInDb,
@@ -921,6 +922,23 @@ function registerTools(server: McpServer): void {
       },
     },
     async ({ project_id, confirm }) => textResult(await startOfflineBotsInDb(project_id, { confirm })),
+  );
+
+  server.registerTool(
+    'db_delete_bot_token',
+    {
+      description:
+        'Удалить токен бота из проекта (НЕОБРАТИМО). ТРЕБУЕТ confirm: true. '
+        + 'Доступен владельцу и коллабораторам проекта. Останавливает бота и шлёт WS token-deleted. '
+        + 'Эквивалент DELETE /api/projects/:projectId/tokens/:tokenId.',
+      inputSchema: {
+        project_id: z.number().describe('ID проекта'),
+        token_id: z.number().describe('ID токена из db_list_bot_tokens'),
+        confirm: z.boolean().describe('Обязательное подтверждение необратимого удаления'),
+      },
+    },
+    async ({ project_id, token_id, confirm }) =>
+      textResult(await deleteBotTokenInDb(project_id, token_id, { confirm })),
   );
 }
 

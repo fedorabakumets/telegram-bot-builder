@@ -1466,6 +1466,36 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
+   * Закрывает все running-записи launch history для токена
+   * @param tokenId - ID токена
+   * @param data - Поля обновления (status, stoppedAt, errorMessage)
+   * @returns Число обновлённых строк
+   */
+  async closeAllRunningLaunchHistory(
+    tokenId: number,
+    data: StorageBotLaunchHistoryUpdate,
+  ): Promise<number> {
+    const result = await this.db
+      .update(botLaunchHistory)
+      .set(data)
+      .where(and(eq(botLaunchHistory.tokenId, tokenId), eq(botLaunchHistory.status, 'running')))
+      .returning({ id: botLaunchHistory.id });
+    return result.length;
+  }
+
+  /**
+   * tokenId с хотя бы одной running-записью в истории запусков
+   * @returns Список уникальных tokenId
+   */
+  async listTokenIdsWithRunningLaunchHistory(): Promise<number[]> {
+    const rows = await this.db
+      .selectDistinct({ tokenId: botLaunchHistory.tokenId })
+      .from(botLaunchHistory)
+      .where(eq(botLaunchHistory.status, 'running'));
+    return rows.map((r) => r.tokenId);
+  }
+
+  /**
    * Получить статистику пользователей по токену
    * @param tokenId - ID токена
    * @returns Объект со статистикой: total_users, active_24h, active_7d, new_today

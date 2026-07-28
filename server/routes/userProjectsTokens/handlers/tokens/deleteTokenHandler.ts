@@ -1,27 +1,22 @@
 /**
  * @fileoverview Хендлер удаления токена пользователя
- *
- * Этот модуль предоставляет функцию для обработки запросов
- * на удаление токена пользователя.
- *
  * @module userProjectsTokens/handlers/tokens/deleteTokenHandler
  */
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { stopBot } from "../../../../bots/stopBot";
+import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
 
 /**
- * Обрабатывает запрос на удаление токена
- *
- * @function deleteTokenHandler
- * @param {Request} req - Объект запроса
- * @param {Response} res - Объект ответа
- * @returns {Promise<void>}
+ * DELETE /api/user/tokens/:id — доступ владельца или коллаборатора проекта токена
+ * @param req - Объект запроса
+ * @param res - Объект ответа
  */
 export async function deleteTokenHandler(req: Request, res: Response): Promise<void> {
     try {
-        const userId = (req as any).user?.id;
-        const tokenId = parseInt(req.params.id);
+        const userId = (req as any).user?.id as number | undefined;
+        const tokenId = parseInt(req.params.id, 10);
 
         if (!userId) {
             res.status(401).json({ error: "Пользователь не аутентифицирован" });
@@ -29,14 +24,35 @@ export async function deleteTokenHandler(req: Request, res: Response): Promise<v
         }
 
         const token = await storage.getBotToken(tokenId);
-        if (!token || token.ownerId !== userId) {
-            res.status(403).json({ error: "Доступ запрещён" });
+        if (!token) {
+            res.status(404).json({ error: "Токен не найден" });
             return;
         }
 
+        const hasAccess = await storage.hasProjectAccess(token.projectId, userId);
+        if (!hasAccess) {
+            res.status(403).json({ error: "Нет доступа к проекту токена" });
+            return;
+        }
+
+        try {
+            await stopBot(token.projectId, tokenId);
+        } catch (stopError) {
+            console.warn(`[deleteTokenHandler] Не удалось остановить бота ${tokenId}:`, stopError);
+        }
+
         await storage.deleteBotToken(tokenId);
+
+        void broadcastProjectEvent(token.projectId, {
+            type: 'token-deleted',
+            projectId: token.projectId,
+            tokenId,
+            data: { tokenId, tokenName: token.name },
+            timestamp: new Date().toISOString(),
+        }).catch((err) => console.error('[deleteTokenHandler] broadcast:', err));
+
         res.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Ошибка удаления токена:", error);
         res.status(500).json({ error: "Не удалось удалить токен" });
     }

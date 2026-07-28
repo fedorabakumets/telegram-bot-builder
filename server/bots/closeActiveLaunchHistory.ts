@@ -1,5 +1,5 @@
 /**
- * @fileoverview Закрытие активной записи истории запуска перед новым стартом бота
+ * @fileoverview Закрытие активных записей истории запуска бота
  * @module server/bots/closeActiveLaunchHistory
  */
 
@@ -7,17 +7,18 @@ import { storage } from '../storages/storage';
 import { clearActiveLaunchId } from '../terminal/activeLaunchIds';
 
 /**
- * Закрывает незавершённый запуск в bot_launch_history и сбрасывает in-memory launchId
+ * Закрывает ВСЕ незавершённые (running) запуски токена и сбрасывает in-memory launchId
  * @param tokenId - Идентификатор токена бота
+ * @param errorMessage - Опциональное сообщение (null = чистая остановка)
  */
-export async function closeActiveLaunchHistory(tokenId: number): Promise<void> {
-  const activeHistory = await storage.getActiveLaunchHistory(tokenId);
-  if (activeHistory) {
-    await storage.updateLaunchHistory(activeHistory.id, {
-      status: 'stopped',
-      stoppedAt: new Date(),
-      errorMessage: null,
-    });
-  }
+export async function closeActiveLaunchHistory(
+  tokenId: number,
+  errorMessage: string | null = null,
+): Promise<void> {
+  await storage.closeAllRunningLaunchHistory(tokenId, {
+    status: 'stopped',
+    stoppedAt: new Date(),
+    errorMessage,
+  });
   clearActiveLaunchId(tokenId);
 }

@@ -15,7 +15,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [bot](./bot.md) | 24 |
 | [bot-folders](./bot-folders.md) | 1 |
 | [bot-logs](./bot-logs.md) | 1 |
-| [bots](./bots.md) | 1 |
+| [bots](./bots.md) | 2 |
 | [config](./config.md) | 1 |
 | [database](./database.md) | 17 |
 | [google-auth](./google-auth.md) | 2 |
@@ -61,3 +61,15 @@ REST API визуального конструктора Telegram-ботов. А
 - [projects.md](./projects.md) — HTTP
 - [realtime-events.md](./realtime-events.md) — WS
 - [features/start-offline-bots.md](../features/start-offline-bots.md) — обзор
+
+## Удаление токена (project access)
+
+`DELETE /api/projects/{projectId}/tokens/{tokenId}` — владелец или коллаборатор. WS `token-deleted`. List/status без сырого Telegram token.
+
+- [features/token-project-access-delete.md](../features/token-project-access-delete.md)
+
+## Сверка истории запусков
+
+GET launch-history / bot-status закрывают orphan `running`, если процесс не live.
+
+- [features/launch-history-status-reconciliation.md](../features/launch-history-status-reconciliation.md)

@@ -10,6 +10,7 @@ import { restoreProcessTracking } from '../utils/processRestorer';
 import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
 import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 import { workerManager } from '../../../bots/botWorkerManager';
+import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
 
 /**
  * Нормализует tokenId — срезает префикс `token_` если он есть
@@ -200,6 +201,8 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
                 errorMessage: actualStatus === 'stopped' ? 'Процесс завершен' : null,
             });
         }
+
+        await reconcileLaunchHistoryForToken(tokenId, actualStatus === 'running');
 
         res.json({
             status: actualStatus,
