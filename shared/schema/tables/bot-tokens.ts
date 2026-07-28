@@ -101,6 +101,12 @@ export const botTokens = pgTable("bot_tokens", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/**
+ * Флаг 0/1 из JSON: допускает null (как в ответах API/БД).
+ * @returns Zod-схема для опционального числового флага
+ */
+const optionalFlag = () => z.number().min(0).max(1).nullable().optional();
+
 /** Схема для вставки данных токена бота */
 export const insertBotTokenSchema = z.object({
   /** Идентификатор проекта */
@@ -115,16 +121,31 @@ export const insertBotTokenSchema = z.object({
   isDefault: z.number().min(0).max(1).default(0),
   /** Флаг активности токена (0 = неактивен, 1 = активен) */
   isActive: z.number().min(0).max(1).default(1),
+  /** Описание токена */
+  description: z.string().nullable().optional(),
+  /** Имя бота из Telegram API */
+  botFirstName: z.string().nullable().optional(),
+  /** Username бота из Telegram API */
+  botUsername: z.string().nullable().optional(),
+  /** Полное описание бота из Telegram API */
+  botDescription: z.string().nullable().optional(),
+  /** Короткое описание бота из Telegram API */
+  botShortDescription: z.string().nullable().optional(),
+  /** URL аватарки бота из Telegram API */
+  botPhotoUrl: z.string().nullable().optional(),
   /** Флаг возможности бота присоединяться к группам */
-  botCanJoinGroups: z.number().min(0).max(1).optional(),
+  botCanJoinGroups: optionalFlag(),
   /** Флаг возможности бота читать все сообщения в группах */
-  botCanReadAllGroupMessages: z.number().min(0).max(1).optional(),
+  botCanReadAllGroupMessages: optionalFlag(),
   /** Флаг поддержки инлайн-запросов ботом */
-  botSupportsInlineQueries: z.number().min(0).max(1).optional(),
+  botSupportsInlineQueries: optionalFlag(),
   /** Флаг наличия главного веб-приложения у бота */
-  botHasMainWebApp: z.number().min(0).max(1).optional(),
-  /** Время последнего использования токена */
-  lastUsedAt: z.date().nullable().optional(),
+  botHasMainWebApp: optionalFlag(),
+  /**
+   * Время последнего использования (Date или ISO-строка из JSON).
+   * null первым в union — иначе z.coerce.date ломает null из API.
+   */
+  lastUsedAt: z.union([z.null(), z.coerce.date()]).optional(),
   /** Флаг отслеживания времени выполнения (0 = выключено, 1 = включено) */
   trackExecutionTime: z.number().min(0).max(1).default(0),
   /** Общее время выполнения в секундах */
