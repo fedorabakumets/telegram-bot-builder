@@ -253,7 +253,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-25T21:11:31Z",
+    "updated_at": "2026-07-28T06:31:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -418,7 +418,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-26T00:10:59Z",
+    "updated_at": "2026-07-28T06:31:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -1757,7 +1757,7 @@
       "futures": "🔮 Планы развития",
       "mcp": "🤖 MCP"
     },
-    "updated_at": "2026-06-25T18:45:43+03:00",
+    "updated_at": "2026-07-28T06:31:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -2280,7 +2280,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-07-26T06:44:15+03:00",
+    "updated_at": "2026-07-28T06:31:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -2612,8 +2612,8 @@
   },
   {
     "path": "mcp/bot-builder",
-    "title": "MCP-сервер конструктора (botcraft-builder)",
-    "excerpt": "> Подробное руководство по MCP-серверу BotCraft Studio для сборки `project.json` и генерации Python-кода через внешние ИИ-клиенты (Cursor, C",
+    "title": "Bot builder",
+    "excerpt": "﻿# MCP-сервер конструктора (botcraft-builder)",
     "parts": [
       "mcp",
       "bot-builder"
@@ -2621,7 +2621,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-07-12T22:22:41+03:00",
+    "updated_at": "2026-07-28T06:31:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -2636,7 +2636,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-06-22T16:22:21+03:00",
+    "updated_at": "2026-07-28T06:31:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -2651,7 +2651,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-06-23T14:36:15+03:00",
+    "updated_at": "2026-07-28T06:31:44+03:00",
     "tags": [],
     "author": ""
   },
