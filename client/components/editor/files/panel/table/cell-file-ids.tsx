@@ -1,25 +1,23 @@
 /**
  * @fileoverview Ячейка «file_id по ботам» таблицы файлов (`CellFileIds`).
- * Отображает file_id для каждого бота из `file.fileIdsByToken` (Req 8.2).
- * Когда в селекторе выбран бот (`selectedTokenId`), его file_id показывается
- * первым, остальные — ниже в детерминированном порядке по tokenId (Req 8.3).
- * Если карта пуста, используется одиночный `file.fileId` (обратная
- * совместимость). Каждый id копируется в буфер по клику через `onCopy`.
+ * Показывает file_id с подписью владельца через TelegramFileIdOwner.
  * @module components/editor/files/panel/table/cell-file-ids
  */
 
-import { Copy } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/utils';
 import type { ProjectFile } from '../../hooks/use-project-files';
+import { TelegramFileIdOwner } from '@/components/editor/properties/media/telegram-file-id-owner';
+import { useProjectTokenLabels } from '@/components/editor/properties/media/use-project-token-labels';
 
 /** Пропсы ячейки file_id по ботам */
 export interface CellFileIdsProps {
   /** Данные файла */
   file: ProjectFile;
-  /** Выбранный токен бота (его file_id показывается первым, Req 8.3) */
+  /** ID проекта для подписей ботов */
+  projectId: number;
+  /** Выбранный токен бота (его file_id показывается первым) */
   selectedTokenId?: number | null;
-  /** Копирование file_id в буфер обмена */
+  /** Копирование file_id в буфер обмена (legacy callback, копирование внутри Owner) */
   onCopy: (fileId: string) => void;
   /** Дополнительные классы для `td` */
   className?: string;
@@ -34,7 +32,7 @@ export interface FileIdEntry {
 }
 
 /**
- * Строит упорядоченный список file_id: выбранный токен первым (Req 8.3),
+ * Строит упорядоченный список file_id: выбранный токен первым,
  * остальные — по возрастанию tokenId; при пустой карте — одиночный fileId.
  * @param file - Данные файла
  * @param selectedTokenId - Выбранный токен бота
@@ -55,43 +53,42 @@ export function buildOrderedEntries(file: ProjectFile, selectedTokenId?: number 
 }
 
 /**
- * Ячейка со списком file_id по ботам.
+ * Ячейка со списком file_id по ботам с подписями владельцев.
  * @param props - Свойства ячейки
  * @returns JSX элемент `<td>` со столбцом file_id
  */
-export function CellFileIds({ file, selectedTokenId, onCopy, className }: CellFileIdsProps) {
-  const entries = buildOrderedEntries(file, selectedTokenId);
+export function CellFileIds({ file, projectId, selectedTokenId, className }: CellFileIdsProps) {
+  const tokenLabels = useProjectTokenLabels(projectId);
+  const byToken = file.fileIdsByToken ?? {};
+  const mapAsStrings: Record<string, string> = {};
+  for (const [k, v] of Object.entries(byToken)) {
+    mapAsStrings[String(k)] = v;
+  }
+
+  /** Legacy: один fileId без карты — показываем как общий кэш, если tokenId неизвестен */
+  const legacyId = Object.keys(mapAsStrings).length === 0 ? (file.fileId ?? null) : undefined;
+  const legacyWithOwner =
+    legacyId && file.tokenId != null
+      ? { [String(file.tokenId)]: legacyId }
+      : undefined;
+
+  const hasAny =
+    Object.keys(mapAsStrings).length > 0
+    || !!legacyWithOwner
+    || legacyId != null;
 
   return (
     <td className={cn('p-2', className)}>
-      {entries.length === 0 ? (
+      {!hasAny ? (
         <span className="text-muted-foreground">—</span>
       ) : (
-        <div className="flex flex-col gap-0.5">
-          {entries.map((entry, idx) => (
-            <div key={`${entry.tokenId ?? 'default'}-${idx}`} className="flex items-center gap-1">
-              <span
-                className={cn(
-                  'font-mono text-[10px] truncate max-w-[120px] cursor-pointer hover:text-primary',
-                  entry.tokenId != null && entry.tokenId === selectedTokenId && 'text-primary font-semibold',
-                )}
-                onClick={() => onCopy(entry.fileId)}
-                title={entry.fileId}
-              >
-                {entry.fileId}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-5 w-5 shrink-0"
-                onClick={() => onCopy(entry.fileId)}
-                title="Копировать file_id"
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
+        <TelegramFileIdOwner
+          telegramFileId={legacyWithOwner ? undefined : legacyId}
+          fileIdsByToken={Object.keys(mapAsStrings).length > 0 ? mapAsStrings : legacyWithOwner}
+          tokenLabels={tokenLabels}
+          selectedTokenId={selectedTokenId}
+          compact
+        />
       )}
     </td>
   );

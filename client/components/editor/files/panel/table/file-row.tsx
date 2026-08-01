@@ -90,7 +90,7 @@ export function FileRow({
       {/* 4. Расширение */}
       <td className="p-2 text-muted-foreground text-[10px] uppercase">{getExtension(file.fileName, file.mediaType)}</td>
       {/* 5. file_id по ботам (приоритет выбранного токена) */}
-      <CellFileIds file={file} selectedTokenId={selectedTokenId} onCopy={onCopy} />
+      <CellFileIds file={file} projectId={projectId} selectedTokenId={selectedTokenId} onCopy={onCopy} />
       {/* 6. Размер */}
       <td className={cn('p-2 text-right font-mono', getSizeColor(file.fileSize))}>{formatSize(file.fileSize)}</td>
       {/* 7. Сотрудник (аватар коллаборатора) */}
