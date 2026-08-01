@@ -3,20 +3,19 @@
  *
  * Отображает информацию о файле с кнопками просмотра и удаления.
  * Поддерживает переменные вида {var.path} — показывает иконку вместо img.
- * Показывает кэшированный Telegram file_id если он есть.
- * Для JSON file_id записей — показывает file_id по каждому токену.
+ * File ID с подписью владельца-бота — через TelegramFileIdOwner.
  * Для видео — отображает блок выбора обложки.
  *
  * @module MediaFileCard
  */
 
 import { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, X, Copy, Check } from "lucide-react";
+import { Eye, X } from "lucide-react";
 import { ThumbnailSelector } from "./thumbnail-selector";
-import type { BotToken } from "@shared/schema";
+import { TelegramFileIdOwner } from "./telegram-file-id-owner";
+import { useProjectTokenLabels } from "./use-project-token-labels";
 
 /**
  * Проверяет, является ли строка переменной вида {var.path}
@@ -117,33 +116,10 @@ export function MediaFileCard({
   projectId,
   onThumbnailSet,
 }: MediaFileCardProps) {
-  /** Флаг успешного копирования file_id */
-  const [copied, setCopied] = useState(false);
-  /** Маппинг tokenId → флаг копирования для множественных file_id */
-  const [copiedTokenId, setCopiedTokenId] = useState<string | null>(null);
   /** Флаг ошибки загрузки превью через прокси (fallback на иконку) */
   const [previewError, setPreviewError] = useState(false);
-
-  /** Загружаем токены проекта для отображения имени бота рядом с file_id */
-  const { data: tokens = [] } = useQuery<BotToken[]>({
-    queryKey: ['/api/user/tokens', projectId],
-    queryFn: async () => {
-      const res = await fetch(`/api/user/tokens?projectId=${projectId}`);
-      if (!res.ok) return [];
-      return res.json();
-    },
-    enabled: !!projectId && !!fileIdsByToken && Object.keys(fileIdsByToken).length > 0,
-  });
-
-  /** Маппинг tokenId → имя бота для быстрого доступа */
-  const tokenNameById = useMemo(() => {
-    const map: Record<string, string> = {};
-    tokens.forEach((t) => {
-      const label = t.name + (t.botUsername ? ` (@${t.botUsername})` : '');
-      map[String(t.id)] = label;
-    });
-    return map;
-  }, [tokens]);
+  /** Подписи ботов для блока File ID */
+  const tokenLabels = useProjectTokenLabels(projectId);
 
   /** URL прокси для превью JSON file_id медиа (null если недоступно) */
   const previewProxyUrl = useMemo(() => {
@@ -156,33 +132,15 @@ export function MediaFileCard({
     setPreviewError(false);
   }, [previewProxyUrl]);
 
+  /**
+   * Открывает превью изображения
+   */
   const handlePreview = () => {
     if (onPreview) {
       onPreview();
     } else if (fileType === 'image' || fileType === 'photo') {
       window.open(url, '_blank');
     }
-  };
-
-  /**
-   * Копирует Telegram file_id в буфер обмена
-   */
-  const handleCopyFileId = async () => {
-    if (!telegramFileId) return;
-    await navigator.clipboard.writeText(telegramFileId);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  /**
-   * Копирует file_id конкретного токена в буфер обмена
-   * @param tokenId - Идентификатор токена
-   * @param fileId - Значение file_id для копирования
-   */
-  const handleCopyTokenFileId = async (tokenId: string, fileId: string) => {
-    await navigator.clipboard.writeText(fileId);
-    setCopiedTokenId(tokenId);
-    setTimeout(() => setCopiedTokenId(null), 2000);
   };
 
   return (
@@ -298,70 +256,11 @@ export function MediaFileCard({
               <i className="fas fa-tag text-xs mr-1"></i>{tag}
             </Badge>
           ))}
-          {/* Telegram File ID — скрываем если есть fileIdsByToken (они показываются ниже) */}
-          {telegramFileId !== undefined && !fileIdsByToken && (
-            <div className="flex items-center gap-2 pt-1">
-              <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0">🤖 File ID:</span>
-              {telegramFileId ? (
-                <>
-                  <span className="text-xs font-mono text-slate-600 dark:text-slate-300 truncate flex-1">
-                    {telegramFileId}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleCopyFileId}
-                    className="h-5 w-5 p-0 shrink-0"
-                    title="Скопировать File ID"
-                  >
-                    {copied
-                      ? <Check className="w-3 h-3 text-emerald-500" />
-                      : <Copy className="w-3 h-3 text-slate-400" />
-                    }
-                  </Button>
-                </>
-              ) : (
-                <span className="text-xs text-slate-400 dark:text-slate-500 italic">
-                  появится после первой отправки ботом
-                </span>
-              )}
-            </div>
-          )}
-          {/* File ID по токенам (для JSON file_id записей) */}
-          {fileIdsByToken && (
-            <div className="pt-1 space-y-1">
-              {Object.keys(fileIdsByToken).length === 0 ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0">🤖 File ID:</span>
-                  <span className="text-xs text-slate-400 dark:text-slate-500 italic">нет file_id</span>
-                </div>
-              ) : Object.entries(fileIdsByToken).map(([tokenId, fileId]) => (
-                <div key={tokenId} className="flex items-center gap-2">
-                  <span
-                    className="text-xs text-slate-500 dark:text-slate-400 shrink-0 truncate max-w-[160px] cursor-default"
-                    title={tokenNameById[tokenId] ?? `Token ${tokenId}`}
-                  >
-                    🤖 {tokenNameById[tokenId] ?? `Token ${tokenId}`}:
-                  </span>
-                  <span className="text-xs font-mono text-slate-600 dark:text-slate-300 truncate flex-1">
-                    {fileId}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleCopyTokenFileId(tokenId, fileId)}
-                    className="h-5 w-5 p-0 shrink-0"
-                    title="Скопировать File ID"
-                  >
-                    {copiedTokenId === tokenId
-                      ? <Check className="w-3 h-3 text-emerald-500" />
-                      : <Copy className="w-3 h-3 text-slate-400" />
-                    }
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
+          <TelegramFileIdOwner
+            telegramFileId={telegramFileId}
+            fileIdsByToken={fileIdsByToken}
+            tokenLabels={tokenLabels}
+          />
         </div>
       )}
 

@@ -9,7 +9,6 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { Copy, Check } from "lucide-react";
 import { useDropzone } from 'react-dropzone';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +21,8 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaFiles, useUploadMedia, useDeleteMedia, useUpdateMedia, useIncrementUsage } from "@/components/editor/properties/hooks/use-media";
 import { CameraCapture } from "./camera-capture";
+import { TelegramFileIdOwner } from "./telegram-file-id-owner";
+import { useProjectTokenLabels } from "./use-project-token-labels";
 import type { MediaFile, InsertMediaFile } from "@shared/schema";
 import { Loader2, Upload, Search, X, Edit, Trash2, Eye, Play, Volume2, FileText, Image, AlertCircle, CheckCircle2, Camera, FolderOpen, Zap } from "lucide-react";
 
@@ -77,6 +78,9 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
    * Хук для показа уведомлений
    */
   const { toast } = useToast();
+
+  /** Подписи ботов для File ID на карточках */
+  const tokenLabels = useProjectTokenLabels(projectId);
 
   /**
    * Текущая вкладка (все, фото, видео, аудио, документы)
@@ -970,8 +974,11 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
                         )}
                       </div>
                     )}
-                    {/* Telegram File ID */}
-                    <TelegramFileIdRow fileId={file.telegramFileId ?? null} />
+                    {/* Telegram File ID с подписью владельца */}
+                    <TelegramFileIdOwner
+                      telegramFileId={file.telegramFileId ?? null}
+                      tokenLabels={tokenLabels}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -1103,51 +1110,6 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
           });
         }}
       />
-    </div>
-  );
-}
-
-/**
- * Строка с Telegram File ID и кнопкой копирования
- * @param props - fileId: кэшированный Telegram file_id или null
- * @returns JSX элемент
- */
-function TelegramFileIdRow({ fileId }: { fileId: string | null }) {
-  /** Флаг успешного копирования */
-  const [copied, setCopied] = useState(false);
-
-  /**
-   * Копирует file_id в буфер обмена
-   */
-  const handleCopy = async () => {
-    if (!fileId) return;
-    await navigator.clipboard.writeText(fileId);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div className="flex items-center gap-1.5 pt-1 border-t border-gray-100 dark:border-gray-800">
-      <span className="text-xs text-gray-400 shrink-0">🤖</span>
-      {fileId ? (
-        <>
-          <span className="text-xs font-mono text-gray-500 dark:text-gray-400 truncate flex-1">
-            {fileId}
-          </span>
-          <button
-            onClick={handleCopy}
-            title="Скопировать Telegram File ID"
-            className="shrink-0 p-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            {copied
-              ? <Check className="w-3 h-3 text-emerald-500" />
-              : <Copy className="w-3 h-3 text-gray-400" />
-            }
-          </button>
-        </>
-      ) : (
-        <span className="text-xs text-gray-400 italic">нет file_id</span>
-      )}
     </div>
   );
 }
