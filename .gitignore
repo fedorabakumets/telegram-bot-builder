@@ -21,6 +21,9 @@ attached_assets/
 uploads/*
 !uploads/README.md
 
+# Local exports (users CSV/JSON dumps — may contain PII)
+exports/
+
 # Generated bot files - exclude all files but keep README.md
 bots/*
 !bots/README.md
