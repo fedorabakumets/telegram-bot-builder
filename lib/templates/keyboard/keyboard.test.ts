@@ -155,7 +155,7 @@ describe('keyboard.py.jinja2 шаблон', () => {
       it('должен генерировать URL кнопки', () => {
         const result = generateKeyboard(validParamsInline);
 
-        assert.ok(result.includes('url="https://example.com"'));
+        assert.ok(result.includes('replace_variables_in_text("https://example.com"') || result.includes('url="https://example.com"'));
       });
 
       it('должен генерировать keyboard = builder.as_markup()', () => {
@@ -624,7 +624,11 @@ describe('keyboard.py.jinja2 шаблон', () => {
     describe('web_app действие', () => {
       it('генерирует WebAppInfo(url="https://example.com/shop") для web_app кнопки', () => {
         const result = generateKeyboard(validParamsWebApp);
-        assert.ok(result.includes('WebAppInfo(url="https://example.com/shop")'), `Ожидался WebAppInfo(url="https://example.com/shop"), получено:\n${result}`);
+        assert.ok(
+          result.includes('WebAppInfo(url=replace_variables_in_text("https://example.com/shop"')
+            || result.includes('WebAppInfo(url="https://example.com/shop")'),
+          `Ожидался WebAppInfo с URL магазина, получено:\n${result}`,
+        );
       });
 
       it('не генерирует callback_data для web_app кнопки с заполненным URL', () => {
@@ -688,7 +692,11 @@ describe('keyboard.py.jinja2 шаблон', () => {
           oneTimeKeyboard: false,
           resizeKeyboard: true,
         });
-        assert.ok(result.includes('WebAppInfo(url="https://example.com")'), 'Должна быть web_app кнопка');
+        assert.ok(
+          result.includes('WebAppInfo(url=replace_variables_in_text("https://example.com"')
+            || result.includes('WebAppInfo(url="https://example.com")'),
+          'Должна быть web_app кнопка',
+        );
         assert.ok(result.includes('builder.adjust(2, 1)'), `Ожидался builder.adjust(2, 1), получено:\n${result}`);
       });
     });
@@ -801,8 +809,33 @@ describe('keyboard.py.jinja2 шаблон', () => {
           oneTimeKeyboard: false,
           resizeKeyboard: true,
         });
-        assert.ok(result.includes('url="https://example.com"'), 'Должен быть url=');
+        assert.ok(result.includes('https://example.com'), 'Должен быть url=');
         assert.ok(result.includes('style="primary"'), 'Должен быть style="primary"');
+      });
+
+      it('url кнопки подставляет {переменные} через replace_variables_in_text', () => {
+        const result = generateKeyboard({
+          nodeId: 'kb_ready',
+          projectId: 77,
+          keyboardType: 'inline',
+          buttons: [{
+            id: 'btn_open',
+            text: 'Открыть @{sticky.bot_username}',
+            action: 'url',
+            url: '{sticky.link}',
+            buttonType: 'normal',
+            skipDataCollection: false,
+            hideAfterClick: false,
+            style: 'success',
+          }],
+          oneTimeKeyboard: false,
+          resizeKeyboard: true,
+        });
+        assert.ok(
+          result.includes('url=replace_variables_in_text('),
+          'URL должен проходить через replace_variables_in_text',
+        );
+        assert.ok(result.includes('{sticky.link}'), 'В URL должен остаться шаблон переменной');
       });
 
       it('схема принимает все три значения style', () => {
