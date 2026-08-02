@@ -19,6 +19,7 @@
  *  O. Извлечение по JSON-пути (8 тестов)
  *  P. XML формат ответа (12 тестов)
  *  Q. Batch mode — параллельные запросы (10 тестов)
+ *  R. Env бота и Auth Bearer с {VAR} (6 тестов)
  */
 
 import fs from 'fs';
@@ -437,12 +438,13 @@ test('C04', 'С заголовками → _json_mod.loads(_headers_raw) при�
     '_json_mod.loads(_headers_raw) не найдено при заданных заголовках');
 });
 
-test('C05', 'С заголовками → подстановка переменных (_headers_raw.replace()', () => {
+test('C05', 'С заголовками → подстановка переменных replace_variables_in_text(_headers_raw)', () => {
   const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
     httpRequestHeaders: '{"X-User": "{user_id}"}',
   })]);
   const code = gen(p, 'C05');
-  ok(code.includes('_headers_raw.replace('), '_headers_raw.replace( не найдено — подстановка переменных отсутствует');
+  ok(code.includes('replace_variables_in_text(_headers_raw, _all_vars, {})'),
+    'replace_variables_in_text(_headers_raw, _all_vars, {}) не найдено — подстановка переменных отсутствует');
 });
 
 test('C06', 'С заголовками → обработка ошибок парсинга (logging.warning)', () => {
@@ -466,7 +468,9 @@ test('C08', 'Заголовок с переменной {api_key} → подст
     httpRequestHeaders: '{"X-API-Key": "{api_key}"}',
   })]);
   const code = gen(p, 'C08');
-  ok(code.includes('_headers_raw.replace('), 'Подстановка переменной {api_key} в заголовках не найдена');
+  ok(code.includes('replace_variables_in_text(_headers_raw, _all_vars, {})'),
+    'Подстановка переменной {api_key} в заголовках не найдена');
+  ok(code.includes('{api_key}'), 'Плейсхолдер {api_key} отсутствует в сгенерированном коде');
 });
 
 test('C09', 'Синтаксис OK с заголовками', () => {
@@ -1783,6 +1787,88 @@ test('Q10', 'enableBatch + autoTransitionTo → переход после batch'
   const code = gen(p, 'Q10');
   ok(code.includes('handle_callback_msg_result'), 'автопереход к msg-result не найден после batch');
   syntax(code, 'Q10');
+});
+
+// ─── R. Env бота и Auth Bearer с {VAR} ───────────────────────────────────────
+
+test('R01', 'merge os.environ в _all_vars перед подстановкой', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1')]);
+  const code = gen(p, 'R01');
+  ok(code.includes('_os_http_env.environ'), 'os.environ merge не найден');
+  ok(code.includes('_env_base.update(_all_vars)'), 'user_data/FSM поверх env не найден');
+  const envIdx = code.indexOf('_os_http_env.environ');
+  const urlIdx = code.indexOf('replace_variables_in_text(_url, _all_vars, {})');
+  ok(envIdx >= 0 && urlIdx > envIdx, 'merge env должен быть ДО подстановки URL');
+});
+
+test('R02', 'Bearer auth с {MANAGED_BOT_SECRET} → runtime replace, не вшитый литерал', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestAuthType: 'bearer',
+    httpRequestAuthBearerToken: '{MANAGED_BOT_SECRET}',
+  })]);
+  const code = gen(p, 'R02');
+  ok(code.includes('replace_variables_in_text("""{MANAGED_BOT_SECRET}""", _all_vars, {})'),
+    'runtime replace для Bearer token не найден');
+  ok(code.includes("_headers['Authorization'] = f'Bearer {_auth_bearer}'"),
+    'Authorization из _auth_bearer не найден');
+  ok(!code.includes("_headers['Authorization'] = 'Bearer {MANAGED_BOT_SECRET}'"),
+    'Bearer не должен быть вшит литералом без replace');
+});
+
+test('R03', 'литеральный Bearer без { → тоже через replace_variables_in_text', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestAuthType: 'bearer',
+    httpRequestAuthBearerToken: 'static-token-xyz',
+  })]);
+  const code = gen(p, 'R03');
+  ok(code.includes('replace_variables_in_text("""static-token-xyz""", _all_vars, {})'),
+    'replace для литерального Bearer не найден');
+  ok(code.includes("_headers['Authorization'] = f'Bearer {_auth_bearer}'"),
+    'Authorization из _auth_bearer не найден');
+});
+
+test('R04', 'Headers с {ENV_KEY} + merge env', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestHeaders: '{"Authorization": "Bearer {ENV_KEY}"}',
+  })]);
+  const code = gen(p, 'R04');
+  ok(code.includes('_os_http_env.environ'), 'merge env отсутствует');
+  ok(code.includes('replace_variables_in_text(_headers_raw, _all_vars, {})'),
+    'replace headers на объединённом словаре отсутствует');
+  ok(code.includes('{ENV_KEY}'), 'плейсхолдер {ENV_KEY} отсутствует');
+});
+
+test('R05', 'command_trigger → http_request(bearer from env) → message → синтаксис OK', () => {
+  const msgNode = makeMessageNode('msg-ok', 'Готово');
+  const httpNode = makeHttpRequestNode('http-auth', {
+    httpRequestUrl: 'https://api.example.com/managed',
+    httpRequestAuthType: 'bearer',
+    httpRequestAuthBearerToken: '{MANAGED_BOT_SECRET}',
+    httpRequestResponseVariable: 'managed_resp',
+    autoTransitionTo: 'msg-ok',
+    enableAutoTransition: true,
+  });
+  const trigger = makeCommandTriggerNode('cmd-reg', '/register', 'http-auth');
+  const p = makeCleanProject([trigger, httpNode, msgNode]);
+  const code = gen(p, 'R05');
+  ok(code.includes('replace_variables_in_text("""{MANAGED_BOT_SECRET}""", _all_vars, {})'),
+    'Bearer from env replace не найден в полном сценарии');
+  ok(code.includes('_os_http_env.environ'), 'merge env не найден в полном сценарии');
+  syntax(code, 'R05');
+});
+
+test('R06', 'Auth Basic user/pass через replace_variables_in_text', () => {
+  const p = makeCleanProject([makeStartNode(), makeHttpRequestNode('http1', {
+    httpRequestAuthType: 'basic',
+    httpRequestAuthBasicUsername: '{API_USER}',
+    httpRequestAuthBasicPassword: '{API_PASS}',
+  })]);
+  const code = gen(p, 'R06');
+  ok(code.includes('replace_variables_in_text("""{API_USER}""", _all_vars, {})'),
+    'replace Basic username не найден');
+  ok(code.includes('replace_variables_in_text("""{API_PASS}""", _all_vars, {})'),
+    'replace Basic password не найден');
+  syntax(code, 'R06');
 });
 
 // ─── Итог ────────────────────────────────────────────────────────────────────

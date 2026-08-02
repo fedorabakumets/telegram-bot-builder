@@ -20,13 +20,13 @@
 | Параметр | Тип | По умолчанию | Описание |
 |---|---|---|---|
 | `authType` | none/basic/bearer/header/query | `none` | Тип аутентификации |
-| `authBearerToken` | string | — | Bearer токен |
-| `authBasicUsername` | string | — | Basic auth логин |
-| `authBasicPassword` | string | — | Basic auth пароль |
-| `authHeaderName` | string | — | Имя заголовка (header auth) |
-| `authHeaderValue` | string | — | Значение заголовка (header auth) |
-| `authQueryName` | string | — | Имя query параметра (query auth) |
-| `authQueryValue` | string | — | Значение query параметра (query auth) |
+| `authBearerToken` | string | — | Bearer токен (поддерживает `{переменные}` и ключи env бота) |
+| `authBasicUsername` | string | — | Basic auth логин (поддерживает `{переменные}` и env) |
+| `authBasicPassword` | string | — | Basic auth пароль (поддерживает `{переменные}` и env) |
+| `authHeaderName` | string | — | Имя заголовка (header auth; поддерживает `{переменные}` и env) |
+| `authHeaderValue` | string | — | Значение заголовка (header auth; поддерживает `{переменные}` и env) |
+| `authQueryName` | string | — | Имя query параметра (query auth; поддерживает `{переменные}` и env) |
+| `authQueryValue` | string | — | Значение query параметра (query auth; поддерживает `{переменные}` и env) |
 
 ### Дополнительные параметры
 
@@ -66,16 +66,19 @@
 
 ### Bearer аутентификация
 
+Токен можно задать литералом или через `{имя}` — из переменных сценария или **env бота** (вкладка Бот → переменные окружения у токена). Секрет не обязан лежать в тексте сценария.
+
 ```json
 {
   "url": "https://api.example.com/me",
   "method": "GET",
   "authType": "bearer",
-  "authBearerToken": "mytoken123",
+  "authBearerToken": "{API_TOKEN}",
   "responseVariable": "me_response"
 }
 ```
 
+Эквивалентно через заголовок: `headers` → `Authorization: Bearer {API_TOKEN}`. После изменения env нужен перезапуск бота.
 ### Basic аутентификация
 
 ```json
@@ -173,12 +176,16 @@ XML-ответ автоматически конвертируется в dict/l
 
 В режиме `autodetect` XML также распознаётся автоматически по Content-Type или по `<?xml` в начале ответа.
 
-## Подстановка переменных
+## Подстановка переменных и env бота
 
-Переменные в формате `{var_name}` подставляются в URL, заголовки, тело и query параметры из переменных пользователя.
+Плейсхолдеры `{var_name}` подставляются в URL, заголовки, тело, query параметры и **поля Auth** (Bearer, Basic, Header, Query).
+
+Словарь подстановки на рантайме:
+
+1. База — `os.environ` (переменные из `.env` бота / вкладка Бот → env у токена)
+2. Поверх — `user_data` и FSM (переменные сценария **перекрывают** одноимённые ключи env)
 
 Поддерживается **dot-notation** для вложенных переменных: `{validate_response.result.first_name}`. Это позволяет обращаться к полям объектов, сохранённых в переменных предыдущих узлов.
-
 ### Пример с dot-notation в URL
 
 ```json

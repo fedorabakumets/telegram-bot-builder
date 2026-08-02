@@ -21,6 +21,7 @@ import {
   httpRequestNodeGet,
   httpRequestNodePost,
   validParamsBearer,
+  validParamsBearerFromEnv,
   validParamsBasic,
   validParamsWithQueryParams,
   validParamsFormEncoded,
@@ -56,10 +57,21 @@ describe('generateHttpRequest()', () => {
     expect(code).not.toContain('for _k, _v in _all_vars.items()');
   });
 
-  it('парсит JSON заголовки', () => {
+  it('парсит JSON заголовки через replace_variables_in_text', () => {
     const code = generateHttpRequest(validParamsWithHeaders);
     expect(code).toContain('_headers_raw');
+    expect(code).toContain('replace_variables_in_text(_headers_raw, _all_vars, {})');
     expect(code).toContain('_json_mod.loads(_headers_raw)');
+  });
+
+  it('подмешивает os.environ в _all_vars перед подстановкой', () => {
+    const code = generateHttpRequest(validParamsGet);
+    expect(code).toContain('_os_http_env.environ');
+    expect(code).toContain('_env_base.update(_all_vars)');
+    const envIdx = code.indexOf('_os_http_env.environ');
+    const urlIdx = code.indexOf('replace_variables_in_text(_url, _all_vars, {})');
+    expect(envIdx).toBeGreaterThan(-1);
+    expect(urlIdx).toBeGreaterThan(envIdx);
   });
 
   it('парсит JSON тело для POST', () => {
@@ -127,14 +139,25 @@ describe('generateHttpRequest()', () => {
 });
 
 describe('аутентификация', () => {
-  it('добавляет Bearer заголовок', () => {
+  it('добавляет Bearer через runtime replace_variables_in_text (литерал)', () => {
     const code = generateHttpRequest(validParamsBearer);
-    expect(code).toContain("_headers['Authorization'] = 'Bearer mytoken123'");
+    expect(code).toContain('replace_variables_in_text("""mytoken123""", _all_vars, {})');
+    expect(code).toContain("_headers['Authorization'] = f'Bearer {_auth_bearer}'");
+    expect(code).not.toContain("_headers['Authorization'] = 'Bearer mytoken123'");
   });
 
-  it('добавляет Basic заголовок', () => {
+  it('добавляет Bearer из env через {MANAGED_BOT_SECRET}', () => {
+    const code = generateHttpRequest(validParamsBearerFromEnv);
+    expect(code).toContain('replace_variables_in_text("""{MANAGED_BOT_SECRET}""", _all_vars, {})');
+    expect(code).toContain("_headers['Authorization'] = f'Bearer {_auth_bearer}'");
+    expect(code).toContain('_os_http_env.environ');
+  });
+
+  it('добавляет Basic через runtime replace', () => {
     const code = generateHttpRequest(validParamsBasic);
     expect(code).toContain('_base64.b64encode');
+    expect(code).toContain('replace_variables_in_text("""admin""", _all_vars, {})');
+    expect(code).toContain('replace_variables_in_text("""secret""", _all_vars, {})');
     expect(code).toContain('Basic');
   });
 });
@@ -341,8 +364,9 @@ describe('формат ответа file (base64)', () => {
     expect(code).toContain('set_user_var(user_id, "export_file", _response_data)');
   });
 
-  it('НЕ генерирует _resp.json() для формата file', () => {
+  it('для формата file сначала пробует _resp.json, иначе бинарный fallback', () => {
     const code = generateHttpRequest(validParamsFileFormat);
-    expect(code).not.toContain('await _resp.json(');
+    expect(code).toContain('_response_data = await _resp.json(content_type=None)');
+    expect(code).toContain('_resp_bytes = await _resp.read()');
   });
 });
