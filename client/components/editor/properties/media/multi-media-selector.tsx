@@ -14,7 +14,7 @@ import type { MediaFileData } from "./media-files-list";
 import { Plus } from "lucide-react";
 import { uploadImageFromUrl } from "@lib/bot-generator/media/uploadImageFromUrl";
 import { toast } from "@/hooks/use-toast";
-import { useMediaFiles } from "../hooks/use-media";
+import { useMediaFiles, type MediaFileWithTokens } from "../hooks/use-media";
 import { MediaFieldButton } from "./media-field-button";
 import { mergeAttachedMedia } from "../../files/panel/attach-node-refs";
 
@@ -92,12 +92,14 @@ export function MultiMediaSelector({
         };
       } catch { /* fallthrough */ }
     }
-    const dbFile = dbFileByUrl.get(url);
+    const dbFile = dbFileByUrl.get(url) as MediaFileWithTokens | undefined;
+    const tokenMap = dbFile?.fileIdsByToken;
     return {
       url,
       fileName: dbFile?.fileName ?? `Файл ${index + 1}`,
       fileType: dbFile?.fileType ?? getMediaTypeByUrl(url),
       telegramFileId: dbFile?.telegramFileId ?? null,
+      fileIdsByToken: tokenMap && Object.keys(tokenMap).length > 0 ? tokenMap : undefined,
       isHidden: hasKeyboard && index > 0,
       mediaFileId: dbFile?.id,
       thumbnailMediaId: null,

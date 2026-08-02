@@ -19,11 +19,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { useMediaFiles, useUploadMedia, useDeleteMedia, useUpdateMedia, useIncrementUsage } from "@/components/editor/properties/hooks/use-media";
+import type { MediaFile, InsertMediaFile } from "@shared/schema";
+import { useMediaFiles, useUploadMedia, useDeleteMedia, useUpdateMedia, useIncrementUsage, type MediaFileWithTokens } from "@/components/editor/properties/hooks/use-media";
 import { CameraCapture } from "./camera-capture";
 import { TelegramFileIdOwner } from "./telegram-file-id-owner";
 import { useProjectTokenLabels } from "./use-project-token-labels";
-import type { MediaFile, InsertMediaFile } from "@shared/schema";
 import { Loader2, Upload, Search, X, Edit, Trash2, Eye, Play, Volume2, FileText, Image, AlertCircle, CheckCircle2, Camera, FolderOpen, Zap } from "lucide-react";
 
 /**
@@ -974,9 +974,10 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
                         )}
                       </div>
                     )}
-                    {/* Telegram File ID с подписью владельца */}
+                    {/* Telegram File ID с подписью владельца (карта из media_file_tokens) */}
                     <TelegramFileIdOwner
                       telegramFileId={file.telegramFileId ?? null}
+                      fileIdsByToken={(file as MediaFileWithTokens).fileIdsByToken}
                       tokenLabels={tokenLabels}
                     />
                   </div>

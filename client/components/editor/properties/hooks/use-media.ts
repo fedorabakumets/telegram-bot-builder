@@ -9,6 +9,12 @@ import type { MediaFile, InsertMediaFile } from "@shared/schema";
 import { validateMediaFilesArray } from "../utils/api-validation";
 import type { MediaUploadParams, MultipleMediaUploadParams, MultipleUploadResult } from "../types/media.types";
 
+/** Медиафайл из API с картой file_id по токенам ботов */
+export type MediaFileWithTokens = MediaFile & {
+  /** tokenId → file_id из media_file_tokens */
+  fileIdsByToken?: Record<string, string>;
+};
+
 /**
  * Хук для получения списка медиафайлов проекта
  *
@@ -25,9 +31,9 @@ export function useMediaFiles(projectId: number, fileType?: string) {
   return useQuery({
     queryKey: ["/api/media/project", projectId, fileType],
     enabled: !!projectId,
-    /** Автообновление каждые 30 секунд — подхватывает telegram_file_id после первой отправки ботом */
+    /** Автообновление каждые 30 с — подхватывает fileIdsByToken после отправки ботом */
     refetchInterval: 30_000,
-    queryFn: async (): Promise<MediaFile[]> => {
+    queryFn: async (): Promise<MediaFileWithTokens[]> => {
       const id = typeof projectId === 'number' ? projectId : parseInt(projectId as unknown as string);
       const url = fileType
         ? `/api/media/project/${id}?type=${fileType}`
@@ -41,7 +47,7 @@ export function useMediaFiles(projectId: number, fileType?: string) {
       if (!validation.isValid) {
         throw new Error(`Неверный формат ответа: ${validation.errors.map(e => e.message).join(', ')}`);
       }
-      return validation.data as MediaFile[];
+      return validation.data as MediaFileWithTokens[];
     },
   });
 }
