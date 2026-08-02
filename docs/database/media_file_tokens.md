@@ -34,19 +34,3 @@
 |--------|-------|------|
 | [media_files.id](./media_files.md) | **[media_file_tokens.media_file_id](./media_file_tokens.md)** | Many to One |
 | [bot_tokens.id](./bot_tokens.md) | **[media_file_tokens.token_id](./media_file_tokens.md)** | Many to One |
-
-### Runtime (сгенерированный бот)
-
-Telegram `file_id` привязан к конкретному боту. При старте Python-бот загружает кэш **только** для своего `TOKEN_ID`:
-
-```sql
-SELECT mf.url, mft.file_id
-FROM media_file_tokens mft
-JOIN media_files mf ON mf.id = mft.media_file_id
-WHERE mf.project_id = $1 AND mft.token_id = $2
-```
-
-После успешной отправки через `FSInputFile`/URL бот делает upsert в `media_file_tokens` и зеркалит значение в `media_files.telegram_file_id`.  
-При `Bad Request: wrong file identifier` — invalidate строки текущего токена и повторная отправка файла.
-
-Хелперы в шаблоне: `lib/templates/media/partials/media-file-id-helpers.py.jinja2`.
