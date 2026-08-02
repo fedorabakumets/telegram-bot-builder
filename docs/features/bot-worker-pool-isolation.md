@@ -24,7 +24,7 @@
 | Python graceful stop | `request_bot_stop()` → `_stop_event` → `dp.stop_polling()`; cancel только fallback; Conflict backoff до 6 раз |
 | Node `botWorkerManager` | `activeBots` по `bot_started` / `bot_exited`; mutex per tokenId; kill воркера только когда set пуст после drain ~2с |
 | Node `clearBotRedisLock` | На orphan/timeout stop сразу; при confirmed — finally в bot `main` + safety clear после cooldown |
-| Node `waitForWorkerBotStart` | `startBot` ждёт `bot_started` (~30с), иначе rollback `activeBots` |
+| Node `waitForWorkerBotStart` | `startBot` ждёт `bot_started` (~120с); при таймауте — stop in-flight, не мгновенный killWorker; mutex per tokenId |
 | `getLatestLaunchLogs` | Последний launch из `bot_launch_history`; для `running` + строки с `launch_id IS NULL` |
 
 ## System-протокол воркера

@@ -5,8 +5,8 @@
 
 import type { EventEmitter } from 'node:events';
 
-/** Таймаут ожидания bot_started по умолчанию (мс) */
-export const WORKER_START_CONFIRM_TIMEOUT_MS = 30_000;
+/** Таймаут ожидания bot_started (мс). Крупные bot.py компилятся >30с */
+export const WORKER_START_CONFIRM_TIMEOUT_MS = 120_000;
 
 /**
  * Ждёт событие bot-started для конкретного tokenId или таймаут.

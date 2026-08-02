@@ -404,6 +404,18 @@ class BotWorkerManager extends EventEmitter {
       worker.activeBots.add(tokenId);
       const ok = await started;
       if (!ok) {
+        // Не killWorker сразу: Python ещё грузит bot.py — стопаем задачу, потом drain
+        console.warn(
+          `🏭 [WorkerPool] Таймаут bot_started project=${projectId} token=${tokenId} — stop in-flight`,
+        );
+        const stopWait = waitForWorkerBotStop(
+          this,
+          projectId,
+          tokenId,
+          WORKER_STOP_CONFIRM_TIMEOUT_MS,
+        );
+        this.sendCommand(projectId, { cmd: "stop_bot", token_id: tokenId });
+        await stopWait;
         worker.activeBots.delete(tokenId);
         if (worker.activeBots.size === 0) {
           this.scheduleWorkerDrain(projectId);
