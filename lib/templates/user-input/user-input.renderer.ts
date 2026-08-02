@@ -134,7 +134,8 @@ export function nodeToUserInputParams(node: Node): UserInputTemplateParams {
     ? normalizeInputSource(nodeData.inputType || 'any')
     : undefined;
   const acceptsAny = inputSource === 'any';
-  const inputVariable = nodeData.inputVariable || 'input';
+  /** UI пишет inputVariable; старые/скрипт-ноды могли писать variableName */
+  const inputVariable = nodeData.inputVariable || nodeData.variableName || 'input';
 
   return {
     nodeId: node.id,

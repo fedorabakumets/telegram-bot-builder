@@ -775,8 +775,21 @@ export const nodeSchema = z.object({
     query: z.string().default(''),
     /** Переменная для сохранения результата запроса */
     saveResultTo: z.string().default(''),
-    /** Формат результата: json — массив объектов, text — строка, first_row — первая строка, affected — количество строк */
-    resultFormat: z.enum(['json', 'text', 'first_row', 'affected']).default('first_row'),
+    /**
+     * Формат результата:
+     * psql_query: json | text | first_row | affected;
+     * bot_table: first_row | all_rows | scalar | count | random_row
+     */
+    resultFormat: z.enum([
+      'json',
+      'text',
+      'first_row',
+      'affected',
+      'all_rows',
+      'scalar',
+      'count',
+      'random_row',
+    ]).default('first_row'),
     /** Шаблон строки для формата text, например "{name} — {value}" */
     textTemplate: z.string().default(''),
     /** Присваивания переменных для узла set_variable */
