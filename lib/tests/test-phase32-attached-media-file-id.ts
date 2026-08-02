@@ -226,12 +226,8 @@ test('D01', 'Обычный URL в attachedMedia рядом с file_id — об�
   const code = gen(makeProject([node]), 'd01');
   ok(code.includes('json.loads'), 'json.loads должен быть для file_id');
   ok(code.includes('https://example.com/photo.jpg'), 'URL должен быть в коде');
-  // Проверяем порядок: json.loads должен идти после send_photo
-  const sendPhotoIdx = code.indexOf('send_photo');
-  const jsonLoadsIdx2 = code.indexOf('json.loads');
-  if (sendPhotoIdx !== -1 && jsonLoadsIdx2 !== -1) {
-    ok(jsonLoadsIdx2 > sendPhotoIdx, 'json.loads должен идти после send_photo');
-  }
+  // URL + file_id → media_group (не одиночный send_photo)
+  ok(code.includes('send_media_group'), 'URL + file_id должны уходить через send_media_group');
 });
 
 test('D02', 'Переменная {var.photo} рядом с file_id — оба обрабатываются', () => {

@@ -55,6 +55,14 @@
 - При хранении: маппинг `{ tokenId: file_id }` — для каждого бота свой file_id
 - При отправке: выбирается file_id для конкретного токена, через который будет отправка
 
+### Runtime-кэш в сгенерированном боте
+
+- Таблица `media_file_tokens` — источник истины для повторной отправки локальных `/uploads/` и remote URL медиа.
+- При старте бот вызывает `_load_media_file_id_cache()` — JOIN `media_file_tokens` × `media_files` с фильтром `token_id = TOKEN_ID`.
+- Поле `media_files.telegram_file_id` — только legacy-зеркало; **не** загружается в общий кэш (иначе чужой бот проекта получает чужой file_id → `wrong file identifier`).
+- При ошибке Telegram `wrong file identifier` / `HTTP URL specified`: `_invalidate_media_file_id(url)` + повтор через `FSInputFile` или URL; новый id пишется в `media_file_tokens` для текущего токена.
+- Исторический backfill не делается: каждый бот наполняет свои строки при первой успешной отправке.
+
 ### Thumbnail (обложка)
 
 У большинства типов медиа есть поле `thumbnail` с отдельным file_id:

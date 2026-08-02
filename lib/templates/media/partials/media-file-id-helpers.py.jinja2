@@ -1,0 +1,136 @@
+{#
+  Хелперы кэша Telegram file_id по токену бота (media_file_tokens).
+
+  @fileoverview Load/save/invalidate file_id для текущего TOKEN_ID;
+  определение ошибки wrong file identifier для retry через FSInputFile/URL.
+#}
+
+def _is_wrong_file_id_error(_exc: Exception) -> bool:
+    """Проверяет, что Telegram отклонил file_id / HTTP URL как невалидный."""
+    _msg = str(_exc).lower()
+    return (
+        "wrong file identifier" in _msg
+        or "wrong file_id" in _msg
+        or "http url specified" in _msg
+    )
+
+
+async def _load_media_file_id_cache() -> None:
+    """Загружает в память file_id только для текущего TOKEN_ID из media_file_tokens."""
+    global _media_file_id_cache
+    _project_id = globals().get("PROJECT_ID")
+    if not db_pool or not TOKEN_ID or not _project_id:
+        return
+    try:
+        async with db_pool.acquire() as _conn:
+            _rows = await _conn.fetch(
+                """
+                SELECT mf.url, mft.file_id
+                FROM media_file_tokens mft
+                JOIN media_files mf ON mf.id = mft.media_file_id
+                WHERE mf.project_id = $1 AND mft.token_id = $2
+                """,
+                _project_id,
+                TOKEN_ID,
+            )
+            for _row in _rows:
+                _media_file_id_cache[_row["url"]] = _row["file_id"]
+            if _rows:
+                logging.info(
+                    f"📦 Загружено {len(_rows)} file_id из media_file_tokens (token={TOKEN_ID})"
+                )
+    except Exception as _cache_err:
+        logging.warning(f"⚠️ Не удалось загрузить file_id кэш из media_file_tokens: {_cache_err}")
+
+
+async def _save_media_file_id(
+    url: str,
+    file_id: str,
+    file_type: str = "document",
+    mime_type: str = "application/octet-stream",
+) -> None:
+    """
+    Пишет file_id в память, media_file_tokens (TOKEN_ID) и зеркало media_files.telegram_file_id.
+    """
+    _media_file_id_cache[url] = file_id
+    _project_id = globals().get("PROJECT_ID")
+    if not db_pool or not _project_id:
+        return
+    try:
+        async with db_pool.acquire() as _conn:
+            _media_id = await _conn.fetchval(
+                "SELECT id FROM media_files WHERE url = $1 AND project_id = $2",
+                url,
+                _project_id,
+            )
+            if _media_id is None:
+                _media_id = await _conn.fetchval(
+                    """
+                    INSERT INTO media_files (
+                        project_id, file_name, file_type, file_path, file_size,
+                        mime_type, url, telegram_file_id, is_public, usage_count
+                    ) VALUES ($1, $2, $3, $2, 0, $4, $5, $6, 0, 0)
+                    ON CONFLICT (url, project_id) DO UPDATE
+                        SET telegram_file_id = EXCLUDED.telegram_file_id
+                    RETURNING id
+                    """,
+                    _project_id,
+                    url,
+                    file_type,
+                    mime_type,
+                    url,
+                    file_id,
+                )
+                if _media_id is None:
+                    _media_id = await _conn.fetchval(
+                        "SELECT id FROM media_files WHERE url = $1 AND project_id = $2",
+                        url,
+                        _project_id,
+                    )
+            else:
+                await _conn.execute(
+                    "UPDATE media_files SET telegram_file_id = $1 WHERE id = $2",
+                    file_id,
+                    _media_id,
+                )
+            if _media_id and TOKEN_ID:
+                await _conn.execute(
+                    """
+                    INSERT INTO media_file_tokens (media_file_id, token_id, file_id)
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT (media_file_id, token_id)
+                    DO UPDATE SET file_id = EXCLUDED.file_id
+                    """,
+                    _media_id,
+                    TOKEN_ID,
+                    file_id,
+                )
+            logging.info(f"💾 file_id сохранён в media_file_tokens для {url} (token={TOKEN_ID})")
+    except Exception as _db_err:
+        logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
+
+
+async def _invalidate_media_file_id(url: str) -> None:
+    """Сбрасывает file_id из памяти и media_file_tokens для текущего TOKEN_ID."""
+    _media_file_id_cache.pop(url, None)
+    _project_id = globals().get("PROJECT_ID")
+    if not db_pool or not TOKEN_ID or not _project_id:
+        return
+    try:
+        async with db_pool.acquire() as _conn:
+            await _conn.execute(
+                """
+                DELETE FROM media_file_tokens mft
+                USING media_files mf
+                WHERE mft.media_file_id = mf.id
+                  AND mf.url = $1
+                  AND mf.project_id = $2
+                  AND mft.token_id = $3
+                """,
+                url,
+                _project_id,
+                TOKEN_ID,
+            )
+            logging.info(f"🧹 file_id сброшен для {url} (token={TOKEN_ID})")
+    except Exception as _inv_err:
+        logging.warning(f"⚠️ Не удалось сбросить file_id в БД: {_inv_err}")

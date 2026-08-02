@@ -83,20 +83,9 @@ async def main():
         await init_database()
         {%- endif %}
 
-        # Загружаем кэш Telegram file_id из БД в память — чтобы после перезапуска не читать файлы заново
+        # Загружаем кэш Telegram file_id из media_file_tokens только для текущего TOKEN_ID
         if db_pool:
-            try:
-                async with db_pool.acquire() as _conn:
-                    _rows = await _conn.fetch(
-                        "SELECT url, telegram_file_id FROM media_files WHERE project_id = $1 AND telegram_file_id IS NOT NULL",
-                        PROJECT_ID
-                    )
-                    for _row in _rows:
-                        _media_file_id_cache[_row["url"]] = _row["telegram_file_id"]
-                    if _rows:
-                        logging.info(f"📦 Загружено {len(_rows)} file_id из БД в кэш памяти")
-            except Exception as _cache_err:
-                logging.warning(f"⚠️ Не удалось загрузить file_id кэш из БД: {_cache_err}")
+            await _load_media_file_id_cache()
 
 {%- if projectId and contentCache %}
         # Загрузка контента из таблицы _content

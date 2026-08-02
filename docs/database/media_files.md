@@ -20,7 +20,7 @@
 | tags | text[] | `[]` | YES | - | - | Теги для поиска |
 | is_public | integer | `0` | YES | - | - | Флаг публичности (0 = приватный, 1 = публичный) |
 | usage_count | integer | `0` | YES | - | - | Количество использований файла |
-| telegram_file_id | text | - | YES | - | - | Кэшированный Telegram file_id для быстрой повторной отправки |
+| telegram_file_id | text | - | YES | - | - | Legacy-зеркало Telegram file_id (последний записанный ботом). **Не** использовать как общий кэш для multi-bot: источник истины — [media_file_tokens](./media_file_tokens.md) по `token_id` |
 | thumbnail_media_id | integer | - | YES | - | [media_files.id](./media_files.md) | ID медиафайла-обложки (ссылка на фото из той же таблицы, только для видео) |
 | thumbnail_url | text | - | YES | - | - | URL обложки видео (альтернатива thumbnailMediaId — для внешних URL без скачивания) |
 | uploaded_by | bigint | - | YES | - | [telegram_users.id](./telegram_users.md) | ID пользователя Telegram, загрузившего файл (ссылка на telegram_users.id) |
