@@ -1302,7 +1302,11 @@ test('Q01', 'schema parse сохраняет else-only condition без variable
   ]));
   const code = gen(project, 'q01');
   ok(code.includes('async def handle_callback_cond1'), 'else-only condition должен пережить schema parse');
-  ok(code.includes('handle_callback_cond1(mock_callback)') || code.includes('handle_callback_cond1(callback_query)'), 'trigger должен вызывать condition handler');
+  // Вызов может быть с state=state: handle_callback_cond1(mock_callback, state=state)
+  ok(
+    code.includes('handle_callback_cond1(mock_callback') || code.includes('handle_callback_cond1(callback_query'),
+    'trigger должен вызывать condition handler',
+  );
 });
 
 test('Q02', 'else-only condition → media генерирует без NameError-подобной дыры', () => {
@@ -1313,7 +1317,7 @@ test('Q02', 'else-only condition → media генерирует без NameError
   ]), 'q02');
   const conditionHandler = getHandlerBlock(code, 'cond1');
   ok(conditionHandler.includes('if True:'), 'pass-through condition должен иметь unconditional branch');
-  ok(conditionHandler.includes('await handle_callback_m1(callback_query)'), 'condition должен переходить в media handler');
+  ok(conditionHandler.includes('await handle_callback_m1(callback_query'), 'condition должен переходить в media handler');
   syntax(code, 'q02');
 });
 
@@ -1341,8 +1345,8 @@ test('Q04', 'schema parse сохраняет system operator is_admin в conditi
   const code = gen(project, 'q04');
   const conditionHandler = getHandlerBlock(code, 'cond_admin');
   ok(conditionHandler.includes('callback_query.from_user.id in ADMIN_IDS'), 'is_admin должен пережить schema parse');
-  ok(conditionHandler.includes('await handle_callback_m1(callback_query)'), 'admin branch должен вести в m1');
-  ok(conditionHandler.includes('await handle_callback_m2(callback_query)'), 'else branch должен вести в m2');
+  ok(conditionHandler.includes('await handle_callback_m1(callback_query'), 'admin branch должен вести в m1');
+  ok(conditionHandler.includes('await handle_callback_m2(callback_query'), 'else branch должен вести в m2');
 });
 
 test('Q05', 'schema parse сохраняет is_subscribed в condition перед media', () => {
@@ -1358,8 +1362,8 @@ test('Q05', 'schema parse сохраняет is_subscribed в condition пере
   const code = gen(project, 'q05');
   const conditionHandler = getHandlerBlock(code, 'cond_sub');
   ok(conditionHandler.includes('await _is_user_subscribed("@news_channel")'), 'is_subscribed должен пережить schema parse');
-  ok(conditionHandler.includes('await handle_callback_m1(callback_query)'), 'subscription branch должен вести в m1');
-  ok(conditionHandler.includes('await handle_callback_m2(callback_query)'), 'else branch должен вести в m2');
+  ok(conditionHandler.includes('await handle_callback_m1(callback_query'), 'subscription branch должен вести в m1');
+  ok(conditionHandler.includes('await handle_callback_m2(callback_query'), 'else branch должен вести в m2');
 });
 
 test('Q06', 'condition is_not_subscribed → media генерирует валидный Python', () => {
@@ -1375,7 +1379,7 @@ test('Q06', 'condition is_not_subscribed → media генерирует вали
   const conditionHandler = getHandlerBlock(code, 'cond_nosub');
   ok(conditionHandler.includes('not await _is_user_subscribed("https://t.me/news_channel")'), 'is_not_subscribed должен быть в коде');
   ok(conditionHandler.includes('return f"@{_slug}"'), 'нормализация ссылки должна быть в helper');
-  ok(conditionHandler.includes('await handle_callback_m1(callback_query)'), 'ветка is_not_subscribed должна вести в media');
+  ok(conditionHandler.includes('await handle_callback_m1(callback_query'), 'ветка is_not_subscribed должна вести в media');
   syntax(code, 'q06');
 });
 

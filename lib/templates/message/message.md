@@ -342,6 +342,17 @@ if (enableAutoTransition && autoTransitionTo) {
 
 Если для текущего `TOKEN_ID` file_id не найден — логирует предупреждение и продолжает без медиа.
 
+## Runtime-кэш file_id для URL /uploads/ (media_file_tokens)
+
+Помимо JSON `fileIdsByToken` в `attachedMedia`, шаблон message/media-node кэширует Telegram `file_id` после первой отправки файла с диска или по HTTP URL.
+
+- Память процесса: `_media_file_id_cache[url] → file_id` (только id текущего `TOKEN_ID`).
+- Загрузка при старте: `_load_media_file_id_cache()` из таблицы `media_file_tokens` (не из общего `media_files.telegram_file_id`).
+- Сохранение: `_save_media_file_id(url, file_id, …)` — upsert в `media_file_tokens` + зеркало в `media_files.telegram_file_id`.
+- Ошибка `wrong file identifier`: `_invalidate_media_file_id(url)` и повторная отправка через `FSInputFile`/URL.
+
+Хелперы: [`media/partials/media-file-id-helpers.py.jinja2`](../media/partials/media-file-id-helpers.py.jinja2).
+
 ## Dynamic keyboard flow
 
 Если `MessageTemplateParams.enableDynamicButtons=true`, сообщение остаётся отдельной нодой, а клавиатура строится в следующем `keyboard`-шаблоне на основе данных, которые пришли после HTTP request.

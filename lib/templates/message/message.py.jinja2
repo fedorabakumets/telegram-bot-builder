@@ -309,25 +309,21 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _cached_fid = _media_file_id_cache.get("{{ imageUrl }}")
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка фото через in-memory file_id (без перегенерации)")
-                _sent_result = await _b.send_photo(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                try:
+                    _sent_result = await _b.send_photo(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
-                return _sent_result
+                    return _sent_result
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+                    logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка через FSInputFile: {_fid_err}")
+                    await _invalidate_media_file_id("{{ imageUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: отправка фото через FSInputFile")
             _sent_photo = await _b.send_photo(_target_chat_id, FSInputFile(image_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_photo and _sent_photo.photo:
                 _new_fid = _sent_photo.photo[-1].file_id
-                _media_file_id_cache["{{ imageUrl }}"] = _new_fid
+                await _save_media_file_id("{{ imageUrl }}", _new_fid, "photo", "image/jpeg")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для фото {{ imageUrl }}")
-                if db_pool:
-                    try:
-                        async with db_pool.acquire() as _conn:
-                            await _conn.execute(
-                                "UPDATE media_files SET telegram_file_id = $1 WHERE url = $2 AND project_id = $3",
-                                _new_fid, "{{ imageUrl }}", PROJECT_ID
-                            )
-                            logging.info(f"💾 file_id сохранён в БД для {{ imageUrl }}")
-                    except Exception as _db_err:
-                        logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
             _sent_result = _sent_photo
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
             return _sent_result
@@ -352,25 +348,21 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _rt_fid = _media_file_id_cache.get("{{ imageUrl }}")
             if _rt_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка фото через in-memory file_id (без перегенерации)")
-                _sent_result = await _b.send_photo(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                try:
+                    _sent_result = await _b.send_photo(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
-                return _sent_result
+                    return _sent_result
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+                    logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка по URL: {_fid_err}")
+                    await _invalidate_media_file_id("{{ imageUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: первая отправка фото по URL, file_id будет получен из ответа")
             _sent_photo = await _b.send_photo(_target_chat_id, "{{ imageUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_photo and _sent_photo.photo:
                 _new_fid = _sent_photo.photo[-1].file_id
-                _media_file_id_cache["{{ imageUrl }}"] = _new_fid
+                await _save_media_file_id("{{ imageUrl }}", _new_fid, "photo", "image/jpeg")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для фото {{ imageUrl }}")
-                if db_pool:
-                    try:
-                        async with db_pool.acquire() as _conn:
-                            await _conn.execute(
-                                "INSERT INTO media_files (project_id, file_name, file_type, file_path, file_size, mime_type, url, telegram_file_id, is_public, usage_count) VALUES ($1, $2, 'photo', $2, 0, 'image/jpeg', $3, $4, 0, 0) ON CONFLICT (url, project_id) DO UPDATE SET telegram_file_id = EXCLUDED.telegram_file_id",
-                                PROJECT_ID, "{{ imageUrl }}", "{{ imageUrl }}", _new_fid
-                            )
-                            logging.info(f"💾 file_id сохранён в БД для {{ imageUrl }}")
-                    except Exception as _db_err:
-                        logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
             _sent_result = _sent_photo
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
             return _sent_result
@@ -404,9 +396,15 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- else %}
                 logging.info(f"🖼 Узел {{ nodeId }}: обложка не установлена")
 {%- endif %}
-                _sent_result = await _b.send_video(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
+                try:
+                    _sent_result = await _b.send_video(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
-                return _sent_result
+                    return _sent_result
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+                    logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка через FSInputFile: {_fid_err}")
+                    await _invalidate_media_file_id("{{ videoUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: отправка видео через FSInputFile")
 {%- if _vid_thumb_fid %}
             logging.info(f"🖼 Узел {{ nodeId }}: обложка через file_id={{ _vid_thumb_fid }}...")
@@ -420,34 +418,14 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _sent_video = await _b.send_video(_target_chat_id, FSInputFile(video_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
             if _sent_video and _sent_video.video:
                 _new_fid = _sent_video.video.file_id
-                _media_file_id_cache["{{ videoUrl }}"] = _new_fid
+                await _save_media_file_id("{{ videoUrl }}", _new_fid, "video", "video/mp4")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для видео {{ videoUrl }}")
-                if db_pool:
-                    try:
-                        async with db_pool.acquire() as _conn:
-                            await _conn.execute(
-                                "UPDATE media_files SET telegram_file_id = $1 WHERE url = $2 AND project_id = $3",
-                                _new_fid, "{{ videoUrl }}", PROJECT_ID
-                            )
-                            logging.info(f"💾 file_id сохранён в БД для {{ videoUrl }}")
-                    except Exception as _db_err:
-                        logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
 {%- if _vid_thumb_url %}
                 # Сохраняем file_id обложки из ответа Telegram (video.thumbnail.file_id)
                 if _sent_video.video.thumbnail:
                     _thumb_fid = _sent_video.video.thumbnail.file_id
-                    _media_file_id_cache["{{ _vid_thumb_url }}"] = _thumb_fid
+                    await _save_media_file_id("{{ _vid_thumb_url }}", _thumb_fid, "photo", "image/jpeg")
                     logging.info(f"✅ Узел {{ nodeId }}: получен file_id обложки={_thumb_fid[:20]}... для {{ _vid_thumb_url }}")
-                    if db_pool:
-                        try:
-                            async with db_pool.acquire() as _conn:
-                                await _conn.execute(
-                                    "UPDATE media_files SET telegram_file_id = $1 WHERE url = $2 AND project_id = $3",
-                                    _thumb_fid, "{{ _vid_thumb_url }}", PROJECT_ID
-                                )
-                                logging.info(f"💾 file_id обложки сохранён в БД для {{ _vid_thumb_url }}")
-                        except Exception as _db_err:
-                            logging.warning(f"⚠️ Не удалось сохранить file_id обложки в БД: {_db_err}")
 {%- endif %}
             _sent_result = _sent_video
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
@@ -470,9 +448,15 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
 {%- else %}
                 logging.info(f"🖼 Узел {{ nodeId }}: обложка не установлена")
 {%- endif %}
-                _sent_result = await _b.send_video(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
+                try:
+                    _sent_result = await _b.send_video(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
-                return _sent_result
+                    return _sent_result
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+                    logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка по URL: {_fid_err}")
+                    await _invalidate_media_file_id("{{ videoUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: первая отправка видео по URL, file_id будет получен из ответа")
 {%- if _vid_thumb_fid %}
             logging.info(f"🖼 Узел {{ nodeId }}: обложка через file_id={{ _vid_thumb_fid }}...")
@@ -486,34 +470,14 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _sent_video = await _b.send_video(_target_chat_id, "{{ videoUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id{{ _vid_thumb_arg }})
             if _sent_video and _sent_video.video:
                 _new_fid = _sent_video.video.file_id
-                _media_file_id_cache["{{ videoUrl }}"] = _new_fid
+                await _save_media_file_id("{{ videoUrl }}", _new_fid, "video", "video/mp4")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для видео {{ videoUrl }}")
-                if db_pool:
-                    try:
-                        async with db_pool.acquire() as _conn:
-                            await _conn.execute(
-                                "INSERT INTO media_files (project_id, file_name, file_type, file_path, file_size, mime_type, url, telegram_file_id, is_public, usage_count) VALUES ($1, $2, 'video', $2, 0, 'video/mp4', $3, $4, 0, 0) ON CONFLICT (url, project_id) DO UPDATE SET telegram_file_id = EXCLUDED.telegram_file_id",
-                                PROJECT_ID, "{{ videoUrl }}", "{{ videoUrl }}", _new_fid
-                            )
-                            logging.info(f"💾 file_id сохранён в БД для {{ videoUrl }}")
-                    except Exception as _db_err:
-                        logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
 {%- if _vid_thumb_url %}
                 # Сохраняем file_id обложки из ответа Telegram (video.thumbnail.file_id)
                 if _sent_video.video.thumbnail:
                     _thumb_fid = _sent_video.video.thumbnail.file_id
-                    _media_file_id_cache["{{ _vid_thumb_url }}"] = _thumb_fid
+                    await _save_media_file_id("{{ _vid_thumb_url }}", _thumb_fid, "photo", "image/jpeg")
                     logging.info(f"✅ Узел {{ nodeId }}: получен file_id обложки={_thumb_fid[:20]}... для {{ _vid_thumb_url }}")
-                    if db_pool:
-                        try:
-                            async with db_pool.acquire() as _conn:
-                                await _conn.execute(
-                                    "UPDATE media_files SET telegram_file_id = $1 WHERE url = $2 AND project_id = $3",
-                                    _thumb_fid, "{{ _vid_thumb_url }}", PROJECT_ID
-                                )
-                                logging.info(f"💾 file_id обложки сохранён в БД для {{ _vid_thumb_url }}")
-                        except Exception as _db_err:
-                            logging.warning(f"⚠️ Не удалось сохранить file_id обложки в БД: {_db_err}")
 {%- endif %}
             _sent_result = _sent_video
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
@@ -529,25 +493,21 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _cached_fid = _media_file_id_cache.get("{{ audioUrl }}")
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка аудио через in-memory file_id (без перегенерации)")
-                _sent_result = await _b.send_audio(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                try:
+                    _sent_result = await _b.send_audio(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
-                return _sent_result
+                    return _sent_result
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+                    logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка через FSInputFile: {_fid_err}")
+                    await _invalidate_media_file_id("{{ audioUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: отправка аудио через FSInputFile")
             _sent_audio = await _b.send_audio(_target_chat_id, FSInputFile(audio_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_audio and _sent_audio.audio:
                 _new_fid = _sent_audio.audio.file_id
-                _media_file_id_cache["{{ audioUrl }}"] = _new_fid
+                await _save_media_file_id("{{ audioUrl }}", _new_fid, "audio", "audio/mpeg")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для аудио {{ audioUrl }}")
-                if db_pool:
-                    try:
-                        async with db_pool.acquire() as _conn:
-                            await _conn.execute(
-                                "UPDATE media_files SET telegram_file_id = $1 WHERE url = $2 AND project_id = $3",
-                                _new_fid, "{{ audioUrl }}", PROJECT_ID
-                            )
-                            logging.info(f"💾 file_id сохранён в БД для {{ audioUrl }}")
-                    except Exception as _db_err:
-                        logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
             _sent_result = _sent_audio
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
             return _sent_result
@@ -562,25 +522,21 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _rt_fid = _media_file_id_cache.get("{{ audioUrl }}")
             if _rt_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка аудио через in-memory file_id (без перегенерации)")
-                _sent_result = await _b.send_audio(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                try:
+                    _sent_result = await _b.send_audio(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
-                return _sent_result
+                    return _sent_result
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+                    logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка по URL: {_fid_err}")
+                    await _invalidate_media_file_id("{{ audioUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: первая отправка аудио по URL, file_id будет получен из ответа")
             _sent_audio = await _b.send_audio(_target_chat_id, "{{ audioUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_audio and _sent_audio.audio:
                 _new_fid = _sent_audio.audio.file_id
-                _media_file_id_cache["{{ audioUrl }}"] = _new_fid
+                await _save_media_file_id("{{ audioUrl }}", _new_fid, "audio", "audio/mpeg")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для аудио {{ audioUrl }}")
-                if db_pool:
-                    try:
-                        async with db_pool.acquire() as _conn:
-                            await _conn.execute(
-                                "INSERT INTO media_files (project_id, file_name, file_type, file_path, file_size, mime_type, url, telegram_file_id, is_public, usage_count) VALUES ($1, $2, 'audio', $2, 0, 'audio/mpeg', $3, $4, 0, 0) ON CONFLICT (url, project_id) DO UPDATE SET telegram_file_id = EXCLUDED.telegram_file_id",
-                                PROJECT_ID, "{{ audioUrl }}", "{{ audioUrl }}", _new_fid
-                            )
-                            logging.info(f"💾 file_id сохранён в БД для {{ audioUrl }}")
-                    except Exception as _db_err:
-                        logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
             _sent_result = _sent_audio
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
             return _sent_result
@@ -595,25 +551,21 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _cached_fid = _media_file_id_cache.get("{{ documentUrl }}")
             if _cached_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка документа через in-memory file_id (без перегенерации)")
-                _sent_result = await _b.send_document(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                try:
+                    _sent_result = await _b.send_document(_target_chat_id, _cached_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
-                return _sent_result
+                    return _sent_result
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+                    logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка через FSInputFile: {_fid_err}")
+                    await _invalidate_media_file_id("{{ documentUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: отправка документа через FSInputFile")
             _sent_doc = await _b.send_document(_target_chat_id, FSInputFile(doc_path), caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_doc and _sent_doc.document:
                 _new_fid = _sent_doc.document.file_id
-                _media_file_id_cache["{{ documentUrl }}"] = _new_fid
+                await _save_media_file_id("{{ documentUrl }}", _new_fid, "document", "application/octet-stream")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для документа {{ documentUrl }}")
-                if db_pool:
-                    try:
-                        async with db_pool.acquire() as _conn:
-                            await _conn.execute(
-                                "UPDATE media_files SET telegram_file_id = $1 WHERE url = $2 AND project_id = $3",
-                                _new_fid, "{{ documentUrl }}", PROJECT_ID
-                            )
-                            logging.info(f"💾 file_id сохранён в БД для {{ documentUrl }}")
-                    except Exception as _db_err:
-                        logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
             _sent_result = _sent_doc
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
             return _sent_result
@@ -628,25 +580,21 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             _rt_fid = _media_file_id_cache.get("{{ documentUrl }}")
             if _rt_fid:
                 logging.info(f"📎 Узел {{ nodeId }}: отправка документа через in-memory file_id (без перегенерации)")
-                _sent_result = await _b.send_document(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
+                try:
+                    _sent_result = await _b.send_document(_target_chat_id, _rt_fid, caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
-                return _sent_result
+                    return _sent_result
+                except Exception as _fid_err:
+                    if not _is_wrong_file_id_error(_fid_err):
+                        raise
+                    logging.warning(f"⚠️ Узел {{ nodeId }}: невалидный file_id, переотправка по URL: {_fid_err}")
+                    await _invalidate_media_file_id("{{ documentUrl }}")
             logging.info(f"📤 Узел {{ nodeId }}: первая отправка документа по URL, file_id будет получен из ответа")
             _sent_doc = await _b.send_document(_target_chat_id, "{{ documentUrl }}", caption=text{{ parse_mode_arg }}, reply_markup={{ effectiveKeyboard }}, message_thread_id=_thread_id)
             if _sent_doc and _sent_doc.document:
                 _new_fid = _sent_doc.document.file_id
-                _media_file_id_cache["{{ documentUrl }}"] = _new_fid
+                await _save_media_file_id("{{ documentUrl }}", _new_fid, "document", "application/octet-stream")
                 logging.info(f"✅ Узел {{ nodeId }}: получен file_id={_new_fid[:20]}... для документа {{ documentUrl }}")
-                if db_pool:
-                    try:
-                        async with db_pool.acquire() as _conn:
-                            await _conn.execute(
-                                "INSERT INTO media_files (project_id, file_name, file_type, file_path, file_size, mime_type, url, telegram_file_id, is_public, usage_count) VALUES ($1, $2, 'document', $2, 0, 'application/octet-stream', $3, $4, 0, 0) ON CONFLICT (url, project_id) DO UPDATE SET telegram_file_id = EXCLUDED.telegram_file_id",
-                                PROJECT_ID, "{{ documentUrl }}", "{{ documentUrl }}", _new_fid
-                            )
-                            logging.info(f"💾 file_id сохранён в БД для {{ documentUrl }}")
-                    except Exception as _db_err:
-                        logging.warning(f"⚠️ Не удалось сохранить file_id в БД: {_db_err}")
             _sent_result = _sent_doc
 {% include 'message/partials/send-extra-file-ids.py.jinja2' %}
             return _sent_result
@@ -681,9 +629,10 @@ async def handle_callback_{{ nodeId|replace('-', '_') }}(callback_query: types.C
             if locals().get('_sent_result') is not None:
                 return _sent_result
 {%- endif %}
-{%- if mediaItem and '{' in mediaItem %}
+{%- if mediaItem and mediaItem[0] == '{' and mediaItem[-1] == '}' and '"__type":"file_id"' not in mediaItem %}
 {%- set _fileVarName = mediaItem | replace('{', '') | replace('}', '') %}
             # Проверяем — вдруг это file-объект из convert_file ({"type":"file","data":...})
+            # Не трогаем JSON file_id ({"__type":"file_id",...}) — это не {var.name}
             _file_var_val = user_data.get(user_id, {}).get("{{ _fileVarName }}")
             if isinstance(_file_var_val, dict) and _file_var_val.get("type") == "file":
                 try:

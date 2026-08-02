@@ -98,9 +98,11 @@ logging.info(f"📁 PROJECT_DIR: {PROJECT_DIR}")
 user_data = {}
 all_user_vars = {}  # Глобальные переменные пользователя
 
-# Кэш Telegram file_id в памяти процесса: url -> file_id
-# Заполняется после первой отправки, позволяет не перечитывать файл при повторных вызовах
+# Кэш Telegram file_id в памяти процесса: url -> file_id (только для текущего TOKEN_ID)
+# Заполняется из media_file_tokens при старте и после первой успешной отправки
 _media_file_id_cache: dict = {}
+
+{% include 'media/partials/media-file-id-helpers.py.jinja2' %}
 
 # Redis — опциональное хранилище (задаётся через REDIS_URL в .env)
 REDIS_URL = os.getenv("REDIS_URL")
