@@ -11,6 +11,7 @@
 import type { Request, Response } from 'express';
 import { startBot } from '../../../bots/startBot';
 import { stopBot } from '../../../bots/stopBot';
+import { POST_STOP_COOLDOWN_MS, sleepMs } from '../../../bots/restartTiming';
 import { storage } from '../../../storages/storage';
 
 /**
@@ -111,7 +112,7 @@ export async function handleBotRestart(req: Request, res: Response): Promise<voi
             return;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await sleepMs(POST_STOP_COOLDOWN_MS);
 
         const startResult = await startBot(projectId, target.token, target.tokenId);
         if (startResult.success) {

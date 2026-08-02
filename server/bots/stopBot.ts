@@ -29,6 +29,7 @@ import { flushBuffer } from '../terminal/botLogsBuffer';
 import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { clearActiveLaunchId } from '../terminal/activeLaunchIds';
 import { clearBotRedisLockByTokenId } from './clearBotRedisLock';
+import { POST_STOP_COOLDOWN_MS, sleepMs } from './restartTiming';
 
 /**
  * Останавливает запущенный экземпляр Telegram-бота по идентификатору проекта и токена
@@ -69,6 +70,8 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
         console.error(
           `[stopBot] Таймаут подтверждения остановки project=${projectId} token=${tokenId}`,
         );
+        // Orphan: снимаем Redis lock чтобы не блокировать следующий старт навсегда
+        await clearBotRedisLockByTokenId((id) => storage.getBotToken(id), tokenId);
         return {
           success: false,
           error: 'Таймаут остановки бота в воркере — процесс мог не завершиться',
@@ -82,7 +85,11 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
       });
       clearActiveLaunchId(tokenId);
       await storage.stopBotInstanceByToken(tokenId);
-      await clearBotRedisLockByTokenId((id) => storage.getBotToken(id), tokenId);
+      // Lock чистит finally в main; Node — safety после cooldown
+      void (async () => {
+        await sleepMs(POST_STOP_COOLDOWN_MS);
+        await clearBotRedisLockByTokenId((id) => storage.getBotToken(id), tokenId);
+      })();
 
       void broadcastProjectEvent(projectId, {
         type: 'bot-stopped',

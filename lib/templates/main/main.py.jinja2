@@ -18,14 +18,27 @@ async def set_bot_commands():
 
 {% endif %}
 
+# Event остановки: worker pool вызывает request_bot_stop() (signal в воркере заглушен)
+_bot_stop_event = None
+
+
+def request_bot_stop():
+    """Graceful stop от worker pool — ставит _stop_event без cancel задачи."""
+    global _bot_stop_event
+    if _bot_stop_event is not None:
+        _bot_stop_event.set()
+
+
 async def main():
     """Главная функция запуска бота"""
-    global db_pool, dp, _redis_client, _redis_connected
+    global db_pool, dp, _redis_client, _redis_connected, _bot_stop_event
 
     _stop_event = asyncio.Event()
+    _bot_stop_event = _stop_event
     _lock_acquired = False
     _background_tasks: list = []  # Все фоновые задачи для корректной отмены при остановке
     _webhook_runner = None  # aiohttp runner для корректного завершения webhook-сервера
+    _polling_task = None  # Задача dp.start_polling для stop_polling при CancelledError
 
     def signal_handler(signum, _frame):
         print(f"⚠️ Получен сигнал {signum}, начинаем корректное завершение...")
@@ -187,26 +200,59 @@ async def main():
             _webhook_runner = None
             await bot.delete_webhook()
         else:
-            # Polling режим — стандартный запуск
+            # Polling режим — с backoff при Telegram Conflict (два getUpdates)
             logging.info("🔄 Polling режим")
-            # Запускаем polling и ждём сигнала остановки
-            polling_task = asyncio.create_task(dp.start_polling(bot))
-            _background_tasks.append(polling_task)
-            await _stop_event.wait()
-            await dp.stop_polling()
-            await polling_task
+            _conflict_attempt = 0
+            _max_conflict_retries = 6
+            while _conflict_attempt < _max_conflict_retries:
+                try:
+                    _polling_task = asyncio.create_task(dp.start_polling(bot))
+                    _background_tasks.append(_polling_task)
+                    await _stop_event.wait()
+                    await dp.stop_polling()
+                    try:
+                        await _polling_task
+                    except Exception:
+                        pass
+                    break
+                except asyncio.CancelledError:
+                    raise
+                except Exception as _poll_err:
+                    _err_text = f"{type(_poll_err).__name__}: {_poll_err}"
+                    if "Conflict" not in _err_text and "terminated by other getUpdates" not in _err_text:
+                        raise
+                    _conflict_attempt += 1
+                    logging.warning(
+                        f"⚠️ Telegram Conflict (попытка {_conflict_attempt}/{_max_conflict_retries}), ждём 10с..."
+                    )
+                    if _stop_event.is_set():
+                        break
+                    await asyncio.sleep(10)
+            else:
+                logging.error("❌ Polling остановлен: исчерпаны попытки после Telegram Conflict")
     except KeyboardInterrupt:
         print("⚠️ Получен сигнал остановки, завершаем работу...")
     except SystemExit:
         print("⚠️ Системное завершение, завершаем работу...")
     except asyncio.CancelledError:
         print("⚠️ Бот остановлен воркером (CancelledError)")
+        # Пытаемся закрыть getUpdates до проброса cancel (иначе Conflict у нового инстанса)
+        try:
+            await dp.stop_polling()
+        except Exception:
+            pass
+        if _polling_task is not None and not _polling_task.done():
+            try:
+                await asyncio.wait_for(asyncio.shield(_polling_task), timeout=3.0)
+            except Exception:
+                pass
         # Пробрасываем cancel воркеру: иначе _run_bot видит нормальный выход и
         # эмитит bot_exited:{id}:running вместо stopped
         raise
     except Exception as e:
         logging.error(f"Ошибка: {e}")
     finally:
+        _bot_stop_event = None
         # Отменяем все фоновые задачи перед закрытием ресурсов
         for _task in _background_tasks:
             if not _task.done():

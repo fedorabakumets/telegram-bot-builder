@@ -5,8 +5,8 @@
 
 import type { EventEmitter } from 'node:events';
 
-/** Таймаут ожидания bot_exited/bot_stopped по умолчанию (мс) */
-export const WORKER_STOP_CONFIRM_TIMEOUT_MS = 10_000;
+/** Таймаут ожидания bot_exited/bot_stopped (мс): graceful 15с + cancel 5с */
+export const WORKER_STOP_CONFIRM_TIMEOUT_MS = 20_000;
 
 /**
  * Ждёт событие bot-exited для конкретного tokenId или таймаут.

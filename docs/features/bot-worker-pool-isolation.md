@@ -14,14 +14,17 @@
 - worker-path `stopBot` не удалял Redis lock → «уже запущен» при рестарте
 - `activeBots.delete` + `killWorker` до подтверждения Python → ложный `stopped` и убийство соседей
 - `getLatestLaunchLogs` брал launch из строк логов → карточка «не пишет»
+- stop через `task.cancel()` без `stop_polling` → `TelegramConflictError` при быстром рестарте
 
 ## Решение (runtime)
 
 | Слой | Поведение |
 |------|-----------|
 | Python `worker.py` + `worker_isolation.py` | Уникальные модули `bot_{id}_*`, env под asyncio.Lock, contextvars для логов, `bot_started:{id}` |
-| Node `botWorkerManager` | `activeBots` по `bot_started` / `bot_exited`; kill воркера только когда set пуст после Python; без fanout raw stdout |
-| Node `clearBotRedisLock` | Удаление `bot:lock:{token[-10]}` в stop (worker+spawn), exit, restore |
+| Python graceful stop | `request_bot_stop()` → `_stop_event` → `dp.stop_polling()`; cancel только fallback; Conflict backoff до 6 раз |
+| Node `botWorkerManager` | `activeBots` по `bot_started` / `bot_exited`; mutex per tokenId; kill воркера только когда set пуст после drain ~2с |
+| Node `clearBotRedisLock` | На orphan/timeout stop сразу; при confirmed — finally в bot `main` + safety clear после cooldown |
+| Node `waitForWorkerBotStart` | `startBot` ждёт `bot_started` (~30с), иначе rollback `activeBots` |
 | `getLatestLaunchLogs` | Последний launch из `bot_launch_history`; для `running` + строки с `launch_id IS NULL` |
 
 ## System-протокол воркера
@@ -40,11 +43,14 @@
 
 ## Ops runbook (прод)
 
-1. Stop всех токенов проекта (API `/bot/stop`).
-2. Пауза ~45–60с (TTL lock / getUpdates).
-3. Start по одному с паузой ≥1с (не полагаться на старый restart-all до выкладки фикса).
-4. Проверить `GET /api/workers/stats` и статусы; у проблемного бота — свежие логи своего `tokenId`.
-5. После деплоя шаблонов — перегенерировать/рестартнуть ботов, чтобы подтянуть новый `main` / FSM.
+**После фикса graceful stop + restart-all:**
+
+1. `POST .../bot/restart-all` безопасен: stop всех → пауза **5с** → start со stagger 250мс.
+2. Single restart: stop → пауза **5с** → start.
+3. Проверить `GET /api/workers/stats` и статусы; у проблемного бота — свежие логи своего `tokenId`.
+4. После деплоя шаблонов — перегенерировать/рестартнуть ботов, чтобы подтянуть новый `main` (`request_bot_stop`).
+
+**Если Conflict всё ещё долгий:** второй инстанс (local+prod / 2 replicas) или orphan в логах (`задача бота ещё выполняется`).
 
 ## Security
 
