@@ -77,6 +77,7 @@ import {
   resolveUploadBackend,
   StorageBackendWriteError,
 } from "./media/upload-storage-helper";
+import { enrichMediaFilesWithTokens } from "./media/enrich-media-files-with-tokens";
 import { createUserIdsRoutes } from "./user-ids-routes";
 import { broadcastProjectEvent, emitTokenUpdated } from "../terminal";
 import { getRequestTokenId, resolveEffectiveProjectTokenId } from "./utils/resolve-request-token";
@@ -2435,7 +2436,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Получение всех медиафайлов проекта
+  // Получение всех медиафайлов проекта (+ fileIdsByToken из media_file_tokens)
   app.get("/api/media/project/:projectId", requireProjectAccess, async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
@@ -2448,7 +2449,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         mediaFiles = await storage.getMediaFilesByProject(projectId);
       }
 
-      res.json(mediaFiles);
+      res.json(await enrichMediaFilesWithTokens(mediaFiles));
     } catch (error) {
       console.error("Ошибка при получении медиафайлов:", error);
       res.status(500).json({ message: "Ошибка при получении медиафайлов" });
