@@ -130,11 +130,13 @@ async function maybeEmitNewUser(projectId: number, tokenId: number, data: unknow
  * @param message - Тело сообщения в формате JSON
  */
 function handleMessage(_pattern: string, channel: string, message: string): void {
+  // Общий subscriber: сюда же приходят platform:project_event:* и bot:logs:*
+  if (!channel.startsWith('bot:') || isLogsChannel(channel)) {
+    return;
+  }
+
   const parsed = parseChannel(channel);
   if (!parsed) {
-    if (isLogsChannel(channel)) {
-      return;
-    }
     console.warn(`[RedisSub] Неизвестный формат канала: ${channel}`);
     return;
   }

@@ -133,6 +133,12 @@ async def init_redis_client():
     import asyncio as _asyncio_redis
     import random as _random_redis
     import redis.asyncio as _redis_lib
+    # Railway/OSS Redis не поддерживает CLIENT MAINT_NOTIFICATIONS (redis-py ≥7 spam)
+    try:
+        from redis.maint_notifications import MaintNotificationsConfig as _MaintCfg
+        _maint_kw = {"maint_notifications_config": _MaintCfg(enabled=False)}
+    except Exception:
+        _maint_kw = {}
 
     _max_attempts = 8
     _base_delay = 0.25
@@ -143,6 +149,7 @@ async def init_redis_client():
                 REDIS_URL,
                 decode_responses=False,
                 socket_connect_timeout=2,
+                **_maint_kw,
             )
             await _redis_client.ping()
             logging.info("🔴 Redis подключён успешно")
