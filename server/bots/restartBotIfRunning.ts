@@ -8,10 +8,10 @@ import { storage } from "../storages/storage";
 import { findActiveProcessForProject } from "../utils/findActiveProcessForProject";
 import { startBot } from "./startBot";
 import { stopBot } from "./stopBot";
+import { POST_STOP_COOLDOWN_MS, sleepMs } from "./restartTiming";
 
 /**
  * Перезапускает Telegram-бота, если он запущен (после обновления кода).
- * В worker-режиме вызывает полный stopBot (закрывает launch history), затем startBot.
  * @param projectId - ID проекта
  * @returns Результат операции
  */
@@ -26,8 +26,11 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
     console.log(`Перезапускаем бота ${projectId} из-за обновления кода...`);
 
     if (process.env.USE_WORKER_POOL !== 'false') {
-      await stopBot(projectId, instance.tokenId);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const stopResult = await stopBot(projectId, instance.tokenId);
+      if (!stopResult.success) {
+        return { success: false, error: stopResult.error };
+      }
+      await sleepMs(POST_STOP_COOLDOWN_MS);
       return await startBot(projectId, instance.token, instance.tokenId);
     }
 
@@ -37,7 +40,7 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
       return { success: true };
     }
 
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await sleepMs(POST_STOP_COOLDOWN_MS);
 
     const activeProcessInfo = findActiveProcessForProject(projectId);
     if (activeProcessInfo) {

@@ -101,6 +101,8 @@ class BotContext:
         self.webhook_url: Optional[str] = None
         self.webhook_port: Optional[int] = None
         self.bot_dir: Optional[Path] = None
+        # Загруженный module bot.py — для request_bot_stop()
+        self.module: Optional[types.ModuleType] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Сериализация для команды status."""
@@ -149,7 +151,7 @@ class BotWorker:
         if token_id in self.bots:
             emit_log(token_id, "Бот уже запущен, перезапускаем...", "stdout")
             await self._stop_bot({"token_id": token_id})
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(2.0)
 
         ctx = BotContext(token_id=token_id, token=token, bot_file=bot_file)
         ctx.webhook_url = webhook_url
@@ -224,6 +226,7 @@ class BotWorker:
                     smod.__dict__["BOT_TOKEN"] = ctx.token
                     smod.__dict__["TOKEN_ID"] = token_id
                 emit_log(token_id, "Top-level код выполнен", "stdout")
+                ctx.module = module
 
                 iso.restore_short_aliases(alias_prev)
                 alias_prev = {}
@@ -267,7 +270,7 @@ class BotWorker:
             iso.current_token_id.reset(token_token)
 
     async def _stop_bot(self, data: Dict[str, Any]) -> None:
-        """Останавливает конкретного бота (cancel task)."""
+        """Останавливает бота: сначала graceful request_bot_stop, затем cancel."""
         token_id = data.get("token_id")
         if not token_id:
             return
@@ -275,21 +278,39 @@ class BotWorker:
         if not ctx:
             emit_log(token_id, "Бот не найден в воркере", "stderr")
             return
-        if ctx.task and not ctx.task.done():
-            ctx.task.cancel()
+
+        # 1) Graceful: ставит _stop_event → main делает stop_polling
+        mod = ctx.module
+        if mod is not None and hasattr(mod, "request_bot_stop"):
             try:
-                await asyncio.wait_for(asyncio.shield(ctx.task), timeout=5.0)
+                mod.request_bot_stop()
+                emit_log(token_id, "Graceful stop: request_bot_stop()", "stdout")
+            except Exception as e:
+                emit_log(token_id, f"request_bot_stop ошибка: {e}", "stderr")
+
+        if ctx.task and not ctx.task.done():
+            try:
+                await asyncio.wait_for(asyncio.shield(ctx.task), timeout=15.0)
             except asyncio.TimeoutError:
-                # Не эмитим bot_stopped пока task жив — иначе UI думает что стоп успешен
-                emit_log(
-                    token_id,
-                    "Таймаут остановки: задача бота ещё выполняется (orphan)",
-                    "stderr",
-                )
-                return
+                emit_log(token_id, "Graceful stop timeout 15с — cancel задачи", "stderr")
+                ctx.task.cancel()
+                try:
+                    await asyncio.wait_for(asyncio.shield(ctx.task), timeout=5.0)
+                except asyncio.TimeoutError:
+                    # Не эмитим bot_stopped пока task жив — иначе UI думает что стоп успешен
+                    emit_log(
+                        token_id,
+                        "Таймаут остановки: задача бота ещё выполняется (orphan)",
+                        "stderr",
+                    )
+                    return
+                except asyncio.CancelledError:
+                    pass
             except asyncio.CancelledError:
                 pass
+
         ctx.status = "stopped"
+        ctx.module = None
         if token_id in self.bots:
             del self.bots[token_id]
         emit_log(token_id, "Бот остановлен", "stdout")
