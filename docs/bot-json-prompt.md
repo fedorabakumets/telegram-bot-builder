@@ -266,7 +266,26 @@
 }
 ```
 
-Переменные в URL, заголовках и теле задаются через `{имя_переменной}`.
+Переменные в URL, заголовках, теле и Auth задаются через `{имя}`: переменные сценария + **env бота** (вкладка Бот → env). Сценарий перекрывает одноимённые ключи env.
+
+#### Bearer из env бота
+
+Секрет хранится в env токена (`API_TOKEN=...`), в ноде — только плейсхолдер:
+
+```json
+{
+  "type": "http_request",
+  "data": {
+    "httpRequestUrl": "https://api.example.com/me",
+    "httpRequestMethod": "GET",
+    "httpRequestAuthType": "bearer",
+    "httpRequestAuthBearerToken": "{API_TOKEN}",
+    "httpRequestResponseVariable": "me_response",
+    "autoTransitionTo": "next_node_id",
+    "enableAutoTransition": true
+  }
+}
+```
 
 #### Получение файла (base64)
 

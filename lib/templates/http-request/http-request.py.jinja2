@@ -8,6 +8,8 @@
   @fsm Принимает опциональный state: FSMContext = None.
        Читает FSM-данные поверх user_data (FSM имеет приоритет).
        Передаёт state при автопереходе.
+  Подстановка {var} в URL/headers/body/Auth: os.environ (env бота) как база,
+  поверх — user_data и FSM (переменные сценария перекрывают одноимённые ключи env).
 #}
 
 # Обработчик HTTP запроса: {{ nodeId }}
@@ -33,6 +35,11 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
                 _all_vars.update(_fsm_data)
         except Exception:
             pass
+    # Env бота (.env → os.environ) — база; user_data/FSM перекрывают одноимённые ключи
+    import os as _os_http_env
+    _env_base = {str(_ek): str(_ev) for _ek, _ev in _os_http_env.environ.items() if _ev is not None}
+    _env_base.update(_all_vars)
+    _all_vars = _env_base
 
     {% if enableBatch %}
     # === BATCH MODE: параллельные запросы по массиву ===
@@ -58,8 +65,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
         {% if queryParams %}
         try:
             _qp_raw = """{{ queryParams }}"""
-            for _k, _v in _local_vars.items():
-                _qp_raw = _qp_raw.replace("{" + _k + "}", str(_v))
+            _qp_raw = replace_variables_in_text(_qp_raw, _local_vars, {})
             _qp_list = _json_batch.loads(_qp_raw)
             if _qp_list:
                 from urllib.parse import urlencode as _urlencode
@@ -75,8 +81,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
         {% if headers %}
         try:
             _h_raw = """{{ headers }}"""
-            for _k, _v in _local_vars.items():
-                _h_raw = _h_raw.replace("{" + _k + "}", str(_v))
+            _h_raw = replace_variables_in_text(_h_raw, _local_vars, {})
             _b_headers = _json_batch.loads(_h_raw)
         except Exception:
             pass
@@ -223,8 +228,7 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
     try:
         import json as _json_mod
         _qp_raw = """{{ queryParams }}"""
-        for _k, _v in _all_vars.items():
-            _qp_raw = _qp_raw.replace("{" + _k + "}", str(_v))
+        _qp_raw = replace_variables_in_text(_qp_raw, _all_vars, {})
         _qp_list = _json_mod.loads(_qp_raw)
         if _qp_list:
             from urllib.parse import urlencode as _urlencode
@@ -242,25 +246,31 @@ async def handle_callback_{{ safeName }}(callback_query: types.CallbackQuery, st
     try:
         import json as _json_mod
         _headers_raw = """{{ headers }}"""
-        for _k, _v in _all_vars.items():
-            _headers_raw = _headers_raw.replace("{" + _k + "}", str(_v))
+        _headers_raw = replace_variables_in_text(_headers_raw, _all_vars, {})
         _headers = _json_mod.loads(_headers_raw)
     except Exception as _e:
         logging.warning(f"http_request [{{ nodeId }}]: ошибка парсинга заголовков: {_e}")
     {% endif %}
 
-    # Аутентификация
+    # Аутентификация (поля Auth поддерживают {переменные} и ключи env бота)
     {% if authType == 'bearer' and authBearerToken %}
-    _headers['Authorization'] = 'Bearer {{ authBearerToken }}'
+    _auth_bearer = replace_variables_in_text("""{{ authBearerToken }}""", _all_vars, {})
+    _headers['Authorization'] = f'Bearer {_auth_bearer}'
     {% elif authType == 'basic' and authBasicUsername %}
     import base64 as _base64
-    _basic_creds = _base64.b64encode(f'{{ authBasicUsername }}:{{ authBasicPassword }}'.encode()).decode()
+    _auth_user = replace_variables_in_text("""{{ authBasicUsername }}""", _all_vars, {})
+    _auth_pass = replace_variables_in_text("""{{ authBasicPassword }}""", _all_vars, {})
+    _basic_creds = _base64.b64encode(f'{_auth_user}:{_auth_pass}'.encode()).decode()
     _headers['Authorization'] = f'Basic {_basic_creds}'
     {% elif authType == 'header' and authHeaderName %}
-    _headers['{{ authHeaderName }}'] = '{{ authHeaderValue }}'
+    _auth_hname = replace_variables_in_text("""{{ authHeaderName }}""", _all_vars, {})
+    _auth_hval = replace_variables_in_text("""{{ authHeaderValue }}""", _all_vars, {})
+    _headers[_auth_hname] = _auth_hval
     {% elif authType == 'query' and authQueryName %}
+    _auth_qname = replace_variables_in_text("""{{ authQueryName }}""", _all_vars, {})
+    _auth_qval = replace_variables_in_text("""{{ authQueryValue }}""", _all_vars, {})
     _sep = '&' if '?' in _url else '?'
-    _url = _url + _sep + '{{ authQueryName }}={{ authQueryValue }}'
+    _url = _url + _sep + f'{_auth_qname}={_auth_qval}'
     {% endif %}
 
     # Тело запроса

@@ -59,7 +59,7 @@ export const validParamsWithVariables: HttpRequestTemplateParams = {
   responseVariable: 'weather_data',
 };
 
-/** Параметры: Bearer аутентификация */
+/** Параметры: Bearer аутентификация (литеральный токен) */
 export const validParamsBearer: HttpRequestTemplateParams = {
   nodeId: 'http_request_bearer',
   safeName: 'http_request_bearer',
@@ -69,6 +69,18 @@ export const validParamsBearer: HttpRequestTemplateParams = {
   authBearerToken: 'mytoken123',
   timeout: 30,
   responseVariable: 'me_response',
+};
+
+/** Параметры: Bearer токен из env бота через {MANAGED_BOT_SECRET} */
+export const validParamsBearerFromEnv: HttpRequestTemplateParams = {
+  nodeId: 'http_request_bearer_env',
+  safeName: 'http_request_bearer_env',
+  url: 'https://api.example.com/managed',
+  method: 'GET',
+  authType: 'bearer',
+  authBearerToken: '{MANAGED_BOT_SECRET}',
+  timeout: 30,
+  responseVariable: 'managed_response',
 };
 
 /** Параметры: Basic аутентификация */
