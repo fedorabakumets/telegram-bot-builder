@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-06-25T18:45:43+03:00",
+    "updated_at": "2026-08-02T16:41:59+03:00",
     "tags": [],
     "author": ""
   },
@@ -508,7 +508,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T20:24:40+03:00",
+    "updated_at": "2026-08-02T11:32:20Z",
     "tags": [],
     "author": ""
   },
@@ -628,7 +628,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-07-28T20:24:40+03:00",
+    "updated_at": "2026-08-02T11:32:20Z",
     "tags": [],
     "author": ""
   },
@@ -823,7 +823,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-08-02T14:19:21+03:00",
+    "updated_at": "2026-08-02T11:32:20Z",
     "tags": [],
     "author": ""
   },
@@ -838,7 +838,7 @@
     "folder_titles": {
       "database": "Database"
     },
-    "updated_at": "2026-08-02T14:19:21+03:00",
+    "updated_at": "2026-08-02T11:32:20Z",
     "tags": [],
     "author": ""
   },
@@ -1108,7 +1108,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-06-25T17:45:01+03:00",
+    "updated_at": "2026-08-02T16:41:59+03:00",
     "tags": [],
     "author": ""
   },
@@ -1576,6 +1576,23 @@
       "features": "✨ Фичи"
     },
     "updated_at": "2026-06-24T08:27:21+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "futures/features/mini-app-menu-button",
+    "title": "Mini App в кнопке меню — Roadmap",
+    "excerpt": "<!--",
+    "parts": [
+      "futures",
+      "features",
+      "mini-app-menu-button"
+    ],
+    "folder_titles": {
+      "futures": "🔮 Планы развития",
+      "features": "✨ Фичи"
+    },
+    "updated_at": "2026-08-02T16:41:59+03:00",
     "tags": [],
     "author": ""
   },
@@ -2323,7 +2340,7 @@
       "futures": "🔮 Планы развития",
       "ui": "🎨 Интерфейс"
     },
-    "updated_at": "2026-06-23T14:36:15+03:00",
+    "updated_at": "2026-08-02T16:41:59+03:00",
     "tags": [],
     "author": ""
   },
