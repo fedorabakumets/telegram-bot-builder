@@ -12,7 +12,10 @@ declare module "express-session" {
 declare global {
   namespace Express {
     interface Request {
+      /** Пользователь из сессии или MCP PAT */
       user?: TelegramUserDB;
+      /** Сырой Bearer PAT для remote MCP (только на /mcp) */
+      mcpAgentToken?: string;
     }
   }
 }

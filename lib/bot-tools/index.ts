@@ -6,6 +6,7 @@
 export * from './types.ts';
 export * from './constants.ts';
 export * from './api-fetch.ts';
+export * from './mcp-request-context.ts';
 export * from './introspection.ts';
 export * from './validate-project.ts';
 export * from './validate-domain.ts';

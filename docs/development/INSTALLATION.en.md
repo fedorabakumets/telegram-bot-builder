@@ -690,7 +690,22 @@ The MCP agent is identified by a personal access token (PAT) — like a GitHub/n
 
 **3.** The full `mcp_…` token is shown **exactly once** — copy it immediately. Only an sha-256 hash is stored in the database; the secret is never shown again.
 
-**4.** Copy the ready-made `mcp.json` snippet there (values are pre-filled) and paste it into your MCP client config:
+**4.** Copy the ready-made snippet — default is **Remote URL** (no repo clone). Paste into your MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "botcraft-builder": {
+      "url": "https://<your-domain>/mcp",
+      "headers": {
+        "Authorization": "Bearer mcp_..."
+      }
+    }
+  }
+}
+```
+
+For local development (repo clone required), the Agent tab also has a **Stdio** snippet:
 
 ```json
 {
@@ -708,9 +723,10 @@ The MCP agent is identified by a personal access token (PAT) — like a GitHub/n
 }
 ```
 
-> - `API_BASE_URL` — the app server address (locally `http://localhost:5000`, in production your `https://` domain).
-> - `MCP_AGENT_TOKEN` — the token from step 3. Treat it like a password, never commit it to public repos (it is not needed in the main app's `.env` — only in the MCP client config).
-> - You can **revoke the token instantly** on the "Agent" tab with the "Revoke" button — it stops working immediately.
+> - Remote details: [docs/mcp/remote-http.md](../mcp/remote-http.md).
+> - Treat the Bearer / `MCP_AGENT_TOKEN` like a password; never commit it.
+> - You can **revoke the token instantly** on the Agent tab.
+> - Server flag: `MCP_HTTP_ENABLED` (enabled by default).
 
 </details>
 

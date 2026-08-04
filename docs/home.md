@@ -16,6 +16,7 @@
 
 ## 🤖 MCP-конструктор
 - [Обзор](mcp/overview.md)
+- [Remote HTTP (без клона репо)](mcp/remote-http.md)
 - [Полное руководство (botcraft-builder)](mcp/bot-builder.md)
 - [Пример: простой бот /start + /help](mcp/example-simple-bot.md)
 

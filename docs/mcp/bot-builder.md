@@ -52,12 +52,39 @@ lib/bot-tools/                ← ядро: validate, create, mutate, generate
 **Важно:**
 
 - Файловые тулы **stateless** — агент держит `project_json` в контексте (или пишет через `save_project`).
-- Live-тулы (`update_project_db`, `db_*`) ходят в HTTP API запущенного приложения с `Authorization: Bearer` из `MCP_AGENT_TOKEN`.
+- Live-тулы (`update_project_db`, `db_*`) ходят в HTTP API запущенного приложения с `Authorization: Bearer` из request-scoped ALS (remote `/mcp`) или `MCP_AGENT_TOKEN` (stdio).
 - Ответ каждого тула — JSON в текстовом блоке MCP.
 
 ---
 
-## Установка и подключение
+## Remote HTTP (без клона репо)
+
+Основной способ для пользователей продакшена: эндпоинт **`POST /mcp`** (Streamable HTTP) + Bearer PAT из вкладки «Агент».
+
+Полное описание, threat model и конфиги Cursor / Claude / Codex: [[mcp/remote-http]].
+
+Краткий сниппет:
+
+```json
+{
+  "mcpServers": {
+    "botcraft-builder": {
+      "url": "https://<домен>/mcp",
+      "headers": {
+        "Authorization": "Bearer mcp_…"
+      }
+    }
+  }
+}
+```
+
+На HTTP **отключены** `load_project` / `save_project` (диск сервера). Live-правки — через `db_*`.
+
+Флаг: `MCP_HTTP_ENABLED` (по умолчанию включено).
+
+---
+
+## Установка и подключение (stdio, локально)
 
 ### Требования
 

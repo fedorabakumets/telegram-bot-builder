@@ -33,6 +33,14 @@
 
 ## Быстрый старт
 
+### Без клона репо (рекомендуется)
+
+1. Вкладка **«Агент»** → создать токен → скопировать сниппет **Remote URL**
+2. Вставить в Cursor / Claude / Codex: `url` = `https://<домен>/mcp` + `Authorization: Bearer mcp_…`
+3. Подробнее: [[mcp/remote-http]]
+
+### Локально (stdio, нужен репозиторий)
+
 1. В репозитории: `npm install`
 2. Подключить MCP — см. [[mcp/bot-builder#Установка и подключение]] (нужен `MCP_AGENT_TOKEN` для live/API-тулов)
 3. В чате Cursor: *«Собери бота с /start и /help через botcraft-builder MCP»*
