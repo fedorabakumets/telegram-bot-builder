@@ -47,6 +47,7 @@ import { deleteTokenByIdHandler } from "./botTokens/handlers/deleteTokenByIdHand
 import { isMaskedOrPlaceholderToken, toPublicBotToken } from "./botTokens/to-public-bot-token";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { validateExternalUrl } from "../utils/validateExternalUrl";
+import { resolveSessionCookieOptions } from "../utils/resolveSessionCookie";
 import { resolveSessionSecret } from "../utils/resolveSessionSecret";
 import { handleTelegramError } from "../utils/telegram-error-handler";
 import { fetchWithProxy } from "../utils/telegram-proxy";
@@ -452,19 +453,19 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     console.log('[Session] Хранилище сессий: PostgreSQL (Redis недоступен)');
   }
 
+  const sessionCookie = resolveSessionCookieOptions();
+  console.log(
+    `[Session] Cookie: secure=${sessionCookie.secure}, sameSite=${sessionCookie.sameSite}`,
+  );
+
   const sessionMiddleware = session({
     store: store,
     secret: resolveSessionSecret(),
     resave: false,
     saveUninitialized: false,
-    cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
-      httpOnly: true,
-      // В prod: secure=true + sameSite=none (для cross-origin popup авторизации)
-      // В dev: secure=false + sameSite=lax (браузер не отправляет sameSite=none без secure)
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-    }
+    // Secure только при реальном HTTPS: локальный npm start по http://localhost
+    // иначе теряет cookie → login 200, а /api/projects 401
+    cookie: sessionCookie,
   });
 
   app.use(sessionMiddleware);
