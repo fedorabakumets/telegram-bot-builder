@@ -43,7 +43,10 @@ export const TelegramAuthRequestSchema = z
     photo_url: z.string().optional(),
     /** Unix timestamp auth_date */
     auth_date: z.number().optional().openapi({ example: 1710000000 }),
-    /** OIDC id_token (опционально) */
+    /**
+     * OIDC id_token. В production без SKIP_AUTH обязателен.
+     * Повторный вызов с другим id = смена аккаунта.
+     */
     id_token: z.string().optional(),
   })
   .openapi("TelegramAuthRequest");
@@ -54,8 +57,26 @@ export const TelegramAuthResponseSchema = z
     success: z.literal(true),
     message: z.string().openapi({ example: "Авторизация успешна" }),
     user: TelegramUserSchema,
+    /** true если в сессии был другой пользователь (смена аккаунта) */
+    switched: z.boolean().openapi({ example: false }),
   })
   .openapi("TelegramAuthResponse");
+
+/** Ответ GET /api/auth/me */
+export const MeResponseSchema = z
+  .object({
+    /** Текущий пользователь или null */
+    user: TelegramUserSchema.nullable(),
+  })
+  .openapi("MeResponse");
+
+/** Ответ POST /api/auth/logout */
+export const LogoutResponseSchema = z
+  .object({
+    success: z.literal(true),
+    message: z.string().openapi({ example: "Выход выполнен" }),
+  })
+  .openapi("LogoutResponse");
 
 /** Успешный ответ GET /api/auth/telegram/user/{id} */
 export const GetTelegramUserResponseSchema = z

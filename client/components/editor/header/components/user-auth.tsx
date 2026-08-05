@@ -33,10 +33,17 @@ export function UserAuth({ user, isLoading, onLogout, onLogin, isVertical }: Use
   if (isLoading) return null;
 
   if (user && isTelegramUser(user)) {
-    return <UserSection user={user} onLogout={onLogout || (() => {})} isVertical={isVertical} />;
+    return (
+      <UserSection
+        user={user}
+        onLogout={onLogout || (() => {})}
+        onSwitchAccount={onLogin}
+        isVertical={isVertical}
+      />
+    );
   }
 
-  if (user && isGuest(user)) {
+  if (!user || (user && isGuest(user))) {
     return <GuestSection onLogin={onLogin} isVertical={isVertical} />;
   }
 

@@ -2,7 +2,7 @@
  * @fileoverview Футер сайдбара: профиль пользователя и кнопка шапки
  */
 
-import { LogOut, MessageCircle, PanelTop } from 'lucide-react';
+import { LogOut, MessageCircle, PanelTop, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { useTelegramLogin } from '@/components/editor/header/hooks/use-telegram-login';
@@ -52,27 +52,49 @@ export function SidebarFooter({ isCollapsed, headerVisible, onToggleHeader }: Si
       )}
 
       {isAuthed ? (
-        <div className={cn('flex items-center gap-2', isCollapsed ? 'justify-center' : '')}>
-          {/* Аватар пользователя */}
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-xs font-medium">
-              {(user as any).firstName?.[0] ?? '?'}
-            </span>
-          </div>
-          {!isCollapsed && (
-            <>
-              <span className="text-sm text-foreground truncate flex-1">
-                {(user as any).firstName}
+        <div className={cn('flex flex-col gap-1', isCollapsed && 'items-center')}>
+          <div className={cn('flex items-center gap-2', isCollapsed ? 'justify-center' : '')}>
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-medium">
+                {(user as { firstName?: string }).firstName?.[0] ?? '?'}
               </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
-                onClick={logout}
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </>
+            </div>
+            {!isCollapsed && (
+              <>
+                <span className="text-sm text-foreground truncate flex-1">
+                  {(user as { firstName?: string }).firstName}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-primary flex-shrink-0"
+                  onClick={handleTelegramLogin}
+                  title="Сменить аккаунт"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
+                  onClick={logout}
+                  title="Выйти"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+          {isCollapsed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-primary"
+              onClick={handleTelegramLogin}
+              title="Сменить аккаунт"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           )}
         </div>
       ) : (

@@ -20,6 +20,8 @@ import { apiRequest } from '@/queryClient';
 import { type BotProject, BotToken } from '@shared/schema';
 import type { BotStatusResponse } from '../bot-types';
 import type { BotInfo } from '../profile/BotProfileEditor';
+import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { isTelegramUser } from '@/types/telegram-user';
 
 /**
  * Результат хука запросов ботов
@@ -45,8 +47,11 @@ export interface BotQueriesResult {
  * Хук для получения всех данных ботов
  */
 export function useBotQueries(): BotQueriesResult {
+  const { user } = useTelegramAuth();
+  const userId = user && isTelegramUser(user) ? user.id : 'anon';
+
   const { data: projects = [], isLoading: projectsLoading } = useQuery<BotProject[]>({
-    queryKey: ['/api/projects'],
+    queryKey: ['/api/projects', userId],
     queryFn: () => apiRequest('GET', '/api/projects'),
   });
 

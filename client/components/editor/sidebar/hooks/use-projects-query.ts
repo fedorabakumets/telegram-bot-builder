@@ -30,10 +30,12 @@ export interface UseProjectsQueryResult {
  * @returns Объект с данными о проектах и состоянием
  */
 export function useProjectsQuery(): UseProjectsQueryResult {
-  const { sessionReady } = useTelegramAuth();
+  const { sessionReady, user } = useTelegramAuth();
+  const userId =
+    user && 'id' in user ? user.id : 'anon';
 
   const { data, isLoading, refetch } = useQuery<BotProject[]>({
-    queryKey: ['/api/projects'],
+    queryKey: ['/api/projects', userId],
     queryFn: () => apiRequest('GET', '/api/projects'),
     staleTime: 0, // Данные всегда считаются устаревшими
     enabled: sessionReady, // Ждём готовности серверной сессии
@@ -44,7 +46,7 @@ export function useProjectsQuery(): UseProjectsQueryResult {
     if (sessionReady) {
       refetch();
     }
-  }, [sessionReady]);
+  }, [sessionReady, refetch]);
 
   return {
     projects: data || [],

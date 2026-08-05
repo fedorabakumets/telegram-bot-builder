@@ -7,7 +7,7 @@
  * @module auth/utils/telegramJwks
  */
 
-import { createVerify } from "crypto";
+import { createPublicKey, createVerify } from "crypto";
 
 /** URL публичных ключей Telegram JWKS */
 const JWKS_URL = "https://oauth.telegram.org/jwks";
@@ -37,17 +37,42 @@ interface JwkKey {
 }
 
 /**
+ * Результат успешной верификации id_token
+ */
+export interface VerifiedTelegramIdToken {
+    /** Telegram user id из claim sub */
+    sub: string;
+    /** Срок действия (unix) */
+    exp?: number;
+}
+
+/**
+ * Сбрасывает кэш JWKS (для тестов)
+ */
+export function resetJwksCache(): void {
+    jwksCache = null;
+}
+
+/**
+ * Подменяет кэш JWKS (для тестов)
+ *
+ * @param keys - Массив JWK ключей
+ */
+export function setJwksCacheForTests(keys: JwkKey[]): void {
+    jwksCache = { keys, fetchedAt: Date.now() };
+}
+
+/**
  * Загружает JWKS ключи Telegram с кэшированием
  *
  * @returns Массив JWK ключей
  */
-async function fetchJwks(): Promise<JwkKey[]> {
+export async function fetchJwks(): Promise<JwkKey[]> {
     const now = Date.now();
     if (jwksCache && now - jwksCache.fetchedAt < CACHE_TTL_MS) {
         return jwksCache.keys;
     }
 
-    // TODO: заменить на нативный fetch (Node 18+) или https.get если нужна совместимость
     const res = await fetch(JWKS_URL);
     if (!res.ok) throw new Error(`JWKS fetch failed: ${res.status}`);
     const data = await res.json() as { keys: JwkKey[] };
@@ -57,41 +82,79 @@ async function fetchJwks(): Promise<JwkKey[]> {
 }
 
 /**
+ * Верифицирует RSA-подпись JWT по JWK
+ *
+ * @param idToken - Полная JWT-строка
+ * @param jwk - Ключ из JWKS
+ * @returns true если подпись валидна
+ */
+function verifyRsaSignature(idToken: string, jwk: JwkKey): boolean {
+    const lastDot = idToken.lastIndexOf(".");
+    if (lastDot < 0) return false;
+
+    const signedContent = idToken.slice(0, lastDot);
+    const signatureB64 = idToken.slice(lastDot + 1);
+    const signature = Buffer.from(signatureB64, "base64url");
+
+    const keyObject = createPublicKey({
+        key: { kty: jwk.kty, n: jwk.n, e: jwk.e },
+        format: "jwk",
+    });
+
+    const verifier = createVerify("RSA-SHA256");
+    verifier.update(signedContent);
+    verifier.end();
+    return verifier.verify(keyObject, signature);
+}
+
+/**
  * Верифицирует id_token (JWT) от Telegram Login через JWKS
  *
  * @param idToken - JWT строка из поля id_token callback'а
- * @returns true если токен валиден, false иначе
+ * @returns Данные payload при успехе, null при ошибке
  */
-export async function verifyTelegramIdToken(idToken: string): Promise<boolean> {
+export async function verifyTelegramIdToken(
+    idToken: string,
+): Promise<VerifiedTelegramIdToken | null> {
     try {
         const parts = idToken.split(".");
-        if (parts.length !== 3) return false;
+        if (parts.length !== 3) return null;
 
-        const [headerB64, payloadB64, signatureB64] = parts;
+        const [headerB64, payloadB64] = parts;
         const header = JSON.parse(Buffer.from(headerB64, "base64url").toString());
+        const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString());
+
+        if (!header.kid) {
+            console.warn("⚠️ Telegram id_token: отсутствует kid");
+            return null;
+        }
 
         const keys = await fetchJwks();
-        const jwk = keys.find(k => k.kid === header.kid);
-
+        const jwk = keys.find((k) => k.kid === header.kid);
         if (!jwk) {
-            // TODO: реализовать полную верификацию подписи RSA через crypto.createPublicKey
-            console.warn("⚠️ Telegram id_token: ключ не найден в JWKS, верификация пропущена");
-            return true;
+            console.warn("⚠️ Telegram id_token: ключ не найден в JWKS");
+            return null;
         }
 
-        // TODO: реализовать полную верификацию подписи RSA через crypto.createPublicKey
-        // Сейчас проверяем только структуру и срок действия токена
-        const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString());
-        const now = Math.floor(Date.now() / 1000);
+        if (!verifyRsaSignature(idToken, jwk)) {
+            console.warn("⚠️ Telegram id_token: невалидная подпись");
+            return null;
+        }
 
+        const now = Math.floor(Date.now() / 1000);
         if (payload.exp && payload.exp < now) {
             console.warn("⚠️ Telegram id_token истёк");
-            return false;
+            return null;
         }
 
-        return true;
+        if (!payload.sub) {
+            console.warn("⚠️ Telegram id_token: отсутствует sub");
+            return null;
+        }
+
+        return { sub: String(payload.sub), exp: payload.exp };
     } catch (err) {
         console.error("Ошибка верификации Telegram id_token:", err);
-        return false;
+        return null;
     }
 }

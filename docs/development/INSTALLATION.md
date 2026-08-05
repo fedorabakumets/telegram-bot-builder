@@ -598,7 +598,14 @@ ADMIN_API_KEY=любая-случайная-строка-для-локалки
 >
 > Спецификация OpenAPI: `/docs-json` (dev) или `/admin/openapi.json` (prod, после входа).
 
-> 💡 **Не хотите настраивать Telegram Login?** Добавьте `SKIP_AUTH=true` в `.env` — авторизация будет отключена в любом режиме (dev и production). Вместо Telegram виджета появится простая форма ввода ID.
+> 💡 **Не хотите настраивать Telegram Login?** Добавьте `SKIP_AUTH=true` в `.env` — авторизация будет отключена в любом режиме (dev и production). Вместо Telegram виджета появится простая форма ввода ID. При `SKIP_AUTH=true` строгая проверка `id_token` на `POST /api/auth/telegram` **не** включается.
+
+> ✅ **Production checklist (строгий Telegram Login):**
+> - `SESSION_SECRET` задан
+> - Telegram Client ID настроен (Setup Wizard или env)
+> - `TELEGRAM_BOT_TOKEN` — для Mini App HMAC (без него Mini App login в prod недоступен)
+> - `SKIP_AUTH` **не** задан (иначе вход по ID без proof)
+> - Документация: `docs/features/studio-auth.md`, `docs/api/auth.md`
 
 > 💡 Telegram Login настраивается через Setup Wizard при первом запуске — вручную заполнять не нужно.
 

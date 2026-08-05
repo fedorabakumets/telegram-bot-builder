@@ -3,96 +3,93 @@
  * @module auth/handlers/miniAppAuthHandler
  */
 
-import crypto from 'crypto';
-import type { Request, Response } from 'express';
-import { storage } from '../../../storages/storage';
-import { regenerateSession, saveSession } from '../utils/sessionUtils';
-import { getSetting } from '../../../services/app-settings.service';
-
-/**
- * Верифицирует Telegram Mini App initData через HMAC-SHA256
- * @param initData - строка initData из window.Telegram.WebApp.initData
- * @param botToken - токен бота
- * @returns true если данные валидны
- */
-function verifyInitData(initData: string, botToken: string): boolean {
-  const params = new URLSearchParams(initData);
-  const hash = params.get('hash');
-  if (!hash) return false;
-
-  params.delete('hash');
-  const dataCheckString = Array.from(params.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, v]) => `${k}=${v}`)
-    .join('\n');
-
-  const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
-  const expectedHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
-
-  return expectedHash === hash;
-}
+import type { Request, Response } from "express";
+import { storage } from "../../../storages/storage";
+import { regenerateSession, saveSession } from "../utils/sessionUtils";
+import { getSetting } from "../../../services/app-settings.service";
+import { verifyMiniAppInitData } from "../utils/verifyMiniAppInitData";
 
 /**
  * Хендлер авторизации через Telegram Mini App initData.
  * Верифицирует initData и создаёт/обновляет сессию пользователя.
+ * При смене аккаунта регенерирует session (как POST /telegram).
+ *
  * @param req - Объект запроса (тело: initData)
  * @param res - Объект ответа
+ * @returns Promise без значения
  */
 export async function handleMiniAppAuth(req: Request, res: Response): Promise<void> {
   try {
     const { initData } = req.body;
     if (!initData) {
-      res.status(400).json({ success: false, error: 'initData обязателен' });
+      res.status(400).json({ success: false, error: "initData обязателен" });
       return;
     }
 
     const botToken = await getSetting("telegram_bot_token");
     if (!botToken) {
-      // В dev-режиме пропускаем верификацию
-      if (process.env.NODE_ENV !== 'development') {
-        res.status(500).json({ success: false, error: 'Bot token не настроен' });
+      if (process.env.NODE_ENV !== "development") {
+        res.status(500).json({ success: false, error: "Bot token не настроен" });
         return;
       }
-    } else if (!verifyInitData(initData, botToken)) {
-      res.status(401).json({ success: false, error: 'Невалидный initData' });
+    } else if (!verifyMiniAppInitData(initData, botToken)) {
+      res.status(401).json({ success: false, error: "Невалидный initData" });
       return;
     }
 
     const params = new URLSearchParams(initData);
-    const userJson = params.get('user');
+    const userJson = params.get("user");
     if (!userJson) {
-      res.status(400).json({ success: false, error: 'Нет данных пользователя в initData' });
+      res.status(400).json({ success: false, error: "Нет данных пользователя в initData" });
       return;
     }
 
     const tgUser = JSON.parse(userJson);
     const userData = await storage.getTelegramUserOrCreate({
       id: Number(tgUser.id),
-      firstName: tgUser.first_name || '',
+      firstName: tgUser.first_name || "",
       lastName: tgUser.last_name,
       username: tgUser.username,
       photoUrl: tgUser.photo_url,
     });
 
     if (!req.session) {
-      res.status(500).json({ success: false, error: 'Сессия не инициализирована' });
+      res.status(500).json({ success: false, error: "Сессия не инициализирована" });
       return;
     }
 
-    const oldSessionId = req.session.id;
-    await regenerateSession(req);
-    req.session.telegramUser = userData;
-    await saveSession(req);
+    const existingUserId = req.session.telegramUser?.id;
+    const isSameUser = existingUserId && Number(existingUserId) === Number(userData.id);
+    const isGuestSession = !existingUserId;
+    let switched = false;
 
-    if (oldSessionId) {
-      await storage.migrateGuestProjects(oldSessionId, userData.id);
+    if (isSameUser || isGuestSession) {
+      const oldSessionId = isGuestSession ? req.session.id : null;
+      req.session.telegramUser = userData;
+      await saveSession(req);
+      if (oldSessionId) {
+        await storage.migrateGuestProjects(oldSessionId, userData.id);
+      }
+    } else {
+      switched = true;
+      const oldSessionId = req.session.id;
+      await regenerateSession(req);
+      req.session.telegramUser = userData;
+      await saveSession(req);
+      if (oldSessionId) {
+        await storage.migrateGuestProjects(oldSessionId, userData.id);
+      }
     }
 
-    console.log(`✅ Mini App авторизация: ${tgUser.first_name} (@${tgUser.username}), ID: ${userData.id}`);
+    console.log(
+      `✅ Mini App авторизация: ${tgUser.first_name} (@${tgUser.username}), ID: ${userData.id}` +
+        (switched ? " [switch]" : ""),
+    );
 
-    res.json({ success: true, user: userData });
-  } catch (error: any) {
-    console.error('Mini App auth error:', error?.message || error);
-    res.status(500).json({ success: false, error: error?.message || 'Ошибка авторизации' });
+    res.json({ success: true, user: userData, switched });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Ошибка авторизации";
+    console.error("Mini App auth error:", message);
+    res.status(500).json({ success: false, error: message });
   }
 }

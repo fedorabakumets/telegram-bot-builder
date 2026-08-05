@@ -20,7 +20,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/editor/header/utils/theme-provider";
 import { ServerStatus } from "@/components/server-status";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { BotLogsProvider } from "./components/editor/bot/contexts/bot-logs-context";
 import { ActiveTerminalsProvider } from "./components/editor/bot/contexts/ActiveTerminalsContext";
@@ -86,7 +86,7 @@ function ProjectsGuard({ children }: { children: React.ReactNode }) {
   const isExcluded = location.startsWith('/templates') || location.startsWith('/not-found');
 
   const { data: projects = [], isLoading } = useQuery({
-    queryKey: ['/api/projects/list'],
+    queryKey: ['/api/projects/list', isGuestUser ? 'anon' : (user as { id: number }).id],
     queryFn: () => apiRequest('GET', '/api/projects/list'),
     enabled: sessionReady && !isGuestUser && !isExcluded,
   });
@@ -143,72 +143,6 @@ function Router() {
  * @returns JSX.Element Главный компонент приложения
  */
 function App() {
-  /**
-   * @brief Эффект для обработки авторизации через Telegram
-   *
-   * Слушает сообщения от окна авторизации Telegram и обрабатывает:
-   * - Отправку данных авторизации на сервер
-   * - Сохранение данных пользователя в localStorage
-   * - Инвалидацию кешей и обновление данных
-   */
-  useEffect(() => {
-    // Слушаем на событие авторизации из окна Telegram Login
-    const handleAuthMessage = async (event: MessageEvent) => {
-      if (event.data && event.data.type === 'telegram-auth' && event.data.user) {
-        try {
-          // КРИТИЧНО: Отправляем POST запрос на бэк для создания сессии
-          const telegramUser = event.data.user;
-          const response = await fetch('/api/auth/telegram', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include', // КРИТИЧНО: отправляем cookies для сессии
-            body: JSON.stringify({
-              id: telegramUser.id,
-              first_name: telegramUser.first_name,
-              last_name: telegramUser.last_name,
-              username: telegramUser.username,
-              photo_url: telegramUser.photo_url,
-              auth_date: telegramUser.auth_date,
-              hash: telegramUser.hash,
-            }),
-          });
-
-          if (response.ok) {
-            console.log('✅ Auth POST successful - session created on server');
-            // Сохраняем пользователя в localStorage для обновления hook'а
-            localStorage.setItem('telegramUser', JSON.stringify(event.data.user));
-            // КРИТИЧНО: Явно инвалидируем ВСЕ кеши и рефрешим запросы
-            setTimeout(() => {
-              // Отправляем custom event для обновления всех компонентов
-              window.dispatchEvent(new CustomEvent('telegram-auth-change', {
-                detail: { user: event.data.user }
-              }));
-              // Инвалидируем и рефрешим запросы
-              queryClient.removeQueries({ queryKey: ['/api/templates/category/custom', 'guest'] });
-              queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
-              queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
-              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-              // Явно рефрешим для немедленной загрузки
-              queryClient.refetchQueries({ queryKey: ['/api/templates/category/custom'] });
-              queryClient.refetchQueries({ queryKey: ['/api/projects'] });
-            }, 100);
-          } else {
-            console.error('❌ Auth POST failed:', response.status);
-          }
-        } catch (e) {
-          console.error('Error in auth flow:', e);
-        }
-      }
-    };
-
-    window.addEventListener('message', handleAuthMessage);
-    return () => {
-      window.removeEventListener('message', handleAuthMessage);
-    };
-  }, []);
-
   return (
     <ThemeProvider defaultTheme="dark" storageKey="telegram-bot-builder-theme">
       <QueryClientProvider client={queryClient}>

@@ -331,13 +331,57 @@
         }
       }
     },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Выход из Studio-сессии",
+        "description": "Публичный. Уничтожает серверную сессию и очищает cookie connect.sid. Алиас: POST /api/auth/telegram/logout.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Сессия уничтожена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Текущий пользователь сессии",
+        "description": "Публичный (cookie опциональна). Клиент вызывает при каждой загрузке страницы. Не меняет сессию. Без cookie или без telegramUser возвращает { user: null }.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Пользователь из сессии или null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/telegram": {
       "post": {
         "tags": [
           "auth"
         ],
-        "summary": "Вход через Telegram Login Widget",
-        "description": "Публичный. Создаёт/обновляет пользователя и устанавливает session cookie.",
+        "summary": "Вход / смена аккаунта через Telegram Login Widget",
+        "description": "Публичный. Только реальный login (не restore после reload). Создаёт/обновляет пользователя и устанавливает session cookie. Повторный вызов с другим id = смена аккаунта: сервер регенерирует session, в ответе switched=true. В production без SKIP_AUTH поле id_token обязательно.",
         "security": [],
         "requestBody": {
           "content": {
@@ -370,7 +414,7 @@
             }
           },
           "401": {
-            "description": "Невалидный id_token",
+            "description": "Требуется или невалиден id_token / proof",
             "content": {
               "application/json": {
                 "schema": {
@@ -378,6 +422,36 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limit auth",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/telegram/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "POST /api/auth/telegram/logout",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено (/setup)"
           }
         }
       }
@@ -6419,7 +6493,7 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "connect.sid",
-        "description": "Сессия после POST /api/auth/telegram"
+        "description": "Сессия после успешного login (POST /api/auth/telegram или miniapp/dev-login)"
       },
       "agentToken": {
         "type": "http",
@@ -6458,6 +6532,7 @@
       },
       "TelegramUser": {
         "type": "object",
+        "nullable": true,
         "properties": {
           "id": {
             "type": "number",
@@ -6511,6 +6586,36 @@
           "firstName"
         ]
       },
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/TelegramUser"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "LogoutResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string",
+            "example": "Выход выполнен"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ]
+      },
       "TelegramAuthResponse": {
         "type": "object",
         "properties": {
@@ -6526,12 +6631,17 @@
           },
           "user": {
             "$ref": "#/components/schemas/TelegramUser"
+          },
+          "switched": {
+            "type": "boolean",
+            "example": false
           }
         },
         "required": [
           "success",
           "message",
-          "user"
+          "user",
+          "switched"
         ]
       },
       "AuthError": {

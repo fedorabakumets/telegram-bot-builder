@@ -14,6 +14,8 @@ import {
 } from "./schemas/common";
 import {
   GetTelegramUserResponseSchema,
+  LogoutResponseSchema,
+  MeResponseSchema,
   TelegramAuthRequestSchema,
   TelegramAuthResponseSchema,
 } from "./schemas/auth";
@@ -39,7 +41,7 @@ documentedRegistry.registerComponent("securitySchemes", "cookieAuth", {
   type: "apiKey",
   in: "cookie",
   name: "connect.sid",
-  description: "Сессия после POST /api/auth/telegram",
+  description: "Сессия после успешного login (POST /api/auth/telegram или miniapp/dev-login)",
 });
 
 documentedRegistry.registerComponent("securitySchemes", "agentToken", {
@@ -68,11 +70,49 @@ documentedRegistry.registerPath({
 });
 
 documentedRegistry.registerPath({
+  method: "get",
+  path: "/api/auth/me",
+  tags: ["auth"],
+  summary: "Текущий пользователь сессии",
+  description:
+    "Публичный (cookie опциональна). Клиент вызывает при каждой загрузке страницы. " +
+    "Не меняет сессию. Без cookie или без telegramUser возвращает { user: null }.",
+  security: publicSecurity,
+  responses: {
+    200: {
+      description: "Пользователь из сессии или null",
+      content: { "application/json": { schema: MeResponseSchema } },
+    },
+  },
+});
+
+documentedRegistry.registerPath({
+  method: "post",
+  path: "/api/auth/logout",
+  tags: ["auth"],
+  summary: "Выход из Studio-сессии",
+  description:
+    "Публичный. Уничтожает серверную сессию и очищает cookie connect.sid. " +
+    "Алиас: POST /api/auth/telegram/logout.",
+  security: publicSecurity,
+  responses: {
+    200: {
+      description: "Сессия уничтожена",
+      content: { "application/json": { schema: LogoutResponseSchema } },
+    },
+  },
+});
+
+documentedRegistry.registerPath({
   method: "post",
   path: "/api/auth/telegram",
   tags: ["auth"],
-  summary: "Вход через Telegram Login Widget",
-  description: "Публичный. Создаёт/обновляет пользователя и устанавливает session cookie.",
+  summary: "Вход / смена аккаунта через Telegram Login Widget",
+  description:
+    "Публичный. Только реальный login (не restore после reload). " +
+    "Создаёт/обновляет пользователя и устанавливает session cookie. " +
+    "Повторный вызов с другим id = смена аккаунта: сервер регенерирует session, " +
+    "в ответе switched=true. В production без SKIP_AUTH поле id_token обязательно.",
   security: publicSecurity,
   request: {
     body: { content: { "application/json": { schema: TelegramAuthRequestSchema } } },
@@ -87,7 +127,11 @@ documentedRegistry.registerPath({
       content: { "application/json": { schema: AuthErrorSchema } },
     },
     401: {
-      description: "Невалидный id_token",
+      description: "Требуется или невалиден id_token / proof",
+      content: { "application/json": { schema: AuthErrorSchema } },
+    },
+    429: {
+      description: "Rate limit auth",
       content: { "application/json": { schema: AuthErrorSchema } },
     },
   },

@@ -12,9 +12,8 @@ import type { Request } from "express";
 /**
  * Промисифицирует метод regenerate сессии
  *
- * @function regenerateSession
- * @param {Request} req - Объект запроса Express
- * @returns {Promise<void>}
+ * @param req - Объект запроса Express
+ * @returns Promise без значения
  */
 export function regenerateSession(req: Request): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -31,13 +30,34 @@ export function regenerateSession(req: Request): Promise<void> {
 /**
  * Промисифицирует метод save сессии
  *
- * @function saveSession
- * @param {Request} req - Объект запроса Express
- * @returns {Promise<void>}
+ * @param req - Объект запроса Express
+ * @returns Promise без значения
  */
 export function saveSession(req: Request): Promise<void> {
     return new Promise((resolve, reject) => {
         req.session!.save((err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+/**
+ * Промисифицирует метод destroy сессии
+ *
+ * @param req - Объект запроса Express
+ * @returns Promise без значения
+ */
+export function destroySession(req: Request): Promise<void> {
+    return new Promise((resolve, reject) => {
+        if (!req.session) {
+            resolve();
+            return;
+        }
+        req.session.destroy((err) => {
             if (err) {
                 reject(err);
             } else {

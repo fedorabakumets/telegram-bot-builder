@@ -9,12 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
-import { queryClient } from '@/queryClient';
-import { invalidateAuthQueries } from '@/utils/invalidate-auth-queries';
 
 /**
  * Форма входа по Telegram ID для dev-режима.
- * Отправляет POST /api/auth/dev-login и логинит пользователя без popup.
+ * Отправляет POST /api/auth/dev-login и синхронизирует клиентскую сессию.
  *
  * @returns JSX элемент формы
  */
@@ -22,6 +20,7 @@ export function AuthDevForm() {
   const [telegramId, setTelegramId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { acceptSession } = useTelegramAuth();
 
   /**
    * Обрабатывает отправку формы — вызывает dev-login API
@@ -45,11 +44,7 @@ export function AuthDevForm() {
       });
       const data = await resp.json();
       if (data.success && data.user) {
-        const user = data.user;
-        // Сохраняем в localStorage и оповещаем все экземпляры хука
-        localStorage.setItem('telegramUser', JSON.stringify(user));
-        invalidateAuthQueries(queryClient);
-        window.dispatchEvent(new CustomEvent('telegram-auth-change', { detail: { user } }));
+        await acceptSession(data.user, Boolean(data.switched));
       } else {
         toast({ title: 'Ошибка входа', description: data.error, variant: 'destructive' });
       }

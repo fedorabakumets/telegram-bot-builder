@@ -1,92 +1,63 @@
-# Авторизация и изоляция данных — дальнейшие улучшения
+/**
+ * @fileoverview Авторизация и изоляция данных — статус и дальнейшие улучшения
+ */
 
-## Срочно
+# Авторизация и изоляция данных
 
-### TELEGRAM_BOT_TOKEN на Railway
-Без этой переменной Mini App авторизация не верифицирует initData в продакшене — работает только в dev-режиме.
-Добавить в Railway Variables: `TELEGRAM_BOT_TOKEN=<токен @blogspotbotbotbot>`
+UI-док: [`docs/features/studio-auth.md`](../../features/studio-auth.md).  
+API: `docs/api/auth.md` (генерируется `npm run docs:api`).
 
----
+## Реализовано
 
-## Безопасность
+### GET /api/auth/me + POST /api/auth/logout
+- Reload читает сессию через `/me`, не через повторный POST `/telegram`
+- **Дедупликация `/me`**: `useAuthMeQuery` + общий `queryKey` — один запрос на вкладку при множественных `useTelegramAuth`; синхронизация между вкладками через `storage` → `setQueryData`
+- Logout уничтожает session + clear cookie `connect.sid`
+- Алиас: `POST /api/auth/telegram/logout`
 
-### Полная RSA-верификация id_token
-Файл: `server/routes/auth/utils/telegramJwks.ts`
-Сейчас проверяется только `exp`. Нужно реализовать полную верификацию подписи через `crypto.createPublicKey` с JWK ключом из JWKS endpoint.
+### RSA-верификация id_token
+Файл: `server/routes/auth/utils/telegramJwks.ts` — полная RSA через JWKS; missing kid / bad sig → reject.
+В strict prod (`NODE_ENV=production` и `SKIP_AUTH !== true`) `id_token` обязателен.
 
-### Закрыть дыру в getProjectHandler
-Проекты с `ownerId != null` доступны без авторизации через прямой API запрос (без куки).
-Решение: если `project.ownerId !== null` и `ownerId === null` → вернуть 401.
+### Rate limit `/api/auth/*`
+In-memory limiter: 5 req/min на IP (`authRateLimit.ts`).
 
----
+### Смена аккаунта
+Повторный `POST /telegram` с другим id → `regenerateSession`, ответ `switched: true`.
+UI: кнопка «Сменить аккаунт». Кэш проектов с `userId` в queryKey.
 
-## UX
+### getProjectHandler
+Уже закрыто middleware `requireProjectAccess` на `GET /api/projects/:id`.
 
-### Toast после входа/выхода
-- "Добро пожаловать, {firstName}!" после успешного входа
-- "Вы вышли из аккаунта" после logout
-- Место: `use-telegram-auth.ts` в методах `login` и `logout`
+### Toast login / logout / switch
+В `use-telegram-auth.ts`.
+
+## Threat model (Studio session)
+
+| Угроза | Защита |
+|--------|--------|
+| Подделка identity без Telegram | Strict prod: обязателен id_token / Mini App HMAC |
+| Слабый JWKS | RSA verify; unknown kid → 401 |
+| Logout без destroy | destroySession + clearCookie |
+| Session fixation при смене A→B | regenerateSession |
+| Утечка проектов A→B в UI | clearUserCache + userId в queryKey |
+| Brute-force auth | rate limit 5/min |
+| localStorage как truth | `/me` = источник правды |
+
+## Ops checklist (production)
+
+- [ ] `SESSION_SECRET` задан
+- [ ] Telegram Client ID (Login Widget)
+- [ ] `TELEGRAM_BOT_TOKEN` для Mini App на Railway
+- [ ] Не ставить `SKIP_AUTH=true`, если нужен строгий Telegram Login
+
+## Открыто / follow-up
 
 ### Блокировка запуска ботов для гостей
-На вкладке Бот гость видит кнопки запуска. Нужно показывать заглушку "Войдите чтобы запустить бота".
-Место: `client/components/editor/bot/card/BotActions.tsx`
+AuthGuard уже режет гостей; остаточные guest-пути в canvas-sync — отдельный cleanup.
 
----
+### Миграция данных гостя при входе
+Сейчас мигрируют только проекты. Рассмотреть токены и прочее.
 
-## Архитектура
-
-### Рефакторинг auth эндпоинтов — разделить POST /auth/telegram на login и me
-
-**Проблема:** `POST /api/auth/telegram` сейчас используется и при первом логине, и при восстановлении сессии после перезагрузки страницы. Это вызывало race condition: `regenerateSession` менял session ID, браузер получал `Set-Cookie`, но следующий GET уходил со старым cookie → сессия не находилась → проекты возвращали `[]`.
-
-**Текущий воркэраунд:** `regenerateSession` вызывается только при смене аккаунта, при повторном входе того же пользователя session ID не меняется.
-
-**Правильное решение:**
-
-```
-POST /api/auth/telegram     — только при реальном логине (вызывает regenerateSession один раз)
-GET  /api/auth/me           — при каждой загрузке страницы (только читает сессию, ничего не меняет)
-POST /api/auth/logout       — выход
-```
-
-Клиент при загрузке:
-```ts
-// Вместо POST /api/auth/telegram при каждой перезагрузке:
-const { data: me } = useQuery({
-  queryKey: ['/api/auth/me'],
-  staleTime: Infinity,
-});
-
-const { data: projects } = useQuery({
-  queryKey: ['/api/projects'],
-  enabled: !!me?.user,  // ждём пока знаем кто залогинен
-});
-```
-
-Это устраняет необходимость в `session-restore.ts`, `sessionReady` state и всей логике ожидания сессии на клиенте.
-
-**Файлы для изменения:**
-- `server/routes/auth/handlers/telegramAuthHandler.ts` — убрать логику восстановления
-- `client/components/editor/header/hooks/use-telegram-auth.ts` — заменить POST на GET /auth/me
-- `client/utils/session-restore.ts` — удалить за ненадобностью
-
-### userId в query key у useBotQueries
-Файл: `client/components/editor/bot/hooks/use-bot-queries.ts`
-Сейчас `queryKey: ['/api/projects']` без userId — при смене пользователя кеш не сбрасывается.
-Решение: добавить userId в ключ, инвалидировать при смене.
-
-### Миграция данных гостя при входе (улучшение)
-Сейчас мигрируют только проекты. Рассмотреть миграцию токенов и других данных.
-
----
-
-## Гостевой режим
-
-### Ограничения для гостей
-Определить список функций недоступных гостям:
-- Запуск ботов
-- Сохранение сценариев как публичных
-- Экспорт в Google Sheets
-
-### Индикатор ограничений
-Показывать гостю подсказки что конкретная функция требует входа.
+### Гостевой режим (ограничения)
+Индикаторы «войдите для…» — низкий приоритет при обязательном AuthGuard.

@@ -65,6 +65,8 @@
     "test:unit": "node run-tests.js --unit",
     "test:integration": "node run-tests.js --integration",
     "test:sidebar": "vitest run client/components/editor/sidebar/tests",
+    "test:auth": "vitest run --config server/routes/auth/vitest.config.ts",
+    "test:auth-client": "vitest run client/components/editor/header/hooks/use-auth-me-query.test.ts client/components/editor/header/hooks/use-telegram-auth.test.ts",
     "test:sidebar:coverage": "vitest run --coverage client/components/editor/sidebar/tests",
     "test:sidebar:watch": "vitest client/components/editor/sidebar/tests",
     "test:voice": "node run-tests.js --pattern voice",

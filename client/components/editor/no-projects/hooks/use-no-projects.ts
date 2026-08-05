@@ -41,7 +41,7 @@ export function useNoProjects(): UseNoProjectsResult {
   const [isImporting, setIsImporting] = useState(false);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const { user } = useTelegramAuth();
+  const { user, logout } = useTelegramAuth();
   const telegramId = user && !isGuest(user) ? (user as any).id : null;
 
   /** Открывает диалог создания проекта */
@@ -51,11 +51,10 @@ export function useNoProjects(): UseNoProjectsResult {
   const handleTemplates = () => setLocation('/templates');
 
   /**
-   * Выход из аккаунта: очищает localStorage, диспатчит событие, редиректит на /
+   * Выход из аккаунта и редирект на главную
    */
-  const handleLogout = () => {
-    localStorage.removeItem('telegramUser');
-    window.dispatchEvent(new CustomEvent('telegram-auth-change', { detail: { user: null } }));
+  const handleLogout = async () => {
+    await logout();
     setLocation('/');
   };
 

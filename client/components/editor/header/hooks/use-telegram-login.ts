@@ -96,7 +96,7 @@ function ensureTelegramLogin(timeoutMs = 2500): Promise<boolean> {
  * @returns Объект с функцией handleTelegramLogin
  */
 export function useTelegramLogin() {
-  const { login } = useTelegramAuth();
+  const { login, acceptSession } = useTelegramAuth();
   const { toast } = useToast();
   const didInit = useRef(false);
   // Читаем clientId с сервера в рантайме — решает проблему Docker build stage
@@ -112,12 +112,16 @@ export function useTelegramLogin() {
   const handleTelegramAuth = useCallback((data: any): void => {
     if (!data || data.error) return;
     const user = data.user ?? data;
+    const idToken =
+      data.id_token ?? data.idToken ?? user.id_token ?? user.idToken;
     login({
       id: user.id ?? user.sub,
       firstName: user.first_name ?? user.name ?? '',
       lastName: user.last_name,
       username: user.username ?? user.preferred_username,
       photoUrl: user.photo_url ?? user.picture,
+      authDate: user.auth_date,
+      idToken: typeof idToken === 'string' ? idToken : undefined,
     });
   }, [login]);
 
@@ -171,7 +175,8 @@ export function useTelegramLogin() {
           });
           const data = await resp.json();
           if (data.success && data.user) {
-            login(data.user);
+            // Сессия уже создана dev-login — только синхронизируем клиент
+            await acceptSession(data.user, Boolean(data.switched));
           } else {
             toast({ title: 'Ошибка входа', description: data.error, variant: 'destructive' });
           }
@@ -197,7 +202,7 @@ export function useTelegramLogin() {
 
     init();
     window.Telegram.Login.open(handleTelegramAuth);
-  }, [handleTelegramAuth, init, isDev, login, toast]);
+  }, [handleTelegramAuth, init, isDev, acceptSession, toast]);
 
   return { handleTelegramLogin };
 }

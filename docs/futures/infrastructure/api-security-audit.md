@@ -2,6 +2,8 @@
 
 ## Дата: 2026-05-29
 
+> **Обновление (Studio auth, 2026-08):** закрыты пробелы login/me/logout, RSA `id_token`, rate limit `/api/auth/*`, смена аккаунта. См. `docs/futures/infrastructure/auth-and-isolation.md` и `docs/features/studio-auth.md`. Пункты ниже про guest bypass в `requireProjectAccess` и bot integration — отдельный трек (частично уже исправлены middleware).
+
 ---
 
 ## 🔴 Критические проблемы

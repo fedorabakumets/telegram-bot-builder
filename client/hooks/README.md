@@ -6,10 +6,12 @@
 
 ### API хуки
 Хуки для взаимодействия с серверным API:
-- `useAuth()` - аутентификация пользователя
+- `useTelegramAuth()` (`client/components/editor/header/hooks/use-telegram-auth.ts`) — сессия Studio: `GET /api/auth/me`, login, logout, switchAccount
 - `useBots()` - управление ботами
 - `useTemplates()` - работа с сценариями
 - `useFiles()` - загрузка и управление файлами
+
+См. также: `docs/features/studio-auth.md`, `docs/api/auth.md`.
 
 ### Состояние приложения
 Хуки для управления глобальным состоянием:

@@ -75,9 +75,13 @@
 - `DELETE /api/bots/:id` - удаление бота
 
 ### 🔐 Аутентификация
-- `POST /api/auth/login` - вход в систему
-- `POST /api/auth/logout` - выход из системы
-- `GET /api/auth/user` - получение данных пользователя
+- `GET /api/auth/me` - текущий пользователь сессии (или null)
+- `POST /api/auth/logout` - выход (destroy session); алиас `POST /api/auth/telegram/logout`
+- `POST /api/auth/telegram` - вход / смена аккаунта (Telegram Login Widget)
+- `POST /api/auth/telegram/miniapp` - вход через Mini App initData
+- `POST /api/auth/dev-login` - вход по ID (development / SKIP_AUTH)
+- `GET /api/auth/login` - HTML-страница входа
+- Подробности: `docs/api/auth.md`, `docs/features/studio-auth.md`
 
 ### 📁 Файлы
 - `POST /api/upload` - загрузка файлов
