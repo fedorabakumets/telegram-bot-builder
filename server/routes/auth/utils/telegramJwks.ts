@@ -9,8 +9,8 @@
 
 import { createPublicKey, createVerify } from "crypto";
 
-/** URL публичных ключей Telegram JWKS */
-const JWKS_URL = "https://oauth.telegram.org/jwks";
+/** URL публичных ключей Telegram JWKS (OIDC) */
+const JWKS_URL = "https://oauth.telegram.org/.well-known/jwks.json";
 
 /** Время жизни кэша ключей в миллисекундах (1 час) */
 const CACHE_TTL_MS = 60 * 60 * 1000;
@@ -75,7 +75,20 @@ export async function fetchJwks(): Promise<JwkKey[]> {
 
     const res = await fetch(JWKS_URL);
     if (!res.ok) throw new Error(`JWKS fetch failed: ${res.status}`);
-    const data = await res.json() as { keys: JwkKey[] };
+
+    const raw = await res.text();
+    let data: { keys: JwkKey[] };
+    try {
+        data = JSON.parse(raw) as { keys: JwkKey[] };
+    } catch {
+        throw new Error(
+            `JWKS fetch returned non-JSON (${res.status}): ${raw.slice(0, 80)}`,
+        );
+    }
+
+    if (!Array.isArray(data.keys)) {
+        throw new Error("JWKS response missing keys array");
+    }
 
     jwksCache = { keys: data.keys, fetchedAt: now };
     return data.keys;
