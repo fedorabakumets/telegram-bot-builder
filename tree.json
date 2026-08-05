@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-28T08:23:40Z",
+    "updated_at": "2026-08-05T15:24:19+03:00",
     "tags": [],
     "author": ""
   },
@@ -80,7 +80,7 @@
   {
     "path": "api/auth",
     "title": "auth",
-    "excerpt": "Эндпоинтов: **5**",
+    "excerpt": "Эндпоинтов: **8**",
     "parts": [
       "api",
       "auth"
@@ -88,7 +88,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-07-04T19:32:54+03:00",
+    "updated_at": "2026-08-05T15:24:19+03:00",
     "tags": [],
     "author": ""
   },
@@ -1048,7 +1048,7 @@
     "folder_titles": {
       "development": "🛠️ Разработка"
     },
-    "updated_at": "2026-08-04T17:44:54+03:00",
+    "updated_at": "2026-08-05T15:24:19+03:00",
     "tags": [],
     "author": ""
   },
@@ -1259,6 +1259,36 @@
       "features": "🧩 Возможности"
     },
     "updated_at": "2026-07-28T09:54:28+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/studio-auth-qa",
+    "title": "QA: Studio auth",
+    "excerpt": "/**",
+    "parts": [
+      "features",
+      "studio-auth-qa"
+    ],
+    "folder_titles": {
+      "features": "🧩 Возможности"
+    },
+    "updated_at": "2026-08-05T15:24:19+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "features/studio-auth",
+    "title": "Авторизация Studio",
+    "excerpt": "/**",
+    "parts": [
+      "features",
+      "studio-auth"
+    ],
+    "folder_titles": {
+      "features": "🧩 Возможности"
+    },
+    "updated_at": "2026-08-05T15:24:19+03:00",
     "tags": [],
     "author": ""
   },
@@ -1650,7 +1680,7 @@
   {
     "path": "futures/infrastructure/api-security-audit",
     "title": "Аудит безопасности API — Проблемы и план исправлений",
-    "excerpt": "---",
+    "excerpt": "> **Обновление (Studio auth, 2026-08):** закрыты пробелы login/me/logout, RSA `id_token`, rate limit `/api/auth/*`, смена аккаунта. См. `doc",
     "parts": [
       "futures",
       "infrastructure",
@@ -1660,7 +1690,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-06-23T14:36:15+03:00",
+    "updated_at": "2026-08-05T15:24:19+03:00",
     "tags": [],
     "author": ""
   },
@@ -1683,8 +1713,8 @@
   },
   {
     "path": "futures/infrastructure/auth-and-isolation",
-    "title": "Авторизация и изоляция данных — дальнейшие улучшения",
-    "excerpt": "Без этой переменной Mini App авторизация не верифицирует initData в продакшене — работает только в dev-режиме.",
+    "title": "Авторизация и изоляция данных",
+    "excerpt": "/**",
     "parts": [
       "futures",
       "infrastructure",
@@ -1694,7 +1724,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-06-23T14:36:15+03:00",
+    "updated_at": "2026-08-05T15:24:19+03:00",
     "tags": [],
     "author": ""
   },
