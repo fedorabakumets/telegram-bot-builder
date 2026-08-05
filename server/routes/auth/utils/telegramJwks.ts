@@ -40,10 +40,27 @@ interface JwkKey {
  * Результат успешной верификации id_token
  */
 export interface VerifiedTelegramIdToken {
-    /** Telegram user id из claim sub */
+    /** OIDC subject (может отличаться от Telegram user id) */
     sub: string;
+    /** Telegram user id из claim id */
+    id?: number;
     /** Срок действия (unix) */
     exp?: number;
+}
+
+/**
+ * Извлекает Telegram user id из верифицированного id_token
+ * @param verified - Результат verifyTelegramIdToken
+ * @returns Числовой Telegram id или null
+ */
+export function getTelegramUserIdFromToken(
+    verified: VerifiedTelegramIdToken,
+): number | null {
+    if (verified.id != null && !Number.isNaN(verified.id)) {
+        return verified.id;
+    }
+    const fromSub = Number(verified.sub);
+    return Number.isNaN(fromSub) ? null : fromSub;
 }
 
 /**
@@ -165,7 +182,11 @@ export async function verifyTelegramIdToken(
             return null;
         }
 
-        return { sub: String(payload.sub), exp: payload.exp };
+        return {
+            sub: String(payload.sub),
+            id: payload.id != null ? Number(payload.id) : undefined,
+            exp: payload.exp,
+        };
     } catch (err) {
         console.error("Ошибка верификации Telegram id_token:", err);
         return null;

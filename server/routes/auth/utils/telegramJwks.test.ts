@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { generateKeyPairSync, createSign } from "crypto";
 import {
   verifyTelegramIdToken,
+  getTelegramUserIdFromToken,
   setJwksCacheForTests,
   resetJwksCache,
 } from "./telegramJwks";
@@ -70,12 +71,23 @@ describe("verifyTelegramIdToken", () => {
   it("принимает валидный JWT", async () => {
     const token = signJwt(
       { alg: "RS256", kid: "test-kid" },
-      { sub: "12345", exp: Math.floor(Date.now() / 1000) + 3600 },
+      { sub: "oidc-subject-xyz", id: 12345, exp: Math.floor(Date.now() / 1000) + 3600 },
       privateKey.export({ type: "pkcs8", format: "pem" }) as string,
     );
 
     const result = await verifyTelegramIdToken(token);
-    expect(result).toEqual({ sub: "12345", exp: expect.any(Number) });
+    expect(result).toEqual({
+      sub: "oidc-subject-xyz",
+      id: 12345,
+      exp: expect.any(Number),
+    });
+  });
+
+  it("getTelegramUserIdFromToken предпочитает claim id, не sub", () => {
+    expect(
+      getTelegramUserIdFromToken({ sub: "long-oidc-sub", id: 6591857297 }),
+    ).toBe(6591857297);
+    expect(getTelegramUserIdFromToken({ sub: "12345" })).toBe(12345);
   });
 
   it("отклоняет истёкший JWT", async () => {

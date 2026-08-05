@@ -18,9 +18,13 @@ vi.mock("../utils/sessionUtils", () => ({
   saveSession: (...args: unknown[]) => saveSession(...args),
 }));
 
-vi.mock("../utils/telegramJwks", () => ({
-  verifyTelegramIdToken: (...args: unknown[]) => verifyTelegramIdToken(...args),
-}));
+vi.mock("../utils/telegramJwks", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../utils/telegramJwks")>();
+  return {
+    ...actual,
+    verifyTelegramIdToken: (...args: unknown[]) => verifyTelegramIdToken(...args),
+  };
+});
 
 vi.mock("../utils/isStrictAuthMode", () => ({
   isStrictAuthMode: () => isStrictAuthMode(),
@@ -127,7 +131,23 @@ describe("handleTelegramAuth", () => {
 
   it("с валидным id_token → 200", async () => {
     isStrictAuthMode.mockReturnValue(true);
-    verifyTelegramIdToken.mockResolvedValue({ sub: "100" });
+    verifyTelegramIdToken.mockResolvedValue({ sub: "oidc-sub", id: 100 });
+    const req = {
+      body: { id: 100, first_name: "Bob", id_token: "jwt" },
+      session: { id: "sid-1" },
+    } as unknown as Request;
+    const res = mockRes();
+
+    await handleTelegramAuth(req, res);
+
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ success: true }),
+    );
+  });
+
+  it("id_token: sub отличается, но id совпадает → 200", async () => {
+    isStrictAuthMode.mockReturnValue(true);
+    verifyTelegramIdToken.mockResolvedValue({ sub: "long-oidc-sub", id: 100 });
     const req = {
       body: { id: 100, first_name: "Bob", id_token: "jwt" },
       session: { id: "sid-1" },

@@ -10,7 +10,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../storages/storage";
 import { regenerateSession, saveSession } from "../utils/sessionUtils";
-import { verifyTelegramIdToken } from "../utils/telegramJwks";
+import { verifyTelegramIdToken, getTelegramUserIdFromToken } from "../utils/telegramJwks";
 import { isStrictAuthMode } from "../utils/isStrictAuthMode";
 
 /**
@@ -47,7 +47,8 @@ export async function handleTelegramAuth(req: Request, res: Response): Promise<v
                 res.status(401).json({ success: false, error: "Невалидный id_token" });
                 return;
             }
-            if (String(verified.sub) !== String(id)) {
+            const tokenUserId = getTelegramUserIdFromToken(verified);
+            if (tokenUserId == null || String(tokenUserId) !== String(id)) {
                 res.status(401).json({
                     success: false,
                     error: "id_token не соответствует user id",
