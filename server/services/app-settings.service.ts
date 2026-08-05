@@ -143,7 +143,7 @@ export async function getAllSettings(): Promise<Record<string, string>> {
  */
 export async function isConfigured(): Promise<boolean> {
   // В dev-режиме или при SKIP_AUTH считаем настроенным даже без данных в БД
-  if (process.env.NODE_ENV === "development" || process.env.SKIP_AUTH === "true") {
+  if (process.env.NODE_ENV === "development" || process.env.SKIP_AUTH !== "false") {
     return true;
   }
   const values = await Promise.all(REQUIRED_KEYS.map(getSetting));
@@ -151,12 +151,12 @@ export async function isConfigured(): Promise<boolean> {
 }
 
 /**
- * Проверяет, отключена ли авторизация через переменную окружения SKIP_AUTH
+ * Проверяет, включён ли режим dev-login (SKIP_AUTH не равен false).
  *
- * @returns `true` если авторизация отключена
+ * @returns `true` если вход по Telegram ID без proof разрешён
  */
 export function isAuthSkipped(): boolean {
-  return process.env.SKIP_AUTH === "true";
+  return process.env.SKIP_AUTH !== "false";
 }
 
 /**

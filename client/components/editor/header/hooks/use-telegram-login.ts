@@ -102,7 +102,7 @@ export function useTelegramLogin() {
   // Читаем clientId с сервера в рантайме — решает проблему Docker build stage
   const { data: appConfig } = useAppConfig();
   const clientId = appConfig?.telegramClientId || CLIENT_ID_FALLBACK;
-  const isDev = import.meta.env?.MODE === 'development' || appConfig?.skipAuth === true;
+  const isDev = appConfig?.skipAuth ?? true;
 
   /**
    * Обрабатывает результат Telegram Login и сохраняет пользователя.

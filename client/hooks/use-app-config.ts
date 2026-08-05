@@ -15,7 +15,7 @@ export interface AppConfig {
   telegramClientId: number;
   /** Имя бота для Telegram Login Widget (без @) */
   telegramBotUsername: string;
-  /** Авторизация через Telegram отключена (SKIP_AUTH=true на сервере) */
+  /** Dev-login по умолчанию; SKIP_AUTH=false — Telegram Login Widget */
   skipAuth?: boolean;
 }
 

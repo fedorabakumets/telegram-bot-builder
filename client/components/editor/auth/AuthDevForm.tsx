@@ -57,8 +57,13 @@ export function AuthDevForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <p className="text-xs text-amber-500 text-center">
+      <p className="text-xs text-amber-500 text-center leading-relaxed">
         ⚠️ Dev-режим: введите ваш Telegram ID
+      </p>
+      <p className="text-xs text-muted-foreground text-center leading-relaxed">
+        Для входа через Telegram Login Widget добавьте{' '}
+        <code className="rounded bg-muted px-1 py-0.5 text-[11px]">SKIP_AUTH=false</code> в{' '}
+        <code className="rounded bg-muted px-1 py-0.5 text-[11px]">.env</code> и перезапустите сервер
       </p>
       <Input
         type="number"

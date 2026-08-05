@@ -18,8 +18,8 @@ import { useAppConfig } from '@/hooks/use-app-config';
 
 /**
  * Экран авторизации приложения.
- * В dev-режиме или при SKIP_AUTH показывает инлайн-форму ввода Telegram ID.
- * В prod-режиме показывает кнопку входа через Telegram.
+ * В dev-режиме (skipAuth по умолчанию) показывает инлайн-форму ввода Telegram ID.
+ * При SKIP_AUTH=false в .env — кнопку входа через Telegram Login Widget.
  *
  * @returns JSX элемент экрана авторизации
  */
@@ -27,8 +27,8 @@ export function AuthScreen() {
   const { handleTelegramLogin, isLoading } = useAuthScreen();
   const { data: appConfig } = useAppConfig();
 
-  /** true если приложение запущено в dev-режиме или сервер отдал skipAuth */
-  const isDev = import.meta.env.MODE === 'development' || appConfig?.skipAuth === true;
+  /** true если сервер в режиме dev-login (skipAuth, по умолчанию включён) */
+  const isDev = appConfig?.skipAuth ?? true;
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
