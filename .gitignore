@@ -80,7 +80,7 @@ config/google-auth/token.json
 .gigaide/
 .kiro/
 .local/
-.cursor/mcp.json
+.cursor/
 
 # Deployment configs
 .nixpacks/
