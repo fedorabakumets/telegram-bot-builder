@@ -30,6 +30,51 @@ PROJECT_ID = int(os.environ.get("PROJECT_ID", "0"))
 # Локальные модули бота, которые часто конфликтуют по короткому имени
 _SIBLING_PRIORITY = ("config", "utils", "redis_storage", "database", "middlewares", "handlers")
 
+# Подсказки для типичных ошибок запуска (зеркало server/bots/formatBotRuntimeError.ts)
+_ERROR_HINTS: list[tuple[str, str, str]] = [
+    (
+        "token is invalid",
+        "Неверный токен Telegram-бота",
+        "Откройте @BotFather → ваш бот → API Token, скопируйте токен и вставьте в настройки проекта.",
+    ),
+    (
+        "unauthorized",
+        "Токен не авторизован",
+        "Токен отозван или неверный. Получите новый в @BotFather и обновите в настройках проекта.",
+    ),
+    (
+        "no module named",
+        "Не найден модуль Python",
+        "Проверьте зависимости бота или пересоберите код проекта.",
+    ),
+    (
+        "syntaxerror",
+        "Синтаксическая ошибка в коде бота",
+        "Проверьте схему проекта и пересоберите бот.",
+    ),
+    (
+        "indentationerror",
+        "Ошибка отступов в коде бота",
+        "Проверьте сгенерированный код или пересоберите проект.",
+    ),
+    (
+        "filenotfounderror",
+        "Файл бота не найден",
+        "Пересоберите бот или проверьте, что проект сохранён.",
+    ),
+]
+
+
+def format_bot_error(exc: BaseException) -> str:
+    """Форматирует исключение для терминала: заголовок, подсказка, тех. деталь."""
+    msg = str(exc).strip()
+    first_line = msg.splitlines()[0] if msg else type(exc).__name__
+    lower = msg.lower()
+    for key, title, hint in _ERROR_HINTS:
+        if key in lower:
+            return f"{title}\n→ {hint}\n(технически: {first_line})"
+    return f"Ошибка запуска: {first_line}"
+
 
 class WorkerLogHandler(logging.Handler):
     """Root handler: token_id из contextvars (изоляция логов между ботами)."""
@@ -38,6 +83,8 @@ class WorkerLogHandler(logging.Handler):
         try:
             msg = self.format(record)
             tid = iso.current_token_id.get()
+            if tid == 0:
+                return
             emit_log(tid, msg, "stderr" if record.levelno >= logging.WARNING else "stdout")
         except Exception:
             pass
@@ -251,9 +298,10 @@ class BotWorker:
             emit_log(token_id, "Бот остановлен (CancelledError)", "stdout")
             ctx.status = "stopped"
         except Exception as e:
+            user_msg = format_bot_error(e)
             tb = traceback.format_exc()
-            emit_log(token_id, f"Ошибка бота: {e}\n{tb}", "stderr")
-            sys.stderr.write(f"[bot_{token_id}] ERROR: {e}\n{tb}\n")
+            emit_log(token_id, user_msg, "stderr")
+            sys.stderr.write(f"[bot_{token_id}] {user_msg}\n{tb}\n")
             sys.stderr.flush()
             ctx.status = "error"
         finally:

@@ -73,21 +73,27 @@ export function setupBotProcessListeners() {
 
     // ─── Режим воркера: подписка на логи из worker pool ───
     if (process.env.USE_WORKER_POOL !== 'false') {
-      let workerLogCount = 0;
-      workerManager.on('bot-log', (projectId: number, tokenId: number, type: string, content: string) => {
-        workerLogCount++;
-        // Логируем первые 5 сообщений и потом каждое 50-е
-        if (workerLogCount <= 5 || workerLogCount % 50 === 0) {
-          console.log(`[Terminal:WorkerPool] bot-log #${workerLogCount}: project=${projectId} token=${tokenId} type=${type} content="${content.slice(0, 80)}"`);
-        }
-        // Маршрутизируем логи воркера с привязкой к активному launchId
+      const routeWorkerLog = (projectId: number, tokenId: number, type: string, content: string) => {
         const streamType = (type === 'stderr') ? 'stderr' : 'stdout';
         const launchId = getActiveLaunchId(tokenId);
         sendOutputToTerminals(content, streamType, projectId, tokenId, launchId);
-      });
+      };
 
-      workerManager.on('bot-exited', (projectId: number, tokenId: number, exitStatus: string | number) => {
-        void handleWorkerBotExited(projectId, tokenId, exitStatus);
+      if (process.env.WORKER_POOL_VERBOSE === 'true') {
+        let workerLogCount = 0;
+        workerManager.on('bot-log', (projectId: number, tokenId: number, type: string, content: string) => {
+          workerLogCount++;
+          if (workerLogCount <= 5 || workerLogCount % 50 === 0) {
+            console.log(`[Terminal:WorkerPool] bot-log #${workerLogCount}: project=${projectId} token=${tokenId} type=${type} content="${content.slice(0, 80)}"`);
+          }
+          routeWorkerLog(projectId, tokenId, type, content);
+        });
+      } else {
+        workerManager.on('bot-log', routeWorkerLog);
+      }
+
+      workerManager.on('bot-exited', (projectId: number, tokenId: number, exitStatus: string | number, runtimeError?: string) => {
+        void handleWorkerBotExited(projectId, tokenId, exitStatus, runtimeError);
       });
 
       console.log('[Terminal] Подписка на логи и exit воркеров настроена');

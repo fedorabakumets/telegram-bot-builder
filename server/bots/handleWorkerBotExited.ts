@@ -9,24 +9,31 @@ import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { getActiveLaunchId, clearActiveLaunchId } from '../terminal/activeLaunchIds';
 import { clearBotRedisLockByTokenId } from './clearBotRedisLock';
 import { isWorkerCleanExit } from './isWorkerCleanExit';
+import { formatBotRuntimeError, formatBotRuntimeErrorShort } from './formatBotRuntimeError';
 
 /**
  * Обновляет БД и шлёт WS после выхода бота из воркера
  * @param projectId - ID проекта
  * @param tokenId - ID токена
  * @param exitStatus - Статус из worker (`error` / `stopped` / код)
+ * @param runtimeError - Последняя stderr-ошибка бота (опционально)
  */
 export async function handleWorkerBotExited(
   projectId: number,
   tokenId: number,
   exitStatus: string | number,
+  runtimeError?: string,
 ): Promise<void> {
   const statusStr = String(exitStatus);
   const isError = statusStr === 'error' || !isWorkerCleanExit(exitStatus);
   const launchStatus = isError ? 'error' : 'stopped';
   const wsType = isError ? 'bot-error' : 'bot-stopped';
   const errorMessage = isError
-    ? (statusStr === 'error' ? 'Бот завершился с ошибкой' : `Бот завершился: ${statusStr}`)
+    ? (runtimeError
+      ? formatBotRuntimeError(runtimeError)
+      : statusStr === 'error'
+        ? 'Бот завершился с ошибкой'
+        : `Бот завершился: ${statusStr}`)
     : null;
 
   try {
@@ -72,6 +79,8 @@ export async function handleWorkerBotExited(
   });
 
   console.log(
-    `[WorkerExit] project=${projectId} token=${tokenId} status=${statusStr} → WS ${wsType}`,
+    `[WorkerExit] project=${projectId} token=${tokenId} status=${statusStr} → WS ${wsType}${
+      isError && runtimeError ? ` (${formatBotRuntimeErrorShort(runtimeError)})` : ''
+    }`,
   );
 }

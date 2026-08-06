@@ -53,6 +53,9 @@ export async function persistLogLine(
 ): Promise<number | undefined> {
   if (globalThis.__dbPoolActive === false) return undefined;
 
+  // Логи без реального token_id (0) не сохраняем — нет FK в bot_tokens
+  if (tokenId <= 0) return undefined;
+
   try {
     const [row] = await db.insert(botLogs).values({
       projectId,

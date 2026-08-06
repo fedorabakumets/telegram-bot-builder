@@ -17,6 +17,7 @@ import {
   waitForWorkerBotStart,
   WORKER_START_CONFIRM_TIMEOUT_MS,
 } from "./waitForWorkerBotStart";
+import { formatBotRuntimeErrorShort } from "./formatBotRuntimeError";
 
 /** Задержка перед killWorker когда activeBots пуст (мс) */
 const WORKER_DRAIN_MS = 2_000;
@@ -82,6 +83,12 @@ class BotWorkerManager extends EventEmitter {
 
   /** Путь к Python интерпретатору */
   private pythonPath: string;
+
+  /** Последняя stderr-ошибка бота для errorMessage в БД */
+  private lastBotErrors = new Map<number, string>();
+
+  /** Подробные логи stdout воркера (JSON) */
+  private workerVerbose = process.env.WORKER_POOL_VERBOSE === "true";
 
   constructor() {
     super();
@@ -207,7 +214,9 @@ class BotWorkerManager extends EventEmitter {
       let buffer = "";
       workerProcess.stdout?.on("data", (chunk: Buffer) => {
         const raw = chunk.toString("utf-8");
-        console.log(`🏭 [WorkerPool:${projectId}] stdout: ${raw.trim().substring(0, 200)}`);
+        if (this.workerVerbose) {
+          console.log(`🏭 [WorkerPool:${projectId}] stdout: ${raw.trim().substring(0, 200)}`);
+        }
         buffer += raw;
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";
@@ -314,8 +323,16 @@ class BotWorkerManager extends EventEmitter {
     }
 
     // Логи бота — маршрутизируем по token_id
-    if (msg.token_id !== undefined) {
-      this.emit("bot-log", projectId, msg.token_id, msg.type, msg.content || "");
+    if (msg.token_id !== undefined && msg.token_id > 0) {
+      const content = msg.content || "";
+      if (msg.type === "stderr") {
+        this.lastBotErrors.set(msg.token_id, content);
+        const preview = content.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "").split("\n")[0];
+        console.error(`🏭 [WorkerPool:${projectId}] бот ${msg.token_id} ошибка: ${preview}`);
+      }
+      this.emit("bot-log", projectId, msg.token_id, msg.type, content);
+    } else if (msg.token_id !== undefined && msg.token_id === 0) {
+      // Системные asyncio-логи без контекста бота — не маршрутизируем
     } else {
       console.warn(`[WorkerPool] ⚠️ Сообщение без token_id от проекта ${projectId}: type=${msg.type}, content="${(msg.content || "").slice(0, 60)}"`);
     }
@@ -331,14 +348,27 @@ class BotWorkerManager extends EventEmitter {
     const worker = this.workers.get(projectId);
 
     if (ev.kind === "bot_started" && ev.tokenId !== undefined) {
+      this.lastBotErrors.delete(ev.tokenId);
       worker?.activeBots.add(ev.tokenId);
+      console.log(`🏭 [WorkerPool:${projectId}] бот ${ev.tokenId} запущен`);
       this.emit("bot-started", projectId, ev.tokenId);
       return;
     }
 
     if ((ev.kind === "bot_exited" || ev.kind === "bot_stopped") && ev.tokenId !== undefined) {
       worker?.activeBots.delete(ev.tokenId);
-      this.emit("bot-exited", projectId, ev.tokenId, ev.status || "stopped");
+      const status = ev.status || "stopped";
+      const runtimeError = this.lastBotErrors.get(ev.tokenId);
+      this.lastBotErrors.delete(ev.tokenId);
+      if (status === "error") {
+        const short = runtimeError
+          ? formatBotRuntimeErrorShort(runtimeError)
+          : "Бот завершился с ошибкой";
+        console.error(`🏭 [WorkerPool:${projectId}] бот ${ev.tokenId} остановлен: ${short}`);
+      } else {
+        console.log(`🏭 [WorkerPool:${projectId}] бот ${ev.tokenId} остановлен`);
+      }
+      this.emit("bot-exited", projectId, ev.tokenId, status, runtimeError);
       // Drain: не убиваем воркер мгновенно (гонка с restart)
       if (worker && worker.activeBots.size === 0 && worker.status === "ready") {
         this.scheduleWorkerDrain(projectId);
