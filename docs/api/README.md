@@ -21,7 +21,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [health](./health.md) | 1 |
 | [launch](./launch.md) | 1 |
 | [media](./media.md) | 13 |
-| [projects](./projects.md) | 143 |
+| [projects](./projects.md) | 145 |
 | [push-to-github](./push-to-github.md) | 1 |
 | [root](./root.md) | 1 |
 | [server](./server.md) | 1 |
@@ -34,7 +34,6 @@ REST API визуального конструктора Telegram-ботов. А
 | [templates](./templates.md) | 16 |
 | [tokens](./tokens.md) | 6 |
 | [user](./user.md) | 12 |
-| [users](./users.md) | 5 |
 | [webhook](./webhook.md) | 1 |
 | [workers](./workers.md) | 1 |
 

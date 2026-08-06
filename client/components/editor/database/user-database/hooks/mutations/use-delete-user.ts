@@ -35,11 +35,13 @@ export function useDeleteUser(params: UseDeleteUserParams) {
   const qClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (userId: number) =>
-      apiRequest('DELETE', `/api/users/${userId}`, {
-        projectId,
-        tokenId: selectedTokenId ?? null,
-      }),
+    mutationFn: (userId: number) => {
+      const url = buildUsersApiUrl(
+        `/api/projects/${projectId}/users/${userId}`,
+        selectedTokenId,
+      );
+      return apiRequest('DELETE', url);
+    },
     onSuccess: () => {
       qClient.removeQueries({ queryKey: [usersQueryKey, selectedTokenId] });
       qClient.removeQueries({ queryKey: [statsQueryKey, selectedTokenId] });

@@ -8,6 +8,7 @@ import { z } from "zod";
 import {
   ForbiddenSchema,
   MessageErrorSchema,
+  SetupRequiredSchema,
   UnauthorizedSchema,
   ValidationErrorSchema,
 } from "../schemas/common";
@@ -15,6 +16,8 @@ import {
   BotUserRowSchema,
   BotUsersPageSchema,
   CreateBotUserRequestSchema,
+  DeleteBotUserSuccessSchema,
+  UpdateBotUserRequestSchema,
 } from "../schemas/bot-users";
 
 /**
@@ -30,6 +33,21 @@ export function registerBotUsersPaths(
   const projectIdParam = z.object({
     /** ID проекта */
     id: z.string().openapi({ example: "42", description: "ID проекта" }),
+  });
+
+  const projectUserParams = z.object({
+    /** ID проекта */
+    projectId: z.string().openapi({ example: "42", description: "ID проекта" }),
+    /** Telegram user_id (строка) */
+    userId: z.string().openapi({ example: "123456789", description: "Telegram user_id" }),
+  });
+
+  const tokenIdQuery = z.object({
+    /** ID токена бота (скоуп данных) */
+    tokenId: z.string().optional().openapi({
+      example: "7",
+      description: "Токен бота. Без него резолвится через resolveEffectiveProjectTokenId.",
+    }),
   });
 
   const listQuery = z.object({
@@ -134,6 +152,157 @@ export function registerBotUsersPaths(
       403: {
         description: "Нет доступа к проекту",
         content: { "application/json": { schema: ForbiddenSchema } },
+      },
+      500: {
+        description: "Ошибка БД",
+        content: { "application/json": { schema: MessageErrorSchema } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/projects/{projectId}/users/{userId}",
+    tags: ["projects"],
+    summary: "Один пользователь бота по projectId и userId",
+    description:
+      "Возвращает одну строку `bot_users` для пары (project_id, user_id, token_id). " +
+      "`tokenId` в query — скоуп по токену бота (как в остальных users-эндпоинтах). " +
+      "Используется карточкой пользователя в редакторе.",
+    security: cookieSecurity,
+    request: { params: projectUserParams, query: tokenIdQuery },
+    responses: {
+      200: {
+        description: "Строка bot_users",
+        content: { "application/json": { schema: BotUserRowSchema } },
+      },
+      401: {
+        description: "Не авторизован",
+        content: { "application/json": { schema: UnauthorizedSchema } },
+      },
+      403: {
+        description: "Нет доступа к проекту",
+        content: { "application/json": { schema: ForbiddenSchema } },
+      },
+      404: {
+        description: "Пользователь не найден",
+        content: { "application/json": { schema: MessageErrorSchema } },
+      },
+      503: {
+        description: "Сервис не настроен (setupGuard)",
+        content: { "application/json": { schema: SetupRequiredSchema } },
+      },
+      500: {
+        description: "Ошибка БД",
+        content: { "application/json": { schema: MessageErrorSchema } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: "put",
+    path: "/api/projects/{projectId}/users/{userId}",
+    tags: ["projects"],
+    summary: "Обновить пользователя бота (статус активности)",
+    description:
+      "**UI:** смена статуса «активен / неактивен» в базе пользователей.\n\n" +
+      "Обновляет `is_active` в `bot_users` и `last_interaction`. " +
+      "`projectId` и `userId` — в path; `tokenId` — в query (`?tokenId=7`). " +
+      "Резолв токена через `resolveEffectiveProjectTokenId`.\n\n" +
+      "Заменяет legacy `PUT /api/users/{id}` с `projectId` в body.",
+    security: cookieSecurity,
+    request: {
+      params: projectUserParams,
+      query: tokenIdQuery,
+      body: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: UpdateBotUserRequestSchema,
+            examples: {
+              activate: {
+                summary: "Активировать пользователя",
+                value: { isActive: 1 },
+              },
+              deactivate: {
+                summary: "Деактивировать пользователя",
+                value: { isActive: 0 },
+              },
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Обновлённая строка bot_users",
+        content: { "application/json": { schema: BotUserRowSchema } },
+      },
+      400: {
+        description: "Нет полей для обновления",
+        content: { "application/json": { schema: MessageErrorSchema } },
+      },
+      401: {
+        description: "Не авторизован",
+        content: { "application/json": { schema: UnauthorizedSchema } },
+      },
+      403: {
+        description: "Нет доступа к проекту",
+        content: { "application/json": { schema: ForbiddenSchema } },
+      },
+      404: {
+        description: "Пользователь не найден",
+        content: { "application/json": { schema: MessageErrorSchema } },
+      },
+      503: {
+        description: "Сервис не настроен (setupGuard)",
+        content: { "application/json": { schema: SetupRequiredSchema } },
+      },
+      500: {
+        description: "Ошибка БД",
+        content: { "application/json": { schema: MessageErrorSchema } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: "delete",
+    path: "/api/projects/{projectId}/users/{userId}",
+    tags: ["projects"],
+    summary: "Удалить пользователя и его сообщения",
+    description:
+      "**UI:** удаление пользователя из базы в редакторе.\n\n" +
+      "Удаляет все сообщения из `bot_messages` и строку из `bot_users` " +
+      "для (user_id, project_id, token_id). `tokenId` — в query.\n\n" +
+      "Заменяет legacy `DELETE /api/users/{id}` с `projectId` в body. " +
+      "Не путать с `DELETE /api/projects/{id}/users` — массовое удаление всех пользователей проекта.",
+    security: cookieSecurity,
+    request: { params: projectUserParams, query: tokenIdQuery },
+    responses: {
+      200: {
+        description: "Успешное удаление",
+        content: {
+          "application/json": {
+            schema: DeleteBotUserSuccessSchema,
+            example: { message: "User data deleted successfully" },
+          },
+        },
+      },
+      401: {
+        description: "Не авторизован",
+        content: { "application/json": { schema: UnauthorizedSchema } },
+      },
+      403: {
+        description: "Нет доступа к проекту",
+        content: { "application/json": { schema: ForbiddenSchema } },
+      },
+      404: {
+        description: "Пользователь не найден",
+        content: { "application/json": { schema: MessageErrorSchema } },
+      },
+      503: {
+        description: "Сервис не настроен (setupGuard)",
+        content: { "application/json": { schema: SetupRequiredSchema } },
       },
       500: {
         description: "Ошибка БД",

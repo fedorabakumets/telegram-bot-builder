@@ -99,10 +99,6 @@
       "description": "Эндпоинты /api/user"
     },
     {
-      "name": "users",
-      "description": "Пользователи ботов и статистика"
-    },
-    {
       "name": "webhook",
       "description": "Входящие webhook-апдейты Telegram (публичный прокси в Python бота)"
     },
@@ -4619,20 +4615,358 @@
       }
     },
     "/api/projects/{projectId}/users/{userId}": {
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Удалить пользователя и его сообщения",
+        "description": "**UI:** удаление пользователя из базы в редакторе.\n\nУдаляет все сообщения из `bot_messages` и строку из `bot_users` для (user_id, project_id, token_id). `tokenId` — в query.\n\nЗаменяет legacy `DELETE /api/users/{id}` с `projectId` в body. Не путать с `DELETE /api/projects/{id}/users` — массовое удаление всех пользователей проекта.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Telegram user_id",
+              "example": "123456789"
+            },
+            "required": true,
+            "name": "userId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него резолвится через resolveEffectiveProjectTokenId.",
+              "example": "7"
+            },
+            "required": false,
+            "name": "tokenId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешное удаление",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteBotUserSuccess"
+                },
+                "example": {
+                  "message": "User data deleted successfully"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Сервис не настроен (setupGuard)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
           "projects"
         ],
-        "summary": "GET /api/projects/{projectId}/users/{userId}",
+        "summary": "Один пользователь бота по projectId и userId",
+        "description": "Возвращает одну строку `bot_users` для пары (project_id, user_id, token_id). `tokenId` в query — скоуп по токену бота (как в остальных users-эндпоинтах). Используется карточкой пользователя в редакторе.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Telegram user_id",
+              "example": "123456789"
+            },
+            "required": true,
+            "name": "userId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него резолвится через resolveEffectiveProjectTokenId.",
+              "example": "7"
+            },
+            "required": false,
+            "name": "tokenId",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Строка bot_users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotUserRow"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено (/setup)"
+            "description": "Сервис не настроен (setupGuard)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Обновить пользователя бота (статус активности)",
+        "description": "**UI:** смена статуса «активен / неактивен» в базе пользователей.\n\nОбновляет `is_active` в `bot_users` и `last_interaction`. `projectId` и `userId` — в path; `tokenId` — в query (`?tokenId=7`). Резолв токена через `resolveEffectiveProjectTokenId`.\n\nЗаменяет legacy `PUT /api/users/{id}` с `projectId` в body.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Telegram user_id",
+              "example": "123456789"
+            },
+            "required": true,
+            "name": "userId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него резолвится через resolveEffectiveProjectTokenId.",
+              "example": "7"
+            },
+            "required": false,
+            "name": "tokenId",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBotUserRequest"
+              },
+              "examples": {
+                "activate": {
+                  "summary": "Активировать пользователя",
+                  "value": {
+                    "isActive": 1
+                  }
+                },
+                "deactivate": {
+                  "summary": "Деактивировать пользователя",
+                  "value": {
+                    "isActive": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновлённая строка bot_users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotUserRow"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет полей для обновления",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Сервис не настроен (setupGuard)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5892,97 +6226,6 @@
         }
       }
     },
-    "/api/users/{id}": {
-      "delete": {
-        "tags": [
-          "users"
-        ],
-        "summary": "DELETE /api/users/{id}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "users"
-        ],
-        "summary": "GET /api/users/{id}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "users"
-        ],
-        "summary": "PUT /api/users/{id}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
-    "/api/users/{id}/interaction": {
-      "post": {
-        "tags": [
-          "users"
-        ],
-        "summary": "POST /api/users/{id}/interaction",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
-    "/api/users/{id}/state": {
-      "put": {
-        "tags": [
-          "users"
-        ],
-        "summary": "PUT /api/users/{id}/state",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
     "/api/webhook/{projectId}/{tokenId}": {
       "post": {
         "tags": [
@@ -6951,6 +7194,10 @@
           "is_premium": {
             "type": "integer"
           },
+          "is_active": {
+            "type": "integer",
+            "example": 1
+          },
           "registered_at": {
             "type": "string"
           },
@@ -7012,6 +7259,57 @@
         },
         "required": [
           "userId"
+        ]
+      },
+      "SetupRequired": {
+        "type": "object",
+        "properties": {
+          "setupRequired": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string",
+            "example": "Приложение не настроено. Перейдите на /setup"
+          }
+        },
+        "required": [
+          "setupRequired",
+          "message"
+        ]
+      },
+      "UpdateBotUserRequest": {
+        "type": "object",
+        "properties": {
+          "isActive": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Статус активности пользователя в bot_users",
+            "example": 1
+          }
+        }
+      },
+      "DeleteBotUserSuccess": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "User data deleted successfully"
+          }
+        },
+        "required": [
+          "message"
         ]
       },
       "UpdateMessagesRetentionResponse": {
@@ -7628,25 +7926,6 @@
           }
         },
         "required": [
-          "message"
-        ]
-      },
-      "SetupRequired": {
-        "type": "object",
-        "properties": {
-          "setupRequired": {
-            "type": "boolean",
-            "enum": [
-              true
-            ]
-          },
-          "message": {
-            "type": "string",
-            "example": "Приложение не настроено. Перейдите на /setup"
-          }
-        },
-        "required": [
-          "setupRequired",
           "message"
         ]
       },

@@ -79,6 +79,25 @@ export const CreateBotUserRequestSchema = z
   })
   .openapi("CreateBotUserRequest");
 
+/** Тело PUT — обновление пользователя бота */
+export const UpdateBotUserRequestSchema = z
+  .object({
+    /** 1 / true — активен; 0 / false — неактивен */
+    isActive: z.union([z.number().int(), z.boolean(), z.string()]).optional().openapi({
+      example: 1,
+      description: "Статус активности пользователя в bot_users",
+    }),
+  })
+  .openapi("UpdateBotUserRequest");
+
+/** Успешное удаление пользователя */
+export const DeleteBotUserSuccessSchema = z
+  .object({
+    /** Текстовое сообщение об успехе */
+    message: z.string().openapi({ example: "User data deleted successfully" }),
+  })
+  .openapi("DeleteBotUserSuccess");
+
 /** Строка bot_users после INSERT/UPSERT */
 export const BotUserRowSchema = z
   .object({
@@ -91,6 +110,7 @@ export const BotUserRowSchema = z
     language_code: z.string().nullable().optional(),
     is_bot: z.number().int().optional(),
     is_premium: z.number().int().optional(),
+    is_active: z.number().int().optional().openapi({ example: 1 }),
     registered_at: z.string().optional(),
     last_interaction: z.string().optional(),
   })

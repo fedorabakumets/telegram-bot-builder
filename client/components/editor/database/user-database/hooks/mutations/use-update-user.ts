@@ -39,14 +39,16 @@ export function useUpdateUser(params: UseUpdateUserParams) {
     mutationFn: ({ userId, data }: { userId: number; data: Partial<UserBotData> }) => {
       const normalizedData = {
         ...data,
-        projectId,
-        tokenId: selectedTokenId ?? null,
         ...(data.isActive !== undefined && { isActive: data.isActive ? 1 : 0 }),
         ...(data.isBlocked !== undefined && { isBlocked: data.isBlocked ? 1 : 0 }),
         ...(data.isPremium !== undefined && { isPremium: data.isPremium ? 1 : 0 }),
       };
 
-      return apiRequest('PUT', `/api/users/${userId}`, normalizedData);
+      const url = buildUsersApiUrl(
+        `/api/projects/${projectId}/users/${userId}`,
+        selectedTokenId,
+      );
+      return apiRequest('PUT', url, normalizedData);
     },
     onSuccess: () => {
       qClient.removeQueries({ queryKey: [usersQueryKey, selectedTokenId] });

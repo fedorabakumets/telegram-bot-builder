@@ -1,6 +1,6 @@
 # projects
 
-Эндпоинтов: **143**
+Эндпоинтов: **145**
 
 ### `GET` /api/projects
 
@@ -1918,19 +1918,79 @@ POST /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
 | 503 | Приложение не настроено (/setup) |
 
-### `GET` /api/projects/{projectId}/users/{userId}
+### `DELETE` /api/projects/{projectId}/users/{userId}
 
-GET /api/projects/{projectId}/users/{userId}
+Удалить пользователя и его сообщения
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+**UI:** удаление пользователя из базы в редакторе.
+
+Удаляет все сообщения из `bot_messages` и строку из `bot_users` для (user_id, project_id, token_id). `tokenId` — в query.
+
+Заменяет legacy `DELETE /api/users/{id}` с `projectId` в body. Не путать с `DELETE /api/projects/{id}/users` — массовое удаление всех пользователей проекта.
+
+**Параметры:** 3
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 200 | Успешное удаление |
+| 401 | Не авторизован |
+| 403 | Нет доступа к проекту |
+| 404 | Пользователь не найден |
+| 500 | Ошибка БД |
+| 503 | Сервис не настроен (setupGuard) |
+
+### `GET` /api/projects/{projectId}/users/{userId}
+
+Один пользователь бота по projectId и userId
+
+**Авторизация:** Cookie (`connect.sid`)
+
+Возвращает одну строку `bot_users` для пары (project_id, user_id, token_id). `tokenId` в query — скоуп по токену бота (как в остальных users-эндпоинтах). Используется карточкой пользователя в редакторе.
+
+**Параметры:** 3
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Строка bot_users |
+| 401 | Не авторизован |
+| 403 | Нет доступа к проекту |
+| 404 | Пользователь не найден |
+| 500 | Ошибка БД |
+| 503 | Сервис не настроен (setupGuard) |
+
+### `PUT` /api/projects/{projectId}/users/{userId}
+
+Обновить пользователя бота (статус активности)
+
+**Авторизация:** Cookie (`connect.sid`)
+
+**UI:** смена статуса «активен / неактивен» в базе пользователей.
+
+Обновляет `is_active` в `bot_users` и `last_interaction`. `projectId` и `userId` — в path; `tokenId` — в query (`?tokenId=7`). Резолв токена через `resolveEffectiveProjectTokenId`.
+
+Заменяет legacy `PUT /api/users/{id}` с `projectId` в body.
+
+**Тело запроса:** `UpdateBotUserRequest`
+
+**Параметры:** 3
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Обновлённая строка bot_users |
+| 400 | Нет полей для обновления |
+| 401 | Не авторизован |
+| 403 | Нет доступа к проекту |
+| 404 | Пользователь не найден |
+| 500 | Ошибка БД |
+| 503 | Сервис не настроен (setupGuard) |
 
 ### `GET` /api/projects/{projectId}/users/{userId}/avatar
 

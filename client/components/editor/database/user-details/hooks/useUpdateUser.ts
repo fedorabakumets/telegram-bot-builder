@@ -33,11 +33,11 @@ export function useUpdateUser(
         throw new Error('Пользователь не выбран');
       }
 
-      return apiRequest('PUT', `/api/users/${user.userId}`, {
-        ...updates,
-        projectId,
-        tokenId: selectedTokenId ?? null,
-      });
+      const url = buildUsersApiUrl(
+        `/api/projects/${projectId}/users/${user.userId}`,
+        selectedTokenId,
+      );
+      return apiRequest('PUT', url, updates);
     },
     onSuccess: () => {
       qClient.invalidateQueries({ queryKey: [usersQueryKey, selectedTokenId] });

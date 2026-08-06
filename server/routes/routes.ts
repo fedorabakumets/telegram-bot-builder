@@ -40,6 +40,8 @@ import { requireApiAuth } from "../middleware/requireApiAuth";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
 import { requireMediaOwnership } from "../middleware/mediaOwnership";
+import { deleteBotUserHandler } from "./botUsers/handlers/deleteBotUserHandler";
+import { updateBotUserHandler } from "./botUsers/handlers/updateBotUserHandler";
 import { deleteProjectTokenHandler } from "./botTokens/handlers/deleteProjectTokenHandler";
 import { deleteTokenByIdHandler } from "./botTokens/handlers/deleteTokenByIdHandler";
 import { isMaskedOrPlaceholderToken, toPublicBotToken } from "./botTokens/to-public-bot-token";
@@ -79,7 +81,7 @@ import {
 } from "./media/upload-storage-helper";
 import { enrichMediaFilesWithTokens } from "./media/enrich-media-files-with-tokens";
 import { broadcastProjectEvent, emitTokenUpdated } from "../terminal";
-import { getRequestTokenId, resolveEffectiveProjectTokenId } from "./utils/resolve-request-token";
+import { getRequestTokenId } from "./utils/resolve-request-token";
 import { getTelegramProxyAgent } from "../utils/telegram-proxy";
 import { setupSwagger } from "../swagger/setup-swagger";
 import {
@@ -3606,32 +3608,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Get specific user data by ID
-  app.get("/api/users/:id", async (req, res) => {
-    try {
-      const id = req.params.id;
-      const result = await dbPool.query(
-        `SELECT * FROM bot_users WHERE user_id = $1 LIMIT 1`,
-        [id]
-      );
-      if (result.rows.length === 0) {
-        return res.status(404).json({ message: "User data not found" });
-      }
-      // Скоупинг под владельца: отдаём строку только если её проект принадлежит запросившему
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const rowProjectId = Number(result.rows[0].project_id);
-        const hasAccess = await storage.hasProjectAccess(rowProjectId, ownerId);
-        if (!hasAccess) {
-          return res.status(404).json({ message: "User data not found" });
-        }
-      }
-      res.json(result.rows[0]);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user data" });
-    }
-  });
-
   // Get user data by project and telegram user ID
   app.get("/api/projects/:projectId/users/:userId", requireProjectAccess, async (req, res) => {
     try {
@@ -3650,6 +3626,17 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(500).json({ message: "Failed to fetch user data" });
     }
   });
+
+  app.put(
+    "/api/projects/:projectId/users/:userId",
+    requireProjectAccess,
+    updateBotUserHandler,
+  );
+  app.delete(
+    "/api/projects/:projectId/users/:userId",
+    requireProjectAccess,
+    deleteBotUserHandler,
+  );
 
   // Create new user data
   app.post("/api/projects/:id/users", requireProjectAccess, async (req, res) => {
@@ -3673,125 +3660,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create user data" });
-    }
-  });
-
-  // Update user data in bot_users table
-  app.put("/api/users/:id", async (req, res) => {
-    const userId = req.params.id; // This is telegram user_id as string
-    const projectId = Number(req.body.projectId ?? 0);
-    const requestedTokenId = getRequestTokenId(req);
-    let effectiveTokenId: number | null = null;
-
-    try {
-      effectiveTokenId = await resolveEffectiveProjectTokenId(projectId, requestedTokenId);
-      // Используем общий пул соединений для обновления bot_users
-
-      // Скоупинг под владельца: мутация только в проектах, к которым есть доступ
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-        if (!hasAccess) {
-          return res.status(403).json({ message: "Нет прав доступа к проекту" });
-        }
-      }
-
-      // Проверяем какие поля можно обновить
-      const updateFields = [];
-      const values = [];
-      let paramIndex = 1;
-
-      if (req.body.isActive !== undefined) {
-        updateFields.push(`is_active = $${paramIndex++}`);
-        // Convert to integer 1 or 0 for PostgreSQL
-        values.push(req.body.isActive === 1 || req.body.isActive === true || req.body.isActive === '1' ? 1 : 0);
-      }
-
-      // Note: is_blocked and is_premium columns don't exist in bot_users table
-      // These fields are handled through user_data JSON field if needed
-
-      if (updateFields.length === 0) {
-        // НЕ закрываем пул - он нужен для других запросов
-        return res.status(400).json({ message: "No valid fields to update" });
-      }
-
-      const query = `
-        UPDATE bot_users 
-        SET ${updateFields.join(', ')}, last_interaction = NOW()
-        WHERE user_id = $${paramIndex} AND project_id = $${paramIndex + 1} AND token_id = $${paramIndex + 2}
-        RETURNING *
-      `;
-      values.push(userId);
-      values.push(projectId);
-      values.push(effectiveTokenId);
-
-      console.log('Updating user:', userId, 'with query:', query, 'values:', values);
-
-      const result = await dbPool.query(query, values);
-
-      console.log('Update result:', result.rows.length, 'rows affected');
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error("Ошибка обновления пользователя в bot_users:", error);
-      res.status(500).json({ message: "Failed to update user data" });
-    }
-  });
-
-  // Delete user data
-  app.delete("/api/users/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const projectId = Number(req.body?.projectId ?? 0);
-      const requestedTokenId = getRequestTokenId(req);
-      const tokenId = await resolveEffectiveProjectTokenId(projectId, requestedTokenId);
-
-      // Скоупинг под владельца: удаление только в проектах, к которым есть доступ
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-        if (!hasAccess) {
-          return res.status(403).json({ message: "Нет прав доступа к проекту" });
-        }
-      }
-
-      // Используем общий пул соединений для удаления
-      try {
-        // Удаляем сообщения пользователя из таблицы bot_messages
-        try {
-          const deleteMessagesResult = await dbPool.query(
-            `DELETE FROM bot_messages WHERE user_id = $1 AND project_id = $2 AND token_id = $3`,
-            [id, projectId, tokenId]
-          );
-
-          console.log(`Deleted ${deleteMessagesResult.rowCount || 0} messages from bot_messages for user ${id}`);
-        } catch (dbError) {
-          console.log("bot_messages table not found or error:", (dbError as any).message);
-        }
-
-        // Пытаемся удалить из bot_users если пользователь передал user_id
-        const deleteResult = await dbPool.query(
-          `DELETE FROM bot_users WHERE user_id = $1 AND project_id = $2 AND token_id = $3`,
-          [id, projectId, tokenId]
-        );
-
-        if (deleteResult.rowCount && deleteResult.rowCount > 0) {
-          console.log(`Deleted user ${id} from bot_users table`);
-          return res.json({ message: "User data deleted successfully" });
-        }
-      } catch (dbError) {
-        console.log("bot_users delete error:", (dbError as any).message);
-        return res.status(404).json({ message: "User data not found" });
-      }
-
-      res.json({ message: "User data deleted successfully" });
-    } catch (error) {
-      console.error("Failed to delete user data:", error);
-      res.status(500).json({ message: "Failed to delete user data" });
     }
   });
 
@@ -3884,69 +3752,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.json(result.rows);
     } catch (error) {
       res.status(500).json({ message: "Failed to search user data" });
-    }
-  });
-
-  // Increment user interaction count
-  app.post("/api/users/:id/interaction", async (req, res) => {
-    try {
-      const id = req.params.id;
-      const projectId = Number(req.body?.projectId ?? 0);
-      const tokenId = getRequestTokenId(req) ?? 0;
-      // Скоупинг под владельца: мутация только в проектах, к которым есть доступ
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-        if (!hasAccess) {
-          return res.status(403).json({ message: "Нет прав доступа к проекту" });
-        }
-      }
-      const result = await dbPool.query(
-        `UPDATE bot_users SET interaction_count = interaction_count + 1, last_interaction = NOW()
-         WHERE user_id = $1 AND project_id = $2 AND token_id = $3`,
-        [id, projectId, tokenId]
-      );
-      if (!result.rowCount || result.rowCount === 0) {
-        return res.status(404).json({ message: "User data not found" });
-      }
-      res.json({ message: "Interaction count incremented" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to increment interaction" });
-    }
-  });
-
-  // Update user state
-  app.put("/api/users/:id/state", async (req, res) => {
-    try {
-      const id = req.params.id;
-      const { state } = req.body;
-      const projectId = Number(req.body?.projectId ?? 0);
-      const tokenId = getRequestTokenId(req) ?? 0;
-
-      if (!state || typeof state !== 'string') {
-        return res.status(400).json({ message: "State is required and must be a string" });
-      }
-
-      // Скоупинг под владельца: мутация только в проектах, к которым есть доступ
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-        if (!hasAccess) {
-          return res.status(403).json({ message: "Нет прав доступа к проекту" });
-        }
-      }
-
-      const result = await dbPool.query(
-        `UPDATE bot_users SET user_data = jsonb_set(COALESCE(user_data, '{}'), '{current_state}', to_jsonb($1::text))
-         WHERE user_id = $2 AND project_id = $3 AND token_id = $4`,
-        [state, id, projectId, tokenId]
-      );
-      if (!result.rowCount || result.rowCount === 0) {
-        return res.status(404).json({ message: "User data not found" });
-      }
-      res.json({ message: "User state updated successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update user state" });
     }
   });
 
