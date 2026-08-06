@@ -37,9 +37,12 @@ async function generateApiDocs(): Promise<void> {
   fs.writeFileSync(path.join(API_DOCS_DIR, "openapi.json"), JSON.stringify(document, null, 2), "utf8");
   console.log("✅ Записан docs/api/openapi.json");
 
-  renderOpenApiMarkdownFiles(document, API_DOCS_DIR);
+  const removedStale = renderOpenApiMarkdownFiles(document, API_DOCS_DIR);
   const tagCount = fs.readdirSync(API_DOCS_DIR).filter((f) => f.endsWith(".md") && f !== "README.md").length;
   console.log(`✅ Markdown: docs/api/README.md + ${tagCount} файлов по тегам`);
+  if (removedStale.length > 0) {
+    console.log(`🗑️ Удалены устаревшие docs/api: ${removedStale.join(", ")}`);
+  }
 }
 
 generateApiDocs()

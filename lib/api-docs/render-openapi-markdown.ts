@@ -153,15 +153,38 @@ function collectByTag(doc: OpenApiDocForMarkdown): Map<string, TaggedOperation[]
 }
 
 /**
+ * Удаляет markdown-файлы тегов, которые больше не присутствуют в OpenAPI spec.
+ * @param outputDir - Каталог docs/api
+ * @param activeTags - Актуальные имена тегов из текущего spec
+ * @returns Список удалённых файлов (без README.md)
+ */
+function removeStaleTagMarkdownFiles(outputDir: string, activeTags: Set<string>): string[] {
+  const removed: string[] = [];
+
+  for (const entry of fs.readdirSync(outputDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".md") || entry.name === "README.md") continue;
+
+    const tag = entry.name.slice(0, -".md".length);
+    if (activeTags.has(tag)) continue;
+
+    fs.unlinkSync(path.join(outputDir, entry.name));
+    removed.push(entry.name);
+  }
+
+  return removed;
+}
+
+/**
  * Записывает docs/api/README.md и docs/api/{tag}.md.
  * @param doc - OpenAPI document
  * @param outputDir - Каталог docs/api
- * @returns void
+ * @returns Имена удалённых устаревших markdown-файлов тегов
  */
-export function renderOpenApiMarkdownFiles(doc: OpenApiDocForMarkdown, outputDir: string): void {
+export function renderOpenApiMarkdownFiles(doc: OpenApiDocForMarkdown, outputDir: string): string[] {
   fs.mkdirSync(outputDir, { recursive: true });
   const byTag = collectByTag(doc);
   const sortedTags = [...byTag.keys()].sort((a, b) => a.localeCompare(b));
+  const activeTagSet = new Set(sortedTags);
 
   const indexRows = sortedTags.map((tag) => {
     const count = byTag.get(tag)?.length ?? 0;
@@ -204,4 +227,6 @@ export function renderOpenApiMarkdownFiles(doc: OpenApiDocForMarkdown, outputDir
     ].join("\n");
     fs.writeFileSync(path.join(outputDir, `${tag}.md`), body, "utf8");
   }
+
+  return removeStaleTagMarkdownFiles(outputDir, activeTagSet);
 }
