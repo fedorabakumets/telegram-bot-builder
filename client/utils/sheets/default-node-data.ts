@@ -364,8 +364,6 @@ export const defaultNodeData = {
   action: undefined,
   /** Ожидать текстовый ввод */
   waitForTextInput: undefined,
-  /** Источник ID: "bot_users", "variable" */
-  idSourceType: 'bot_users' as const,
   /** Тип API рассылки: "bot", "userbot" */
   broadcastApiType: 'bot' as const,
   /** Целевой узел рассылки */

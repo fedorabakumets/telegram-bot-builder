@@ -8,8 +8,6 @@ import assert from 'node:assert';
 import { generateBroadcastBot, collectBroadcastNodes } from './broadcast-bot.renderer';
 import {
   validParamsBotUsers,
-  validParamsUserIds,
-  validParamsBoth,
   validParamsEmpty,
   validParamsWithMedia,
   validParamsWithAutoTransition,
@@ -37,22 +35,10 @@ describe('broadcast-bot.py.jinja2', () => {
     });
 
     describe('Получатели', () => {
-      it('bot_users: SELECT из bot_users', () => {
+      it('SELECT из bot_users, без FROM user_ids', () => {
         const r = generateBroadcastBot(validParamsBotUsers);
         assert.ok(r.includes('SELECT DISTINCT user_id FROM bot_users'));
         assert.ok(!r.includes('FROM user_ids'));
-      });
-
-      it('user_ids: SELECT из user_ids', () => {
-        const r = generateBroadcastBot(validParamsUserIds);
-        assert.ok(r.includes('SELECT DISTINCT user_id FROM user_ids'));
-        assert.ok(!r.includes('FROM bot_users'));
-      });
-
-      it('both: SELECT из обеих таблиц', () => {
-        const r = generateBroadcastBot(validParamsBoth);
-        assert.ok(r.includes('SELECT DISTINCT user_id FROM user_ids'));
-        assert.ok(r.includes('SELECT DISTINCT user_id FROM bot_users'));
       });
     });
 
@@ -148,11 +134,6 @@ describe('broadcast-bot.py.jinja2', () => {
       it('отклоняет отсутствие nodeId', () => {
         assert.throws(() => generateBroadcastBot(invalidParamsMissingField as any));
       });
-
-      it('отклоняет неправильный idSourceType', () => {
-        const r = broadcastBotParamsSchema.safeParse({ nodeId: 'test', idSourceType: 'all' });
-        assert.ok(!r.success);
-      });
     });
 
     describe('Граничные случаи', () => {
@@ -225,23 +206,8 @@ describe('broadcast-bot.py.jinja2', () => {
       assert.ok(broadcastBotParamsSchema.safeParse({ nodeId: 'test' }).success);
     });
 
-    it('дефолт idSourceType = bot_users', () => {
-      const r = broadcastBotParamsSchema.safeParse({ nodeId: 'test' });
-      assert.ok(r.success && r.data.idSourceType === 'bot_users');
-    });
-
-    it('принимает все значения idSourceType', () => {
-      for (const v of ['user_ids', 'bot_users', 'both']) {
-        assert.ok(broadcastBotParamsSchema.safeParse({ nodeId: 'test', idSourceType: v }).success);
-      }
-    });
-
     it('принимает broadcastNodes как массив', () => {
       assert.ok(broadcastBotParamsSchema.safeParse({ nodeId: 'test', broadcastNodes: [{ id: 'n1', text: 'Hi' }] }).success);
-    });
-
-    it('использует ZodDefault для idSourceType', () => {
-      assert.strictEqual(broadcastBotParamsSchema.shape.idSourceType.constructor.name, 'ZodDefault');
     });
   });
 });

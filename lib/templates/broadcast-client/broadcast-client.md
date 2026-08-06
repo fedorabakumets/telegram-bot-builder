@@ -2,14 +2,13 @@
 
 ## Описание
 
-Генерирует Python обработчик массовой рассылки сообщений через Telethon Client API. В отличие от Bot API, Client API работает от имени пользователя и имеет меньше ограничений на рассылку.
+Генерирует Python обработчик массовой рассылки сообщений через Telethon Client API. В отличие от Bot API, Client API работает от имени пользователя и имеет меньше ограничений на рассылку. Получатели берутся из таблицы `bot_users`.
 
 ## Параметры
 
 | Параметр | Тип | По умолчанию | Описание |
 |---|---|---|---|
 | nodeId | string | — | ID узла (обязательный) |
-| idSourceType | `'user_ids'` \| `'bot_users'` \| `'both'` | `'bot_users'` | Источник ID получателей |
 | successMessage | string | `''` | Сообщение после успешной рассылки |
 | errorMessage | string | `''` | Сообщение при ошибке |
 | broadcastNodes | BroadcastNode[] | `[]` | Список сообщений для рассылки |
@@ -37,7 +36,6 @@ import { generateBroadcastClient } from './templates/broadcast-client';
 
 const code = generateBroadcastClient({
   nodeId: 'broadcast_1',
-  idSourceType: 'bot_users',
   successMessage: 'Рассылка завершена',
   broadcastNodes: [
     { id: 'msg_1', text: 'Привет!', formatMode: 'none' },

@@ -103,10 +103,6 @@ export async function replaceVariablesInText(
     variables.bot_name = "Бот";
   }
 
-  // Переменные для рассылок (заглушки, так как это админская отправка)
-  variables.user_ids = "";
-  variables.user_ids_count = "0";
-
   // Заменяем все переменные в формате {variable_name} и {variable.path.nested}
   return text.replace(/\{([\w.]+)\}/g, (match, varPath) => {
     // Поддержка вложенных путей через точку (например validate_response.result.first_name)

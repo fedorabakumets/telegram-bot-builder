@@ -38,10 +38,6 @@ export interface BroadcastBotTemplateParams {
   /** Уникальный идентификатор узла */
   nodeId: string;
 
-  // --- Источник ---
-  /** Источник ID: 'user_ids', 'bot_users', 'both' */
-  idSourceType?: 'user_ids' | 'bot_users' | 'both';
-
   // --- Сообщения ---
   /** Сообщение об успехе */
   successMessage?: string;

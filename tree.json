@@ -423,21 +423,6 @@
     "author": ""
   },
   {
-    "path": "api/user-ids",
-    "title": "user-ids",
-    "excerpt": "Эндпоинтов: **4**",
-    "parts": [
-      "api",
-      "user-ids"
-    ],
-    "folder_titles": {
-      "api": "Api"
-    },
-    "updated_at": "2026-07-04T19:32:54+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
     "path": "api/user",
     "title": "user",
     "excerpt": "Эндпоинтов: **12**",
@@ -894,21 +879,6 @@
     "parts": [
       "database",
       "telegram_users"
-    ],
-    "folder_titles": {
-      "database": "Database"
-    },
-    "updated_at": "2026-07-04T19:19:59+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "database/user_ids",
-    "title": "user_ids",
-    "excerpt": "Таблица ID пользователей для рассылки (общая база на все проекты)",
-    "parts": [
-      "database",
-      "user_ids"
     ],
     "folder_titles": {
       "database": "Database"
@@ -2525,23 +2495,6 @@
       "broadcasts": "📢 Рассылки"
     },
     "updated_at": "2026-06-15T19:18:04+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
-    "path": "interface/broadcasts/id-database",
-    "title": "🗃️ База идентификаторов для рассылок",
-    "excerpt": "База идентификаторов — это общий список Telegram ID пользователей, который хранится отдельно от конкретного проекта и помогает быстро собрат",
-    "parts": [
-      "interface",
-      "broadcasts",
-      "id-database"
-    ],
-    "folder_titles": {
-      "interface": "🖥️ Интерфейс",
-      "broadcasts": "📢 Рассылки"
-    },
-    "updated_at": "2026-06-15T01:26:00+03:00",
     "tags": [],
     "author": ""
   },

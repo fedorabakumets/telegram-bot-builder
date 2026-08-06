@@ -95,7 +95,6 @@ export function generateBroadcastBotFromNode(node: Node, allNodes: Node[]): stri
   const d = node.data as any;
   return generateBroadcastBot({
     nodeId: node.id,
-    idSourceType: d.idSourceType || 'bot_users',
     successMessage: d.successMessage || '',
     errorMessage: d.errorMessage || '',
     broadcastNodes: collectBroadcastNodes(allNodes, node.id),

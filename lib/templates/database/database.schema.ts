@@ -11,8 +11,6 @@ export const databaseParamsSchema = z.object({
   userDatabaseEnabled: z.boolean().default(false),
   /** Есть логирование сообщений (нужна таблица bot_messages) */
   hasMessageLogging: z.boolean().default(false),
-  /** Есть таблица user_ids */
-  hasUserIdsTable: z.boolean().default(false),
   /** Есть таблица user_telegram_settings */
   hasTelegramSettingsTable: z.boolean().default(false),
   /** Нужны функции чтения/записи переменных пользователя */

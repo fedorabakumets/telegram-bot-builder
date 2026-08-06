@@ -7,7 +7,6 @@ import { Node } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { IdSourceSelector } from '../navigation/id-source-selector';
 import { ApiTypeSelector } from '../common/api-type-selector';
 import { ComingSoonBadge } from '../conditional-message-card/coming-soon-badge';
 
@@ -33,9 +32,6 @@ export function BroadcastNodeProperties({ node, onUpdate }: BroadcastNodePropert
     <div className="w-full bg-gradient-to-br from-orange-50/40 to-amber-50/20 dark:from-orange-950/30 dark:to-amber-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-orange-200/40 dark:border-orange-800/40 backdrop-blur-sm space-y-3">
       {/* Выбор типа API */}
       <ApiTypeSelector node={node} onUpdate={onUpdate} />
-
-      {/* Выбор источника ID */}
-      <IdSourceSelector node={node} onUpdate={onUpdate} />
 
       {/* Подтверждение рассылки */}
       <div className="flex items-center justify-between">

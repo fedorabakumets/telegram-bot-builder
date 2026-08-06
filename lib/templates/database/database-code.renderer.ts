@@ -16,7 +16,6 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
   }
 
   const hasMessageLogging = nodes.some(n => n.type === NODE_TYPES.MESSAGE);
-  const hasUserIdsTable = nodes.some(n => n.data?.buttons?.some((b: any) => b.action === 'goto'));
   const hasUserDataAccess = nodes.some(n =>
     n.data?.collectUserInput ||
     n.data?.enableConditionalMessages ||
@@ -28,7 +27,7 @@ export function generateDatabaseCode(userDatabaseEnabled: boolean, nodes: any[])
     n.data?.collectUserInput && TG_VARS.has(n.data?.inputVariable)
   );
 
-  let code = generateDatabase({ userDatabaseEnabled: true, hasMessageLogging, hasUserIdsTable, hasUserDataAccess, hasTelegramSettingsTable });
+  let code = generateDatabase({ userDatabaseEnabled: true, hasMessageLogging, hasUserDataAccess, hasTelegramSettingsTable });
   code += '\n';
 
   const commandNodes = nodes

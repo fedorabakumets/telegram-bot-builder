@@ -156,8 +156,6 @@ export interface MessageTemplateParams {
   // --- Служебные ---
   /** Есть ли входящие кнопки с hideAfterClick=true, ведущие к этому узлу */
   hasHideAfterClickIncoming?: boolean;
-  /** Использует ли текст переменные user_ids */
-  hasUserIdsVariable?: boolean;
   /**
    * Паттерн для декоратора @dp.callback_query.
    * Если задан customCallbackData у кнопки goto/command, ведущей к этому узлу —

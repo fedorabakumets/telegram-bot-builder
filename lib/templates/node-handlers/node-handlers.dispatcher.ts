@@ -59,13 +59,6 @@ import type { DynamicButtonsConfig } from '../keyboard/dynamic-buttons';
 import type { MessageTemplateParams } from '../message/message.params';
 
 /**
- * Проверяет, использует ли текст переменные {user_ids} или {user_ids_count}
- */
-function hasUserIdsVar(text: string): boolean {
-  return /\{user_ids(?:_count)?\}/.test(text || '');
-}
-
-/**
  * Ищет customCallbackData среди кнопок всех узлов, ведущих к указанному nodeId.
  * Применяется для кнопок с action === 'goto' или action === 'command'.
  *
@@ -327,7 +320,6 @@ export function generateNodeHandlers(
         conditionalMessages: node.data?.conditionalMessages || [],
         fallbackMessage: node.data?.fallbackMessage,
         synonymEntries: collectSynonymEntries([node]),
-        hasUserIdsVariable: hasUserIdsVar(node.data?.messageText || ''),
         hasHideAfterClickIncoming: nodes.some((n: Node) =>
           (n.data?.buttons || []).some((btn: any) => btn.hideAfterClick === true && btn.target === node.id)
         ),

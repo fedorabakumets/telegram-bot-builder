@@ -39,9 +39,6 @@ export type { BotMessage, InsertBotMessage, BotMessageMedia, InsertBotMessageMed
 export { messageActivityDaily } from "./message-activity-daily";
 export type { MessageActivityDaily, InsertMessageActivityDaily } from "./message-activity-daily";
 
-export { userIds, insertUserIdSchema } from "./user-ids";
-export type { UserId, InsertUserId } from "./user-ids";
-
 export { buttonSchema } from "./button-schema";
 export type { Button } from "./button-schema";
 

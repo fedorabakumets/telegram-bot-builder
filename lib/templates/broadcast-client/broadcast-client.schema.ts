@@ -39,10 +39,6 @@ export const broadcastClientParamsSchema = z.object({
   /** Уникальный идентификатор узла */
   nodeId: z.string(),
 
-  // --- Источник ---
-  /** Источник ID: 'user_ids', 'bot_users', 'both' */
-  idSourceType: z.enum(['user_ids', 'bot_users', 'both']).default('bot_users'),
-
   // --- Сообщения ---
   /** Сообщение об успехе */
   successMessage: z.string().default(''),

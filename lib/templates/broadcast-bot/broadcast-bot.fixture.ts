@@ -19,35 +19,23 @@ const sampleNodes = [
   },
 ];
 
+/** Валидные параметры с получателями из bot_users */
 export const validParamsBotUsers: BroadcastBotTemplateParams = {
   nodeId: 'broadcast_1',
-  idSourceType: 'bot_users',
   successMessage: 'Рассылка выполнена успешно',
   errorMessage: 'Произошла ошибка',
   broadcastNodes: sampleNodes,
 };
 
-export const validParamsUserIds: BroadcastBotTemplateParams = {
-  nodeId: 'broadcast_2',
-  idSourceType: 'user_ids',
-  broadcastNodes: sampleNodes,
-};
-
-export const validParamsBoth: BroadcastBotTemplateParams = {
-  nodeId: 'broadcast_3',
-  idSourceType: 'both',
-  broadcastNodes: sampleNodes,
-};
-
+/** Валидные параметры с пустым списком сообщений */
 export const validParamsEmpty: BroadcastBotTemplateParams = {
   nodeId: 'broadcast_4',
-  idSourceType: 'bot_users',
   broadcastNodes: [],
 };
 
+/** Валидные параметры с медиа */
 export const validParamsWithMedia: BroadcastBotTemplateParams = {
   nodeId: 'broadcast_5',
-  idSourceType: 'bot_users',
   broadcastNodes: [
     {
       id: 'msg_media',
@@ -63,9 +51,9 @@ export const validParamsWithMedia: BroadcastBotTemplateParams = {
   ],
 };
 
+/** Валидные параметры с автопереходом */
 export const validParamsWithAutoTransition: BroadcastBotTemplateParams = {
   nodeId: 'broadcast_6',
-  idSourceType: 'bot_users',
   broadcastNodes: [
     {
       id: 'msg_a',
@@ -92,5 +80,7 @@ export const validParamsWithAutoTransition: BroadcastBotTemplateParams = {
   ],
 };
 
+/** Невалидные параметры: nodeId не строка */
 export const invalidParamsWrongType = { nodeId: 123 };
-export const invalidParamsMissingField = { idSourceType: 'bot_users' };
+/** Невалидные параметры: отсутствует nodeId */
+export const invalidParamsMissingField = { successMessage: 'test' };

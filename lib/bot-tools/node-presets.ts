@@ -285,7 +285,6 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       is_anonymous: false
     },
     broadcast: {
-      idSourceType: 'bot_users',
       enableConfirmation: true,
       confirmationText: 'Отправить рассылку всем пользователям?',
       successMessage: '✅ Рассылка отправлена!',

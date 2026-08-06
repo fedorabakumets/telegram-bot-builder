@@ -129,7 +129,6 @@ import {
 Компоненты навигации:
 - `AutoTransitionSection` — секция автоперехода
 - `GotoTargetSection` — секция целевого перехода
-- `IdSourceSelector` — выбор источника ID
 - `InputNavigationGrid` — сетка навигации ввода
 
 ### `synonyms/`

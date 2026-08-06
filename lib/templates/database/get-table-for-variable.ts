@@ -24,8 +24,8 @@ export interface TableInfo {
  * @returns Информация о таблице или null
  *
  * @example
- * const info = getTableForVariable('user_ids');
- * // { table: 'user_ids', column: 'user_id' }
+ * const info = getTableForVariable('tg_phone');
+ * // { table: 'user_telegram_settings', column: 'phone_number' }
  */
 export function getTableForVariable(varName: string): TableInfo | null {
   for (const source of SYSTEM_VARIABLE_SOURCES) {

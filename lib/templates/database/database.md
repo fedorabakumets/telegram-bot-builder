@@ -10,7 +10,6 @@
 |----------|-----|--------------|----------|
 | `userDatabaseEnabled` | `boolean` | `false` | Включена ли база данных пользователей |
 | `hasMessageLogging` | `boolean` | `false` | Генерировать функцию `log_message` |
-| `hasUserIdsTable` | `boolean` | `false` | Генерировать функцию `get_user_ids_from_db` |
 | `hasTelegramSettingsTable` | `boolean` | `false` | Создавать таблицу `user_telegram_settings` |
 | `hasUserDataAccess` | `boolean` | `false` | Генерировать функции чтения/записи переменных |
 

@@ -40,9 +40,6 @@ export type { BotMessage, InsertBotMessage, BotMessageMedia, InsertBotMessageMed
 export { messageActivityDaily } from "./schema/tables/message-activity-daily";
 export type { MessageActivityDaily, InsertMessageActivityDaily } from "./schema/tables/message-activity-daily";
 
-export { userIds, insertUserIdSchema } from "./schema/tables/user-ids";
-export type { UserId, InsertUserId } from "./schema/tables/user-ids";
-
 export { buttonSchema } from "./schema/tables/button-schema";
 export type { Button } from "./schema/tables/button-schema";
 

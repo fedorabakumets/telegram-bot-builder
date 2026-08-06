@@ -275,7 +275,6 @@ export function getNodeDefaults(type: Node['type']): any {
       is_anonymous: false
     },
     broadcast: {
-      idSourceType: 'bot_users',
       enableConfirmation: true,
       confirmationText: 'Отправить рассылку всем пользователям?',
       successMessage: '✅ Рассылка отправлена!',

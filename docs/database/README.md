@@ -28,7 +28,6 @@
 | [project_versions](./project_versions.md) | 8 | Таблица версий проектов — хранит снимки данных проекта (BotDataWithSheets) |
 | [storage_configs](./storage_configs.md) | 8 | Таблица реестра хранилищ: несколько S3 (разные бакеты/endpoint'ы/креды) и несколько локальных папок. Одно хранилище помечено активным для новых загрузок; читать можно из всех. |
 | [telegram_users](./telegram_users.md) | 8 | Таблица аутентифицированных пользователей Telegram |
-| [user_ids](./user_ids.md) | 4 | Таблица ID пользователей для рассылки (общая база на все проекты) |
 | [user_telegram_settings](./user_telegram_settings.md) | 9 | Таблица пользовательских настроек для Telegram Client API |
 | [worker_processes](./worker_processes.md) | 8 | Таблица процессов воркеров — мониторинг Python worker pool |
 

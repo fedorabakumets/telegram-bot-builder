@@ -64,14 +64,6 @@ export const SYSTEM_VARIABLE_SOURCES: SystemVariableSource[] = [
       { column: 'session_string', variableName: 'tg_session', description: 'Session string', fieldType: 'string' },
       { column: 'is_active', variableName: 'tg_is_active', description: 'Активны ли настройки', fieldType: 'boolean' }
     ]
-  },
-  {
-    table: 'user_ids',
-    description: 'Список ID для рассылки',
-    fields: [
-      { column: 'user_id', variableName: 'user_ids', description: 'Список всех ID (используйте фильтры |join:", " или |join:"\\n")', fieldType: 'array' },
-      { column: 'user_id', variableName: 'user_ids_count', description: 'Количество ID', fieldType: 'number', transform: 'count' }
-    ]
   }
 ];
 

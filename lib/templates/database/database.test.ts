@@ -55,42 +55,43 @@ describe('database.py.jinja2 шаблон', () => {
       });
 
       it('должен включать get_moscow_time', () => {
-        const result = generateDatabase({ userDatabaseEnabled: true });
+        const result = generateDatabase({ userDatabaseEnabled: true, hasMessageLogging: true });
 
         assert.ok(result.includes('def get_moscow_time()'));
         assert.ok(result.includes('moscow_tz = timezone(timedelta(hours=3))'));
       });
 
       it('должен включать log_message', () => {
-        const result = generateDatabase({ userDatabaseEnabled: true });
+        const result = generateDatabase({ userDatabaseEnabled: true, hasMessageLogging: true });
 
         assert.ok(result.includes('async def log_message'));
         assert.ok(result.includes('INSERT INTO bot_messages'));
       });
 
-      it('должен включать get_user_ids_from_db', () => {
-        const result = generateDatabase({ userDatabaseEnabled: true });
+      it('не должен включать get_user_ids_from_db и FROM user_ids', () => {
+        const result = generateDatabase({ userDatabaseEnabled: true, hasMessageLogging: true, hasUserDataAccess: true });
 
-        assert.ok(result.includes('async def get_user_ids_from_db'));
-        assert.ok(result.includes('SELECT user_id FROM user_ids'));
+        assert.ok(!result.includes('async def get_user_ids_from_db'));
+        assert.ok(!result.includes('FROM user_ids'));
+        assert.ok(result.includes('bot_users'));
       });
 
       it('должен включать get_user_data_from_db', () => {
-        const result = generateDatabase({ userDatabaseEnabled: true });
+        const result = generateDatabase({ userDatabaseEnabled: true, hasUserDataAccess: true });
 
         assert.ok(result.includes('async def get_user_data_from_db'));
         assert.ok(result.includes('SELECT user_data FROM bot_users'));
       });
 
       it('должен включать update_user_variable_in_db', () => {
-        const result = generateDatabase({ userDatabaseEnabled: true });
+        const result = generateDatabase({ userDatabaseEnabled: true, hasUserDataAccess: true });
 
         assert.ok(result.includes('async def update_user_variable_in_db'));
         assert.ok(result.includes('user_data[variable_name] = variable_value'));
       });
 
       it('должен включать save_user_data_to_db', () => {
-        const result = generateDatabase({ userDatabaseEnabled: true });
+        const result = generateDatabase({ userDatabaseEnabled: true, hasUserDataAccess: true });
 
         assert.ok(result.includes('async def save_user_data_to_db'));
         assert.ok(result.includes('update_user_variable_in_db'));
@@ -119,8 +120,8 @@ describe('database.py.jinja2 шаблон', () => {
         if (result.success) {
           assert.strictEqual(result.data.userDatabaseEnabled, false);
           assert.strictEqual(result.data.hasMessageLogging, false);
-          assert.strictEqual(result.data.hasUserIdsTable, false);
           assert.strictEqual(result.data.hasTelegramSettingsTable, false);
+          assert.strictEqual(result.data.hasUserDataAccess, false);
         }
       });
 
@@ -143,7 +144,11 @@ describe('database.py.jinja2 шаблон', () => {
 
     describe('Граничные случаи', () => {
       it('должен генерировать все функции при включенной БД', () => {
-        const result = generateDatabase({ userDatabaseEnabled: true });
+        const result = generateDatabase({
+          userDatabaseEnabled: true,
+          hasMessageLogging: true,
+          hasUserDataAccess: true,
+        });
 
         const functions = [
           'init_database',
@@ -152,7 +157,6 @@ describe('database.py.jinja2 шаблон', () => {
           'update_user_data_in_db',
           'get_moscow_time',
           'log_message',
-          'get_user_ids_from_db',
           'get_user_data_from_db',
           'update_user_variable_in_db',
           'save_user_data_to_db',
@@ -161,6 +165,7 @@ describe('database.py.jinja2 шаблон', () => {
         functions.forEach(fn => {
           assert.ok(result.includes(`def ${fn}`), `Функция ${fn} должна присутствовать`);
         });
+        assert.ok(!result.includes('get_user_ids_from_db'));
       });
 
       it('должен включать asyncpg.create_pool', () => {
@@ -191,12 +196,12 @@ describe('database.py.jinja2 шаблон', () => {
         const result = generateDatabase({
           userDatabaseEnabled: true,
           hasMessageLogging: true,
-          hasUserIdsTable: true,
           hasTelegramSettingsTable: true,
         });
 
         assert.ok(result.includes('async def init_database'));
         assert.ok(result.includes('async def log_message'));
+        assert.ok(!result.includes('FROM user_ids'));
       });
     });
 
@@ -227,8 +232,8 @@ describe('database.py.jinja2 шаблон', () => {
         const result = databaseParamsSchema.safeParse({
           userDatabaseEnabled: true,
           hasMessageLogging: true,
-          hasUserIdsTable: false,
           hasTelegramSettingsTable: true,
+          hasUserDataAccess: false,
         });
         assert.ok(result.success);
       });
@@ -270,8 +275,8 @@ describe('database.py.jinja2 шаблон', () => {
         if (result.success) {
           assert.strictEqual(result.data.userDatabaseEnabled, false);
           assert.strictEqual(result.data.hasMessageLogging, false);
-          assert.strictEqual(result.data.hasUserIdsTable, false);
           assert.strictEqual(result.data.hasTelegramSettingsTable, false);
+          assert.strictEqual(result.data.hasUserDataAccess, false);
         }
       });
 
@@ -279,16 +284,16 @@ describe('database.py.jinja2 шаблон', () => {
         const result = databaseParamsSchema.safeParse({
           userDatabaseEnabled: true,
           hasMessageLogging: true,
-          hasUserIdsTable: true,
           hasTelegramSettingsTable: true,
+          hasUserDataAccess: true,
         });
 
         assert.ok(result.success);
         if (result.success) {
           assert.strictEqual(result.data.userDatabaseEnabled, true);
           assert.strictEqual(result.data.hasMessageLogging, true);
-          assert.strictEqual(result.data.hasUserIdsTable, true);
           assert.strictEqual(result.data.hasTelegramSettingsTable, true);
+          assert.strictEqual(result.data.hasUserDataAccess, true);
         }
       });
     });
@@ -301,16 +306,16 @@ describe('database.py.jinja2 шаблон', () => {
         assert.strictEqual(fields.length, 4);
         assert.ok(fields.includes('userDatabaseEnabled'));
         assert.ok(fields.includes('hasMessageLogging'));
-        assert.ok(fields.includes('hasUserIdsTable'));
         assert.ok(fields.includes('hasTelegramSettingsTable'));
+        assert.ok(fields.includes('hasUserDataAccess'));
       });
 
       it('должен использовать ZodDefault для всех полей', () => {
         const shape = databaseParamsSchema.shape;
         assert.strictEqual(shape.userDatabaseEnabled.constructor.name, 'ZodDefault');
         assert.strictEqual(shape.hasMessageLogging.constructor.name, 'ZodDefault');
-        assert.strictEqual(shape.hasUserIdsTable.constructor.name, 'ZodDefault');
         assert.strictEqual(shape.hasTelegramSettingsTable.constructor.name, 'ZodDefault');
+        assert.strictEqual(shape.hasUserDataAccess.constructor.name, 'ZodDefault');
       });
     });
   });

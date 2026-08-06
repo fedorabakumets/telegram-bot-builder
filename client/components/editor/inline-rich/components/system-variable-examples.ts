@@ -24,7 +24,6 @@ const SYSTEM_VARIABLE_EXAMPLES: Record<string, string> = {
   current_time: '14:30:00',
   current_datetime: '2026-06-14 14:30:00',
   language_code: 'ru',
-  user_ids_count: '1500',
   user_interaction_count: '27'
 };
 

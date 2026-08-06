@@ -58,7 +58,6 @@ const sidebars: SidebarsConfig = {
           items: [
             'interface/broadcasts/overview',
             'interface/broadcasts/create',
-            'interface/broadcasts/id-database',
           ],
         },
       ],

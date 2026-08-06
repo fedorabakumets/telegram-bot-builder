@@ -16,20 +16,6 @@
 {{ indent }}# {{ source.description }}
 {{ indent }}# Переменные из bot_users инициализируются в init_user_variables()
 
-{% elif source.table == 'user_ids' %}
-{{ indent }}# Таблица: {{ source.table }}
-{{ indent }}# {{ source.description }}
-{{ indent }}try:
-{{ indent }}    async with db_pool.acquire() as conn:
-{{ indent }}        rows = await conn.fetch("SELECT user_id FROM user_ids ORDER BY created_at DESC")
-{{ indent }}        user_ids = [str(row["user_id"]) for row in rows]
-{{ indent }}        user_ids_count = len(rows)
-{{ indent }}        logging.info(f"✅ Получено {user_ids_count} ID из таблицы user_ids")
-{{ indent }}except Exception as e:
-{{ indent }}    logging.error(f"❌ Ошибка получения данных из user_ids: {e}")
-{{ indent }}    user_ids = []
-{{ indent }}    user_ids_count = 0
-
 {% elif source.table == 'user_telegram_settings' %}
 {{ indent }}# Таблица: {{ source.table }}
 {{ indent }}# {{ source.description }}

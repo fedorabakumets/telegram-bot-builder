@@ -555,8 +555,6 @@ export const nodeSchema = z.object({
     action: z.string().optional(),
     /** Ожидать текстовый ввод (устаревшее, используйте enableTextInput) */
     waitForTextInput: z.boolean().optional(),
-    /** Источник ID пользователей для рассылки: "user_ids", "bot_users", "both" */
-    idSourceType: z.enum(['user_ids', 'bot_users', 'both']).default('bot_users').optional(),
     /** Тип API для рассылки: "bot" — через бота, "client" — через клиент */
     broadcastApiType: z.enum(['bot', 'client']).default('bot').optional(),
     /** ID узла с контентом рассылки */

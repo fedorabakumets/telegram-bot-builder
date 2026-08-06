@@ -44,7 +44,6 @@ const PAGES: string[] = [
   'tables/system-tables.md',
   'broadcasts/overview.md',
   'broadcasts/create.md',
-  'broadcasts/id-database.md',
 ];
 
 /**

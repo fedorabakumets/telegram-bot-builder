@@ -314,17 +314,6 @@ export const botProjects = pgTable("bot_projects", {
 		}).onDelete("cascade"),
 ]);
 
-export const userIds = pgTable("user_ids", {
-	id: serial().primaryKey().notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	userId: bigint("user_id", { mode: "number" }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow(),
-	source: text().default('manual'),
-}, (table) => [
-	index("user_ids_user_id_idx").using("btree", table.userId.asc().nullsLast().op("int8_ops")),
-	unique("user_ids_user_unique").on(table.userId),
-]);
-
 /** Таблица истории версий проекта — снимки data (BotDataWithSheets) при сохранении */
 export const projectVersions = pgTable("project_versions", {
 	id: serial().primaryKey().notNull(),

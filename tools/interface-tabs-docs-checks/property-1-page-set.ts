@@ -40,7 +40,6 @@ const expectedPages: string[] = [
   'tables/system-tables.md',
   'broadcasts/overview.md',
   'broadcasts/create.md',
-  'broadcasts/id-database.md',
 ];
 
 /** Список служебных файлов `_meta.json`, которые должны содержать валидный JSON. */

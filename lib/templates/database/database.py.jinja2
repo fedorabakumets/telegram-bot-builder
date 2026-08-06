@@ -4,7 +4,6 @@
   @fileoverview Генерирует функции для работы с базой данных
   @param {boolean} userDatabaseEnabled - База данных пользователей включена
   @param {boolean} hasMessageLogging - Есть логирование сообщений (нужна таблица bot_messages)
-  @param {boolean} hasUserIdsTable - Есть таблица user_ids
   @param {boolean} hasTelegramSettingsTable - Есть таблица user_telegram_settings
 #}
 
@@ -47,26 +46,6 @@ async def log_message(user_id: int, message_type: str, message_text: str = None,
             )
     except Exception as e:
         logging.error(f"❌ Ошибка логирования сообщения: {e}")
-{% endmacro %}
-
-{#
-  Получение списка user_ids
-#}
-{% macro get_user_ids_from_db() %}
-async def get_user_ids_from_db(user_id: int):
-    """Получает список user_ids из таблицы user_ids"""
-    if not db_pool:
-        return {"user_ids": [], "count": 0}
-    try:
-        async with db_pool.acquire() as conn:
-            rows = await conn.fetch("SELECT user_id FROM user_ids ORDER BY created_at DESC")
-            user_ids = [str(row["user_id"]) for row in rows]
-            count = len(rows)
-            logging.info(f"✅ Получено {count} ID из таблицы user_ids")
-            return {"user_ids": user_ids, "count": count}
-    except Exception as e:
-        logging.error(f"❌ Ошибка получения данных из user_ids: {e}")
-        return {"user_ids": [], "count": 0}
 {% endmacro %}
 
 {#
@@ -354,9 +333,6 @@ async def update_user_data_in_db(user_id: int, data_key: str, data_value):
 {% if hasMessageLogging %}
 {{ get_moscow_time_macro() }}
 {{ log_message_function() }}
-{% endif %}
-{% if hasUserIdsTable %}
-{{ get_user_ids_from_db() }}
 {% endif %}
 {% if hasUserDataAccess %}
 {{ get_user_data_from_db() }}

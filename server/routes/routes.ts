@@ -78,7 +78,6 @@ import {
   StorageBackendWriteError,
 } from "./media/upload-storage-helper";
 import { enrichMediaFilesWithTokens } from "./media/enrich-media-files-with-tokens";
-import { createUserIdsRoutes } from "./user-ids-routes";
 import { broadcastProjectEvent, emitTokenUpdated } from "../terminal";
 import { getRequestTokenId, resolveEffectiveProjectTokenId } from "./utils/resolve-request-token";
 import { getTelegramProxyAgent } from "../utils/telegram-proxy";
@@ -567,9 +566,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // Get all bot projects (lightweight - without data field)
   setupProjectRoutes(app, requireDbReady);
-
-  // User IDs management routes (общая база на все проекты)
-  app.use("/api/user-ids", createUserIdsRoutes(pgPool));
 
   // Get all bot instances
   app.get("/api/bots", async (req, res) => {

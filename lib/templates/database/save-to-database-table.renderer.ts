@@ -53,7 +53,7 @@ export function generateSaveToDatabaseTable(
       indentLevel: indent,
     });
   } else {
-    // Любая другая таблица (user_ids, user_telegram_settings, etc.)
+    // Любая другая таблица (user_telegram_settings и др.)
     return renderPartialTemplate('database/save-to-table.py.jinja2', {
       tableName: tableInfo.table,
       columnName: tableInfo.column || variableName,
