@@ -184,7 +184,7 @@ export class DatabaseStorage implements IStorage {
   async stopBotInstanceByToken(tokenId: number): Promise<boolean> {
     const result = await this.db
       .update(botInstances)
-      .set({ status: 'stopped', stoppedAt: new Date() })
+      .set({ status: 'stopped', stoppedAt: new Date(), errorMessage: null })
       .where(eq(botInstances.tokenId, tokenId));
     return result.rowCount ? result.rowCount > 0 : false;
   }
