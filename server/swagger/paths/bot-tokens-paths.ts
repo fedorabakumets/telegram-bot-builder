@@ -12,6 +12,8 @@ import {
   ValidationErrorSchema,
 } from "../schemas/common";
 import {
+  BotLaunchHistoryListSchema,
+  BotStatusByTokenResponseSchema,
   TokenUpdatedEventDataSchema,
   TokenUpdatedPayloadSchema,
   UpdateMessagesRetentionRequestSchema,
@@ -51,7 +53,7 @@ export function registerBotTokensPaths(
       "Таблица `message_activity_daily` (длинный график «Активность») не трогается. " +
       "Требуется владение токеном (`requireTokenOwnership`). " +
       "**Side-effect:** после успеха эмитит WebSocket `token-updated` " +
-      "(безопасный снимок токена без секретов; см. docs/api/realtime-events.md). " +
+      "(безопасный снимок токена без секретов; см. docs/features/token-settings-realtime.md). " +
       "UI и другие клиенты обновляются без F5.",
     security: cookieSecurity,
     request: {
@@ -132,6 +134,102 @@ export function registerBotTokensPaths(
       404: {
         description: "Токен не найден в этом проекте",
         content: { "application/json": { schema: MessageErrorSchema } },
+      },
+    },
+  });
+
+  const tokenIdParams = z.object({
+    /** ID токена бота */
+    tokenId: z.string().openapi({ example: "7", description: "ID токена бота" }),
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/tokens/{tokenId}/bot-status",
+    tags: ["tokens"],
+    summary: "Статус бота по токену",
+    description:
+      "Возвращает актуальный статус бота для токена: сверка с активным процессом, " +
+      "worker pool и записью `bot_instances`. При расхождении обновляет БД и launch-history. " +
+      "Требуется доступ к проекту токена (`hasProjectAccess`). " +
+      "Ответ не содержит сырой Telegram token (instance без поля token). " +
+      "Кэш отключён (`Cache-Control: no-store`). " +
+      "Для MCP/agent API см. `GET /api/bot/tokens/{tokenId}/status` (тег `bot`).",
+    security: cookieSecurity,
+    request: { params: tokenIdParams },
+    responses: {
+      200: {
+        description: "Статус бота",
+        content: {
+          "application/json": { schema: BotStatusByTokenResponseSchema },
+        },
+      },
+      401: {
+        description: "Не авторизован",
+        content: { "application/json": { schema: UnauthorizedSchema } },
+      },
+      403: {
+        description: "Нет доступа к проекту токена",
+        content: { "application/json": { schema: ForbiddenSchema } },
+      },
+      404: {
+        description: "Токен не найден",
+        content: { "application/json": { schema: MessageErrorSchema } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: "get",
+    path: "/api/tokens/{tokenId}/launch-history",
+    tags: ["tokens"],
+    summary: "История запусков бота",
+    description:
+      "Возвращает до 10 последних записей `bot_launch_history` для токена. " +
+      "Перед ответом выполняет reconcile с live-статусом (self-heal orphans). " +
+      "Требуется доступ к проекту токена (`hasProjectAccess`).",
+    security: cookieSecurity,
+    request: { params: tokenIdParams },
+    responses: {
+      200: {
+        description: "Список записей истории (до 10)",
+        content: {
+          "application/json": { schema: BotLaunchHistoryListSchema },
+        },
+      },
+      400: {
+        description: "Некорректный tokenId",
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string().openapi({ example: "Некорректный tokenId" }),
+            }),
+          },
+        },
+      },
+      401: {
+        description: "Не авторизован",
+        content: { "application/json": { schema: UnauthorizedSchema } },
+      },
+      403: {
+        description: "Нет доступа к проекту токена",
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string().openapi({ example: "Нет прав доступа" }),
+            }),
+          },
+        },
+      },
+      404: {
+        description: "Токен не найден",
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string().openapi({ example: "Токен не найден" }),
+            }),
+          },
+        },
       },
     },
   });

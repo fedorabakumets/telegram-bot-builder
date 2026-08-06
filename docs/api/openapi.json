@@ -4379,7 +4379,7 @@
           "tokens"
         ],
         "summary": "Срок хранения сообщений диалога",
-        "description": "Обновляет `messages_retention_days` у токена. `0` — без автоочистки; иначе сервер раз в час удаляет из `bot_messages` сообщения этого токена старше N дней. Таблица `message_activity_daily` (длинный график «Активность») не трогается. Требуется владение токеном (`requireTokenOwnership`). **Side-effect:** после успеха эмитит WebSocket `token-updated` (безопасный снимок токена без секретов; см. docs/api/realtime-events.md). UI и другие клиенты обновляются без F5.",
+        "description": "Обновляет `messages_retention_days` у токена. `0` — без автоочистки; иначе сервер раз в час удаляет из `bot_messages` сообщения этого токена старше N дней. Таблица `message_activity_daily` (длинный график «Активность») не трогается. Требуется владение токеном (`requireTokenOwnership`). **Side-effect:** после успеха эмитит WebSocket `token-updated` (безопасный снимок токена без секретов; см. docs/features/token-settings-realtime.md). UI и другие клиенты обновляются без F5.",
         "security": [
           {
             "cookieAuth": []
@@ -5932,57 +5932,70 @@
         }
       }
     },
-    "/api/tokens/{id}": {
-      "delete": {
-        "tags": [
-          "tokens"
-        ],
-        "summary": "DELETE /api/tokens/{id}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "tokens"
-        ],
-        "summary": "PUT /api/tokens/{id}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
     "/api/tokens/{tokenId}/bot-status": {
       "get": {
         "tags": [
           "tokens"
         ],
-        "summary": "GET /api/tokens/{tokenId}/bot-status",
+        "summary": "Статус бота по токену",
+        "description": "Возвращает актуальный статус бота для токена: сверка с активным процессом, worker pool и записью `bot_instances`. При расхождении обновляет БД и launch-history. Требуется доступ к проекту токена (`hasProjectAccess`). Ответ не содержит сырой Telegram token (instance без поля token). Кэш отключён (`Cache-Control: no-store`). Для MCP/agent API см. `GET /api/bot/tokens/{tokenId}/status` (тег `bot`).",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID токена бота",
+              "example": "7"
+            },
+            "required": true,
+            "name": "tokenId",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Статус бота",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotStatusByTokenResponse"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "403": {
+            "description": "Нет доступа к проекту токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Токен не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           }
         }
       }
@@ -5992,16 +6005,102 @@
         "tags": [
           "tokens"
         ],
-        "summary": "GET /api/tokens/{tokenId}/launch-history",
+        "summary": "История запусков бота",
+        "description": "Возвращает до 10 последних записей `bot_launch_history` для токена. Перед ответом выполняет reconcile с live-статусом (self-heal orphans). Требуется доступ к проекту токена (`hasProjectAccess`).",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID токена бота",
+              "example": "7"
+            },
+            "required": true,
+            "name": "tokenId",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Список записей истории (до 10)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotLaunchHistoryList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный tokenId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Некорректный tokenId"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "403": {
+            "description": "Нет доступа к проекту токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Нет прав доступа"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Токен не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Токен не найден"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -7167,6 +7266,125 @@
         "required": [
           "messagesRetentionDays"
         ]
+      },
+      "PublicBotInstance": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "projectId": {
+            "type": "integer"
+          },
+          "tokenId": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "stopped",
+              "error"
+            ]
+          },
+          "processId": {
+            "type": "string",
+            "nullable": true
+          },
+          "startedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "stoppedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "tokenId",
+          "status"
+        ]
+      },
+      "BotStatusByTokenResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "stopped",
+              "error"
+            ]
+          },
+          "instance": {
+            "$ref": "#/components/schemas/PublicBotInstance"
+          }
+        },
+        "required": [
+          "status",
+          "instance"
+        ]
+      },
+      "BotLaunchHistoryEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "projectId": {
+            "type": "integer"
+          },
+          "tokenId": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "stopped",
+              "error"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "stoppedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "processId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "tokenId",
+          "status"
+        ]
+      },
+      "BotLaunchHistoryList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BotLaunchHistoryEntry"
+        }
       },
       "StartOfflineTokenResult": {
         "type": "object",

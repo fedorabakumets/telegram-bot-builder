@@ -79,3 +79,62 @@ export const TokenUpdatedEventDataSchema = z
     source: z.enum(["ui", "mcp", "api"]).optional(),
   })
   .openapi("TokenUpdatedEventData");
+
+/** Публичный экземпляр бота в ответе bot-status (без поля token) */
+export const PublicBotInstanceSchema = z
+  .object({
+    /** ID экземпляра */
+    id: z.number().int(),
+    /** ID проекта */
+    projectId: z.number().int(),
+    /** ID токена */
+    tokenId: z.number().int(),
+    /** Статус: running | stopped | error */
+    status: z.enum(["running", "stopped", "error"]),
+    /** PID или worker_<projectId> */
+    processId: z.string().nullable().optional(),
+    /** Время запуска */
+    startedAt: z.string().datetime().nullable().optional(),
+    /** Время остановки */
+    stoppedAt: z.string().datetime().nullable().optional(),
+    /** Сообщение об ошибке */
+    errorMessage: z.string().nullable().optional(),
+  })
+  .openapi("PublicBotInstance");
+
+/** Ответ GET /api/tokens/{tokenId}/bot-status */
+export const BotStatusByTokenResponseSchema = z
+  .object({
+    /** Актуальный статус (сверка с процессом / worker pool) */
+    status: z.enum(["running", "stopped", "error"]),
+    /** Экземпляр без секрета token или null если бот никогда не запускался */
+    instance: PublicBotInstanceSchema.nullable(),
+  })
+  .openapi("BotStatusByTokenResponse");
+
+/** Запись истории запуска */
+export const BotLaunchHistoryEntrySchema = z
+  .object({
+    /** ID записи */
+    id: z.number().int(),
+    /** ID проекта */
+    projectId: z.number().int(),
+    /** ID токена */
+    tokenId: z.number().int(),
+    /** Статус: running | stopped | error */
+    status: z.enum(["running", "stopped", "error"]),
+    /** Время начала */
+    startedAt: z.string().datetime().nullable().optional(),
+    /** Время остановки */
+    stoppedAt: z.string().datetime().nullable().optional(),
+    /** Текст ошибки */
+    errorMessage: z.string().nullable().optional(),
+    /** PID процесса */
+    processId: z.string().nullable().optional(),
+  })
+  .openapi("BotLaunchHistoryEntry");
+
+/** Ответ GET /api/tokens/{tokenId}/launch-history — до 10 последних записей */
+export const BotLaunchHistoryListSchema = z
+  .array(BotLaunchHistoryEntrySchema)
+  .openapi("BotLaunchHistoryList");

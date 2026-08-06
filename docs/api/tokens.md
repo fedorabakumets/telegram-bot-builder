@@ -1,6 +1,6 @@
 # tokens
 
-Эндпоинтов: **6**
+Эндпоинтов: **4**
 
 ### `DELETE` /api/projects/{projectId}/tokens/{tokenId}
 
@@ -28,7 +28,7 @@
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Обновляет `messages_retention_days` у токена. `0` — без автоочистки; иначе сервер раз в час удаляет из `bot_messages` сообщения этого токена старше N дней. Таблица `message_activity_daily` (длинный график «Активность») не трогается. Требуется владение токеном (`requireTokenOwnership`). **Side-effect:** после успеха эмитит WebSocket `token-updated` (безопасный снимок токена без секретов; см. docs/api/realtime-events.md). UI и другие клиенты обновляются без F5.
+Обновляет `messages_retention_days` у токена. `0` — без автоочистки; иначе сервер раз в час удаляет из `bot_messages` сообщения этого токена старше N дней. Таблица `message_activity_daily` (длинный график «Активность») не трогается. Требуется владение токеном (`requireTokenOwnership`). **Side-effect:** после успеха эмитит WebSocket `token-updated` (безопасный снимок токена без секретов; см. docs/features/token-settings-realtime.md). UI и другие клиенты обновляются без F5.
 
 **Тело запроса:** `UpdateMessagesRetentionRequest`
 
@@ -44,58 +44,41 @@
 | 403 | Нет доступа к проекту токена |
 | 404 | Токен не найден |
 
-### `DELETE` /api/tokens/{id}
-
-DELETE /api/tokens/{id}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
-### `PUT` /api/tokens/{id}
-
-PUT /api/tokens/{id}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
 ### `GET` /api/tokens/{tokenId}/bot-status
 
-GET /api/tokens/{tokenId}/bot-status
+Статус бота по токену
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+Возвращает актуальный статус бота для токена: сверка с активным процессом, worker pool и записью `bot_instances`. При расхождении обновляет БД и launch-history. Требуется доступ к проекту токена (`hasProjectAccess`). Ответ не содержит сырой Telegram token (instance без поля token). Кэш отключён (`Cache-Control: no-store`). Для MCP/agent API см. `GET /api/bot/tokens/{tokenId}/status` (тег `bot`).
+
+**Параметры:** 1
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 200 | Статус бота |
+| 401 | Не авторизован |
+| 403 | Нет доступа к проекту токена |
+| 404 | Токен не найден |
 
 ### `GET` /api/tokens/{tokenId}/launch-history
 
-GET /api/tokens/{tokenId}/launch-history
+История запусков бота
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+Возвращает до 10 последних записей `bot_launch_history` для токена. Перед ответом выполняет reconcile с live-статусом (self-heal orphans). Требуется доступ к проекту токена (`hasProjectAccess`).
+
+**Параметры:** 1
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 200 | Список записей истории (до 10) |
+| 400 | Некорректный tokenId |
+| 401 | Не авторизован |
+| 403 | Нет доступа к проекту токена |
+| 404 | Токен не найден |

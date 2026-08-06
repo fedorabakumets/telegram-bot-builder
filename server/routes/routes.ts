@@ -43,7 +43,6 @@ import { requireMediaOwnership } from "../middleware/mediaOwnership";
 import { deleteBotUserHandler } from "./botUsers/handlers/deleteBotUserHandler";
 import { updateBotUserHandler } from "./botUsers/handlers/updateBotUserHandler";
 import { deleteProjectTokenHandler } from "./botTokens/handlers/deleteProjectTokenHandler";
-import { deleteTokenByIdHandler } from "./botTokens/handlers/deleteTokenByIdHandler";
 import { isMaskedOrPlaceholderToken, toPublicBotToken } from "./botTokens/to-public-bot-token";
 import { checkUrlAccessibility } from "../utils/checkUrlAccessibility";
 import { validateExternalUrl } from "../utils/validateExternalUrl";
@@ -996,36 +995,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Update a token
-  app.put("/api/tokens/:id", requireTokenOwnership, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-
-      const updateData = insertBotTokenSchema.partial().parse(req.body) as StorageBotTokenUpdate;
-      if (updateData.token && isMaskedOrPlaceholderToken(updateData.token)) {
-        delete (updateData as { token?: string }).token;
-      }
-
-      const token = await storage.updateBotToken(id, updateData);
-      if (!token) {
-        return res.status(404).json({ message: "Token not found" });
-      }
-
-      void emitTokenUpdated({
-        projectId: token.projectId,
-        tokenId: id,
-        source: 'api',
-      }).catch((err) => console.error('[put-token] emitTokenUpdated:', err));
-
-      res.json(toPublicBotToken(token));
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update token" });
-    }
-  });
-
   // Update a token by project and token ID
   app.put("/api/projects/:id/tokens/:tokenId", async (req, res) => {
     try {
@@ -1076,9 +1045,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       res.status(500).json({ message: "Failed to update token" });
     }
   });
-
-  // Delete a token (владелец или коллаборатор проекта токена)
-  app.delete("/api/tokens/:id", requireTokenOwnership, deleteTokenByIdHandler);
 
   // Delete a token for a specific project (hasProjectAccess + сверка projectId)
   app.delete(
