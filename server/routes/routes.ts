@@ -22,7 +22,6 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { cleanupBotStates } from "../bots/cleanupBotStates";
 import { stopBot } from "../bots/stopBot";
-import dbRoutes from "../database/db-routes";
 import { db, pool as dbPool } from "../database/db";
 import { initializeDatabaseTables } from "../database/init-db";
 import { ensureDefaultProject } from "../utils/ensureDefaultProject";
@@ -566,9 +565,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
     next();
   };
-
-  // Register database management routes
-  app.use("/api/database", dbRoutes);
 
   // Get all bot projects (lightweight - without data field)
   setupProjectRoutes(app, requireDbReady);

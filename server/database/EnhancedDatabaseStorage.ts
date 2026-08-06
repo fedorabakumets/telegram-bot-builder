@@ -107,57 +107,6 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     });
   }
 
-  // Расширенная статистика с кэшированием
-  async getDetailedStats(): Promise<{
-    projects: number;
-    templates: number;
-    activeInstances: number;
-    totalUsers: number;
-    systemHealth: any;
-    cacheStats: any;
-  }> {
-    const [projects, templates, instances] = await Promise.all([
-      this.getAllBotProjects(),
-      this.getAllBotTemplates(),
-      this.getAllBotInstances(),
-    ]);
-
-    return {
-      projects: projects.length,
-      templates: templates.length,
-      activeInstances: instances.filter(i => i.status === 'running').length,
-      totalUsers: 0,
-      systemHealth: dbManager.getConnectionStats(),
-      cacheStats: cachedOps.getStats()
-    };
-  }
-
-  // Операции обслуживания базы данных
-  async performMaintenance(): Promise<void> {
-    console.log('Запуск обслуживания базы данных...');
-
-    // Оптимизация соединений
-    await dbManager.optimizeConnections();
-
-    // Очистка старых данных (старше 30 дней)
-    await dbManager.cleanupOldData(30);
-
-    // Очистка устаревших записей кэша
-    cachedOps.cleanup();
-
-    console.log('Обслуживание базы данных завершено');
-  }
-
-  // Операции резервного копирования
-  async createBackup(): Promise<string> {
-    return await dbManager.createBackup();
-  }
-
-  // Проверка работоспособности
-  async healthCheck(): Promise<boolean> {
-    return await dbManager.performHealthCheck();
-  }
-
   // Методы групп ботов - использовать реализацию родителя напрямую
   async getBotGroup(id: number): Promise<BotGroup | undefined> {
     const [group] = await this.db.select().from(botGroups).where(eq(botGroups.id, id));

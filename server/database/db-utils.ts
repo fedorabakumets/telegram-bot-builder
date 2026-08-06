@@ -1,24 +1,33 @@
+/**
+ * @fileoverview Утилиты управления подключением к БД: health-мониторинг, retry и транзакции
+ * @module server/database/db-utils
+ */
+
 import { sql } from 'drizzle-orm';
 import { db, pool } from './db';
 
 /**
  * Класс для управления и мониторинга подключения к базе данных
- * Предоставляет функции для проверки работоспособности, оптимизации соединений,
- * выполнения операций с повторными попытками и другие утилиты для работы с базой данных
+ * Предоставляет проверку работоспособности, retry и транзакции
  */
 export class DatabaseManager {
   private static instance: DatabaseManager;
   private healthCheckInterval: NodeJS.Timeout | null = null;
 
   /**
-   * Статистика подключения к базе данных
+   * Статистика подключения к базе данных (обновляется health-check'ом)
    */
   private connectionStats = {
-    totalConnections: 0,      // Общее количество соединений
-    activeConnections: 0,     // Активные соединения
-    idleConnections: 0,       // Неиспользуемые соединения
-    errors: 0,                // Количество ошибок
-    lastHealthCheck: new Date() // Время последней проверки работоспособности
+    /** Общее количество соединений */
+    totalConnections: 0,
+    /** Активные соединения */
+    activeConnections: 0,
+    /** Неиспользуемые соединения */
+    idleConnections: 0,
+    /** Количество ошибок */
+    errors: 0,
+    /** Время последней проверки работоспособности */
+    lastHealthCheck: new Date()
   };
 
   /**
@@ -90,13 +99,12 @@ export class DatabaseManager {
       }
       this.connectionStats.lastHealthCheck = new Date();
 
-      // console.log('Проверка работоспособности базы данных прошла успешно');
       return true;
     } catch (error: any) {
       const errorMessage = error?.message || 'Неизвестная ошибка';
-      
+
       // Не логируем как ошибку, если соединение просто закрылось (это нормально при перезапуске БД)
-      if (errorMessage.includes('Connection terminated unexpectedly') || 
+      if (errorMessage.includes('Connection terminated unexpectedly') ||
           errorMessage.includes('Connection terminated') ||
           errorMessage.includes('ECONNRESET') ||
           errorMessage.includes('ETIMEDOUT')) {
@@ -104,62 +112,9 @@ export class DatabaseManager {
       } else {
         console.error('❌ Проверка работоспособности БД не удалась:', errorMessage);
       }
-      
+
       this.connectionStats.errors++;
       return false;
-    }
-  }
-
-  /**
-   * Получает статистику подключения к базе данных
-   * @returns Объект со статистикой подключения
-   */
-  getConnectionStats() {
-    return {
-      ...this.connectionStats,
-      poolInfo: {
-        totalCount: pool?.totalCount || 0,
-        idleCount: pool?.idleCount || 0,
-        waitingCount: pool?.waitingCount || 0,
-        maxSize: 20,
-        minSize: 2
-      }
-    };
-  }
-
-  /**
-   * Оптимизирует соединения с базой данных
-   * @returns Promise<void>
-   */
-  async optimizeConnections(): Promise<void> {
-    try {
-      // Закрытие неиспользуемых соединений, если их слишком много
-      if (this.connectionStats.idleConnections > 5) {
-        console.log('Оптимизация соединений с базой данных...');
-        // Примечание: pg_terminate_backend требует прав суперпользователя
-        // Вместо этого просто регистрируем попытку оптимизации
-        console.log('Оптимизация соединений возможна при наличии прав суперпользователя');
-      }
-
-      // Попытка анализа производительности базы данных (если pg_stat_statements доступна)
-      try {
-        const slowQueries = await db.execute(sql`
-          SELECT query, calls, total_exec_time, mean_exec_time
-          FROM pg_stat_statements
-          WHERE mean_exec_time > 1000
-          ORDER BY mean_exec_time DESC
-          LIMIT 10
-        `);
-
-        if (slowQueries.rows.length > 0) {
-          console.log('Найдены медленные запросы:', slowQueries.rows);
-        }
-      } catch (error) {
-        // pg_stat_statements может быть недоступна, это нормально
-        console.log('pg_stat_statements недоступна, пропускаем анализ медленных запросов');
-      }
-    } catch (error: any) {
-      console.warn('Предупреждение об оптимизации соединений:', error?.message);
     }
   }
 
@@ -213,86 +168,6 @@ export class DatabaseManager {
         throw new Error(`Транзакция не удалась: ${error?.message || 'Неизвестная ошибка'}`);
       }
     });
-  }
-
-  /**
-   * Создает резервную копию базы данных (базовая реализация)
-   * @returns Promise<string> Имя файла резервной копии
-   */
-  async createBackup(): Promise<string> {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupName = `backup_${timestamp}`;
-
-    try {
-      // Это упрощенная резервная копия - в продакшене следует использовать pg_dump
-      await db.execute(sql`
-        SELECT pg_terminate_backend(pid)
-        FROM pg_stat_activity
-        WHERE datname = current_database() AND pid <> pg_backend_pid()
-      `);
-
-      console.log(`Резервная копия создана: ${backupName}`);
-      return backupName;
-    } catch (error: any) {
-      console.error('Подробная ошибка:', error?.message, error?.stack);
-      throw new Error(`Операция резервного копирования не удалась: ${error?.message || 'Неизвестная ошибка'}`);
-    }
-  }
-
-  /**
-   * Очищает старые данные из базы данных
-   * @param daysToKeep Количество дней хранения данных (по умолчанию 30)
-   * @returns Promise<void>
-   */
-  async cleanupOldData(daysToKeep: number = 30): Promise<void> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-
-    try {
-      // Очистка старых экземпляров ботов
-      const cleanupResult = await db.execute(sql`
-        DELETE FROM bot_instances
-        WHERE status = 'stopped' AND stopped_at < ${cutoffDate}
-      `);
-
-      console.log(`Очищено ${cleanupResult.rowCount} старых экземпляров ботов`);
-
-      // Очистка старых взаимодействий пользователей (опционально)
-      await db.execute(sql`
-        DELETE FROM bot_users
-        WHERE is_active = 0 AND last_interaction < ${cutoffDate}
-      `);
-
-    } catch (error: any) {
-      console.error('Подробная ошибка:', error?.message, error?.stack);
-      throw new Error(`Операция очистки не удалась: ${error?.message || 'Неизвестная ошибка'}`);
-    }
-  }
-
-  /**
-   * Получает метрики базы данных
-   * @returns Promise<any[]> Массив с метриками таблиц базы данных
-   */
-  async getDatabaseMetrics() {
-    try {
-      const metrics = await db.execute(sql`
-        SELECT
-          schemaname,
-          tablename,
-          n_tup_ins as inserts,
-          n_tup_upd as updates,
-          n_tup_del as deletes,
-          n_live_tup as live_rows,
-          n_dead_tup as dead_rows
-        FROM pg_stat_user_tables
-        ORDER BY n_live_tup DESC
-      `);
-
-      return metrics.rows;
-    } catch (error: any) {
-      console.error('Подробная ошибка:', error?.message, error?.stack);
-      return [];
-    }
   }
 }
 

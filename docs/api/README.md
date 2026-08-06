@@ -17,7 +17,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [bot-logs](./bot-logs.md) | 1 |
 | [bots](./bots.md) | 2 |
 | [config](./config.md) | 1 |
-| [database](./database.md) | 17 |
+| [database](./database.md) | 1 |
 | [google-auth](./google-auth.md) | 2 |
 | [health](./health.md) | 1 |
 | [launch](./launch.md) | 1 |
