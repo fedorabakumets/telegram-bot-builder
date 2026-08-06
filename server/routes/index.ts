@@ -1,5 +1,4 @@
 // Routes module exports
-export { setupGoogleAuthRoutes } from '../google-sheets/setupGoogleAuthRoutes';
 export { githubRouter } from './github';
 export { registerRoutes } from './routes';
 export { setupAuthRoutes } from './setupAuthRoutes';

@@ -178,16 +178,10 @@
 **Идея:** Кнопка "📊 Экспорт в Google Sheets" — запускает экспорт пользователей
 прямо из Telegram.
 
-**Что уже есть:**
-- `GoogleSheetsExportButton.tsx` — UI кнопка в редакторе
-- `POST /api/projects/:id/export-to-google-sheets` — эндпоинт экспорта
-
-**Что нужно:**
-- Bot-версия эндпоинта с проверкой `telegram_id`
-- Флоу в сценарии: кнопка → HTTP POST → сообщение со ссылкой на таблицу
+**Статус:** редакторский OAuth-экспорт удалён как легаси. Нужна отдельная bot-версия
+(HTTP к Sheets API / сервисный аккаунт), если фича снова понадобится.
 
 **Файлы:**
-- `server/routes/projectRoutes/handlers/googleSheetsHandlers.ts`
 - `bots/новый/новый.json` — лист "Карточка проекта"
 
 ---

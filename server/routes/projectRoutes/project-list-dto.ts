@@ -33,18 +33,6 @@ export interface ProjectListItem {
     createdAt: Date | null;
     /** Дата последнего обновления проекта */
     updatedAt: Date | null;
-    /** ID последней экспортированной Google Таблицы пользователей */
-    lastExportedGoogleSheetId: string | null;
-    /** URL последней экспортированной Google Таблицы пользователей */
-    lastExportedGoogleSheetUrl: string | null;
-    /** Дата последнего экспорта пользователей в Google Таблицы */
-    lastExportedAt: Date | null;
-    /** ID последней экспортированной Google Таблицы структуры проекта */
-    lastExportedStructureSheetId: string | null;
-    /** URL последней экспортированной Google Таблицы структуры проекта */
-    lastExportedStructureSheetUrl: string | null;
-    /** Дата последнего экспорта структуры проекта в Google Таблицы */
-    lastExportedStructureAt: Date | null;
     /** Количество узлов во всех листах проекта */
     nodeCount: number;
     /** Количество листов проекта */
@@ -73,12 +61,6 @@ export function toProjectListItem(
         adminIds: project.adminIds,
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
-        lastExportedGoogleSheetId: project.lastExportedGoogleSheetId,
-        lastExportedGoogleSheetUrl: project.lastExportedGoogleSheetUrl,
-        lastExportedAt: project.lastExportedAt,
-        lastExportedStructureSheetId: project.lastExportedStructureSheetId,
-        lastExportedStructureSheetUrl: project.lastExportedStructureSheetUrl,
-        lastExportedStructureAt: project.lastExportedStructureAt,
         nodeCount,
         sheetsCount,
     };

@@ -27,7 +27,6 @@ import { initializeDatabaseTables } from "../database/init-db";
 import { ensureDefaultProject } from "../utils/ensureDefaultProject";
 import { downloadFileFromUrl } from "../files/downloadFileFromUrl";
 import { getFileType } from "../files/getFileType";
-import { setupGoogleAuthRoutes } from "../google-sheets/setupGoogleAuthRoutes";
 import { seedDefaultTemplates } from "../utils/seed-templates";
 import { storage } from "../storages/storage";
 import { initializeTelegramManager, telegramClientManager } from "../telegram/telegram-client";
@@ -5222,23 +5221,6 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
     }
   });
 
-  // Callback route for Google OAuth - redirects to proper API endpoint
-  app.get('/callback', async (req, res) => {
-    const { code, error } = req.query;
-
-    if (error) {
-      console.error('Google OAuth error:', error);
-      return res.status(400).json({ error: 'Authentication failed', details: error });
-    }
-
-    if (!code || typeof code !== 'string') {
-      return res.status(400).json({ error: 'Missing authorization code' });
-    }
-
-    // Redirect to the proper API endpoint to handle the code
-    res.redirect(`/api/google-auth/callback?code=${encodeURIComponent(code)}`);
-  });
-
   // ─── Переменные окружения бота (веб-клиент, без telegram_id) ───
 
   /**
@@ -5541,8 +5523,5 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
       res.status(500).json({ message: "Ошибка batch обновления переменных" });
     }
   });
-
-  // Setup Google Auth routes
-  setupGoogleAuthRoutes(app);
 }
 

@@ -30,7 +30,6 @@ import { duplicateProjectHandler } from "./projectRoutes/handlers/duplicateProje
 import { getTokenHandler, clearTokenHandler } from "./projectRoutes/handlers/tokenHandlers";
 import { listBotTokensHandler } from "./projectRoutes/handlers/listBotTokensHandler";
 import { updateCommentsSettingsHandler } from "./projectRoutes/handlers/settingsHandler";
-import { exportToGoogleSheetsHandler, exportStructureToGoogleSheetsHandler } from "./projectRoutes/handlers/googleSheetsHandlers";
 import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHandler";
 import { cleanupOrphanedFoldersHandler } from "./projectManagement/handlers/cleanupOrphanedFoldersHandler";
 import { handleGenerateCode } from "./projects/generateCode";
@@ -90,10 +89,6 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
     app.get("/api/projects/:id/admin-ids", requireProjectAccess, getAdminIdsHandler);
     app.put("/api/projects/:id/admin-ids", requireProjectAccess, updateAdminIdsHandler);
     app.post("/api/projects/:id/admin-ids/remove", requireProjectAccess, removeAdminIdHandler);
-
-    // Экспорт в Google Таблицы
-    app.post("/api/projects/:id/export-to-google-sheets", requireDbReady, requireProjectAccess, exportToGoogleSheetsHandler);
-    app.post("/api/projects/:id/export-structure-to-google-sheets", requireDbReady, requireProjectAccess, exportStructureToGoogleSheetsHandler);
 
     // Загрузка изображений по URL
     app.post("/api/media/upload-from-url", requireDbReady, uploadImageHandler);

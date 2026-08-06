@@ -83,13 +83,6 @@ export const ProjectListItemSchema = z
     createdAt: z.union([z.string(), z.date()]).nullable().optional(),
     /** Дата обновления */
     updatedAt: z.union([z.string(), z.date()]).nullable().optional(),
-    /** Метаданные экспорта в Google Sheets */
-    lastExportedGoogleSheetId: z.string().nullable().optional(),
-    lastExportedGoogleSheetUrl: z.string().nullable().optional(),
-    lastExportedAt: z.union([z.string(), z.date()]).nullable().optional(),
-    lastExportedStructureSheetId: z.string().nullable().optional(),
-    lastExportedStructureSheetUrl: z.string().nullable().optional(),
-    lastExportedStructureAt: z.union([z.string(), z.date()]).nullable().optional(),
     /** Количество узлов на всех листах */
     nodeCount: z.number().openapi({ example: 12 }),
     /** Количество листов */

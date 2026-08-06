@@ -17,12 +17,21 @@ const STORAGE_KEYS = {
 } as const;
 
 // Stored types with ISO date strings
-type StoredProject = Omit<BotProject, 'createdAt' | 'updatedAt' | 'restartOnUpdate' | 'lastExportedAt' | 'lastExportedStructureAt'> & { 
-  createdAt: string; 
-  updatedAt: string; 
+type StoredProject = Omit<
+  BotProject,
+  | 'createdAt'
+  | 'updatedAt'
+  | 'restartOnUpdate'
+  | 'lastExportedAt'
+  | 'lastExportedStructureAt'
+  | 'lastExportedGoogleSheetId'
+  | 'lastExportedGoogleSheetUrl'
+  | 'lastExportedStructureSheetId'
+  | 'lastExportedStructureSheetUrl'
+> & {
+  createdAt: string;
+  updatedAt: string;
   restartOnUpdate?: boolean;
-  lastExportedAt: string | null;
-  lastExportedStructureAt: string | null;
 };
 type StoredToken = Omit<BotToken, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null };
 type StoredTemplate = Omit<BotTemplate, 'createdAt' | 'updatedAt' | 'lastUsedAt' | 'ownerId'> & { createdAt: string; updatedAt: string; lastUsedAt: string | null; ownerId: number | null };
@@ -106,12 +115,12 @@ export class LocalStorageService {
       ...stored,
       createdAt: new Date(stored.createdAt),
       updatedAt: new Date(stored.updatedAt),
-      lastExportedAt: stored.lastExportedAt ? new Date(stored.lastExportedAt) : null,
-      lastExportedGoogleSheetId: stored.lastExportedGoogleSheetId ?? null,
-      lastExportedGoogleSheetUrl: stored.lastExportedGoogleSheetUrl ?? null,
-      lastExportedStructureAt: stored.lastExportedStructureAt ? new Date(stored.lastExportedStructureAt) : null,
-      lastExportedStructureSheetId: stored.lastExportedStructureSheetId ?? null,
-      lastExportedStructureSheetUrl: stored.lastExportedStructureSheetUrl ?? null,
+      lastExportedAt: null,
+      lastExportedGoogleSheetId: null,
+      lastExportedGoogleSheetUrl: null,
+      lastExportedStructureAt: null,
+      lastExportedStructureSheetId: null,
+      lastExportedStructureSheetUrl: null,
     };
   }
 
@@ -156,12 +165,6 @@ export class LocalStorageService {
       data: data.data,
       botToken: data.botToken || null,
       userDatabaseEnabled: data.userDatabaseEnabled ?? 1,
-      lastExportedGoogleSheetId: null,
-      lastExportedGoogleSheetUrl: null,
-      lastExportedAt: null,
-      lastExportedStructureSheetId: null,
-      lastExportedStructureSheetUrl: null,
-      lastExportedStructureAt: null,
       createdAt: now,
       updatedAt: now,
     };

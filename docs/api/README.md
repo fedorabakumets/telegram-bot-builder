@@ -18,11 +18,10 @@ REST API визуального конструктора Telegram-ботов. А
 | [bots](./bots.md) | 2 |
 | [config](./config.md) | 1 |
 | [database](./database.md) | 1 |
-| [google-auth](./google-auth.md) | 2 |
 | [health](./health.md) | 1 |
 | [launch](./launch.md) | 1 |
 | [media](./media.md) | 13 |
-| [projects](./projects.md) | 145 |
+| [projects](./projects.md) | 143 |
 | [push-to-github](./push-to-github.md) | 1 |
 | [root](./root.md) | 1 |
 | [server](./server.md) | 1 |

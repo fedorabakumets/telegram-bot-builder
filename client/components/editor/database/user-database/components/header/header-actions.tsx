@@ -1,12 +1,11 @@
 /**
  * @fileoverview Компонент кнопок действий заголовка
- * @description Кнопки: Google Sheets экспорт, Очистить базу
+ * @description Кнопка очистки базы пользователей
  */
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
-// import { GoogleSheetsExportButton } from '../../../../google-sheets/GoogleSheetsExportButton';
 
 /**
  * Пропсы компонента HeaderActions
@@ -38,7 +37,6 @@ export function HeaderActions({
       data-project-id={projectId}
       title={`Действия для проекта ${projectName}`}
     >
-      {/* <GoogleSheetsExportButton projectId={projectId} projectName={projectName} /> */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button

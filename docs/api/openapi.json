@@ -35,10 +35,6 @@
       "description": "Публичная конфигурация клиента"
     },
     {
-      "name": "google-auth",
-      "description": "Эндпоинты /api/google-auth"
-    },
-    {
       "name": "health",
       "description": "Healthcheck и готовность компонентов"
     },
@@ -1047,44 +1043,6 @@
         }
       }
     },
-    "/api/google-auth/callback": {
-      "get": {
-        "tags": [
-          "google-auth"
-        ],
-        "summary": "GET /api/google-auth/callback",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
-    "/api/google-auth/start": {
-      "get": {
-        "tags": [
-          "google-auth"
-        ],
-        "summary": "GET /api/google-auth/start",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
     "/api/health": {
       "get": {
         "tags": [
@@ -1988,44 +1946,6 @@
           "projects"
         ],
         "summary": "POST /api/projects/{id}/export",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
-    "/api/projects/{id}/export-structure-to-google-sheets": {
-      "post": {
-        "tags": [
-          "projects"
-        ],
-        "summary": "POST /api/projects/{id}/export-structure-to-google-sheets",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
-    "/api/projects/{id}/export-to-google-sheets": {
-      "post": {
-        "tags": [
-          "projects"
-        ],
-        "summary": "POST /api/projects/{id}/export-to-google-sheets",
         "responses": {
           "200": {
             "description": "Успешный ответ"
@@ -7152,48 +7072,6 @@
             ]
           },
           "updatedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "string"
-              },
-              {
-                "nullable": true
-              }
-            ]
-          },
-          "lastExportedGoogleSheetId": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastExportedGoogleSheetUrl": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastExportedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "string"
-              },
-              {
-                "nullable": true
-              }
-            ]
-          },
-          "lastExportedStructureSheetId": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastExportedStructureSheetUrl": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastExportedStructureAt": {
             "anyOf": [
               {
                 "type": "string"

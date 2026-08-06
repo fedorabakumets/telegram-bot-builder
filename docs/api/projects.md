@@ -1,6 +1,6 @@
 # projects
 
-Эндпоинтов: **145**
+Эндпоинтов: **143**
 
 ### `GET` /api/projects
 
@@ -268,34 +268,6 @@ POST /api/projects/{id}/bot/stop
 ### `POST` /api/projects/{id}/export
 
 POST /api/projects/{id}/export
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
-### `POST` /api/projects/{id}/export-structure-to-google-sheets
-
-POST /api/projects/{id}/export-structure-to-google-sheets
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
-### `POST` /api/projects/{id}/export-to-google-sheets
-
-POST /api/projects/{id}/export-to-google-sheets
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 

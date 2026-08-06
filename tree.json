@@ -183,21 +183,6 @@
     "author": ""
   },
   {
-    "path": "api/google-auth",
-    "title": "google-auth",
-    "excerpt": "Эндпоинтов: **2**",
-    "parts": [
-      "api",
-      "google-auth"
-    ],
-    "folder_titles": {
-      "api": "Api"
-    },
-    "updated_at": "2026-07-04T19:32:54+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
     "path": "api/health",
     "title": "health",
     "excerpt": "Эндпоинтов: **1**",
