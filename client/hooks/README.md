@@ -8,7 +8,7 @@
 Хуки для взаимодействия с серверным API:
 - `useTelegramAuth()` (`client/components/editor/header/hooks/use-telegram-auth.ts`) — сессия Studio: `GET /api/auth/me`, login, logout, switchAccount
 - `useBots()` - управление ботами
-- `useTemplates()` - работа с сценариями
+- `use-project-tokens.ts` - токены проектов (`GET /api/projects/:id/tokens`)
 - `useFiles()` - загрузка и управление файлами
 
 См. также: `docs/features/studio-auth.md`, `docs/api/auth.md`.

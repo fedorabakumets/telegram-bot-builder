@@ -68,7 +68,6 @@ import { setupUserProjectAndTokenRoutes } from "./setupUserProjectAndTokenRoutes
 import { setupAgentTokenRoutes } from "./setupAgentTokenRoutes";
 import { setupMcpRoutes } from "./mcp/setupMcpRoutes";
 import { setupStorageConfigRoutes } from "./setupStorageConfigRoutes";
-import { setupUserTemplateRoutes } from "./setupUserTemplateRoutes";
 import type { StorageBotTokenInput, StorageBotTokenUpdate } from "../storages/storageTypes";
 import { ensureStorageRegistryLoaded } from "../storage/storage-registry";
 import { readStorageLimitBytes } from "../storage/storage-config";
@@ -4610,9 +4609,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // CRUD реестра хранилищ (/api/storage-configs)
   setupStorageConfigRoutes(app);
-
-  // Get user's templates
-  setupUserTemplateRoutes(app);
 
   // GitHub push endpoint
   setupGithubPushRoute(app);

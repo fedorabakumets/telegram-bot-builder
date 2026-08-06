@@ -63,7 +63,7 @@ export function useUdalitStsenary() {
 
   const mutation = useMutation({
     mutationFn: async (templateId: number) => {
-      const response = await fetch(`/api/user/templates/${templateId}`, {
+      const response = await fetch(`/api/templates/${templateId}`, {
         method: 'DELETE',
         credentials: 'include',
       });

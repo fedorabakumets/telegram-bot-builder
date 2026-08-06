@@ -46,9 +46,9 @@ export function FileIdInput({ projectId, mediaType, onMediaTypeChange, onAdd }: 
 
   /** Загружаем токены проекта */
   const { data: tokens = [], isLoading } = useQuery<BotToken[]>({
-    queryKey: ['/api/user/tokens', projectId],
+    queryKey: [`/api/projects/${projectId}/tokens`],
     queryFn: async () => {
-      const res = await fetch(`/api/user/tokens?projectId=${projectId}`);
+      const res = await fetch(`/api/projects/${projectId}/tokens`);
       if (!res.ok) return [];
       return res.json();
     },

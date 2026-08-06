@@ -33,7 +33,6 @@ REST API визуального конструктора Telegram-ботов. А
 | [telegram-settings](./telegram-settings.md) | 1 |
 | [templates](./templates.md) | 16 |
 | [tokens](./tokens.md) | 6 |
-| [user](./user.md) | 12 |
 | [webhook](./webhook.md) | 1 |
 | [workers](./workers.md) | 1 |
 
