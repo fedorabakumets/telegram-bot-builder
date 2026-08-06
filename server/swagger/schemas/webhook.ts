@@ -43,3 +43,12 @@ export const WebhookBadParamsSchema = z
     message: z.string().openapi({ example: "Некорректные projectId или tokenId" }),
   })
   .openapi("WebhookBadParams");
+
+/** Успешный ответ webhook — пустое body (res.end() без данных) */
+export const WebhookEmptyBodySchema = z
+  .string()
+  .openapi({
+    description: "Пустое body. Node не возвращает JSON — только HTTP-статус.",
+    example: "",
+  })
+  .openapi("WebhookEmptyBody");

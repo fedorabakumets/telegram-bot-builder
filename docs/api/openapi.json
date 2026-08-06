@@ -6059,7 +6059,35 @@
         },
         "responses": {
           "200": {
-            "description": "Апдейт принят. Body обычно пустое. При недоступном Python-боте Node всё равно отвечает 200 (защита от бесконечных ретраев Telegram). Статус может совпадать с ответом aiohttp."
+            "description": "Апдейт принят. Body **пустое** (не JSON). Статус HTTP копируется с aiohttp или принудительно 200 при ошибке прокси.",
+            "headers": {
+              "Content-Length": {
+                "description": "Длина body в байтах (обычно 0)",
+                "schema": {
+                  "type": "integer",
+                  "example": 0
+                }
+              }
+            },
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEmptyBody"
+                },
+                "examples": {
+                  "botProcessed": {
+                    "summary": "200 — Python-бот доступен",
+                    "description": "Прокси дошёл до http://localhost:{9000+tokenId}/webhook. Статус совпадает с aiohttp (обычно 200), body пустое.",
+                    "value": ""
+                  },
+                  "botUnavailable": {
+                    "summary": "200 — Python-бот недоступен (fallback)",
+                    "description": "fetch на localhost упал (бот не запущен, порт закрыт). Node отвечает 200 с пустым body, чтобы Telegram не ретраил апдейт.",
+                    "value": ""
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Некорректные `projectId` или `tokenId` в path (не число)",
@@ -7621,6 +7649,11 @@
           "setupRequired",
           "message"
         ]
+      },
+      "WebhookEmptyBody": {
+        "type": "string",
+        "description": "Пустое body. Node не возвращает JSON — только HTTP-статус.",
+        "example": ""
       },
       "WebhookBadParams": {
         "type": "object",

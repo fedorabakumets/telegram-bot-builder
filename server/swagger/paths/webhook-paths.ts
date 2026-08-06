@@ -6,7 +6,7 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 import { SetupRequiredSchema } from "../schemas/common";
-import { TelegramWebhookUpdateSchema, WebhookBadParamsSchema } from "../schemas/webhook";
+import { TelegramWebhookUpdateSchema, WebhookBadParamsSchema, WebhookEmptyBodySchema } from "../schemas/webhook";
 
 /**
  * Регистрирует детальный OpenAPI path приёма webhook от Telegram.
@@ -95,8 +95,34 @@ export function registerWebhookPaths(
     responses: {
       200: {
         description:
-          "Апдейт принят. Body обычно пустое. При недоступном Python-боте Node всё равно отвечает 200 " +
-          "(защита от бесконечных ретраев Telegram). Статус может совпадать с ответом aiohttp.",
+          "Апдейт принят. Body **пустое** (не JSON). Статус HTTP копируется с aiohttp или принудительно 200 при ошибке прокси.",
+        content: {
+          "text/plain": {
+            schema: WebhookEmptyBodySchema,
+            examples: {
+              botProcessed: {
+                summary: "200 — Python-бот доступен",
+                description:
+                  "Прокси дошёл до http://localhost:{9000+tokenId}/webhook. " +
+                  "Статус совпадает с aiohttp (обычно 200), body пустое.",
+                value: "",
+              },
+              botUnavailable: {
+                summary: "200 — Python-бот недоступен (fallback)",
+                description:
+                  "fetch на localhost упал (бот не запущен, порт закрыт). " +
+                  "Node отвечает 200 с пустым body, чтобы Telegram не ретраил апдейт.",
+                value: "",
+              },
+            },
+          },
+        },
+        headers: {
+          "Content-Length": {
+            description: "Длина body в байтах (обычно 0)",
+            schema: { type: "integer", example: 0 },
+          },
+        },
       },
       400: {
         description: "Некорректные `projectId` или `tokenId` в path (не число)",
