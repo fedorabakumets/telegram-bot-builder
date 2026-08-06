@@ -16,6 +16,8 @@ tools/_*
 .cache/
 .config/
 attached_assets/
+.test-*.json
+cookies.txt
 
 # Uploads - exclude all files except README.md
 uploads/*
