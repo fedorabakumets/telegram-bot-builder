@@ -123,7 +123,7 @@ export { validateEnhancedNode, validateEnhancedNodes } from './bot-generator/val
 export type { ValidationResult } from './bot-generator/validation';
 
 // Ядро: контекст и состояние генерации
-export { createGenerationState, withLogging, withComments } from './bot-generator/core/generation-state';
+export { createGenerationState, withLogging } from './bot-generator/core/generation-state';
 export { markComponentGenerated, isComponentGenerated } from './bot-generator/core/generation-state';
 export type { GenerationState } from './bot-generator/core/generation-state';
 

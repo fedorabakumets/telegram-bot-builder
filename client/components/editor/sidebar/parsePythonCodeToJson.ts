@@ -9,8 +9,6 @@
  */
 
 import { Button, Node } from '@shared/schema';
-import { processCodeWithAutoComments } from '../../../../lib/bot-generator/core/generated-comment';
-
 
 /**
  * Парсит Python код бота обратно в JSON структуру узлов и соединений
@@ -27,12 +25,6 @@ import { processCodeWithAutoComments } from '../../../../lib/bot-generator/core/
  * console.log(`Найдено ${nodes.length} узлов`);
  */
 export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; connections: any[]; } {
-  // Собираем код в массив строк для автоматической обработки
-  const codeLines: string[] = [];
-  
-  // Добавляем комментарий о генерации
-  codeLines.push('# Код сгенерирован в parsePythonCodeToJson.ts');
-  
   const nodes: Node[] = [];
   const nodeIdMap = new Map<string, Node>();
 
@@ -261,9 +253,6 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
     }
   });
 
-  // Применяем автоматическое добавление комментариев ко всему коду
-  processCodeWithAutoComments(codeLines, 'parsePythonCodeToJson.ts');
-  
   // Возвращаем результат
   return { nodes, connections };
 }

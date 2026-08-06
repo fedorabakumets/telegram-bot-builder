@@ -108,8 +108,7 @@ function gen(project: any, label: string): string {
   return generatePythonCode(project, {
     botName: `FileId_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 console.log('\n╔══════════════════════════════════════════════════════════════╗');

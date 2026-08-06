@@ -104,8 +104,7 @@ function gen(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `Phase20_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /** Запускает py_compile и возвращает результат синтаксической проверки. */

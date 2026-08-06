@@ -22,11 +22,11 @@ function makeCleanProject(nodes: any[]) {
 }
 
 function gen(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `Phase60_${label}`, userDatabaseEnabled: true, enableComments: false, projectId: 1 });
+  return generatePythonCode(project as any, { botName: `Phase60_${label}`, userDatabaseEnabled: true, projectId: 1 });
 }
 
 function genNoProject(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `Phase60_${label}`, userDatabaseEnabled: true, enableComments: false });
+  return generatePythonCode(project as any, { botName: `Phase60_${label}`, userDatabaseEnabled: true });
 }
 
 function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {

@@ -30,8 +30,7 @@ function gen(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `BotManager_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**

@@ -41,8 +41,7 @@ function gen(project: unknown, label: string, db = false): string {
   return generatePythonCode(project as any, {
     botName: `Phase22_${label}`,
     userDatabaseEnabled: db,
-    enableComments: false,
-  });
+    });
 }
 
 /**

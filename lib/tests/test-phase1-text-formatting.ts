@@ -191,8 +191,7 @@ function gen(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `Phase1_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**
@@ -207,7 +206,6 @@ function genWithProjectId(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `Phase1_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
     projectId: 99999,
   });
 }

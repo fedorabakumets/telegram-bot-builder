@@ -219,7 +219,6 @@ export async function startBot(projectId: number, token: string, tokenId: number
     console.log(`   typeof project.userDatabaseEnabled:`, typeof project.userDatabaseEnabled);
 
     const userDatabaseEnabled = project.userDatabaseEnabled === 1;
-    const enableComments = false;
     
     console.log(`🔧 Генерация кода бота:`);
     console.log(`   userDatabaseEnabled:`, userDatabaseEnabled);
@@ -252,7 +251,6 @@ export async function startBot(projectId: number, token: string, tokenId: number
       botName: project.name,
       userDatabaseEnabled,
       projectId,
-      enableComments,
       enableLogging: false,
       enableGroupHandlers: false,
       groups: [],

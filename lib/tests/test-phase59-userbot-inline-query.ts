@@ -23,7 +23,7 @@ function makeCleanProject(nodes: any[]) {
 }
 
 function gen(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `Phase59_${label}`, userDatabaseEnabled: true, enableComments: false, projectId: 1 });
+  return generatePythonCode(project as any, { botName: `Phase59_${label}`, userDatabaseEnabled: true, projectId: 1 });
 }
 
 function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {
@@ -261,7 +261,7 @@ test('D02', 'projectId → get_content для query', () => {
 
 test('D03', 'без projectId → нет get_content', () => {
   const p = makeCleanProject([makeUserbotInlineQueryNode('uiq1')]);
-  const code = generatePythonCode(p as any, { botName: 'Phase59_d03', userDatabaseEnabled: true, enableComments: false });
+  const code = generatePythonCode(p as any, { botName: 'Phase59_d03', userDatabaseEnabled: true });
   const handlerIdx = code.indexOf('handle_callback_uiq1');
   const handlerBlock = code.substring(handlerIdx, handlerIdx + 3000);
   ok(!handlerBlock.includes('get_content'), 'get_content НЕ должен быть в коде без projectId');

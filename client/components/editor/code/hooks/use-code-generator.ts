@@ -131,7 +131,6 @@ export function useCodeGenerator({
       if (format === 'python' && mode === 'server' && projectId) {
         const data = await apiRequest('POST', `/api/projects/${projectId}/generate`, {
           userDatabaseEnabled,
-          enableComments: false,
           enableLogging: false,
         });
         return data.code;
@@ -152,7 +151,6 @@ export function useCodeGenerator({
           projectId,
           enableGroupHandlers: false,
           enableLogging: false,
-          enableComments: false,
         });
       }
 

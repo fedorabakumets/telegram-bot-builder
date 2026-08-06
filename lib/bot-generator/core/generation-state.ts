@@ -1,9 +1,9 @@
 /**
  * @fileoverview Состояние генерации Python-кода бота
- * 
+ *
  * Модуль предоставляет состояние для процесса генерации.
- * Заменяет глобальные переменные loggingEnabled и commentsEnabled.
- * 
+ * Заменяет глобальную переменную loggingEnabled.
+ *
  * @module bot-generator/core/generation-state
  */
 
@@ -33,19 +33,16 @@ export type ComponentName = typeof COMPONENT_NAMES[keyof typeof COMPONENT_NAMES]
 /**
  * Состояние генерации.
  * generatedComponents — мутабельный Set для отслеживания уже эмитированных секций.
- * 
+ *
  * @example
  * const state: GenerationState = {
  *   loggingEnabled: true,
- *   commentsEnabled: true,
  *   generatedComponents: new Set()
  * };
  */
 export interface GenerationState {
   /** Включено ли логирование */
   readonly loggingEnabled: boolean;
-  /** Включены ли комментарии */
-  readonly commentsEnabled: boolean;
   /**
    * Множество уже сгенерированных компонентов.
    * Мутабельный — намеренно, чтобы pipeline мог регистрировать эмиссию
@@ -56,10 +53,10 @@ export interface GenerationState {
 
 /**
  * Создаёт новое состояние генерации из опций
- * 
+ *
  * @param options - Опции генерации
  * @returns Новое состояние генерации
- * 
+ *
  * @example
  * const state = createGenerationState({ enableLogging: true });
  */
@@ -68,18 +65,17 @@ export function createGenerationState(
 ): GenerationState {
   return {
     loggingEnabled: options.enableLogging ?? false,
-    commentsEnabled: options.enableComments ?? true,
     generatedComponents: new Set<string>(),
   };
 }
 
 /**
  * Создаёт новое состояние с обновлённым логированием
- * 
+ *
  * @param state - Текущее состояние
  * @param enabled - Включить или выключить логирование
  * @returns Новое состояние с обновлённым логированием
- * 
+ *
  * @example
  * const newState = withLogging(state, true);
  */
@@ -94,32 +90,12 @@ export function withLogging(
 }
 
 /**
- * Создаёт новое состояние с обновлёнными комментариями
- * 
- * @param state - Текущее состояние
- * @param enabled - Включить или выключить комментарии
- * @returns Новое состояние с обновлёнными комментариями
- * 
- * @example
- * const newState = withComments(state, false);
- */
-export function withComments(
-  state: GenerationState,
-  enabled: boolean
-): GenerationState {
-  return {
-    ...state,
-    commentsEnabled: enabled,
-  };
-}
-
-/**
  * Отмечает компонент как сгенерированный
- * 
+ *
  * @param state - Текущее состояние
  * @param component - Имя сгенерированного компонента
  * @returns Новое состояние с отмеченным компонентом
- * 
+ *
  * @example
  * const newState = markComponentGenerated(state, 'database');
  */
@@ -129,7 +105,7 @@ export function markComponentGenerated(
 ): GenerationState {
   const newComponents = new Set(state.generatedComponents);
   newComponents.add(component);
-  
+
   return {
     ...state,
     generatedComponents: newComponents,
@@ -138,11 +114,11 @@ export function markComponentGenerated(
 
 /**
  * Проверяет, был ли компонент сгенерирован
- * 
+ *
  * @param state - Текущее состояние
  * @param component - Имя компонента для проверки
  * @returns true если компонент был сгенерирован
- * 
+ *
  * @example
  * const isGenerated = isComponentGenerated(state, 'database');
  */

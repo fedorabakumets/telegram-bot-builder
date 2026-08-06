@@ -124,7 +124,7 @@ function makeNewBotProject() {
  * @param project - Объект проекта
  */
 function gen(project: unknown): string {
-  return generatePythonCode(project as any, { botName: 'RuntimeTest', userDatabaseEnabled: false, enableComments: false });
+  return generatePythonCode(project as any, { botName: 'RuntimeTest', userDatabaseEnabled: false });
 }
 
 /**

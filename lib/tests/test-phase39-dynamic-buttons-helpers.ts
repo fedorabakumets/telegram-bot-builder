@@ -28,7 +28,7 @@ export function makeProject(nodes: any[]) {
  * @param label - Метка для имени бота
  */
 export function gen(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `DynBtn_${label}`, userDatabaseEnabled: false, enableComments: false });
+  return generatePythonCode(project as any, { botName: `DynBtn_${label}`, userDatabaseEnabled: false });
 }
 
 /**

@@ -95,7 +95,6 @@ function startProject() {
 function gen(label: string, userDatabaseEnabled: boolean, projectId: number | null = null): string {
   return generatePythonCode(startProject(), {
     botName: `DbToggle_${label}`,
-    enableComments: false,
     userDatabaseEnabled,
     projectId,
   });

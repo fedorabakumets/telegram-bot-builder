@@ -89,7 +89,6 @@ function startProject() {
 function gen(label: string, protectContent?: boolean): string {
   return generatePythonCode(startProject(), {
     botName: `ProtectContent_${label}`,
-    enableComments: false,
     userDatabaseEnabled: false,
     ...(protectContent === undefined ? {} : { protectContent }),
   });

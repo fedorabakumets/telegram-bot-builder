@@ -48,8 +48,7 @@ function gen(project: unknown, opts: { userDatabaseEnabled: boolean; label: stri
   return generatePythonCode(project as any, {
     botName: `TestBot_${opts.label}`,
     userDatabaseEnabled: opts.userDatabaseEnabled,
-    enableComments: false,
-  });
+    });
 }
 
 /**

@@ -39,8 +39,7 @@ function gen(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `PhaseSMI_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**

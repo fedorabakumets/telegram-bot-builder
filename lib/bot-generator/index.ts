@@ -43,7 +43,7 @@ export type {
 } from './types';
 
 // Ядро: контекст и состояние генерации
-export { createGenerationState, withLogging, withComments } from './core/generation-state';
+export { createGenerationState, withLogging } from './core/generation-state';
 export { markComponentGenerated, isComponentGenerated } from './core/generation-state';
 export type { GenerationState } from './core/generation-state';
 

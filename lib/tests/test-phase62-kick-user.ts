@@ -11,7 +11,7 @@ function makeCleanProject(nodes: any[]) {
   return { sheets: [{ id: 'sheet1', name: 'Test', nodes, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), viewState: { pan: { x: 0, y: 0 }, zoom: 100 } }], version: 2, activeSheetId: 'sheet1' };
 }
 function gen(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `PhaseKU_${label}`, userDatabaseEnabled: false, enableComments: false });
+  return generatePythonCode(project as any, { botName: `PhaseKU_${label}`, userDatabaseEnabled: false });
 }
 function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {
   const tmp = `_tmp_ku_${label}.py`;

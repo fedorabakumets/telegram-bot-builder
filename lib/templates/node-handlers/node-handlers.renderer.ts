@@ -138,8 +138,7 @@ export function resolveMediaUrls(data: any): {
  */
 export function generateBroadcastHandler(
   node: Node,
-  allNodes: Node[] = [],
-  _enableComments: boolean = true
+  allNodes: Node[] = []
 ): string {
   return node.data?.broadcastApiType === 'client'
     ? generateBroadcastClientFromNode(node, allNodes)

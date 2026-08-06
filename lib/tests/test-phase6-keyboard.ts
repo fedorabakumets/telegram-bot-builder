@@ -41,8 +41,7 @@ function gen(project: unknown, label: string, userDatabaseEnabled = false): stri
   return generatePythonCode(project as any, {
     botName: `Phase6Keyboard_${label}`,
     userDatabaseEnabled,
-    enableComments: false,
-  });
+    });
 }
 
 function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {

@@ -144,7 +144,6 @@ function incomingCallbackProject() {
 function gen(label: string, project: any, catchAllHandlers?: boolean): string {
   const options: any = {
     botName: `CatchAll_${label}`,
-    enableComments: false,
     userDatabaseEnabled: false,
   };
   if (catchAllHandlers !== undefined) options.catchAllHandlers = catchAllHandlers;

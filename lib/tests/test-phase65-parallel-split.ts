@@ -23,7 +23,7 @@ function makeCleanProject(nodes: any[]) {
 }
 
 function gen(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `Phase65_${label}`, userDatabaseEnabled: false, enableComments: false });
+  return generatePythonCode(project as any, { botName: `Phase65_${label}`, userDatabaseEnabled: false });
 }
 
 function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {

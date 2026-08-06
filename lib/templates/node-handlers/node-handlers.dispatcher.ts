@@ -21,7 +21,6 @@ import { generateForwardMessageFromNode } from '../forward-message';
 import { generateCreateForumTopicFromNode } from '../create-forum-topic';
 /** Генератор callback-обработчика для узла HTTP запроса */
 import { generateHttpRequestFromNode } from '../http-request';
-import { processCodeWithAutoComments } from '../../bot-generator/core/generated-comment';
 import { generateUserHandlerFromNode } from '../user-handler';
 import { generateAnimationHandler } from '../animation-handler/animation-handler.renderer';
 import { generateAdminRightsFromNode } from '../admin-rights/admin-rights.renderer';
@@ -240,7 +239,6 @@ function generateCommandEntryHandler(node: Node, callbackHandlerCode: string): s
  *
  * @param nodes - Массив узлов для генерации обработчиков
  * @param userDatabaseEnabled - Флаг, указывающий, включена ли база данных пользователей
- * @param enableComments - Включить автоматические комментарии в коде
  * @param telegramFileIds - Словарь кэшированных Telegram file_id (ключ — URL, значение — file_id)
  * @param thumbnailFileIds - Словарь обложек видео (ключ — URL видео, значение — file_id обложки)
  * @param thumbnailUrls - Словарь прямых URL обложек видео (ключ — URL видео, значение — URL обложки)
@@ -249,12 +247,11 @@ function generateCommandEntryHandler(node: Node, callbackHandlerCode: string): s
  *
  * @example
  * const nodes = [{ id: 'welcome', type: 'message' }, { id: 'help-trigger', type: 'command_trigger' }];
- * const code = generateNodeHandlers(nodes, true, true);
+ * const code = generateNodeHandlers(nodes, true);
  */
 export function generateNodeHandlers(
   nodes: Node[],
   userDatabaseEnabled: boolean,
-  enableComments: boolean = true,
   telegramFileIds: Record<string, string> = {},
   thumbnailFileIds: Record<string, string> = {},
   thumbnailUrls: Record<string, string> = {},
@@ -366,7 +363,7 @@ export function generateNodeHandlers(
     promote_user: generateUserHandlerFromNode,
     demote_user: generateUserHandlerFromNode,
     admin_rights: generateAdminRightsFromNode,
-    broadcast: (node) => generateBroadcastHandler(node, nodes, enableComments),
+    broadcast: (node) => generateBroadcastHandler(node, nodes),
     keyboard: (node) => generateKeyboardHandler(node, nodes),
     input: generateUserInputNodeHandler,
     get_managed_bot_token: (node) => {
@@ -598,11 +595,5 @@ export function generateNodeHandlers(
     codeLines.push(`# @@NODE_END:${node.id}@@`);
   });
 
-  // Применяем автоматическое добавление комментариев ко всему коду, если включена генерация комментариев
-  if (enableComments) {
-    processCodeWithAutoComments(codeLines, 'generate-node-handlers.ts');
-  }
-
-  // Собираем финальный код из обработанных строк
   return codeLines.join('\n');
 }

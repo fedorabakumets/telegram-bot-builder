@@ -44,8 +44,7 @@ function gen(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `PhaseOMT_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**
@@ -604,7 +603,7 @@ test('F03', 'outgoing_message_trigger + userDatabaseEnabled → синтакси
     makeOutgoingMessageTriggerNode('omt1', 'fwd1'),
     makeForwardMessageNodeWithThread('fwd1', '-1002300967595', '618', 'last_bot_message'),
   ]);
-  const code = generatePythonCode(p as any, { botName: 'PhaseOMT_f03', userDatabaseEnabled: true, enableComments: false });
+  const code = generatePythonCode(p as any, { botName: 'PhaseOMT_f03', userDatabaseEnabled: true });
   syntax(code, 'f03');
 });
 

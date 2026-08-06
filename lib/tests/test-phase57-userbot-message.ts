@@ -24,7 +24,7 @@ function makeCleanProject(nodes: any[]) {
 }
 
 function gen(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `Phase57_${label}`, userDatabaseEnabled: true, enableComments: false, projectId: 1 });
+  return generatePythonCode(project as any, { botName: `Phase57_${label}`, userDatabaseEnabled: true, projectId: 1 });
 }
 
 function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {

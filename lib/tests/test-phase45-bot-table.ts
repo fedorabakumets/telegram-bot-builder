@@ -34,7 +34,7 @@ function makeCleanProject(nodes: any[]) {
 
 /** Генерирует Python-код из проекта */
 function gen(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `Phase45_${label}`, userDatabaseEnabled: true, enableComments: false });
+  return generatePythonCode(project as any, { botName: `Phase45_${label}`, userDatabaseEnabled: true });
 }
 
 /** Проверяет синтаксис Python-кода через py_compile */

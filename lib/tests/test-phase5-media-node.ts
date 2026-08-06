@@ -71,16 +71,14 @@ function gen(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `Phase5_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 function genDB(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `Phase5DB_${label}`,
     userDatabaseEnabled: true,
-    enableComments: false,
-  });
+    });
 }
 
 function parseProject<T>(project: T): T {
@@ -1498,7 +1496,6 @@ test('S01', 'thumbnailFileIds → thumbnail= в send_video (message-нода)', 
   const code = generatePythonCode(p as any, {
     botName: 'ThumbTest',
     userDatabaseEnabled: false,
-    enableComments: false,
     telegramFileIds: {},
     thumbnailFileIds: { '/uploads/video.mp4': 'AgACBQADthumb123' },
   });
@@ -1515,8 +1512,7 @@ test('S02', 'без thumbnailFileIds → thumbnail= НЕ добавляется'
   const code = generatePythonCode(p as any, {
     botName: 'ThumbTest2',
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
   ok(!code.includes('thumbnail='), 'thumbnail= НЕ должен быть без thumbnailFileIds');
 });
 
@@ -1529,7 +1525,6 @@ test('S03', 'синтаксис Python OK — send_video с thumbnail', () => {
   const code = generatePythonCode(p as any, {
     botName: 'ThumbTest3',
     userDatabaseEnabled: false,
-    enableComments: false,
     thumbnailFileIds: { '/uploads/video.mp4': 'AgACBQADthumb123' },
   });
   syntax(code, 's03');
@@ -1541,7 +1536,6 @@ test('S04', 'thumbnailFileIds → thumbnail= в answer_video (media-нода)', 
   const code = generatePythonCode(p as any, {
     botName: 'ThumbTest4',
     userDatabaseEnabled: false,
-    enableComments: false,
     thumbnailFileIds: { '/uploads/video.mp4': 'AgACBQADthumb456' },
   });
   ok(code.includes('thumbnail=') || code.includes('AgACBQADthumb456'), 'thumbnail должен быть в answer_video');
@@ -1553,7 +1547,6 @@ test('S05', 'синтаксис Python OK — answer_video с thumbnail (media-�
   const code = generatePythonCode(p as any, {
     botName: 'ThumbTest5',
     userDatabaseEnabled: false,
-    enableComments: false,
     thumbnailFileIds: { '/uploads/video.mp4': 'AgACBQADthumb456' },
   });
   syntax(code, 's05');
@@ -1568,7 +1561,6 @@ test('S06', 'thumbnail НЕ добавляется для фото', () => {
   const code = generatePythonCode(p as any, {
     botName: 'ThumbTest6',
     userDatabaseEnabled: false,
-    enableComments: false,
     thumbnailFileIds: { '/uploads/photo.jpg': 'AgACBQADthumb789' },
   });
   ok(!code.includes('thumbnail='), 'thumbnail= НЕ должен быть для фото');
@@ -1583,7 +1575,6 @@ test('S07', 'несколько видео — thumbnail для каждого',
   const code = generatePythonCode(p as any, {
     botName: 'ThumbTest7',
     userDatabaseEnabled: false,
-    enableComments: false,
     thumbnailFileIds: {
       '/uploads/v1.mp4': 'AgACBQADthumbA',
       '/uploads/v2.mp4': 'AgACBQADthumbB',
@@ -1603,7 +1594,6 @@ test('S08', 'thumbnail для URL-видео (не /uploads/)', () => {
   const code = generatePythonCode(p as any, {
     botName: 'ThumbTest8',
     userDatabaseEnabled: false,
-    enableComments: false,
     thumbnailFileIds: { 'https://example.com/video.mp4': 'AgACBQADthumbURL' },
   });
   ok(code.includes('thumbnail=') || code.includes('AgACBQADthumbURL'), 'thumbnail должен быть для URL-видео');

@@ -25,7 +25,7 @@ function makeCleanProject(nodes: any[]) {
  * @returns Сгенерированный Python-код
  */
 function gen(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `PhaseCallback_${label}`, userDatabaseEnabled: false, enableComments: false });
+  return generatePythonCode(project as any, { botName: `PhaseCallback_${label}`, userDatabaseEnabled: false });
 }
 
 /**
@@ -1011,7 +1011,7 @@ test('N08', 'incoming_callback_trigger → message с userDatabaseEnabled: true 
     makeIncomingCallbackTriggerNode('ict1', 'msg1'),
     makeMessageNode('msg1', 'Привет, {callback_data}!'),
   ]);
-  const code = generatePythonCode(project as any, { botName: 'PhaseCallback_n08', userDatabaseEnabled: true, enableComments: false });
+  const code = generatePythonCode(project as any, { botName: 'PhaseCallback_n08', userDatabaseEnabled: true });
   const r = checkSyntax(code, 'n08');
   ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
 });

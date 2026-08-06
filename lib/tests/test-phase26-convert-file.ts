@@ -135,8 +135,7 @@ function gen(project: any, label: string): string {
   return generatePythonCode(project, {
     botName: `ConvertFile_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**
@@ -149,8 +148,7 @@ function genDB(project: any, label: string): string {
   return generatePythonCode(project, {
     botName: `ConvertFileDB_${label}`,
     userDatabaseEnabled: true,
-    enableComments: false,
-  });
+    });
 }
 
 /**

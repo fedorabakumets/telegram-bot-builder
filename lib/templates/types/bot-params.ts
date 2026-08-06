@@ -23,8 +23,6 @@ export interface BotTemplateParams {
   userDatabaseEnabled: boolean;
   /** ID проекта для сохранения в базу данных */
   projectId: number | null;
-  /** Включить ли комментарии в коде */
-  enableComments: boolean;
   /** Включить ли логирование */
   enableLogging: boolean;
   /** Команды для BotFather */

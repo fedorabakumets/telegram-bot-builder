@@ -129,8 +129,7 @@ function gen(project: any, label: string): string {
   return generatePythonCode(project, {
     botName: `Loop_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**
@@ -143,8 +142,7 @@ function genDB(project: any, label: string): string {
   return generatePythonCode(project, {
     botName: `LoopDB_${label}`,
     userDatabaseEnabled: true,
-    enableComments: false,
-  });
+    });
 }
 
 /**

@@ -19,7 +19,7 @@ describe('generateNodeHandlers', () => {
           keyboardType: 'none',
         },
       } as any,
-    ], false, false);
+    ], false);
 
     assert.ok(result.includes('handle_callback_kbd_1'));
     assert.ok(result.includes('keyboard-ноды'));
@@ -39,7 +39,7 @@ describe('generateNodeHandlers', () => {
           saveToDatabase: true,
         },
       } as any,
-    ], false, false);
+    ], false);
 
     assert.ok(result.includes('handle_callback_input_1'));
     assert.ok(result.includes('"waiting_for_input"'));
@@ -71,7 +71,7 @@ describe('generateNodeHandlers', () => {
           keyboardType: 'none',
         },
       } as any,
-    ], false, false);
+    ], false);
 
     const handlerMatches = result.match(/async def handle_callback_get_token_1\(/g) || [];
     assert.equal(handlerMatches.length, 1);

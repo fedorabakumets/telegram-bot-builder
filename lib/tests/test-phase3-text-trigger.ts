@@ -28,7 +28,7 @@ function makeCleanProject(nodes: any[]) {
 }
 
 function gen(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `Phase3_${label}`, userDatabaseEnabled: false, enableComments: false });
+  return generatePythonCode(project as any, { botName: `Phase3_${label}`, userDatabaseEnabled: false });
 }
 
 function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {
@@ -967,8 +967,8 @@ test('M04', 'генерация одного триггера < 100ms', () => {
 test('M05', 'повторная генерация того же проекта → идентичный результат', () => {
   const p = makeCleanProject([makeTriggerNode('t1', ['привет', 'хай'], 'msg1'), makeMessageNode('msg1')]);
   // Используем одинаковый label чтобы botName был одинаковым
-  const code1 = generatePythonCode(p as any, { botName: 'Phase3_m05', userDatabaseEnabled: false, enableComments: false });
-  const code2 = generatePythonCode(p as any, { botName: 'Phase3_m05', userDatabaseEnabled: false, enableComments: false });
+  const code1 = generatePythonCode(p as any, { botName: 'Phase3_m05', userDatabaseEnabled: false });
+  const code2 = generatePythonCode(p as any, { botName: 'Phase3_m05', userDatabaseEnabled: false });
   ok(code1 === code2, 'Повторная генерация должна давать идентичный результат');
 });
 

@@ -127,8 +127,6 @@ export interface GeneratePythonCodeOptions {
   enableLogging?: boolean;
   /** Включить обработчики групп */
   enableGroupHandlers?: boolean;
-  /** Включить комментарии */
-  enableComments?: boolean;
   /** Автоматически регистрировать пользователей при первом обращении */
   autoRegisterUsers?: boolean;
   /** URL вебхука для webhook режима */
@@ -205,7 +203,6 @@ function buildGenerationContext(
     projectId = null,
     enableLogging = false,
     enableGroupHandlers = false,
-    enableComments = true,
     autoRegisterUsers = false,
     webhookUrl = null,
     webhookPort = null,
@@ -220,7 +217,6 @@ function buildGenerationContext(
 
   const genOptions: GenerationOptions = {
     enableLogging,
-    enableComments,
     userDatabaseEnabled,
     enableGroupHandlers,
     projectId,
@@ -346,7 +342,6 @@ function generateCodeSections(
   const nodeHandlers = generateNodeHandlers(
     nodes,
     userDatabaseEnabled,
-    !!context.options.enableComments,
     context.options.telegramFileIds || {},
     context.options.thumbnailFileIds || {},
     context.options.thumbnailUrls || {},

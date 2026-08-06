@@ -43,8 +43,7 @@ function gen(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `PhaseMBU_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**
@@ -527,7 +526,7 @@ test('F01', 'полный сценарий с userDatabaseEnabled → синта
     }),
     makeMessageNode('msg_bot', 'Бот @{bot_username} (id: {bot_id}) создан пользователем {creator_id}'),
   ]);
-  const code = generatePythonCode(p as any, { botName: 'PhaseMBU_f01', userDatabaseEnabled: true, enableComments: false });
+  const code = generatePythonCode(p as any, { botName: 'PhaseMBU_f01', userDatabaseEnabled: true });
   syntax(code, 'f01');
 });
 

@@ -41,8 +41,7 @@ function gen(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `PhaseBotToken_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**

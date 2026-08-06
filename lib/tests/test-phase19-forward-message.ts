@@ -185,8 +185,7 @@ function gen(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `Phase19_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /** Генерирует Python-код с включённой пользовательской БД. */
@@ -194,8 +193,7 @@ function genDB(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `Phase19DB_${label}`,
     userDatabaseEnabled: true,
-    enableComments: false,
-  });
+    });
 }
 
 /** Запускает py_compile и возвращает результат синтаксической проверки. */

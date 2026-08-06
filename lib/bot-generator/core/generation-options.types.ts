@@ -13,15 +13,12 @@
  * @example
  * const options: GenerationOptions = {
  *   enableLogging: true,
- *   enableComments: true,
  *   userDatabaseEnabled: false
  * };
  */
 export interface GenerationOptions {
   /** Включить логирование в сгенерированном коде */
   enableLogging?: boolean;
-  /** Включить комментарии в сгенерированном коде */
-  enableComments?: boolean;
   /** Включить базу данных пользователей */
   userDatabaseEnabled?: boolean;
   /** Включить обработчики групп */
@@ -80,7 +77,6 @@ export interface GenerationOptions {
  */
 export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   enableLogging: false,
-  enableComments: true,
   userDatabaseEnabled: false,
   enableGroupHandlers: false,
   projectId: null,

@@ -1,23 +1,23 @@
-п»ї/**
- * @fileoverview Р¤Р°Р·Р° вЂ” РЈС‚РµС‡РєРё РїР°РјСЏС‚Рё (Memory Leaks)
+/**
+ * @fileoverview Фаза — Утечки памяти (Memory Leaks)
  *
- * РўРµСЃС‚РёСЂСѓРµС‚ С‚СЂРё РёСЃРїСЂР°РІР»РµРЅРёСЏ СѓС‚РµС‡РµРє РїР°РјСЏС‚Рё:
+ * Тестирует три исправления утечек памяти:
  *  1. USER_DATA_TTL + _user_last_seen + cleanup_user_data (utils.py.jinja2)
- *  2. asyncio.create_task(cleanup_user_data()) РІ main() (main.py.jinja2)
- *  3. signal_handler РёСЃРїРѕР»СЊР·СѓРµС‚ loop.stop() РІРјРµСЃС‚Рѕ sys.exit(0) (main.py.jinja2)
- *  4. templateCache РѕРіСЂР°РЅРёС‡РµРЅ MAX_CACHE_SIZE = 100 (template-renderer.ts)
+ *  2. asyncio.create_task(cleanup_user_data()) в main() (main.py.jinja2)
+ *  3. signal_handler использует loop.stop() вместо sys.exit(0) (main.py.jinja2)
+ *  4. templateCache ограничен MAX_CACHE_SIZE = 100 (template-renderer.ts)
  *
- * Р‘Р»РѕРєРё:
- *  A. USER_DATA_TTL РєРѕРЅСЃС‚Р°РЅС‚Р° (10 С‚РµСЃС‚РѕРІ)
- *  B. _user_last_seen СЃР»РѕРІР°СЂСЊ (10 С‚РµСЃС‚РѕРІ)
- *  C. cleanup_user_data С„СѓРЅРєС†РёСЏ (15 С‚РµСЃС‚РѕРІ)
- *  D. asyncio.create_task(cleanup_user_data()) РІ main() (10 С‚РµСЃС‚РѕРІ)
- *  E. signal_handler вЂ” loop.stop() РІРјРµСЃС‚Рѕ sys.exit() (15 С‚РµСЃС‚РѕРІ)
- *  F. finally Р±Р»РѕРє вЂ” РєРѕСЂСЂРµРєС‚РЅРѕРµ Р·Р°РєСЂС‹С‚РёРµ СЃРѕРµРґРёРЅРµРЅРёР№ (10 С‚РµСЃС‚РѕРІ)
- *  G. templateCache РѕРіСЂР°РЅРёС‡РµРЅРёРµ (10 С‚РµСЃС‚РѕРІ)
- *  H. РљРѕРјР±РёРЅР°С†РёРё вЂ” РїРѕР»РЅС‹Рµ РїСЂРѕРµРєС‚С‹ (15 С‚РµСЃС‚РѕРІ)
- *  I. Р РµРіСЂРµСЃСЃРёСЏ вЂ” СЃС‚Р°СЂС‹Рµ РїР°С‚С‚РµСЂРЅС‹ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‚ (10 С‚РµСЃС‚РѕРІ)
- *  J. Р“СЂР°РЅРёС‡РЅС‹Рµ СЃР»СѓС‡Р°Рё (10 С‚РµСЃС‚РѕРІ)
+ * Блоки:
+ *  A. USER_DATA_TTL константа (10 тестов)
+ *  B. _user_last_seen словарь (10 тестов)
+ *  C. cleanup_user_data функция (15 тестов)
+ *  D. asyncio.create_task(cleanup_user_data()) в main() (10 тестов)
+ *  E. signal_handler — loop.stop() вместо sys.exit() (15 тестов)
+ *  F. finally блок — корректное закрытие соединений (10 тестов)
+ *  G. templateCache ограничение (10 тестов)
+ *  H. Комбинации — полные проекты (15 тестов)
+ *  I. Регрессия — старые паттерны отсутствуют (10 тестов)
+ *  J. Граничные случаи (10 тестов)
  */
 
 import fs from 'fs';
@@ -25,27 +25,27 @@ import { execSync } from 'child_process';
 import { generatePythonCode } from '../bot-generator.ts';
 import { renderPartialTemplate } from '../templates/template-renderer.ts';
 
-// в”Ђв”Ђв”Ђ Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ СѓР·Р»С‹ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// --- Вспомогательные узлы ----------------------------------------------------
 
 /**
- * РЎРѕР·РґР°С‘С‚ СѓР·РµР» С‚РёРїР° start
- * @param id - РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СѓР·Р»Р°
+ * Создаёт узел типа start
+ * @param id - Идентификатор узла
  */
 function makeStartNode(id = 'start1') {
   return {
     id,
     type: 'start',
     position: { x: 0, y: 0 },
-    data: { command: '/start', messageText: 'РџСЂРёРІРµС‚', keyboardType: 'none', buttons: [] },
+    data: { command: '/start', messageText: 'Привет', keyboardType: 'none', buttons: [] },
   };
 }
 
 /**
- * РЎРѕР·РґР°С‘С‚ СѓР·РµР» С‚РёРїР° message
- * @param id - РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СѓР·Р»Р°
- * @param text - РўРµРєСЃС‚ СЃРѕРѕР±С‰РµРЅРёСЏ
+ * Создаёт узел типа message
+ * @param id - Идентификатор узла
+ * @param text - Текст сообщения
  */
-function makeMessageNode(id: string, text = 'РћС‚РІРµС‚') {
+function makeMessageNode(id: string, text = 'Ответ') {
   return {
     id,
     type: 'message',
@@ -55,10 +55,10 @@ function makeMessageNode(id: string, text = 'РћС‚РІРµС‚') {
 }
 
 /**
- * РЎРѕР·РґР°С‘С‚ СѓР·РµР» С‚РёРїР° command_trigger
- * @param id - РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СѓР·Р»Р°
- * @param command - РљРѕРјР°РЅРґР° Р±РѕС‚Р°
- * @param targetId - ID С†РµР»РµРІРѕРіРѕ СѓР·Р»Р°
+ * Создаёт узел типа command_trigger
+ * @param id - Идентификатор узла
+ * @param command - Команда бота
+ * @param targetId - ID целевого узла
  */
 function makeCommandTriggerNode(id: string, command: string, targetId: string) {
   return {
@@ -67,7 +67,7 @@ function makeCommandTriggerNode(id: string, command: string, targetId: string) {
     position: { x: 0, y: 0 },
     data: {
       command,
-      description: 'РљРѕРјР°РЅРґР°',
+      description: 'Команда',
       showInMenu: true,
       adminOnly: false,
       requiresAuth: false,
@@ -79,10 +79,10 @@ function makeCommandTriggerNode(id: string, command: string, targetId: string) {
 }
 
 /**
- * РЎРѕР·РґР°С‘С‚ СѓР·РµР» С‚РёРїР° text_trigger
- * @param id - РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СѓР·Р»Р°
- * @param synonyms - РЎРїРёСЃРѕРє СЃРёРЅРѕРЅРёРјРѕРІ
- * @param targetId - ID С†РµР»РµРІРѕРіРѕ СѓР·Р»Р°
+ * Создаёт узел типа text_trigger
+ * @param id - Идентификатор узла
+ * @param synonyms - Список синонимов
+ * @param targetId - ID целевого узла
  */
 function makeTextTriggerNode(id: string, synonyms: string[], targetId: string) {
   return {
@@ -102,10 +102,10 @@ function makeTextTriggerNode(id: string, synonyms: string[], targetId: string) {
 }
 
 /**
- * РЎРѕР·РґР°С‘С‚ СѓР·РµР» С‚РёРїР° condition
- * @param id - РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СѓР·Р»Р°
- * @param variable - РџРµСЂРµРјРµРЅРЅР°СЏ СѓСЃР»РѕРІРёСЏ
- * @param branches - Р’РµС‚РєРё СѓСЃР»РѕРІРёСЏ
+ * Создаёт узел типа condition
+ * @param id - Идентификатор узла
+ * @param variable - Переменная условия
+ * @param branches - Ветки условия
  */
 function makeConditionNode(id: string, variable: string, branches: any[]) {
   return {
@@ -117,9 +117,9 @@ function makeConditionNode(id: string, variable: string, branches: any[]) {
 }
 
 /**
- * РЎРѕР·РґР°С‘С‚ СѓР·РµР» С‚РёРїР° media
- * @param id - РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ СѓР·Р»Р°
- * @param media - РЎРїРёСЃРѕРє РјРµРґРёР°С„Р°Р№Р»РѕРІ
+ * Создаёт узел типа media
+ * @param id - Идентификатор узла
+ * @param media - Список медиафайлов
  */
 function makeMediaNode(id: string, media: string[]) {
   return {
@@ -130,12 +130,12 @@ function makeMediaNode(id: string, media: string[]) {
   };
 }
 
-// в”Ђв”Ђв”Ђ РЈС‚РёР»РёС‚С‹ РіРµРЅРµСЂР°С†РёРё в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// --- Утилиты генерации -------------------------------------------------------
 
 /**
- * РЎРѕР·РґР°С‘С‚ РјРёРЅРёРјР°Р»СЊРЅС‹Р№ project.json СЃ Р·Р°РґР°РЅРЅС‹РјРё СѓР·Р»Р°РјРё
- * @param nodes - РњР°СЃСЃРёРІ СѓР·Р»РѕРІ
- * @param userDatabaseEnabled - Р’РєР»СЋС‡РёС‚СЊ Р‘Р”
+ * Создаёт минимальный project.json с заданными узлами
+ * @param nodes - Массив узлов
+ * @param userDatabaseEnabled - Включить БД
  */
 function makeCleanProject(nodes: any[], userDatabaseEnabled = false) {
   return {
@@ -144,7 +144,7 @@ function makeCleanProject(nodes: any[], userDatabaseEnabled = false) {
     userDatabaseEnabled,
     sheets: [{
       id: 'sheet-ml',
-      name: 'РћСЃРЅРѕРІРЅРѕР№ РїРѕС‚РѕРє',
+      name: 'Основной поток',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       viewState: { zoom: 1, position: { x: 0, y: 0 } },
@@ -154,36 +154,34 @@ function makeCleanProject(nodes: any[], userDatabaseEnabled = false) {
 }
 
 /**
- * Р“РµРЅРµСЂРёСЂСѓРµС‚ Python-РєРѕРґ РёР· РїСЂРѕРµРєС‚Р°
- * @param project - РћР±СЉРµРєС‚ РїСЂРѕРµРєС‚Р°
- * @param label - РњРµС‚РєР° РґР»СЏ РёРјРµРЅРё Р±РѕС‚Р°
- * @param userDatabaseEnabled - Р’РєР»СЋС‡РёС‚СЊ Р‘Р”
+ * Генерирует Python-код из проекта
+ * @param project - Объект проекта
+ * @param label - Метка для имени бота
+ * @param userDatabaseEnabled - Включить БД
  */
 function gen(project: any, label: string, userDatabaseEnabled = false): string {
   return generatePythonCode(project, {
     botName: `MemLeak_${label}`,
     userDatabaseEnabled,
-    enableComments: false,
-  });
+    });
 }
 
 /**
- * Р“РµРЅРµСЂРёСЂСѓРµС‚ Python-РєРѕРґ СЃ РІРєР»СЋС‡С‘РЅРЅРѕР№ Р‘Р”
- * @param project - РћР±СЉРµРєС‚ РїСЂРѕРµРєС‚Р°
- * @param label - РњРµС‚РєР° РґР»СЏ РёРјРµРЅРё Р±РѕС‚Р°
+ * Генерирует Python-код с включённой БД
+ * @param project - Объект проекта
+ * @param label - Метка для имени бота
  */
 function genDB(project: any, label: string): string {
   return generatePythonCode(project, {
     botName: `MemLeakDB_${label}`,
     userDatabaseEnabled: true,
-    enableComments: false,
-  });
+    });
 }
 
 /**
- * РџСЂРѕРІРµСЂСЏРµС‚ СЃРёРЅС‚Р°РєСЃРёСЃ Python-РєРѕРґР° С‡РµСЂРµР· py_compile
- * @param code - Python-РєРѕРґ
- * @param label - РњРµС‚РєР° РґР»СЏ РІСЂРµРјРµРЅРЅРѕРіРѕ С„Р°Р№Р»Р°
+ * Проверяет синтаксис Python-кода через py_compile
+ * @param code - Python-код
+ * @param label - Метка для временного файла
  */
 function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {
   const tmp = `_tmp_ml_${label}.py`;
@@ -199,682 +197,682 @@ function checkSyntax(code: string, label: string): { ok: boolean; error?: string
   }
 }
 
-// в”Ђв”Ђв”Ђ РўРµСЃС‚-СЂР°РЅРЅРµСЂ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// --- Тест-раннер -------------------------------------------------------------
 
-/** Р РµР·СѓР»СЊС‚Р°С‚ РѕРґРЅРѕРіРѕ С‚РµСЃС‚Р° */
+/** Результат одного теста */
 type Result = { id: string; name: string; passed: boolean; note: string };
 const results: Result[] = [];
 
 /**
- * Р—Р°РїСѓСЃРєР°РµС‚ РѕРґРёРЅ С‚РµСЃС‚ Рё Р·Р°РїРёСЃС‹РІР°РµС‚ СЂРµР·СѓР»СЊС‚Р°С‚
- * @param id - РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ С‚РµСЃС‚Р°
- * @param name - РќР°Р·РІР°РЅРёРµ С‚РµСЃС‚Р°
- * @param fn - РўРµР»Рѕ С‚РµСЃС‚Р°
+ * Запускает один тест и записывает результат
+ * @param id - Идентификатор теста
+ * @param name - Название теста
+ * @param fn - Тело теста
  */
 function test(id: string, name: string, fn: () => void) {
   try {
     fn();
     results.push({ id, name, passed: true, note: 'OK' });
-    console.log(`  вњ… ${id}. ${name}`);
+    console.log(`  ? ${id}. ${name}`);
   } catch (e: any) {
     results.push({ id, name, passed: false, note: e.message });
-    console.log(`  вќЊ ${id}. ${name}\n     в†’ ${e.message}`);
+    console.log(`  ? ${id}. ${name}\n     > ${e.message}`);
   }
 }
 
 /**
- * РЈС‚РІРµСЂР¶РґРµРЅРёРµ вЂ” Р±СЂРѕСЃР°РµС‚ РѕС€РёР±РєСѓ РµСЃР»Рё СѓСЃР»РѕРІРёРµ Р»РѕР¶РЅРѕ
- * @param cond - РЈСЃР»РѕРІРёРµ
- * @param msg - РЎРѕРѕР±С‰РµРЅРёРµ РѕР± РѕС€РёР±РєРµ
+ * Утверждение — бросает ошибку если условие ложно
+ * @param cond - Условие
+ * @param msg - Сообщение об ошибке
  */
 function ok(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
 }
 
 /**
- * РџСЂРѕРІРµСЂСЏРµС‚ СЃРёРЅС‚Р°РєСЃРёСЃ Python Рё Р±СЂРѕСЃР°РµС‚ РѕС€РёР±РєСѓ РїСЂРё РЅРµСѓРґР°С‡Рµ
- * @param code - Python-РєРѕРґ
- * @param label - РњРµС‚РєР° РґР»СЏ РІСЂРµРјРµРЅРЅРѕРіРѕ С„Р°Р№Р»Р°
+ * Проверяет синтаксис Python и бросает ошибку при неудаче
+ * @param code - Python-код
+ * @param label - Метка для временного файла
  */
 function syntax(code: string, label: string) {
   const r = checkSyntax(code, label);
-  ok(r.ok, `РЎРёРЅС‚Р°РєСЃРёС‡РµСЃРєР°СЏ РѕС€РёР±РєР° Python:\n${r.error}`);
+  ok(r.ok, `Синтаксическая ошибка Python:\n${r.error}`);
 }
 
-// в”Ђв”Ђв”Ђ Р§РµС‚С‹СЂРµ РєР»СЋС‡РµРІС‹С… С„РёРєСЃР° в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// --- Четыре ключевых фикса ---------------------------------------------------
 
-/** РџСЂРѕРІРµСЂСЏРµС‚ РЅР°Р»РёС‡РёРµ РІСЃРµС… С‡РµС‚С‹СЂС‘С… РёСЃРїСЂР°РІР»РµРЅРёР№ СѓС‚РµС‡РµРє РїР°РјСЏС‚Рё РІ РєРѕРґРµ */
+/** Проверяет наличие всех четырёх исправлений утечек памяти в коде */
 function hasFourFixes(code: string): void {
-  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚');
-  ok(code.includes('cleanup_user_data'), 'cleanup_user_data РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚');
-  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'asyncio.create_task(cleanup_user_data()) РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚');
-  ok(code.includes('asyncio.get_running_loop().stop()'), 'asyncio.get_running_loop().stop() РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚');
+  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL отсутствует');
+  ok(code.includes('cleanup_user_data'), 'cleanup_user_data отсутствует');
+  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'asyncio.create_task(cleanup_user_data()) отсутствует');
+  ok(code.includes('asyncio.get_running_loop().stop()'), 'asyncio.get_running_loop().stop() отсутствует');
 }
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// Р‘Р›РћРљ A: USER_DATA_TTL РєРѕРЅСЃС‚Р°РЅС‚Р°
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ===============================================================================
+// БЛОК A: USER_DATA_TTL константа
+// ===============================================================================
 
-console.log('\nв•”в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•—');
-console.log('в•‘       Р¤Р°Р·Р° вЂ” РЈС‚РµС‡РєРё РїР°РјСЏС‚Рё (Memory Leaks)                   в•‘');
-console.log('в•љв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ќ\n');
+console.log('\nг==============================================================¬');
+console.log('¦       Фаза — Утечки памяти (Memory Leaks)                   ¦');
+console.log('L==============================================================-\n');
 
-console.log('в”Ђв”Ђ Р‘Р»РѕРє A: USER_DATA_TTL РєРѕРЅСЃС‚Р°РЅС‚Р° в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ');
+console.log('-- Блок A: USER_DATA_TTL константа -----------------------------');
 
-test('A01', 'USER_DATA_TTL = 3600 РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ РєРѕРґРµ', () => {
+test('A01', 'USER_DATA_TTL = 3600 присутствует в коде', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'A01');
-  ok(code.includes('USER_DATA_TTL = 3600'), 'USER_DATA_TTL = 3600 РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('USER_DATA_TTL = 3600'), 'USER_DATA_TTL = 3600 не найдено');
 });
 
-test('A02', 'USER_DATA_TTL РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё userDatabaseEnabled: true', () => {
+test('A02', 'USER_DATA_TTL присутствует при userDatabaseEnabled: true', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true);
   const code = genDB(p, 'A02');
-  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB=true');
+  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL отсутствует при DB=true');
 });
 
-test('A03', 'USER_DATA_TTL РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё userDatabaseEnabled: false', () => {
+test('A03', 'USER_DATA_TTL присутствует при userDatabaseEnabled: false', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], false);
   const code = gen(p, 'A03');
-  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB=false');
+  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL отсутствует при DB=false');
 });
 
-test('A04', 'USER_DATA_TTL РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ inline РєРЅРѕРїРєР°РјРё', () => {
+test('A04', 'USER_DATA_TTL присутствует при проекте с inline кнопками', () => {
   const start = makeStartNode();
   start.data = {
     ...start.data,
     keyboardType: 'inline',
-    buttons: [{ id: 'b1', text: 'РљРЅРѕРїРєР°', action: 'goto', target: 'msg1' }],
+    buttons: [{ id: 'b1', text: 'Кнопка', action: 'goto', target: 'msg1' }],
   } as any;
   const p = makeCleanProject([start, makeMessageNode('msg1')]);
   const code = gen(p, 'A04');
-  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё inline РєРЅРѕРїРєР°С…');
+  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL отсутствует при inline кнопках');
 });
 
-test('A05', 'USER_DATA_TTL РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ reply РєРЅРѕРїРєР°РјРё', () => {
+test('A05', 'USER_DATA_TTL присутствует при проекте с reply кнопками', () => {
   const start = makeStartNode();
   start.data = {
     ...start.data,
     keyboardType: 'reply',
-    buttons: [{ id: 'b1', text: 'РњРµРЅСЋ', action: 'goto', target: 'msg1' }],
+    buttons: [{ id: 'b1', text: 'Меню', action: 'goto', target: 'msg1' }],
   } as any;
   const p = makeCleanProject([start, makeMessageNode('msg1')]);
   const code = gen(p, 'A05');
-  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё reply РєРЅРѕРїРєР°С…');
+  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL отсутствует при reply кнопках');
 });
 
-test('A06', 'USER_DATA_TTL РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ command_trigger', () => {
+test('A06', 'USER_DATA_TTL присутствует при проекте с command_trigger', () => {
   const p = makeCleanProject([
     makeCommandTriggerNode('cmd1', '/help', 'msg1'),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'A06');
-  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё command_trigger');
+  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL отсутствует при command_trigger');
 });
 
-test('A07', 'USER_DATA_TTL РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ text_trigger', () => {
+test('A07', 'USER_DATA_TTL присутствует при проекте с text_trigger', () => {
   const p = makeCleanProject([
-    makeTextTriggerNode('txt1', ['РїСЂРёРІРµС‚', 'hello'], 'msg1'),
+    makeTextTriggerNode('txt1', ['привет', 'hello'], 'msg1'),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'A07');
-  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё text_trigger');
+  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL отсутствует при text_trigger');
 });
 
-test('A08', 'USER_DATA_TTL РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ condition', () => {
+test('A08', 'USER_DATA_TTL присутствует при проекте с condition', () => {
   const p = makeCleanProject([
     makeStartNode(),
     makeConditionNode('cond1', 'user_name', [
       { value: 'admin', targetNodeId: 'msg1' },
       { value: '__else__', targetNodeId: 'msg2' },
     ]),
-    makeMessageNode('msg1', 'РџСЂРёРІРµС‚, admin!'),
-    makeMessageNode('msg2', 'РџСЂРёРІРµС‚!'),
+    makeMessageNode('msg1', 'Привет, admin!'),
+    makeMessageNode('msg2', 'Привет!'),
   ]);
   const code = gen(p, 'A08');
-  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё condition');
+  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL отсутствует при condition');
 });
 
-test('A09', 'USER_DATA_TTL РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ media СѓР·Р»РѕРј', () => {
+test('A09', 'USER_DATA_TTL присутствует при проекте с media узлом', () => {
   const p = makeCleanProject([
     makeStartNode(),
     makeMediaNode('media1', ['photo_id_123']),
   ]);
   const code = gen(p, 'A09');
-  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё media СѓР·Р»Рµ');
+  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL отсутствует при media узле');
 });
 
-test('A10', 'РЎРёРЅС‚Р°РєСЃРёСЃ Python OK РїСЂРё РЅР°Р»РёС‡РёРё USER_DATA_TTL', () => {
+test('A10', 'Синтаксис Python OK при наличии USER_DATA_TTL', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'A10');
-  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚');
+  ok(code.includes('USER_DATA_TTL'), 'USER_DATA_TTL отсутствует');
   syntax(code, 'A10');
 });
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// Р‘Р›РћРљ B: _user_last_seen СЃР»РѕРІР°СЂСЊ
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ===============================================================================
+// БЛОК B: _user_last_seen словарь
+// ===============================================================================
 
-console.log('\nв”Ђв”Ђ Р‘Р»РѕРє B: _user_last_seen СЃР»РѕРІР°СЂСЊ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ');
+console.log('\n-- Блок B: _user_last_seen словарь -----------------------------');
 
-test('B01', '_user_last_seen: dict[int, float] = {} РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ РєРѕРґРµ', () => {
+test('B01', '_user_last_seen: dict[int, float] = {} присутствует в коде', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'B01');
-  ok(code.includes('_user_last_seen: dict[int, float] = {}'), '_user_last_seen: dict[int, float] = {} РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('_user_last_seen: dict[int, float] = {}'), '_user_last_seen: dict[int, float] = {} не найдено');
 });
 
-test('B02', '_user_last_seen РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB РІРєР»СЋС‡С‘РЅ', () => {
+test('B02', '_user_last_seen присутствует при DB включён', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true);
   const code = genDB(p, 'B02');
-  ok(code.includes('_user_last_seen'), '_user_last_seen РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB=true');
+  ok(code.includes('_user_last_seen'), '_user_last_seen отсутствует при DB=true');
 });
 
-test('B03', '_user_last_seen РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB РІС‹РєР»СЋС‡РµРЅ', () => {
+test('B03', '_user_last_seen присутствует при DB выключен', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], false);
   const code = gen(p, 'B03');
-  ok(code.includes('_user_last_seen'), '_user_last_seen РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB=false');
+  ok(code.includes('_user_last_seen'), '_user_last_seen отсутствует при DB=false');
 });
 
-test('B04', '_user_last_seen[user_id] = time.monotonic() РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ init_user_variables', () => {
+test('B04', '_user_last_seen[user_id] = time.monotonic() присутствует в init_user_variables', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'B04');
-  ok(code.includes('_user_last_seen[user_id] = time.monotonic()'), '_user_last_seen[user_id] = time.monotonic() РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('_user_last_seen[user_id] = time.monotonic()'), '_user_last_seen[user_id] = time.monotonic() не найдено');
 });
 
-test('B05', '_user_last_seen РѕР±РЅРѕРІР»СЏРµС‚СЃСЏ РІ С‚РµР»Рµ init_user_variables', () => {
+test('B05', '_user_last_seen обновляется в теле init_user_variables', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'B05');
   const initIdx = code.indexOf('async def init_user_variables');
-  ok(initIdx !== -1, 'init_user_variables РЅРµ РЅР°Р№РґРµРЅР°');
+  ok(initIdx !== -1, 'init_user_variables не найдена');
   const afterInit = code.slice(initIdx, initIdx + 600);
-  ok(afterInit.includes('_user_last_seen'), '_user_last_seen РЅРµ РЅР°Р№РґРµРЅ РІ С‚РµР»Рµ init_user_variables');
+  ok(afterInit.includes('_user_last_seen'), '_user_last_seen не найден в теле init_user_variables');
 });
 
-test('B06', '_user_last_seen.items() РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РІ cleanup_user_data', () => {
+test('B06', '_user_last_seen.items() используется в cleanup_user_data', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'B06');
-  ok(code.includes('_user_last_seen.items()'), '_user_last_seen.items() РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('_user_last_seen.items()'), '_user_last_seen.items() не найдено');
 });
 
-test('B07', '_user_last_seen.pop(uid, None) РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚', () => {
+test('B07', '_user_last_seen.pop(uid, None) присутствует', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'B07');
-  ok(code.includes('_user_last_seen.pop(uid, None)'), '_user_last_seen.pop(uid, None) РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('_user_last_seen.pop(uid, None)'), '_user_last_seen.pop(uid, None) не найдено');
 });
 
-test('B08', '_user_last_seen РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ adminOnly', () => {
+test('B08', '_user_last_seen присутствует при проекте с adminOnly', () => {
   const cmd = makeCommandTriggerNode('cmd1', '/admin', 'msg1');
   cmd.data = { ...cmd.data, adminOnly: true } as any;
   const p = makeCleanProject([cmd, makeMessageNode('msg1')]);
   const code = gen(p, 'B08');
-  ok(code.includes('_user_last_seen'), '_user_last_seen РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё adminOnly');
+  ok(code.includes('_user_last_seen'), '_user_last_seen отсутствует при adminOnly');
 });
 
-test('B09', '_user_last_seen РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ requiresAuth', () => {
+test('B09', '_user_last_seen присутствует при проекте с requiresAuth', () => {
   const cmd = makeCommandTriggerNode('cmd1', '/profile', 'msg1');
   cmd.data = { ...cmd.data, requiresAuth: true } as any;
   const p = makeCleanProject([cmd, makeMessageNode('msg1')]);
   const code = gen(p, 'B09');
-  ok(code.includes('_user_last_seen'), '_user_last_seen РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё requiresAuth');
+  ok(code.includes('_user_last_seen'), '_user_last_seen отсутствует при requiresAuth');
 });
 
-test('B10', 'РЎРёРЅС‚Р°РєСЃРёСЃ Python OK РїСЂРё РЅР°Р»РёС‡РёРё _user_last_seen', () => {
+test('B10', 'Синтаксис Python OK при наличии _user_last_seen', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'B10');
-  ok(code.includes('_user_last_seen'), '_user_last_seen РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚');
+  ok(code.includes('_user_last_seen'), '_user_last_seen отсутствует');
   syntax(code, 'B10');
 });
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// Р‘Р›РћРљ C: cleanup_user_data С„СѓРЅРєС†РёСЏ
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ===============================================================================
+// БЛОК C: cleanup_user_data функция
+// ===============================================================================
 
-console.log('\nв”Ђв”Ђ Р‘Р»РѕРє C: cleanup_user_data С„СѓРЅРєС†РёСЏ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ');
+console.log('\n-- Блок C: cleanup_user_data функция ---------------------------');
 
-test('C01', 'async def cleanup_user_data() РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚', () => {
+test('C01', 'async def cleanup_user_data() присутствует', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'C01');
-  ok(code.includes('async def cleanup_user_data()'), 'async def cleanup_user_data() РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('async def cleanup_user_data()'), 'async def cleanup_user_data() не найдено');
 });
 
-test('C02', 'cleanup_user_data СЃРѕРґРµСЂР¶РёС‚ while True:', () => {
+test('C02', 'cleanup_user_data содержит while True:', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'C02');
   const fnIdx = code.indexOf('async def cleanup_user_data()');
-  ok(fnIdx !== -1, 'cleanup_user_data РЅРµ РЅР°Р№РґРµРЅР°');
+  ok(fnIdx !== -1, 'cleanup_user_data не найдена');
   const fnBody = code.slice(fnIdx, fnIdx + 800);
-  ok(fnBody.includes('while True:'), 'while True: РЅРµ РЅР°Р№РґРµРЅРѕ РІ cleanup_user_data');
+  ok(fnBody.includes('while True:'), 'while True: не найдено в cleanup_user_data');
 });
 
-test('C03', 'cleanup_user_data СЃРѕРґРµСЂР¶РёС‚ await asyncio.sleep(USER_DATA_TTL)', () => {
+test('C03', 'cleanup_user_data содержит await asyncio.sleep(USER_DATA_TTL)', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'C03');
-  ok(code.includes('await asyncio.sleep(USER_DATA_TTL)'), 'await asyncio.sleep(USER_DATA_TTL) РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('await asyncio.sleep(USER_DATA_TTL)'), 'await asyncio.sleep(USER_DATA_TTL) не найдено');
 });
 
-test('C04', 'cleanup_user_data СЃРѕРґРµСЂР¶РёС‚ time.monotonic()', () => {
+test('C04', 'cleanup_user_data содержит time.monotonic()', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'C04');
   const fnIdx = code.indexOf('async def cleanup_user_data()');
-  ok(fnIdx !== -1, 'cleanup_user_data РЅРµ РЅР°Р№РґРµРЅР°');
+  ok(fnIdx !== -1, 'cleanup_user_data не найдена');
   const fnBody = code.slice(fnIdx, fnIdx + 800);
-  ok(fnBody.includes('time.monotonic()'), 'time.monotonic() РЅРµ РЅР°Р№РґРµРЅРѕ РІ cleanup_user_data');
+  ok(fnBody.includes('time.monotonic()'), 'time.monotonic() не найдено в cleanup_user_data');
 });
 
-test('C05', 'cleanup_user_data СЃРѕРґРµСЂР¶РёС‚ user_data.pop(uid, None)', () => {
+test('C05', 'cleanup_user_data содержит user_data.pop(uid, None)', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'C05');
-  ok(code.includes('user_data.pop(uid, None)'), 'user_data.pop(uid, None) РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('user_data.pop(uid, None)'), 'user_data.pop(uid, None) не найдено');
 });
 
-test('C06', 'cleanup_user_data СЃРѕРґРµСЂР¶РёС‚ _user_last_seen.pop(uid, None)', () => {
+test('C06', 'cleanup_user_data содержит _user_last_seen.pop(uid, None)', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'C06');
-  ok(code.includes('_user_last_seen.pop(uid, None)'), '_user_last_seen.pop(uid, None) РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('_user_last_seen.pop(uid, None)'), '_user_last_seen.pop(uid, None) не найдено');
 });
 
-test('C07', 'cleanup_user_data СЃРѕРґРµСЂР¶РёС‚ logging.debug', () => {
+test('C07', 'cleanup_user_data содержит logging.debug', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'C07');
   const fnIdx = code.indexOf('async def cleanup_user_data()');
-  ok(fnIdx !== -1, 'cleanup_user_data РЅРµ РЅР°Р№РґРµРЅР°');
+  ok(fnIdx !== -1, 'cleanup_user_data не найдена');
   const fnBody = code.slice(fnIdx, fnIdx + 800);
-  ok(fnBody.includes('logging.debug'), 'logging.debug РЅРµ РЅР°Р№РґРµРЅРѕ РІ cleanup_user_data');
+  ok(fnBody.includes('logging.debug'), 'logging.debug не найдено в cleanup_user_data');
 });
 
-test('C08', 'cleanup_user_data СЃРѕРґРµСЂР¶РёС‚ TTL-РѕС‡РёСЃС‚РєР° user_data', () => {
+test('C08', 'cleanup_user_data содержит TTL-очистка user_data', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'C08');
-  ok(code.includes('TTL-РѕС‡РёСЃС‚РєР° user_data'), 'TTL-РѕС‡РёСЃС‚РєР° user_data РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('TTL-очистка user_data'), 'TTL-очистка user_data не найдено');
 });
 
-test('C09', 'cleanup_user_data РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB РІРєР»СЋС‡С‘РЅ', () => {
+test('C09', 'cleanup_user_data присутствует при DB включён', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true);
   const code = genDB(p, 'C09');
-  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB=true');
+  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data отсутствует при DB=true');
 });
 
-test('C10', 'cleanup_user_data РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB РІС‹РєР»СЋС‡РµРЅ', () => {
+test('C10', 'cleanup_user_data присутствует при DB выключен', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], false);
   const code = gen(p, 'C10');
-  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB=false');
+  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data отсутствует при DB=false');
 });
 
-test('C11', 'cleanup_user_data РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ inline РєРЅРѕРїРєР°РјРё', () => {
+test('C11', 'cleanup_user_data присутствует при проекте с inline кнопками', () => {
   const start = makeStartNode();
   start.data = {
     ...start.data,
     keyboardType: 'inline',
-    buttons: [{ id: 'b1', text: 'Р”Р°Р»РµРµ', action: 'goto', target: 'msg1' }],
+    buttons: [{ id: 'b1', text: 'Далее', action: 'goto', target: 'msg1' }],
   } as any;
   const p = makeCleanProject([start, makeMessageNode('msg1')]);
   const code = gen(p, 'C11');
-  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё inline РєРЅРѕРїРєР°С…');
+  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data отсутствует при inline кнопках');
 });
 
-test('C12', 'cleanup_user_data РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ 10 СѓР·Р»Р°РјРё', () => {
+test('C12', 'cleanup_user_data присутствует при проекте с 10 узлами', () => {
   const nodes: any[] = [makeStartNode()];
   for (let i = 1; i <= 9; i++) {
-    nodes.push(makeMessageNode(`msg${i}`, `РЎРѕРѕР±С‰РµРЅРёРµ ${i}`));
+    nodes.push(makeMessageNode(`msg${i}`, `Сообщение ${i}`));
   }
   const p = makeCleanProject(nodes);
   const code = gen(p, 'C12');
-  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё 10 СѓР·Р»Р°С…');
+  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data отсутствует при 10 узлах');
 });
 
-test('C13', 'cleanup_user_data РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ command_trigger + message', () => {
+test('C13', 'cleanup_user_data присутствует при проекте с command_trigger + message', () => {
   const p = makeCleanProject([
     makeCommandTriggerNode('cmd1', '/start', 'msg1'),
-    makeMessageNode('msg1', 'РџСЂРёРІРµС‚!'),
+    makeMessageNode('msg1', 'Привет!'),
   ]);
   const code = gen(p, 'C13');
-  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё command_trigger');
+  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data отсутствует при command_trigger');
 });
 
-test('C14', 'cleanup_user_data РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ condition', () => {
+test('C14', 'cleanup_user_data присутствует при проекте с condition', () => {
   const p = makeCleanProject([
     makeStartNode(),
     makeConditionNode('cond1', 'score', [
       { value: '100', targetNodeId: 'msg1' },
       { value: '__else__', targetNodeId: 'msg2' },
     ]),
-    makeMessageNode('msg1', 'РџРѕР±РµРґР°!'),
-    makeMessageNode('msg2', 'РџРѕРїСЂРѕР±СѓР№ РµС‰С‘'),
+    makeMessageNode('msg1', 'Победа!'),
+    makeMessageNode('msg2', 'Попробуй ещё'),
   ]);
   const code = gen(p, 'C14');
-  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё condition');
+  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data отсутствует при condition');
 });
 
-test('C15', 'РЎРёРЅС‚Р°РєСЃРёСЃ Python OK РїСЂРё РЅР°Р»РёС‡РёРё cleanup_user_data', () => {
+test('C15', 'Синтаксис Python OK при наличии cleanup_user_data', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'C15');
-  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚');
+  ok(code.includes('async def cleanup_user_data()'), 'cleanup_user_data отсутствует');
   syntax(code, 'C15');
 });
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// Р‘Р›РћРљ D: asyncio.create_task(cleanup_user_data()) РІ main()
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ===============================================================================
+// БЛОК D: asyncio.create_task(cleanup_user_data()) в main()
+// ===============================================================================
 
-console.log('\nв”Ђв”Ђ Р‘Р»РѕРє D: asyncio.create_task(cleanup_user_data()) РІ main() в”Ђв”Ђв”Ђ');
+console.log('\n-- Блок D: asyncio.create_task(cleanup_user_data()) в main() ---');
 
-test('D01', 'asyncio.create_task(cleanup_user_data()) РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ РєРѕРґРµ', () => {
+test('D01', 'asyncio.create_task(cleanup_user_data()) присутствует в коде', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'D01');
-  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'asyncio.create_task(cleanup_user_data()) РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'asyncio.create_task(cleanup_user_data()) не найдено');
 });
 
-test('D02', 'Р’С‹Р·РѕРІ РЅР°С…РѕРґРёС‚СЃСЏ РІРЅСѓС‚СЂРё async def main()', () => {
+test('D02', 'Вызов находится внутри async def main()', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'D02');
   const mainIdx = code.indexOf('async def main()');
-  ok(mainIdx !== -1, 'async def main() РЅРµ РЅР°Р№РґРµРЅР°');
+  ok(mainIdx !== -1, 'async def main() не найдена');
   const mainBody = code.slice(mainIdx, mainIdx + 2000);
-  ok(mainBody.includes('asyncio.create_task(cleanup_user_data())'), 'create_task РЅРµ РЅР°Р№РґРµРЅ РІРЅСѓС‚СЂРё main()');
+  ok(mainBody.includes('asyncio.create_task(cleanup_user_data())'), 'create_task не найден внутри main()');
 });
 
-test('D03', 'Р’С‹Р·РѕРІ РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB РІРєР»СЋС‡С‘РЅ', () => {
+test('D03', 'Вызов присутствует при DB включён', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true);
   const code = genDB(p, 'D03');
-  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB=true');
+  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task отсутствует при DB=true');
 });
 
-test('D04', 'Р’С‹Р·РѕРІ РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB РІС‹РєР»СЋС‡РµРЅ', () => {
+test('D04', 'Вызов присутствует при DB выключен', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], false);
   const code = gen(p, 'D04');
-  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB=false');
+  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task отсутствует при DB=false');
 });
 
-test('D05', 'Р’С‹Р·РѕРІ РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ inline РєРЅРѕРїРєР°РјРё', () => {
+test('D05', 'Вызов присутствует при проекте с inline кнопками', () => {
   const start = makeStartNode();
   start.data = {
     ...start.data,
     keyboardType: 'inline',
-    buttons: [{ id: 'b1', text: 'РљРЅРѕРїРєР°', action: 'goto', target: 'msg1' }],
+    buttons: [{ id: 'b1', text: 'Кнопка', action: 'goto', target: 'msg1' }],
   } as any;
   const p = makeCleanProject([start, makeMessageNode('msg1')]);
   const code = gen(p, 'D05');
-  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё inline РєРЅРѕРїРєР°С…');
+  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task отсутствует при inline кнопках');
 });
 
-test('D06', 'Р’С‹Р·РѕРІ РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ command_trigger', () => {
+test('D06', 'Вызов присутствует при проекте с command_trigger', () => {
   const p = makeCleanProject([
     makeCommandTriggerNode('cmd1', '/help', 'msg1'),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'D06');
-  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё command_trigger');
+  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task отсутствует при command_trigger');
 });
 
-test('D07', 'Р’С‹Р·РѕРІ РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ text_trigger', () => {
+test('D07', 'Вызов присутствует при проекте с text_trigger', () => {
   const p = makeCleanProject([
-    makeTextTriggerNode('txt1', ['РґР°', 'РЅРµС‚'], 'msg1'),
+    makeTextTriggerNode('txt1', ['да', 'нет'], 'msg1'),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'D07');
-  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё text_trigger');
+  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task отсутствует при text_trigger');
 });
 
-test('D08', 'Р’С‹Р·РѕРІ РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ adminOnly', () => {
+test('D08', 'Вызов присутствует при проекте с adminOnly', () => {
   const cmd = makeCommandTriggerNode('cmd1', '/admin', 'msg1');
   cmd.data = { ...cmd.data, adminOnly: true } as any;
   const p = makeCleanProject([cmd, makeMessageNode('msg1')]);
   const code = gen(p, 'D08');
-  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё adminOnly');
+  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task отсутствует при adminOnly');
 });
 
-test('D09', 'Р’С‹Р·РѕРІ РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ requiresAuth', () => {
+test('D09', 'Вызов присутствует при проекте с requiresAuth', () => {
   const cmd = makeCommandTriggerNode('cmd1', '/profile', 'msg1');
   cmd.data = { ...cmd.data, requiresAuth: true } as any;
   const p = makeCleanProject([cmd, makeMessageNode('msg1')]);
   const code = gen(p, 'D09');
-  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё requiresAuth');
+  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task отсутствует при requiresAuth');
 });
 
-test('D10', 'РЎРёРЅС‚Р°РєСЃРёСЃ Python OK РїСЂРё РЅР°Р»РёС‡РёРё create_task', () => {
+test('D10', 'Синтаксис Python OK при наличии create_task', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'D10');
-  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚');
+  ok(code.includes('asyncio.create_task(cleanup_user_data())'), 'create_task отсутствует');
   syntax(code, 'D10');
 });
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// Р‘Р›РћРљ E: signal_handler вЂ” loop.stop() РІРјРµСЃС‚Рѕ sys.exit()
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ===============================================================================
+// БЛОК E: signal_handler — loop.stop() вместо sys.exit()
+// ===============================================================================
 
-console.log('\nв”Ђв”Ђ Р‘Р»РѕРє E: signal_handler вЂ” loop.stop() РІРјРµСЃС‚Рѕ sys.exit() в”Ђв”Ђв”Ђв”Ђв”Ђ');
+console.log('\n-- Блок E: signal_handler — loop.stop() вместо sys.exit() -----');
 
-test('E01', 'asyncio.get_running_loop().stop() РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ РєРѕРґРµ', () => {
+test('E01', 'asyncio.get_running_loop().stop() присутствует в коде', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'E01');
-  ok(code.includes('asyncio.get_running_loop().stop()'), 'asyncio.get_running_loop().stop() РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('asyncio.get_running_loop().stop()'), 'asyncio.get_running_loop().stop() не найдено');
 });
 
-test('E02', 'sys.exit(0) РќР• РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ signal_handler', () => {
+test('E02', 'sys.exit(0) НЕ присутствует в signal_handler', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'E02');
   const handlerIdx = code.indexOf('def signal_handler');
-  ok(handlerIdx !== -1, 'signal_handler РЅРµ РЅР°Р№РґРµРЅ');
-  // Р‘РµСЂС‘Рј С‚РµР»Рѕ С„СѓРЅРєС†РёРё (РґРѕ СЃР»РµРґСѓСЋС‰РµР№ def РЅР° С‚РѕРј Р¶Рµ СѓСЂРѕРІРЅРµ)
+  ok(handlerIdx !== -1, 'signal_handler не найден');
+  // Берём тело функции (до следующей def на том же уровне)
   const handlerBody = code.slice(handlerIdx, handlerIdx + 400);
-  ok(!handlerBody.includes('sys.exit(0)'), 'sys.exit(0) РЅР°Р№РґРµРЅРѕ РІ signal_handler вЂ” СЂРµРіСЂРµСЃСЃРёСЏ!');
+  ok(!handlerBody.includes('sys.exit(0)'), 'sys.exit(0) найдено в signal_handler — регрессия!');
 });
 
-test('E03', 'signal_handler СЃРѕРґРµСЂР¶РёС‚ try: Р±Р»РѕРє', () => {
+test('E03', 'signal_handler содержит try: блок', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'E03');
   const handlerIdx = code.indexOf('def signal_handler');
-  ok(handlerIdx !== -1, 'signal_handler РЅРµ РЅР°Р№РґРµРЅ');
+  ok(handlerIdx !== -1, 'signal_handler не найден');
   const handlerBody = code.slice(handlerIdx, handlerIdx + 400);
-  ok(handlerBody.includes('try:'), 'try: РЅРµ РЅР°Р№РґРµРЅРѕ РІ signal_handler');
+  ok(handlerBody.includes('try:'), 'try: не найдено в signal_handler');
 });
 
-test('E04', 'signal_handler СЃРѕРґРµСЂР¶РёС‚ except RuntimeError:', () => {
+test('E04', 'signal_handler содержит except RuntimeError:', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'E04');
   const handlerIdx = code.indexOf('def signal_handler');
-  ok(handlerIdx !== -1, 'signal_handler РЅРµ РЅР°Р№РґРµРЅ');
+  ok(handlerIdx !== -1, 'signal_handler не найден');
   const handlerBody = code.slice(handlerIdx, handlerIdx + 400);
-  ok(handlerBody.includes('except RuntimeError:'), 'except RuntimeError: РЅРµ РЅР°Р№РґРµРЅРѕ РІ signal_handler');
+  ok(handlerBody.includes('except RuntimeError:'), 'except RuntimeError: не найдено в signal_handler');
 });
 
-test('E05', 'signal_handler СЃРѕРґРµСЂР¶РёС‚ pass РїРѕСЃР»Рµ except', () => {
+test('E05', 'signal_handler содержит pass после except', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'E05');
   const handlerIdx = code.indexOf('def signal_handler');
-  ok(handlerIdx !== -1, 'signal_handler РЅРµ РЅР°Р№РґРµРЅ');
+  ok(handlerIdx !== -1, 'signal_handler не найден');
   const handlerBody = code.slice(handlerIdx, handlerIdx + 400);
-  ok(handlerBody.includes('pass'), 'pass РЅРµ РЅР°Р№РґРµРЅРѕ РІ signal_handler');
+  ok(handlerBody.includes('pass'), 'pass не найдено в signal_handler');
 });
 
-test('E06', 'signal.signal(signal.SIGTERM, signal_handler) РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚', () => {
+test('E06', 'signal.signal(signal.SIGTERM, signal_handler) присутствует', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'E06');
-  ok(code.includes('signal.signal(signal.SIGTERM, signal_handler)'), 'SIGTERM СЂРµРіРёСЃС‚СЂР°С†РёСЏ РЅРµ РЅР°Р№РґРµРЅР°');
+  ok(code.includes('signal.signal(signal.SIGTERM, signal_handler)'), 'SIGTERM регистрация не найдена');
 });
 
-test('E07', 'signal.signal(signal.SIGINT, signal_handler) РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚', () => {
+test('E07', 'signal.signal(signal.SIGINT, signal_handler) присутствует', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'E07');
-  ok(code.includes('signal.signal(signal.SIGINT, signal_handler)'), 'SIGINT СЂРµРіРёСЃС‚СЂР°С†РёСЏ РЅРµ РЅР°Р№РґРµРЅР°');
+  ok(code.includes('signal.signal(signal.SIGINT, signal_handler)'), 'SIGINT регистрация не найдена');
 });
 
-test('E08', 'signal_handler РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB РІРєР»СЋС‡С‘РЅ', () => {
+test('E08', 'signal_handler присутствует при DB включён', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true);
   const code = genDB(p, 'E08');
-  ok(code.includes('def signal_handler'), 'signal_handler РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB=true');
+  ok(code.includes('def signal_handler'), 'signal_handler отсутствует при DB=true');
 });
 
-test('E09', 'signal_handler РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB РІС‹РєР»СЋС‡РµРЅ', () => {
+test('E09', 'signal_handler присутствует при DB выключен', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], false);
   const code = gen(p, 'E09');
-  ok(code.includes('def signal_handler'), 'signal_handler РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё DB=false');
+  ok(code.includes('def signal_handler'), 'signal_handler отсутствует при DB=false');
 });
 
-test('E10', 'asyncio.get_running_loop().stop() РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё inline РєРЅРѕРїРєР°С…', () => {
+test('E10', 'asyncio.get_running_loop().stop() присутствует при inline кнопках', () => {
   const start = makeStartNode();
   start.data = {
     ...start.data,
     keyboardType: 'inline',
-    buttons: [{ id: 'b1', text: 'РљРЅРѕРїРєР°', action: 'goto', target: 'msg1' }],
+    buttons: [{ id: 'b1', text: 'Кнопка', action: 'goto', target: 'msg1' }],
   } as any;
   const p = makeCleanProject([start, makeMessageNode('msg1')]);
   const code = gen(p, 'E10');
-  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё inline РєРЅРѕРїРєР°С…');
+  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() отсутствует при inline кнопках');
 });
 
-test('E11', 'asyncio.get_running_loop().stop() РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё command_trigger', () => {
+test('E11', 'asyncio.get_running_loop().stop() присутствует при command_trigger', () => {
   const p = makeCleanProject([
     makeCommandTriggerNode('cmd1', '/start', 'msg1'),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'E11');
-  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё command_trigger');
+  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() отсутствует при command_trigger');
 });
 
-test('E12', 'asyncio.get_running_loop().stop() РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё text_trigger', () => {
+test('E12', 'asyncio.get_running_loop().stop() присутствует при text_trigger', () => {
   const p = makeCleanProject([
-    makeTextTriggerNode('txt1', ['СЃС‚РѕРї', 'stop'], 'msg1'),
+    makeTextTriggerNode('txt1', ['стоп', 'stop'], 'msg1'),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'E12');
-  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё text_trigger');
+  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() отсутствует при text_trigger');
 });
 
-test('E13', 'asyncio.get_running_loop().stop() РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё condition', () => {
+test('E13', 'asyncio.get_running_loop().stop() присутствует при condition', () => {
   const p = makeCleanProject([
     makeStartNode(),
     makeConditionNode('cond1', 'level', [
       { value: '1', targetNodeId: 'msg1' },
       { value: '__else__', targetNodeId: 'msg2' },
     ]),
-    makeMessageNode('msg1', 'РЈСЂРѕРІРµРЅСЊ 1'),
-    makeMessageNode('msg2', 'Р”СЂСѓРіРѕР№ СѓСЂРѕРІРµРЅСЊ'),
+    makeMessageNode('msg1', 'Уровень 1'),
+    makeMessageNode('msg2', 'Другой уровень'),
   ]);
   const code = gen(p, 'E13');
-  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё condition');
+  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() отсутствует при condition');
 });
 
-test('E14', 'asyncio.get_running_loop().stop() РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё media', () => {
+test('E14', 'asyncio.get_running_loop().stop() присутствует при media', () => {
   const p = makeCleanProject([
     makeStartNode(),
     makeMediaNode('media1', ['AgACAgIAAxkBAAIBcmJ']),
   ]);
   const code = gen(p, 'E14');
-  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё media');
+  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() отсутствует при media');
 });
 
-test('E15', 'РЎРёРЅС‚Р°РєСЃРёСЃ Python OK РїСЂРё РЅР°Р»РёС‡РёРё signal_handler СЃ loop.stop()', () => {
+test('E15', 'Синтаксис Python OK при наличии signal_handler с loop.stop()', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'E15');
-  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚');
+  ok(code.includes('asyncio.get_running_loop().stop()'), 'loop.stop() отсутствует');
   syntax(code, 'E15');
 });
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// Р‘Р›РћРљ F: finally Р±Р»РѕРє вЂ” РєРѕСЂСЂРµРєС‚РЅРѕРµ Р·Р°РєСЂС‹С‚РёРµ СЃРѕРµРґРёРЅРµРЅРёР№
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ===============================================================================
+// БЛОК F: finally блок — корректное закрытие соединений
+// ===============================================================================
 
-console.log('\nв”Ђв”Ђ Р‘Р»РѕРє F: finally Р±Р»РѕРє вЂ” РєРѕСЂСЂРµРєС‚РЅРѕРµ Р·Р°РєСЂС‹С‚РёРµ СЃРѕРµРґРёРЅРµРЅРёР№ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ');
+console.log('\n-- Блок F: finally блок — корректное закрытие соединений -------');
 
-test('F01', 'finally: РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ main()', () => {
+test('F01', 'finally: присутствует в main()', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'F01');
   const mainIdx = code.indexOf('async def main()');
-  ok(mainIdx !== -1, 'async def main() РЅРµ РЅР°Р№РґРµРЅР°');
+  ok(mainIdx !== -1, 'async def main() не найдена');
   const mainBody = code.slice(mainIdx, mainIdx + 3000);
-  ok(mainBody.includes('finally:'), 'finally: РЅРµ РЅР°Р№РґРµРЅРѕ РІ main()');
+  ok(mainBody.includes('finally:'), 'finally: не найдено в main()');
 });
 
-test('F02', 'await bot.session.close() РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ finally', () => {
+test('F02', 'await bot.session.close() присутствует в finally', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'F02');
-  ok(code.includes('await bot.session.close()'), 'await bot.session.close() РЅРµ РЅР°Р№РґРµРЅРѕ');
+  ok(code.includes('await bot.session.close()'), 'await bot.session.close() не найдено');
 });
 
-test('F03', 'РџСЂРё DB РІРєР»СЋС‡С‘РЅ: await db_pool.close() РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ finally', () => {
+test('F03', 'При DB включён: await db_pool.close() присутствует в finally', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true);
   const code = genDB(p, 'F03');
-  ok(code.includes('await db_pool.close()'), 'await db_pool.close() РЅРµ РЅР°Р№РґРµРЅРѕ РїСЂРё DB=true');
+  ok(code.includes('await db_pool.close()'), 'await db_pool.close() не найдено при DB=true');
 });
 
-test('F04', 'РџСЂРё DB РІС‹РєР»СЋС‡РµРЅ: db_pool.close() РќР• РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚', () => {
+test('F04', 'При DB выключен: db_pool.close() НЕ присутствует', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], false);
   const code = gen(p, 'F04');
-  ok(!code.includes('db_pool.close()'), 'db_pool.close() РЅР°Р№РґРµРЅРѕ РїСЂРё DB=false вЂ” Р»РёС€РЅРёР№ РєРѕРґ');
+  ok(!code.includes('db_pool.close()'), 'db_pool.close() найдено при DB=false — лишний код');
 });
 
-test('F05', 'finally РёРґС‘С‚ РџРћРЎР›Р• except Р±Р»РѕРєРѕРІ (РїРѕСЂСЏРґРѕРє РёРЅРґРµРєСЃРѕРІ)', () => {
+test('F05', 'finally идёт ПОСЛЕ except блоков (порядок индексов)', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'F05');
   const exceptIdx = code.indexOf('except KeyboardInterrupt:');
   const finallyIdx = code.indexOf('finally:');
-  ok(exceptIdx !== -1, 'except KeyboardInterrupt: РЅРµ РЅР°Р№РґРµРЅРѕ');
-  ok(finallyIdx !== -1, 'finally: РЅРµ РЅР°Р№РґРµРЅРѕ');
-  ok(finallyIdx > exceptIdx, 'finally РґРѕР»Р¶РµРЅ РёРґС‚Рё РїРѕСЃР»Рµ except');
+  ok(exceptIdx !== -1, 'except KeyboardInterrupt: не найдено');
+  ok(finallyIdx !== -1, 'finally: не найдено');
+  ok(finallyIdx > exceptIdx, 'finally должен идти после except');
 });
 
-test('F06', 'finally РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ inline РєРЅРѕРїРєР°РјРё', () => {
+test('F06', 'finally присутствует при проекте с inline кнопками', () => {
   const start = makeStartNode();
   start.data = {
     ...start.data,
     keyboardType: 'inline',
-    buttons: [{ id: 'b1', text: 'РљРЅРѕРїРєР°', action: 'goto', target: 'msg1' }],
+    buttons: [{ id: 'b1', text: 'Кнопка', action: 'goto', target: 'msg1' }],
   } as any;
   const p = makeCleanProject([start, makeMessageNode('msg1')]);
   const code = gen(p, 'F06');
   const mainBody = code.slice(code.indexOf('async def main()'));
-  ok(mainBody.includes('finally:'), 'finally: РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё inline РєРЅРѕРїРєР°С…');
+  ok(mainBody.includes('finally:'), 'finally: отсутствует при inline кнопках');
 });
 
-test('F07', 'finally РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ command_trigger', () => {
+test('F07', 'finally присутствует при проекте с command_trigger', () => {
   const p = makeCleanProject([
     makeCommandTriggerNode('cmd1', '/start', 'msg1'),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'F07');
   const mainBody = code.slice(code.indexOf('async def main()'));
-  ok(mainBody.includes('finally:'), 'finally: РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё command_trigger');
+  ok(mainBody.includes('finally:'), 'finally: отсутствует при command_trigger');
 });
 
-test('F08', 'finally РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ text_trigger', () => {
+test('F08', 'finally присутствует при проекте с text_trigger', () => {
   const p = makeCleanProject([
-    makeTextTriggerNode('txt1', ['РїСЂРёРІРµС‚'], 'msg1'),
+    makeTextTriggerNode('txt1', ['привет'], 'msg1'),
     makeMessageNode('msg1'),
   ]);
   const code = gen(p, 'F08');
   const mainBody = code.slice(code.indexOf('async def main()'));
-  ok(mainBody.includes('finally:'), 'finally: РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё text_trigger');
+  ok(mainBody.includes('finally:'), 'finally: отсутствует при text_trigger');
 });
 
-test('F09', 'finally РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё РїСЂРѕРµРєС‚Рµ СЃ adminOnly', () => {
+test('F09', 'finally присутствует при проекте с adminOnly', () => {
   const cmd = makeCommandTriggerNode('cmd1', '/admin', 'msg1');
   cmd.data = { ...cmd.data, adminOnly: true } as any;
   const p = makeCleanProject([cmd, makeMessageNode('msg1')]);
   const code = gen(p, 'F09');
   const mainBody = code.slice(code.indexOf('async def main()'));
-  ok(mainBody.includes('finally:'), 'finally: РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РїСЂРё adminOnly');
+  ok(mainBody.includes('finally:'), 'finally: отсутствует при adminOnly');
 });
 
-test('F10', 'РЎРёРЅС‚Р°РєСЃРёСЃ Python OK РїСЂРё РЅР°Р»РёС‡РёРё finally Р±Р»РѕРєР°', () => {
+test('F10', 'Синтаксис Python OK при наличии finally блока', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true);
   const code = genDB(p, 'F10');
-  ok(code.includes('finally:'), 'finally: РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚');
+  ok(code.includes('finally:'), 'finally: отсутствует');
   syntax(code, 'F10');
 });
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// Р‘Р›РћРљ G: templateCache РѕРіСЂР°РЅРёС‡РµРЅРёРµ
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ===============================================================================
+// БЛОК G: templateCache ограничение
+// ===============================================================================
 
-console.log('\nв”Ђв”Ђ Р‘Р»РѕРє G: templateCache РѕРіСЂР°РЅРёС‡РµРЅРёРµ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ');
+console.log('\n-- Блок G: templateCache ограничение ---------------------------');
 
-test('G01', 'MAX_CACHE_SIZE = 100 РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РІ РёСЃС…РѕРґРЅРёРєРµ template-renderer.ts', () => {
+test('G01', 'MAX_CACHE_SIZE = 100 присутствует в исходнике template-renderer.ts', () => {
   const src = fs.readFileSync('lib/templates/template-renderer.ts', 'utf-8');
-  ok(src.includes('MAX_CACHE_SIZE = 100'), 'MAX_CACHE_SIZE = 100 РЅРµ РЅР°Р№РґРµРЅРѕ РІ template-renderer.ts');
+  ok(src.includes('MAX_CACHE_SIZE = 100'), 'MAX_CACHE_SIZE = 100 не найдено в template-renderer.ts');
 });
 
-test('G02', 'renderPartialTemplate 5 СЂР°Р· СЃ СЂР°Р·РЅС‹РјРё С€Р°Р±Р»РѕРЅР°РјРё РЅРµ РїР°РґР°РµС‚', () => {
+test('G02', 'renderPartialTemplate 5 раз с разными шаблонами не падает', () => {
   const templates = [
     ['utils/utils.py.jinja2', { adminOnly: false, userDatabaseEnabled: false }],
     ['utils/utils.py.jinja2', { adminOnly: true, userDatabaseEnabled: false }],
@@ -884,28 +882,28 @@ test('G02', 'renderPartialTemplate 5 СЂР°Р· СЃ СЂР°Р·РЅС‹РјРё С€Р°Р±Р»РѕРЅР°РјРё
   ] as const;
   for (const [tmpl, ctx] of templates) {
     const result = renderPartialTemplate(tmpl, ctx as any);
-    ok(typeof result === 'string' && result.length > 0, `renderPartialTemplate(${tmpl}) РІРµСЂРЅСѓР» РїСѓСЃС‚РѕР№ СЂРµР·СѓР»СЊС‚Р°С‚`);
+    ok(typeof result === 'string' && result.length > 0, `renderPartialTemplate(${tmpl}) вернул пустой результат`);
   }
 });
 
-test('G03', 'renderPartialTemplate СЃ РѕРґРЅРёРј С€Р°Р±Р»РѕРЅРѕРј РґРІР°Р¶РґС‹ РІРѕР·РІСЂР°С‰Р°РµС‚ РѕРґРёРЅР°РєРѕРІС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚', () => {
+test('G03', 'renderPartialTemplate с одним шаблоном дважды возвращает одинаковый результат', () => {
   const ctx = { adminOnly: false, userDatabaseEnabled: false };
   const r1 = renderPartialTemplate('utils/utils.py.jinja2', ctx);
   const r2 = renderPartialTemplate('utils/utils.py.jinja2', ctx);
-  ok(r1 === r2, 'Р”РІР° РІС‹Р·РѕРІР° СЃ РѕРґРёРЅР°РєРѕРІС‹Рј РєРѕРЅС‚РµРєСЃС‚РѕРј РІРµСЂРЅСѓР»Рё СЂР°Р·РЅС‹Рµ СЂРµР·СѓР»СЊС‚Р°С‚С‹');
+  ok(r1 === r2, 'Два вызова с одинаковым контекстом вернули разные результаты');
 });
 
-test('G04', 'renderPartialTemplate utils/utils.py.jinja2 СЃРѕРґРµСЂР¶РёС‚ cleanup_user_data', () => {
+test('G04', 'renderPartialTemplate utils/utils.py.jinja2 содержит cleanup_user_data', () => {
   const result = renderPartialTemplate('utils/utils.py.jinja2', { adminOnly: false, userDatabaseEnabled: false });
-  ok(result.includes('cleanup_user_data'), 'cleanup_user_data РЅРµ РЅР°Р№РґРµРЅРѕ РІ utils.py.jinja2');
+  ok(result.includes('cleanup_user_data'), 'cleanup_user_data не найдено в utils.py.jinja2');
 });
 
-test('G05', 'renderPartialTemplate utils/utils.py.jinja2 СЃ adminOnly:true СЃРѕРґРµСЂР¶РёС‚ is_admin', () => {
+test('G05', 'renderPartialTemplate utils/utils.py.jinja2 с adminOnly:true содержит is_admin', () => {
   const result = renderPartialTemplate('utils/utils.py.jinja2', { adminOnly: true, userDatabaseEnabled: false });
-  ok(result.includes('is_admin'), 'is_admin РЅРµ РЅР°Р№РґРµРЅРѕ РїСЂРё adminOnly:true');
+  ok(result.includes('is_admin'), 'is_admin не найдено при adminOnly:true');
 });
 
-test('G06', 'renderPartialTemplate main/main.py.jinja2 СЃРѕРґРµСЂР¶РёС‚ cleanup_user_data', () => {
+test('G06', 'renderPartialTemplate main/main.py.jinja2 содержит cleanup_user_data', () => {
   const result = renderPartialTemplate('main/main.py.jinja2', {
     userDatabaseEnabled: false,
     menuCommands: [],
@@ -913,10 +911,10 @@ test('G06', 'renderPartialTemplate main/main.py.jinja2 СЃРѕРґРµСЂР¶РёС‚ cleanup_
     incomingMessageTriggerMiddlewares: [],
     hasInlineButtons: false,
   });
-  ok(result.includes('cleanup_user_data'), 'cleanup_user_data РЅРµ РЅР°Р№РґРµРЅРѕ РІ main.py.jinja2');
+  ok(result.includes('cleanup_user_data'), 'cleanup_user_data не найдено в main.py.jinja2');
 });
 
-test('G07', 'renderPartialTemplate main/main.py.jinja2 СЃРѕРґРµСЂР¶РёС‚ asyncio.get_running_loop().stop()', () => {
+test('G07', 'renderPartialTemplate main/main.py.jinja2 содержит asyncio.get_running_loop().stop()', () => {
   const result = renderPartialTemplate('main/main.py.jinja2', {
     userDatabaseEnabled: false,
     menuCommands: [],
@@ -924,10 +922,10 @@ test('G07', 'renderPartialTemplate main/main.py.jinja2 СЃРѕРґРµСЂР¶РёС‚ asyncio.
     incomingMessageTriggerMiddlewares: [],
     hasInlineButtons: false,
   });
-  ok(result.includes('asyncio.get_running_loop().stop()'), 'loop.stop() РЅРµ РЅР°Р№РґРµРЅРѕ РІ main.py.jinja2');
+  ok(result.includes('asyncio.get_running_loop().stop()'), 'loop.stop() не найдено в main.py.jinja2');
 });
 
-test('G08', 'renderPartialTemplate main/main.py.jinja2 РќР• СЃРѕРґРµСЂР¶РёС‚ sys.exit(0)', () => {
+test('G08', 'renderPartialTemplate main/main.py.jinja2 НЕ содержит sys.exit(0)', () => {
   const result = renderPartialTemplate('main/main.py.jinja2', {
     userDatabaseEnabled: false,
     menuCommands: [],
@@ -935,31 +933,31 @@ test('G08', 'renderPartialTemplate main/main.py.jinja2 РќР• СЃРѕРґРµСЂР¶РёС‚ sys
     incomingMessageTriggerMiddlewares: [],
     hasInlineButtons: false,
   });
-  ok(!result.includes('sys.exit(0)'), 'sys.exit(0) РЅР°Р№РґРµРЅРѕ РІ main.py.jinja2 вЂ” СЂРµРіСЂРµСЃСЃРёСЏ!');
+  ok(!result.includes('sys.exit(0)'), 'sys.exit(0) найдено в main.py.jinja2 — регрессия!');
 });
 
-test('G09', 'renderPartialTemplate utils/utils.py.jinja2 СЃРѕРґРµСЂР¶РёС‚ USER_DATA_TTL', () => {
+test('G09', 'renderPartialTemplate utils/utils.py.jinja2 содержит USER_DATA_TTL', () => {
   const result = renderPartialTemplate('utils/utils.py.jinja2', { adminOnly: false, userDatabaseEnabled: false });
-  ok(result.includes('USER_DATA_TTL'), 'USER_DATA_TTL РЅРµ РЅР°Р№РґРµРЅРѕ РІ utils.py.jinja2');
+  ok(result.includes('USER_DATA_TTL'), 'USER_DATA_TTL не найдено в utils.py.jinja2');
 });
 
-test('G10', 'renderPartialTemplate utils/utils.py.jinja2 СЃРѕРґРµСЂР¶РёС‚ _user_last_seen', () => {
+test('G10', 'renderPartialTemplate utils/utils.py.jinja2 содержит _user_last_seen', () => {
   const result = renderPartialTemplate('utils/utils.py.jinja2', { adminOnly: false, userDatabaseEnabled: false });
-  ok(result.includes('_user_last_seen'), '_user_last_seen РЅРµ РЅР°Р№РґРµРЅРѕ РІ utils.py.jinja2');
+  ok(result.includes('_user_last_seen'), '_user_last_seen не найдено в utils.py.jinja2');
 });
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// Р‘Р›РћРљ H: РљРѕРјР±РёРЅР°С†РёРё вЂ” РїРѕР»РЅС‹Рµ РїСЂРѕРµРєС‚С‹
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ===============================================================================
+// БЛОК H: Комбинации — полные проекты
+// ===============================================================================
 
-console.log('\nв”Ђв”Ђ Р‘Р»РѕРє H: РљРѕРјР±РёРЅР°С†РёРё вЂ” РїРѕР»РЅС‹Рµ РїСЂРѕРµРєС‚С‹ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ');
+console.log('\n-- Блок H: Комбинации — полные проекты -------------------------');
 
-test('H01', 'РџСЂРѕРµРєС‚: start + message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H01', 'Проект: start + message > все 4 фикса присутствуют', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   hasFourFixes(gen(p, 'H01'));
 });
 
-test('H02', 'РџСЂРѕРµРєС‚: command_trigger + message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H02', 'Проект: command_trigger + message > все 4 фикса присутствуют', () => {
   const p = makeCleanProject([
     makeCommandTriggerNode('cmd1', '/start', 'msg1'),
     makeMessageNode('msg1'),
@@ -967,55 +965,55 @@ test('H02', 'РџСЂРѕРµРєС‚: command_trigger + message в†’ РІСЃРµ 4 С„РёРєСЃР° РїС
   hasFourFixes(gen(p, 'H02'));
 });
 
-test('H03', 'РџСЂРѕРµРєС‚: text_trigger + message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H03', 'Проект: text_trigger + message > все 4 фикса присутствуют', () => {
   const p = makeCleanProject([
-    makeTextTriggerNode('txt1', ['РїСЂРёРІРµС‚', 'hi'], 'msg1'),
+    makeTextTriggerNode('txt1', ['привет', 'hi'], 'msg1'),
     makeMessageNode('msg1'),
   ]);
   hasFourFixes(gen(p, 'H03'));
 });
 
-test('H04', 'РџСЂРѕРµРєС‚: start + condition + message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H04', 'Проект: start + condition + message > все 4 фикса присутствуют', () => {
   const p = makeCleanProject([
     makeStartNode(),
     makeConditionNode('cond1', 'age', [
       { value: '18', targetNodeId: 'msg1' },
       { value: '__else__', targetNodeId: 'msg2' },
     ]),
-    makeMessageNode('msg1', 'Р’Р·СЂРѕСЃР»С‹Р№'),
-    makeMessageNode('msg2', 'РќРµСЃРѕРІРµСЂС€РµРЅРЅРѕР»РµС‚РЅРёР№'),
+    makeMessageNode('msg1', 'Взрослый'),
+    makeMessageNode('msg2', 'Несовершеннолетний'),
   ]);
   hasFourFixes(gen(p, 'H04'));
 });
 
-test('H05', 'РџСЂРѕРµРєС‚: start + inline keyboard + message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H05', 'Проект: start + inline keyboard + message > все 4 фикса присутствуют', () => {
   const start = makeStartNode();
   start.data = {
     ...start.data,
     keyboardType: 'inline',
-    buttons: [{ id: 'b1', text: 'Р”Р°Р»РµРµ', action: 'goto', target: 'msg1' }],
+    buttons: [{ id: 'b1', text: 'Далее', action: 'goto', target: 'msg1' }],
   } as any;
   const p = makeCleanProject([start, makeMessageNode('msg1')]);
   hasFourFixes(gen(p, 'H05'));
 });
 
-test('H06', 'РџСЂРѕРµРєС‚: start + reply keyboard + message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H06', 'Проект: start + reply keyboard + message > все 4 фикса присутствуют', () => {
   const start = makeStartNode();
   start.data = {
     ...start.data,
     keyboardType: 'reply',
-    buttons: [{ id: 'b1', text: 'РњРµРЅСЋ', action: 'goto', target: 'msg1' }],
+    buttons: [{ id: 'b1', text: 'Меню', action: 'goto', target: 'msg1' }],
   } as any;
   const p = makeCleanProject([start, makeMessageNode('msg1')]);
   hasFourFixes(gen(p, 'H06'));
 });
 
-test('H07', 'РџСЂРѕРµРєС‚ СЃ DB: start + message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H07', 'Проект с DB: start + message > все 4 фикса присутствуют', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true);
   hasFourFixes(genDB(p, 'H07'));
 });
 
-test('H08', 'РџСЂРѕРµРєС‚ СЃ DB: command_trigger + message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H08', 'Проект с DB: command_trigger + message > все 4 фикса присутствуют', () => {
   const p = makeCleanProject([
     makeCommandTriggerNode('cmd1', '/start', 'msg1'),
     makeMessageNode('msg1'),
@@ -1023,35 +1021,35 @@ test('H08', 'РџСЂРѕРµРєС‚ СЃ DB: command_trigger + message в†’ РІСЃРµ 4 С„РёРєСЃ
   hasFourFixes(genDB(p, 'H08'));
 });
 
-test('H09', 'РџСЂРѕРµРєС‚ СЃ DB + inline: start + message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H09', 'Проект с DB + inline: start + message > все 4 фикса присутствуют', () => {
   const start = makeStartNode();
   start.data = {
     ...start.data,
     keyboardType: 'inline',
-    buttons: [{ id: 'b1', text: 'РљРЅРѕРїРєР°', action: 'goto', target: 'msg1' }],
+    buttons: [{ id: 'b1', text: 'Кнопка', action: 'goto', target: 'msg1' }],
   } as any;
   const p = makeCleanProject([start, makeMessageNode('msg1')], true);
   hasFourFixes(genDB(p, 'H09'));
 });
 
-test('H10', 'РџСЂРѕРµРєС‚: 5 command_trigger + 5 message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H10', 'Проект: 5 command_trigger + 5 message > все 4 фикса присутствуют', () => {
   const nodes: any[] = [];
   for (let i = 1; i <= 5; i++) {
     nodes.push(makeCommandTriggerNode(`cmd${i}`, `/cmd${i}`, `msg${i}`));
-    nodes.push(makeMessageNode(`msg${i}`, `РћС‚РІРµС‚ РЅР° РєРѕРјР°РЅРґСѓ ${i}`));
+    nodes.push(makeMessageNode(`msg${i}`, `Ответ на команду ${i}`));
   }
   const p = makeCleanProject(nodes);
   hasFourFixes(gen(p, 'H10'));
 });
 
-test('H11', 'РџСЂРѕРµРєС‚: adminOnly + requiresAuth в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H11', 'Проект: adminOnly + requiresAuth > все 4 фикса присутствуют', () => {
   const cmd = makeCommandTriggerNode('cmd1', '/secret', 'msg1');
   cmd.data = { ...cmd.data, adminOnly: true, requiresAuth: true } as any;
-  const p = makeCleanProject([cmd, makeMessageNode('msg1', 'РЎРµРєСЂРµС‚РЅС‹Р№ СЂР°Р·РґРµР»')]);
+  const p = makeCleanProject([cmd, makeMessageNode('msg1', 'Секретный раздел')]);
   hasFourFixes(gen(p, 'H11'));
 });
 
-test('H12', 'РџСЂРѕРµРєС‚: media СѓР·РµР» в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H12', 'Проект: media узел > все 4 фикса присутствуют', () => {
   const p = makeCleanProject([
     makeStartNode(),
     makeMediaNode('media1', ['photo_id_abc123']),
@@ -1059,7 +1057,7 @@ test('H12', 'РџСЂРѕРµРєС‚: media СѓР·РµР» в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃ
   hasFourFixes(gen(p, 'H12'));
 });
 
-test('H13', 'РџСЂРѕРµРєС‚: forward_message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H13', 'Проект: forward_message > все 4 фикса присутствуют', () => {
   const fwd = {
     id: 'fwd1',
     type: 'forward_message',
@@ -1070,7 +1068,7 @@ test('H13', 'РџСЂРѕРµРєС‚: forward_message в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚С
   hasFourFixes(gen(p, 'H13'));
 });
 
-test('H14', 'РџСЂРѕРµРєС‚: incoming_message_trigger в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('H14', 'Проект: incoming_message_trigger > все 4 фикса присутствуют', () => {
   const trigger = {
     id: 'imt1',
     type: 'incoming_message_trigger',
@@ -1081,26 +1079,26 @@ test('H14', 'РџСЂРѕРµРєС‚: incoming_message_trigger в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂ
   hasFourFixes(gen(p, 'H14'));
 });
 
-test('H15', 'РџСЂРѕРµРєС‚: РІСЃРµ С‚РёРїС‹ СѓР·Р»РѕРІ РІРјРµСЃС‚Рµ в†’ СЃРёРЅС‚Р°РєСЃРёСЃ OK + РІСЃРµ 4 С„РёРєСЃР°', () => {
+test('H15', 'Проект: все типы узлов вместе > синтаксис OK + все 4 фикса', () => {
   const start = makeStartNode();
   start.data = {
     ...start.data,
     keyboardType: 'inline',
-    buttons: [{ id: 'b1', text: 'Р”Р°Р»РµРµ', action: 'goto', target: 'msg1' }],
+    buttons: [{ id: 'b1', text: 'Далее', action: 'goto', target: 'msg1' }],
   } as any;
   const nodes: any[] = [
     start,
-    makeMessageNode('msg1', 'РџСЂРёРІРµС‚!'),
+    makeMessageNode('msg1', 'Привет!'),
     makeCommandTriggerNode('cmd1', '/help', 'msg2'),
-    makeMessageNode('msg2', 'РџРѕРјРѕС‰СЊ'),
-    makeTextTriggerNode('txt1', ['СЃС‚РѕРї'], 'msg3'),
-    makeMessageNode('msg3', 'РЎС‚РѕРї'),
+    makeMessageNode('msg2', 'Помощь'),
+    makeTextTriggerNode('txt1', ['стоп'], 'msg3'),
+    makeMessageNode('msg3', 'Стоп'),
     makeConditionNode('cond1', 'score', [
       { value: '10', targetNodeId: 'msg4' },
       { value: '__else__', targetNodeId: 'msg5' },
     ]),
-    makeMessageNode('msg4', 'РџРѕР±РµРґР°'),
-    makeMessageNode('msg5', 'РџСЂРѕРёРіСЂС‹С€'),
+    makeMessageNode('msg4', 'Победа'),
+    makeMessageNode('msg5', 'Проигрыш'),
     makeMediaNode('media1', ['photo_id_xyz']),
   ];
   const p = makeCleanProject(nodes, true);
@@ -1109,103 +1107,103 @@ test('H15', 'РџСЂРѕРµРєС‚: РІСЃРµ С‚РёРїС‹ СѓР·Р»РѕРІ РІРјРµСЃС‚Рµ в†’ СЃРёРЅС‚Р
   syntax(code, 'H15');
 });
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// Р‘Р›РћРљ I: Р РµРіСЂРµСЃСЃРёСЏ вЂ” СЃС‚Р°СЂС‹Рµ РїР°С‚С‚РµСЂРЅС‹ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‚
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ===============================================================================
+// БЛОК I: Регрессия — старые паттерны отсутствуют
+// ===============================================================================
 
-console.log('\nв”Ђв”Ђ Р‘Р»РѕРє I: Р РµРіСЂРµСЃСЃРёСЏ вЂ” СЃС‚Р°СЂС‹Рµ РїР°С‚С‚РµСЂРЅС‹ РѕС‚СЃСѓС‚СЃС‚РІСѓСЋС‚ в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ');
+console.log('\n-- Блок I: Регрессия — старые паттерны отсутствуют -------------');
 
-test('I01', 'sys.exit(0) РќР• РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚ РЅРёРіРґРµ РІ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅРѕРј РєРѕРґРµ', () => {
+test('I01', 'sys.exit(0) НЕ присутствует нигде в сгенерированном коде', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'I01');
-  ok(!code.includes('sys.exit(0)'), 'sys.exit(0) РЅР°Р№РґРµРЅРѕ РІ РєРѕРґРµ вЂ” СЂРµРіСЂРµСЃСЃРёСЏ!');
+  ok(!code.includes('sys.exit(0)'), 'sys.exit(0) найдено в коде — регрессия!');
 });
 
-test('I02', 'import sys РІРЅСѓС‚СЂРё signal_handler РќР• РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚', () => {
+test('I02', 'import sys внутри signal_handler НЕ присутствует', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'I02');
   const handlerIdx = code.indexOf('def signal_handler');
-  ok(handlerIdx !== -1, 'signal_handler РЅРµ РЅР°Р№РґРµРЅ');
+  ok(handlerIdx !== -1, 'signal_handler не найден');
   const handlerBody = code.slice(handlerIdx, handlerIdx + 400);
-  ok(!handlerBody.includes('import sys'), 'import sys РЅР°Р№РґРµРЅРѕ РІРЅСѓС‚СЂРё signal_handler вЂ” СЂРµРіСЂРµСЃСЃРёСЏ!');
+  ok(!handlerBody.includes('import sys'), 'import sys найдено внутри signal_handler — регрессия!');
 });
 
-test('I03', 'user_data РЅРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ Р±РµР· _user_last_seen (РЅРµС‚ Р±РµСЃРєРѕРЅРµС‡РЅРѕРіРѕ СЂРѕСЃС‚Р°)', () => {
+test('I03', 'user_data не используется без _user_last_seen (нет бесконечного роста)', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'I03');
-  ok(code.includes('user_data'), 'user_data РЅРµ РЅР°Р№РґРµРЅРѕ РІ РєРѕРґРµ');
-  ok(code.includes('_user_last_seen'), '_user_last_seen РЅРµ РЅР°Р№РґРµРЅРѕ вЂ” РЅРµС‚ Р·Р°С‰РёС‚С‹ РѕС‚ СѓС‚РµС‡РєРё');
+  ok(code.includes('user_data'), 'user_data не найдено в коде');
+  ok(code.includes('_user_last_seen'), '_user_last_seen не найдено — нет защиты от утечки');
 });
 
-test('I04', 'cleanup_user_data РќР• РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РЅРё РІ РѕРґРЅРѕРј РёР· 5 СЂР°Р·РЅС‹С… РїСЂРѕРµРєС‚РѕРІ', () => {
+test('I04', 'cleanup_user_data НЕ отсутствует ни в одном из 5 разных проектов', () => {
   const projects = [
     makeCleanProject([makeStartNode(), makeMessageNode('msg1')]),
     makeCleanProject([makeCommandTriggerNode('cmd1', '/start', 'msg1'), makeMessageNode('msg1')]),
-    makeCleanProject([makeTextTriggerNode('txt1', ['РїСЂРёРІРµС‚'], 'msg1'), makeMessageNode('msg1')]),
+    makeCleanProject([makeTextTriggerNode('txt1', ['привет'], 'msg1'), makeMessageNode('msg1')]),
     makeCleanProject([makeStartNode(), makeMediaNode('media1', ['photo_id'])]),
     makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true),
   ];
   for (let i = 0; i < projects.length; i++) {
     const code = i === 4 ? genDB(projects[i], `I04_${i}`) : gen(projects[i], `I04_${i}`);
-    ok(code.includes('cleanup_user_data'), `cleanup_user_data РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РІ РїСЂРѕРµРєС‚Рµ #${i + 1}`);
+    ok(code.includes('cleanup_user_data'), `cleanup_user_data отсутствует в проекте #${i + 1}`);
   }
 });
 
-test('I05', 'asyncio.create_task РІС‹Р·С‹РІР°РµС‚СЃСЏ СЂРѕРІРЅРѕ 1 СЂР°Р· РІ main()', () => {
+test('I05', 'asyncio.create_task вызывается ровно 1 раз в main()', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'I05');
   const mainIdx = code.indexOf('async def main()');
-  ok(mainIdx !== -1, 'async def main() РЅРµ РЅР°Р№РґРµРЅР°');
+  ok(mainIdx !== -1, 'async def main() не найдена');
   const mainBody = code.slice(mainIdx, mainIdx + 3000);
   const count = (mainBody.match(/asyncio\.create_task\(cleanup_user_data\(\)\)/g) || []).length;
-  ok(count === 1, `asyncio.create_task(cleanup_user_data()) РІС‹Р·С‹РІР°РµС‚СЃСЏ ${count} СЂР°Р·(Р°), РѕР¶РёРґР°РµС‚СЃСЏ 1`);
+  ok(count === 1, `asyncio.create_task(cleanup_user_data()) вызывается ${count} раз(а), ожидается 1`);
 });
 
-test('I06', 'signal_handler РѕРїСЂРµРґРµР»С‘РЅ СЂРѕРІРЅРѕ 1 СЂР°Р·', () => {
+test('I06', 'signal_handler определён ровно 1 раз', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'I06');
   const count = (code.match(/def signal_handler/g) || []).length;
-  ok(count === 1, `signal_handler РѕРїСЂРµРґРµР»С‘РЅ ${count} СЂР°Р·(Р°), РѕР¶РёРґР°РµС‚СЃСЏ 1`);
+  ok(count === 1, `signal_handler определён ${count} раз(а), ожидается 1`);
 });
 
-test('I07', 'USER_DATA_TTL РѕРїСЂРµРґРµР»С‘РЅ СЂРѕРІРЅРѕ 1 СЂР°Р·', () => {
+test('I07', 'USER_DATA_TTL определён ровно 1 раз', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'I07');
   const count = (code.match(/USER_DATA_TTL = 3600/g) || []).length;
-  ok(count === 1, `USER_DATA_TTL = 3600 РѕРїСЂРµРґРµР»С‘РЅ ${count} СЂР°Р·(Р°), РѕР¶РёРґР°РµС‚СЃСЏ 1`);
+  ok(count === 1, `USER_DATA_TTL = 3600 определён ${count} раз(а), ожидается 1`);
 });
 
-test('I08', '_user_last_seen РѕРїСЂРµРґРµР»С‘РЅ СЂРѕРІРЅРѕ 1 СЂР°Р·', () => {
+test('I08', '_user_last_seen определён ровно 1 раз', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'I08');
   const count = (code.match(/_user_last_seen: dict\[int, float\] = \{\}/g) || []).length;
-  ok(count === 1, `_user_last_seen: dict[int, float] = {} РѕРїСЂРµРґРµР»С‘РЅ ${count} СЂР°Р·(Р°), РѕР¶РёРґР°РµС‚СЃСЏ 1`);
+  ok(count === 1, `_user_last_seen: dict[int, float] = {} определён ${count} раз(а), ожидается 1`);
 });
 
-test('I09', 'cleanup_user_data РѕРїСЂРµРґРµР»С‘РЅ СЂРѕРІРЅРѕ 1 СЂР°Р·', () => {
+test('I09', 'cleanup_user_data определён ровно 1 раз', () => {
   const p = makeCleanProject([makeStartNode(), makeMessageNode('msg1')]);
   const code = gen(p, 'I09');
   const count = (code.match(/async def cleanup_user_data\(\)/g) || []).length;
-  ok(count === 1, `async def cleanup_user_data() РѕРїСЂРµРґРµР»С‘РЅ ${count} СЂР°Р·(Р°), РѕР¶РёРґР°РµС‚СЃСЏ 1`);
+  ok(count === 1, `async def cleanup_user_data() определён ${count} раз(а), ожидается 1`);
 });
 
-test('I10', 'РЎРёРЅС‚Р°РєСЃРёСЃ Python OK РґР»СЏ 10 СЂР°Р·РЅС‹С… РїСЂРѕРµРєС‚РѕРІ РїРѕРґСЂСЏРґ', () => {
+test('I10', 'Синтаксис Python OK для 10 разных проектов подряд', () => {
   const projects = [
     makeCleanProject([makeStartNode(), makeMessageNode('msg1')]),
     makeCleanProject([makeCommandTriggerNode('cmd1', '/start', 'msg1'), makeMessageNode('msg1')]),
-    makeCleanProject([makeTextTriggerNode('txt1', ['РїСЂРёРІРµС‚'], 'msg1'), makeMessageNode('msg1')]),
+    makeCleanProject([makeTextTriggerNode('txt1', ['привет'], 'msg1'), makeMessageNode('msg1')]),
     makeCleanProject([makeStartNode(), makeMediaNode('media1', ['photo_id'])]),
     makeCleanProject([makeStartNode(), makeMessageNode('msg1')], true),
     makeCleanProject([makeCommandTriggerNode('cmd1', '/help', 'msg1'), makeMessageNode('msg1')], true),
     makeCleanProject([
       makeStartNode(),
       makeConditionNode('cond1', 'x', [{ value: '1', targetNodeId: 'msg1' }, { value: '__else__', targetNodeId: 'msg2' }]),
-      makeMessageNode('msg1', 'Р”Р°'),
-      makeMessageNode('msg2', 'РќРµС‚'),
+      makeMessageNode('msg1', 'Да'),
+      makeMessageNode('msg2', 'Нет'),
     ]),
-    makeCleanProject([makeTextTriggerNode('txt1', ['СЃС‚РѕРї', 'stop', 'РІС‹С…РѕРґ'], 'msg1'), makeMessageNode('msg1')]),
-    makeCleanProject([makeStartNode(), makeMessageNode('msg1', 'рџЋ‰ РџСЂРёРІРµС‚!')]),
-    makeCleanProject([makeStartNode(), makeMessageNode('msg1', 'РўРµРєСЃС‚ СЃ "РєР°РІС‹С‡РєР°РјРё" Рё \'Р°РїРѕСЃС‚СЂРѕС„Р°РјРё\'')]),
+    makeCleanProject([makeTextTriggerNode('txt1', ['стоп', 'stop', 'выход'], 'msg1'), makeMessageNode('msg1')]),
+    makeCleanProject([makeStartNode(), makeMessageNode('msg1', '?? Привет!')]),
+    makeCleanProject([makeStartNode(), makeMessageNode('msg1', 'Текст с "кавычками" и \'апострофами\'')]),
   ];
   for (let i = 0; i < projects.length; i++) {
     const code = i === 4 || i === 5 ? genDB(projects[i], `I10_${i}`) : gen(projects[i], `I10_${i}`);
@@ -1213,32 +1211,32 @@ test('I10', 'РЎРёРЅС‚Р°РєСЃРёСЃ Python OK РґР»СЏ 10 СЂР°Р·РЅС‹С… РїСЂРѕРµРєС‚РѕР
   }
 });
 
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-// Р‘Р›РћРљ J: Р“СЂР°РЅРёС‡РЅС‹Рµ СЃР»СѓС‡Р°Рё
-// в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+// ===============================================================================
+// БЛОК J: Граничные случаи
+// ===============================================================================
 
-console.log('\nв”Ђв”Ђ Р‘Р»РѕРє J: Р“СЂР°РЅРёС‡РЅС‹Рµ СЃР»СѓС‡Р°Рё в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ');
+console.log('\n-- Блок J: Граничные случаи ------------------------------------');
 
-test('J01', 'РџСѓСЃС‚РѕР№ РїСЂРѕРµРєС‚ (РЅРµС‚ СѓР·Р»РѕРІ) в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('J01', 'Пустой проект (нет узлов) > все 4 фикса присутствуют', () => {
   const p = makeCleanProject([]);
   hasFourFixes(gen(p, 'J01'));
 });
 
-test('J02', 'РџСЂРѕРµРєС‚ С‚РѕР»СЊРєРѕ СЃ keyboard СѓР·Р»РѕРј в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('J02', 'Проект только с keyboard узлом > все 4 фикса присутствуют', () => {
   const kbd = {
     id: 'kbd1',
     type: 'keyboard',
     position: { x: 0, y: 0 },
-    data: { keyboardType: 'reply', buttons: [{ id: 'b1', text: 'РљРЅРѕРїРєР°', action: 'goto', target: 'kbd1' }] },
+    data: { keyboardType: 'reply', buttons: [{ id: 'b1', text: 'Кнопка', action: 'goto', target: 'kbd1' }] },
   };
   const p = makeCleanProject([kbd]);
   hasFourFixes(gen(p, 'J02'));
 });
 
-test('J03', 'РџСЂРѕРµРєС‚ СЃ 20 СѓР·Р»Р°РјРё в†’ СЃРёРЅС‚Р°РєСЃРёСЃ OK + РІСЃРµ 4 С„РёРєСЃР°', () => {
+test('J03', 'Проект с 20 узлами > синтаксис OK + все 4 фикса', () => {
   const nodes: any[] = [makeStartNode()];
   for (let i = 1; i <= 19; i++) {
-    nodes.push(makeMessageNode(`msg${i}`, `РЎРѕРѕР±С‰РµРЅРёРµ РЅРѕРјРµСЂ ${i}`));
+    nodes.push(makeMessageNode(`msg${i}`, `Сообщение номер ${i}`));
   }
   const p = makeCleanProject(nodes);
   const code = gen(p, 'J03');
@@ -1246,53 +1244,53 @@ test('J03', 'РџСЂРѕРµРєС‚ СЃ 20 СѓР·Р»Р°РјРё в†’ СЃРёРЅС‚Р°РєСЃРёСЃ OK + РІСЃРµ 
   syntax(code, 'J03');
 });
 
-test('J04', 'РџСЂРѕРµРєС‚ СЃ Unicode РІ С‚РµРєСЃС‚Р°С… в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('J04', 'Проект с Unicode в текстах > все 4 фикса присутствуют', () => {
   const p = makeCleanProject([
     makeStartNode(),
-    makeMessageNode('msg1', 'рџЋ‰ РџСЂРёРІРµС‚! дЅ еҐЅ Щ…Ш±Ш­ШЁШ§ рџљЂ Г‘oГ±o'),
-    makeMessageNode('msg2', 'ж—Ґжњ¬иЄћгѓ†г‚№гѓ€н•њкµ­м–ґн…ЊмЉ¤нЉё'),
+    makeMessageNode('msg1', '?? Привет! ?? ????? ?? Nono'),
+    makeMessageNode('msg2', '????????????'),
   ]);
   hasFourFixes(gen(p, 'J04'));
 });
 
-test('J05', 'РџСЂРѕРµРєС‚ СЃ РѕС‡РµРЅСЊ РґР»РёРЅРЅС‹РјРё ID СѓР·Р»РѕРІ в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('J05', 'Проект с очень длинными ID узлов > все 4 фикса присутствуют', () => {
   const longId1 = 'node_' + 'a'.repeat(50);
   const longId2 = 'node_' + 'b'.repeat(50);
   const p = makeCleanProject([
     makeStartNode(longId1),
-    makeMessageNode(longId2, 'РћС‚РІРµС‚'),
+    makeMessageNode(longId2, 'Ответ'),
   ]);
   hasFourFixes(gen(p, 'J05'));
 });
 
-test('J06', 'РџСЂРѕРµРєС‚ СЃ adminOnly РЅР° РІСЃРµС… СѓР·Р»Р°С… в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('J06', 'Проект с adminOnly на всех узлах > все 4 фикса присутствуют', () => {
   const cmd1 = makeCommandTriggerNode('cmd1', '/admin1', 'msg1');
   const cmd2 = makeCommandTriggerNode('cmd2', '/admin2', 'msg2');
   cmd1.data = { ...cmd1.data, adminOnly: true } as any;
   cmd2.data = { ...cmd2.data, adminOnly: true } as any;
   const p = makeCleanProject([
-    cmd1, makeMessageNode('msg1', 'Р Р°Р·РґРµР» 1'),
-    cmd2, makeMessageNode('msg2', 'Р Р°Р·РґРµР» 2'),
+    cmd1, makeMessageNode('msg1', 'Раздел 1'),
+    cmd2, makeMessageNode('msg2', 'Раздел 2'),
   ]);
   hasFourFixes(gen(p, 'J06'));
 });
 
-test('J07', 'РџСЂРѕРµРєС‚ СЃ requiresAuth РЅР° РІСЃРµС… СѓР·Р»Р°С… в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('J07', 'Проект с requiresAuth на всех узлах > все 4 фикса присутствуют', () => {
   const cmd1 = makeCommandTriggerNode('cmd1', '/profile', 'msg1');
   const cmd2 = makeCommandTriggerNode('cmd2', '/settings', 'msg2');
   cmd1.data = { ...cmd1.data, requiresAuth: true } as any;
   cmd2.data = { ...cmd2.data, requiresAuth: true } as any;
   const p = makeCleanProject([
-    cmd1, makeMessageNode('msg1', 'РџСЂРѕС„РёР»СЊ'),
-    cmd2, makeMessageNode('msg2', 'РќР°СЃС‚СЂРѕР№РєРё'),
+    cmd1, makeMessageNode('msg1', 'Профиль'),
+    cmd2, makeMessageNode('msg2', 'Настройки'),
   ]);
   hasFourFixes(gen(p, 'J07'));
 });
 
-test('J08', 'РџСЂРѕРµРєС‚ СЃ DB + 10 СѓР·Р»РѕРІ в†’ СЃРёРЅС‚Р°РєСЃРёСЃ OK + РІСЃРµ 4 С„РёРєСЃР°', () => {
+test('J08', 'Проект с DB + 10 узлов > синтаксис OK + все 4 фикса', () => {
   const nodes: any[] = [makeStartNode()];
   for (let i = 1; i <= 9; i++) {
-    nodes.push(makeMessageNode(`msg${i}`, `РЎРѕРѕР±С‰РµРЅРёРµ ${i}`));
+    nodes.push(makeMessageNode(`msg${i}`, `Сообщение ${i}`));
   }
   const p = makeCleanProject(nodes, true);
   const code = genDB(p, 'J08');
@@ -1300,7 +1298,7 @@ test('J08', 'РџСЂРѕРµРєС‚ СЃ DB + 10 СѓР·Р»РѕРІ в†’ СЃРёРЅС‚Р°РєСЃРёСЃ OK + РІСЃ
   syntax(code, 'J08');
 });
 
-test('J09', 'РџСЂРѕРµРєС‚ СЃ multi-sheet (РЅРµСЃРєРѕР»СЊРєРѕ Р»РёСЃС‚РѕРІ) в†’ РІСЃРµ 4 С„РёРєСЃР° РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‚', () => {
+test('J09', 'Проект с multi-sheet (несколько листов) > все 4 фикса присутствуют', () => {
   const p = {
     version: 2,
     activeSheetId: 'sheet1',
@@ -1308,31 +1306,31 @@ test('J09', 'РџСЂРѕРµРєС‚ СЃ multi-sheet (РЅРµСЃРєРѕР»СЊРєРѕ Р»РёСЃС‚РѕРІ) в†’ Р
     sheets: [
       {
         id: 'sheet1',
-        name: 'Р›РёСЃС‚ 1',
+        name: 'Лист 1',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         viewState: { zoom: 1, position: { x: 0, y: 0 } },
-        nodes: [makeStartNode(), makeMessageNode('msg1', 'Р›РёСЃС‚ 1')],
+        nodes: [makeStartNode(), makeMessageNode('msg1', 'Лист 1')],
       },
       {
         id: 'sheet2',
-        name: 'Р›РёСЃС‚ 2',
+        name: 'Лист 2',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         viewState: { zoom: 1, position: { x: 0, y: 0 } },
-        nodes: [makeCommandTriggerNode('cmd1', '/help', 'msg2'), makeMessageNode('msg2', 'РџРѕРјРѕС‰СЊ')],
+        nodes: [makeCommandTriggerNode('cmd1', '/help', 'msg2'), makeMessageNode('msg2', 'Помощь')],
       },
     ],
   };
   hasFourFixes(gen(p, 'J09'));
 });
 
-test('J10', 'Р¤РёРЅР°Р»СЊРЅС‹Р№ РјРµРіР°С‚РµСЃС‚: РІСЃРµ С‚РёРїС‹ + DB + adminOnly + requiresAuth в†’ СЃРёРЅС‚Р°РєСЃРёСЃ OK + РІСЃРµ 4 С„РёРєСЃР°', () => {
+test('J10', 'Финальный мегатест: все типы + DB + adminOnly + requiresAuth > синтаксис OK + все 4 фикса', () => {
   const start = makeStartNode();
   start.data = {
     ...start.data,
     keyboardType: 'inline',
-    buttons: [{ id: 'b1', text: 'Р”Р°Р»РµРµ', action: 'goto', target: 'msg1' }],
+    buttons: [{ id: 'b1', text: 'Далее', action: 'goto', target: 'msg1' }],
   } as any;
   const cmdAdmin = makeCommandTriggerNode('cmd_admin', '/admin', 'msg_admin');
   cmdAdmin.data = { ...cmdAdmin.data, adminOnly: true } as any;
@@ -1340,19 +1338,19 @@ test('J10', 'Р¤РёРЅР°Р»СЊРЅС‹Р№ РјРµРіР°С‚РµСЃС‚: РІСЃРµ С‚РёРїС‹ + DB + adminOn
   cmdAuth.data = { ...cmdAuth.data, requiresAuth: true } as any;
   const nodes: any[] = [
     start,
-    makeMessageNode('msg1', 'Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ! рџЋ‰'),
+    makeMessageNode('msg1', 'Добро пожаловать! ??'),
     cmdAdmin,
-    makeMessageNode('msg_admin', 'РџР°РЅРµР»СЊ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР°'),
+    makeMessageNode('msg_admin', 'Панель администратора'),
     cmdAuth,
-    makeMessageNode('msg_auth', 'Р’Р°С€ РїСЂРѕС„РёР»СЊ'),
-    makeTextTriggerNode('txt1', ['РїРѕРјРѕС‰СЊ', 'help', '?'], 'msg_help'),
-    makeMessageNode('msg_help', 'РЎРїСЂР°РІРєР° РїРѕ Р±РѕС‚Сѓ'),
+    makeMessageNode('msg_auth', 'Ваш профиль'),
+    makeTextTriggerNode('txt1', ['помощь', 'help', '?'], 'msg_help'),
+    makeMessageNode('msg_help', 'Справка по боту'),
     makeConditionNode('cond1', 'user_level', [
       { value: 'vip', targetNodeId: 'msg_vip' },
       { value: '__else__', targetNodeId: 'msg_regular' },
     ]),
-    makeMessageNode('msg_vip', 'в­ђ VIP-СЂР°Р·РґРµР»'),
-    makeMessageNode('msg_regular', 'РћР±С‹С‡РЅС‹Р№ СЂР°Р·РґРµР»'),
+    makeMessageNode('msg_vip', '? VIP-раздел'),
+    makeMessageNode('msg_regular', 'Обычный раздел'),
     makeMediaNode('media1', ['photo_id_welcome_banner']),
   ];
   const p = makeCleanProject(nodes, true);
@@ -1361,22 +1359,22 @@ test('J10', 'Р¤РёРЅР°Р»СЊРЅС‹Р№ РјРµРіР°С‚РµСЃС‚: РІСЃРµ С‚РёРїС‹ + DB + adminOn
   syntax(code, 'J10');
 });
 
-// в”Ђв”Ђв”Ђ РС‚РѕРі в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+// --- Итог --------------------------------------------------------------------
 
 const passed = results.filter(r => r.passed).length;
 const failed = results.filter(r => !r.passed).length;
 const total = results.length;
 
-console.log('\nв•”в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•—');
-const summary = `  РС‚РѕРі: ${passed}/${total} РїСЂРѕР№РґРµРЅРѕ  |  РџСЂРѕРІР°Р»РµРЅРѕ: ${failed}`;
+console.log('\nг==============================================================¬');
+const summary = `  Итог: ${passed}/${total} пройдено  |  Провалено: ${failed}`;
 const padding = ' '.repeat(Math.max(0, 62 - summary.length));
-console.log(`в•‘${summary}${padding}в•‘`);
-console.log('в•љв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ќ');
+console.log(`¦${summary}${padding}¦`);
+console.log('L==============================================================-');
 
 if (failed > 0) {
-  console.log('\nРџСЂРѕРІР°Р»РёРІС€РёРµСЃСЏ С‚РµСЃС‚С‹:');
+  console.log('\nПровалившиеся тесты:');
   results.filter(r => !r.passed).forEach(r => {
-    console.log(`  вќЊ ${r.id}. ${r.name}`);
+    console.log(`  ? ${r.id}. ${r.name}`);
     console.log(`     ${r.note}`);
   });
   process.exit(1);

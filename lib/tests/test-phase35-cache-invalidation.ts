@@ -86,8 +86,7 @@ function gen(project: any, label: string): string {
   return generatePythonCode(project, {
     botName: `CacheInv_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**

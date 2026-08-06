@@ -42,7 +42,7 @@ async function loadGenerator(): Promise<(data: any, opts: any) => string> {
  * 
  * @example
  * POST /api/projects/60/generate
- * Body: { userDatabaseEnabled: true, enableComments: false }
+ * Body: { userDatabaseEnabled: true, enableLogging: false }
  * 
  * Response: { code: "...", lines: 2157, generatedAt: 1234567890 }
  */
@@ -50,7 +50,7 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
   try {
     const projectId = parseInt(req.params.id, 10);
 
-    const { userDatabaseEnabled = false, enableComments = false, enableLogging = false } = req.body;
+    const { userDatabaseEnabled = false, enableLogging = false } = req.body;
 
     // Получаем проект из БД
     const project = await storage.getBotProject(projectId);
@@ -237,7 +237,6 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
     const code = generatePythonCode(botDataForGenerator, {
       botName: project.name,
       userDatabaseEnabled,
-      enableComments,
       enableLogging,
       projectId,
       catchAllHandlers,

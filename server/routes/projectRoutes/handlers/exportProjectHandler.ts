@@ -36,18 +36,11 @@ export async function exportProjectHandler(req: Request, res: Response): Promise
         const { generatePythonCode } = await import(modUrl.href);
 
         const userDatabaseEnabled = project.userDatabaseEnabled === 1;
-        const enableComments = false;
 
-        const pythonCode = generatePythonCode(
-            project.data as any,
-            project.name,
-            [],
+        const pythonCode = generatePythonCode(project.data as any, {
+            botName: project.name,
             userDatabaseEnabled,
-            null,
-            false,
-            false,
-            enableComments
-        );
+        });
 
         res.json({ code: pythonCode });
     } catch (error) {

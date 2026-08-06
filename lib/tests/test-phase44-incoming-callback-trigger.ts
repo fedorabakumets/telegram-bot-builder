@@ -51,8 +51,7 @@ function gen(project: unknown, label: string): string {
   return generatePythonCode(project as any, {
     botName: `PhaseICT_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**
@@ -440,7 +439,7 @@ test('B07', 'incoming_callback_trigger → message с Markdown → синтак�
 
 test('B08', 'incoming_callback_trigger → message с userDatabaseEnabled: true → синтаксис OK', () => {
   const p = makeCleanProject([makeIncomingCallbackTriggerNode('ict1', 'msg1'), makeMessageNode('msg1', 'Привет!')]);
-  const code = generatePythonCode(p as any, { botName: 'PhaseICT_b08', userDatabaseEnabled: true, enableComments: false });
+  const code = generatePythonCode(p as any, { botName: 'PhaseICT_b08', userDatabaseEnabled: true });
   syntax(code, 'b08');
 });
 
@@ -846,7 +845,7 @@ test('H03', 'incoming_callback_trigger → broadcast с userDatabaseEnabled: tru
     makeIncomingCallbackTriggerNode('ict1', 'bc1'),
     makeBroadcastNode('bc1'),
   ]);
-  const code = generatePythonCode(p as any, { botName: 'PhaseICT_h03', userDatabaseEnabled: true, enableComments: false });
+  const code = generatePythonCode(p as any, { botName: 'PhaseICT_h03', userDatabaseEnabled: true });
   syntax(code, 'h03');
 });
 
@@ -1322,7 +1321,7 @@ test('N06', 'incoming_callback_trigger → message с userDatabaseEnabled: true 
     makeIncomingCallbackTriggerNode('ict1', 'msg1'),
     makeMessageNode('msg1', 'Привет, {callback_data}!'),
   ]);
-  const code = generatePythonCode(p as any, { botName: 'PhaseICT_n06', userDatabaseEnabled: true, enableComments: false });
+  const code = generatePythonCode(p as any, { botName: 'PhaseICT_n06', userDatabaseEnabled: true });
   syntax(code, 'n06');
 });
 

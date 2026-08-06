@@ -146,8 +146,7 @@ function gen(project: any, label: string): string {
   return generatePythonCode(project, {
     botName: `PsqlQuery_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**
@@ -160,8 +159,7 @@ function genDB(project: any, label: string): string {
   return generatePythonCode(project, {
     botName: `PsqlQueryDB_${label}`,
     userDatabaseEnabled: true,
-    enableComments: false,
-  });
+    });
 }
 
 /**

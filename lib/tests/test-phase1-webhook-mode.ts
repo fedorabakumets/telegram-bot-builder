@@ -110,8 +110,7 @@ test('A01', 'без webhookUrl → dp.start_polling(bot) присутствуе�
   const code = generatePythonCode(p as any, {
     botName: 'PollingBot',
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
   ok(code.includes('dp.start_polling(bot)'), 'dp.start_polling(bot) должен быть в коде');
 });
 
@@ -120,8 +119,7 @@ test('A02', 'без webhookUrl → set_webhook находится только �
   const code = generatePythonCode(p as any, {
     botName: 'PollingBot',
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
   // set_webhook должен быть только внутри if WEBHOOK_URL: ветки
   const ifWebhookIdx = code.indexOf('if WEBHOOK_URL:');
   const setWebhookIdx = code.indexOf('set_webhook');
@@ -135,8 +133,7 @@ test('A03', 'без webhookUrl → SimpleRequestHandler находится то�
   const code = generatePythonCode(p as any, {
     botName: 'PollingBot',
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
   // SimpleRequestHandler должен быть только внутри if WEBHOOK_URL: ветки
   const ifWebhookIdx = code.indexOf('if WEBHOOK_URL:');
   const handlerIdx = code.indexOf('SimpleRequestHandler');
@@ -150,8 +147,7 @@ test('A04', 'без webhookUrl → WEBHOOK_URL = os.getenv присутству�
   const code = generatePythonCode(p as any, {
     botName: 'PollingBot',
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
   ok(code.includes('WEBHOOK_URL = os.getenv("WEBHOOK_URL")'), 'WEBHOOK_URL должен читаться из env');
 });
 
@@ -160,8 +156,7 @@ test('A05', 'без webhookUrl → WEBHOOK_PORT = int(os.getenv присутст
   const code = generatePythonCode(p as any, {
     botName: 'PollingBot',
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
   ok(code.includes('WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT"'), 'WEBHOOK_PORT должен читаться из env');
 });
 
@@ -176,7 +171,6 @@ test('B01', 'с webhookUrl → bot.set_webhook присутствует в main.
   const code = generatePythonCode(p as any, {
     botName: 'WebhookBot',
     userDatabaseEnabled: false,
-    enableComments: false,
     webhookUrl: 'https://example.com',
     webhookPort: 9123,
     projectId: 42,
@@ -189,7 +183,6 @@ test('B02', 'с webhookUrl → SimpleRequestHandler присутствует', (
   const code = generatePythonCode(p as any, {
     botName: 'WebhookBot',
     userDatabaseEnabled: false,
-    enableComments: false,
     webhookUrl: 'https://example.com',
     webhookPort: 9123,
     projectId: 42,
@@ -202,7 +195,6 @@ test('B03', 'с webhookUrl → web.TCPSite присутствует', () => {
   const code = generatePythonCode(p as any, {
     botName: 'WebhookBot',
     userDatabaseEnabled: false,
-    enableComments: false,
     webhookUrl: 'https://example.com',
     webhookPort: 9123,
     projectId: 42,
@@ -215,7 +207,6 @@ test('B04', 'с webhookUrl → WEBHOOK_URL = os.getenv присутствует 
   const code = generatePythonCode(p as any, {
     botName: 'WebhookBot',
     userDatabaseEnabled: false,
-    enableComments: false,
     webhookUrl: 'https://example.com',
     webhookPort: 9123,
     projectId: 42,
@@ -228,7 +219,6 @@ test('B05', 'с webhookUrl → WEBHOOK_PORT = int(os.getenv присутству
   const code = generatePythonCode(p as any, {
     botName: 'WebhookBot',
     userDatabaseEnabled: false,
-    enableComments: false,
     webhookUrl: 'https://example.com',
     webhookPort: 9123,
     projectId: 42,
@@ -241,7 +231,6 @@ test('B06', 'с webhookUrl → dp.start_polling находится в else ве�
   const code = generatePythonCode(p as any, {
     botName: 'WebhookBot',
     userDatabaseEnabled: false,
-    enableComments: false,
     webhookUrl: 'https://example.com',
     webhookPort: 9123,
     projectId: 42,
@@ -264,7 +253,6 @@ test('C01', 'путь вебхука содержит PROJECT_ID', () => {
   const code = generatePythonCode(p as any, {
     botName: 'WebhookBot',
     userDatabaseEnabled: false,
-    enableComments: false,
     webhookUrl: 'https://example.com',
     webhookPort: 9001,
     projectId: 77,
@@ -277,7 +265,6 @@ test('C02', 'путь вебхука содержит TOKEN_ID', () => {
   const code = generatePythonCode(p as any, {
     botName: 'WebhookBot',
     userDatabaseEnabled: false,
-    enableComments: false,
     webhookUrl: 'https://example.com',
     webhookPort: 9001,
     projectId: 77,
@@ -290,7 +277,6 @@ test('C03', 'путь вебхука содержит /api/webhook/', () => {
   const code = generatePythonCode(p as any, {
     botName: 'WebhookBot',
     userDatabaseEnabled: false,
-    enableComments: false,
     webhookUrl: 'https://example.com',
     webhookPort: 9001,
     projectId: 77,
@@ -309,7 +295,6 @@ test('D01', 'сгенерированный код содержит валида
   const code = generatePythonCode(p as any, {
     botName: 'WebhookBot',
     userDatabaseEnabled: false,
-    enableComments: false,
     webhookUrl: 'https://example.com',
     webhookPort: 9001,
     projectId: 77,
@@ -323,8 +308,7 @@ test('D02', 'в polling режиме условие валидации Redis п�
   const code = generatePythonCode(p as any, {
     botName: 'PollingBot',
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
   // Валидация всегда генерируется, но срабатывает только при WEBHOOK_URL
   // Проверяем что условие правильное — if WEBHOOK_URL and not REDIS_URL
   ok(code.includes('if WEBHOOK_URL and not REDIS_URL:'), 'условие валидации должно быть в коде');

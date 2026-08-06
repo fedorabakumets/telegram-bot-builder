@@ -52,8 +52,7 @@ function gen(project: unknown, label: string, userDb = false): string {
   return generatePythonCode(project as any, {
     botName: `PhaseEM_${label}`,
     userDatabaseEnabled: userDb,
-    enableComments: false,
-  });
+    });
 }
 
 /**

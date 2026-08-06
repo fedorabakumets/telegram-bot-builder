@@ -131,8 +131,6 @@ export interface TemplateRenderOptions {
   userDatabaseEnabled: boolean;
   /** ID проекта */
   projectId?: number | null;
-  /** Включить комментарии в коде */
-  enableComments: boolean;
   /** Включить логирование */
   enableLogging: boolean;
 }
@@ -148,7 +146,6 @@ export interface TemplateRenderOptions {
  *   botName: 'MyBot',
  *   nodes: [...],
  *   userDatabaseEnabled: true,
- *   enableComments: true,
  * })
  */
 export function renderBotTemplate(options: TemplateRenderOptions): string {
@@ -161,7 +158,6 @@ export function renderBotTemplate(options: TemplateRenderOptions): string {
     nodes: options.nodes,
     userDatabaseEnabled: options.userDatabaseEnabled,
     projectId: options.projectId,
-    enableComments: options.enableComments,
     enableLogging: options.enableLogging,
     botFatherCommands: formatBotFatherCommands(options.nodes),
     hasInlineButtons: options.nodes.some(hasInlineButtonsFilter),

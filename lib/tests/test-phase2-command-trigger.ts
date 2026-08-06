@@ -29,11 +29,11 @@ function makeCleanProject(nodes: any[]) {
 }
 
 function gen(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `Phase2_${label}`, userDatabaseEnabled: false, enableComments: false });
+  return generatePythonCode(project as any, { botName: `Phase2_${label}`, userDatabaseEnabled: false });
 }
 
 function genDB(project: unknown, label: string): string {
-  return generatePythonCode(project as any, { botName: `Phase2DB_${label}`, userDatabaseEnabled: true, enableComments: false });
+  return generatePythonCode(project as any, { botName: `Phase2DB_${label}`, userDatabaseEnabled: true });
 }
 
 function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {

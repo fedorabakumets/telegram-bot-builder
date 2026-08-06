@@ -18,7 +18,6 @@ export const botParamsSchema = z.object({
   nodes: z.array(botNodeSchema),
   userDatabaseEnabled: z.boolean().default(false),
   projectId: z.number().nullable().default(null),
-  enableComments: z.boolean().default(true),
   enableLogging: z.boolean().default(true),
   botFatherCommands: z.string().optional(),
   hasInlineButtons: z.boolean().default(false),

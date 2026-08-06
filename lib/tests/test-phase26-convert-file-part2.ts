@@ -106,8 +106,7 @@ function genDB(project: any, label: string): string {
   return generatePythonCode(project, {
     botName: `CF2DB_${label}`,
     userDatabaseEnabled: true,
-    enableComments: false,
-  });
+    });
 }
 
 /**
@@ -120,8 +119,7 @@ function gen(project: any, label: string): string {
   return generatePythonCode(project, {
     botName: `CF2_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
-  });
+    });
 }
 
 /**

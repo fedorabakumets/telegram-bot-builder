@@ -107,7 +107,6 @@ function gen(
   const { userDatabaseEnabled = true, projectId = 263 } = opts;
   const options: any = {
     botName: `ContentCache_${label}`,
-    enableComments: false,
     userDatabaseEnabled,
     projectId,
   };

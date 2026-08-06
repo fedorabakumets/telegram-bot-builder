@@ -23,7 +23,6 @@ function gen(project: unknown, label: string, withContent = true): string {
   return generatePythonCode(project as any, {
     botName: `Phase30_${label}`,
     userDatabaseEnabled: withContent,
-    enableComments: false,
     projectId: withContent ? 245 : null,
   });
 }

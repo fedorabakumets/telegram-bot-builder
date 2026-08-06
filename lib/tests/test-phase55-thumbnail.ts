@@ -136,7 +136,6 @@ function gen(project: any, label: string, opts: {
   return generatePythonCode(project, {
     botName: `Thumb_${label}`,
     userDatabaseEnabled: false,
-    enableComments: false,
     ...opts,
   });
 }

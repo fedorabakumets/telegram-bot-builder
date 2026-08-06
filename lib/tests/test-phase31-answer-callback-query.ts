@@ -45,8 +45,7 @@ function gen(project: unknown, label: string, userDb = false): string {
   return generatePythonCode(project as any, {
     botName: `PhaseACQ_${label}`,
     userDatabaseEnabled: userDb,
-    enableComments: false,
-  });
+    });
 }
 
 /**
