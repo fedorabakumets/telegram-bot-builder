@@ -6,6 +6,7 @@ import { restoreRunningBots } from "./bots/restoreRunningBots";
 import { reconcileOrphanLaunchHistories } from "./bots/reconcileLaunchHistory";
 import { workerManager } from "./bots/botWorkerManager";
 import { findActiveProcessForToken } from "./utils/findActiveProcessForToken";
+import { apiNotFoundHandler } from "./middleware/apiNotFoundHandler";
 import { registerRoutes } from "./routes/routes";
 import { log, serveStatic, setupVite } from "./routes/vite";
 import { storage } from "./storages/storage";
@@ -112,6 +113,9 @@ app.use((req, res, next) => {
   const httpServer = createServer(app);
   await runMigrations();
   await registerRoutes(app, httpServer);
+
+  // Несуществующие /api/* → JSON 404, не SPA index.html (до Vite/static catch-all)
+  app.use("/api", apiNotFoundHandler);
 
   /**
    * Глобальный обработчик ошибок
