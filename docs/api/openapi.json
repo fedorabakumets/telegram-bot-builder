@@ -108,7 +108,7 @@
     },
     {
       "name": "workers",
-      "description": "Эндпоинты /api/workers"
+      "description": "Worker Pool — Python-воркеры и статистика запущенных ботов"
     }
   ],
   "paths": {
@@ -6008,16 +6008,94 @@
         "tags": [
           "workers"
         ],
-        "summary": "GET /api/workers/stats",
+        "summary": "Статистика Worker Pool",
+        "description": "Возвращает агрегированную статистику Python Worker Pool для **текущего пользователя**.\n\n**Модель:** один проект = один процесс `worker.py` (asyncio event loop), внутри — несколько ботов (по `tokenId`). Активен при `USE_WORKER_POOL !== 'false'` (по умолчанию включён).\n\n**Изоляция (IDOR):** в `details` только воркеры проектов, доступных владельцу/коллаборатору. Агрегаты `workers`, `totalBots`, `totalMemoryMb` пересчитываются после фильтрации. Внутренний `pid` процесса **не** возвращается.\n\n**Авторизация:** session cookie (`connect.sid`) или Bearer PAT (`agentToken`). Без личности → `401` (глобальный `requireApiAuth`).\n\n**Клиент:** компонент `WorkerPoolStatus` в панели бота опрашивает эндпоинт каждые 10 с и показывает бейдж «N воркеров · M ботов · RAM» (скрыт, если `workers === 0`).\n\n**Память:** `memoryMb` — RSS процесса воркера (Windows: `tasklist`, Linux/macOS: `ps`). При ошибке чтения памяти поле может быть `0`.\n\n**Пустой ответ (`workers: 0`):** нет запущенных ботов, воркеры уже завершили drain, или Worker Pool отключён в окружении.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Статистика воркеров владельца. Если активных воркеров нет — нули и пустой `details`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkerPoolStats"
+                },
+                "examples": {
+                  "active": {
+                    "summary": "Два проекта с ботами",
+                    "value": {
+                      "workers": 2,
+                      "totalBots": 3,
+                      "totalMemoryMb": 145,
+                      "details": [
+                        {
+                          "projectId": 266,
+                          "botsCount": 1,
+                          "memoryMb": 72
+                        },
+                        {
+                          "projectId": 42,
+                          "botsCount": 2,
+                          "memoryMb": 73
+                        }
+                      ]
+                    }
+                  },
+                  "empty": {
+                    "summary": "Нет активных воркеров",
+                    "value": {
+                      "workers": 0,
+                      "totalBots": 0,
+                      "totalMemoryMb": 0,
+                      "details": []
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован (нет session cookie и Bearer PAT)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка при чтении статистики воркеров",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkerStatsError"
+                },
+                "example": {
+                  "message": "Не удалось получить статистику воркеров"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено (/setup)"
+            "description": "Глобальный middleware `setupGuard`: приложение ещё не прошло первоначальную настройку (страница `/setup`). Не специфично для workers — так отвечают почти все `/api/*` до setup.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                },
+                "example": {
+                  "setupRequired": true,
+                  "message": "Приложение не настроено. Перейдите на /setup"
+                }
+              }
+            }
           }
         }
       }
@@ -7357,6 +7435,103 @@
         "required": [
           "name",
           "backend"
+        ]
+      },
+      "WorkerPoolDetail": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "integer",
+            "description": "ID проекта bot_projects",
+            "example": 266
+          },
+          "botsCount": {
+            "type": "integer",
+            "description": "Сколько tokenId сейчас в activeBots воркера",
+            "example": 2
+          },
+          "memoryMb": {
+            "type": "integer",
+            "description": "RSS процесса Python worker, округлённо в МБ",
+            "example": 72
+          }
+        },
+        "required": [
+          "projectId",
+          "botsCount",
+          "memoryMb"
+        ]
+      },
+      "WorkerPoolStats": {
+        "type": "object",
+        "properties": {
+          "workers": {
+            "type": "integer",
+            "example": 2
+          },
+          "totalBots": {
+            "type": "integer",
+            "example": 3
+          },
+          "totalMemoryMb": {
+            "type": "integer",
+            "example": 145
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkerPoolDetail"
+            },
+            "example": [
+              {
+                "projectId": 266,
+                "botsCount": 1,
+                "memoryMb": 72
+              },
+              {
+                "projectId": 42,
+                "botsCount": 2,
+                "memoryMb": 73
+              }
+            ]
+          }
+        },
+        "required": [
+          "workers",
+          "totalBots",
+          "totalMemoryMb",
+          "details"
+        ]
+      },
+      "WorkerStatsError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Не удалось получить статистику воркеров"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "SetupRequired": {
+        "type": "object",
+        "properties": {
+          "setupRequired": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "message": {
+            "type": "string",
+            "example": "Приложение не настроено. Перейдите на /setup"
+          }
+        },
+        "required": [
+          "setupRequired",
+          "message"
         ]
       },
       "BotTable": {

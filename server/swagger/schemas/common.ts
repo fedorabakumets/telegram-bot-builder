@@ -59,3 +59,15 @@ export const ForbiddenSchema = z
     message: z.string().openapi({ example: "Нет прав на удаление проекта" }),
   })
   .openapi("ForbiddenError");
+
+/** Ответ setupGuard — приложение ещё не настроено через /setup */
+export const SetupRequiredSchema = z
+  .object({
+    /** Флаг: нужна первоначальная настройка */
+    setupRequired: z.literal(true),
+    /** Подсказка для пользователя */
+    message: z.string().openapi({
+      example: "Приложение не настроено. Перейдите на /setup",
+    }),
+  })
+  .openapi("SetupRequired");
