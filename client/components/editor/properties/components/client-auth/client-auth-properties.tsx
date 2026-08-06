@@ -76,7 +76,7 @@ export function ClientAuthProperties({ node }: ClientAuthPropertiesProps) {
             <li>Credentials хранятся в таблице <code className="text-xs bg-blue-100 dark:bg-blue-900/40 px-1.5 py-0.5 rounded">user_telegram_settings</code></li>
             <li>Узел автоматически читает активную сессию из БД</li>
             <li>API ID/API Hash подставляются в сгенерированный код</li>
-            <li>Для настройки авторизации используйте панель "Настройки проекта"</li>
+            <li>Для настройки Telethon userbot откройте карточку бота → блок «Telethon Userbot»</li>
           </ol>
         </CardContent>
       </Card>

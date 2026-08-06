@@ -1,6 +1,6 @@
 # projects
 
-Эндпоинтов: **145**
+Эндпоинтов: **139**
 
 ### `GET` /api/projects
 
@@ -1204,20 +1204,6 @@ POST /api/projects/{projectId}/bot/set-group-title
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
 | 503 | Приложение не настроено (/setup) |
 
-### `POST` /api/projects/{projectId}/bot/set-group-username
-
-POST /api/projects/{projectId}/bot/set-group-username
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
 ### `POST` /api/projects/{projectId}/bot/unban-member
 
 POST /api/projects/{projectId}/bot/unban-member
@@ -1543,76 +1529,6 @@ GET /api/projects/{projectId}/nodes/{nodeId}
 ### `GET` /api/projects/{projectId}/storage-quota
 
 GET /api/projects/{projectId}/storage-quota
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
-### `POST` /api/projects/{projectId}/telegram-client/ban-member
-
-POST /api/projects/{projectId}/telegram-client/ban-member
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
-### `POST` /api/projects/{projectId}/telegram-client/demote-member
-
-POST /api/projects/{projectId}/telegram-client/demote-member
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
-### `POST` /api/projects/{projectId}/telegram-client/kick-member
-
-POST /api/projects/{projectId}/telegram-client/kick-member
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
-### `POST` /api/projects/{projectId}/telegram-client/promote-member
-
-POST /api/projects/{projectId}/telegram-client/promote-member
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
-
-### `POST` /api/projects/{projectId}/telegram-client/restrict-member
-
-POST /api/projects/{projectId}/telegram-client/restrict-member
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 

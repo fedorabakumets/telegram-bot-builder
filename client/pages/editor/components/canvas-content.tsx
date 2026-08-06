@@ -8,7 +8,6 @@
 
 import { Canvas } from '@/components/editor/canvas/canvas/canvas';
 import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
-import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import type { EditorTab } from '../types';
 import type { BotDataWithSheets, UserBotData, BotProject } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
@@ -153,14 +152,6 @@ export function CanvasContent(props: CanvasContentProps) {
           onOpenDialogPanel={props.onOpenDialogPanel}
           onOpenUserDetailsPanel={props.onOpenUserDetailsPanel}
         />
-      </div>
-    );
-  }
-
-  if (currentTab === 'groups') {
-    return (
-      <div className="h-full">
-        <GroupsPanel projectId={project?.id ?? 0} projectName={project?.name ?? ''} />
       </div>
     );
   }

@@ -7,4 +7,3 @@
 export { setGroupPhotoHandler } from "./setGroupPhoto.handler";
 export { setGroupTitleHandler } from "./setGroupTitle.handler";
 export { setGroupDescriptionHandler } from "./setGroupDescription.handler";
-export { setGroupUsernameHandler } from "./setGroupUsername.handler";

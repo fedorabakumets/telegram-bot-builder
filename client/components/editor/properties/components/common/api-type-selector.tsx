@@ -3,7 +3,7 @@
  *
  * Позволяет выбрать метод отправки сообщений:
  * - Bot API: стандартный метод через бота (ограничения Telegram)
- * - Client API: через личный аккаунт (требует авторизации во вкладке Telegram Client)
+ * - Client API: через userbot (настройка в карточке бота → Telethon Userbot)
  *
  * @module ApiTypeSelector
  */
@@ -78,8 +78,7 @@ export function ApiTypeSelector({ node, onUpdate }: ApiTypeSelectorProps) {
 
       {apiType === 'client' && (
         <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-          ⚠️ Требуется авторизация во вкладке{" "}
-          <Badge variant="outline" className="text-xs">Telegram Client</Badge>
+          ⚠️ Настройте Telethon Userbot в карточке бота (API ID, API Hash, авторизация по коду)
         </p>
       )}
     </div>

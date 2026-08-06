@@ -46,7 +46,6 @@ import { useNodeFocus } from '@/pages/editor/hooks/use-node-focus';
 import { useDialogPanel } from '@/pages/editor/hooks/use-dialog-panel';
 import { useProjectNavigation } from '@/pages/editor/hooks/use-project-navigation';
 import { SaveTemplateModal } from '@/components/editor/header/components/save-template-modal';
-import { TelegramClientConfig } from '@/components/editor/telegram-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
@@ -54,7 +53,6 @@ import { useLocation } from 'wouter';
 import { DialogPanel } from '@/components/editor/database/dialog/dialog-panel';
 import { UserMessagesLiveProvider } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 import { DialogsTabContent } from '@/components/editor/database/user-database/dialogs-tab/dialogs-tab-content';
-import { GroupsPanel } from '@/components/editor/groups/groups-panel';
 import { UserDatabasePanel } from '@/components/editor/database/user-database/user-database-panel';
 import { BroadcastPanel } from '@/components/editor/broadcast';
 import { AnalyticsPanel } from '@/components/editor/analytics';
@@ -1725,12 +1723,6 @@ export default function Editor() {
           )}
 
           {/* Остальные вкладки */}
-          {currentTab === 'groups' && (
-            <GroupsPanel
-              projectId={activeProject.id}
-              projectName={activeProject.name}
-            />
-          )}
           {currentTab === 'bot' && (
             <div className="h-full">
               <BotLayout
@@ -1860,13 +1852,6 @@ export default function Editor() {
                 projectId={activeProject.id}
                 onRestored={discardLocalChanges}
               />
-            </div>
-          )}
-          {currentTab === 'client-api' && (
-            <div className="h-full p-6 bg-background overflow-auto">
-              <div className="max-w-3xl mx-auto">
-                <TelegramClientConfig />
-              </div>
             </div>
           )}
           {currentTab === 'agent' && (
@@ -2178,13 +2163,6 @@ export default function Editor() {
                       setSelectedDatabaseTokenId(null);
                       setLocation(`/projects/${projectId}`);
                     }}
-                  />
-                </div>
-              ) : currentTab === 'groups' ? (
-                <div className="h-full">
-                  <GroupsPanel
-                    projectId={activeProject.id}
-                    projectName={activeProject.name}
                   />
                 </div>
               ) : currentTab === 'broadcast' ? (

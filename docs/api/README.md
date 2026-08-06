@@ -21,16 +21,13 @@ REST API визуального конструктора Telegram-ботов. А
 | [health](./health.md) | 1 |
 | [launch](./launch.md) | 1 |
 | [media](./media.md) | 13 |
-| [projects](./projects.md) | 145 |
+| [projects](./projects.md) | 139 |
 | [push-to-github](./push-to-github.md) | 1 |
 | [root](./root.md) | 1 |
 | [server](./server.md) | 1 |
 | [settings](./settings.md) | 1 |
 | [setup](./setup.md) | 2 |
 | [storage-configs](./storage-configs.md) | 5 |
-| [telegram-auth](./telegram-auth.md) | 12 |
-| [telegram-client](./telegram-client.md) | 1 |
-| [telegram-settings](./telegram-settings.md) | 1 |
 | [templates](./templates.md) | 16 |
 | [tokens](./tokens.md) | 4 |
 | [webhook](./webhook.md) | 1 |

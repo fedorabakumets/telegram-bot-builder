@@ -24,9 +24,8 @@ import { sendGroupMessageHandler, getGroupInfoHandler, getGroupMembersCountHandl
 import { checkMemberHandler, banMemberHandler, unbanMemberHandler, promoteMemberHandler, demoteMemberHandler } from "./botIntegration/groups/members";
 import { searchUserHandler } from "./botIntegration/user";
 import { restrictMemberHandler } from "./botIntegration/groups/members";
-import { setGroupPhotoHandler, setGroupTitleHandler, setGroupDescriptionHandler, setGroupUsernameHandler } from "./botIntegration/groups/settings";
+import { setGroupPhotoHandler, setGroupTitleHandler, setGroupDescriptionHandler } from "./botIntegration/groups/settings";
 import { pinMessageHandler, unpinMessageHandler, createInviteLinkHandler, deleteMessageHandler } from "./botIntegration/groups/moderation";
-import { telegramSettingsHandler, groupMembersHandler } from "./botIntegration/telegram";
 import { createBroadcastHandler, getBroadcastsHandler, getBroadcastDetailHandler, stopBroadcastHandler, previewAudienceHandler, deleteBroadcastHandler, editBroadcastHandler } from "./botIntegration/handlers/broadcasts";
 
 /**
@@ -47,7 +46,6 @@ import { createBroadcastHandler, getBroadcastsHandler, getBroadcastDetailHandler
  * - Маршруты для получения/обновления информации о боте
  * - Маршруты для работы с группами Telegram
  * - Маршруты для управления участниками группы
- * - Маршруты для работы с Telegram Client API
  */
 export function setupBotIntegrationRoutes(app: Express) {
     /**
@@ -264,9 +262,6 @@ export function setupBotIntegrationRoutes(app: Express) {
     // Установка описания группы
     app.post("/api/projects/:projectId/bot/set-group-description", requireProjectAccess, setGroupDescriptionHandler);
 
-    // Установка username группы (сделать публичной/приватной)
-    app.post("/api/projects/:projectId/bot/set-group-username", requireProjectAccess, setGroupUsernameHandler);
-
     // Закрепление сообщения в группе
     app.post("/api/projects/:projectId/bot/pin-message", requireProjectAccess, pinMessageHandler);
 
@@ -278,13 +273,6 @@ export function setupBotIntegrationRoutes(app: Express) {
 
     // Удаление сообщения в группе
     app.post("/api/projects/:projectId/bot/delete-message", requireProjectAccess, deleteMessageHandler);
-
-    // Конечные точки Telegram Client API
-    // Сохранение данных Telegram API пользователя
-    app.post("/api/telegram-settings", telegramSettingsHandler);
-
-    // Получение участников группы через Telegram Client API (общая база)
-    app.get("/api/telegram-client/group-members/:groupId", groupMembersHandler);
 
     // Рассылки
     app.get("/api/projects/:projectId/broadcasts", requireProjectAccess, getBroadcastsHandler);

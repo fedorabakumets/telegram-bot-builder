@@ -11,8 +11,6 @@ export type HeaderTab =
   | 'bot'
   | 'users'
   | 'dialogs'
-  | 'groups'
-  | 'client-api'
   | 'broadcast'
   | 'analytics'
   | 'tables'
