@@ -25,7 +25,6 @@ REST API визуального конструктора Telegram-ботов. А
 | [push-to-github](./push-to-github.md) | 1 |
 | [root](./root.md) | 1 |
 | [server](./server.md) | 1 |
-| [settings](./settings.md) | 1 |
 | [setup](./setup.md) | 2 |
 | [storage-configs](./storage-configs.md) | 5 |
 | [templates](./templates.md) | 16 |

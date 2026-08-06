@@ -131,7 +131,7 @@ export function useCodeGenerator({
       if (format === 'python' && mode === 'server' && projectId) {
         const data = await apiRequest('POST', `/api/projects/${projectId}/generate`, {
           userDatabaseEnabled,
-          enableComments: true,
+          enableComments: false,
           enableLogging: false,
         });
         return data.code;
@@ -145,7 +145,6 @@ export function useCodeGenerator({
         } catch {
           return '# Ошибка генерации\n# Модуль генератора недоступен в браузере';
         }
-        const storedComments = typeof window !== 'undefined' ? localStorage.getItem('botcraft-comments-generation') : null;
         return botGenerator.generatePythonCode(convertToSimple(botData) as any, {
           botName: projectName,
           groups: [],
@@ -153,7 +152,7 @@ export function useCodeGenerator({
           projectId,
           enableGroupHandlers: false,
           enableLogging: false,
-          enableComments: storedComments === 'true',
+          enableComments: false,
         });
       }
 

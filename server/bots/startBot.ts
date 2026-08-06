@@ -219,8 +219,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
     console.log(`   typeof project.userDatabaseEnabled:`, typeof project.userDatabaseEnabled);
 
     const userDatabaseEnabled = project.userDatabaseEnabled === 1;
-    // Получаем настройки генерации комментариев из переменной окружения (по умолчанию выключено)
-    const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION === 'true';
+    const enableComments = false;
     
     console.log(`🔧 Генерация кода бота:`);
     console.log(`   userDatabaseEnabled:`, userDatabaseEnabled);

@@ -206,11 +206,12 @@ const safeTokens = tokens.map(({ token, ...rest }) => ({
 |----------|------|------|
 | `GET /api/workers/stats` | setupBotManagementRoutes.ts | Утечка внутренней информации |
 | `GET /api/projects/import-from-files` | routes.ts | Импорт проектов без авторизации |
-| `POST /api/settings/comments-generation` | setupProjectRoutes.ts | Изменение настроек без авторизации |
 | `POST /api/bot-folders/cleanup` | setupProjectRoutes.ts | Удаление папок без авторизации |
-| `POST /api/telegram-settings` | routes.ts | Сохранение API credentials без авторизации |
 | `GET /api/tokens/:tokenId/bot-status` | setupBotManagementRoutes.ts | Статус чужого бота |
 | `GET /api/tokens/:tokenId/launch-history` | setupBotManagementRoutes.ts | История запусков чужого бота |
+
+**Resolved:** `POST /api/settings/comments-generation` — эндпоинт удалён (legacy enableComments API).
+**Resolved:** `POST /api/telegram-settings` — эндпоинт удалён (Studio Client API cleanup).
 
 **Решение:** Добавить `requireAuth` ко всем, `requireProjectAccess` где применимо.
 

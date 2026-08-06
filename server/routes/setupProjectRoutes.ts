@@ -29,7 +29,6 @@ import { exportProjectHandler } from "./projectRoutes/handlers/exportProjectHand
 import { duplicateProjectHandler } from "./projectRoutes/handlers/duplicateProjectHandler";
 import { getTokenHandler, clearTokenHandler } from "./projectRoutes/handlers/tokenHandlers";
 import { listBotTokensHandler } from "./projectRoutes/handlers/listBotTokensHandler";
-import { updateCommentsSettingsHandler } from "./projectRoutes/handlers/settingsHandler";
 import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHandler";
 import { cleanupOrphanedFoldersHandler } from "./projectManagement/handlers/cleanupOrphanedFoldersHandler";
 import { handleGenerateCode } from "./projects/generateCode";
@@ -81,9 +80,6 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
     // Безопасный список токенов проекта (без секрета token) — для дискавери MCP-агентом
     app.get("/api/projects/:id/tokens/list", requireDbReady, requireProjectAccess, listBotTokensHandler);
-
-    // Настройки генерации комментариев
-    app.post("/api/settings/comments-generation", updateCommentsSettingsHandler);
 
     // Управление ID администраторов бота
     app.get("/api/projects/:id/admin-ids", requireProjectAccess, getAdminIdsHandler);

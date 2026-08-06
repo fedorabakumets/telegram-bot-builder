@@ -36,7 +36,7 @@ export async function exportProjectHandler(req: Request, res: Response): Promise
         const { generatePythonCode } = await import(modUrl.href);
 
         const userDatabaseEnabled = project.userDatabaseEnabled === 1;
-        const enableComments = process.env.BOTCRAFT_COMMENTS_GENERATION === 'true';
+        const enableComments = false;
 
         const pythonCode = generatePythonCode(
             project.data as any,
