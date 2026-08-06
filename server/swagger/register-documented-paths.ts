@@ -34,6 +34,7 @@ import { registerDatabasePaths } from "./paths/database-paths";
 import { registerProjectsPaths } from "./paths/projects-paths";
 import { registerStorageConfigPaths } from "./paths/storage-config-paths";
 import { registerWorkerPaths } from "./paths/worker-paths";
+import { registerWebhookPaths } from "./paths/webhook-paths";
 
 /** Реестр Zod-схем и paths для генерации OpenAPI */
 export const documentedRegistry = new OpenAPIRegistry();
@@ -234,4 +235,5 @@ registerProjectsPaths(documentedRegistry, cookieSecurity);
 registerConfigSetupPaths(documentedRegistry, publicSecurity);
 registerStorageConfigPaths(documentedRegistry, cookieSecurity);
 registerWorkerPaths(documentedRegistry, cookieSecurity);
+registerWebhookPaths(documentedRegistry, publicSecurity);
 registerDatabasePaths(documentedRegistry, cookieSecurity);

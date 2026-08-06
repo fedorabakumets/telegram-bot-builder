@@ -33,7 +33,7 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   "agent-tokens": "Персональные токены агента (MCP/CLI)",
   workers: "Worker Pool — Python-воркеры и статистика запущенных ботов",
   "telegram-auth": "Авторизация Telegram Client API (userbot)",
-  webhook: "Webhook-эндпоинты Telegram",
+  webhook: "Входящие webhook-апдейты Telegram (публичный прокси в Python бота)",
   broadcasts: "Рассылки",
   groups: "Telegram-группы и модерация",
   github: "GitHub commit/push",

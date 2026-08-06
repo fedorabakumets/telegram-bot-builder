@@ -104,7 +104,7 @@
     },
     {
       "name": "webhook",
-      "description": "Webhook-эндпоинты Telegram"
+      "description": "Входящие webhook-апдейты Telegram (публичный прокси в Python бота)"
     },
     {
       "name": "workers",
@@ -5988,17 +5988,105 @@
         "tags": [
           "webhook"
         ],
-        "summary": "POST /api/webhook/{projectId}/{tokenId}",
+        "summary": "Приём апдейта Telegram (webhook режим)",
+        "description": "**Публичный** эндпоинт — Telegram Server API шлёт сюда POST без cookie и без PAT. Путь в allowlist `requireApiAuth` (`/webhook/`).\n\n**Когда используется:** только если токен бота в настройках запуска имеет `launchMode: webhook`. При старте бот регистрирует в Telegram URL:\n`{webhookBaseUrl}/api/webhook/{projectId}/{tokenId}`\n\n**Поток:**\n1. Telegram → POST этот URL с JSON Update\n2. Node.js (`setupWebhookRoutes`) проксирует body на `http://localhost:{9000+tokenId}/webhook`\n3. Python aiohttp + aiogram (`SimpleRequestHandler`) обрабатывает сценарий\n\n**UI:** превью URL в `BotLaunchSettings` (`buildWebhookPreview`).\n\n**Порт Python:** `9000 + tokenId` (константа `BASE_WEBHOOK_PORT` в `setupWebhookRoutes.ts`). В Worker Pool каждый бот внутри `worker.py` поднимает свой aiohttp на этом порту.\n\n**Ответ:** обычно **пустое body** — статус копируется с Python-сервера или `200` при ошибке прокси (чтобы Telegram не ретраил апдейт, если процесс бота недоступен).\n\n**Безопасность:** Node **не** проверяет `webhookSecretToken` из настроек токена — секрет можно задать только при `set_webhook` на стороне бота (отдельная задача). Не публикуйте URL без TLS на production.\n\n**Polling vs webhook:** при `launchMode: polling` этот URL не регистрируется в Telegram; эндпоинт может оставаться доступным, но апдейты не приходят.",
         "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта — часть публичного webhook URL",
+              "example": "266"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID токена — определяет порт Python (9000 + tokenId)",
+              "example": "233"
+            },
+            "required": true,
+            "name": "tokenId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelegramWebhookUpdate"
+              },
+              "examples": {
+                "textMessage": {
+                  "summary": "Текстовое сообщение",
+                  "value": {
+                    "update_id": 10000,
+                    "message": {
+                      "message_id": 1365,
+                      "date": 1441645532,
+                      "chat": {
+                        "id": 783828,
+                        "type": "private",
+                        "first_name": "User"
+                      },
+                      "text": "Привет"
+                    }
+                  }
+                },
+                "callbackQuery": {
+                  "summary": "Callback от inline-кнопки",
+                  "value": {
+                    "update_id": 10001,
+                    "callback_query": {
+                      "id": "99887766",
+                      "from": {
+                        "id": 783828,
+                        "is_bot": false,
+                        "first_name": "User"
+                      },
+                      "chat_instance": "123456789",
+                      "data": "btn_ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Апдейт принят. Body обычно пустое. При недоступном Python-боте Node всё равно отвечает 200 (защита от бесконечных ретраев Telegram). Статус может совпадать с ответом aiohttp."
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          "400": {
+            "description": "Некорректные `projectId` или `tokenId` в path (не число)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookBadParams"
+                },
+                "example": {
+                  "message": "Некорректные projectId или tokenId"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено (/setup)"
+            "description": "Глобальный `setupGuard` — приложение ещё не настроено через `/setup`. До завершения setup webhook с production не работает.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                },
+                "example": {
+                  "setupRequired": true,
+                  "message": "Приложение не настроено. Перейдите на /setup"
+                }
+              }
+            }
           }
         }
       }
@@ -7532,6 +7620,79 @@
         "required": [
           "setupRequired",
           "message"
+        ]
+      },
+      "WebhookBadParams": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Некорректные projectId или tokenId"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "TelegramWebhookUpdate": {
+        "type": "object",
+        "properties": {
+          "update_id": {
+            "type": "integer",
+            "example": 10000
+          },
+          "message": {
+            "type": "object",
+            "properties": {
+              "message_id": {
+                "type": "integer",
+                "example": 1365
+              },
+              "date": {
+                "type": "integer",
+                "example": 1441645532
+              },
+              "chat": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 783828
+                  },
+                  "type": {
+                    "type": "string",
+                    "example": "private"
+                  },
+                  "first_name": {
+                    "type": "string",
+                    "example": "User"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type"
+                ]
+              },
+              "text": {
+                "type": "string",
+                "example": "Привет"
+              }
+            },
+            "required": [
+              "message_id",
+              "date",
+              "chat"
+            ]
+          },
+          "callback_query": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            }
+          }
+        },
+        "required": [
+          "update_id"
         ]
       },
       "BotTable": {
