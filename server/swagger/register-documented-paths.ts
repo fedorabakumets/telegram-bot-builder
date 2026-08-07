@@ -30,6 +30,7 @@ import { registerBotUsersPaths } from "./paths/bot-users-paths";
 import { registerBotTokensPaths } from "./paths/bot-tokens-paths";
 import { registerBotStartOfflinePaths } from "./paths/bot-runtime-start-offline-paths";
 import { registerConfigSetupPaths } from "./paths/config-setup-paths";
+import { registerAdminAppSettingsPaths } from "./paths/admin-app-settings-paths";
 import { registerDatabasePaths } from "./paths/database-paths";
 import { registerProjectsPaths } from "./paths/projects-paths";
 import { registerStorageConfigPaths } from "./paths/storage-config-paths";
@@ -52,6 +53,13 @@ documentedRegistry.registerComponent("securitySchemes", "agentToken", {
   scheme: "bearer",
   bearerFormat: "PAT",
   description: "Персональный токен агента (MCP/CLI)",
+});
+
+documentedRegistry.registerComponent("securitySchemes", "adminCookie", {
+  type: "apiKey",
+  in: "cookie",
+  name: "admin_auth",
+  description: "Admin cookie после POST /admin/api/login (ADMIN_API_KEY)",
 });
 
 const cookieSecurity = [{ cookieAuth: [] as string[] }];
@@ -236,6 +244,7 @@ registerBotTokensPaths(documentedRegistry, cookieSecurity);
 registerBotStartOfflinePaths(documentedRegistry, cookieSecurity);
 registerProjectsPaths(documentedRegistry, cookieSecurity);
 registerConfigSetupPaths(documentedRegistry, publicSecurity);
+registerAdminAppSettingsPaths(documentedRegistry);
 registerStorageConfigPaths(documentedRegistry, cookieSecurity);
 registerWorkerPaths(documentedRegistry, cookieSecurity);
 registerWebhookPaths(documentedRegistry, publicSecurity);

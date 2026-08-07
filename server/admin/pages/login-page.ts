@@ -13,6 +13,10 @@ import type { Request, Response } from "express";
  */
 export function serveAdminLoginPage(req: Request, res: Response): void {
   const error = req.query.error === "1";
+  const setup = req.query.setup === "1";
+  const setupHint = setup
+    ? '<p class="hint">Первоначальная настройка: после входа откроется страница настроек приложения.</p>'
+    : "";
   res.type("html").send(`<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -31,6 +35,7 @@ export function serveAdminLoginPage(req: Request, res: Response): void {
     }
     h1 { margin: 0 0 .5rem; font-size: 1.35rem; }
     p { color: #8b949e; font-size: .9rem; margin: 0 0 1.5rem; }
+    .hint { color: #d29922; margin-bottom: 1rem; }
     label { display: block; font-size: .85rem; margin-bottom: .35rem; color: #8b949e; }
     input {
       width: 100%; padding: .65rem .75rem; border-radius: 8px; border: 1px solid #30363d;
@@ -48,6 +53,7 @@ export function serveAdminLoginPage(req: Request, res: Response): void {
   <form class="card" method="post" action="/admin/api/login">
     <h1>Admin</h1>
     <p>Панель оператора платформы. Введите ADMIN_API_KEY.</p>
+    ${setupHint}
     ${error ? '<div class="err">Неверный ключ доступа</div>' : ""}
     <label for="key">Ключ доступа</label>
     <input id="key" name="key" type="password" autocomplete="current-password" required autofocus />

@@ -1,15 +1,13 @@
 /**
- * @fileoverview OpenAPI paths для публичной конфигурации и setup wizard
+ * @fileoverview OpenAPI paths для публичной конфигурации и setup status
  * @module server/swagger/paths/config-setup-paths
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import {
   PublicConfigSchema,
-  SetupErrorSchema,
-  SetupPayloadSchema,
+  SetupBootstrapSchema,
   SetupStatusSchema,
-  SetupSuccessSchema,
 } from "../schemas/config";
 
 /**
@@ -45,11 +43,11 @@ export function registerConfigSetupPaths(
     tags: ["setup"],
     summary: "Статус первоначальной настройки",
     description:
-      "Публичный, **без сессии**. Показывает, пройден ли setup wizard.\n\n" +
-      "**Клиент:** `SetupGuard` → `useSetupStatus()` при старте приложения.\n\n" +
-      "`configured=false` в production (все три ключа в `app_settings`: client_id, client_secret, bot_username) — " +
-      "UI редиректит на `/setup`, `setupGuard` отвечает 503 на остальные `/api/*`.\n\n" +
-      "В `NODE_ENV=development` или при `SKIP_AUTH !== false` всегда `configured=true` (dev bypass).",
+      "Публичный, **без сессии**. Показывает, завершён ли platform setup.\n\n" +
+      "**Клиент:** `SetupGuard` → bootstrap/status при старте.\n\n" +
+      "`configured=false` в production — UI редиректит в `/admin`, `setupGuard` отвечает 503 на остальные `/api/*`.\n\n" +
+      "В `NODE_ENV=development` или при `SKIP_AUTH !== false` всегда `configured=true` (dev bypass), " +
+      "если не задан `SETUP_WIZARD_STRICT=true`.",
     security: publicSecurity,
     responses: {
       200: {
@@ -60,39 +58,18 @@ export function registerConfigSetupPaths(
   });
 
   registry.registerPath({
-    method: "post",
-    path: "/api/setup",
+    method: "get",
+    path: "/api/setup/bootstrap",
     tags: ["setup"],
-    summary: "Первоначальная настройка приложения",
+    summary: "Bootstrap first-run (configured + adminEnabled)",
     description:
-      "Публичный, **без сессии**. Однократная инициализация: сохраняет Telegram credentials в `app_settings`.\n\n" +
-      "**Клиент:** форма на `/setup` → `POST /api/setup` → редирект на `/projects`.\n\n" +
-      "`telegram_client_secret` сохраняется для проверки `isConfigured()`; Login Widget верифицирует hash от Telegram, " +
-      "не client_secret. Изменение после setup — через `.env` / будущий `/admin/settings`.\n\n" +
-      "Опциональный `telegramBotToken` нужен для Mini App auth (`POST /api/auth/telegram/miniapp`). " +
-      "Если не передан — существующий token в БД не удаляется.",
+      "Публичный, **без сессии**. Для клиента при first-run: `configured` и доступность `/admin` (`adminEnabled`).\n\n" +
+      "Настройка платформы — через `/admin/login` → `/admin/settings` (не публичный wizard).",
     security: publicSecurity,
-    request: {
-      body: {
-        content: { "application/json": { schema: SetupPayloadSchema } },
-      },
-    },
     responses: {
-      201: {
-        description: "Настройки сохранены",
-        content: { "application/json": { schema: SetupSuccessSchema } },
-      },
-      400: {
-        description: "Невалидное тело запроса",
-        content: { "application/json": { schema: SetupErrorSchema } },
-      },
-      409: {
-        description: "Приложение уже настроено",
-        content: { "application/json": { schema: SetupErrorSchema } },
-      },
-      500: {
-        description: "Внутренняя ошибка сервера",
-        content: { "application/json": { schema: SetupErrorSchema } },
+      200: {
+        description: "Bootstrap статус",
+        content: { "application/json": { schema: SetupBootstrapSchema } },
       },
     },
   });

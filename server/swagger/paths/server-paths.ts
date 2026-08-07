@@ -50,7 +50,7 @@ export function registerServerPaths(
         content: { "application/json": { schema: UnauthorizedSchema } },
       },
       503: {
-        description: "Приложение не прошло setup (/setup) — глобальный setupGuard",
+        description: "Приложение не прошло setup — глобальный setupGuard (настройка в /admin)",
       },
     },
   });

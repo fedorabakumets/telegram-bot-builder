@@ -19,33 +19,35 @@
 
 ---
 
-## 2. Решение — Setup Wizard
+## 2. Решение — first-run через Admin
 
 Флоу первого запуска:
 
 ```
 Первый запуск
     ↓
-GET /api/setup/status → { configured: false }
+GET /api/setup/bootstrap → { configured: false, adminEnabled: true }
     ↓
-AuthGuard / middleware → редирект на /setup
+SetupGuard → редирект /admin/login?setup=1
     ↓
-Страница /setup — форма + инструкция по BotFather
+/admin/settings — форма Telegram + инструкция BotFather
     ↓
-POST /api/setup → сохранение в app_settings
+PUT /admin/api/app-settings → сохранение в app_settings
     ↓
-Редирект на /projects
+Вход пользователей на /projects (Telegram Login)
 ```
+
+Если `ADMIN_API_KEY` не задан (production) — `SetupBlockedScreen` с инструкцией.
 
 Флоу повторного запуска:
 
 ```
-Повторный запуск
+GET /api/setup/bootstrap → { configured: true }
     ↓
-GET /api/setup/status → { configured: true }
-    ↓
-/setup → редирект на /projects (недоступна)
+SetupGuard → AuthGuard → приложение
 ```
+
+Публичный `POST /api/setup` и React wizard `/setup` **удалены** — настройка только через admin.
 
 ---
 

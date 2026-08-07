@@ -26,7 +26,7 @@ import { BotLogsProvider } from "./components/editor/bot/contexts/bot-logs-conte
 import { ActiveTerminalsProvider } from "./components/editor/bot/contexts/ActiveTerminalsContext";
 import { TerminalAutoRegister } from "./components/editor/bot/hooks/TerminalAutoRegister";
 import { ProjectsChangedListener } from "@/components/projects-changed-listener";
-import { SetupGuard, SetupRedirect } from "@/components/editor/setup";
+import { SetupGuard } from "@/components/editor/setup";
 import { NoProjectsScreen } from "@/components/editor/no-projects";
 import { useTelegramAuth } from "@/components/editor/header/hooks/use-telegram-auth";
 import { isGuest } from "@/types/telegram-user";
@@ -84,8 +84,7 @@ function ProjectsGuard({ children }: { children: React.ReactNode }) {
   // На этих страницах гард не блокирует
   const isExcluded =
     location.startsWith('/templates') ||
-    location.startsWith('/not-found') ||
-    location.startsWith('/setup');
+    location.startsWith('/not-found');
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['/api/projects/list', isGuestUser ? 'anon' : (user as { id: number }).id],
@@ -119,7 +118,6 @@ function Router() {
         <ProjectsChangedListener />
         <ProjectsGuard>
           <Switch>
-            <Route path="/setup" component={SetupRedirect} />
             <Route path="/projects" component={Home} />
             <Route path="/templates" component={TemplatesPage} />
             <Route path="/editor/:id" component={Editor} />

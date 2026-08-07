@@ -60,14 +60,14 @@ export const ForbiddenSchema = z
   })
   .openapi("ForbiddenError");
 
-/** Ответ setupGuard — приложение ещё не настроено через /setup */
+/** Ответ setupGuard — приложение ещё не настроено */
 export const SetupRequiredSchema = z
   .object({
     /** Флаг: нужна первоначальная настройка */
     setupRequired: z.literal(true),
     /** Подсказка для пользователя */
     message: z.string().openapi({
-      example: "Приложение не настроено. Перейдите на /setup",
+      example: "Приложение не настроено. Перейдите в /admin для настройки",
     }),
   })
   .openapi("SetupRequired");

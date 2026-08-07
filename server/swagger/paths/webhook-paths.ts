@@ -135,14 +135,14 @@ export function registerWebhookPaths(
       },
       503: {
         description:
-          "Глобальный `setupGuard` — приложение ещё не настроено через `/setup`. " +
-          "До завершения setup webhook с production не работает.",
+          "Глобальный `setupGuard` — приложение ещё не настроено. " +
+          "До завершения setup (через /admin) webhook с production не работает.",
         content: {
           "application/json": {
             schema: SetupRequiredSchema,
             example: {
               setupRequired: true,
-              message: "Приложение не настроено. Перейдите на /setup",
+              message: "Приложение не настроено. Перейдите в /admin для настройки",
             },
           },
         },

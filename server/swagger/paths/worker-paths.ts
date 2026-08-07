@@ -96,13 +96,13 @@ export function registerWorkerPaths(
       503: {
         description:
           "Глобальный middleware `setupGuard`: приложение ещё не прошло первоначальную настройку " +
-          "(страница `/setup`). Не специфично для workers — так отвечают почти все `/api/*` до setup.",
+          "(через `/admin`). Не специфично для workers — так отвечают почти все `/api/*` до setup.",
         content: {
           "application/json": {
             schema: SetupRequiredSchema,
             example: {
               setupRequired: true,
-              message: "Приложение не настроено. Перейдите на /setup",
+              message: "Приложение не настроено. Перейдите в /admin для настройки",
             },
           },
         },

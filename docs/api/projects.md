@@ -14,7 +14,7 @@ GET /api/projects
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects
 
@@ -103,7 +103,7 @@ GET /api/projects/{id}/admin-ids
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{id}/admin-ids
 
@@ -117,7 +117,7 @@ PUT /api/projects/{id}/admin-ids
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/admin-ids/remove
 
@@ -131,7 +131,7 @@ POST /api/projects/{id}/admin-ids/remove
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{id}/bot/description
 
@@ -145,7 +145,7 @@ PUT /api/projects/{id}/bot/description
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/bot/info
 
@@ -159,7 +159,7 @@ GET /api/projects/{id}/bot/info
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{id}/bot/name
 
@@ -173,7 +173,7 @@ PUT /api/projects/{id}/bot/name
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/bot/restart
 
@@ -187,7 +187,7 @@ POST /api/projects/{id}/bot/restart
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/bot/restart-all
 
@@ -201,7 +201,7 @@ POST /api/projects/{id}/bot/restart-all
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{id}/bot/short-description
 
@@ -215,7 +215,7 @@ PUT /api/projects/{id}/bot/short-description
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/bot/start
 
@@ -229,7 +229,7 @@ POST /api/projects/{id}/bot/start
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/bot/stop
 
@@ -243,7 +243,7 @@ POST /api/projects/{id}/bot/stop
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/duplicate
 
@@ -277,7 +277,7 @@ POST /api/projects/{id}/export
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/generate
 
@@ -291,7 +291,7 @@ POST /api/projects/{id}/generate
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/groups
 
@@ -305,7 +305,7 @@ GET /api/projects/{id}/groups
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/groups
 
@@ -319,7 +319,7 @@ POST /api/projects/{id}/groups
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/launches/all
 
@@ -333,7 +333,7 @@ GET /api/projects/{id}/launches/all
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/logs/all
 
@@ -347,7 +347,7 @@ GET /api/projects/{id}/logs/all
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/messages/activity
 
@@ -361,7 +361,7 @@ GET /api/projects/{id}/messages/activity
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/messages/all
 
@@ -375,7 +375,7 @@ GET /api/projects/{id}/messages/all
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/responses
 
@@ -389,7 +389,7 @@ GET /api/projects/{id}/responses
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/tables
 
@@ -403,7 +403,7 @@ POST /api/projects/{id}/tables
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{id}/tables/{tableId}
 
@@ -417,7 +417,7 @@ DELETE /api/projects/{id}/tables/{tableId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{id}/tables/{tableId}
 
@@ -431,7 +431,7 @@ PUT /api/projects/{id}/tables/{tableId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/tables/{tableId}/columns
 
@@ -445,7 +445,7 @@ GET /api/projects/{id}/tables/{tableId}/columns
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/tables/{tableId}/columns
 
@@ -459,7 +459,7 @@ POST /api/projects/{id}/tables/{tableId}/columns
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{id}/tables/{tableId}/columns/{columnId}
 
@@ -473,7 +473,7 @@ DELETE /api/projects/{id}/tables/{tableId}/columns/{columnId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{id}/tables/{tableId}/columns/{columnId}
 
@@ -487,7 +487,7 @@ PUT /api/projects/{id}/tables/{tableId}/columns/{columnId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/tables/{tableId}/rows
 
@@ -501,7 +501,7 @@ GET /api/projects/{id}/tables/{tableId}/rows
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/tables/{tableId}/rows
 
@@ -515,7 +515,7 @@ POST /api/projects/{id}/tables/{tableId}/rows
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{id}/tables/{tableId}/rows/{rowId}
 
@@ -529,7 +529,7 @@ DELETE /api/projects/{id}/tables/{tableId}/rows/{rowId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{id}/tables/{tableId}/rows/{rowId}
 
@@ -543,7 +543,7 @@ PUT /api/projects/{id}/tables/{tableId}/rows/{rowId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/tables/{tableId}/rows/reindex
 
@@ -557,7 +557,7 @@ POST /api/projects/{id}/tables/{tableId}/rows/reindex
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{id}/token
 
@@ -571,7 +571,7 @@ DELETE /api/projects/{id}/token
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/token
 
@@ -585,7 +585,7 @@ GET /api/projects/{id}/token
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/tokens
 
@@ -599,7 +599,7 @@ GET /api/projects/{id}/tokens
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/tokens
 
@@ -613,7 +613,7 @@ POST /api/projects/{id}/tokens
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{id}/tokens/{tokenId}
 
@@ -627,7 +627,7 @@ PUT /api/projects/{id}/tokens/{tokenId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{id}/tokens/{tokenId}/bot-info
 
@@ -641,7 +641,7 @@ PUT /api/projects/{id}/tokens/{tokenId}/bot-info
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/tokens/default
 
@@ -655,7 +655,7 @@ GET /api/projects/{id}/tokens/default
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/tokens/first
 
@@ -669,7 +669,7 @@ GET /api/projects/{id}/tokens/first
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/tokens/list
 
@@ -683,7 +683,7 @@ GET /api/projects/{id}/tokens/list
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/tokens/parse
 
@@ -697,7 +697,7 @@ POST /api/projects/{id}/tokens/parse
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{id}/users
 
@@ -711,7 +711,7 @@ DELETE /api/projects/{id}/users
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/users
 
@@ -765,7 +765,7 @@ GET /api/projects/{id}/users/growth
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/users/growth-by-source
 
@@ -779,7 +779,7 @@ GET /api/projects/{id}/users/growth-by-source
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/users/popular-buttons
 
@@ -793,7 +793,7 @@ GET /api/projects/{id}/users/popular-buttons
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/users/search
 
@@ -807,7 +807,7 @@ GET /api/projects/{id}/users/search
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/users/stats
 
@@ -821,7 +821,7 @@ GET /api/projects/{id}/users/stats
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/users/traffic
 
@@ -835,7 +835,7 @@ GET /api/projects/{id}/users/traffic
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/users/variables
 
@@ -849,7 +849,7 @@ GET /api/projects/{id}/users/variables
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/versions
 
@@ -880,7 +880,7 @@ DELETE /api/projects/{id}/versions/{versionId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{id}/versions/{versionId}
 
@@ -894,7 +894,7 @@ GET /api/projects/{id}/versions/{versionId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/versions/{versionId}/restore
 
@@ -908,7 +908,7 @@ POST /api/projects/{id}/versions/{versionId}/restore
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/versions/commit
 
@@ -922,7 +922,7 @@ POST /api/projects/{id}/versions/commit
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{id}/versions/prune
 
@@ -936,7 +936,7 @@ POST /api/projects/{id}/versions/prune
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/bot/admin-status/{groupId}
 
@@ -950,7 +950,7 @@ GET /api/projects/{projectId}/bot/admin-status/{groupId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/ban-member
 
@@ -964,7 +964,7 @@ POST /api/projects/{projectId}/bot/ban-member
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/bot/check-member/{groupId}/{userId}
 
@@ -978,7 +978,7 @@ GET /api/projects/{projectId}/bot/check-member/{groupId}/{userId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/create-invite-link
 
@@ -992,7 +992,7 @@ POST /api/projects/{projectId}/bot/create-invite-link
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/bot/data
 
@@ -1006,7 +1006,7 @@ GET /api/projects/{projectId}/bot/data
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/delete-message
 
@@ -1020,7 +1020,7 @@ POST /api/projects/{projectId}/bot/delete-message
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/demote-member
 
@@ -1034,7 +1034,7 @@ POST /api/projects/{projectId}/bot/demote-member
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/bot/group-admins/{groupId}
 
@@ -1048,7 +1048,7 @@ GET /api/projects/{projectId}/bot/group-admins/{groupId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/bot/group-info/{groupId}
 
@@ -1062,7 +1062,7 @@ GET /api/projects/{projectId}/bot/group-info/{groupId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/bot/group-members-count/{groupId}
 
@@ -1076,7 +1076,7 @@ GET /api/projects/{projectId}/bot/group-members-count/{groupId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/bot/group-members/{groupId}
 
@@ -1090,7 +1090,7 @@ GET /api/projects/{projectId}/bot/group-members/{groupId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/pin-message
 
@@ -1104,7 +1104,7 @@ POST /api/projects/{projectId}/bot/pin-message
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/promote-member
 
@@ -1118,7 +1118,7 @@ POST /api/projects/{projectId}/bot/promote-member
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/restrict-member
 
@@ -1132,7 +1132,7 @@ POST /api/projects/{projectId}/bot/restrict-member
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/bot/search-user/{query}
 
@@ -1146,7 +1146,7 @@ GET /api/projects/{projectId}/bot/search-user/{query}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/send-group-message
 
@@ -1160,7 +1160,7 @@ POST /api/projects/{projectId}/bot/send-group-message
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/set-group-description
 
@@ -1174,7 +1174,7 @@ POST /api/projects/{projectId}/bot/set-group-description
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/set-group-photo
 
@@ -1188,7 +1188,7 @@ POST /api/projects/{projectId}/bot/set-group-photo
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/set-group-title
 
@@ -1202,7 +1202,7 @@ POST /api/projects/{projectId}/bot/set-group-title
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/unban-member
 
@@ -1216,7 +1216,7 @@ POST /api/projects/{projectId}/bot/unban-member
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/bot/unpin-message
 
@@ -1230,7 +1230,7 @@ POST /api/projects/{projectId}/bot/unpin-message
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/broadcasts
 
@@ -1244,7 +1244,7 @@ GET /api/projects/{projectId}/broadcasts
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/broadcasts
 
@@ -1258,7 +1258,7 @@ POST /api/projects/{projectId}/broadcasts
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{projectId}/broadcasts/{broadcastId}
 
@@ -1272,7 +1272,7 @@ DELETE /api/projects/{projectId}/broadcasts/{broadcastId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/broadcasts/{broadcastId}
 
@@ -1286,7 +1286,7 @@ GET /api/projects/{projectId}/broadcasts/{broadcastId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/broadcasts/{broadcastId}
 
@@ -1300,7 +1300,7 @@ PUT /api/projects/{projectId}/broadcasts/{broadcastId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/broadcasts/{broadcastId}/stop
 
@@ -1314,7 +1314,7 @@ POST /api/projects/{projectId}/broadcasts/{broadcastId}/stop
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/broadcasts/preview-audience
 
@@ -1328,7 +1328,7 @@ POST /api/projects/{projectId}/broadcasts/preview-audience
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/collaborators
 
@@ -1342,7 +1342,7 @@ GET /api/projects/{projectId}/collaborators
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{projectId}/files
 
@@ -1356,7 +1356,7 @@ DELETE /api/projects/{projectId}/files
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/files
 
@@ -1370,7 +1370,7 @@ GET /api/projects/{projectId}/files
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/files
 
@@ -1384,7 +1384,7 @@ POST /api/projects/{projectId}/files
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{projectId}/groups/{groupId}
 
@@ -1398,7 +1398,7 @@ DELETE /api/projects/{projectId}/groups/{groupId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/groups/{groupId}
 
@@ -1412,7 +1412,7 @@ PUT /api/projects/{projectId}/groups/{groupId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/groups/{groupId}/messages
 
@@ -1426,7 +1426,7 @@ GET /api/projects/{projectId}/groups/{groupId}/messages
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/groups/{groupId}/saved-members
 
@@ -1440,7 +1440,7 @@ GET /api/projects/{projectId}/groups/{groupId}/saved-members
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/groups/{groupId}/sync
 
@@ -1454,7 +1454,7 @@ POST /api/projects/{projectId}/groups/{groupId}/sync
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/messages
 
@@ -1468,7 +1468,7 @@ POST /api/projects/{projectId}/messages
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{projectId}/messages/{messageId}
 
@@ -1482,7 +1482,7 @@ DELETE /api/projects/{projectId}/messages/{messageId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PATCH` /api/projects/{projectId}/messages/{messageId}
 
@@ -1496,7 +1496,7 @@ PATCH /api/projects/{projectId}/messages/{messageId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/nodes
 
@@ -1510,7 +1510,7 @@ GET /api/projects/{projectId}/nodes
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/nodes/{nodeId}
 
@@ -1524,7 +1524,7 @@ GET /api/projects/{projectId}/nodes/{nodeId}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/storage-quota
 
@@ -1538,7 +1538,7 @@ GET /api/projects/{projectId}/storage-quota
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/telegram-file
 
@@ -1552,7 +1552,7 @@ GET /api/projects/{projectId}/telegram-file
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/auto-restart
 
@@ -1566,7 +1566,7 @@ PUT /api/projects/{projectId}/tokens/{tokenId}/auto-restart
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/catch-all-handlers
 
@@ -1580,7 +1580,7 @@ PUT /api/projects/{projectId}/tokens/{tokenId}/catch-all-handlers
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/content-cache
 
@@ -1594,7 +1594,7 @@ PUT /api/projects/{projectId}/tokens/{tokenId}/content-cache
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/env-batch
 
@@ -1608,7 +1608,7 @@ PUT /api/projects/{projectId}/tokens/{tokenId}/env-batch
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/tokens/{tokenId}/env-variables
 
@@ -1622,7 +1622,7 @@ GET /api/projects/{projectId}/tokens/{tokenId}/env-variables
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/tokens/{tokenId}/env-variables
 
@@ -1636,7 +1636,7 @@ POST /api/projects/{projectId}/tokens/{tokenId}/env-variables
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}
 
@@ -1650,7 +1650,7 @@ DELETE /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}
 
@@ -1664,7 +1664,7 @@ PUT /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal
 
@@ -1678,7 +1678,7 @@ GET /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/launch-settings
 
@@ -1692,7 +1692,7 @@ PUT /api/projects/{projectId}/tokens/{tokenId}/launch-settings
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/log-level
 
@@ -1706,7 +1706,7 @@ PUT /api/projects/{projectId}/tokens/{tokenId}/log-level
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{projectId}/tokens/{tokenId}/logs
 
@@ -1720,7 +1720,7 @@ DELETE /api/projects/{projectId}/tokens/{tokenId}/logs
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/tokens/{tokenId}/logs
 
@@ -1734,7 +1734,7 @@ GET /api/projects/{projectId}/tokens/{tokenId}/logs
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/protect-content
 
@@ -1748,7 +1748,7 @@ PUT /api/projects/{projectId}/tokens/{tokenId}/protect-content
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/save-incoming-media
 
@@ -1762,7 +1762,7 @@ PUT /api/projects/{projectId}/tokens/{tokenId}/save-incoming-media
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/tokens/{tokenId}/set-default
 
@@ -1776,7 +1776,7 @@ POST /api/projects/{projectId}/tokens/{tokenId}/set-default
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/userbot
 
@@ -1790,7 +1790,7 @@ PUT /api/projects/{projectId}/tokens/{tokenId}/userbot
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/tokens/{tokenId}/userbot/send-code
 
@@ -1804,7 +1804,7 @@ POST /api/projects/{projectId}/tokens/{tokenId}/userbot/send-code
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in
 
@@ -1818,7 +1818,7 @@ POST /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa
 
@@ -1832,7 +1832,7 @@ POST /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{projectId}/users/{userId}
 
@@ -1920,7 +1920,7 @@ GET /api/projects/{projectId}/users/{userId}/avatar
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `DELETE` /api/projects/{projectId}/users/{userId}/messages
 
@@ -1934,7 +1934,7 @@ DELETE /api/projects/{projectId}/users/{userId}/messages
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/{projectId}/users/{userId}/messages
 
@@ -1948,7 +1948,7 @@ GET /api/projects/{projectId}/users/{userId}/messages
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/users/{userId}/send-message
 
@@ -1962,7 +1962,7 @@ POST /api/projects/{projectId}/users/{userId}/send-message
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `POST` /api/projects/{projectId}/users/{userId}/send-node-message
 
@@ -1976,7 +1976,7 @@ POST /api/projects/{projectId}/users/{userId}/send-node-message
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/import-from-files
 
@@ -1990,7 +1990,7 @@ GET /api/projects/import-from-files
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |
 
 ### `GET` /api/projects/list
 
@@ -2019,4 +2019,4 @@ PUT /api/projects/reorder
 |-----|----------|
 | 200 | Успешный ответ |
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено (/setup) |
+| 503 | Приложение не настроено — настройка в /admin |

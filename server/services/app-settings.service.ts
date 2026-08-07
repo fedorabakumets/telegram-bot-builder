@@ -10,6 +10,7 @@
 import { db } from "../database/db";
 import { appSettings } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { fetchBotUsernameFromToken } from "./telegram-bot-username";
 
 /** In-memory кэш настроек с TTL */
 const cache = new Map<string, { value: string; expiresAt: number }>();
@@ -17,14 +18,13 @@ const cache = new Map<string, { value: string; expiresAt: number }>();
 /** Время жизни записи в кэше — 60 секунд */
 const CACHE_TTL_MS = 60_000;
 
-/**
- * Обязательные ключи для проверки завершённости настройки приложения
- */
-const REQUIRED_KEYS = [
-  "telegram_client_id",
-  "telegram_client_secret",
-  "telegram_bot_username",
-] as const;
+/** Ключи Telegram Login / Mini App в app_settings */
+const TELEGRAM_KEYS = {
+  clientId: "telegram_client_id",
+  clientSecret: "telegram_client_secret",
+  botUsername: "telegram_bot_username",
+  botToken: "telegram_bot_token",
+} as const;
 
 /**
  * Маппинг ключей настроек на переменные окружения (fallback для старых деплоев)
@@ -130,33 +130,90 @@ export async function getAllSettings(): Promise<Record<string, string>> {
 }
 
 /**
- * Проверить, настроены ли все обязательные ключи приложения.
+ * Проверяет, задан ли непустой ключ настройки.
+ * @param value - Значение из getSetting
+ * @returns true если строка непустая
+ */
+function isNonEmptySetting(value: string | undefined): boolean {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+/**
+ * Резолвит username бота: из БД или через getMe по токену.
+ * @returns Username без @ или undefined
+ */
+export async function resolveBotUsername(): Promise<string | undefined> {
+  const storedUsername = await getSetting(TELEGRAM_KEYS.botUsername);
+  if (isNonEmptySetting(storedUsername)) {
+    return storedUsername!.replace(/^@/, "");
+  }
+
+  const token = await getSetting(TELEGRAM_KEYS.botToken);
+  if (!isNonEmptySetting(token)) return undefined;
+
+  return fetchBotUsernameFromToken(token!);
+}
+
+/**
+ * Проверяет, настроен ли провайдер Telegram Login.
+ * Требует client_id, client_secret и username (явный или из bot token).
+ * @returns true если Telegram auth готов к использованию
+ */
+export async function isTelegramAuthConfigured(): Promise<boolean> {
+  const [clientId, clientSecret, username] = await Promise.all([
+    getSetting(TELEGRAM_KEYS.clientId),
+    getSetting(TELEGRAM_KEYS.clientSecret),
+    resolveBotUsername(),
+  ]);
+
+  return (
+    isNonEmptySetting(clientId) &&
+    isNonEmptySetting(clientSecret) &&
+    isNonEmptySetting(username)
+  );
+}
+
+/**
+ * Проверить, завершена ли платформенная настройка (агрегатор провайдеров).
+ *
+ * Сейчас: только Telegram. При добавлении email/OAuth — расширить агрегатор.
  *
  * В режиме разработки (`NODE_ENV=development`) или при `SKIP_AUTH=true`
- * всегда возвращает `true`, чтобы не блокировать запуск при отсутствии настроек в БД.
+ * всегда возвращает `true`, если не задан `SETUP_WIZARD_STRICT=true`.
  *
- * В production считает приложение настроенным, если все три ключа
- * присутствуют и непустые: `telegram_client_id`, `telegram_client_secret`,
- * `telegram_bot_username`.
- *
- * @returns `true` если все обязательные ключи заданы (или режим разработки / SKIP_AUTH)
+ * @returns `true` если хотя бы один провайдер настроен (или dev bypass)
  */
 export async function isConfigured(): Promise<boolean> {
-  // В dev-режиме или при SKIP_AUTH считаем настроенным даже без данных в БД
-  if (process.env.NODE_ENV === "development" || process.env.SKIP_AUTH !== "false") {
+  if (isPlatformAuthBypassed()) {
     return true;
   }
-  const values = await Promise.all(REQUIRED_KEYS.map(getSetting));
-  return values.every((v) => typeof v === "string" && v.trim().length > 0);
+
+  return await isTelegramAuthConfigured();
 }
 
 /**
  * Проверяет, включён ли режим dev-login (SKIP_AUTH не равен false).
- *
  * @returns `true` если вход по Telegram ID без proof разрешён
  */
 export function isAuthSkipped(): boolean {
   return process.env.SKIP_AUTH !== "false";
+}
+
+/**
+ * Проверяет, включён ли строгий режим setup wizard (проверка БД даже в dev).
+ * @returns true если SETUP_WIZARD_STRICT=true
+ */
+export function isSetupWizardStrict(): boolean {
+  return process.env.SETUP_WIZARD_STRICT === "true";
+}
+
+/**
+ * Платформа считает setup завершённым без Telegram (dev bypass).
+ * @returns true если SKIP_AUTH или dev без SETUP_WIZARD_STRICT
+ */
+export function isPlatformAuthBypassed(): boolean {
+  if (isSetupWizardStrict()) return false;
+  return process.env.NODE_ENV === "development" || isAuthSkipped();
 }
 
 /**

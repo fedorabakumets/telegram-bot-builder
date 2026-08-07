@@ -237,6 +237,12 @@ export async function runMigrations(): Promise<void> {
     client.release();
   }
 
-  await seedSettingsFromEnv();
-  console.log("[Migrations] Seed настроек из env завершён");
+  if (process.env.SKIP_APP_SETTINGS_SEED === "true") {
+    console.log(
+      "[Migrations] Seed app_settings из env пропущен (SKIP_APP_SETTINGS_SEED=true)",
+    );
+  } else {
+    await seedSettingsFromEnv();
+    console.log("[Migrations] Seed настроек из env завершён");
+  }
 }

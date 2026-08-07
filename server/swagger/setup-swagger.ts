@@ -90,7 +90,7 @@ export function buildOpenApiDocument(app: Express): OpenApiDocument {
       responses: {
         "200": { description: "Успешный ответ" },
         "401": { description: "Требуется авторизация (сессия или Bearer PAT)" },
-        "503": { description: "Приложение не настроено (/setup)" },
+        "503": { description: "Приложение не настроено — настройка в /admin" },
       },
     };
   }

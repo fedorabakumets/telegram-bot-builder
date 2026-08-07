@@ -21,6 +21,11 @@ export const DRIZZLE_STUDIO_URL = "https://local.drizzle.studio";
 /** Базовые разделы admin hub */
 const BASE_ADMIN_SECTIONS: AdminSection[] = [
   {
+    title: "Настройки приложения",
+    description: "Telegram Login, Mini App и будущие провайдеры входа (email, OAuth).",
+    href: "/admin/settings",
+  },
+  {
     title: "Database Schema",
     description: "ER-диаграмма и описание таблиц из Drizzle-схемы (npm run docs:db).",
     href: "/admin/schema",

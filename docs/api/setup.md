@@ -2,30 +2,21 @@
 
 Эндпоинтов: **2**
 
-### `POST` /api/setup
+### `GET` /api/setup/bootstrap
 
-Первоначальная настройка приложения
+Bootstrap first-run (configured + adminEnabled)
 
 **Авторизация:** Публичный
 
-Публичный, **без сессии**. Однократная инициализация: сохраняет Telegram credentials в `app_settings`.
+Публичный, **без сессии**. Для клиента при first-run: `configured` и доступность `/admin` (`adminEnabled`).
 
-**Клиент:** форма на `/setup` → `POST /api/setup` → редирект на `/projects`.
-
-`telegram_client_secret` сохраняется для проверки `isConfigured()`; Login Widget верифицирует hash от Telegram, не client_secret. Изменение после setup — через `.env` / будущий `/admin/settings`.
-
-Опциональный `telegramBotToken` нужен для Mini App auth (`POST /api/auth/telegram/miniapp`). Если не передан — существующий token в БД не удаляется.
-
-**Тело запроса:** `SetupPayload`
+Настройка платформы — через `/admin/login` → `/admin/settings` (не публичный wizard).
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 201 | Настройки сохранены |
-| 400 | Невалидное тело запроса |
-| 409 | Приложение уже настроено |
-| 500 | Внутренняя ошибка сервера |
+| 200 | Bootstrap статус |
 
 ### `GET` /api/setup/status
 
@@ -33,13 +24,13 @@
 
 **Авторизация:** Публичный
 
-Публичный, **без сессии**. Показывает, пройден ли setup wizard.
+Публичный, **без сессии**. Показывает, завершён ли platform setup.
 
-**Клиент:** `SetupGuard` → `useSetupStatus()` при старте приложения.
+**Клиент:** `SetupGuard` → bootstrap/status при старте.
 
-`configured=false` в production (все три ключа в `app_settings`: client_id, client_secret, bot_username) — UI редиректит на `/setup`, `setupGuard` отвечает 503 на остальные `/api/*`.
+`configured=false` в production — UI редиректит в `/admin`, `setupGuard` отвечает 503 на остальные `/api/*`.
 
-В `NODE_ENV=development` или при `SKIP_AUTH !== false` всегда `configured=true` (dev bypass).
+В `NODE_ENV=development` или при `SKIP_AUTH !== false` всегда `configured=true` (dev bypass), если не задан `SETUP_WIZARD_STRICT=true`.
 
 #### Ответы
 

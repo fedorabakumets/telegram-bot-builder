@@ -5,6 +5,7 @@
 
 import type { Request, Response } from "express";
 import { getAdminHubSections } from "../admin-hub-sections";
+import { isConfigured, isPlatformAuthBypassed } from "../../services/app-settings.service";
 
 /**
  * Собирает HTML карточек разделов admin hub.
@@ -27,9 +28,15 @@ function renderAdminHubCards(): string {
  * Отдаёт hub админ-панели.
  * @param _req - Запрос Express
  * @param res - Ответ Express
- * @returns void
  */
-export function serveAdminHubPage(_req: Request, res: Response): void {
+export async function serveAdminHubPage(_req: Request, res: Response): Promise<void> {
+  const configured = await isConfigured();
+  const setupBanner = isPlatformAuthBypassed()
+    ? ""
+    : configured
+      ? ""
+      : `<div class="banner warn">Сначала <a href="/admin/settings">настройте Telegram Login</a> или включите SKIP_AUTH в .env для dev-login.</div>`;
+
   res.type("html").send(`<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -44,6 +51,8 @@ export function serveAdminHubPage(_req: Request, res: Response): void {
     h1 { margin: 0; font-size: 1.75rem; }
     .logout { color: #8b949e; text-decoration: none; font-size: .9rem; background: none; border: none; cursor: pointer; font-family: inherit; }
     .logout:hover { color: #f85149; }
+    .banner { padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: .9rem; background: #3d1300; border: 1px solid #d29922; }
+    .banner a { color: #58a6ff; }
     .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
     .card {
       display: block; padding: 1.25rem; border-radius: 12px; background: #161b22;
@@ -61,6 +70,7 @@ export function serveAdminHubPage(_req: Request, res: Response): void {
       <h1>Admin</h1>
       <form method="post" action="/admin/api/logout"><button class="logout" type="submit">Выйти</button></form>
     </div>
+    ${setupBanner}
     <div class="grid">${renderAdminHubCards()}</div>
   </div>
 </body>

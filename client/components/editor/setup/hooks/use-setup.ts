@@ -1,10 +1,9 @@
 /**
- * @fileoverview Хуки для работы с API настройки приложения
+ * @fileoverview Хуки для проверки статуса первоначальной настройки
  * @module components/editor/setup/hooks/use-setup
  */
 
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest, queryClient } from '@/queryClient';
+import { useQuery } from '@tanstack/react-query';
 
 /**
  * Статус настройки приложения
@@ -15,23 +14,29 @@ export interface SetupStatus {
 }
 
 /**
- * Данные для первоначальной настройки Telegram-интеграции
+ * Bootstrap-данные для first-run flow
  */
-export interface SetupPayload {
-  /** Client ID из настроек Web Login в BotFather */
-  telegramClientId: string;
-  /** Client Secret из настроек Web Login в BotFather */
-  telegramClientSecret: string;
-  /** Имя бота без символа @ */
-  telegramBotUsername: string;
-  /** Токен бота для Mini App авторизации (опционально) */
-  telegramBotToken?: string;
+export interface SetupBootstrap extends SetupStatus {
+  /** Доступен ли вход в /admin (ADMIN_API_KEY или dev-fallback) */
+  adminEnabled: boolean;
 }
 
 /**
- * Хук для получения статуса настройки приложения.
- * Выполняет GET-запрос на /api/setup/status.
+ * Хук для получения bootstrap статуса setup.
+ * Выполняет GET-запрос на /api/setup/bootstrap.
  *
+ * @returns Результат useQuery с configured и adminEnabled
+ */
+export function useSetupBootstrap() {
+  return useQuery<SetupBootstrap>({
+    queryKey: ['/api/setup/bootstrap'],
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+}
+
+/**
+ * Хук для получения статуса настройки (legacy, совместимость).
  * @returns Результат useQuery с полем configured
  */
 export function useSetupStatus() {
@@ -39,21 +44,5 @@ export function useSetupStatus() {
     queryKey: ['/api/setup/status'],
     staleTime: 5 * 60 * 1000,
     retry: false,
-  });
-}
-
-/**
- * Хук для сохранения настроек Telegram-интеграции.
- * Выполняет POST-запрос на /api/setup и инвалидирует кеш статуса.
- *
- * @returns Результат useMutation для отправки SetupPayload
- */
-export function useSetupMutation() {
-  return useMutation<SetupStatus, Error, SetupPayload>({
-    mutationFn: (payload: SetupPayload) =>
-      apiRequest('POST', '/api/setup', payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/setup/status'] });
-    },
   });
 }

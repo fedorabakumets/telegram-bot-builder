@@ -16,7 +16,7 @@ import { isConfigured } from "../services/app-settings.service";
  */
 const EXCLUDED_PATHS = [
   "/setup/status",
-  "/setup",
+  "/setup/bootstrap",
   "/config",
   "/health",
 ];
@@ -62,6 +62,6 @@ export async function setupGuard(
 
   res.status(503).json({
     setupRequired: true,
-    message: "Приложение не настроено. Перейдите на /setup",
+    message: "Приложение не настроено. Перейдите в /admin для настройки",
   });
 }
