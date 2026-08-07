@@ -243,21 +243,6 @@
     "author": ""
   },
   {
-    "path": "api/push-to-github",
-    "title": "push-to-github",
-    "excerpt": "Эндпоинтов: **1**",
-    "parts": [
-      "api",
-      "push-to-github"
-    ],
-    "folder_titles": {
-      "api": "Api"
-    },
-    "updated_at": "2026-07-04T19:32:54+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
     "path": "api/realtime-events",
     "title": "Realtime events (WebSocket)",
     "excerpt": "События проекта доставляются клиентам через terminal WebSocket и (между репликами Node) через Redis.",

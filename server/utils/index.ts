@@ -4,7 +4,6 @@ export { checkUrlAccessibility } from './checkUrlAccessibility';
 export { validateExternalUrl } from './validateExternalUrl';
 export { ensureDefaultProject } from './ensureDefaultProject';
 export { findActiveProcessForProject } from './findActiveProcessForProject';
-export { pushToGitHub } from './github-push';
 export { shutdownAllBots } from './graceful-shutdown';
 export { normalizeNodeData } from './normalizeNodeData';
 export { normalizeProjectData } from './normalizeProjectData';

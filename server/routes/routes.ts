@@ -55,7 +55,6 @@ import {
   buildGroupsSelectSql,
 } from "./botUsers/dialogListKind";
 import { setupBotIntegrationRoutes } from "./setupBotIntegrationRoutes";
-import { setupGithubPushRoute } from './setupGithubPushRoute';
 import { setupWebhookRoutes } from './setupWebhookRoutes';
 import { getRedisPublisher, waitForRedisInit } from "../redis/redisClient";
 import { setupProjectRoutes } from "./setupProjectRoutes";
@@ -3733,9 +3732,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
 
   // CRUD реестра хранилищ (/api/storage-configs)
   setupStorageConfigRoutes(app);
-
-  // GitHub push endpoint
-  setupGithubPushRoute(app);
 
   // Webhook роут: приём апдейтов от Telegram и проксирование в Python-процесс бота
   setupWebhookRoutes(app);
