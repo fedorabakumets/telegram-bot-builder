@@ -35,7 +35,6 @@ interface OpenApiDocument {
  * @returns Путь без префикса /api
  */
 function toApiRelativePath(fullPath: string): string {
-  if (fullPath === "/api") return "/";
   if (fullPath.startsWith("/api/")) return fullPath.slice(4);
   return fullPath;
 }

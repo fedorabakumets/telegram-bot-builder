@@ -35,8 +35,6 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   webhook: "Входящие webhook-апдейты Telegram (публичный прокси в Python бота)",
   broadcasts: "Рассылки",
   groups: "Telegram-группы и модерация",
-  github: "GitHub commit/push",
-  root: "Корень API",
 };
 
 /**
@@ -56,7 +54,6 @@ function toOpenApiPath(path: string): string {
 function inferTag(path: string): string {
   const segments = path.split("/").filter(Boolean);
   if (segments[0] !== "api") return "other";
-  if (segments.length === 1) return "root";
   return segments[1] ?? "other";
 }
 

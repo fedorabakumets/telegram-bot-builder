@@ -19,8 +19,6 @@ const EXCLUDED_PATHS = [
   "/setup",
   "/config",
   "/health",
-  "/",
-  "",
 ];
 
 /**

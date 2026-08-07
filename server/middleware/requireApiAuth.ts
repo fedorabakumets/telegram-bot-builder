@@ -25,9 +25,9 @@ const PUBLIC_PREFIXES = [
 ];
 
 /**
- * Публичные пути точного совпадения (корень API — health-check).
+ * Публичные пути точного совпадения.
  */
-const PUBLIC_EXACT = ["", "/"];
+const PUBLIC_EXACT: string[] = [];
 
 /**
  * Проверяет, относится ли путь к публичному allowlist.

@@ -22,7 +22,6 @@ REST API визуального конструктора Telegram-ботов. А
 | [launch](./launch.md) | 1 |
 | [media](./media.md) | 13 |
 | [projects](./projects.md) | 139 |
-| [root](./root.md) | 1 |
 | [server](./server.md) | 1 |
 | [setup](./setup.md) | 2 |
 | [storage-configs](./storage-configs.md) | 5 |

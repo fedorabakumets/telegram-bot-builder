@@ -51,10 +51,6 @@
       "description": "Проекты, версии, экспорт и дублирование"
     },
     {
-      "name": "root",
-      "description": "Корень API"
-    },
-    {
       "name": "server",
       "description": "Эндпоинты /api/server"
     },
@@ -84,26 +80,6 @@
     }
   ],
   "paths": {
-    "/api": {
-      "get": {
-        "tags": [
-          "root"
-        ],
-        "summary": "GET /api",
-        "security": [],
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
-          }
-        }
-      }
-    },
     "/api/agent-tokens": {
       "get": {
         "tags": [
@@ -1017,7 +993,7 @@
           "health"
         ],
         "summary": "Healthcheck компонентов",
-        "description": "Публичный эндпоинт. Проверяет готовность БД, шаблонов и Telegram-клиента.",
+        "description": "Публичный эндпоинт liveness/readiness. Используется UI (`ServerStatus`), Railway healthcheck и балансировщиками. Заменяет устаревший `GET /api`. Для проверки без JSON допустен `HEAD /api/health` (ответ 204).",
         "security": [],
         "responses": {
           "200": {
@@ -5928,10 +5904,6 @@
             "type": "boolean",
             "example": true
           },
-          "telegram": {
-            "type": "boolean",
-            "example": false
-          },
           "ready": {
             "type": "boolean",
             "example": true
@@ -5940,7 +5912,6 @@
         "required": [
           "database",
           "templates",
-          "telegram",
           "ready"
         ]
       },

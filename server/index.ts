@@ -81,7 +81,7 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       // Пропускаем логирование частых HEAD-запросов к /api и /api/health для уменьшения шума
-      if (req.method === "HEAD" && (path === "/api" || path === "/api/health")) {
+      if (req.method === "HEAD" && path === "/api/health") {
         return;
       }
 

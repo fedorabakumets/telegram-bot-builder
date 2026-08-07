@@ -479,16 +479,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Запускаем инициализацию в фоне без блокировки сервера
   initializeComponents();
 
-  // Simple API root endpoint for health checks
-  app.get("/api", (_req, res) => {
-    res.json({ status: "ok", ready: isDbReady });
-  });
-
-  app.head("/api", (_req, res) => {
-    res.sendStatus(204);
-  });
-
-  // API для проверки готовности компонентов
+  // API для проверки готовности компонентов (healthcheck для UI, Railway, балансировщиков)
   app.get("/api/health", (_req, res) => {
     res.json({
       database: isDbReady,

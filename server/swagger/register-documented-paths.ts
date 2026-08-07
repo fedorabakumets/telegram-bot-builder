@@ -61,7 +61,9 @@ documentedRegistry.registerPath({
   path: "/api/health",
   tags: ["health"],
   summary: "Healthcheck компонентов",
-  description: "Публичный эндпоинт. Проверяет готовность БД, шаблонов и Telegram-клиента.",
+  description:
+    "Публичный эндпоинт liveness/readiness. Используется UI (`ServerStatus`), Railway healthcheck и балансировщиками. " +
+    "Заменяет устаревший `GET /api`. Для проверки без JSON допустен `HEAD /api/health` (ответ 204).",
   security: publicSecurity,
   responses: {
     200: {

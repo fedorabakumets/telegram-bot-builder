@@ -258,21 +258,6 @@
     "author": ""
   },
   {
-    "path": "api/root",
-    "title": "root",
-    "excerpt": "Эндпоинтов: **1**",
-    "parts": [
-      "api",
-      "root"
-    ],
-    "folder_titles": {
-      "api": "Api"
-    },
-    "updated_at": "2026-07-04T19:32:54+03:00",
-    "tags": [],
-    "author": ""
-  },
-  {
     "path": "api/server",
     "title": "server",
     "excerpt": "Эндпоинтов: **1**",
