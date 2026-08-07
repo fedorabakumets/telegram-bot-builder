@@ -52,7 +52,7 @@
     },
     {
       "name": "server",
-      "description": "Эндпоинты /api/server"
+      "description": "Серверные переменные окружения (whitelist ключей для подстановки в env бота)"
     },
     {
       "name": "setup",
@@ -4982,16 +4982,36 @@
         "tags": [
           "server"
         ],
-        "summary": "GET /api/server/env-keys",
+        "summary": "Список серверных env-ключей для подстановки в бот",
+        "description": "Возвращает **только имена** переменных из whitelist серверного `process.env`, которые заданы и не пустые. **Значения не передаются** — секреты (DATABASE_URL, пароли PG и т.д.) не попадают в браузер.\n\n**Клиент:** вкладка «Переменные» у токена бота — `BotEnvPanel` и кнопка «Подставить из сервера» (`BotEnvServerVarsPopover`). UI подставляет в custom env синтаксис `${{KEY}}`; при генерации `.env` бота такие ссылки резолвятся из окружения Node-процесса на сервере.\n\n**Whitelist (фиксированный):** DATABASE_URL, REDIS_URL, WEBHOOK_BASE_URL, API_BASE_URL, NODE_ENV, PGHOST, PGPORT, PGDATABASE, PGUSER.\n\nВ `items` только ключи из whitelist, для которых `process.env[KEY]` определён и не пустой. Если переменная не задана на сервере — она не возвращается (UI показывает локальный дефолт без `${{…}}`).\n\nТребуется авторизация: сессионная cookie или Bearer PAT агента.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Доступные серверные ключи (без значений)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerEnvKeysResponse"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено (/setup)"
+            "description": "Приложение не прошло setup (/setup) — глобальный setupGuard"
           }
         }
       }
@@ -5001,17 +5021,58 @@
         "tags": [
           "setup"
         ],
-        "summary": "POST /api/setup",
+        "summary": "Первоначальная настройка приложения",
+        "description": "Публичный, **без сессии**. Однократная инициализация: сохраняет Telegram credentials в `app_settings`.\n\n**Клиент:** форма на `/setup` → `POST /api/setup` → редирект на `/projects`.\n\n`telegram_client_secret` сохраняется для проверки `isConfigured()`; Login Widget верифицирует hash от Telegram, не client_secret. Изменение после setup — через `.env` / будущий `/admin/settings`.\n\nОпциональный `telegramBotToken` нужен для Mini App auth (`POST /api/auth/telegram/miniapp`). Если не передан — существующий token в БД не удаляется.",
         "security": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupPayload"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Успешный ответ"
+          "201": {
+            "description": "Настройки сохранены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupSuccess"
+                }
+              }
+            }
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          "400": {
+            "description": "Невалидное тело запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено (/setup)"
+          "409": {
+            "description": "Приложение уже настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupError"
+                }
+              }
+            }
           }
         }
       }
@@ -5022,7 +5083,7 @@
           "setup"
         ],
         "summary": "Статус первоначальной настройки",
-        "description": "Публичный. Показывает, пройден ли setup wizard (telegram credentials в БД).",
+        "description": "Публичный, **без сессии**. Показывает, пройден ли setup wizard.\n\n**Клиент:** `SetupGuard` → `useSetupStatus()` при старте приложения.\n\n`configured=false` в production (все три ключа в `app_settings`: client_id, client_secret, bot_username) — UI редиректит на `/setup`, `setupGuard` отвечает 503 на остальные `/api/*`.\n\nВ `NODE_ENV=development` или при `SKIP_AUTH !== false` всегда `configured=true` (dev bypass).",
         "security": [],
         "responses": {
           "200": {
@@ -7240,6 +7301,66 @@
           "configured"
         ]
       },
+      "SetupSuccess": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
+      "SetupError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "telegramClientId обязателен"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "SetupPayload": {
+        "type": "object",
+        "properties": {
+          "telegramClientId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "example": "123456789"
+          },
+          "telegramClientSecret": {
+            "type": "string",
+            "example": "secret_from_botfather"
+          },
+          "telegramBotUsername": {
+            "type": "string",
+            "example": "my_bot"
+          },
+          "telegramBotToken": {
+            "type": "string",
+            "example": "123456:ABC-DEF"
+          }
+        },
+        "required": [
+          "telegramClientId",
+          "telegramClientSecret",
+          "telegramBotUsername"
+        ]
+      },
       "StorageConfigDto": {
         "type": "object",
         "properties": {
@@ -7536,6 +7657,52 @@
         },
         "required": [
           "update_id"
+        ]
+      },
+      "ServerEnvKeyItem": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "DATABASE_URL",
+              "REDIS_URL",
+              "WEBHOOK_BASE_URL",
+              "API_BASE_URL",
+              "NODE_ENV",
+              "PGHOST",
+              "PGPORT",
+              "PGDATABASE",
+              "PGUSER"
+            ],
+            "description": "Ключ из фиксированного whitelist. В ответ попадают только ключи, у которых в process.env есть непустое значение.",
+            "example": "DATABASE_URL"
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
+      "ServerEnvKeysResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServerEnvKeyItem"
+            },
+            "example": [
+              {
+                "key": "DATABASE_URL"
+              },
+              {
+                "key": "REDIS_URL"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items"
         ]
       },
       "BotTable": {

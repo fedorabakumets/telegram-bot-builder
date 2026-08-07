@@ -26,8 +26,7 @@ import { BotLogsProvider } from "./components/editor/bot/contexts/bot-logs-conte
 import { ActiveTerminalsProvider } from "./components/editor/bot/contexts/ActiveTerminalsContext";
 import { TerminalAutoRegister } from "./components/editor/bot/hooks/TerminalAutoRegister";
 import { ProjectsChangedListener } from "@/components/projects-changed-listener";
-import { SetupGuard } from "@/components/editor/setup";
-import { AuthGuard } from "@/components/editor/auth";
+import { SetupGuard, SetupRedirect } from "@/components/editor/setup";
 import { NoProjectsScreen } from "@/components/editor/no-projects";
 import { useTelegramAuth } from "@/components/editor/header/hooks/use-telegram-auth";
 import { isGuest } from "@/types/telegram-user";
@@ -83,7 +82,10 @@ function ProjectsGuard({ children }: { children: React.ReactNode }) {
   const isGuestUser = !user || isGuest(user);
 
   // На этих страницах гард не блокирует
-  const isExcluded = location.startsWith('/templates') || location.startsWith('/not-found');
+  const isExcluded =
+    location.startsWith('/templates') ||
+    location.startsWith('/not-found') ||
+    location.startsWith('/setup');
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['/api/projects/list', isGuestUser ? 'anon' : (user as { id: number }).id],
@@ -112,22 +114,21 @@ function ProjectsGuard({ children }: { children: React.ReactNode }) {
 function Router() {
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <AuthGuard>
-        <SetupGuard>
-          <TerminalAutoRegister />
-          <ProjectsChangedListener />
-          <ProjectsGuard>
-            <Switch>
-              <Route path="/projects" component={Home} />
-              <Route path="/templates" component={TemplatesPage} />
-              <Route path="/editor/:id" component={Editor} />
-              <Route path="/projects/:id" component={Editor} />
-              <Route path="/" component={Editor} />
-              <Route component={NotFound} />
-            </Switch>
-          </ProjectsGuard>
-        </SetupGuard>
-      </AuthGuard>
+      <SetupGuard>
+        <TerminalAutoRegister />
+        <ProjectsChangedListener />
+        <ProjectsGuard>
+          <Switch>
+            <Route path="/setup" component={SetupRedirect} />
+            <Route path="/projects" component={Home} />
+            <Route path="/templates" component={TemplatesPage} />
+            <Route path="/editor/:id" component={Editor} />
+            <Route path="/projects/:id" component={Editor} />
+            <Route path="/" component={Editor} />
+            <Route component={NotFound} />
+          </Switch>
+        </ProjectsGuard>
+      </SetupGuard>
     </Suspense>
   );
 }

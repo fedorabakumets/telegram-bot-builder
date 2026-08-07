@@ -35,7 +35,7 @@ export async function handleGetSetupStatus(
  *
  * POST /api/setup
  *
- * @param req - Объект запроса с телом `{ telegramClientId, telegramClientSecret, telegramBotUsername }`
+ * @param req - Объект запроса с телом SetupPayload (telegramClientId, telegramClientSecret, telegramBotUsername, опционально telegramBotToken)
  * @param res - Объект ответа
  * @returns 201 при успехе, 400 при невалидных данных, 409 если уже настроено, 500 при ошибке
  */
@@ -49,7 +49,7 @@ export async function handlePostSetup(
       return;
     }
 
-    const { telegramClientId, telegramClientSecret, telegramBotUsername } =
+    const { telegramClientId, telegramClientSecret, telegramBotUsername, telegramBotToken } =
       req.body;
 
     // Валидация telegramClientId — непустая строка или число
@@ -86,6 +86,13 @@ export async function handlePostSetup(
       "telegram_bot_username",
       telegramBotUsername.replace("@", "")
     );
+
+    if (
+      typeof telegramBotToken === "string" &&
+      telegramBotToken.trim() !== ""
+    ) {
+      await setSetting("telegram_bot_token", telegramBotToken.trim());
+    }
 
     res.status(201).json({ success: true });
   } catch (err) {

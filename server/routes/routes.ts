@@ -31,6 +31,7 @@ import { seedDefaultTemplates } from "../utils/seed-templates";
 import { storage } from "../storages/storage";
 import { authMiddleware, getOwnerIdFromRequest, requireAuth } from "../telegram/auth-middleware";
 import { setupGuard } from "../middleware/setup-guard";
+import { ALLOWED_SERVER_ENV_KEYS } from "../constants/allowed-server-env-keys";
 import { identifyAgent } from "../middleware/agentTokenMiddleware";
 import { requireApiAuth } from "../middleware/requireApiAuth";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
@@ -4261,21 +4262,13 @@ function setupTemplates(app: Express, requireDbReady: (_req: any, res: any, next
   });
 
   /**
-   * Получение списка доступных серверных переменных (только ключи, без значений)
-   * GET /api/server/env-keys
+   * Список ключей серверных переменных для подстановки в env бота (${{KEY}}).
+   * GET /api/server/env-keys — только имена из whitelist, без значений.
    */
   app.get("/api/server/env-keys", (_req, res) => {
-    /** Ключи из серверного окружения, доступные для подстановки */
-    const allowedKeys = [
-      'DATABASE_URL', 'REDIS_URL', 'WEBHOOK_BASE_URL',
-      'API_BASE_URL', 'NODE_ENV',
-      'PGHOST', 'PGPORT', 'PGDATABASE', 'PGUSER',
-    ];
-
-    /** Возвращаем только ключи (без значений — безопасность) */
-    const items = allowedKeys
-      .filter(key => process.env[key] !== undefined && process.env[key] !== '')
-      .map(key => ({ key }));
+    const items = ALLOWED_SERVER_ENV_KEYS
+      .filter((key) => process.env[key] !== undefined && process.env[key] !== '')
+      .map((key) => ({ key }));
 
     res.json({ items });
   });

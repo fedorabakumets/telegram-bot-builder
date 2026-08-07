@@ -5,6 +5,7 @@
 
 import type { ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { AuthGuard } from '@/components/editor/auth';
 import { useSetupStatus } from './hooks/use-setup';
 import { SetupPage } from './SetupPage';
@@ -30,6 +31,7 @@ interface SetupGuardProps {
  */
 export function SetupGuard({ children }: SetupGuardProps) {
   const { data, isLoading } = useSetupStatus();
+  const [location, navigate] = useLocation();
 
   if (isLoading) {
     return (
@@ -40,6 +42,14 @@ export function SetupGuard({ children }: SetupGuardProps) {
   }
 
   if (!data?.configured) {
+    if (location !== '/setup') {
+      navigate('/setup', { replace: true });
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
     return <SetupPage />;
   }
 

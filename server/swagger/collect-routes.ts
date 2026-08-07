@@ -32,6 +32,7 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   "storage-configs": "Реестр внешних хранилищ",
   "agent-tokens": "Персональные токены агента (MCP/CLI)",
   workers: "Worker Pool — Python-воркеры и статистика запущенных ботов",
+  server: "Серверные переменные окружения (whitelist ключей для подстановки в env бота)",
   webhook: "Входящие webhook-апдейты Telegram (публичный прокси в Python бота)",
   broadcasts: "Рассылки",
   groups: "Telegram-группы и модерация",
