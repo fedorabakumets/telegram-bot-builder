@@ -28,9 +28,9 @@ Bootstrap first-run (configured + adminEnabled)
 
 **Клиент:** `SetupGuard` → bootstrap/status при старте.
 
-`configured=false` в production — UI редиректит в `/admin`, `setupGuard` отвечает 503 на остальные `/api/*`.
+`configured=false` — UI редиректит в `/admin`, `setupGuard` отвечает 503 на остальные `/api/*`.
 
-В `NODE_ENV=development` или при `SKIP_AUTH !== false` всегда `configured=true` (dev bypass), если не задан `SETUP_WIZARD_STRICT=true`.
+При dev-login в `/admin/settings` (`auth_login_mode=dev_login`) — `configured=true` без BotFather.
 
 #### Ответы
 

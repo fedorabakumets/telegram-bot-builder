@@ -5,7 +5,7 @@
 
 import type { Request, Response } from "express";
 import { getAdminHubSections } from "../admin-hub-sections";
-import { isConfigured, isPlatformAuthBypassed } from "../../services/app-settings.service";
+import { isConfigured, isAuthSkippedSync } from "../../services/app-settings.service";
 
 /**
  * Собирает HTML карточек разделов admin hub.
@@ -31,11 +31,11 @@ function renderAdminHubCards(): string {
  */
 export async function serveAdminHubPage(_req: Request, res: Response): Promise<void> {
   const configured = await isConfigured();
-  const setupBanner = isPlatformAuthBypassed()
-    ? ""
-    : configured
+  const devLogin = isAuthSkippedSync();
+  const setupBanner =
+    devLogin || configured
       ? ""
-      : `<div class="banner warn">Сначала <a href="/admin/settings">настройте Telegram Login</a> или включите SKIP_AUTH в .env для dev-login.</div>`;
+      : `<div class="banner warn">Сначала <a href="/admin/settings">настройте вход</a> — dev-login или Telegram Widget.</div>`;
 
   res.type("html").send(`<!DOCTYPE html>
 <html lang="ru">

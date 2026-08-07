@@ -3,12 +3,7 @@
  * @module server/admin/pages/sections/auth-env-banner
  */
 
-import {
-  getAuthLoginMode,
-  isAuthSkippedSync,
-  isConfigured,
-  isSetupWizardStrict,
-} from "../../../services/app-settings.service";
+import { getAuthLoginMode, isConfigured } from "../../../services/app-settings.service";
 
 /**
  * HTML баннер с текущим режимом входа.
@@ -17,10 +12,8 @@ import {
  */
 export async function renderAuthEnvBanner(configured: boolean): Promise<string> {
   const loginMode = await getAuthLoginMode();
-  const devLogin = isAuthSkippedSync();
-  const strictWizard = isSetupWizardStrict();
 
-  if (devLogin && !strictWizard) {
+  if (loginMode === "dev_login") {
     return `
     <div class="banner info">
       <strong>Сейчас: dev-login</strong> — вход по Telegram ID, виджет и поля BotFather не нужны.
@@ -32,13 +25,12 @@ export async function renderAuthEnvBanner(configured: boolean): Promise<string> 
     return `
     <div class="banner ok">
       <strong>Сейчас: Telegram Login Widget</strong> — вход через кнопку Telegram на сайте.
-      ${strictWizard ? " (SETUP_WIZARD_STRICT в .env — тест production)" : ""}
     </div>`;
   }
 
   return `
     <div class="banner warn">
-      <strong>Нужна настройка Telegram Login</strong> — режим «${loginMode}» требует данные BotFather ниже.
+      <strong>Нужна настройка Telegram Login</strong> — заполните данные BotFather ниже.
       Или переключите на dev-login для локальной работы без виджета.
     </div>`;
 }

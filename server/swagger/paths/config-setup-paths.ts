@@ -45,9 +45,8 @@ export function registerConfigSetupPaths(
     description:
       "Публичный, **без сессии**. Показывает, завершён ли platform setup.\n\n" +
       "**Клиент:** `SetupGuard` → bootstrap/status при старте.\n\n" +
-      "`configured=false` в production — UI редиректит в `/admin`, `setupGuard` отвечает 503 на остальные `/api/*`.\n\n" +
-      "В `NODE_ENV=development` или при `SKIP_AUTH !== false` всегда `configured=true` (dev bypass), " +
-      "если не задан `SETUP_WIZARD_STRICT=true`.",
+      "`configured=false` — UI редиректит в `/admin`, `setupGuard` отвечает 503 на остальные `/api/*`.\n\n" +
+      "При dev-login в `/admin/settings` (`auth_login_mode=dev_login`) — `configured=true` без BotFather.",
     security: publicSecurity,
     responses: {
       200: {

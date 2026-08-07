@@ -252,23 +252,6 @@ export function isAuthSkipped(): boolean {
 }
 
 /**
- * Проверяет, включён ли строгий режим setup wizard (legacy env для тестов).
- * @returns true если SETUP_WIZARD_STRICT=true
- */
-export function isSetupWizardStrict(): boolean {
-  return process.env.SETUP_WIZARD_STRICT === "true";
-}
-
-/**
- * Платформа не требует Telegram credentials (dev-login в admin).
- * @returns true если достаточно dev-login
- */
-export function isPlatformAuthBypassed(): boolean {
-  if (isSetupWizardStrict()) return false;
-  return isAuthSkippedSync();
-}
-
-/**
  * Переносит значения из process.env в таблицу app_settings при первом запуске.
  *
  * Для каждого обязательного ключа: если значение есть в env, но отсутствует в БД —

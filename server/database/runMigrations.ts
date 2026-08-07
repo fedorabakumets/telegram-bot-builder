@@ -237,14 +237,8 @@ export async function runMigrations(): Promise<void> {
     client.release();
   }
 
-  if (process.env.SKIP_APP_SETTINGS_SEED === "true") {
-    console.log(
-      "[Migrations] Seed app_settings из env пропущен (SKIP_APP_SETTINGS_SEED=true)",
-    );
-  } else {
-    await seedSettingsFromEnv();
-    console.log("[Migrations] Seed настроек из env завершён");
-  }
+  await seedSettingsFromEnv();
+  console.log("[Migrations] Seed настроек из env завершён");
 
   const { refreshAuthLoginCache } = await import("../services/app-settings.service");
   await refreshAuthLoginCache();
