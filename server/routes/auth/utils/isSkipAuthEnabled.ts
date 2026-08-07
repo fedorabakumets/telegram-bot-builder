@@ -3,12 +3,14 @@
  * @module auth/utils/isSkipAuthEnabled
  */
 
+import { isAuthSkippedSync } from "../../../services/app-settings.service";
+
 /**
- * SKIP_AUTH включён по умолчанию (dev-login, форма Telegram ID).
- * Явно `SKIP_AUTH=false` — Telegram Login Widget и строгий proof в production.
+ * Dev-login включён, если в admin выбран режим dev_login
+ * (или SKIP_AUTH в env не равен false до первой настройки).
  *
  * @returns true если skip-auth активен
  */
 export function isSkipAuthEnabled(): boolean {
-  return process.env.SKIP_AUTH !== "false";
+  return isAuthSkippedSync();
 }

@@ -4,6 +4,8 @@
  */
 
 import { renderTelegramSettingsInstructions } from "./telegram-settings-instructions";
+import { renderAuthLoginModeSection } from "./auth-login-mode-section";
+import type { AuthLoginMode } from "../../../services/app-settings.service";
 
 /** Параметры отрисовки секции Telegram */
 export interface TelegramSectionProps {
@@ -19,10 +21,8 @@ export interface TelegramSectionProps {
   errorMessage?: string;
   /** Успешное сохранение */
   saved?: boolean;
-  /** Telegram Login обязателен для работы платформы */
-  telegramRequired: boolean;
-  /** SKIP_AUTH активен (dev-login) */
-  skipAuthEnabled: boolean;
+  /** Режим входа из admin */
+  loginMode: AuthLoginMode;
 }
 
 /**
@@ -31,14 +31,14 @@ export interface TelegramSectionProps {
  * @returns HTML фрагмент формы
  */
 function renderTelegramSettingsForm(props: TelegramSectionProps): string {
-  const required = props.telegramRequired;
-  const reqLabel = required
+  const widgetMode = props.loginMode === "telegram_widget";
+  const reqLabel = widgetMode
     ? '<span class="muted">(обязательно)</span>'
-    : '<span class="muted">(для production)</span>';
-  const secretReq = required
+    : '<span class="muted">(опционально)</span>';
+  const secretReq = widgetMode
     ? '<span class="muted">(обязательно при первой настройке)</span>'
-    : '<span class="muted">(если SKIP_AUTH=false)</span>';
-  const clientIdRequired = required ? "required" : "";
+    : '<span class="muted">(опционально)</span>';
+  const clientIdRequired = widgetMode ? "required" : "";
   const secretHint = props.clientSecretConfigured
     ? "Задан — оставьте пустым, чтобы не менять"
     : "Из BotFather → Web Login (не bot token!)";
@@ -46,23 +46,33 @@ function renderTelegramSettingsForm(props: TelegramSectionProps): string {
     ? "Задан — оставьте пустым, чтобы не менять"
     : "Опционально — Mini App в Telegram, не для виджета";
 
+  const clientIdPlaceholder = props.clientId
+    ? ""
+    : "Числовой Client ID из BotFather → Web Login";
+  const usernamePlaceholder = props.botUsername
+    ? ""
+    : "my_bot — без @, или из Bot Token";
+
   return `
     <div class="form-card">
-      <h3 class="form-card-title">Данные бота</h3>
-      <p class="form-card-desc muted small">
-        ${props.skipAuthEnabled
-          ? "Опционально при SKIP_AUTH — для production задайте SKIP_AUTH=false и заполните поля."
-          : "Заполни поля из BotFather (SKIP_AUTH=false — виджет обязателен)."}
-      </p>
       <form id="settings-form" class="fields">
+        ${renderAuthLoginModeSection({ loginMode: props.loginMode })}
+        <hr class="form-divider" />
+        <h3 class="form-card-title">Данные Telegram (для виджета)</h3>
+        <p class="form-card-desc muted small">
+          ${props.loginMode === "dev_login"
+            ? "Не обязательно при dev-login. Заполните перед переключением на Telegram Widget."
+            : "Обязательно: Client ID, Secret и username из BotFather."}
+        </p>
         <label for="clientId">Client ID ${reqLabel}</label>
-        <input id="clientId" name="clientId" type="text" ${clientIdRequired} value="${escapeAttr(props.clientId)}" />
+        <input id="clientId" name="clientId" type="text" ${clientIdRequired} value="${escapeAttr(props.clientId)}" placeholder="${escapeAttr(clientIdPlaceholder)}" />
+        <p class="field-hint muted small">Скопируй из @BotFather → Login Widget → OpenID (см. инструкцию справа).</p>
 
         <label for="clientSecret">Client Secret ${secretReq}</label>
         <input id="clientSecret" name="clientSecret" type="password" autocomplete="new-password" placeholder="${escapeAttr(secretHint)}" />
 
         <label for="botUsername">Bot Username <span class="muted">(опционально)</span></label>
-        <input id="botUsername" name="botUsername" type="text" value="${escapeAttr(props.botUsername)}" placeholder="без @ — или подставится из Bot Token" />
+        <input id="botUsername" name="botUsername" type="text" value="${escapeAttr(props.botUsername)}" placeholder="${escapeAttr(usernamePlaceholder)}" />
 
         <label for="botToken">Bot Token <span class="muted">(опционально)</span></label>
         <input id="botToken" name="botToken" type="password" autocomplete="new-password" placeholder="${escapeAttr(tokenHint)}" />
@@ -85,14 +95,15 @@ export function renderTelegramSettingsSection(
     ? `<div class="banner err">${escapeHtml(props.errorMessage)}</div>`
     : "";
   const savedBlock = props.saved
-    ? `<div class="banner ok">Настройка сохранена. <a href="/projects">Перейти к входу</a></div>`
+    ? `<div class="banner ok">Настройка сохранена. <a href="/">Перейти к входу</a></div>`
     : "";
 
   return `
   <section class="section" id="telegram">
     <h2>Telegram Login (OIDC)</h2>
     <p class="muted section-desc">
-      Нужен при <code>SKIP_AUTH=false</code> (вход через виджет). При <code>SKIP_AUTH</code> (dev-login по ID) — опционально.
+      Настройка входа через Telegram. <strong>Локально для себя</strong> — можно пропустить (dev-login).
+      <strong>Нужна перед production</strong>, если выкатываете сайт и делитесь ссылкой с друзьями или клиентами.
     </p>
     ${errorBlock}
     ${savedBlock}

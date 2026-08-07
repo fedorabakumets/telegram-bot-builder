@@ -5946,7 +5946,7 @@
           "admin"
         ],
         "summary": "Сохранить настройки приложения",
-        "description": "Upsert по секциям провайдеров. Пустой `clientSecret` / `botToken` не удаляет существующие значения. `botUsername` опционально — резолв через getMe при заданном token.",
+        "description": "Upsert по секциям `auth` (режим входа) и `telegram`. Пустой `clientSecret` / `botToken` не удаляет существующие значения. При `dev_login` поля Telegram необязательны. `botUsername` опционально — резолв через getMe при заданном token.",
         "security": [
           {
             "adminCookie": []
@@ -5977,16 +5977,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "telegram.clientId обязателен"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/SetupError"
                 }
               }
             }
@@ -5996,16 +5987,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "telegram.clientId обязателен"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/SetupError"
                 }
               }
             }
@@ -6015,16 +5997,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "telegram.clientId обязателен"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/SetupError"
                 }
               }
             }
@@ -7419,6 +7392,27 @@
           "adminEnabled"
         ]
       },
+      "AdminAuthSettings": {
+        "type": "object",
+        "properties": {
+          "loginMode": {
+            "type": "string",
+            "enum": [
+              "dev_login",
+              "telegram_widget"
+            ],
+            "example": "dev_login"
+          },
+          "devLoginEnabled": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "loginMode",
+          "devLoginEnabled"
+        ]
+      },
       "AdminTelegramProvider": {
         "type": "object",
         "properties": {
@@ -7457,6 +7451,9 @@
           "configured": {
             "type": "boolean"
           },
+          "auth": {
+            "$ref": "#/components/schemas/AdminAuthSettings"
+          },
           "providers": {
             "type": "object",
             "properties": {
@@ -7471,6 +7468,7 @@
         },
         "required": [
           "configured",
+          "auth",
           "providers"
         ]
       },
@@ -7485,6 +7483,9 @@
           },
           "configured": {
             "type": "boolean"
+          },
+          "auth": {
+            "$ref": "#/components/schemas/AdminAuthSettings"
           },
           "providers": {
             "type": "object",
@@ -7512,7 +7513,36 @@
         "required": [
           "success",
           "configured",
+          "auth",
           "providers"
+        ]
+      },
+      "SetupError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "telegram.clientId обязателен"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "AdminAuthSettingsPayload": {
+        "type": "object",
+        "properties": {
+          "loginMode": {
+            "type": "string",
+            "enum": [
+              "dev_login",
+              "telegram_widget"
+            ],
+            "example": "dev_login"
+          }
+        },
+        "required": [
+          "loginMode"
         ]
       },
       "AdminTelegramSettingsPayload": {
@@ -7546,13 +7576,13 @@
       "AdminAppSettingsPayload": {
         "type": "object",
         "properties": {
+          "auth": {
+            "$ref": "#/components/schemas/AdminAuthSettingsPayload"
+          },
           "telegram": {
             "$ref": "#/components/schemas/AdminTelegramSettingsPayload"
           }
-        },
-        "required": [
-          "telegram"
-        ]
+        }
       },
       "StorageConfigDto": {
         "type": "object",

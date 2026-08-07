@@ -5,10 +5,9 @@
 
 import type { Request, Response } from "express";
 import {
+  getAuthLoginMode,
   getSetting,
-  isAuthSkipped,
   isConfigured,
-  isPlatformAuthBypassed,
   resolveBotUsername,
 } from "../../services/app-settings.service";
 import { renderAuthEnvBanner } from "./sections/auth-env-banner";
@@ -30,7 +29,7 @@ export async function serveAdminSettingsPage(
   const clientSecret = await getSetting("telegram_client_secret");
   const botToken = await getSetting("telegram_bot_token");
   const configured = await isConfigured();
-  const telegramRequired = !isPlatformAuthBypassed();
+  const loginMode = await getAuthLoginMode();
 
   const errorMessage =
     typeof req.query.error === "string" ? req.query.error : undefined;
@@ -43,11 +42,10 @@ export async function serveAdminSettingsPage(
     botTokenConfigured: Boolean(botToken?.trim()),
     errorMessage,
     saved,
-    telegramRequired,
-    skipAuthEnabled: isAuthSkipped(),
+    loginMode,
   });
 
-  const envBanner = renderAuthEnvBanner(configured);
+  const envBanner = await renderAuthEnvBanner(configured);
 
   res.type("html").send(`<!DOCTYPE html>
 <html lang="ru">
@@ -81,6 +79,16 @@ export async function serveAdminSettingsPage(
     }
     .form-card-title { margin: 0; font-size: 1rem; }
     .form-card-desc { margin: 0.35rem 0 0.75rem; }
+    .form-divider { border: none; border-top: 1px solid #30363d; margin: 1.25rem 0; }
+    .auth-mode-block { margin-bottom: 0.5rem; }
+    .auth-mode-options { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem; }
+    .auth-mode-option {
+      display: flex; gap: 0.65rem; align-items: flex-start; cursor: pointer;
+      padding: 0.75rem; border-radius: 8px; border: 1px solid #30363d; background: #161b22;
+    }
+    .auth-mode-option input { margin-top: 0.2rem; flex-shrink: 0; }
+    .auth-mode-option span { font-size: 0.88rem; line-height: 1.45; color: #8b949e; }
+    .auth-mode-option strong { color: #e6edf3; }
     .setup-col-instructions .instruction-block {
       margin: 0; padding: 1.25rem;
     }
@@ -135,30 +143,50 @@ export async function serveAdminSettingsPage(
     ${telegramSection}
   </div>
   <script>
-    document.getElementById('settings-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      const body = {
-        telegram: {
-          clientId: fd.get('clientId'),
-          clientSecret: fd.get('clientSecret') || undefined,
-          botToken: fd.get('botToken') || undefined,
-          botUsername: fd.get('botUsername') || undefined,
-        },
-      };
-      const res = await fetch('/admin/api/app-settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (res.ok) {
-        window.location.href = '/admin/settings?saved=1';
-        return;
+    (function () {
+      const form = document.getElementById('settings-form');
+      const clientId = document.getElementById('clientId');
+
+      function syncTelegramRequired() {
+        const mode = form.querySelector('input[name="loginMode"]:checked')?.value;
+        if (clientId) clientId.required = mode === 'telegram_widget';
       }
-      const data = await res.json().catch(() => ({}));
-      const err = data.error || 'Ошибка сохранения';
-      window.location.href = '/admin/settings?error=' + encodeURIComponent(err);
-    });
+
+      form.querySelectorAll('input[name="loginMode"]').forEach((radio) => {
+        radio.addEventListener('change', syncTelegramRequired);
+      });
+      syncTelegramRequired();
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const loginMode = fd.get('loginMode');
+        const body = { auth: { loginMode } };
+
+        const clientIdVal = String(fd.get('clientId') ?? '').trim();
+        if (loginMode === 'telegram_widget' || clientIdVal) {
+          body.telegram = {
+            clientId: fd.get('clientId'),
+            clientSecret: fd.get('clientSecret') || undefined,
+            botToken: fd.get('botToken') || undefined,
+            botUsername: fd.get('botUsername') || undefined,
+          };
+        }
+
+        const res = await fetch('/admin/api/app-settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (res.ok) {
+          window.location.href = '/admin/settings?saved=1';
+          return;
+        }
+        const data = await res.json().catch(() => ({}));
+        const err = data.error || 'Ошибка сохранения';
+        window.location.href = '/admin/settings?error=' + encodeURIComponent(err);
+      });
+    })();
   </script>
 </body>
 </html>`);

@@ -118,11 +118,11 @@ function Router() {
         <ProjectsChangedListener />
         <ProjectsGuard>
           <Switch>
+            <Route path="/" component={Home} />
             <Route path="/projects" component={Home} />
             <Route path="/templates" component={TemplatesPage} />
             <Route path="/editor/:id" component={Editor} />
             <Route path="/projects/:id" component={Editor} />
-            <Route path="/" component={Editor} />
             <Route component={NotFound} />
           </Switch>
         </ProjectsGuard>

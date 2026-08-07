@@ -245,4 +245,7 @@ export async function runMigrations(): Promise<void> {
     await seedSettingsFromEnv();
     console.log("[Migrations] Seed настроек из env завершён");
   }
+
+  const { refreshAuthLoginCache } = await import("../services/app-settings.service");
+  await refreshAuthLoginCache();
 }

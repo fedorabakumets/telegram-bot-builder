@@ -13,7 +13,7 @@ export const PublicConfigSchema = z
     telegramClientId: z.number().openapi({ example: 12345678 }),
     /** Имя бота без @ */
     telegramBotUsername: z.string().openapi({ example: "my_bot" }),
-    /** SKIP_AUTH=true — вход отключён */
+    /** dev-login активен (режим dev_login в admin или SKIP_AUTH в env) */
     skipAuth: z.boolean().openapi({ example: false }),
   })
   .openapi("PublicConfig");
@@ -36,6 +36,16 @@ export const SetupBootstrapSchema = z
   })
   .openapi("SetupBootstrap");
 
+/** Секция auth в GET /admin/api/app-settings */
+export const AdminAuthSettingsSchema = z
+  .object({
+    /** Режим входа: dev_login или telegram_widget */
+    loginMode: z.enum(["dev_login", "telegram_widget"]).openapi({ example: "dev_login" }),
+    /** true если dev-login активен */
+    devLoginEnabled: z.boolean().openapi({ example: true }),
+  })
+  .openapi("AdminAuthSettings");
+
 /** Секция Telegram в GET /admin/api/app-settings */
 export const AdminTelegramProviderSchema = z
   .object({
@@ -57,6 +67,8 @@ export const AdminAppSettingsResponseSchema = z
   .object({
     /** Platform setup завершён */
     configured: z.boolean(),
+    /** Режим входа */
+    auth: AdminAuthSettingsSchema,
     /** Настройки по провайдерам */
     providers: z.object({
       /** Telegram Login */
@@ -64,6 +76,14 @@ export const AdminAppSettingsResponseSchema = z
     }),
   })
   .openapi("AdminAppSettingsResponse");
+
+/** Тело PUT /admin/api/app-settings — секция auth */
+export const AdminAuthSettingsPayloadSchema = z
+  .object({
+    /** Режим входа */
+    loginMode: z.enum(["dev_login", "telegram_widget"]).openapi({ example: "dev_login" }),
+  })
+  .openapi("AdminAuthSettingsPayload");
 
 /** Тело PUT /admin/api/app-settings — секция telegram */
 export const AdminTelegramSettingsPayloadSchema = z
@@ -82,8 +102,10 @@ export const AdminTelegramSettingsPayloadSchema = z
 /** Тело PUT /admin/api/app-settings */
 export const AdminAppSettingsPayloadSchema = z
   .object({
+    /** Секция auth (режим входа) */
+    auth: AdminAuthSettingsPayloadSchema.optional(),
     /** Секция Telegram */
-    telegram: AdminTelegramSettingsPayloadSchema,
+    telegram: AdminTelegramSettingsPayloadSchema.optional(),
   })
   .openapi("AdminAppSettingsPayload");
 
@@ -93,6 +115,8 @@ export const SetupErrorSchema = z
     /** Текст ошибки */
     error: z.string().openapi({ example: "telegram.clientId обязателен" }),
   })
+  .openapi("SetupError");
+
 /** Успешный ответ PUT /admin/api/app-settings */
 export const AdminAppSettingsSaveSchema = z
   .object({
@@ -100,6 +124,8 @@ export const AdminAppSettingsSaveSchema = z
     success: z.literal(true),
     /** Platform configured после сохранения */
     configured: z.boolean(),
+    /** Режим входа после сохранения */
+    auth: AdminAuthSettingsSchema,
     /** Обновлённые провайдеры */
     providers: z.object({
       /** Telegram */

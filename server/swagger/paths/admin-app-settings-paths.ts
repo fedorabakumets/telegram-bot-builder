@@ -52,8 +52,8 @@ export function registerAdminAppSettingsPaths(
     tags: ["admin"],
     summary: "Сохранить настройки приложения",
     description:
-      "Upsert по секциям провайдеров. Пустой `clientSecret` / `botToken` не удаляет существующие значения. " +
-      "`botUsername` опционально — резолв через getMe при заданном token.",
+      "Upsert по секциям `auth` (режим входа) и `telegram`. Пустой `clientSecret` / `botToken` не удаляет существующие значения. " +
+      "При `dev_login` поля Telegram необязательны. `botUsername` опционально — резолв через getMe при заданном token.",
     security: [{ adminCookie: [] as string[] }],
     request: {
       body: {

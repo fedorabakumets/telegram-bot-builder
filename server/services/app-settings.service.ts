@@ -26,6 +26,18 @@ const TELEGRAM_KEYS = {
   botToken: "telegram_bot_token",
 } as const;
 
+/** Ключ режима входа в app_settings */
+export const AUTH_LOGIN_MODE_KEY = "auth_login_mode";
+
+/** Режим входа: dev-login по ID или Telegram Login Widget */
+export type AuthLoginMode = "dev_login" | "telegram_widget";
+
+/** Допустимые значения auth_login_mode */
+export const AUTH_LOGIN_MODES: AuthLoginMode[] = ["dev_login", "telegram_widget"];
+
+/** Синхронный кэш skipAuth (обновляется из БД при старте и после setSetting) */
+let skipAuthSyncCache: boolean | null = null;
+
 /**
  * Маппинг ключей настроек на переменные окружения (fallback для старых деплоев)
  */
@@ -115,8 +127,11 @@ export async function setSetting(key: string, value: string): Promise<void> {
       set: { value, updatedAt: new Date() },
     });
 
-  // Сбрасываем кэш — следующий getSetting перечитает из БД
   cache.delete(key);
+
+  if (key === AUTH_LOGIN_MODE_KEY) {
+    skipAuthSyncCache = value === "dev_login";
+  }
 }
 
 /**
@@ -174,17 +189,54 @@ export async function isTelegramAuthConfigured(): Promise<boolean> {
 }
 
 /**
+ * Резолвит dev-login из строки режима или env fallback.
+ * @param mode - Значение из БД
+ * @returns true если dev-login
+ */
+function resolveSkipAuthFromMode(mode: string | undefined): boolean {
+  if (mode === "dev_login") return true;
+  if (mode === "telegram_widget") return false;
+  return process.env.SKIP_AUTH !== "false";
+}
+
+/**
+ * Обновляет синхронный кэш skipAuth из БД (вызывать при старте сервера).
+ * @returns Promise<void>
+ */
+export async function refreshAuthLoginCache(): Promise<void> {
+  const mode = await getSettingFromDb(AUTH_LOGIN_MODE_KEY);
+  skipAuthSyncCache = resolveSkipAuthFromMode(mode);
+}
+
+/**
+ * Текущий режим входа для admin UI и API.
+ * @returns dev_login или telegram_widget
+ */
+export async function getAuthLoginMode(): Promise<AuthLoginMode> {
+  const mode = await getSetting(AUTH_LOGIN_MODE_KEY);
+  if (mode === "telegram_widget") return "telegram_widget";
+  if (mode === "dev_login") return "dev_login";
+  return process.env.SKIP_AUTH === "false" ? "telegram_widget" : "dev_login";
+}
+
+/**
+ * Синхронно: dev-login активен (кэш или env).
+ * @returns true если вход по Telegram ID без виджета
+ */
+export function isAuthSkippedSync(): boolean {
+  if (skipAuthSyncCache !== null) return skipAuthSyncCache;
+  return process.env.SKIP_AUTH !== "false";
+}
+
+/**
  * Проверить, завершена ли платформенная настройка (агрегатор провайдеров).
  *
- * Сейчас: только Telegram. При добавлении email/OAuth — расширить агрегатор.
+ * При режиме dev-login в admin — Telegram credentials не требуются.
  *
- * В режиме разработки (`NODE_ENV=development`) или при `SKIP_AUTH=true`
- * всегда возвращает `true`, если не задан `SETUP_WIZARD_STRICT=true`.
- *
- * @returns `true` если хотя бы один провайдер настроен (или dev bypass)
+ * @returns `true` если вход настроен (dev-login или Telegram)
  */
 export async function isConfigured(): Promise<boolean> {
-  if (isPlatformAuthBypassed()) {
+  if (isAuthSkippedSync()) {
     return true;
   }
 
@@ -192,15 +244,15 @@ export async function isConfigured(): Promise<boolean> {
 }
 
 /**
- * Проверяет, включён ли режим dev-login (SKIP_AUTH не равен false).
- * @returns `true` если вход по Telegram ID без proof разрешён
+ * Проверяет, включён ли режим dev-login.
+ * @returns `true` если вход по Telegram ID без виджета
  */
 export function isAuthSkipped(): boolean {
-  return process.env.SKIP_AUTH !== "false";
+  return isAuthSkippedSync();
 }
 
 /**
- * Проверяет, включён ли строгий режим setup wizard (проверка БД даже в dev).
+ * Проверяет, включён ли строгий режим setup wizard (legacy env для тестов).
  * @returns true если SETUP_WIZARD_STRICT=true
  */
 export function isSetupWizardStrict(): boolean {
@@ -208,12 +260,12 @@ export function isSetupWizardStrict(): boolean {
 }
 
 /**
- * Платформа считает setup завершённым без Telegram (dev bypass).
- * @returns true если SKIP_AUTH или dev без SETUP_WIZARD_STRICT
+ * Платформа не требует Telegram credentials (dev-login в admin).
+ * @returns true если достаточно dev-login
  */
 export function isPlatformAuthBypassed(): boolean {
   if (isSetupWizardStrict()) return false;
-  return process.env.NODE_ENV === "development" || isAuthSkipped();
+  return isAuthSkippedSync();
 }
 
 /**
@@ -226,7 +278,11 @@ export function isPlatformAuthBypassed(): boolean {
  * @returns Promise<void>
  */
 export async function seedSettingsFromEnv(): Promise<void> {
+  const authMode =
+    process.env.SKIP_AUTH === "false" ? "telegram_widget" : "dev_login";
+
   const pairs: Array<[string, string | undefined]> = [
+    [AUTH_LOGIN_MODE_KEY, authMode],
     ["telegram_client_id", process.env.TELEGRAM_CLIENT_ID ?? process.env.VITE_TELEGRAM_CLIENT_ID],
     ["telegram_client_secret", process.env.TELEGRAM_CLIENT_SECRET],
     ["telegram_bot_username", process.env.VITE_TELEGRAM_BOT_USERNAME ?? process.env.TELEGRAM_BOT_USERNAME],
@@ -241,4 +297,6 @@ export async function seedSettingsFromEnv(): Promise<void> {
       console.log(`[AppSettings] Перенесено из env в БД: ${key}`);
     }
   }
+
+  await refreshAuthLoginCache();
 }
