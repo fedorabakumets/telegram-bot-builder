@@ -37,7 +37,7 @@ export function useProjectNavigation(): UseProjectNavigationResult {
 
   /** Перейти на страницу списка проектов */
   const handleGoToProjects = useCallback(() => {
-    setLocation('/');
+    setLocation('/projects');
   }, [setLocation]);
 
   /**
