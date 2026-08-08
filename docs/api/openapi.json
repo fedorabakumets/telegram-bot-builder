@@ -32,7 +32,7 @@
     },
     {
       "name": "health",
-      "description": "Healthcheck и готовность компонентов"
+      "description": "Публичный healthcheck: GET JSON (database/templates/ready), HEAD → 204. ready === database; templates независимо. Без Redis в ответе."
     },
     {
       "name": "launch",
@@ -1558,7 +1558,7 @@
           "health"
         ],
         "summary": "Healthcheck компонентов",
-        "description": "Публичный эндпоинт liveness/readiness. Используется UI (`ServerStatus`), Railway healthcheck и балансировщиками. Заменяет устаревший `GET /api`. Для проверки без JSON допустен `HEAD /api/health` (ответ 204).",
+        "description": "Публичный liveness/readiness без авторизации.\n\n- `database` — БД инициализирована\n- `templates` — системные шаблоны загружены (независимо от БД)\n- `ready` — **равно `database`** (API считает себя готовым при готовой БД)\n\nUI: `ServerStatus` (поллинг до `ready`). Railway/балансировщики — этот path.\nЗаменяет устаревший `GET /api`.\n\n```bash\ncurl -s http://localhost:5000/api/health\n```",
         "security": [],
         "responses": {
           "200": {
@@ -1567,9 +1567,27 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "database": true,
+                  "templates": true,
+                  "ready": true
                 }
               }
             }
+          }
+        }
+      },
+      "head": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Healthcheck без тела (204)",
+        "description": "Тот же probe, что GET, но **без JSON**: ответ **204** и пустое тело.\n\nУдобно для load balancer health checks.\n\n```bash\ncurl -s -I -X HEAD http://localhost:5000/api/health\n```",
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "Сервер отвечает, тела нет"
           }
         }
       }

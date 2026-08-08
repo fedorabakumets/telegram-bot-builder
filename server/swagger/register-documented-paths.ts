@@ -11,7 +11,6 @@ import {
   UnauthorizedSchema,
   ValidationErrorSchema,
 } from "./schemas/common";
-import { HealthResponseSchema } from "./schemas/health";
 import {
   BotProjectSchema,
   CreateProjectRequestSchema,
@@ -27,6 +26,7 @@ import { registerConfigSetupPaths } from "./paths/config-setup-paths";
 import { registerAdminAppSettingsPaths } from "./paths/admin-app-settings-paths";
 import { registerAdminBotFoldersCleanupPaths } from "./paths/admin-bot-folders-cleanup-paths";
 import { registerDatabasePaths } from "./paths/database-paths";
+import { registerHealthPaths } from "./paths/health-paths";
 import { registerProjectsPaths } from "./paths/projects-paths";
 import { registerStorageConfigPaths } from "./paths/storage-config-paths";
 import { registerTemplatePaths } from "./paths/template-paths";
@@ -61,23 +61,7 @@ documentedRegistry.registerComponent("securitySchemes", "adminCookie", {
 const cookieSecurity = [{ cookieAuth: [] as string[] }];
 const publicSecurity: never[] = [];
 
-documentedRegistry.registerPath({
-  method: "get",
-  path: "/api/health",
-  tags: ["health"],
-  summary: "Healthcheck компонентов",
-  description:
-    "Публичный эндпоинт liveness/readiness. Используется UI (`ServerStatus`), Railway healthcheck и балансировщиками. " +
-    "Заменяет устаревший `GET /api`. Для проверки без JSON допустен `HEAD /api/health` (ответ 204).",
-  security: publicSecurity,
-  responses: {
-    200: {
-      description: "Статус компонентов",
-      content: { "application/json": { schema: HealthResponseSchema } },
-    },
-  },
-});
-
+registerHealthPaths(documentedRegistry, publicSecurity);
 registerAuthPaths(documentedRegistry, publicSecurity);
 
 documentedRegistry.registerPath({

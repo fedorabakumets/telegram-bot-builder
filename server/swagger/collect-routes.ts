@@ -22,7 +22,9 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
     "Вход в Studio: Telegram Widget, Mini App initData, dev-login по ID; " +
     "сессия (`/me`, logout). Публичные; cookie `connect.sid` после успешного login. " +
     "Режим входа — `/admin/settings` (dev_login | telegram_widget). Не путать с `/admin/login` и agent PAT.",
-  health: "Healthcheck и готовность компонентов",
+  health:
+    "Публичный healthcheck: GET JSON (database/templates/ready), HEAD → 204. " +
+    "ready === database; templates независимо. Без Redis в ответе.",
   setup: "Первоначальная настройка приложения",
   config: "Публичная конфигурация клиента",
   projects: "Проекты, версии, экспорт и дублирование",
