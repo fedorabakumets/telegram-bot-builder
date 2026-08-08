@@ -36,7 +36,7 @@
     },
     {
       "name": "launch",
-      "description": "Эндпоинты /api/launch"
+      "description": "Логи одного запуска бота (bot_launch_history → bot_logs). Доступ по проекту; пустой launch → 404."
     },
     {
       "name": "media",
@@ -1602,16 +1602,128 @@
         "tags": [
           "launch"
         ],
-        "summary": "GET /api/launch/{launchId}/logs",
+        "summary": "Логи конкретного запуска бота",
+        "description": "Все строки `bot_logs` с данным `launchId` (хронология запуска).\n\n**Доступ:** projectId берётся из первой строки логов → `hasProjectAccess`. Чужой проект → **403**.\n\n**Пустой набор логов** трактуется как отсутствие запуска → **404** (не раскрывает id без данных).\n\n**Клиент:** `use-launch-logs` → LaunchLogsModal / LaunchHistoryViewer.\n\n```bash\ncurl -s http://localhost:5000/api/launch/15/logs -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID записи bot_launch_history",
+              "example": "15"
+            },
+            "required": true,
+            "description": "ID запуска в bot_launch_history",
+            "example": "15",
+            "name": "launchId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT (Authorize). Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив логов запуска",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BotLog"
+                  }
+                },
+                "example": [
+                  {
+                    "id": 42,
+                    "projectId": 266,
+                    "tokenId": 7,
+                    "launchId": 15,
+                    "content": "Bot started successfully",
+                    "type": "stdout",
+                    "timestamp": "2026-08-08T20:00:00.000Z"
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "launchId не число",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotLogError"
+                },
+                "example": {
+                  "error": "Некорректный launchId"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту запуска",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotLogError"
+                },
+                "example": {
+                  "error": "Нет прав доступа"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Запуск не найден (нет логов)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotLogError"
+                },
+                "example": {
+                  "error": "Запуск не найден"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotLogError"
+                },
+                "example": {
+                  "error": "Ошибка получения логов"
+                }
+              }
+            }
           }
         }
       }

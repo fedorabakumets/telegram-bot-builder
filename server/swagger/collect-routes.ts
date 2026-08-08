@@ -38,6 +38,9 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   "bot-logs":
     "Одна строка лога бота по ID (permalink терминала `?log=`). " +
     "Доступ по владению проектом. Live-список логов — другие эндпоинты/WebSocket.",
+  launch:
+    "Логи одного запуска бота (bot_launch_history → bot_logs). " +
+    "Доступ по проекту; пустой launch → 404.",
   bots: "Управление запуском ботов",
   tokens: "Токены ботов и настройки запуска",
   users: "Пользователи ботов и статистика",
