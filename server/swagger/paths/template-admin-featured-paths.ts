@@ -1,15 +1,24 @@
 /**
- * @fileoverview OpenAPI: PATCH `/admin/api/templates/{id}/featured`.
+ * @fileoverview OpenAPI: PATCH /admin/api/templates/{id}/featured.
  * @module server/swagger/paths/template-admin-featured-paths
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { z } from "zod";
 import { MessageErrorSchema } from "../schemas/common";
 import { BotTemplateDtoSchema } from "../schemas/templates";
 import { TemplateIdParamsSchema } from "../schemas/template-bodies";
-
-const adminSecurity = [{ adminCookie: [] as string[] }];
+import {
+  ADMIN_SECURITY,
+  AdminCookiesSchema,
+  AdminUnauthorizedSchema,
+} from "../schemas/admin-common";
+import { TEMPLATE_LIST_ITEM_EXAMPLE } from "./template-examples";
+import {
+  ADMIN_CURL_LOGIN,
+  ADMIN_FEATURED_BODY_EXAMPLE,
+  ADMIN_UNAUTHORIZED_EXAMPLE,
+} from "./admin-examples";
+import { z } from "zod";
 
 /** Тело смены featured */
 const AdminFeaturedBodySchema = z
@@ -30,15 +39,23 @@ export function registerAdminTemplateFeaturedPaths(registry: OpenAPIRegistry): v
     tags: ["admin"],
     summary: "Пометить сценарий как featured (или снять)",
     description:
-      "Только admin cookie. Обычный `PUT /api/templates/{id}` поле `featured` игнорирует.",
-    security: adminSecurity,
+      "Выставляет `featured` 0|1. Обычный `PUT /api/templates/{id}` это поле **игнорирует**.\n\n" +
+      "**Path:** `id` — ID `bot_templates`.\n\n" +
+      "```bash\n" +
+      `${ADMIN_CURL_LOGIN}\n` +
+      "curl -s -X PATCH http://localhost:5000/admin/api/templates/12/featured -b admin.txt \\\n" +
+      "  -H 'Content-Type: application/json' -d '{\"featured\":1}'\n" +
+      "```",
+    security: ADMIN_SECURITY,
     request: {
+      cookies: AdminCookiesSchema,
       params: TemplateIdParamsSchema,
       body: {
+        required: true,
         content: {
           "application/json": {
             schema: AdminFeaturedBodySchema,
-            example: { featured: 1 },
+            example: ADMIN_FEATURED_BODY_EXAMPLE,
           },
         },
       },
@@ -49,6 +66,7 @@ export function registerAdminTemplateFeaturedPaths(registry: OpenAPIRegistry): v
         content: {
           "application/json": {
             schema: BotTemplateDtoSchema,
+            example: { ...TEMPLATE_LIST_ITEM_EXAMPLE, featured: 1 },
           },
         },
       },
@@ -65,8 +83,8 @@ export function registerAdminTemplateFeaturedPaths(registry: OpenAPIRegistry): v
         description: "Нет admin-сессии",
         content: {
           "application/json": {
-            schema: z.object({ error: z.string() }),
-            example: { error: "ADMIN_UNAUTHORIZED" },
+            schema: AdminUnauthorizedSchema,
+            example: ADMIN_UNAUTHORIZED_EXAMPLE,
           },
         },
       },

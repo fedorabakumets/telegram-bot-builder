@@ -39,7 +39,9 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   "storage-configs":
     "Реестр медиа-хранилищ (local / S3): список, создание, обновление, удаление, тест связности. " +
     "Секреты наружу не отдаются — только hasSecrets. UI: вкладка «Файлы» → «Хранилища».",
-  "agent-tokens": "Персональные токены агента (MCP/CLI)",
+  "agent-tokens":
+    "Персональные токены агента (PAT) для MCP/CLI: список, создание, отзыв. " +
+    "Секрет `mcp_…` отдаётся один раз при POST. Авторизация: session cookie или Bearer PAT.",
   workers: "Worker Pool — Python-воркеры и статистика запущенных ботов",
   server: "Серверные переменные окружения (whitelist ключей для подстановки в env бота)",
   webhook: "Входящие webhook-апдейты Telegram (публичный прокси в Python бота)",

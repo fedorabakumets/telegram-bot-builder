@@ -4,11 +4,14 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { z } from "zod";
 import { MessageErrorSchema } from "../schemas/common";
 import { AdminBotFoldersCleanupOkSchema } from "../schemas/bot-folders";
-
-const adminSecurity = [{ adminCookie: [] as string[] }];
+import {
+  ADMIN_SECURITY,
+  AdminCookiesSchema,
+  AdminUnauthorizedSchema,
+} from "../schemas/admin-common";
+import { ADMIN_CURL_LOGIN, ADMIN_UNAUTHORIZED_EXAMPLE } from "./admin-examples";
 
 /**
  * Регистрирует admin-only очистку осиротевших папок ботов.
@@ -22,23 +25,16 @@ export function registerAdminBotFoldersCleanupPaths(registry: OpenAPIRegistry): 
     tags: ["admin"],
     summary: "Удалить осиротевшие папки в bots/",
     description:
-      "Служебная уборка диска: сканирует `bots/`, парсит имена " +
-      "`…_{projectId}_{tokenId}` и **рекурсивно удаляет** каталоги, " +
-      "для которых нет проекта в БД.\n\n" +
-      "**Авторизация:** только admin cookie (`ADMIN_API_KEY` → `/admin/login`). " +
-      "Обычный user cookie / Bearer PAT → **401** `ADMIN_UNAUTHORIZED`.\n\n" +
-      "Папки с нераспознанным именем попадают в `skipped` и **не** удаляются.\n" +
-      "При удалении проекта папки чистятся отдельно; этот эндпоинт — для хвостов после сбоев.\n\n" +
-      "**Было:** `POST /api/bot-folders/cleanup` (любой залогиненный) — **удалено**.\n\n" +
+      "Сканирует `bots/`, парсит `…_{projectId}_{tokenId}` и **рекурсивно удаляет** " +
+      "каталоги без проекта в БД. Нераспознанные имена → `skipped`.\n\n" +
+      "**Авторизация:** только `admin_auth`. User cookie/PAT → 401.\n" +
+      "**Было:** `POST /api/bot-folders/cleanup` — удалено.\n\n" +
       "```bash\n" +
-      "# 1) войти в admin (получить cookie)\n" +
-      "curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n" +
-      "  -H 'Content-Type: application/x-www-form-urlencoded' \\\n" +
-      "  -d 'key=YOUR_ADMIN_API_KEY'\n\n" +
-      "# 2) cleanup\n" +
+      `${ADMIN_CURL_LOGIN}\n` +
       "curl -s -X POST http://localhost:5000/admin/api/bot-folders/cleanup -b admin.txt\n" +
       "```",
-    security: adminSecurity,
+    security: ADMIN_SECURITY,
+    request: { cookies: AdminCookiesSchema },
     responses: {
       200: {
         description: "Очистка выполнена (возможно 0 удалений)",
@@ -58,8 +54,8 @@ export function registerAdminBotFoldersCleanupPaths(registry: OpenAPIRegistry): 
         description: "Нет admin-сессии",
         content: {
           "application/json": {
-            schema: z.object({ error: z.string() }),
-            example: { error: "ADMIN_UNAUTHORIZED" },
+            schema: AdminUnauthorizedSchema,
+            example: ADMIN_UNAUTHORIZED_EXAMPLE,
           },
         },
       },

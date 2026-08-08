@@ -1,14 +1,21 @@
 /**
- * @fileoverview OpenAPI paths: admin seed `/admin/api/templates/refresh|recreate`.
+ * @fileoverview OpenAPI paths: admin seed templates refresh|recreate.
  * @module server/swagger/paths/template-seed-paths
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { z } from "zod";
 import { MessageErrorSchema } from "../schemas/common";
 import { TemplateSeedOkSchema } from "../schemas/templates";
-
-const adminSecurity = [{ adminCookie: [] as string[] }];
+import {
+  ADMIN_SECURITY,
+  AdminCookiesSchema,
+  AdminUnauthorizedSchema,
+} from "../schemas/admin-common";
+import {
+  ADMIN_CURL_LOGIN,
+  ADMIN_TEMPLATE_SEED_OK_EXAMPLE,
+  ADMIN_UNAUTHORIZED_EXAMPLE,
+} from "./admin-examples";
 
 /**
  * Регистрирует admin-only seed системных сценариев.
@@ -23,20 +30,21 @@ export function registerTemplateSeedPaths(registry: OpenAPIRegistry): void {
     summary: "Пересидить системные сценарии (force)",
     description:
       "`seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.\n\n" +
-      "**Авторизация:** только admin cookie (`ADMIN_API_KEY` → `/admin/login`). " +
-      "Обычный user cookie/PAT → 401.\n\n" +
-      "Пути `/api/templates/refresh` и `/recreate` удалены (раньше были без admin-проверки).",
-    security: adminSecurity,
+      "**Авторизация:** только `admin_auth`. User cookie/PAT → 401.\n" +
+      "Публичные `/api/templates/refresh|recreate` удалены.\n\n" +
+      "```bash\n" +
+      `${ADMIN_CURL_LOGIN}\n` +
+      "curl -s -X POST http://localhost:5000/admin/api/templates/refresh -b admin.txt\n" +
+      "```",
+    security: ADMIN_SECURITY,
+    request: { cookies: AdminCookiesSchema },
     responses: {
       200: {
         description: "Seed выполнен",
         content: {
           "application/json": {
             schema: TemplateSeedOkSchema,
-            example: {
-              message: "Templates refreshed successfully",
-              timestamp: "2026-08-08T19:00:00.000Z",
-            },
+            example: ADMIN_TEMPLATE_SEED_OK_EXAMPLE,
           },
         },
       },
@@ -44,8 +52,8 @@ export function registerTemplateSeedPaths(registry: OpenAPIRegistry): void {
         description: "Нет admin-сессии",
         content: {
           "application/json": {
-            schema: z.object({ error: z.string() }),
-            example: { error: "ADMIN_UNAUTHORIZED" },
+            schema: AdminUnauthorizedSchema,
+            example: ADMIN_UNAUTHORIZED_EXAMPLE,
           },
         },
       },
@@ -67,8 +75,13 @@ export function registerTemplateSeedPaths(registry: OpenAPIRegistry): void {
     tags: ["admin"],
     summary: "Пересоздать системные сценарии (seed force)",
     description:
-      "Тот же `seedDefaultTemplates(true)`, что refresh. Только admin cookie.",
-    security: adminSecurity,
+      "Тот же `seedDefaultTemplates(true)`, что refresh. Только admin cookie.\n\n" +
+      "```bash\n" +
+      `${ADMIN_CURL_LOGIN}\n` +
+      "curl -s -X POST http://localhost:5000/admin/api/templates/recreate -b admin.txt\n" +
+      "```",
+    security: ADMIN_SECURITY,
+    request: { cookies: AdminCookiesSchema },
     responses: {
       200: {
         description: "Seed выполнен",
@@ -76,8 +89,8 @@ export function registerTemplateSeedPaths(registry: OpenAPIRegistry): void {
           "application/json": {
             schema: TemplateSeedOkSchema,
             example: {
+              ...ADMIN_TEMPLATE_SEED_OK_EXAMPLE,
               message: "Templates recreated successfully",
-              timestamp: "2026-08-08T19:00:00.000Z",
             },
           },
         },
@@ -86,8 +99,8 @@ export function registerTemplateSeedPaths(registry: OpenAPIRegistry): void {
         description: "Нет admin-сессии",
         content: {
           "application/json": {
-            schema: z.object({ error: z.string() }),
-            example: { error: "ADMIN_UNAUTHORIZED" },
+            schema: AdminUnauthorizedSchema,
+            example: ADMIN_UNAUTHORIZED_EXAMPLE,
           },
         },
       },

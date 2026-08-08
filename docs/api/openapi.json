@@ -8,7 +8,7 @@
   "tags": [
     {
       "name": "agent-tokens",
-      "description": "Персональные токены агента (MCP/CLI)"
+      "description": "Персональные токены агента (PAT) для MCP/CLI: список, создание, отзыв. Секрет `mcp_…` отдаётся один раз при POST. Авторизация: session cookie или Bearer PAT."
     },
     {
       "name": "auth",
@@ -82,10 +82,24 @@
           "agent-tokens"
         ],
         "summary": "Список токенов агента",
-        "description": "Требует session cookie. Возвращает PAT текущего пользователя без секрета (только prefix и метаданные).",
+        "description": "PAT текущего пользователя **без секрета** (только `prefix` и метаданные).\n\n**Авторизация:** session cookie `connect.sid` или Bearer PAT.\nСекрет полного токена сюда **не** возвращается.\n\n**Клиент / MCP:** настройки агента, список ключей.\n\n```bash\ncurl -s http://localhost:5000/api/agent-tokens -b cookies.txt\n# или\ncurl -s http://localhost:5000/api/agent-tokens \\\n  -H 'Authorization: Bearer mcp_…'\n```",
         "security": [
           {
             "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна, если уже задан Bearer PAT (Authorize). Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT (Authorize). Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
           }
         ],
         "responses": {
@@ -95,16 +109,44 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AgentTokenList"
-                }
+                },
+                "example": [
+                  {
+                    "id": 1,
+                    "label": "Cursor MCP",
+                    "prefix": "mcp_a1b2",
+                    "scopes": "read,write",
+                    "createdAt": "2026-08-01T10:00:00.000Z",
+                    "lastUsedAt": "2026-08-08T12:00:00.000Z",
+                    "expiresAt": null,
+                    "revokedAt": null
+                  }
+                ]
               }
             }
           },
           "401": {
-            "description": "Не авторизован",
+            "description": "Нет session cookie и Bearer PAT",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AgentTokenError"
+                },
+                "example": {
+                  "error": "Пользователь не аутентифицирован"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTokenError"
+                },
+                "example": {
+                  "error": "Не удалось получить токены агента"
                 }
               }
             }
@@ -116,38 +158,82 @@
           "agent-tokens"
         ],
         "summary": "Создать токен агента",
-        "description": "Требует session cookie. Полный секрет `token` возвращается один раз — сохраните сразу.",
+        "description": "Создаёт PAT. Поле `token` (полный секрет `mcp_…`) возвращается **один раз** — сохраните сразу.\n\n**Тело:** `label` (обязательно), `scopes` (`read` | `read,write`, по умолчанию `read,write`), `expiresInDays` (опционально, иначе бессрочный).\n\n```bash\ncurl -s -X POST http://localhost:5000/api/agent-tokens -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"label\":\"Cursor MCP\",\"scopes\":\"read,write\",\"expiresInDays\":90}'\n```",
         "security": [
           {
             "cookieAuth": []
           }
         ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна, если уже задан Bearer PAT (Authorize). Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT (Authorize). Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateAgentTokenRequest"
+              },
+              "example": {
+                "label": "Cursor MCP",
+                "scopes": "read,write",
+                "expiresInDays": 90
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Токен создан",
+            "description": "Токен создан; секрет в `token`",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateAgentTokenResponse"
+                },
+                "example": {
+                  "token": "mcp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                  "record": {
+                    "id": 1,
+                    "label": "Cursor MCP",
+                    "prefix": "mcp_a1b2",
+                    "scopes": "read,write",
+                    "createdAt": "2026-08-01T10:00:00.000Z",
+                    "lastUsedAt": "2026-08-08T12:00:00.000Z",
+                    "expiresAt": null,
+                    "revokedAt": null
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Ошибка валидации",
+            "description": "Ошибка валидации Zod",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateAgentTokenValidationError"
+                },
+                "example": {
+                  "error": "Некорректные данные",
+                  "details": [
+                    {
+                      "path": [
+                        "label"
+                      ],
+                      "message": "Название обязательно"
+                    }
+                  ]
                 }
               }
             }
@@ -158,6 +244,22 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AgentTokenError"
+                },
+                "example": {
+                  "error": "Пользователь не аутентифицирован"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTokenError"
+                },
+                "example": {
+                  "error": "Не удалось создать токен агента"
                 }
               }
             }
@@ -171,7 +273,7 @@
           "agent-tokens"
         ],
         "summary": "Отозвать токен агента",
-        "description": "Требует session cookie. Отзывает только токен текущего пользователя.",
+        "description": "Отзывает только токен **текущего** пользователя (`ownerId`). Чужой / несуществующий → 404.\n\n**Path:** `id` — числовой ID записи в `agent_tokens` (из списка GET).\n\n```bash\ncurl -s -X DELETE http://localhost:5000/api/agent-tokens/1 -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -189,6 +291,18 @@
             "example": "1",
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна, если уже задан Bearer PAT (Authorize). Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT (Authorize). Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
           }
         ],
         "responses": {
@@ -198,6 +312,9 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RevokeAgentTokenResponse"
+                },
+                "example": {
+                  "success": true
                 }
               }
             }
@@ -208,6 +325,9 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AgentTokenError"
+                },
+                "example": {
+                  "error": "Пользователь не аутентифицирован"
                 }
               }
             }
@@ -218,6 +338,22 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AgentTokenError"
+                },
+                "example": {
+                  "error": "Токен не найден"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTokenError"
+                },
+                "example": {
+                  "error": "Не удалось отозвать токен агента"
                 }
               }
             }
@@ -7259,10 +7395,24 @@
           "admin"
         ],
         "summary": "Настройки приложения (по провайдерам)",
-        "description": "Требует admin cookie после `/admin/login`. Секреты и токены **не** возвращаются — только флаги `*Configured`.",
+        "description": "Текущие настройки platform setup. Секреты и токены **не** отдаются — только флаги `*Configured`.\n\n**Авторизация:** cookie `admin_auth` после `/admin/login`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s http://localhost:5000/admin/api/app-settings -b admin.txt\n```",
         "security": [
           {
             "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
           }
         ],
         "responses": {
@@ -7272,24 +7422,35 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AdminAppSettingsResponse"
+                },
+                "example": {
+                  "configured": true,
+                  "auth": {
+                    "loginMode": "dev_login",
+                    "devLoginEnabled": true
+                  },
+                  "providers": {
+                    "telegram": {
+                      "clientId": "123456789",
+                      "botUsername": "my_bot",
+                      "clientSecretConfigured": true,
+                      "botTokenConfigured": true,
+                      "configured": true
+                    }
+                  }
                 }
               }
             }
           },
           "401": {
-            "description": "Не авторизован в admin",
+            "description": "Нет admin-сессии",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/AdminUnauthorized"
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
                 }
               }
             }
@@ -7301,17 +7462,43 @@
           "admin"
         ],
         "summary": "Сохранить настройки приложения",
-        "description": "Upsert по секциям `auth` (режим входа) и `telegram`. Пустой `clientSecret` / `botToken` не удаляет существующие значения. При `dev_login` поля Telegram необязательны. `botUsername` опционально — резолв через getMe при заданном token.",
+        "description": "Upsert секций `auth` (режим входа) и `telegram`. Пустой `clientSecret` / `botToken` не затирает уже сохранённые значения.\n\nПри `dev_login` поля Telegram необязательны. `botUsername` можно не слать — резолв через getMe при заданном bot token.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X PUT http://localhost:5000/admin/api/app-settings -b admin.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"auth\":{\"loginMode\":\"dev_login\"}}'\n```",
         "security": [
           {
             "adminCookie": []
           }
         ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AdminAppSettingsPayload"
+              },
+              "example": {
+                "auth": {
+                  "loginMode": "dev_login"
+                },
+                "telegram": {
+                  "clientId": "123456789",
+                  "botUsername": "my_bot",
+                  "clientSecret": "",
+                  "botToken": ""
+                }
               }
             }
           }
@@ -7323,26 +7510,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AdminAppSettingsSave"
+                },
+                "example": {
+                  "success": true,
+                  "configured": true,
+                  "auth": {
+                    "loginMode": "dev_login",
+                    "devLoginEnabled": true
+                  },
+                  "providers": {
+                    "telegram": {
+                      "configured": true,
+                      "botUsername": "my_bot"
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Валидация",
+            "description": "Валидация секции auth/telegram",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SetupError"
+                },
+                "example": {
+                  "error": "telegram.clientId обязателен"
                 }
               }
             }
           },
           "401": {
-            "description": "Не авторизован в admin",
+            "description": "Нет admin-сессии",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SetupError"
+                  "$ref": "#/components/schemas/AdminUnauthorized"
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
                 }
               }
             }
@@ -7353,6 +7560,9 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SetupError"
+                },
+                "example": {
+                  "error": "Внутренняя ошибка сервера"
                 }
               }
             }
@@ -7366,10 +7576,24 @@
           "admin"
         ],
         "summary": "Удалить осиротевшие папки в bots/",
-        "description": "Служебная уборка диска: сканирует `bots/`, парсит имена `…_{projectId}_{tokenId}` и **рекурсивно удаляет** каталоги, для которых нет проекта в БД.\n\n**Авторизация:** только admin cookie (`ADMIN_API_KEY` → `/admin/login`). Обычный user cookie / Bearer PAT → **401** `ADMIN_UNAUTHORIZED`.\n\nПапки с нераспознанным именем попадают в `skipped` и **не** удаляются.\nПри удалении проекта папки чистятся отдельно; этот эндпоинт — для хвостов после сбоев.\n\n**Было:** `POST /api/bot-folders/cleanup` (любой залогиненный) — **удалено**.\n\n```bash\n# 1) войти в admin (получить cookie)\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\n\n# 2) cleanup\ncurl -s -X POST http://localhost:5000/admin/api/bot-folders/cleanup -b admin.txt\n```",
+        "description": "Сканирует `bots/`, парсит `…_{projectId}_{tokenId}` и **рекурсивно удаляет** каталоги без проекта в БД. Нераспознанные имена → `skipped`.\n\n**Авторизация:** только `admin_auth`. User cookie/PAT → 401.\n**Было:** `POST /api/bot-folders/cleanup` — удалено.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/bot-folders/cleanup -b admin.txt\n```",
         "security": [
           {
             "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
           }
         ],
         "responses": {
@@ -7396,15 +7620,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/AdminUnauthorized"
                 },
                 "example": {
                   "error": "ADMIN_UNAUTHORIZED"
@@ -7434,10 +7650,24 @@
           "admin"
         ],
         "summary": "Пересидить системные сценарии (force)",
-        "description": "`seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.\n\n**Авторизация:** только admin cookie (`ADMIN_API_KEY` → `/admin/login`). Обычный user cookie/PAT → 401.\n\nПути `/api/templates/refresh` и `/recreate` удалены (раньше были без admin-проверки).",
+        "description": "`seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.\n\n**Авторизация:** только `admin_auth`. User cookie/PAT → 401.\nПубличные `/api/templates/refresh|recreate` удалены.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/templates/refresh -b admin.txt\n```",
         "security": [
           {
             "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
           }
         ],
         "responses": {
@@ -7460,15 +7690,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/AdminUnauthorized"
                 },
                 "example": {
                   "error": "ADMIN_UNAUTHORIZED"
@@ -7498,10 +7720,24 @@
           "admin"
         ],
         "summary": "Пересоздать системные сценарии (seed force)",
-        "description": "Тот же `seedDefaultTemplates(true)`, что refresh. Только admin cookie.",
+        "description": "Тот же `seedDefaultTemplates(true)`, что refresh. Только admin cookie.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/templates/recreate -b admin.txt\n```",
         "security": [
           {
             "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
           }
         ],
         "responses": {
@@ -7524,15 +7760,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/AdminUnauthorized"
                 },
                 "example": {
                   "error": "ADMIN_UNAUTHORIZED"
@@ -7562,7 +7790,7 @@
           "admin"
         ],
         "summary": "Пометить сценарий как featured (или снять)",
-        "description": "Только admin cookie. Обычный `PUT /api/templates/{id}` поле `featured` игнорирует.",
+        "description": "Выставляет `featured` 0|1. Обычный `PUT /api/templates/{id}` это поле **игнорирует**.\n\n**Path:** `id` — ID `bot_templates`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X PATCH http://localhost:5000/admin/api/templates/12/featured -b admin.txt \\\n  -H 'Content-Type: application/json' -d '{\"featured\":1}'\n```",
         "security": [
           {
             "adminCookie": []
@@ -7580,9 +7808,22 @@
             "example": "12",
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
           }
         ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -7601,6 +7842,73 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BotTemplateDto"
+                },
+                "example": {
+                  "id": 1,
+                  "ownerId": null,
+                  "name": "FAQ-бот",
+                  "description": "Ответы на частые вопросы",
+                  "data": {
+                    "sheets": [
+                      {
+                        "id": "main",
+                        "name": "Основной",
+                        "nodes": [
+                          {
+                            "id": "start",
+                            "type": "start",
+                            "position": {
+                              "x": 0,
+                              "y": 0
+                            },
+                            "data": {
+                              "messageText": "Привет!"
+                            }
+                          }
+                        ],
+                        "edges": []
+                      }
+                    ]
+                  },
+                  "flow_data": {
+                    "sheets": [
+                      {
+                        "id": "main",
+                        "name": "Основной",
+                        "nodes": [
+                          {
+                            "id": "start",
+                            "type": "start",
+                            "position": {
+                              "x": 0,
+                              "y": 0
+                            },
+                            "data": {
+                              "messageText": "Привет!"
+                            }
+                          }
+                        ],
+                        "edges": []
+                      }
+                    ]
+                  },
+                  "category": "utility",
+                  "tags": [
+                    "faq",
+                    "support"
+                  ],
+                  "isPublic": 1,
+                  "difficulty": "easy",
+                  "authorName": null,
+                  "useCount": 120,
+                  "rating": 0,
+                  "ratingCount": 0,
+                  "featured": 1,
+                  "language": "ru",
+                  "complexity": 2,
+                  "estimatedTime": 10,
+                  "createdAt": "2026-01-10T10:00:00.000Z",
+                  "updatedAt": "2026-01-10T10:00:00.000Z"
                 }
               }
             }
@@ -7623,15 +7931,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/AdminUnauthorized"
                 },
                 "example": {
                   "error": "ADMIN_UNAUTHORIZED"
@@ -9193,6 +9493,21 @@
           "configured",
           "auth",
           "providers"
+        ]
+      },
+      "AdminUnauthorized": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "ADMIN_UNAUTHORIZED"
+            ],
+            "example": "ADMIN_UNAUTHORIZED"
+          }
+        },
+        "required": [
+          "error"
         ]
       },
       "AdminAppSettingsSave": {

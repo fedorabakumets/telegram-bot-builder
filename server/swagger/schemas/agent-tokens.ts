@@ -1,5 +1,5 @@
 /**
- * @fileoverview OpenAPI-схемы персональных токенов агента (PAT)
+ * @fileoverview OpenAPI-схемы персональных токенов агента (PAT).
  * @module server/swagger/schemas/agent-tokens
  */
 
@@ -9,7 +9,10 @@ import { z } from "zod";
 /** Права токена агента */
 export const AgentTokenScopesSchema = z
   .enum(["read", "read,write"])
-  .openapi({ example: "read,write", description: "read — только чтение; read,write — чтение и запись" });
+  .openapi({
+    example: "read,write",
+    description: "read — только чтение; read,write — чтение и запись",
+  });
 
 /** Безопасные метаданные токена (без секрета и ownerId) */
 export const AgentTokenDtoSchema = z
@@ -92,4 +95,24 @@ export const AgentTokenIdParamsSchema = z.object({
       example: "1",
     },
   }),
+});
+
+/**
+ * Session cookie для /api/agent-tokens/* (или Bearer PAT через Authorize).
+ * Без cookie и без Bearer — 401.
+ */
+export const AgentTokensCookiesSchema = z.object({
+  "connect.sid": z
+    .string()
+    .optional()
+    .openapi({
+      description:
+        "Session cookie Studio. Не нужна, если уже задан Bearer PAT (Authorize). Без обоих — 401.",
+      example: "s%3Axxxx.yyyy",
+      param: {
+        description:
+          "Session cookie Studio. Не нужна при Bearer PAT (Authorize). Без cookie и без PAT — 401.",
+        example: "s%3Axxxx.yyyy",
+      },
+    }),
 });
