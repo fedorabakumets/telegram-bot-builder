@@ -4,19 +4,22 @@
 
 ### `GET` /api/config
 
-Публичная конфигурация клиента
+Bootstrap экрана входа Studio
 
 **Авторизация:** Публичный
 
-Публичный (**без сессии**): параметры для Login Widget / экрана входа.
+Публичный срез настроек **для UI до логина** (сессия не нужна).
 
-- `telegramClientId` — Client ID виджета (`0` если не задан)
-- `telegramBotUsername` — username бота без `@`
-- `skipAuth` — `true` при режиме **dev-login** (форма ID без proof); `false` при `telegram_widget`
+Зачем: фронт (`useAppConfig` → `AuthScreen` / Login Widget) должен знать, что показать на экране входа — Telegram Login Widget, форму **dev-login** (ввод Telegram ID без proof) или что виджет ещё не настроен. Без этого запроса экран авторизации не собрать.
 
-Источник: `app_settings` → fallback `process.env`.
+Это **не** конфиг бота и не env проекта — только параметры входа в Studio.
 
-**Клиент:** `useAppConfig` → `AuthScreen` / `useTelegramLogin`.
+Поля:
+- `telegramClientId` — Client ID Telegram Login Widget; `0` = не задан
+- `telegramBotUsername` — username бота для виджета (без `@`); пустая строка = не задан
+- `skipAuth` — `true` при `auth_login_mode=dev_login` (форма ID); `false` при `telegram_widget`
+
+Источник: `app_settings` (настраивается в `/admin/settings`), fallback на `process.env` для старых деплоев.
 
 ```bash
 curl -s http://localhost:5000/api/config
@@ -26,7 +29,7 @@ curl -s http://localhost:5000/api/config
 
 | Код | Описание |
 |-----|----------|
-| 200 | Публичные параметры для фронтенда |
+| 200 | Параметры экрана входа (без секретов) |
 
 #### Пример ответа `200`
 

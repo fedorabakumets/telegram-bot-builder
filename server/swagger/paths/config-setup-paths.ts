@@ -24,22 +24,28 @@ export function registerConfigSetupPaths(
     method: "get",
     path: "/api/config",
     tags: ["config"],
-    summary: "Публичная конфигурация клиента",
+    summary: "Bootstrap экрана входа Studio",
     description:
-      "Публичный (**без сессии**): параметры для Login Widget / экрана входа.\n\n" +
-      "- `telegramClientId` — Client ID виджета (`0` если не задан)\n" +
-      "- `telegramBotUsername` — username бота без `@`\n" +
-      "- `skipAuth` — `true` при режиме **dev-login** (форма ID без proof); " +
+      "Публичный срез настроек **для UI до логина** (сессия не нужна).\n\n" +
+      "Зачем: фронт (`useAppConfig` → `AuthScreen` / Login Widget) должен знать, " +
+      "что показать на экране входа — Telegram Login Widget, форму **dev-login** " +
+      "(ввод Telegram ID без proof) или что виджет ещё не настроен. " +
+      "Без этого запроса экран авторизации не собрать.\n\n" +
+      "Это **не** конфиг бота и не env проекта — только параметры входа в Studio.\n\n" +
+      "Поля:\n" +
+      "- `telegramClientId` — Client ID Telegram Login Widget; `0` = не задан\n" +
+      "- `telegramBotUsername` — username бота для виджета (без `@`); пустая строка = не задан\n" +
+      "- `skipAuth` — `true` при `auth_login_mode=dev_login` (форма ID); " +
       "`false` при `telegram_widget`\n\n" +
-      "Источник: `app_settings` → fallback `process.env`.\n\n" +
-      "**Клиент:** `useAppConfig` → `AuthScreen` / `useTelegramLogin`.\n\n" +
+      "Источник: `app_settings` (настраивается в `/admin/settings`), " +
+      "fallback на `process.env` для старых деплоев.\n\n" +
       "```bash\n" +
       "curl -s http://localhost:5000/api/config\n" +
       "```",
     security: publicSecurity,
     responses: {
       200: {
-        description: "Публичные параметры для фронтенда",
+        description: "Параметры экрана входа (без секретов)",
         content: {
           "application/json": {
             schema: PublicConfigSchema,

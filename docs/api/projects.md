@@ -1,6 +1,6 @@
 # projects
 
-Эндпоинтов: **139**
+Эндпоинтов: **138**
 
 ### `GET` /api/projects
 
@@ -1693,20 +1693,6 @@ DELETE /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}
 
 PUT /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal
-
-GET /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 

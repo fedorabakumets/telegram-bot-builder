@@ -1,6 +1,6 @@
 # tokens
 
-Эндпоинтов: **4**
+Эндпоинтов: **5**
 
 ### `DELETE` /api/projects/{projectId}/tokens/{tokenId}
 
@@ -26,6 +26,48 @@
 | 401 | Не авторизован |
 | 403 | Нет доступа к проекту токена |
 | 404 | Токен не найден в этом проекте |
+
+### `GET` /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal
+
+Раскрыть секретное значение env токена
+
+**Авторизация:** Cookie (`connect.sid`)
+
+**Риск:** ответ содержит **сырое** значение env (`API keys`, пароли, webhook secrets). В списке переменных секреты маскируются; этот путь — кнопка «показать». Любой владелец/collaborator проекта может прочитать все secret env токена. Не логируйте тело ответа (прокси, HAR, access logs).
+
+**Кто может:** `requireTokenOwnership` (владелец/collaborator проекта). Переменная должна принадлежать `tokenId` из URL, иначе 404.
+
+**Клиент:** `use-env-variables` / кнопка глаза в `BotEnvRow`.
+
+```bash
+curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal -b cookies.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | ID проекта | `"42"` |
+| `tokenId` | path | да | ID токена бота | `"7"` |
+| `id` | path | да | ID переменной env | `"15"` |
+| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401. | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Сырое значение (секрет) |
+| 401 | Не авторизован |
+| 403 | Нет доступа к проекту токена |
+| 404 | Переменная не найдена / чужой tokenId |
+
+#### Пример ответа `200`
+
+```json
+{
+  "value": "super-secret-api-key"
+}
+```
 
 ### `PUT` /api/projects/{projectId}/tokens/{tokenId}/messages-retention
 

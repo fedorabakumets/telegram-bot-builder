@@ -27,7 +27,8 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
     "ready === database; templates независимо. Без Redis в ответе.",
   setup: "Первоначальная настройка приложения",
   config:
-    "Публичный GET /api/config: Client ID / bot username / skipAuth для Login Widget. Без сессии.",
+    "Bootstrap экрана входа Studio (до сессии): Client ID / bot username / skipAuth. " +
+    "Не конфиг бота — только что показать на AuthScreen (widget vs dev-login).",
   projects: "Проекты, версии, экспорт и дублирование",
   templates:
     "Библиотека готовых сценариев (`bot_templates`). UI: «Сценарии». " +
@@ -44,10 +45,15 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   launch:
     "Логи одного запуска бота (bot_launch_history → bot_logs). " +
     "Доступ по проекту; пустой launch → 404.",
+  bot:
+    "Runtime/env бота. GET …/bot/env/{id}/reveal отдаёт сырое значение секрета " +
+    "(владелец/collaborator проекта; UI использует nested /env-variables/…/reveal).",
   bots:
     "Инстансы ботов (GET /api/bots без секрета token) и массовый старт офлайн " +
     "(POST …/bot/start-offline-all). Доступ по владельцу/проекту.",
-  tokens: "Токены ботов и настройки запуска",
+  tokens:
+    "Токены ботов, retention и reveal env (`…/env-variables/{id}/reveal` — сырой секрет, " +
+    "только владелец/collaborator). Список env секреты маскирует.",
   users: "Пользователи ботов и статистика",
   database:
     "Пользовательские таблицы проекта (bot_tables). Сейчас в OpenAPI: список GET …/tables. " +

@@ -16,7 +16,7 @@
     },
     {
       "name": "bot",
-      "description": "Эндпоинты /api/bot"
+      "description": "Runtime/env бота. GET …/bot/env/{id}/reveal отдаёт сырое значение секрета (владелец/collaborator проекта; UI использует nested /env-variables/…/reveal)."
     },
     {
       "name": "bot-logs",
@@ -28,7 +28,7 @@
     },
     {
       "name": "config",
-      "description": "Публичный GET /api/config: Client ID / bot username / skipAuth для Login Widget. Без сессии."
+      "description": "Bootstrap экрана входа Studio (до сессии): Client ID / bot username / skipAuth. Не конфиг бота — только что показать на AuthScreen (widget vs dev-login)."
     },
     {
       "name": "health",
@@ -64,7 +64,7 @@
     },
     {
       "name": "tokens",
-      "description": "Токены ботов и настройки запуска"
+      "description": "Токены ботов, retention и reveal env (`…/env-variables/{id}/reveal` — сырой секрет, только владелец/collaborator). Список env секреты маскирует."
     },
     {
       "name": "webhook",
@@ -1110,16 +1110,105 @@
         "tags": [
           "bot"
         ],
-        "summary": "GET /api/bot/env/{id}/reveal",
+        "summary": "Раскрыть секретное значение env (legacy)",
+        "description": "**Риск:** ответ содержит **сырое** значение env (`API keys`, пароли, webhook secrets). В списке переменных секреты маскируются; этот путь — кнопка «показать». Любой владелец/collaborator проекта может прочитать все secret env токена. Не логируйте тело ответа (прокси, HAR, access logs).\n\n**Кто может:** `requireEnvVariableOwnership` — владелец/collaborator проекта, к которому привязан токен переменной (env → token → project). Дополнительно query `telegram_id` должен иметь `hasProjectAccess`.\n\nUI Studio этот путь **не вызывает** (см. nested `/env-variables/…/reveal`).\n\n```bash\ncurl -s 'http://localhost:5000/api/bot/env/15/reveal?telegram_id=123456' -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "15"
+            },
+            "required": true,
+            "description": "ID записи bot_env_variables",
+            "example": "15",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "123456789"
+            },
+            "required": true,
+            "description": "Telegram user id для повторной проверки hasProjectAccess",
+            "example": "123456789",
+            "name": "telegram_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Сырое значение (секрет)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotEnvRevealResponse"
+                },
+                "example": {
+                  "value": "super-secret-api-key"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет telegram_id или некорректный id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotEnvRevealError"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotEnvRevealError"
+                },
+                "example": {
+                  "error": "Нет доступа"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Переменная или токен не найдены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotEnvRevealError"
+                }
+              }
+            }
           }
         }
       }
@@ -1594,12 +1683,12 @@
         "tags": [
           "config"
         ],
-        "summary": "Публичная конфигурация клиента",
-        "description": "Публичный (**без сессии**): параметры для Login Widget / экрана входа.\n\n- `telegramClientId` — Client ID виджета (`0` если не задан)\n- `telegramBotUsername` — username бота без `@`\n- `skipAuth` — `true` при режиме **dev-login** (форма ID без proof); `false` при `telegram_widget`\n\nИсточник: `app_settings` → fallback `process.env`.\n\n**Клиент:** `useAppConfig` → `AuthScreen` / `useTelegramLogin`.\n\n```bash\ncurl -s http://localhost:5000/api/config\n```",
+        "summary": "Bootstrap экрана входа Studio",
+        "description": "Публичный срез настроек **для UI до логина** (сессия не нужна).\n\nЗачем: фронт (`useAppConfig` → `AuthScreen` / Login Widget) должен знать, что показать на экране входа — Telegram Login Widget, форму **dev-login** (ввод Telegram ID без proof) или что виджет ещё не настроен. Без этого запроса экран авторизации не собрать.\n\nЭто **не** конфиг бота и не env проекта — только параметры входа в Studio.\n\nПоля:\n- `telegramClientId` — Client ID Telegram Login Widget; `0` = не задан\n- `telegramBotUsername` — username бота для виджета (без `@`); пустая строка = не задан\n- `skipAuth` — `true` при `auth_login_mode=dev_login` (форма ID); `false` при `telegram_widget`\n\nИсточник: `app_settings` (настраивается в `/admin/settings`), fallback на `process.env` для старых деплоев.\n\n```bash\ncurl -s http://localhost:5000/api/config\n```",
         "security": [],
         "responses": {
           "200": {
-            "description": "Публичные параметры для фронтенда",
+            "description": "Параметры экрана входа (без секретов)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5894,18 +5983,105 @@
     "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal": {
       "get": {
         "tags": [
-          "projects"
+          "tokens"
         ],
-        "summary": "GET /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal",
+        "summary": "Раскрыть секретное значение env токена",
+        "description": "**Риск:** ответ содержит **сырое** значение env (`API keys`, пароли, webhook secrets). В списке переменных секреты маскируются; этот путь — кнопка «показать». Любой владелец/collaborator проекта может прочитать все secret env токена. Не логируйте тело ответа (прокси, HAR, access logs).\n\n**Кто может:** `requireTokenOwnership` (владелец/collaborator проекта). Переменная должна принадлежать `tokenId` из URL, иначе 404.\n\n**Клиент:** `use-env-variables` / кнопка глаза в `BotEnvRow`.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "7"
+            },
+            "required": true,
+            "description": "ID токена бота",
+            "example": "7",
+            "name": "tokenId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "15"
+            },
+            "required": true,
+            "description": "ID переменной env",
+            "example": "15",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Сырое значение (секрет)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotEnvRevealResponse"
+                },
+                "example": {
+                  "value": "super-secret-api-key"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotEnvRevealError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Переменная не найдена / чужой tokenId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotEnvRevealError"
+                }
+              }
+            }
           }
         }
       }
@@ -10570,6 +10746,30 @@
           "error"
         ]
       },
+      "BotEnvRevealResponse": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Реальное значение переменной (секрет в открытом виде)",
+            "example": "sk-live-••••"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      },
+      "BotEnvRevealError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
       "MediaFile": {
         "type": "object",
         "properties": {
@@ -10966,14 +11166,17 @@
         "properties": {
           "telegramClientId": {
             "type": "number",
+            "description": "Client ID виджета входа; 0 — виджет ещё не настроен",
             "example": 12345678
           },
           "telegramBotUsername": {
             "type": "string",
+            "description": "Username бота для Login Widget без @",
             "example": "my_bot"
           },
           "skipAuth": {
             "type": "boolean",
+            "description": "true при auth_login_mode=dev_login; false при telegram_widget",
             "example": false
           }
         },

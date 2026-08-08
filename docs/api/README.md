@@ -21,12 +21,12 @@ REST API визуального конструктора Telegram-ботов. А
 | [health](./health.md) | 2 |
 | [launch](./launch.md) | 1 |
 | [media](./media.md) | 13 |
-| [projects](./projects.md) | 139 |
+| [projects](./projects.md) | 138 |
 | [server](./server.md) | 1 |
 | [setup](./setup.md) | 2 |
 | [storage-configs](./storage-configs.md) | 5 |
 | [templates](./templates.md) | 9 |
-| [tokens](./tokens.md) | 4 |
+| [tokens](./tokens.md) | 5 |
 | [webhook](./webhook.md) | 1 |
 | [workers](./workers.md) | 1 |
 

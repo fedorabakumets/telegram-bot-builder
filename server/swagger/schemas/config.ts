@@ -6,15 +6,24 @@
 import "./common";
 import { z } from "zod";
 
-/** Ответ GET /api/config */
+/** Ответ GET /api/config — bootstrap AuthScreen (не конфиг бота) */
 export const PublicConfigSchema = z
   .object({
-    /** Client ID для Telegram Login Widget */
-    telegramClientId: z.number().openapi({ example: 12345678 }),
-    /** Имя бота без @ */
-    telegramBotUsername: z.string().openapi({ example: "my_bot" }),
-    /** dev-login активен (режим dev_login в admin или SKIP_AUTH в env) */
-    skipAuth: z.boolean().openapi({ example: false }),
+    /** Client ID Telegram Login Widget; 0 = не задан */
+    telegramClientId: z.number().openapi({
+      example: 12345678,
+      description: "Client ID виджета входа; 0 — виджет ещё не настроен",
+    }),
+    /** Username бота для виджета (без @); пусто = не задан */
+    telegramBotUsername: z.string().openapi({
+      example: "my_bot",
+      description: "Username бота для Login Widget без @",
+    }),
+    /** true = показать форму dev-login вместо виджета */
+    skipAuth: z.boolean().openapi({
+      example: false,
+      description: "true при auth_login_mode=dev_login; false при telegram_widget",
+    }),
   })
   .openapi("PublicConfig");
 
