@@ -12,6 +12,8 @@ import { downloadImageFromUrl } from "../../../files/downloadImageFromUrl";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { writeFileSync } from "node:fs";
+import { storage } from "../../../storages/storage";
+import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 
 /**
  * Тип данных запроса загрузки изображения
@@ -51,6 +53,17 @@ export async function uploadImageHandler(
         success: false,
         error: 'Необходимо указать projectId'
       });
+      return;
+    }
+
+    const ownerId = getOwnerIdFromRequest(req);
+    if (ownerId === null) {
+      res.status(401).json({ success: false, error: "UNAUTHORIZED" });
+      return;
+    }
+    const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+    if (!hasAccess) {
+      res.status(403).json({ success: false, error: "Нет доступа к проекту" });
       return;
     }
 

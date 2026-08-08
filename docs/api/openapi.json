@@ -40,7 +40,7 @@
     },
     {
       "name": "media",
-      "description": "Загрузка и управление медиафайлами"
+      "description": "Медиа проекта: upload/list/search/download URL, CRUD по id. Auth: requireProjectAccess | requireMediaOwnership | requireMediaFileOwnership. upload-from-url проверяет hasProjectAccess."
     },
     {
       "name": "projects",
@@ -1792,16 +1792,76 @@
         "tags": [
           "media"
         ],
-        "summary": "DELETE /api/media/{id}",
+        "summary": "Удалить медиафайл",
+        "description": "`requireMediaOwnership`. **Клиент:** `use-media`.\n\n```bash\ncurl -s -X DELETE http://localhost:5000/api/media/10 -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "10"
+            },
+            "required": true,
+            "description": "ID записи media_files",
+            "example": "10",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Удалён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Чужой файл",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           }
         }
       },
@@ -1809,16 +1869,92 @@
         "tags": [
           "media"
         ],
-        "summary": "GET /api/media/{id}",
+        "summary": "Медиафайл по ID",
+        "description": "`requireMediaOwnership`. UI почти не вызывает (список через project).\n\n```bash\ncurl -s http://localhost:5000/api/media/10 -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "10"
+            },
+            "required": true,
+            "description": "ID записи media_files",
+            "example": "10",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Один файл",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaFile"
+                },
+                "example": {
+                  "id": 10,
+                  "projectId": 42,
+                  "fileName": "photo.jpg",
+                  "fileType": "photo",
+                  "fileSize": 12345,
+                  "mimeType": "image/jpeg",
+                  "url": "/uploads/42/2026-08-08/photo.jpg",
+                  "description": null,
+                  "tags": [],
+                  "usageCount": 0,
+                  "storageBackend": "local",
+                  "createdAt": "2026-08-08T12:00:00.000Z"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Чужой файл",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           }
         }
       },
@@ -1826,16 +1962,94 @@
         "tags": [
           "media"
         ],
-        "summary": "PUT /api/media/{id}",
+        "summary": "Обновить метаданные медиа",
+        "description": "`requireMediaOwnership`. **Клиент:** `use-media` / thumbnail.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/media/10 -b cookies.txt \\\n  -H 'Content-Type: application/json' -d '{\"description\":\"cover\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "10"
+            },
+            "required": true,
+            "description": "ID записи media_files",
+            "example": "10",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "nullable": true
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Обновлённый файл",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaFile"
+                },
+                "example": {
+                  "id": 10,
+                  "projectId": 42,
+                  "fileName": "photo.jpg",
+                  "fileType": "photo",
+                  "fileSize": 12345,
+                  "mimeType": "image/jpeg",
+                  "url": "/uploads/42/2026-08-08/photo.jpg",
+                  "description": null,
+                  "tags": [],
+                  "usageCount": 0,
+                  "storageBackend": "local",
+                  "createdAt": "2026-08-08T12:00:00.000Z"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Чужой файл",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           }
         }
       }
@@ -1845,16 +2059,94 @@
         "tags": [
           "media"
         ],
-        "summary": "POST /api/media/{id}/file-id",
+        "summary": "Upsert Telegram file_id для токена",
+        "description": "`requireMediaFileOwnership`. Для бот/integration; UI не вызывает.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/media/10/file-id -b cookies.txt \\\n  -H 'Content-Type: application/json' -d '{\"tokenId\":7,\"fileId\":\"AgAC…\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "10"
+            },
+            "required": true,
+            "description": "ID записи media_files",
+            "example": "10",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tokenId": {
+                    "type": "integer",
+                    "example": 7
+                  },
+                  "fileId": {
+                    "type": "string",
+                    "example": "AgACAgIAAxkBAAI…"
+                  }
+                },
+                "required": [
+                  "tokenId",
+                  "fileId"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "file_id сохранён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "nullable": true
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           }
         }
       }
@@ -1864,16 +2156,68 @@
         "tags": [
           "media"
         ],
-        "summary": "POST /api/media/{id}/use",
+        "summary": "Инкремент usageCount",
+        "description": "`requireMediaOwnership`. **Клиент:** `use-media`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/media/10/use -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "10"
+            },
+            "required": true,
+            "description": "ID записи media_files",
+            "example": "10",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Счётчик обновлён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaFile"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Чужой файл",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           }
         }
       }
@@ -1883,16 +2227,71 @@
         "tags": [
           "media"
         ],
-        "summary": "POST /api/media/check-url",
+        "summary": "Проверить внешний URL медиа",
+        "description": "Probe доступности/типа URL. SSRF ограничен `validateExternalUrl`. Только global auth (без projectId). **Клиент:** url-downloader.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/media/check-url -b cookies.txt \\\n  -H 'Content-Type: application/json' -d '{\"url\":\"https://example.com/a.jpg\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "example": "https://example.com/a.jpg"
+                  }
+                },
+                "required": [
+                  "url"
+                ]
+              },
+              "example": {
+                "url": "https://example.com/a.jpg"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Результат проверки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "nullable": true
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           }
         }
       }
@@ -1902,16 +2301,91 @@
         "tags": [
           "media"
         ],
-        "summary": "POST /api/media/download-url/{projectId}",
+        "summary": "Скачать один URL в медиа проекта",
+        "description": "`requireProjectAccess` + SSRF-check. **Клиент:** url-downloader.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/media/download-url/42 -b cookies.txt \\\n  -H 'Content-Type: application/json' -d '{\"url\":\"https://example.com/a.jpg\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "url"
+                ]
+              },
+              "example": {
+                "url": "https://example.com/a.jpg"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Созданный media_files",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "nullable": true
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           }
         }
       }
@@ -1921,16 +2395,96 @@
         "tags": [
           "media"
         ],
-        "summary": "POST /api/media/download-urls/{projectId}",
+        "summary": "Скачать несколько URL в медиа проекта",
+        "description": "Batch download. `requireProjectAccess`. **Клиент:** url-downloader.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/media/download-urls/42 -b cookies.txt \\\n  -H 'Content-Type: application/json' -d '{\"urls\":[\"https://example.com/a.jpg\"]}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "urls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "urls"
+                ]
+              },
+              "example": {
+                "urls": [
+                  "https://example.com/a.jpg"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Результаты batch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "nullable": true
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           }
         }
       }
@@ -1940,16 +2494,84 @@
         "tags": [
           "media"
         ],
-        "summary": "GET /api/media/project/{projectId}",
+        "summary": "Список медиафайлов проекта",
+        "description": "`requireProjectAccess`. **Клиент:** `use-media`.\n\n```bash\ncurl -s http://localhost:5000/api/media/project/42 -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив media_files (+ метаданные токенов при наличии)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaFileList"
+                },
+                "example": [
+                  {
+                    "id": 10,
+                    "projectId": 42,
+                    "fileName": "photo.jpg",
+                    "fileType": "photo",
+                    "fileSize": 12345,
+                    "mimeType": "image/jpeg",
+                    "url": "/uploads/42/2026-08-08/photo.jpg",
+                    "description": null,
+                    "tags": [],
+                    "usageCount": 0,
+                    "storageBackend": "local",
+                    "createdAt": "2026-08-08T12:00:00.000Z"
+                  }
+                ]
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           }
         }
       }
@@ -1959,16 +2581,95 @@
         "tags": [
           "media"
         ],
-        "summary": "GET /api/media/search/{projectId}",
+        "summary": "Поиск медиафайлов проекта",
+        "description": "Query `q` — строка поиска. `requireProjectAccess`. **Клиент:** `use-media`.\n\n```bash\ncurl -s 'http://localhost:5000/api/media/search/42?q=photo' -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "photo"
+            },
+            "required": false,
+            "description": "Строка поиска по имени/тегам",
+            "example": "photo",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Найденные файлы",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaFileList"
+                },
+                "example": [
+                  {
+                    "id": 10,
+                    "projectId": 42,
+                    "fileName": "photo.jpg",
+                    "fileType": "photo",
+                    "fileSize": 12345,
+                    "mimeType": "image/jpeg",
+                    "url": "/uploads/42/2026-08-08/photo.jpg",
+                    "description": null,
+                    "tags": [],
+                    "usageCount": 0,
+                    "storageBackend": "local",
+                    "createdAt": "2026-08-08T12:00:00.000Z"
+                  }
+                ]
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           }
         }
       }
@@ -1978,16 +2679,97 @@
         "tags": [
           "media"
         ],
-        "summary": "POST /api/media/upload-from-url",
+        "summary": "Сохранить картинку по URL/base64 в uploads/",
+        "description": "Пишет файл в `uploads/{projectId}/…`. **Доступ:** `hasProjectAccess(projectId)` (раньше не проверялся — IDOR закрыт).\n\nUI сейчас почти не вызывает.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/media/upload-from-url -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"projectId\":42,\"nodeName\":\"start\",\"imageUrl\":\"https://example.com/a.jpg\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadMediaFromUrlRequest"
+              },
+              "example": {
+                "projectId": 42,
+                "nodeName": "start",
+                "imageUrl": "https://example.com/a.jpg"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Файл сохранён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет projectId/nodeName",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Нет доступа к проекту"
+                }
+              }
+            }
           }
         }
       }
@@ -1997,16 +2779,71 @@
         "tags": [
           "media"
         ],
-        "summary": "POST /api/media/upload-multiple/{projectId}",
+        "summary": "Загрузить до 20 файлов (multipart)",
+        "description": "multipart field `files` (≤20). `requireProjectAccess`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/media/upload-multiple/42 -b cookies.txt -F files=@a.jpg -F files=@b.jpg\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив созданных файлов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaFile"
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           }
         }
       }
@@ -2016,16 +2853,82 @@
         "tags": [
           "media"
         ],
-        "summary": "POST /api/media/upload/{projectId}",
+        "summary": "Загрузить один файл (multipart)",
+        "description": "multipart field `file`. `requireProjectAccess`. **Клиент:** `use-media`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/media/upload/42 -b cookies.txt -F file=@photo.jpg\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Созданный media_files",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaFile"
+                },
+                "example": {
+                  "id": 10,
+                  "projectId": 42,
+                  "fileName": "photo.jpg",
+                  "fileType": "photo",
+                  "fileSize": 12345,
+                  "mimeType": "image/jpeg",
+                  "url": "/uploads/42/2026-08-08/photo.jpg",
+                  "description": null,
+                  "tags": [],
+                  "usageCount": 0,
+                  "storageBackend": "local",
+                  "createdAt": "2026-08-08T12:00:00.000Z"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaError"
+                }
+              }
+            }
           }
         }
       }
@@ -9665,6 +10568,161 @@
         },
         "required": [
           "error"
+        ]
+      },
+      "MediaFile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 10
+          },
+          "projectId": {
+            "type": "integer",
+            "example": 42
+          },
+          "fileName": {
+            "type": "string",
+            "example": "photo.jpg"
+          },
+          "fileType": {
+            "type": "string",
+            "example": "photo"
+          },
+          "filePath": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "integer",
+            "example": 12345
+          },
+          "mimeType": {
+            "type": "string",
+            "example": "image/jpeg"
+          },
+          "url": {
+            "type": "string",
+            "example": "/uploads/42/photo.jpg"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "isPublic": {
+            "type": "integer",
+            "nullable": true
+          },
+          "usageCount": {
+            "type": "integer",
+            "nullable": true
+          },
+          "telegramFileId": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbnailMediaId": {
+            "type": "integer",
+            "nullable": true
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "storageBackend": {
+            "type": "string",
+            "nullable": true,
+            "example": "local"
+          },
+          "storageConfigId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "fileName",
+          "fileType",
+          "fileSize",
+          "mimeType",
+          "url"
+        ]
+      },
+      "MediaFileList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/MediaFile"
+        }
+      },
+      "MediaError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UploadMediaFromUrlRequest": {
+        "type": "object",
+        "properties": {
+          "imageUrl": {
+            "type": "string",
+            "example": "https://example.com/a.jpg"
+          },
+          "projectId": {
+            "type": "integer",
+            "example": 42
+          },
+          "nodeName": {
+            "type": "string",
+            "example": "start"
+          },
+          "imageBase64": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectId",
+          "nodeName"
         ]
       },
       "ProjectListItem": {

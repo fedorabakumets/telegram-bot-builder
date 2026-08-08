@@ -34,7 +34,10 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
     "CRUD + use; доступ canViewOrUseTemplate. " +
     "featured и seed — только /admin/api/templates/*. " +
     "Не путать с lib/templates/ (Jinja2).",
-  media: "Загрузка и управление медиафайлами",
+  media:
+    "Медиа проекта: upload/list/search/download URL, CRUD по id. " +
+    "Auth: requireProjectAccess | requireMediaOwnership | requireMediaFileOwnership. " +
+    "upload-from-url проверяет hasProjectAccess.",
   "bot-logs":
     "Одна строка лога бота по ID (permalink терминала `?log=`). " +
     "Доступ по владению проектом. Live-список логов — другие эндпоинты/WebSocket.",
