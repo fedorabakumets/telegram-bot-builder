@@ -4,7 +4,6 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { z } from "zod";
 import { UnauthorizedSchema } from "../schemas/common";
 import {
   BotEnvCookiesSchema,
@@ -13,18 +12,18 @@ import {
   BotEnvRevealErrorSchema,
   BotEnvRevealResponseSchema,
 } from "../schemas/bot-env-reveal";
+import { BotApiTelegramIdQuerySchema } from "../schemas/bot-api";
+import { BOT_API_AUTH_DOC } from "./bot-api-auth-doc";
 
-/** Общее предупреждение о чувствительности ответа */
+/** Предупреждение о чувствительности ответа */
 const REVEAL_RISK =
-  "**Риск:** ответ содержит **сырое** значение env (`API keys`, пароли, webhook secrets). " +
-  "В списке переменных секреты маскируются; этот путь — кнопка «показать». " +
-  "Любой владелец/collaborator проекта может прочитать все secret env токена. " +
-  "Не логируйте тело ответа (прокси, HAR, access logs).\n\n";
+  "**Риск:** ответ содержит **сырое** значение env. В списке секреты маскируются. " +
+  "Не логируйте тело ответа.\n\n";
 
 /**
- * Регистрирует оба reveal-пути (legacy `/api/bot/env` и UI nested).
- * @param registry - Реестр zod-to-openapi
- * @param cookieSecurity - Session cookie / Bearer PAT
+ * Регистрирует reveal (legacy `/api/bot/env` и UI nested).
+ * @param registry - Реестр
+ * @param cookieSecurity - Session / Bearer
  * @returns void
  */
 export function registerBotEnvRevealPaths(
@@ -37,31 +36,20 @@ export function registerBotEnvRevealPaths(
     tags: ["bot"],
     summary: "Раскрыть секретное значение env (legacy)",
     description:
+      BOT_API_AUTH_DOC +
       REVEAL_RISK +
-      "**Кто может:** `resolveBotApiActor` + `requireBotEnvVariableOwnership` " +
-      "(actor = session/PAT user или telegram_id при scope `bot_manager`).\n\n" +
-      "UI Studio этот путь **не вызывает** (см. nested `/env-variables/…/reveal`).\n\n" +
-      "```bash\n" +
-      "curl -s 'http://localhost:5000/api/bot/env/15/reveal?telegram_id=123456' \\\n" +
-      "  -H 'Authorization: Bearer mcp_…'   # PAT с bot_manager или свой id\n" +
-      "```",
+      "`requireBotEnvVariableOwnership`. UI не вызывает (см. nested). **Клиент:** unused.\n\n" +
+      "```bash\ncurl -s 'http://localhost:5000/api/bot/env/15/reveal?telegram_id=123' \\\n" +
+      "  -H 'Authorization: Bearer mcp_…'\n```",
     security: cookieSecurity,
     request: {
       cookies: BotEnvCookiesSchema,
       params: BotEnvIdParamsSchema,
-      query: z.object({
-        telegram_id: z.string().openapi({
-          example: "123456789",
-          param: {
-            description: "Telegram user id для повторной проверки hasProjectAccess",
-            example: "123456789",
-          },
-        }),
-      }),
+      query: BotApiTelegramIdQuerySchema.partial(),
     },
     responses: {
       200: {
-        description: "Сырое значение (секрет)",
+        description: "Сырое значение",
         content: {
           "application/json": {
             schema: BotEnvRevealResponseSchema,
@@ -70,7 +58,7 @@ export function registerBotEnvRevealPaths(
         },
       },
       400: {
-        description: "Нет telegram_id или некорректный id",
+        description: "Некорректный id / bot_manager без telegram_id",
         content: { "application/json": { schema: BotEnvRevealErrorSchema } },
       },
       401: {
@@ -78,7 +66,7 @@ export function registerBotEnvRevealPaths(
         content: { "application/json": { schema: UnauthorizedSchema } },
       },
       403: {
-        description: "Нет доступа к проекту токена",
+        description: "Нет доступа",
         content: {
           "application/json": {
             schema: BotEnvRevealErrorSchema,
@@ -87,7 +75,7 @@ export function registerBotEnvRevealPaths(
         },
       },
       404: {
-        description: "Переменная или токен не найдены",
+        description: "Не найдено",
         content: { "application/json": { schema: BotEnvRevealErrorSchema } },
       },
     },
@@ -100,20 +88,14 @@ export function registerBotEnvRevealPaths(
     summary: "Раскрыть секретное значение env токена",
     description:
       REVEAL_RISK +
-      "**Кто может:** `requireTokenOwnership` (владелец/collaborator проекта). " +
-      "Переменная должна принадлежать `tokenId` из URL, иначе 404.\n\n" +
-      "**Клиент:** `use-env-variables` / кнопка глаза в `BotEnvRow`.\n\n" +
-      "```bash\n" +
-      "curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal -b cookies.txt\n" +
-      "```",
+      "**Кто:** `requireTokenOwnership`. **Клиент:** `use-env-variables` / BotEnvRow.\n\n" +
+      "```bash\ncurl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal \\\n" +
+      "  -b cookies.txt\n```",
     security: cookieSecurity,
-    request: {
-      cookies: BotEnvCookiesSchema,
-      params: BotEnvNestedParamsSchema,
-    },
+    request: { cookies: BotEnvCookiesSchema, params: BotEnvNestedParamsSchema },
     responses: {
       200: {
-        description: "Сырое значение (секрет)",
+        description: "Сырое значение",
         content: {
           "application/json": {
             schema: BotEnvRevealResponseSchema,
@@ -126,11 +108,11 @@ export function registerBotEnvRevealPaths(
         content: { "application/json": { schema: UnauthorizedSchema } },
       },
       403: {
-        description: "Нет доступа к проекту токена",
+        description: "Нет доступа",
         content: { "application/json": { schema: BotEnvRevealErrorSchema } },
       },
       404: {
-        description: "Переменная не найдена / чужой tokenId",
+        description: "Не найдено / чужой tokenId",
         content: { "application/json": { schema: BotEnvRevealErrorSchema } },
       },
     },

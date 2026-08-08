@@ -19,6 +19,7 @@
 - [Remote HTTP (без клона репо)](mcp/remote-http.md)
 - [Полное руководство (botcraft-builder)](mcp/bot-builder.md)
 - [Пример: простой бот /start + /help](mcp/example-simple-bot.md)
+- [Bot Manager API: PAT и actor](features/bot-manager-api-auth.md)
 
 ## 🖥️ Интерфейс
 - [Обзор интерфейса](interface/overview.md)

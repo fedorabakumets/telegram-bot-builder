@@ -119,6 +119,7 @@ const sidebars: SidebarsConfig = {
         'features/project-versioning',
         'features/incoming-callback-trigger',
         'features/realtime-collaboration',
+        'features/bot-manager-api-auth',
         'features/TELEGRAM_CLIENT_API_TRIGGERS_AND_ACTIONS',
         'features/telegram-buttons-new-features',
       ],

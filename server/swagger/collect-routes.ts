@@ -46,10 +46,10 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
     "Логи одного запуска бота (bot_launch_history → bot_logs). " +
     "Доступ по проекту; пустой launch → 404.",
   bot:
-    "Bot-facing API (`/api/bot/*`) для Bot Manager и части UI. " +
-    "Нужны session или Bearer PAT. Actor: свой user id, либо query telegram_id " +
-    "при PAT scope `bot_manager` (токен в env `STUDIO_BOT_MANAGER_TOKEN`). " +
-    "Чужой telegram_id без bot_manager → 403.",
+    "Bot Manager API (`/api/bot/*`): проекты, токены, users, env, collaborators. " +
+    "Auth: session cookie или Bearer PAT; actor = свой id, либо `telegram_id` " +
+    "при scope `bot_manager` (`STUDIO_BOT_MANAGER_TOKEN`). " +
+    "См. `docs/features/bot-manager-api-auth.md`.",
   bots:
     "Инстансы ботов (GET /api/bots без секрета token) и массовый старт офлайн " +
     "(POST …/bot/start-offline-all). Доступ по владельцу/проекту.",

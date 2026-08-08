@@ -33,14 +33,13 @@
 
 **Авторизация:** Cookie (`connect.sid`)
 
-**Риск:** ответ содержит **сырое** значение env (`API keys`, пароли, webhook secrets). В списке переменных секреты маскируются; этот путь — кнопка «показать». Любой владелец/collaborator проекта может прочитать все secret env токена. Не логируйте тело ответа (прокси, HAR, access logs).
+**Риск:** ответ содержит **сырое** значение env. В списке секреты маскируются. Не логируйте тело ответа.
 
-**Кто может:** `requireTokenOwnership` (владелец/collaborator проекта). Переменная должна принадлежать `tokenId` из URL, иначе 404.
-
-**Клиент:** `use-env-variables` / кнопка глаза в `BotEnvRow`.
+**Кто:** `requireTokenOwnership`. **Клиент:** `use-env-variables` / BotEnvRow.
 
 ```bash
-curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal -b cookies.txt
+curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal \
+  -b cookies.txt
 ```
 
 #### Параметры
@@ -56,10 +55,10 @@ curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal -
 
 | Код | Описание |
 |-----|----------|
-| 200 | Сырое значение (секрет) |
+| 200 | Сырое значение |
 | 401 | Не авторизован |
-| 403 | Нет доступа к проекту токена |
-| 404 | Переменная не найдена / чужой tokenId |
+| 403 | Нет доступа |
+| 404 | Не найдено / чужой tokenId |
 
 #### Пример ответа `200`
 
