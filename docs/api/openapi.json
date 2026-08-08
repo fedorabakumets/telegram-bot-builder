@@ -28,7 +28,7 @@
     },
     {
       "name": "config",
-      "description": "Публичная конфигурация клиента"
+      "description": "Публичный GET /api/config: Client ID / bot username / skipAuth для Login Widget. Без сессии."
     },
     {
       "name": "health",
@@ -1536,7 +1536,7 @@
           "config"
         ],
         "summary": "Публичная конфигурация клиента",
-        "description": "Отдаёт Telegram Client ID, имя бота и флаг skipAuth для Login Widget. Читает app_settings с fallback на process.env.",
+        "description": "Публичный (**без сессии**): параметры для Login Widget / экрана входа.\n\n- `telegramClientId` — Client ID виджета (`0` если не задан)\n- `telegramBotUsername` — username бота без `@`\n- `skipAuth` — `true` при режиме **dev-login** (форма ID без proof); `false` при `telegram_widget`\n\nИсточник: `app_settings` → fallback `process.env`.\n\n**Клиент:** `useAppConfig` → `AuthScreen` / `useTelegramLogin`.\n\n```bash\ncurl -s http://localhost:5000/api/config\n```",
         "security": [],
         "responses": {
           "200": {
@@ -1545,6 +1545,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PublicConfig"
+                },
+                "example": {
+                  "telegramClientId": 12345678,
+                  "telegramBotUsername": "my_bot",
+                  "skipAuth": false
                 }
               }
             }

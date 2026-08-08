@@ -26,7 +26,8 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
     "Публичный healthcheck: GET JSON (database/templates/ready), HEAD → 204. " +
     "ready === database; templates независимо. Без Redis в ответе.",
   setup: "Первоначальная настройка приложения",
-  config: "Публичная конфигурация клиента",
+  config:
+    "Публичный GET /api/config: Client ID / bot username / skipAuth для Login Widget. Без сессии.",
   projects: "Проекты, версии, экспорт и дублирование",
   templates:
     "Библиотека готовых сценариев (`bot_templates`). UI: «Сценарии». " +

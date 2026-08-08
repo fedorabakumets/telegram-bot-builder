@@ -26,13 +26,30 @@ export function registerConfigSetupPaths(
     tags: ["config"],
     summary: "Публичная конфигурация клиента",
     description:
-      "Отдаёт Telegram Client ID, имя бота и флаг skipAuth для Login Widget. " +
-      "Читает app_settings с fallback на process.env.",
+      "Публичный (**без сессии**): параметры для Login Widget / экрана входа.\n\n" +
+      "- `telegramClientId` — Client ID виджета (`0` если не задан)\n" +
+      "- `telegramBotUsername` — username бота без `@`\n" +
+      "- `skipAuth` — `true` при режиме **dev-login** (форма ID без proof); " +
+      "`false` при `telegram_widget`\n\n" +
+      "Источник: `app_settings` → fallback `process.env`.\n\n" +
+      "**Клиент:** `useAppConfig` → `AuthScreen` / `useTelegramLogin`.\n\n" +
+      "```bash\n" +
+      "curl -s http://localhost:5000/api/config\n" +
+      "```",
     security: publicSecurity,
     responses: {
       200: {
         description: "Публичные параметры для фронтенда",
-        content: { "application/json": { schema: PublicConfigSchema } },
+        content: {
+          "application/json": {
+            schema: PublicConfigSchema,
+            example: {
+              telegramClientId: 12345678,
+              telegramBotUsername: "my_bot",
+              skipAuth: false,
+            },
+          },
+        },
       },
     },
   });
