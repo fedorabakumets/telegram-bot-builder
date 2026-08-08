@@ -533,7 +533,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Get all bot projects (lightweight - without data field)
   setupProjectRoutes(app, requireDbReady);
 
-  // Get all bot instances
+  // Get all bot instances (без секрета token)
   app.get("/api/bots", async (req, res) => {
     try {
       const instances = await storage.getAllBotInstances();
@@ -544,7 +544,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       }
       const ownProjects = await storage.getUserBotProjects(ownerId);
       const ownProjectIds = new Set(ownProjects.map(p => p.id));
-      const scoped = instances.filter(inst => ownProjectIds.has(inst.projectId));
+      const scoped = instances
+        .filter((inst) => ownProjectIds.has(inst.projectId))
+        .map(({ token: _token, ...safe }) => safe);
       res.json(scoped);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch bot instances" });

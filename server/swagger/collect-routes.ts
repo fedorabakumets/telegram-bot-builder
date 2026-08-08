@@ -41,7 +41,9 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   launch:
     "Логи одного запуска бота (bot_launch_history → bot_logs). " +
     "Доступ по проекту; пустой launch → 404.",
-  bots: "Управление запуском ботов",
+  bots:
+    "Инстансы ботов (GET /api/bots без секрета token) и массовый старт офлайн " +
+    "(POST …/bot/start-offline-all). Доступ по владельцу/проекту.",
   tokens: "Токены ботов и настройки запуска",
   users: "Пользователи ботов и статистика",
   database:

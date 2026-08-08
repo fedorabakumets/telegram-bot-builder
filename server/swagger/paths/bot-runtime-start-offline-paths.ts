@@ -1,5 +1,5 @@
 /**
- * @fileoverview OpenAPI path: POST start-offline-all
+ * @fileoverview OpenAPI path: POST start-offline-all.
  * @module server/swagger/paths/bot-runtime-start-offline-paths
  */
 
@@ -14,14 +14,26 @@ import {
   StartOfflineAllResponseSchema,
   StartOfflineProgressEventDataSchema,
 } from "../schemas/bot-runtime-start-offline";
+import { BotsCookiesSchema } from "../schemas/bots";
 
 /** Регистрация схем события в OpenAPI */
 void StartOfflineProgressEventDataSchema;
 
+const START_OFFLINE_OK_EXAMPLE = {
+  started: 2,
+  failed: 0,
+  skippedRunning: 1,
+  results: [
+    { tokenId: 7, success: true, processId: "12345" },
+    { tokenId: 8, success: true, processId: "12346" },
+  ],
+};
+
 /**
- * Регистрирует path массового запуска офлайн-ботов
+ * Регистрирует path массового запуска офлайн-ботов.
  * @param registry - OpenAPI registry
  * @param cookieSecurity - Security cookie/PAT
+ * @returns void
  */
 export function registerBotStartOfflinePaths(
   registry: OpenAPIRegistry,
@@ -33,40 +45,72 @@ export function registerBotStartOfflinePaths(
     tags: ["bots"],
     summary: "Запустить всех офлайн-ботов проекта",
     description:
-      "Последовательно запускает токены проекта, у которых status !== running. "
-      + "Уже работающие не трогает (в отличие от restart-all). "
-      + "Требуется доступ к проекту (`requireProjectAccess`). "
-      + "**Side-effects:** WS `bot-started` на каждый успешный старт и "
-      + "`start-offline-progress` (whitelist без секретов; см. docs/api/realtime-events.md). "
-      + "UI обновляется без F5. При большом числе токенов HTTP может быть долгим.",
+      "Последовательно запускает токены проекта со status !== running. " +
+      "Уже running не трогает (в отличие от restart-all).\n\n" +
+      "**Доступ:** `requireProjectAccess`.\n\n" +
+      "**Side-effects:** WS `bot-started`, `start-offline-progress` " +
+      "(без секретов; см. docs/api/realtime-events.md).\n\n" +
+      "**Клиент:** `use-bot-mutations` / BotManagement. MCP: `db_start_offline_bots`.\n\n" +
+      "При большом числе токенов HTTP долгий (пауза ~400ms между стартами).\n\n" +
+      "```bash\n" +
+      "curl -s -X POST http://localhost:5000/api/projects/1/bot/start-offline-all -b cookies.txt\n" +
+      "```",
     security: cookieSecurity,
     request: {
+      cookies: BotsCookiesSchema,
       params: z.object({
-        id: z.string().openapi({ example: "1", description: "ID проекта" }),
+        id: z.string().openapi({
+          example: "1",
+          description: "ID проекта",
+          param: { description: "ID проекта bot_projects", example: "1" },
+        }),
       }),
     },
     responses: {
       200: {
         description: "Сводка запуска",
         content: {
-          "application/json": { schema: StartOfflineAllResponseSchema },
+          "application/json": {
+            schema: StartOfflineAllResponseSchema,
+            example: START_OFFLINE_OK_EXAMPLE,
+          },
         },
       },
       400: {
         description: "Неверный ID проекта",
-        content: { "application/json": { schema: MessageErrorSchema } },
+        content: {
+          "application/json": {
+            schema: MessageErrorSchema,
+            example: { message: "Некорректный ID проекта" },
+          },
+        },
       },
       401: {
         description: "Не авторизован",
-        content: { "application/json": { schema: UnauthorizedSchema } },
+        content: {
+          "application/json": {
+            schema: UnauthorizedSchema,
+            example: { error: "UNAUTHORIZED" },
+          },
+        },
       },
       403: {
         description: "Нет доступа к проекту",
-        content: { "application/json": { schema: ForbiddenSchema } },
+        content: {
+          "application/json": {
+            schema: ForbiddenSchema,
+            example: { message: "Нет доступа к проекту" },
+          },
+        },
       },
       404: {
         description: "Токены не найдены",
-        content: { "application/json": { schema: MessageErrorSchema } },
+        content: {
+          "application/json": {
+            schema: MessageErrorSchema,
+            example: { message: "Токены не найдены" },
+          },
+        },
       },
     },
   });

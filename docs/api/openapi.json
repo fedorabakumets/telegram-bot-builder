@@ -24,7 +24,7 @@
     },
     {
       "name": "bots",
-      "description": "Управление запуском ботов"
+      "description": "Инстансы ботов (GET /api/bots без секрета token) и массовый старт офлайн (POST …/bot/start-offline-all). Доступ по владельцу/проекту."
     },
     {
       "name": "config",
@@ -1516,16 +1516,75 @@
         "tags": [
           "bots"
         ],
-        "summary": "GET /api/bots",
+        "summary": "Инстансы ботов текущего пользователя",
+        "description": "Все `bot_instances` по проектам владельца (и доступным). **Секрет Telegram token в ответе не отдаётся**.\n\nБез личности → `[]` (не 401 на уровне хендлера; глобальный auth всё равно требует login).\n\nUI сейчас почти не вызывает; предпочтительны token-scoped status API.\n\n```bash\ncurl -s http://localhost:5000/api/bots -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Без cookie/PAT → []. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Без личности ответ — пустой массив. Альтернатива — Bearer PAT.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив инстансов без поля token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotInstanceList"
+                },
+                "example": [
+                  {
+                    "id": 1,
+                    "projectId": 266,
+                    "tokenId": 7,
+                    "status": "running",
+                    "processId": "12345",
+                    "startedAt": "2026-08-08T20:00:00.000Z",
+                    "stoppedAt": null,
+                    "errorMessage": null
+                  }
+                ]
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Failed to fetch bot instances"
+                }
+              }
+            }
           }
         }
       }
@@ -2426,7 +2485,7 @@
           "bots"
         ],
         "summary": "Запустить всех офлайн-ботов проекта",
-        "description": "Последовательно запускает токены проекта, у которых status !== running. Уже работающие не трогает (в отличие от restart-all). Требуется доступ к проекту (`requireProjectAccess`). **Side-effects:** WS `bot-started` на каждый успешный старт и `start-offline-progress` (whitelist без секретов; см. docs/api/realtime-events.md). UI обновляется без F5. При большом числе токенов HTTP может быть долгим.",
+        "description": "Последовательно запускает токены проекта со status !== running. Уже running не трогает (в отличие от restart-all).\n\n**Доступ:** `requireProjectAccess`.\n\n**Side-effects:** WS `bot-started`, `start-offline-progress` (без секретов; см. docs/api/realtime-events.md).\n\n**Клиент:** `use-bot-mutations` / BotManagement. MCP: `db_start_offline_bots`.\n\nПри большом числе токенов HTTP долгий (пауза ~400ms между стартами).\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/1/bot/start-offline-all -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -2440,8 +2499,22 @@
               "example": "1"
             },
             "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "1",
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Без cookie/PAT → []. Не нужна при Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Без личности ответ — пустой массив. Альтернатива — Bearer PAT.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
           }
         ],
         "responses": {
@@ -2451,6 +2524,23 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StartOfflineAllResponse"
+                },
+                "example": {
+                  "started": 2,
+                  "failed": 0,
+                  "skippedRunning": 1,
+                  "results": [
+                    {
+                      "tokenId": 7,
+                      "success": true,
+                      "processId": "12345"
+                    },
+                    {
+                      "tokenId": 8,
+                      "success": true,
+                      "processId": "12346"
+                    }
+                  ]
                 }
               }
             }
@@ -2461,6 +2551,9 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Некорректный ID проекта"
                 }
               }
             }
@@ -2471,6 +2564,9 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
                 }
               }
             }
@@ -2481,6 +2577,9 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
                 }
               }
             }
@@ -2491,6 +2590,9 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Токены не найдены"
                 }
               }
             }
@@ -9433,6 +9535,74 @@
           "skippedRunning",
           "results"
         ]
+      },
+      "BotInstancePublic": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "projectId": {
+            "type": "integer",
+            "example": 266
+          },
+          "tokenId": {
+            "type": "integer",
+            "example": 7
+          },
+          "status": {
+            "type": "string",
+            "example": "running"
+          },
+          "processId": {
+            "type": "string",
+            "nullable": true,
+            "example": "12345"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "stoppedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "tokenId",
+          "status"
+        ]
+      },
+      "BotInstanceList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BotInstancePublic"
+        }
       },
       "BotLog": {
         "type": "object",
