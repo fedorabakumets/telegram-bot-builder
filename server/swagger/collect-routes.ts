@@ -32,6 +32,9 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
     "featured и seed — только /admin/api/templates/*. " +
     "Не путать с lib/templates/ (Jinja2).",
   media: "Загрузка и управление медиафайлами",
+  "bot-logs":
+    "Одна строка лога бота по ID (permalink терминала `?log=`). " +
+    "Доступ по владению проектом. Live-список логов — другие эндпоинты/WebSocket.",
   bots: "Управление запуском ботов",
   tokens: "Токены ботов и настройки запуска",
   users: "Пользователи ботов и статистика",

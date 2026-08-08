@@ -20,7 +20,7 @@
     },
     {
       "name": "bot-logs",
-      "description": "Эндпоинты /api/bot-logs"
+      "description": "Одна строка лога бота по ID (permalink терминала `?log=`). Доступ по владению проектом. Live-список логов — другие эндпоинты/WebSocket."
     },
     {
       "name": "bots",
@@ -948,16 +948,123 @@
         "tags": [
           "bot-logs"
         ],
-        "summary": "GET /api/bot-logs/{logId}",
+        "summary": "Одна строка лога бота по ID",
+        "description": "Читает запись из `bot_logs` для **постоянных ссылок** терминала (`?log=`).\n\nЕсли строка ещё в памяти UI — запрос не нужен; клиент зовёт API только когда строки нет в `BotLogsContext` (`use-terminal-log-url`).\n\n**Доступ:** владелец/collaborator проекта `log.projectId` (`hasProjectAccess`). Чужой лог → **403**. Несуществующий id → **404**.\n\nСписок/live логов — другие пути (`GET /api/projects/{projectId}/tokens/{tokenId}/logs`, WebSocket).\n\n```bash\ncurl -s http://localhost:5000/api/bot-logs/42 -b cookies.txt\n# или\ncurl -s http://localhost:5000/api/bot-logs/42 \\\n  -H 'Authorization: Bearer mcp_…'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID записи в таблице bot_logs",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID записи в таблице bot_logs (из permalink ?log=)",
+            "example": "42",
+            "name": "logId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT (Authorize). Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Запись лога",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotLog"
+                },
+                "example": {
+                  "id": 42,
+                  "projectId": 266,
+                  "tokenId": 7,
+                  "launchId": 15,
+                  "content": "Bot started successfully",
+                  "type": "stdout",
+                  "timestamp": "2026-08-08T20:00:00.000Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "logId не число",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotLogError"
+                },
+                "example": {
+                  "error": "Некорректный logId"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту лога",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotLogError"
+                },
+                "example": {
+                  "error": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Запись не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotLogError"
+                },
+                "example": {
+                  "error": "Запись лога не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotLogError"
+                },
+                "example": {
+                  "error": "Ошибка получения лога"
+                }
+              }
+            }
           }
         }
       }
@@ -9126,6 +9233,69 @@
           "failed",
           "skippedRunning",
           "results"
+        ]
+      },
+      "BotLog": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 42
+          },
+          "projectId": {
+            "type": "integer",
+            "example": 266
+          },
+          "tokenId": {
+            "type": "integer",
+            "example": 7
+          },
+          "launchId": {
+            "type": "integer",
+            "nullable": true,
+            "example": 15
+          },
+          "content": {
+            "type": "string",
+            "example": "Bot started successfully"
+          },
+          "type": {
+            "type": "string",
+            "example": "stdout"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ],
+            "example": "2026-08-08T20:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "tokenId",
+          "content",
+          "type"
+        ]
+      },
+      "BotLogError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Запись лога не найдена"
+          }
+        },
+        "required": [
+          "error"
         ]
       },
       "ProjectListItem": {
