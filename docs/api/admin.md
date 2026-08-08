@@ -1,6 +1,6 @@
 # admin
 
-Эндпоинтов: **5**
+Эндпоинтов: **6**
 
 ### `GET` /admin/api/app-settings
 
@@ -35,6 +35,52 @@ Upsert по секциям `auth` (режим входа) и `telegram`. Пус�
 | 400 | Валидация |
 | 401 | Не авторизован в admin |
 | 500 | Внутренняя ошибка |
+
+### `POST` /admin/api/bot-folders/cleanup
+
+Удалить осиротевшие папки в bots/
+
+**Авторизация:** Admin cookie
+
+Служебная уборка диска: сканирует `bots/`, парсит имена `…_{projectId}_{tokenId}` и **рекурсивно удаляет** каталоги, для которых нет проекта в БД.
+
+**Авторизация:** только admin cookie (`ADMIN_API_KEY` → `/admin/login`). Обычный user cookie / Bearer PAT → **401** `ADMIN_UNAUTHORIZED`.
+
+Папки с нераспознанным именем попадают в `skipped` и **не** удаляются.
+При удалении проекта папки чистятся отдельно; этот эндпоинт — для хвостов после сбоев.
+
+**Было:** `POST /api/bot-folders/cleanup` (любой залогиненный) — **удалено**.
+
+```bash
+# 1) войти в admin (получить cookie)
+curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'key=YOUR_ADMIN_API_KEY'
+
+# 2) cleanup
+curl -s -X POST http://localhost:5000/admin/api/bot-folders/cleanup -b admin.txt
+```
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Очистка выполнена (возможно 0 удалений) |
+| 401 | Нет admin-сессии |
+| 500 | Ошибка чтения БД или fs |
+
+#### Пример ответа `200`
+
+```json
+{
+  "deleted": [
+    "bot_999_1"
+  ],
+  "skipped": [],
+  "count": 1,
+  "message": "Удалено 1 папок"
+}
+```
 
 ### `PATCH` /admin/api/templates/{id}/featured
 

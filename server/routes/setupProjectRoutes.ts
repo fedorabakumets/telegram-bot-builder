@@ -30,7 +30,6 @@ import { duplicateProjectHandler } from "./projectRoutes/handlers/duplicateProje
 import { getTokenHandler, clearTokenHandler } from "./projectRoutes/handlers/tokenHandlers";
 import { listBotTokensHandler } from "./projectRoutes/handlers/listBotTokensHandler";
 import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHandler";
-import { cleanupOrphanedFoldersHandler } from "./projectManagement/handlers/cleanupOrphanedFoldersHandler";
 import { handleGenerateCode } from "./projects/generateCode";
 import { getAdminIdsHandler, updateAdminIdsHandler, removeAdminIdHandler } from "./projectRoutes/handlers/adminIdsHandler";
 import { requireProjectAccess } from "../middleware/requireProjectAccess";
@@ -88,9 +87,6 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
     // Загрузка изображений по URL
     app.post("/api/media/upload-from-url", requireDbReady, uploadImageHandler);
-
-    // Очистка осиротевших папок ботов (без проекта в БД)
-    app.post("/api/bot-folders/cleanup", requireDbReady, cleanupOrphanedFoldersHandler);
 
     // Управление ботом
     setupBotManagementRoutes(app);

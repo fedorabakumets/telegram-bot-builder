@@ -19,10 +19,6 @@
       "description": "Эндпоинты /api/bot"
     },
     {
-      "name": "bot-folders",
-      "description": "Эндпоинты /api/bot-folders"
-    },
-    {
       "name": "bot-logs",
       "description": "Эндпоинты /api/bot-logs"
     },
@@ -807,25 +803,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/bot-folders/cleanup": {
-      "post": {
-        "tags": [
-          "bot-folders"
-        ],
-        "summary": "POST /api/bot-folders/cleanup",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
           }
         }
       }
@@ -7383,6 +7360,74 @@
         }
       }
     },
+    "/admin/api/bot-folders/cleanup": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Удалить осиротевшие папки в bots/",
+        "description": "Служебная уборка диска: сканирует `bots/`, парсит имена `…_{projectId}_{tokenId}` и **рекурсивно удаляет** каталоги, для которых нет проекта в БД.\n\n**Авторизация:** только admin cookie (`ADMIN_API_KEY` → `/admin/login`). Обычный user cookie / Bearer PAT → **401** `ADMIN_UNAUTHORIZED`.\n\nПапки с нераспознанным именем попадают в `skipped` и **не** удаляются.\nПри удалении проекта папки чистятся отдельно; этот эндпоинт — для хвостов после сбоев.\n\n**Было:** `POST /api/bot-folders/cleanup` (любой залогиненный) — **удалено**.\n\n```bash\n# 1) войти в admin (получить cookie)\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\n\n# 2) cleanup\ncurl -s -X POST http://localhost:5000/admin/api/bot-folders/cleanup -b admin.txt\n```",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Очистка выполнена (возможно 0 удалений)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBotFoldersCleanupOk"
+                },
+                "example": {
+                  "deleted": [
+                    "bot_999_1"
+                  ],
+                  "skipped": [],
+                  "count": 1,
+                  "message": "Удалено 1 папок"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка чтения БД или fs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Ошибка при очистке папок"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/api/templates/refresh": {
       "post": {
         "tags": [
@@ -9261,6 +9306,44 @@
             "$ref": "#/components/schemas/AdminTelegramSettingsPayload"
           }
         }
+      },
+      "AdminBotFoldersCleanupOk": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "bot_999_1",
+              "faq_888_2"
+            ]
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "README"
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "example": 2
+          },
+          "message": {
+            "type": "string",
+            "example": "Удалено 2 папок"
+          }
+        },
+        "required": [
+          "deleted",
+          "skipped",
+          "count",
+          "message"
+        ]
       },
       "StorageConfigDto": {
         "type": "object",

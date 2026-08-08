@@ -11,6 +11,7 @@ import {
   handleGetAdminAppSettings,
   handlePutAdminAppSettings,
 } from "./handlers/app-settings-handlers";
+import { adminCleanupOrphanedBotFoldersHandler } from "./handlers/bot-folders-cleanup-handler";
 import { adminSetTemplateFeaturedHandler } from "./handlers/template-featured-handler";
 import {
   adminRecreateTemplatesHandler,
@@ -80,6 +81,11 @@ export function setupAdminRoutes(app: Express): void {
     "/admin/api/templates/:id/featured",
     requireAdminAuth,
     adminSetTemplateFeaturedHandler,
+  );
+  app.post(
+    "/admin/api/bot-folders/cleanup",
+    requireAdminAuth,
+    adminCleanupOrphanedBotFoldersHandler,
   );
 
   app.get("/admin/settings", requireAdminAuth, serveAdminSettingsPage);
