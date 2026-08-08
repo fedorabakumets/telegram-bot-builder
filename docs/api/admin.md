@@ -1,6 +1,6 @@
 # admin
 
-Эндпоинтов: **4**
+Эндпоинтов: **5**
 
 ### `GET` /admin/api/app-settings
 
@@ -35,6 +35,27 @@ Upsert по секциям `auth` (режим входа) и `telegram`. Пус�
 | 400 | Валидация |
 | 401 | Не авторизован в admin |
 | 500 | Внутренняя ошибка |
+
+### `PATCH` /admin/api/templates/{id}/featured
+
+Пометить сценарий как featured (или снять)
+
+**Авторизация:** Cookie / Bearer PAT
+
+Только admin cookie. Обычный `PUT /api/templates/{id}` поле `featured` игнорирует.
+
+**Тело запроса:** `AdminSetTemplateFeaturedRequest`
+
+**Параметры:** 1
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Шаблон обновлён |
+| 400 | Неверный id или featured |
+| 401 | Нет admin-сессии |
+| 404 | Шаблон не найден |
 
 ### `POST` /admin/api/templates/recreate
 

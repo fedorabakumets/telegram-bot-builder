@@ -64,7 +64,7 @@
     },
     {
       "name": "templates",
-      "description": "Библиотека готовых сценариев (`bot_templates`). UI: «Сценарии». Живые: list/featured/category/create/use/delete. Доступ: canViewOrUseTemplate; featured с клиента запрещён; seed — /admin/api/templates/*. Marketplace rate/like/… — legacy. Не путать с lib/templates/ (Jinja2)."
+      "description": "Библиотека готовых сценариев (`bot_templates`). UI: «Сценарии». CRUD + use; доступ canViewOrUseTemplate. featured и seed — только /admin/api/templates/*. Не путать с lib/templates/ (Jinja2)."
     },
     {
       "name": "tokens",
@@ -6055,390 +6055,6 @@
         }
       }
     },
-    "/api/templates/{id}/bookmark": {
-      "post": {
-        "tags": [
-          "templates"
-        ],
-        "summary": "Закладка / снять закладку",
-        "description": "**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает**.\n\n**Тело:** `{ bookmarked: boolean }`.",
-        "security": [
-          {
-            "cookieAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "ID bot_templates",
-              "example": "12"
-            },
-            "required": true,
-            "name": "id",
-            "in": "path"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BookmarkTemplateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "bookmarked / unbookmarked",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TemplateMessage"
-                },
-                "example": {
-                  "message": "Template bookmarked"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "bookmarked не boolean",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Не авторизован",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Ошибка",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Приложение не настроено",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetupRequired"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/templates/{id}/download": {
-      "post": {
-        "tags": [
-          "templates"
-        ],
-        "summary": "Инкремент скачиваний",
-        "description": "**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает**. Серверные хендлеры есть; счётчики в `bot_templates` обновляются.\n\nБез тела. `incrementTemplateDownloadCount`. Файл не отдаёт.",
-        "security": [
-          {
-            "cookieAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "ID bot_templates",
-              "example": "12"
-            },
-            "required": true,
-            "name": "id",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "downloadCount++",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TemplateMessage"
-                },
-                "example": {
-                  "message": "Download count incremented"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Не авторизован",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Ошибка",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Приложение не настроено",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetupRequired"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/templates/{id}/like": {
-      "post": {
-        "tags": [
-          "templates"
-        ],
-        "summary": "Лайк / снять лайк",
-        "description": "**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает**.\n\n**Тело:** `{ liked: boolean }`.",
-        "security": [
-          {
-            "cookieAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "ID bot_templates",
-              "example": "12"
-            },
-            "required": true,
-            "name": "id",
-            "in": "path"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LikeTemplateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "liked / unliked",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TemplateMessage"
-                },
-                "example": {
-                  "message": "Template liked"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "liked не boolean",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Не авторизован",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Ошибка",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Приложение не настроено",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetupRequired"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/templates/{id}/rate": {
-      "post": {
-        "tags": [
-          "templates"
-        ],
-        "summary": "Оценить сценарий (1–5)",
-        "description": "**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает**.\n\n**Тело:** `{ rating: 1..5 }`. Иначе 400.",
-        "security": [
-          {
-            "cookieAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "ID bot_templates",
-              "example": "12"
-            },
-            "required": true,
-            "name": "id",
-            "in": "path"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RateTemplateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Оценка принята",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TemplateMessage"
-                },
-                "example": {
-                  "message": "Template rated successfully"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "rating вне 1–5",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                },
-                "example": {
-                  "message": "Rating must be between 1 and 5"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Не авторизован",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Ошибка",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Приложение не настроено",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetupRequired"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/templates/{id}/use": {
       "post": {
         "tags": [
@@ -6595,87 +6211,6 @@
           },
           "503": {
             "description": "setupGuard / БД не готова",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetupRequired"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/templates/{id}/view": {
-      "post": {
-        "tags": [
-          "templates"
-        ],
-        "summary": "Инкремент просмотров",
-        "description": "**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает**. Серверные хендлеры есть; счётчики в `bot_templates` обновляются.\n\nБез тела. `incrementTemplateViewCount`.",
-        "security": [
-          {
-            "cookieAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "ID bot_templates",
-              "example": "12"
-            },
-            "required": true,
-            "name": "id",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "viewCount++",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TemplateMessage"
-                },
-                "example": {
-                  "message": "View count incremented"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Не авторизован",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Ошибка",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Приложение не настроено",
             "content": {
               "application/json": {
                 "schema": {
@@ -7606,6 +7141,103 @@
                 },
                 "example": {
                   "message": "Failed to recreate templates"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/api/templates/{id}/featured": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Пометить сценарий как featured (или снять)",
+        "description": "Только admin cookie. Обычный `PUT /api/templates/{id}` поле `featured` игнорирует.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID bot_templates",
+              "example": "12"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminSetTemplateFeaturedRequest"
+              },
+              "example": {
+                "featured": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Шаблон обновлён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTemplateDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный id или featured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "featured must be 0 or 1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Шаблон не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Template not found"
                 }
               }
             }
@@ -9762,6 +9394,31 @@
           "timestamp"
         ]
       },
+      "AdminSetTemplateFeaturedRequest": {
+        "type": "object",
+        "properties": {
+          "featured": {
+            "anyOf": [
+              {
+                "type": "number",
+                "enum": [
+                  0
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  1
+                ]
+              }
+            ],
+            "example": 1
+          }
+        },
+        "required": [
+          "featured"
+        ]
+      },
       "UpdateTemplateRequest": {
         "type": "object",
         "properties": {
@@ -9907,44 +9564,6 @@
           "message",
           "project",
           "copiedTemplate"
-        ]
-      },
-      "RateTemplateRequest": {
-        "type": "object",
-        "properties": {
-          "rating": {
-            "type": "number",
-            "minimum": 1,
-            "maximum": 5,
-            "example": 5
-          }
-        },
-        "required": [
-          "rating"
-        ]
-      },
-      "LikeTemplateRequest": {
-        "type": "object",
-        "properties": {
-          "liked": {
-            "type": "boolean",
-            "example": true
-          }
-        },
-        "required": [
-          "liked"
-        ]
-      },
-      "BookmarkTemplateRequest": {
-        "type": "object",
-        "properties": {
-          "bookmarked": {
-            "type": "boolean",
-            "example": true
-          }
-        },
-        "required": [
-          "bookmarked"
         ]
       },
       "WorkerPoolDetail": {

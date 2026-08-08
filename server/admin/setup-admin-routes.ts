@@ -11,6 +11,7 @@ import {
   handleGetAdminAppSettings,
   handlePutAdminAppSettings,
 } from "./handlers/app-settings-handlers";
+import { adminSetTemplateFeaturedHandler } from "./handlers/template-featured-handler";
 import {
   adminRecreateTemplatesHandler,
   adminRefreshTemplatesHandler,
@@ -75,6 +76,11 @@ export function setupAdminRoutes(app: Express): void {
 
   app.post("/admin/api/templates/refresh", requireAdminAuth, adminRefreshTemplatesHandler);
   app.post("/admin/api/templates/recreate", requireAdminAuth, adminRecreateTemplatesHandler);
+  app.patch(
+    "/admin/api/templates/:id/featured",
+    requireAdminAuth,
+    adminSetTemplateFeaturedHandler,
+  );
 
   app.get("/admin/settings", requireAdminAuth, serveAdminSettingsPage);
 

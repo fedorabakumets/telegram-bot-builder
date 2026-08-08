@@ -25,9 +25,9 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   projects: "Проекты, версии, экспорт и дублирование",
   templates:
     "Библиотека готовых сценариев (`bot_templates`). UI: «Сценарии». " +
-    "Живые: list/featured/category/create/use/delete. " +
-    "Доступ: canViewOrUseTemplate; featured с клиента запрещён; seed — /admin/api/templates/*. " +
-    "Marketplace rate/like/… — legacy. Не путать с lib/templates/ (Jinja2).",
+    "CRUD + use; доступ canViewOrUseTemplate. " +
+    "featured и seed — только /admin/api/templates/*. " +
+    "Не путать с lib/templates/ (Jinja2).",
   media: "Загрузка и управление медиафайлами",
   bots: "Управление запуском ботов",
   tokens: "Токены ботов и настройки запуска",

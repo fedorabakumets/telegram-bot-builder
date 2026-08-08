@@ -66,27 +66,6 @@ export const TemplateSearchQuerySchema = z.object({
   q: z.string().openapi({ example: "faq", description: "Строка поиска" }),
 });
 
-/** Тело POST …/rate */
-export const RateTemplateRequestSchema = z
-  .object({
-    rating: z.number().min(1).max(5).openapi({ example: 5 }),
-  })
-  .openapi("RateTemplateRequest");
-
-/** Тело POST …/like */
-export const LikeTemplateRequestSchema = z
-  .object({
-    liked: z.boolean().openapi({ example: true }),
-  })
-  .openapi("LikeTemplateRequest");
-
-/** Тело POST …/bookmark */
-export const BookmarkTemplateRequestSchema = z
-  .object({
-    bookmarked: z.boolean().openapi({ example: true }),
-  })
-  .openapi("BookmarkTemplateRequest");
-
 /** Успех POST …/use */
 export const UseTemplateAuthResponseSchema = z
   .object({
