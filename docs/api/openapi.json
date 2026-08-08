@@ -64,7 +64,7 @@
     },
     {
       "name": "templates",
-      "description": "Шаблоны ботов"
+      "description": "Библиотека готовых сценариев ботов (`bot_templates`). UI: страница «Сценарии» + сохранить/загрузить в шапке. Не путать с `lib/templates/` (Jinja2 → Python). Живые: list/featured/category/create/use/delete. Остальное — marketplace/legacy или admin seed."
     },
     {
       "name": "tokens",
@@ -5523,16 +5523,130 @@
         "tags": [
           "templates"
         ],
-        "summary": "GET /api/templates",
+        "summary": "Список системных и публичных сценариев",
+        "description": "Каталог готовых сценариев ботов (`bot_templates`).\n\n**Зачем:** вкладка «Все» на странице «Сценарии».\n\n**Отдаёт:** массив шаблонов. Фильтр: `ownerId === null` (системные) **или** `isPublic === 1`. Личные приватные пользователя сюда **не** попадают (они только в `GET …/category/custom`).\n\n**Нюанс:** к каждому элементу добавляется `flow_data` (= `data`) для совместимости с UI.\n\n**Не отдаёт:** чужие приватные сценарии.\n\n**Авторизация:** cookie или Bearer PAT (`requireApiAuth`).\n\n**Клиент:** `useVseStsenary`.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Системные + публичные сценарии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTemplateList"
+                },
+                "examples": {
+                  "catalog": {
+                    "summary": "Системный FAQ",
+                    "value": [
+                      {
+                        "id": 1,
+                        "ownerId": null,
+                        "name": "FAQ-бот",
+                        "description": "Ответы на частые вопросы",
+                        "data": {
+                          "sheets": [
+                            {
+                              "id": "main",
+                              "name": "Основной",
+                              "nodes": [
+                                {
+                                  "id": "start",
+                                  "type": "start",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0
+                                  },
+                                  "data": {
+                                    "messageText": "Привет!"
+                                  }
+                                }
+                              ],
+                              "edges": []
+                            }
+                          ]
+                        },
+                        "flow_data": {
+                          "sheets": [
+                            {
+                              "id": "main",
+                              "name": "Основной",
+                              "nodes": [
+                                {
+                                  "id": "start",
+                                  "type": "start",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0
+                                  },
+                                  "data": {
+                                    "messageText": "Привет!"
+                                  }
+                                }
+                              ],
+                              "edges": []
+                            }
+                          ]
+                        },
+                        "category": "utility",
+                        "tags": [
+                          "faq",
+                          "support"
+                        ],
+                        "isPublic": 1,
+                        "difficulty": "easy",
+                        "authorName": null,
+                        "useCount": 120,
+                        "rating": 0,
+                        "ratingCount": 0,
+                        "featured": 1,
+                        "language": "ru",
+                        "complexity": 2,
+                        "estimatedTime": 10,
+                        "createdAt": "2026-01-10T10:00:00.000Z",
+                        "updatedAt": "2026-01-10T10:00:00.000Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка чтения БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Failed to fetch templates"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "setupGuard / БД не готова",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       },
@@ -5540,16 +5654,116 @@
         "tags": [
           "templates"
         ],
-        "summary": "POST /api/templates",
+        "summary": "Сохранить проект как сценарий",
+        "description": "Создаёт запись в `bot_templates` из текущего проекта.\n\n**Зачем:** «Сохранить сценарий» в шапке; «сохранить перед удалением» в delete-project-dialog.\n\n**Тело:** `name`, `description`, `data` (обязателен JSON проекта), `category`, `tags`, `isPublic` (0/1), `difficulty`, `language`, `authorName`, `featured`, …\n\n**Нюансы:** `ownerId` из body **игнорируется** — ставится из сессии. `isPublic` по умолчанию 0, если не передан.\n\n**Отдаёт:** созданный шаблон (201).\n\n**Клиент:** `save-template-modal`, `delete-project-dialog`.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTemplateRequest"
+              },
+              "examples": {
+                "fromEditor": {
+                  "summary": "Из save-template-modal",
+                  "value": {
+                    "name": "Мой FAQ",
+                    "description": "Сохранено из редактора",
+                    "category": "custom",
+                    "tags": [],
+                    "isPublic": 0,
+                    "difficulty": "easy",
+                    "language": "ru",
+                    "requiresToken": 1,
+                    "complexity": 1,
+                    "estimatedTime": 5,
+                    "authorName": "ivan",
+                    "featured": 0,
+                    "data": {
+                      "sheets": [
+                        {
+                          "id": "main",
+                          "name": "Основной",
+                          "nodes": [
+                            {
+                              "id": "start",
+                              "type": "start",
+                              "position": {
+                                "x": 0,
+                                "y": 0
+                              },
+                              "data": {
+                                "messageText": "Привет!"
+                              }
+                            }
+                          ],
+                          "edges": []
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Успешный ответ"
+          "201": {
+            "description": "Сценарий создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTemplateDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка Zod (insertBotTemplateSchema)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateValidationError"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка создания",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Failed to create template"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "setupGuard / БД не готова",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5559,16 +5773,88 @@
         "tags": [
           "templates"
         ],
-        "summary": "DELETE /api/templates/{id}",
+        "summary": "Удалить свой сценарий",
+        "description": "Удаляет запись `bot_templates`.\n\n**Зачем:** кнопка удаления на вкладке «Мои».\n\n**Права:** при авторизации — только свой; системные не удаляются (403).\n\n**Отдаёт:** `{ message: \"Template deleted successfully\" }`.\n\n**Клиент:** `useUdalitStsenary`.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID bot_templates",
+              "example": "12"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Удалён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateMessage"
+                },
+                "example": {
+                  "message": "Template deleted successfully"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Чужой или системный",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка удаления",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       },
@@ -5576,16 +5862,91 @@
         "tags": [
           "templates"
         ],
-        "summary": "GET /api/templates/{id}",
+        "summary": "Сценарий по ID",
+        "description": "Один шаблон из `bot_templates`.\n\n**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает** (карточки берут данные из list/featured/category).\n\n**Доступ при ownerId в сессии:** свой или системный (`ownerId=null`). Чужой (даже публичный) → **403** — особенность хендлера.\n\n**Отдаёт:** сырой шаблон **без** алиаса `flow_data`.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID bot_templates",
+              "example": "12"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Шаблон найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTemplateDto"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Чужой шаблон",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "You don't have permission to access this template"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Template not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "setupGuard / БД не готова",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       },
@@ -5593,16 +5954,104 @@
         "tags": [
           "templates"
         ],
-        "summary": "PUT /api/templates/{id}",
+        "summary": "Обновить сценарий",
+        "description": "Частичное обновление (`insertBotTemplateSchema.partial()`).\n\n**Статус:** marketplace/legacy — **текущий UI не использует**.\n\n**Права:** при `ownerId` в сессии — только свой; системные пользователь изменить не может (403).",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID bot_templates",
+              "example": "12"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTemplateRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Обновлённый шаблон",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTemplateDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка Zod",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateValidationError"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет прав (чужой или системный)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка обновления",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5612,16 +6061,97 @@
         "tags": [
           "templates"
         ],
-        "summary": "POST /api/templates/{id}/bookmark",
+        "summary": "Закладка / снять закладку",
+        "description": "**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает**.\n\n**Тело:** `{ bookmarked: boolean }`.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID bot_templates",
+              "example": "12"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookmarkTemplateRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "bookmarked / unbookmarked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateMessage"
+                },
+                "example": {
+                  "message": "Template bookmarked"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "bookmarked не boolean",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5631,16 +6161,78 @@
         "tags": [
           "templates"
         ],
-        "summary": "POST /api/templates/{id}/download",
+        "summary": "Инкремент скачиваний",
+        "description": "**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает**. Серверные хендлеры есть; счётчики в `bot_templates` обновляются.\n\nБез тела. `incrementTemplateDownloadCount`. Файл не отдаёт.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID bot_templates",
+              "example": "12"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "downloadCount++",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateMessage"
+                },
+                "example": {
+                  "message": "Download count incremented"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5650,16 +6242,97 @@
         "tags": [
           "templates"
         ],
-        "summary": "POST /api/templates/{id}/like",
+        "summary": "Лайк / снять лайк",
+        "description": "**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает**.\n\n**Тело:** `{ liked: boolean }`.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID bot_templates",
+              "example": "12"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LikeTemplateRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "liked / unliked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateMessage"
+                },
+                "example": {
+                  "message": "Template liked"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "liked не boolean",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5669,16 +6342,100 @@
         "tags": [
           "templates"
         ],
-        "summary": "POST /api/templates/{id}/rate",
+        "summary": "Оценить сценарий (1–5)",
+        "description": "**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает**.\n\n**Тело:** `{ rating: 1..5 }`. Иначе 400.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID bot_templates",
+              "example": "12"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RateTemplateRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Оценка принята",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateMessage"
+                },
+                "example": {
+                  "message": "Template rated successfully"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "rating вне 1–5",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Rating must be between 1 and 5"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5688,16 +6445,169 @@
         "tags": [
           "templates"
         ],
-        "summary": "POST /api/templates/{id}/use",
+        "summary": "Создать проект из сценария",
+        "description": "Применяет шаблон: инкремент `useCount` + (для авторизованного) новый проект и копия в «Мои».\n\n**Зачем:** кнопка «Использовать» на карточке сценария.\n\n**Авторизованный (`ownerId` из сессии):**\n1. `incrementTemplateUseCount`\n2. `createBotProject` с `name`/`description`/`data` шаблона, `userDatabaseEnabled: 1`\n3. Копия шаблона: `category: 'custom'`, **`isPublic: 0`**, `ownerId` = **оригинальный** owner шаблона (системный остаётся `null`)\n4. Ответ: `{ message, project, copiedTemplate }`\n\n**Без ownerId (legacy guest):** только инкремент счётчика → `{ message: \"Template use count incremented\" }`. При deny-by-default обычно недоступно.\n\n**Клиент:** `useIspolzovatStsenary`.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID bot_templates",
+              "example": "12"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Проект и/или инкремент useCount",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/UseTemplateAuthResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UseTemplateGuestResponse"
+                    }
+                  ]
+                },
+                "examples": {
+                  "authenticated": {
+                    "summary": "Авторизованный: проект + копия",
+                    "value": {
+                      "message": "Template copied to your projects and collection",
+                      "project": {
+                        "id": 266,
+                        "ownerId": 123456789,
+                        "name": "FAQ-бот",
+                        "description": "Ответы на частые вопросы",
+                        "data": {
+                          "sheets": [
+                            {
+                              "id": "main",
+                              "name": "Основной",
+                              "nodes": [
+                                {
+                                  "id": "start",
+                                  "type": "start",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0
+                                  },
+                                  "data": {
+                                    "messageText": "Привет!"
+                                  }
+                                }
+                              ],
+                              "edges": []
+                            }
+                          ]
+                        },
+                        "userDatabaseEnabled": 1
+                      },
+                      "copiedTemplate": {
+                        "id": 88,
+                        "ownerId": null,
+                        "name": "FAQ-бот",
+                        "description": "Ответы на частые вопросы",
+                        "data": {
+                          "sheets": [
+                            {
+                              "id": "main",
+                              "name": "Основной",
+                              "nodes": [
+                                {
+                                  "id": "start",
+                                  "type": "start",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0
+                                  },
+                                  "data": {
+                                    "messageText": "Привет!"
+                                  }
+                                }
+                              ],
+                              "edges": []
+                            }
+                          ]
+                        },
+                        "category": "custom",
+                        "isPublic": 0,
+                        "difficulty": "easy",
+                        "useCount": 0,
+                        "rating": 0,
+                        "ratingCount": 0,
+                        "featured": 0,
+                        "language": "ru",
+                        "complexity": 2,
+                        "estimatedTime": 10
+                      }
+                    }
+                  },
+                  "guest": {
+                    "summary": "Legacy guest: только счётчик",
+                    "value": {
+                      "message": "Template use count incremented"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Шаблон не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Template not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка создания проекта/копии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Failed to use template"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "setupGuard / БД не готова",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5707,16 +6617,78 @@
         "tags": [
           "templates"
         ],
-        "summary": "POST /api/templates/{id}/view",
+        "summary": "Инкремент просмотров",
+        "description": "**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает**. Серверные хендлеры есть; счётчики в `bot_templates` обновляются.\n\nБез тела. `incrementTemplateViewCount`.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID bot_templates",
+              "example": "12"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "viewCount++",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateMessage"
+                },
+                "example": {
+                  "message": "View count incremented"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5726,16 +6698,78 @@
         "tags": [
           "templates"
         ],
-        "summary": "GET /api/templates/category/{category}",
+        "summary": "Сценарии по категории",
+        "description": "Фильтр по `category`. Особый случай **`custom`** = «Мои».\n\n**custom + сессия:** все шаблоны пользователя с `category=custom` (включая приватные) через `getUserBotTemplates`.\n\n**custom без ownerId (legacy guest):** системные custom (`ownerId=null`) + опционально query `ids` (через запятую) из localStorage UI. При deny-by-default гостевая ветка почти недостижима — UI всё ещё шлёт `?ids=`.\n\n**Прочие категории:** только `isPublic=1` или `ownerId=null`.\n\n**Клиент:** `useMoiStsenary` → `/category/custom`.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "custom | business | entertainment | education | utility | games | official | community",
+              "example": "custom"
+            },
+            "required": true,
+            "name": "category",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Только category=custom без сессии: догрузка по ID из localStorage",
+              "example": "3,7,15"
+            },
+            "required": false,
+            "name": "ids",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив шаблонов категории",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTemplateList"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Failed to fetch templates by category"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5745,16 +6779,130 @@
         "tags": [
           "templates"
         ],
-        "summary": "GET /api/templates/featured",
+        "summary": "Рекомендуемые сценарии",
+        "description": "Шаблоны с `featured=1`.\n\n**Зачем:** вкладка «Рекомендуемые» на странице «Сценарии».\n\n**Фильтр privacy:** `isPublic === 1` **или** `ownerId === null` (системные) **или** свой (`ownerId` сессии).\n\n**Не отдаёт:** чужие приватные featured.\n\n**Авторизация:** cookie / PAT. **Клиент:** `useRekomenduemyeStsenary` (запрос при активной вкладке featured).",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Рекомендуемые после privacy-фильтра",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTemplateList"
+                },
+                "examples": {
+                  "featured": {
+                    "summary": "Один featured",
+                    "value": [
+                      {
+                        "id": 1,
+                        "ownerId": null,
+                        "name": "FAQ-бот",
+                        "description": "Ответы на частые вопросы",
+                        "data": {
+                          "sheets": [
+                            {
+                              "id": "main",
+                              "name": "Основной",
+                              "nodes": [
+                                {
+                                  "id": "start",
+                                  "type": "start",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0
+                                  },
+                                  "data": {
+                                    "messageText": "Привет!"
+                                  }
+                                }
+                              ],
+                              "edges": []
+                            }
+                          ]
+                        },
+                        "flow_data": {
+                          "sheets": [
+                            {
+                              "id": "main",
+                              "name": "Основной",
+                              "nodes": [
+                                {
+                                  "id": "start",
+                                  "type": "start",
+                                  "position": {
+                                    "x": 0,
+                                    "y": 0
+                                  },
+                                  "data": {
+                                    "messageText": "Привет!"
+                                  }
+                                }
+                              ],
+                              "edges": []
+                            }
+                          ]
+                        },
+                        "category": "utility",
+                        "tags": [
+                          "faq",
+                          "support"
+                        ],
+                        "isPublic": 1,
+                        "difficulty": "easy",
+                        "authorName": null,
+                        "useCount": 120,
+                        "rating": 0,
+                        "ratingCount": 0,
+                        "featured": 1,
+                        "language": "ru",
+                        "complexity": 2,
+                        "estimatedTime": 10,
+                        "createdAt": "2026-01-10T10:00:00.000Z",
+                        "updatedAt": "2026-01-10T10:00:00.000Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Failed to fetch featured templates"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5764,16 +6912,59 @@
         "tags": [
           "templates"
         ],
-        "summary": "POST /api/templates/recreate",
+        "summary": "Пересоздать системные сценарии (иерархия)",
+        "description": "Тот же `seedDefaultTemplates(true)`, что и refresh; другое сообщение в ответе.\n\n**Статус:** админ/дебаг seed — **UI не использует**.\n\n**Отдаёт:** `{ message: \"Templates recreated with hierarchy successfully\" }`.\n\nОтдельной admin-проверки нет — достаточно cookie/PAT.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Seed выполнен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateSeedOk"
+                },
+                "example": {
+                  "message": "Templates recreated with hierarchy successfully"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка seed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Failed to recreate templates"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5783,16 +6974,71 @@
         "tags": [
           "templates"
         ],
-        "summary": "POST /api/templates/refresh",
+        "summary": "Пересидить системные сценарии (force)",
+        "description": "Вызывает `seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.\n\n**Статус:** админ/дебаг seed — **UI не использует**.\n\n**Дубль registration:** путь регистрируется **дважды** — в `setupTemplates` (`message: \"Templates refreshed successfully\"`) и позже в `registerRoutes` (ответ с `timestamp`). Express обрабатывает **первый** хендлер (`setupTemplates`); второй — мёртвый код.\n\n**Авторизация:** cookie/PAT; отдельной admin-проверки нет.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Seed выполнен (активный хендлер без timestamp)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateSeedOk"
+                },
+                "examples": {
+                  "setupTemplates": {
+                    "summary": "Активный (setupTemplates)",
+                    "value": {
+                      "message": "Templates refreshed successfully"
+                    }
+                  },
+                  "deadDuplicate": {
+                    "summary": "Мёртвый дубль (не достигается)",
+                    "value": {
+                      "message": "Templates updated successfully",
+                      "timestamp": "2026-08-08T19:00:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка seed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Failed to refresh templates"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5802,16 +7048,78 @@
         "tags": [
           "templates"
         ],
-        "summary": "GET /api/templates/search",
+        "summary": "Поиск сценариев",
+        "description": "Поиск по строке `q`.\n\n**Статус:** marketplace/legacy — **текущий UI не вызывает** (нет поисковой строки на «Сценарии»).\n\n**Query:** `q` обязателен (иначе 400).\n\n**Privacy:** публичные + системные (`ownerId=null`) + свои.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Строка поиска",
+              "example": "faq"
+            },
+            "required": true,
+            "name": "q",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Найденные шаблоны",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTemplateList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет q",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Search query is required"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка поиска",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -8143,6 +9451,556 @@
         "required": [
           "ok",
           "message"
+        ]
+      },
+      "BotTemplateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 12
+          },
+          "ownerId": {
+            "type": "number",
+            "nullable": true,
+            "example": null
+          },
+          "name": {
+            "type": "string",
+            "example": "FAQ-бот"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Ответы на частые вопросы"
+          },
+          "data": {
+            "nullable": true,
+            "example": {
+              "sheets": [
+                {
+                  "id": "main",
+                  "nodes": [],
+                  "edges": []
+                }
+              ]
+            }
+          },
+          "flow_data": {
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true,
+            "example": "utility"
+          },
+          "tags": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "isPublic": {
+            "type": "integer",
+            "example": 1
+          },
+          "difficulty": {
+            "type": "string",
+            "nullable": true,
+            "example": "easy"
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorName": {
+            "type": "string",
+            "nullable": true
+          },
+          "useCount": {
+            "type": "integer",
+            "example": 42
+          },
+          "rating": {
+            "type": "integer",
+            "example": 0
+          },
+          "ratingCount": {
+            "type": "integer",
+            "example": 0
+          },
+          "featured": {
+            "type": "integer",
+            "example": 1
+          },
+          "version": {
+            "type": "string",
+            "nullable": true
+          },
+          "previewImage": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastUsedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "downloadCount": {
+            "type": "integer"
+          },
+          "likeCount": {
+            "type": "integer"
+          },
+          "bookmarkCount": {
+            "type": "integer"
+          },
+          "viewCount": {
+            "type": "integer"
+          },
+          "language": {
+            "type": "string",
+            "nullable": true,
+            "example": "ru"
+          },
+          "requiresToken": {
+            "type": "integer"
+          },
+          "complexity": {
+            "type": "integer",
+            "example": 1
+          },
+          "estimatedTime": {
+            "type": "integer",
+            "example": 5
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "ownerId",
+          "name",
+          "description",
+          "category",
+          "isPublic",
+          "difficulty",
+          "useCount",
+          "rating",
+          "ratingCount",
+          "featured",
+          "language",
+          "complexity",
+          "estimatedTime"
+        ]
+      },
+      "BotTemplateList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BotTemplateDto"
+        }
+      },
+      "TemplateValidationError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Invalid data"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            }
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "CreateTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Мой FAQ"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Сохранено из редактора"
+          },
+          "data": {
+            "nullable": true,
+            "example": {
+              "sheets": [
+                {
+                  "id": "main",
+                  "nodes": [],
+                  "edges": []
+                }
+              ]
+            }
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "custom",
+              "business",
+              "entertainment",
+              "education",
+              "utility",
+              "games",
+              "official",
+              "community"
+            ],
+            "default": "custom",
+            "example": "custom"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": []
+          },
+          "isPublic": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0,
+            "example": 0
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "default": "easy"
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorName": {
+            "type": "string",
+            "nullable": true,
+            "example": "ivan"
+          },
+          "version": {
+            "type": "string"
+          },
+          "previewImage": {
+            "type": "string",
+            "nullable": true
+          },
+          "featured": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "ru",
+              "en",
+              "es",
+              "fr",
+              "de",
+              "it",
+              "pt",
+              "zh",
+              "ja",
+              "ko"
+            ],
+            "default": "ru"
+          },
+          "requiresToken": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0
+          },
+          "complexity": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 10,
+            "default": 1
+          },
+          "estimatedTime": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 120,
+            "default": 5
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "TemplateSeedOk": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Templates refreshed successfully"
+          },
+          "timestamp": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "UpdateTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Мой FAQ"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Сохранено из редактора"
+          },
+          "data": {
+            "nullable": true,
+            "example": {
+              "sheets": [
+                {
+                  "id": "main",
+                  "nodes": [],
+                  "edges": []
+                }
+              ]
+            }
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "custom",
+              "business",
+              "entertainment",
+              "education",
+              "utility",
+              "games",
+              "official",
+              "community"
+            ],
+            "default": "custom",
+            "example": "custom"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": []
+          },
+          "isPublic": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0,
+            "example": 0
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "default": "easy"
+          },
+          "authorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorName": {
+            "type": "string",
+            "nullable": true,
+            "example": "ivan"
+          },
+          "version": {
+            "type": "string"
+          },
+          "previewImage": {
+            "type": "string",
+            "nullable": true
+          },
+          "featured": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "ru",
+              "en",
+              "es",
+              "fr",
+              "de",
+              "it",
+              "pt",
+              "zh",
+              "ja",
+              "ko"
+            ],
+            "default": "ru"
+          },
+          "requiresToken": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0
+          },
+          "complexity": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 10,
+            "default": 1
+          },
+          "estimatedTime": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 120,
+            "default": 5
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          }
+        }
+      },
+      "TemplateMessage": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Template deleted successfully"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "UseTemplateAuthResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Template copied to your projects and collection"
+          },
+          "project": {
+            "$ref": "#/components/schemas/BotProject"
+          },
+          "copiedTemplate": {
+            "$ref": "#/components/schemas/BotTemplateDto"
+          }
+        },
+        "required": [
+          "message",
+          "project",
+          "copiedTemplate"
+        ]
+      },
+      "UseTemplateGuestResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Template use count incremented"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "RateTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5,
+            "example": 5
+          }
+        },
+        "required": [
+          "rating"
+        ]
+      },
+      "LikeTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "liked": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "liked"
+        ]
+      },
+      "BookmarkTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "bookmarked": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "bookmarked"
         ]
       },
       "WorkerPoolDetail": {

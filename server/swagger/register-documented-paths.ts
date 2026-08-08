@@ -34,6 +34,7 @@ import { registerAdminAppSettingsPaths } from "./paths/admin-app-settings-paths"
 import { registerDatabasePaths } from "./paths/database-paths";
 import { registerProjectsPaths } from "./paths/projects-paths";
 import { registerStorageConfigPaths } from "./paths/storage-config-paths";
+import { registerTemplatePaths } from "./paths/template-paths";
 import { registerWorkerPaths } from "./paths/worker-paths";
 import { registerWebhookPaths } from "./paths/webhook-paths";
 import { registerServerPaths } from "./paths/server-paths";
@@ -246,6 +247,7 @@ registerProjectsPaths(documentedRegistry, cookieSecurity);
 registerConfigSetupPaths(documentedRegistry, publicSecurity);
 registerAdminAppSettingsPaths(documentedRegistry);
 registerStorageConfigPaths(documentedRegistry, cookieSecurity);
+registerTemplatePaths(documentedRegistry, cookieSecurity);
 registerWorkerPaths(documentedRegistry, cookieSecurity);
 registerWebhookPaths(documentedRegistry, publicSecurity);
 registerServerPaths(documentedRegistry, cookieSecurity);

@@ -23,7 +23,10 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   setup: "Первоначальная настройка приложения",
   config: "Публичная конфигурация клиента",
   projects: "Проекты, версии, экспорт и дублирование",
-  templates: "Шаблоны ботов",
+  templates:
+    "Библиотека готовых сценариев ботов (`bot_templates`). UI: страница «Сценарии» + " +
+    "сохранить/загрузить в шапке. Не путать с `lib/templates/` (Jinja2 → Python). " +
+    "Живые: list/featured/category/create/use/delete. Остальное — marketplace/legacy или admin seed.",
   media: "Загрузка и управление медиафайлами",
   bots: "Управление запуском ботов",
   tokens: "Токены ботов и настройки запуска",
