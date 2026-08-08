@@ -67,6 +67,10 @@ export const UpdateStorageConfigRequestSchema = z
 export const StorageConfigIdParamsSchema = z.object({
   id: z.string().openapi({
     example: "local-default",
-    description: "ID записи storage_configs",
+    description: "ID записи storage_configs (например local-default, s3-main)",
+    param: {
+      description: "ID записи storage_configs (например local-default, s3-main)",
+      example: "local-default",
+    },
   }),
 });

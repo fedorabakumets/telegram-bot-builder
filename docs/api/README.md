@@ -33,6 +33,7 @@ REST API визуального конструктора Telegram-ботов. А
 
 ## Авторизация
 
-- **Cookie** — сессия после Telegram Login Widget (`connect.sid`)
+- **Cookie** — сессия после Telegram Login / Mini App / dev-login (`connect.sid`)
 - **Bearer PAT** — персональный токен агента (MCP/CLI)
+- **Admin cookie** — `/admin/login` (`ADMIN_API_KEY`)
 - Публичные эндпоинты помечены «Публичный»

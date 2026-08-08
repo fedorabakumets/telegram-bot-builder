@@ -12,7 +12,7 @@
     },
     {
       "name": "auth",
-      "description": "Аутентификация через Telegram и dev-login"
+      "description": "Вход в Studio: Telegram Widget, Mini App initData, dev-login по ID; сессия (`/me`, logout). Публичные; cookie `connect.sid` после успешного login. Режим входа — `/admin/settings` (dev_login | telegram_widget). Не путать с `/admin/login` и agent PAT."
     },
     {
       "name": "bot",
@@ -185,10 +185,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID токена в БД",
+              "description": "ID записи agent_tokens в БД",
               "example": "1"
             },
             "required": true,
+            "description": "ID записи agent_tokens в БД",
+            "example": "1",
             "name": "id",
             "in": "path"
           }
@@ -232,129 +234,72 @@
         "tags": [
           "auth"
         ],
-        "summary": "POST /api/auth/dev-login",
-        "security": [],
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/auth/login": {
-      "get": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "GET /api/auth/login",
-        "security": [],
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/auth/logout": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Выход из Studio-сессии",
-        "description": "Публичный. Уничтожает серверную сессию и очищает cookie connect.sid. Алиас: POST /api/auth/telegram/logout.",
-        "security": [],
-        "responses": {
-          "200": {
-            "description": "Сессия уничтожена",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LogoutResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/me": {
-      "get": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Текущий пользователь сессии",
-        "description": "Публичный (cookie опциональна). Клиент вызывает при каждой загрузке страницы. Не меняет сессию. Без cookie или без telegramUser возвращает { user: null }.",
-        "security": [],
-        "responses": {
-          "200": {
-            "description": "Пользователь из сессии или null",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MeResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/telegram": {
-      "post": {
-        "tags": [
-          "auth"
-        ],
-        "summary": "Вход / смена аккаунта через Telegram Login Widget",
-        "description": "Публичный. Только реальный login (не restore после reload). Создаёт/обновляет пользователя и устанавливает session cookie. Повторный вызов с другим id = смена аккаунта: сервер регенерирует session, в ответе switched=true. В production без SKIP_AUTH поле id_token обязательно.",
+        "summary": "Dev-вход по Telegram ID (без proof)",
+        "description": "Локальный вход **без** Telegram Widget / id_token. Создаёт пользователя, ставит cookie, мигрирует **все** гостевые проекты на этого user.\n\n**Когда доступен:** в `/admin/settings` режим `dev_login` (или env fallback, пока не выбран `telegram_widget`).\nИначе → **403** `dev-login отключён`.\n\n**Тело:** `id` (number), `firstName` (string), опционально `username`.\n\n**Клиент:** `AuthDevForm`, popup `/api/auth/login` в dev.\n\n⚠️ Не использовать на проде со включённым dev-login — любой может войти под чужим ID.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/auth/dev-login \\\n  -H 'Content-Type: application/json' -c cookies.txt \\\n  -d '{\"id\":123456789,\"firstName\":\"Иван\",\"username\":\"ivan_p\"}'\n```",
         "security": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TelegramAuthRequest"
+                "$ref": "#/components/schemas/DevLoginRequest"
+              },
+              "example": {
+                "id": 123456789,
+                "firstName": "Иван",
+                "username": "ivan_p"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Авторизация успешна, cookie установлена",
+            "description": "Сессия создана",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TelegramAuthResponse"
+                  "$ref": "#/components/schemas/DevLoginResponse"
+                },
+                "example": {
+                  "success": true,
+                  "user": {
+                    "id": 123456789,
+                    "firstName": "Иван",
+                    "lastName": "Петров",
+                    "username": "ivan_p",
+                    "photoUrl": "https://t.me/i/userpic/320/ivan_p.jpg",
+                    "authDate": 1710000000,
+                    "createdAt": "2026-01-15T10:00:00.000Z",
+                    "updatedAt": "2026-08-08T12:00:00.000Z"
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Не передан id",
+            "description": "Нет id или firstName",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "id и firstName обязательны"
                 }
               }
             }
           },
-          "401": {
-            "description": "Требуется или невалиден id_token / proof",
+          "403": {
+            "description": "Режим telegram_widget / SKIP_AUTH=false",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Forbidden: dev-login отключён (SKIP_AUTH=false)"
                 }
               }
             }
@@ -368,6 +313,267 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Сессия/БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Ошибка dev-входа"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "HTML-страница входа (popup)",
+        "description": "Отдаёт **HTML** (не JSON): Telegram Login Widget или dev-форма по режиму входа.\n\nОткрывается popup из `useTelegramLogin` (`window.open('/api/auth/login')`). После успеха страница шлёт `postMessage` родителю / вызывает `dev-login`.\n\n```bash\ncurl -s http://localhost:5000/api/auth/login | head\n```",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "HTML страница входа",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "example": "<!DOCTYPE html><html>…Telegram Login…</html>"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Выход из Studio-сессии",
+        "description": "Уничтожает серверную сессию и очищает cookie `connect.sid`.\n\nCookie **опциональна**: без `connect.sid` ответ всё равно **200** `{ success: true }` (идемпотентно — `destroySession` no-op при отсутствии сессии).\n\nRate limit: общий лимит mutating auth. `/api/auth/*` вне setupGuard — **503 не бывает**.\n\n**Клиент:** кнопка «Выйти» в шапке/сайдбаре.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/auth/logout -b cookies.txt -c cookies.txt\n```",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Необязательна: без неё ответ всё равно 200 (выход идемпотентен).",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie. Необязательна: без неё ответ всё равно 200 (выход идемпотентен).",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Сессия уничтожена (или уже не было сессии)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Выход выполнен"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка destroy session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Ошибка выхода"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Текущий пользователь сессии",
+        "description": "Источник правды после reload страницы. **Не** меняет сессию.\n\n- Есть cookie `connect.sid` + `telegramUser` → `{ user: {...} }`\n- Нет cookie / гость → **всё равно 200** `{ user: null }` (это **не** 401)\n\n**Параметры:** path/query/body **нет**. Единственный вход — опциональная cookie `connect.sid` (см. Parameters).\n\n`/api/auth/*` исключены из setupGuard — **503 не бывает**.\n\n**Клиент:** `useTelegramAuth` (React Query `['/api/auth/me']`).\n\n```bash\ncurl -s http://localhost:5000/api/auth/me -b cookies.txt\n```",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Необязательна: без неё `{ user: null }`.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Необязательна: без неё `{ user: null }`.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь из сессии или null (гость)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                },
+                "examples": {
+                  "loggedIn": {
+                    "summary": "Залогинен",
+                    "value": {
+                      "user": {
+                        "id": 123456789,
+                        "firstName": "Иван",
+                        "lastName": "Петров",
+                        "username": "ivan_p",
+                        "photoUrl": "https://t.me/i/userpic/320/ivan_p.jpg",
+                        "authDate": 1710000000,
+                        "createdAt": "2026-01-15T10:00:00.000Z",
+                        "updatedAt": "2026-08-08T12:00:00.000Z"
+                      }
+                    }
+                  },
+                  "guest": {
+                    "summary": "Гость",
+                    "value": {
+                      "user": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Сбой чтения session store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeErrorResponse"
+                },
+                "example": {
+                  "user": null,
+                  "error": "Ошибка чтения сессии"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/telegram": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Вход / смена аккаунта (Telegram Login Widget)",
+        "description": "Реальный login (не restore после reload). Создаёт/обновляет `telegram_users`, ставит cookie `connect.sid`, мигрирует гостевые проекты текущей session.\n\n**Поля тела:** `id`, `first_name` (+ опционально last_name, username, photo_url, auth_date).\n**`id_token`:** обязателен в режиме `telegram_widget` / production без skip; в dev-login режиме proof не требуется.\n\n**Смена аккаунта:** другой `id` при уже залогиненной сессии → `regenerateSession`, `switched: true`. Проекты прошлого пользователя не переносятся.\n\n**Клиент:** `useTelegramLogin` / Telegram Login Widget.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/auth/telegram \\\n  -H 'Content-Type: application/json' -c cookies.txt \\\n  -d '{\"id\":123456789,\"first_name\":\"Иван\",\"id_token\":\"eyJ...\"}'\n```",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelegramAuthRequest"
+              },
+              "example": {
+                "id": 123456789,
+                "first_name": "Иван",
+                "last_name": "Петров",
+                "username": "ivan_p",
+                "auth_date": 1710000000,
+                "id_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Авторизация успешна, cookie установлена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelegramAuthResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Авторизация успешна",
+                  "user": {
+                    "id": 123456789,
+                    "firstName": "Иван",
+                    "lastName": "Петров",
+                    "username": "ivan_p",
+                    "photoUrl": "https://t.me/i/userpic/320/ivan_p.jpg",
+                    "authDate": 1710000000,
+                    "createdAt": "2026-01-15T10:00:00.000Z",
+                    "updatedAt": "2026-08-08T12:00:00.000Z"
+                  },
+                  "switched": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не передан id / битое тело",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "ID пользователя обязателен"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет или невалиден id_token / proof",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Требуется id_token"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit auth",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Too many requests"
+                }
+              }
+            }
           }
         }
       }
@@ -377,17 +583,51 @@
         "tags": [
           "auth"
         ],
-        "summary": "POST /api/auth/telegram/logout",
+        "summary": "Выход (алиас logout)",
+        "description": "Тот же обработчик, что `POST /api/auth/logout` (включая идемпотентность без cookie). Оставлен для совместимости со старым клиентом.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/auth/telegram/logout -b cookies.txt -c cookies.txt\n```",
         "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Необязательна: без неё ответ всё равно 200 (выход идемпотентен).",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie. Необязательна: без неё ответ всё равно 200 (выход идемпотентен).",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Сессия уничтожена (или уже не было сессии)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Выход выполнен"
+                }
+              }
+            }
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "500": {
+            "description": "Ошибка destroy session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Ошибка выхода"
+                }
+              }
+            }
           }
         }
       }
@@ -397,17 +637,99 @@
         "tags": [
           "auth"
         ],
-        "summary": "POST /api/auth/telegram/miniapp",
+        "summary": "Вход из Telegram Mini App (initData)",
+        "description": "Верифицирует `initData` HMAC бот-токеном (`telegram_bot_token` в admin settings), создаёт сессию. Логика смены аккаунта как у Widget (`switched`).\n\n**Тело:** `{ \"initData\": \"<Telegram.WebApp.initData>\" }`.\n\nВ development без bot token проверка HMAC ослаблена; в production без токена — 500.\n\n**Клиент:** `useMiniAppAuth` при открытии внутри Telegram.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/auth/telegram/miniapp \\\n  -H 'Content-Type: application/json' -c cookies.txt \\\n  -d '{\"initData\":\"user=%7B%22id%22%3A123...&hash=...\"}'\n```",
         "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiniAppAuthRequest"
+              },
+              "example": {
+                "initData": "user=%7B%22id%22%3A123456789%7D&auth_date=1710000000&hash=abc..."
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Сессия создана / обновлена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelegramAuthResponse"
+                },
+                "example": {
+                  "success": true,
+                  "message": "Авторизация успешна",
+                  "user": {
+                    "id": 123456789,
+                    "firstName": "Иван",
+                    "lastName": "Петров",
+                    "username": "ivan_p",
+                    "photoUrl": "https://t.me/i/userpic/320/ivan_p.jpg",
+                    "authDate": 1710000000,
+                    "createdAt": "2026-01-15T10:00:00.000Z",
+                    "updatedAt": "2026-08-08T12:00:00.000Z"
+                  },
+                  "switched": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет initData или нет user в initData",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "initData обязателен"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Невалидный initData (HMAC)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Невалидный initData"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "429": {
+            "description": "Rate limit auth",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Bot token не настроен (не-dev)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Bot token не настроен"
+                }
+              }
+            }
           }
         }
       }
@@ -417,17 +739,19 @@
         "tags": [
           "auth"
         ],
-        "summary": "Получить пользователя Telegram по ID",
-        "description": "Публичный. Возвращает данные из таблицы telegram_users.",
+        "summary": "Пользователь Telegram по ID",
+        "description": "Публичное чтение записи из `telegram_users` по числовому id.\n\n**Параметр path:** `id` — Telegram user id.\n\nНе создаёт сессию и не требует cookie. Studio login на этот эндпоинт не опирается (источник правды — `GET /api/auth/me`).\n\n```bash\ncurl -s http://localhost:5000/api/auth/telegram/user/123456789\n```",
         "security": [],
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "description": "Telegram user id",
+              "description": "Числовой Telegram user id",
               "example": "123456789"
             },
             "required": true,
+            "description": "Числовой Telegram user id",
+            "example": "123456789",
             "name": "id",
             "in": "path"
           }
@@ -439,6 +763,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GetTelegramUserResponse"
+                },
+                "example": {
+                  "success": true,
+                  "user": {
+                    "id": 123456789,
+                    "firstName": "Иван",
+                    "lastName": "Петров",
+                    "username": "ivan_p",
+                    "photoUrl": "https://t.me/i/userpic/320/ivan_p.jpg",
+                    "authDate": 1710000000,
+                    "createdAt": "2026-01-15T10:00:00.000Z",
+                    "updatedAt": "2026-08-08T12:00:00.000Z"
+                  }
                 }
               }
             }
@@ -449,16 +786,24 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Требуется ID пользователя"
                 }
               }
             }
           },
           "404": {
-            "description": "Пользователь не найден",
+            "description": "Нет записи в БД",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthError"
+                },
+                "example": {
+                  "success": false,
+                  "error": "Пользователь не найден"
                 }
               }
             }
@@ -5271,10 +5616,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID записи storage_configs",
+              "description": "ID записи storage_configs (например local-default, s3-main)",
               "example": "local-default"
             },
             "required": true,
+            "description": "ID записи storage_configs (например local-default, s3-main)",
+            "example": "local-default",
             "name": "id",
             "in": "path"
           }
@@ -5347,10 +5694,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID записи storage_configs",
+              "description": "ID записи storage_configs (например local-default, s3-main)",
               "example": "local-default"
             },
             "required": true,
+            "description": "ID записи storage_configs (например local-default, s3-main)",
+            "example": "local-default",
             "name": "id",
             "in": "path"
           }
@@ -5448,10 +5797,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID записи storage_configs",
+              "description": "ID записи storage_configs (например local-default, s3-main)",
               "example": "local-default"
             },
             "required": true,
+            "description": "ID записи storage_configs (например local-default, s3-main)",
+            "example": "local-default",
             "name": "id",
             "in": "path"
           }
@@ -5783,10 +6134,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID bot_templates",
+              "description": "ID записи bot_templates",
               "example": "12"
             },
             "required": true,
+            "description": "ID записи bot_templates",
+            "example": "12",
             "name": "id",
             "in": "path"
           }
@@ -5872,10 +6225,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID bot_templates",
+              "description": "ID записи bot_templates",
               "example": "12"
             },
             "required": true,
+            "description": "ID записи bot_templates",
+            "example": "12",
             "name": "id",
             "in": "path"
           }
@@ -5964,10 +6319,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID bot_templates",
+              "description": "ID записи bot_templates",
               "example": "12"
             },
             "required": true,
+            "description": "ID записи bot_templates",
+            "example": "12",
             "name": "id",
             "in": "path"
           }
@@ -6071,10 +6428,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID bot_templates",
+              "description": "ID записи bot_templates",
               "example": "12"
             },
             "required": true,
+            "description": "ID записи bot_templates",
+            "example": "12",
             "name": "id",
             "in": "path"
           }
@@ -6238,10 +6597,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "custom | business | entertainment | education | utility | games | official | community",
+              "description": "Категория: custom | business | entertainment | education | utility | game | official | community",
               "example": "custom"
             },
             "required": true,
+            "description": "Категория: custom | business | entertainment | education | utility | game | official | community",
+            "example": "custom",
             "name": "category",
             "in": "path"
           }
@@ -6442,10 +6803,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "Строка поиска",
+              "description": "Строка поиска по имени/описанию/тегам сценария",
               "example": "faq"
             },
             "required": true,
+            "description": "Строка поиска по имени/описанию/тегам сценария",
+            "example": "faq",
             "name": "q",
             "in": "query"
           }
@@ -7164,10 +7527,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID bot_templates",
+              "description": "ID записи bot_templates",
               "example": "12"
             },
             "required": true,
+            "description": "ID записи bot_templates",
+            "example": "12",
             "name": "id",
             "in": "path"
           }
@@ -7314,11 +7679,13 @@
           },
           "photoUrl": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "example": "https://t.me/i/userpic/320/ivan_p.jpg"
           },
           "authDate": {
             "type": "number",
-            "nullable": true
+            "nullable": true,
+            "example": 1710000000
           },
           "createdAt": {
             "anyOf": [
@@ -7328,7 +7695,8 @@
               {
                 "type": "string"
               }
-            ]
+            ],
+            "example": "2026-01-15T10:00:00.000Z"
           },
           "updatedAt": {
             "anyOf": [
@@ -7338,7 +7706,8 @@
               {
                 "type": "string"
               }
-            ]
+            ],
+            "example": "2026-08-08T12:00:00.000Z"
           }
         },
         "required": [
@@ -7355,6 +7724,22 @@
         },
         "required": [
           "user"
+        ]
+      },
+      "MeErrorResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "example": "Ошибка чтения сессии"
+          }
+        },
+        "required": [
+          "user",
+          "error"
         ]
       },
       "LogoutResponse": {
@@ -7374,6 +7759,25 @@
         "required": [
           "success",
           "message"
+        ]
+      },
+      "AuthError": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              false
+            ]
+          },
+          "error": {
+            "type": "string",
+            "example": "Пользователь не найден"
+          }
+        },
+        "required": [
+          "success",
+          "error"
         ]
       },
       "TelegramAuthResponse": {
@@ -7399,28 +7803,7 @@
         },
         "required": [
           "success",
-          "message",
-          "user",
-          "switched"
-        ]
-      },
-      "AuthError": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "enum": [
-              false
-            ]
-          },
-          "error": {
-            "type": "string",
-            "example": "Пользователь не найден"
-          }
-        },
-        "required": [
-          "success",
-          "error"
+          "user"
         ]
       },
       "TelegramAuthRequest": {
@@ -7443,19 +7826,74 @@
             "example": "ivan_p"
           },
           "photo_url": {
-            "type": "string"
+            "type": "string",
+            "example": "https://t.me/i/userpic/320/ivan_p.jpg"
           },
           "auth_date": {
             "type": "number",
             "example": 1710000000
           },
           "id_token": {
-            "type": "string"
+            "type": "string",
+            "example": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
           }
         },
         "required": [
           "id",
           "first_name"
+        ]
+      },
+      "MiniAppAuthRequest": {
+        "type": "object",
+        "properties": {
+          "initData": {
+            "type": "string",
+            "minLength": 1,
+            "example": "user=%7B%22id%22%3A123456789%7D&auth_date=1710000000&hash=abc..."
+          }
+        },
+        "required": [
+          "initData"
+        ]
+      },
+      "DevLoginResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "user": {
+            "$ref": "#/components/schemas/TelegramUser"
+          }
+        },
+        "required": [
+          "success",
+          "user"
+        ]
+      },
+      "DevLoginRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 123456789
+          },
+          "firstName": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Иван"
+          },
+          "username": {
+            "type": "string",
+            "example": "ivan_p"
+          }
+        },
+        "required": [
+          "id",
+          "firstName"
         ]
       },
       "GetTelegramUserResponse": {

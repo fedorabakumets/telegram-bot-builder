@@ -85,7 +85,13 @@ export function registerTemplateFeaturedCategoryPaths(
       params: z.object({
         category: z.string().openapi({
           example: "custom",
-          description: "custom | business | entertainment | education | utility | games | official | community",
+          description:
+            "Категория: custom | business | entertainment | education | utility | game | official | community",
+          param: {
+            description:
+              "Категория: custom | business | entertainment | education | utility | game | official | community",
+            example: "custom",
+          },
         }),
       }),
     },

@@ -81,3 +81,15 @@ export const RevokeAgentTokenResponseSchema = z
     success: z.literal(true),
   })
   .openapi("RevokeAgentTokenResponse");
+
+/** Path-параметр id токена агента */
+export const AgentTokenIdParamsSchema = z.object({
+  id: z.string().openapi({
+    example: "1",
+    description: "ID записи agent_tokens в БД",
+    param: {
+      description: "ID записи agent_tokens в БД",
+      example: "1",
+    },
+  }),
+});

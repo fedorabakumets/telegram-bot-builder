@@ -5,6 +5,12 @@
 
 import fs from "fs";
 import path from "path";
+import {
+  renderParametersTable,
+  renderRequestExample,
+  renderResponseExample,
+  schemaRefName,
+} from "./render-operation-details";
 
 /** HTTP-методы OpenAPI */
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete", "head", "options"] as const;
@@ -22,9 +28,17 @@ interface OpenApiOperation {
   /** Query/path параметры */
   parameters?: unknown[];
   /** Тело запроса */
-  requestBody?: { content?: Record<string, { schema?: unknown }> };
+  requestBody?: {
+    content?: Record<string, { schema?: unknown; example?: unknown; examples?: unknown }>;
+  };
   /** Ответы по кодам */
-  responses?: Record<string, { description?: string; content?: unknown }>;
+  responses?: Record<
+    string,
+    {
+      description?: string;
+      content?: Record<string, { schema?: unknown; example?: unknown; examples?: unknown }>;
+    }
+  >;
 }
 
 /** OpenAPI document (минимальная типизация для рендера) */
@@ -50,17 +64,6 @@ interface TaggedOperation {
 }
 
 /**
- * Извлекает имя схемы из $ref.
- * @param schema - JSON Schema фрагмент
- * @returns Имя схемы или null
- */
-function schemaRefName(schema: unknown): string | null {
-  if (!schema || typeof schema !== "object" || !("$ref" in schema)) return null;
-  const ref = (schema as { $ref: string }).$ref;
-  return ref.split("/").pop() ?? null;
-}
-
-/**
  * Форматирует блок авторизации операции.
  * @param operation - Операция OpenAPI
  * @param defaultSecurity - Глобальный security spec
@@ -74,6 +77,7 @@ function formatAuth(operation: OpenApiOperation, defaultSecurity?: Record<string
   const parts: string[] = [];
   if (keys.includes("cookieAuth")) parts.push("Cookie (`connect.sid`)");
   if (keys.includes("agentToken")) parts.push("Bearer PAT");
+  if (keys.includes("adminCookie")) parts.push("Admin cookie");
   return parts.join(" или ") || "Cookie / Bearer PAT";
 }
 
@@ -104,24 +108,25 @@ function renderOperation(
     lines.push("", operation.description);
   }
 
-  const jsonBody = operation.requestBody?.content?.["application/json"]?.schema;
-  const bodySchema = schemaRefName(jsonBody);
+  const jsonBody = operation.requestBody?.content?.["application/json"];
+  const bodySchema = schemaRefName(jsonBody?.schema);
   if (bodySchema) {
     lines.push("", `**Тело запроса:** \`${bodySchema}\``);
   }
 
-  const paramCount = operation.parameters?.length ?? 0;
-  if (paramCount > 0) {
-    lines.push("", `**Параметры:** ${paramCount}`);
-  }
+  lines.push(...renderParametersTable(operation.parameters));
+  lines.push(...renderRequestExample(jsonBody));
 
   if (operation.responses && Object.keys(operation.responses).length > 0) {
     lines.push("", "#### Ответы", "", "| Код | Описание |", "|-----|----------|");
-    for (const [code, resp] of Object.entries(operation.responses).sort(([a], [b]) => a.localeCompare(b))) {
+    for (const [code, resp] of Object.entries(operation.responses).sort(([a], [b]) =>
+      a.localeCompare(b),
+    )) {
       lines.push(`| ${code} | ${resp.description ?? "—"} |`);
     }
   }
 
+  lines.push(...renderResponseExample(operation.responses));
   lines.push("");
   return lines.join("\n");
 }
@@ -153,10 +158,10 @@ function collectByTag(doc: OpenApiDocForMarkdown): Map<string, TaggedOperation[]
 }
 
 /**
- * Удаляет markdown-файлы тегов, которые больше не присутствуют в OpenAPI spec.
+ * Удаляет markdown-файлы тегов, которых нет в текущем OpenAPI spec.
  * @param outputDir - Каталог docs/api
- * @param activeTags - Актуальные имена тегов из текущего spec
- * @returns Список удалённых файлов (без README.md)
+ * @param activeTags - Актуальные имена тегов
+ * @returns Список удалённых файлов
  */
 function removeStaleTagMarkdownFiles(outputDir: string, activeTags: Set<string>): string[] {
   const removed: string[] = [];
@@ -208,8 +213,9 @@ export function renderOpenApiMarkdownFiles(doc: OpenApiDocForMarkdown, outputDir
     "",
     "## Авторизация",
     "",
-    "- **Cookie** — сессия после Telegram Login Widget (`connect.sid`)",
+    "- **Cookie** — сессия после Telegram Login / Mini App / dev-login (`connect.sid`)",
     "- **Bearer PAT** — персональный токен агента (MCP/CLI)",
+    "- **Admin cookie** — `/admin/login` (`ADMIN_API_KEY`)",
     "- Публичные эндпоинты помечены «Публичный»",
     "",
   ].join("\n");

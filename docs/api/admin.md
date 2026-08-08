@@ -6,7 +6,7 @@
 
 Настройки приложения (по провайдерам)
 
-**Авторизация:** Cookie / Bearer PAT
+**Авторизация:** Admin cookie
 
 Требует admin cookie после `/admin/login`. Секреты и токены **не** возвращаются — только флаги `*Configured`.
 
@@ -21,7 +21,7 @@
 
 Сохранить настройки приложения
 
-**Авторизация:** Cookie / Bearer PAT
+**Авторизация:** Admin cookie
 
 Upsert по секциям `auth` (режим входа) и `telegram`. Пустой `clientSecret` / `botToken` не удаляет существующие значения. При `dev_login` поля Telegram необязательны. `botUsername` опционально — резолв через getMe при заданном token.
 
@@ -40,13 +40,25 @@ Upsert по секциям `auth` (режим входа) и `telegram`. Пус�
 
 Пометить сценарий как featured (или снять)
 
-**Авторизация:** Cookie / Bearer PAT
+**Авторизация:** Admin cookie
 
 Только admin cookie. Обычный `PUT /api/templates/{id}` поле `featured` игнорирует.
 
 **Тело запроса:** `AdminSetTemplateFeaturedRequest`
 
-**Параметры:** 1
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID записи bot_templates | `"12"` |
+
+#### Пример тела запроса
+
+```json
+{
+  "featured": 1
+}
+```
 
 #### Ответы
 
@@ -61,7 +73,7 @@ Upsert по секциям `auth` (режим входа) и `telegram`. Пус�
 
 Пересоздать системные сценарии (seed force)
 
-**Авторизация:** Cookie / Bearer PAT
+**Авторизация:** Admin cookie
 
 Тот же `seedDefaultTemplates(true)`, что refresh. Только admin cookie.
 
@@ -73,11 +85,20 @@ Upsert по секциям `auth` (режим входа) и `telegram`. Пус�
 | 401 | Нет admin-сессии |
 | 500 | Ошибка seed |
 
+#### Пример ответа `200`
+
+```json
+{
+  "message": "Templates recreated successfully",
+  "timestamp": "2026-08-08T19:00:00.000Z"
+}
+```
+
 ### `POST` /admin/api/templates/refresh
 
 Пересидить системные сценарии (force)
 
-**Авторизация:** Cookie / Bearer PAT
+**Авторизация:** Admin cookie
 
 `seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.
 
@@ -92,3 +113,12 @@ Upsert по секциям `auth` (режим входа) и `telegram`. Пус�
 | 200 | Seed выполнен |
 | 401 | Нет admin-сессии |
 | 500 | Ошибка seed |
+
+#### Пример ответа `200`
+
+```json
+{
+  "message": "Templates refreshed successfully",
+  "timestamp": "2026-08-08T19:00:00.000Z"
+}
+```

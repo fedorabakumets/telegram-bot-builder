@@ -7,18 +7,10 @@ import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 import "./schemas/common";
 import {
-  AuthErrorSchema,
   MessageErrorSchema,
   UnauthorizedSchema,
   ValidationErrorSchema,
 } from "./schemas/common";
-import {
-  GetTelegramUserResponseSchema,
-  LogoutResponseSchema,
-  MeResponseSchema,
-  TelegramAuthRequestSchema,
-  TelegramAuthResponseSchema,
-} from "./schemas/auth";
 import { HealthResponseSchema } from "./schemas/health";
 import {
   BotProjectSchema,
@@ -26,6 +18,7 @@ import {
   CreateProjectUnauthorizedSchema,
 } from "./schemas/projects";
 import { registerAgentTokenPaths } from "./paths/agent-token-paths";
+import { registerAuthPaths } from "./paths/auth-paths";
 import { registerBotUsersPaths } from "./paths/bot-users-paths";
 import { registerBotTokensPaths } from "./paths/bot-tokens-paths";
 import { registerBotStartOfflinePaths } from "./paths/bot-runtime-start-offline-paths";
@@ -83,102 +76,7 @@ documentedRegistry.registerPath({
   },
 });
 
-documentedRegistry.registerPath({
-  method: "get",
-  path: "/api/auth/me",
-  tags: ["auth"],
-  summary: "Текущий пользователь сессии",
-  description:
-    "Публичный (cookie опциональна). Клиент вызывает при каждой загрузке страницы. " +
-    "Не меняет сессию. Без cookie или без telegramUser возвращает { user: null }.",
-  security: publicSecurity,
-  responses: {
-    200: {
-      description: "Пользователь из сессии или null",
-      content: { "application/json": { schema: MeResponseSchema } },
-    },
-  },
-});
-
-documentedRegistry.registerPath({
-  method: "post",
-  path: "/api/auth/logout",
-  tags: ["auth"],
-  summary: "Выход из Studio-сессии",
-  description:
-    "Публичный. Уничтожает серверную сессию и очищает cookie connect.sid. " +
-    "Алиас: POST /api/auth/telegram/logout.",
-  security: publicSecurity,
-  responses: {
-    200: {
-      description: "Сессия уничтожена",
-      content: { "application/json": { schema: LogoutResponseSchema } },
-    },
-  },
-});
-
-documentedRegistry.registerPath({
-  method: "post",
-  path: "/api/auth/telegram",
-  tags: ["auth"],
-  summary: "Вход / смена аккаунта через Telegram Login Widget",
-  description:
-    "Публичный. Только реальный login (не restore после reload). " +
-    "Создаёт/обновляет пользователя и устанавливает session cookie. " +
-    "Повторный вызов с другим id = смена аккаунта: сервер регенерирует session, " +
-    "в ответе switched=true. В production без SKIP_AUTH поле id_token обязательно.",
-  security: publicSecurity,
-  request: {
-    body: { content: { "application/json": { schema: TelegramAuthRequestSchema } } },
-  },
-  responses: {
-    200: {
-      description: "Авторизация успешна, cookie установлена",
-      content: { "application/json": { schema: TelegramAuthResponseSchema } },
-    },
-    400: {
-      description: "Не передан id",
-      content: { "application/json": { schema: AuthErrorSchema } },
-    },
-    401: {
-      description: "Требуется или невалиден id_token / proof",
-      content: { "application/json": { schema: AuthErrorSchema } },
-    },
-    429: {
-      description: "Rate limit auth",
-      content: { "application/json": { schema: AuthErrorSchema } },
-    },
-  },
-});
-
-documentedRegistry.registerPath({
-  method: "get",
-  path: "/api/auth/telegram/user/{id}",
-  tags: ["auth"],
-  summary: "Получить пользователя Telegram по ID",
-  description: "Публичный. Возвращает данные из таблицы telegram_users.",
-  security: publicSecurity,
-  request: {
-    params: z.object({
-      /** Telegram user id */
-      id: z.string().openapi({ example: "123456789", description: "Telegram user id" }),
-    }),
-  },
-  responses: {
-    200: {
-      description: "Пользователь найден",
-      content: { "application/json": { schema: GetTelegramUserResponseSchema } },
-    },
-    400: {
-      description: "Невалидный id",
-      content: { "application/json": { schema: AuthErrorSchema } },
-    },
-    404: {
-      description: "Пользователь не найден",
-      content: { "application/json": { schema: AuthErrorSchema } },
-    },
-  },
-});
+registerAuthPaths(documentedRegistry, publicSecurity);
 
 documentedRegistry.registerPath({
   method: "post",

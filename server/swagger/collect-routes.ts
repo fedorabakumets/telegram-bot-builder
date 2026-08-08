@@ -18,7 +18,10 @@ export interface CollectedRoute {
 
 /** Описания тегов OpenAPI по префиксу /api/{segment} */
 const TAG_DESCRIPTIONS: Record<string, string> = {
-  auth: "Аутентификация через Telegram и dev-login",
+  auth:
+    "Вход в Studio: Telegram Widget, Mini App initData, dev-login по ID; " +
+    "сессия (`/me`, logout). Публичные; cookie `connect.sid` после успешного login. " +
+    "Режим входа — `/admin/settings` (dev_login | telegram_widget). Не путать с `/admin/login` и agent PAT.",
   health: "Healthcheck и готовность компонентов",
   setup: "Первоначальная настройка приложения",
   config: "Публичная конфигурация клиента",

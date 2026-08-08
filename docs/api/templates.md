@@ -31,6 +31,80 @@
 | 500 | Ошибка чтения БД |
 | 503 | setupGuard / БД не готова |
 
+#### Пример ответа `200`
+
+```json
+[
+  {
+    "id": 1,
+    "ownerId": null,
+    "name": "FAQ-бот",
+    "description": "Ответы на частые вопросы",
+    "data": {
+      "sheets": [
+        {
+          "id": "main",
+          "name": "Основной",
+          "nodes": [
+            {
+              "id": "start",
+              "type": "start",
+              "position": {
+                "x": 0,
+                "y": 0
+              },
+              "data": {
+                "messageText": "Привет!"
+              }
+            }
+          ],
+          "edges": []
+        }
+      ]
+    },
+    "flow_data": {
+      "sheets": [
+        {
+          "id": "main",
+          "name": "Основной",
+          "nodes": [
+            {
+              "id": "start",
+              "type": "start",
+              "position": {
+                "x": 0,
+                "y": 0
+              },
+              "data": {
+                "messageText": "Привет!"
+              }
+            }
+          ],
+          "edges": []
+        }
+      ]
+    },
+    "category": "utility",
+    "tags": [
+      "faq",
+      "support"
+    ],
+    "isPublic": 1,
+    "difficulty": "easy",
+    "authorName": null,
+    "useCount": 120,
+    "rating": 0,
+    "ratingCount": 0,
+    "featured": 1,
+    "language": "ru",
+    "complexity": 2,
+    "estimatedTime": 10,
+    "createdAt": "2026-01-10T10:00:00.000Z",
+    "updatedAt": "2026-01-10T10:00:00.000Z"
+  }
+]
+```
+
 ### `POST` /api/templates
 
 Сохранить проект как сценарий
@@ -48,6 +122,46 @@
 `ownerId` ставится из сессии. **Клиент:** `save-template-modal`.
 
 **Тело запроса:** `CreateTemplateRequest`
+
+#### Пример тела запроса
+
+```json
+{
+  "name": "Мой FAQ",
+  "description": "Сохранено из редактора",
+  "category": "custom",
+  "tags": [],
+  "isPublic": 0,
+  "difficulty": "easy",
+  "language": "ru",
+  "requiresToken": 1,
+  "complexity": 1,
+  "estimatedTime": 5,
+  "authorName": "ivan",
+  "data": {
+    "sheets": [
+      {
+        "id": "main",
+        "name": "Основной",
+        "nodes": [
+          {
+            "id": "start",
+            "type": "start",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "data": {
+              "messageText": "Привет!"
+            }
+          }
+        ],
+        "edges": []
+      }
+    ]
+  }
+}
+```
 
 #### Ответы
 
@@ -75,7 +189,11 @@
 
 **Клиент:** `useUdalitStsenary`.
 
-**Параметры:** 1
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID записи bot_templates | `"12"` |
 
 #### Ответы
 
@@ -87,6 +205,14 @@
 | 404 | Не найден |
 | 500 | Ошибка удаления |
 | 503 | Приложение не настроено |
+
+#### Пример ответа `200`
+
+```json
+{
+  "message": "Template deleted successfully"
+}
+```
 
 ### `GET` /api/templates/{id}
 
@@ -102,7 +228,11 @@
 
 **Отдаёт:** сырой шаблон **без** алиаса `flow_data`.
 
-**Параметры:** 1
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID записи bot_templates | `"12"` |
 
 #### Ответы
 
@@ -130,7 +260,11 @@
 
 **Тело запроса:** `UpdateTemplateRequest`
 
-**Параметры:** 1
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID записи bot_templates | `"12"` |
 
 #### Ответы
 
@@ -160,7 +294,11 @@
 
 **Клиент:** `useIspolzovatStsenary`.
 
-**Параметры:** 1
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID записи bot_templates | `"12"` |
 
 #### Ответы
 
@@ -172,6 +310,81 @@
 | 404 | Шаблон не найден |
 | 500 | Ошибка создания проекта/копии |
 | 503 | setupGuard / БД не готова |
+
+#### Пример ответа `200`
+
+```json
+{
+  "message": "Template copied to your projects and collection",
+  "project": {
+    "id": 266,
+    "ownerId": 123456789,
+    "name": "FAQ-бот",
+    "description": "Ответы на частые вопросы",
+    "data": {
+      "sheets": [
+        {
+          "id": "main",
+          "name": "Основной",
+          "nodes": [
+            {
+              "id": "start",
+              "type": "start",
+              "position": {
+                "x": 0,
+                "y": 0
+              },
+              "data": {
+                "messageText": "Привет!"
+              }
+            }
+          ],
+          "edges": []
+        }
+      ]
+    },
+    "userDatabaseEnabled": 1
+  },
+  "copiedTemplate": {
+    "id": 88,
+    "ownerId": 123456789,
+    "name": "FAQ-бот",
+    "description": "Ответы на частые вопросы",
+    "data": {
+      "sheets": [
+        {
+          "id": "main",
+          "name": "Основной",
+          "nodes": [
+            {
+              "id": "start",
+              "type": "start",
+              "position": {
+                "x": 0,
+                "y": 0
+              },
+              "data": {
+                "messageText": "Привет!"
+              }
+            }
+          ],
+          "edges": []
+        }
+      ]
+    },
+    "category": "custom",
+    "isPublic": 0,
+    "difficulty": "easy",
+    "useCount": 0,
+    "rating": 0,
+    "ratingCount": 0,
+    "featured": 0,
+    "language": "ru",
+    "complexity": 2,
+    "estimatedTime": 10
+  }
+}
+```
 
 ### `GET` /api/templates/category/{category}
 
@@ -187,7 +400,11 @@
 
 **Клиент:** `useMoiStsenary` → `/category/custom` (требует сессию).
 
-**Параметры:** 1
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `category` | path | да | Категория: custom | business | entertainment | education | utility | game | official | community | `"custom"` |
 
 #### Ответы
 
@@ -223,6 +440,80 @@
 | 500 | Ошибка БД |
 | 503 | Приложение не настроено |
 
+#### Пример ответа `200`
+
+```json
+[
+  {
+    "id": 1,
+    "ownerId": null,
+    "name": "FAQ-бот",
+    "description": "Ответы на частые вопросы",
+    "data": {
+      "sheets": [
+        {
+          "id": "main",
+          "name": "Основной",
+          "nodes": [
+            {
+              "id": "start",
+              "type": "start",
+              "position": {
+                "x": 0,
+                "y": 0
+              },
+              "data": {
+                "messageText": "Привет!"
+              }
+            }
+          ],
+          "edges": []
+        }
+      ]
+    },
+    "flow_data": {
+      "sheets": [
+        {
+          "id": "main",
+          "name": "Основной",
+          "nodes": [
+            {
+              "id": "start",
+              "type": "start",
+              "position": {
+                "x": 0,
+                "y": 0
+              },
+              "data": {
+                "messageText": "Привет!"
+              }
+            }
+          ],
+          "edges": []
+        }
+      ]
+    },
+    "category": "utility",
+    "tags": [
+      "faq",
+      "support"
+    ],
+    "isPublic": 1,
+    "difficulty": "easy",
+    "authorName": null,
+    "useCount": 120,
+    "rating": 0,
+    "ratingCount": 0,
+    "featured": 1,
+    "language": "ru",
+    "complexity": 2,
+    "estimatedTime": 10,
+    "createdAt": "2026-01-10T10:00:00.000Z",
+    "updatedAt": "2026-01-10T10:00:00.000Z"
+  }
+]
+```
+
 ### `GET` /api/templates/search
 
 Поиск сценариев
@@ -237,7 +528,11 @@
 
 **Privacy:** публичные + системные (`ownerId=null`) + свои.
 
-**Параметры:** 1
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `q` | query | да | Строка поиска по имени/описанию/тегам сценария | `"faq"` |
 
 #### Ответы
 

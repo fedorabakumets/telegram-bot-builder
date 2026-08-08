@@ -58,12 +58,26 @@ export const UpdateTemplateRequestSchema = CreateTemplateRequestSchema.partial()
 
 /** Path-параметр id сценария */
 export const TemplateIdParamsSchema = z.object({
-  id: z.string().openapi({ example: "12", description: "ID bot_templates" }),
+  id: z.string().openapi({
+    example: "12",
+    description: "ID записи bot_templates",
+    param: {
+      description: "ID записи bot_templates",
+      example: "12",
+    },
+  }),
 });
 
 /** Query GET /api/templates/search */
 export const TemplateSearchQuerySchema = z.object({
-  q: z.string().openapi({ example: "faq", description: "Строка поиска" }),
+  q: z.string().openapi({
+    example: "faq",
+    description: "Строка поиска по имени/описанию/тегам сценария",
+    param: {
+      description: "Строка поиска по имени/описанию/тегам сценария",
+      example: "faq",
+    },
+  }),
 });
 
 /** Успех POST …/use */

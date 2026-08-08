@@ -30,3 +30,25 @@
 | 401 | Не авторизован (нет session cookie и Bearer PAT) |
 | 500 | Внутренняя ошибка при чтении статистики воркеров |
 | 503 | Глобальный middleware `setupGuard`: приложение ещё не прошло первоначальную настройку (через `/admin`). Не специфично для workers — так отвечают почти все `/api/*` до setup. |
+
+#### Пример ответа `200`
+
+```json
+{
+  "workers": 2,
+  "totalBots": 3,
+  "totalMemoryMb": 145,
+  "details": [
+    {
+      "projectId": 266,
+      "botsCount": 1,
+      "memoryMb": 72
+    },
+    {
+      "projectId": 42,
+      "botsCount": 2,
+      "memoryMb": 73
+    }
+  ]
+}
+```

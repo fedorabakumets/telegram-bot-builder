@@ -27,6 +27,38 @@
 | 500 | Ошибка чтения БД |
 | 503 | Приложение не настроено (setupGuard) |
 
+#### Пример ответа `200`
+
+```json
+[
+  {
+    "id": "local-default",
+    "name": "Локально: uploads",
+    "backend": "local",
+    "isActive": true,
+    "config": {
+      "rootPath": "uploads"
+    },
+    "readOnly": false,
+    "hasSecrets": false,
+    "createdAt": "2026-01-15T10:00:00.000Z"
+  },
+  {
+    "id": "s3-main",
+    "name": "Основное S3",
+    "backend": "s3",
+    "isActive": false,
+    "config": {
+      "bucket": "media",
+      "region": "ru-central1"
+    },
+    "readOnly": false,
+    "hasSecrets": true,
+    "createdAt": "2026-02-01T12:00:00.000Z"
+  }
+]
+```
+
 ### `POST` /api/storage-configs
 
 Создать конфиг хранилища
@@ -40,6 +72,18 @@
 После успеха — `StorageRegistry.reload()`. **Не отдаёт** ключи и `secretsEnc`.
 
 **Тело запроса:** `CreateStorageConfigRequest`
+
+#### Пример тела запроса
+
+```json
+{
+  "name": "Загрузки проекта",
+  "backend": "local",
+  "config": {
+    "rootPath": "./uploads/extra"
+  }
+}
+```
 
 #### Ответы
 
@@ -63,7 +107,11 @@
 
 **Отдаёт:** `{ ok: true, id }`. Объекты на диске/S3 этим вызовом не удаляются.
 
-**Параметры:** 1
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID записи storage_configs (например local-default, s3-main) | `"local-default"` |
 
 #### Ответы
 
@@ -91,7 +139,19 @@
 
 **Тело запроса:** `UpdateStorageConfigRequest`
 
-**Параметры:** 1
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID записи storage_configs (например local-default, s3-main) | `"local-default"` |
+
+#### Пример тела запроса
+
+```json
+{
+  "isActive": true
+}
+```
 
 #### Ответы
 
@@ -117,7 +177,11 @@ Connectivity-check **без** активации.
 **200** `{ ok: true, message }` · **400** `{ ok: false, message }` (без секретов).
 Активация — отдельно `PATCH` с `isActive: true`.
 
-**Параметры:** 1
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID записи storage_configs (например local-default, s3-main) | `"local-default"` |
 
 #### Ответы
 
@@ -128,3 +192,12 @@ Connectivity-check **без** активации.
 | 401 | Не авторизован |
 | 404 | Хранилище не найдено |
 | 503 | Приложение не настроено |
+
+#### Пример ответа `200`
+
+```json
+{
+  "ok": true,
+  "message": "Папка доступна на запись: uploads"
+}
+```

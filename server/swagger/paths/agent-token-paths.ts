@@ -4,9 +4,9 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { z } from "zod";
 import {
   AgentTokenErrorSchema,
+  AgentTokenIdParamsSchema,
   AgentTokenListSchema,
   CreateAgentTokenRequestSchema,
   CreateAgentTokenResponseSchema,
@@ -79,10 +79,7 @@ export function registerAgentTokenPaths(
     description: "Требует session cookie. Отзывает только токен текущего пользователя.",
     security: cookieSecurity,
     request: {
-      params: z.object({
-        /** ID записи токена */
-        id: z.string().openapi({ example: "1", description: "ID токена в БД" }),
-      }),
+      params: AgentTokenIdParamsSchema,
     },
     responses: {
       200: {
