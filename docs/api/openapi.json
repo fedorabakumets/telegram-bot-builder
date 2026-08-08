@@ -60,7 +60,7 @@
     },
     {
       "name": "storage-configs",
-      "description": "Реестр внешних хранилищ"
+      "description": "Реестр медиа-хранилищ (local / S3): список, создание, обновление, удаление, тест связности. Секреты наружу не отдаются — только hasSecrets. UI: вкладка «Файлы» → «Хранилища»."
     },
     {
       "name": "templates",
@@ -5066,7 +5066,7 @@
           "storage-configs"
         ],
         "summary": "Список конфигов хранилищ",
-        "description": "Все записи storage_configs в безопасном DTO: без secretsEnc и расшифрованных кредов, только флаг hasSecrets.",
+        "description": "Реестр бэкендов медиа: **local** (папка) и **S3**/MinIO.\n\n**Зачем:** UI «Файлы» → «Хранилища»; фильтр файлов; новые загрузки → активное writable (`isActive=true`).\n\n**Отдаёт:** `id`, `name`, `backend`, `isActive`, `config` (несекретные параметры), `readOnly`, `hasSecrets`, `createdAt`.\n\n**Не отдаёт:** `secretsEnc`, access/secret keys — только булев `hasSecrets`.\n\n**Авторизация:** cookie или Bearer PAT. Клиент: `useStorageConfigs`.",
         "security": [
           {
             "cookieAuth": []
@@ -5074,11 +5074,76 @@
         ],
         "responses": {
           "200": {
-            "description": "Массив конфигов",
+            "description": "Все записи storage_configs без секретов",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StorageConfigList"
+                },
+                "examples": {
+                  "mixed": {
+                    "summary": "Local активный + S3",
+                    "value": [
+                      {
+                        "id": "local-default",
+                        "name": "Локально: uploads",
+                        "backend": "local",
+                        "isActive": true,
+                        "config": {
+                          "rootPath": "uploads"
+                        },
+                        "readOnly": false,
+                        "hasSecrets": false,
+                        "createdAt": "2026-01-15T10:00:00.000Z"
+                      },
+                      {
+                        "id": "s3-main",
+                        "name": "Основное S3",
+                        "backend": "s3",
+                        "isActive": false,
+                        "config": {
+                          "bucket": "media",
+                          "region": "ru-central1"
+                        },
+                        "readOnly": false,
+                        "hasSecrets": true,
+                        "createdAt": "2026-02-01T12:00:00.000Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка чтения БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigError"
+                },
+                "example": {
+                  "error": "Не удалось получить список хранилищ"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Приложение не настроено (setupGuard)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
                 }
               }
             }
@@ -5090,7 +5155,7 @@
           "storage-configs"
         ],
         "summary": "Создать конфиг хранилища",
-        "description": "Регистрирует local или S3 бэкенд. Креды S3 шифруются в secretsEnc. После создания перестраивается storage registry.",
+        "description": "Регистрирует **local** или **S3** с `isActive=false` (активация — `PATCH`).\n\n**S3:** `s3AccessKeyId` + `s3SecretAccessKey` → шифрование в `secretsEnc` (нужен `STORAGE_ENCRYPTION_KEY`). В ответе секретов нет (`hasSecrets`).\n\nПосле успеха — `StorageRegistry.reload()`. **Не отдаёт** ключи и `secretsEnc`.",
         "security": [
           {
             "cookieAuth": []
@@ -5101,13 +5166,41 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateStorageConfigRequest"
+              },
+              "examples": {
+                "local": {
+                  "summary": "Локальная папка",
+                  "value": {
+                    "name": "Загрузки проекта",
+                    "backend": "local",
+                    "config": {
+                      "rootPath": "./uploads/extra"
+                    }
+                  }
+                },
+                "s3": {
+                  "summary": "S3 / MinIO",
+                  "value": {
+                    "id": "s3-main",
+                    "name": "Основное S3",
+                    "backend": "s3",
+                    "config": {
+                      "bucket": "media",
+                      "region": "ru-central1",
+                      "endpointUrl": "https://storage.example.com",
+                      "forcePathStyle": true
+                    },
+                    "s3AccessKeyId": "AKIAEXAMPLE",
+                    "s3SecretAccessKey": "secretExample"
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Конфиг создан",
+            "description": "Конфиг создан (DTO без секретов)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5117,11 +5210,21 @@
             }
           },
           "400": {
-            "description": "Невалидные данные или нет STORAGE_ENCRYPTION_KEY",
+            "description": "Валидация или нет STORAGE_ENCRYPTION_KEY",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StorageConfigValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
@@ -5131,7 +5234,20 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorBody"
+                  "$ref": "#/components/schemas/StorageConfigError"
+                },
+                "example": {
+                  "error": "Хранилище с id \"s3-main\" уже существует"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
                 }
               }
             }
@@ -5144,16 +5260,75 @@
         "tags": [
           "storage-configs"
         ],
-        "summary": "DELETE /api/storage-configs/{id}",
+        "summary": "Удалить конфиг хранилища",
+        "description": "Удаляет запись и перезагружает реестр.\n\n**409:** есть `media_files` с этим `storageConfigId` — в теле `filesCount`.\n\n**Отдаёт:** `{ ok: true, id }`. Объекты на диске/S3 этим вызовом не удаляются.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID записи storage_configs",
+              "example": "local-default"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Конфиг удалён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigDeleteOk"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Хранилище не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "На хранилище ещё есть файлы",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigDeleteConflict"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       },
@@ -5161,16 +5336,98 @@
         "tags": [
           "storage-configs"
         ],
-        "summary": "PATCH /api/storage-configs/{id}",
+        "summary": "Обновить конфиг хранилища",
+        "description": "Частичное обновление: имя, `config` (**полная замена** объекта), `readOnly`, креды S3, `isActive`.\n\n**Set-active:** `isActive: true` снимает активность у остальных.\n\n**Креды:** пара ключей перешифровывается; без полей — старые секреты не трогаются.\n\n**Отдаёт** DTO без секретов. После успеха — `StorageRegistry.reload()`.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID записи storage_configs",
+              "example": "local-default"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStorageConfigRequest"
+              },
+              "examples": {
+                "setActive": {
+                  "summary": "Сделать активным",
+                  "value": {
+                    "isActive": true
+                  }
+                },
+                "rename": {
+                  "summary": "Переименовать",
+                  "value": {
+                    "name": "Бэкапы S3"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Обновлённый DTO",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Валидация или нет STORAGE_ENCRYPTION_KEY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigValidationError"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Хранилище не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -5180,16 +5437,83 @@
         "tags": [
           "storage-configs"
         ],
-        "summary": "POST /api/storage-configs/{id}/test",
+        "summary": "Проверить доступность хранилища",
+        "description": "Connectivity-check **без** активации.\n\n- **local:** папка writable или создаётся;\n- **s3:** `HeadBucket` (fallback `ListObjectsV2`).\n\n**200** `{ ok: true, message }` · **400** `{ ok: false, message }` (без секретов).\nАктивация — отдельно `PATCH` с `isActive: true`.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID записи storage_configs",
+              "example": "local-default"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Хранилище доступно",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigTestResult"
+                },
+                "example": {
+                  "ok": true,
+                  "message": "Папка доступна на запись: uploads"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Проверка не прошла",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigTestResult"
+                },
+                "example": {
+                  "ok": false,
+                  "message": "Папка недоступна и не может быть создана: …"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Хранилище не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageConfigError"
+                }
+              }
+            }
           },
           "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+            "description": "Приложение не настроено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupRequired"
+                }
+              }
+            }
           }
         }
       }
@@ -7589,11 +7913,11 @@
         "properties": {
           "id": {
             "type": "string",
-            "example": "s3-main"
+            "example": "local-default"
           },
           "name": {
             "type": "string",
-            "example": "Основное S3"
+            "example": "Локально: uploads"
           },
           "backend": {
             "type": "string",
@@ -7601,11 +7925,11 @@
               "local",
               "s3"
             ],
-            "example": "s3"
+            "example": "local"
           },
           "isActive": {
             "type": "boolean",
-            "example": false
+            "example": true
           },
           "config": {
             "type": "object",
@@ -7613,7 +7937,7 @@
               "nullable": true
             },
             "example": {
-              "bucket": "media"
+              "rootPath": "uploads"
             }
           },
           "readOnly": {
@@ -7622,7 +7946,7 @@
           },
           "hasSecrets": {
             "type": "boolean",
-            "example": true
+            "example": false
           },
           "createdAt": {
             "type": "string",
@@ -7647,6 +7971,18 @@
           "$ref": "#/components/schemas/StorageConfigDto"
         }
       },
+      "StorageConfigError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Хранилище не найдено"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
       "StorageConfigValidationError": {
         "type": "object",
         "properties": {
@@ -7665,31 +8001,21 @@
           "error"
         ]
       },
-      "ErrorBody": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string",
-            "example": "Некорректные данные"
-          }
-        },
-        "required": [
-          "error"
-        ]
-      },
       "CreateStorageConfigRequest": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 128
+            "maxLength": 128,
+            "description": "Если не указан — сервер сгенерирует `local-…` / `s3-…`",
+            "example": "s3-main"
           },
           "name": {
             "type": "string",
             "minLength": 1,
             "maxLength": 200,
-            "example": "Локальное хранилище"
+            "example": "Основное S3"
           },
           "backend": {
             "type": "string",
@@ -7697,7 +8023,7 @@
               "local",
               "s3"
             ],
-            "example": "local"
+            "example": "s3"
           },
           "config": {
             "type": "object",
@@ -7705,8 +8031,56 @@
               "nullable": true
             },
             "example": {
-              "rootPath": "./uploads"
+              "bucket": "media",
+              "region": "ru-central1",
+              "endpointUrl": "https://storage.example.com",
+              "forcePathStyle": true
             }
+          },
+          "s3AccessKeyId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Нужен вместе с s3SecretAccessKey при backend=s3; требует STORAGE_ENCRYPTION_KEY",
+            "example": "AKIA…"
+          },
+          "s3SecretAccessKey": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Шифруется в secretsEnc; наружу никогда не отдаётся",
+            "example": "wJalr…"
+          },
+          "readOnly": {
+            "type": "boolean",
+            "default": false,
+            "example": false
+          }
+        },
+        "required": [
+          "name",
+          "backend"
+        ]
+      },
+      "UpdateStorageConfigRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "example": "Бэкапы S3"
+          },
+          "config": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            }
+          },
+          "readOnly": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
           },
           "s3AccessKeyId": {
             "type": "string",
@@ -7715,15 +8089,60 @@
           "s3SecretAccessKey": {
             "type": "string",
             "minLength": 1
-          },
-          "readOnly": {
+          }
+        }
+      },
+      "StorageConfigDeleteOk": {
+        "type": "object",
+        "properties": {
+          "ok": {
             "type": "boolean",
-            "default": false
+            "enum": [
+              true
+            ]
+          },
+          "id": {
+            "type": "string",
+            "example": "s3-backup"
           }
         },
         "required": [
-          "name",
-          "backend"
+          "ok",
+          "id"
+        ]
+      },
+      "StorageConfigDeleteConflict": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Нельзя удалить хранилище: на нём есть файлы"
+          },
+          "filesCount": {
+            "type": "integer",
+            "example": 12
+          }
+        },
+        "required": [
+          "error",
+          "filesCount"
+        ]
+      },
+      "StorageConfigTestResult": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Папка доступна на запись: uploads"
+          }
+        },
+        "required": [
+          "ok",
+          "message"
         ]
       },
       "WorkerPoolDetail": {

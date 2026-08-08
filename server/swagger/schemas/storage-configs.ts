@@ -1,5 +1,6 @@
 /**
- * @fileoverview OpenAPI-схемы реестра внешних хранилищ
+ * @fileoverview OpenAPI-схемы реестра внешних хранилищ (`/api/storage-configs`).
+ * Безопасный DTO без `secretsEnc`/кредов — только флаг `hasSecrets`.
  * @module server/swagger/schemas/storage-configs
  */
 
@@ -9,21 +10,28 @@ import { z } from "zod";
 /** Безопасный DTO конфига хранилища (без секретов) */
 export const StorageConfigDtoSchema = z
   .object({
-    /** Стабильный ID конфига */
-    id: z.string().openapi({ example: "s3-main" }),
-    /** Человекочитаемое имя */
-    name: z.string().openapi({ example: "Основное S3" }),
+    /** Стабильный ID (`storage_configs.id`, ссылка из `media_files`) */
+    id: z.string().openapi({ example: "local-default" }),
+    /** Человекочитаемое имя в UI «Хранилища» */
+    name: z.string().openapi({ example: "Локально: uploads" }),
     /** Тип бэкенда */
-    backend: z.enum(["local", "s3"]).openapi({ example: "s3" }),
-    /** Активно для новых загрузок */
-    isActive: z.boolean().openapi({ example: false }),
-    /** Несекретные параметры (bucket, endpoint…) */
-    config: z.record(z.string(), z.unknown()).openapi({ example: { bucket: "media" } }),
-    /** Только чтение */
+    backend: z.enum(["local", "s3"]).openapi({ example: "local" }),
+    /** Активно для новых загрузок (ровно одно на инстанс) */
+    isActive: z.boolean().openapi({ example: true }),
+    /**
+     * Несекретные параметры.
+     * local: `{ rootPath }`;
+     * s3: `{ endpointUrl?, region?, bucket, forcePathStyle?, publicUrlBase? }`.
+     * Access/secret keys сюда не попадают.
+     */
+    config: z.record(z.string(), z.unknown()).openapi({
+      example: { rootPath: "uploads" },
+    }),
+    /** Только чтение — нельзя выбрать целью записи */
     readOnly: z.boolean().openapi({ example: false }),
-    /** Заданы ли зашифрованные креды */
-    hasSecrets: z.boolean().openapi({ example: true }),
-    /** Дата создания ISO */
+    /** Заданы ли зашифрованные креды S3 (значения не раскрываются) */
+    hasSecrets: z.boolean().openapi({ example: false }),
+    /** Дата создания ISO или null */
     createdAt: z.string().nullable().openapi({ example: "2026-01-15T10:00:00.000Z" }),
   })
   .openapi("StorageConfigDto");
@@ -33,32 +41,41 @@ export const StorageConfigListSchema = z
   .array(StorageConfigDtoSchema)
   .openapi("StorageConfigList");
 
-/** Тело POST /api/storage-configs */
-export const CreateStorageConfigRequestSchema = z
+/** Простая ошибка storage-configs (`error`) */
+export const StorageConfigErrorSchema = z
   .object({
-    /** Опциональный стабильный id */
-    id: z.string().min(1).max(128).optional(),
-    /** Имя конфига */
-    name: z.string().min(1).max(200).openapi({ example: "Локальное хранилище" }),
-    /** Тип бэкенда */
-    backend: z.enum(["local", "s3"]).openapi({ example: "local" }),
-    /** Несекретные параметры */
-    config: z.record(z.string(), z.unknown()).optional().openapi({ example: { rootPath: "./uploads" } }),
-    /** Access key S3 (только при backend=s3) */
-    s3AccessKeyId: z.string().min(1).optional(),
-    /** Secret key S3 */
-    s3SecretAccessKey: z.string().min(1).optional(),
-    /** Режим только чтения */
-    readOnly: z.boolean().optional().default(false),
+    error: z.string().openapi({ example: "Хранилище не найдено" }),
   })
-  .openapi("CreateStorageConfigRequest");
+  .openapi("StorageConfigError");
 
-/** Ошибка валидации storage-configs */
+/** Ошибка валидации тела create/update */
 export const StorageConfigValidationErrorSchema = z
   .object({
-    /** Сообщение */
     error: z.string().openapi({ example: "Некорректные данные" }),
-    /** Детали Zod */
     details: z.array(z.unknown()).optional(),
   })
   .openapi("StorageConfigValidationError");
+
+/** Конфликт удаления: на хранилище ещё есть файлы */
+export const StorageConfigDeleteConflictSchema = z
+  .object({
+    error: z.string().openapi({ example: "Нельзя удалить хранилище: на нём есть файлы" }),
+    filesCount: z.number().int().openapi({ example: 12 }),
+  })
+  .openapi("StorageConfigDeleteConflict");
+
+/** Успешное удаление DELETE /api/storage-configs/{id} */
+export const StorageConfigDeleteOkSchema = z
+  .object({
+    ok: z.literal(true),
+    id: z.string().openapi({ example: "s3-backup" }),
+  })
+  .openapi("StorageConfigDeleteOk");
+
+/** Результат POST /api/storage-configs/{id}/test */
+export const StorageConfigTestResultSchema = z
+  .object({
+    ok: z.boolean().openapi({ example: true }),
+    message: z.string().openapi({ example: "Папка доступна на запись: uploads" }),
+  })
+  .openapi("StorageConfigTestResult");
