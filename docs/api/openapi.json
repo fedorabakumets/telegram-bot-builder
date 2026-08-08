@@ -2647,7 +2647,7 @@
           "database"
         ],
         "summary": "Список таблиц контента проекта",
-        "description": "Возвращает пользовательские таблицы bot_tables для редактора Database. Требует доступ к проекту (requireProjectAccess).",
+        "description": "Пользовательские таблицы `bot_tables` для панели Database в редакторе.\n\n**Доступ:** `requireProjectAccess` (владелец / collaborator).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/tables -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -2657,12 +2657,26 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID проекта",
+              "description": "ID проекта bot_projects",
               "example": "42"
             },
             "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
           }
         ],
         "responses": {
@@ -2672,7 +2686,15 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BotTableList"
-                }
+                },
+                "example": [
+                  {
+                    "id": 1,
+                    "projectId": 42,
+                    "name": "Товары",
+                    "createdAt": "2026-08-01T10:00:00.000Z"
+                  }
+                ]
               }
             }
           },
@@ -2682,6 +2704,48 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Некорректный ID проекта"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить таблицы"
                 }
               }
             }
@@ -10823,7 +10887,8 @@
               {
                 "nullable": true
               }
-            ]
+            ],
+            "example": "2026-08-01T10:00:00.000Z"
           }
         },
         "required": [
