@@ -909,7 +909,7 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/env?telegram_id=123' \
 
 Подробнее: `docs/features/bot-manager-api-auth.md`.
 
-Body `{ key, value?, isSecret? }`, ключ `^[A-Z][A-Z0-9_]*$`. **Клиент:** unused.
+Body `{ key, value?, isSecret? }`, ключ вида A-Z + A-Z0-9_ (regex `^[A-Z][A-Z0-9_]*` + конец строки). **Клиент:** unused.
 
 ```bash
 curl -s -X POST 'http://localhost:5000/api/bot/tokens/7/env?telegram_id=123' \

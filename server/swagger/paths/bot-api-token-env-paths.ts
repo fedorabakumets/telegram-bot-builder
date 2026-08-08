@@ -66,7 +66,8 @@ export function registerBotApiTokenEnvPaths(
     summary: "Создать env-переменную",
     description:
       BOT_API_AUTH_DOC +
-      "Body `{ key, value?, isSecret? }`, ключ `^[A-Z][A-Z0-9_]*$`. **Клиент:** unused.\n\n" +
+      "Body `{ key, value?, isSecret? }`, ключ вида A-Z + A-Z0-9_ (regex `^[A-Z][A-Z0-9_]*` + конец строки). " +
+      "**Клиент:** unused.\n\n" +
       "```bash\ncurl -s -X POST 'http://localhost:5000/api/bot/tokens/7/env?telegram_id=123' \\\n" +
       "  -H 'Authorization: Bearer mcp_…' -H 'Content-Type: application/json' \\\n" +
       "  -d '{\"key\":\"API_KEY\",\"value\":\"secret\",\"isSecret\":1}'\n```",

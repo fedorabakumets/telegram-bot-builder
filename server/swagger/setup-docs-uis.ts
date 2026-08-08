@@ -48,11 +48,16 @@ export function setupDocsUis(app: Express, document: OpenApiDocument, options: D
 
   app.get(basePath, createDocsHubHandler(basePath, specPath));
 
+  // Не передаём swaggerDoc inline: swagger-ui-express делает
+  // `.replace('<% swaggerOptions %>', json)`, а в JSON из описаний
+  // встречается последовательность `$`` (regex + markdown) — она ломает
+  // replacement patterns JS и даёт белый экран. Spec грузим по URL.
   app.use(
     `${basePath}/swagger`,
     swaggerUi.serve,
-    swaggerUi.setup(document, {
+    swaggerUi.setup(undefined, {
       customSiteTitle: "Telegram Bot Builder API — Swagger",
+      swaggerUrl: specPath,
       swaggerOptions: {
         persistAuthorization: true,
         tagsSorter: "alpha",
