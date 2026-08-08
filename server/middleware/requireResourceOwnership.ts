@@ -16,23 +16,29 @@
 import type { Request, Response, NextFunction } from "express";
 import { storage } from "../storages/storage";
 import { getOwnerIdFromRequest } from "../telegram/auth-middleware";
+import { getBotActorId } from "./bot-api-actor";
 
 /** Резолвер проекта по запросу: возвращает projectId ресурса или null, если ресурс не найден */
 export type ProjectIdResolver = (req: Request) => Promise<number | null>;
+
+/** Резолвер личности для проверки доступа */
+export type ActorIdResolver = (req: Request) => number | null;
 
 /**
  * Создаёт middleware проверки владения ресурсом через резолвер projectId.
  * Личность гарантирована вышестоящим requireApiAuth; здесь — авторизация (доступ к проекту).
  * @param resolveProjectId - Функция, извлекающая projectId ресурса из запроса (null = не найден)
  * @param notFoundMessage - Сообщение при отсутствии ресурса (по умолчанию «Ресурс не найден»)
+ * @param resolveActorId - Кто проверяется (по умолчанию session/PAT owner)
  * @returns Express-middleware, пропускающий запрос только владельцу/коллаборатору проекта
  */
 export function requireResourceOwnership(
     resolveProjectId: ProjectIdResolver,
     notFoundMessage = "Ресурс не найден",
+    resolveActorId: ActorIdResolver = getOwnerIdFromRequest,
 ): (req: Request, res: Response, next: NextFunction) => Promise<void> {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const ownerId = getOwnerIdFromRequest(req);
+        const ownerId = resolveActorId(req);
         if (ownerId === null) {
             res.status(403).json({ message: "Нет прав доступа" });
             return;
@@ -85,4 +91,13 @@ async function resolveProjectIdByTokenParam(req: Request): Promise<number | null
 export const requireTokenOwnership = requireResourceOwnership(
     resolveProjectIdByTokenParam,
     "Токен не найден",
+);
+
+/**
+ * Владение токеном для `/api/bot/*` — проверка по req.botActorId.
+ */
+export const requireBotTokenOwnership = requireResourceOwnership(
+    resolveProjectIdByTokenParam,
+    "Токен не найден",
+    getBotActorId,
 );

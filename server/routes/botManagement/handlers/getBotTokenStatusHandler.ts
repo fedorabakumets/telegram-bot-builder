@@ -8,7 +8,6 @@ import { storage } from '../../../storages/storage';
 import { checkProcessExists, isPythonProcess, findBotProcessPid } from '../utils/processChecker';
 import { restoreProcessTracking } from '../utils/processRestorer';
 import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
-import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 import { workerManager } from '../../../bots/botWorkerManager';
 import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
 
@@ -114,17 +113,7 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
             return;
         }
 
-        // Проверка владения: projectId токена → доступ владельца/коллаборатора
-        const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId === null) {
-            res.status(403).json({ message: 'Нет прав доступа' });
-            return;
-        }
-        const hasAccess = await storage.hasProjectAccess(tokenRecord.projectId, ownerId);
-        if (!hasAccess) {
-            res.status(403).json({ message: 'Нет прав доступа' });
-            return;
-        }
+        // Ownership уже проверен requireBotTokenOwnership (botActorId)
 
         const botName = tokenRecord?.name ?? 'Неизвестный бот';
         const botUsername = tokenRecord?.botUsername ?? null;

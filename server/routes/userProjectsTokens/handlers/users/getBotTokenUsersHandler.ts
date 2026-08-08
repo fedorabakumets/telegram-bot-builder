@@ -12,6 +12,7 @@
 import type { Request, Response } from "express";
 import { Pool } from "pg";
 import { storage } from "../../../../storages/storage";
+import { getBotActorId } from "../../../../middleware/bot-api-actor";
 
 /** Пул подключений к PostgreSQL */
 let pool: InstanceType<typeof Pool> | null = null;
@@ -51,14 +52,14 @@ function parseTokenId(raw: string): number {
 export async function getBotTokenUsersHandler(req: Request, res: Response): Promise<void> {
     try {
         const tokenId = parseTokenId(req.params.tokenId);
-        const telegramId = Number(req.query.telegram_id);
+        const telegramId = getBotActorId(req);
         const limit = Math.min(parseInt(String(req.query.limit ?? "10"), 10), 50);
         const offset = parseInt(String(req.query.offset ?? "0"), 10);
 
-        if (!telegramId || isNaN(telegramId)) {
-            res.status(400).json({ error: "Параметр telegram_id обязателен" });
+        if (telegramId === null) {
+            res.status(401).json({ error: "UNAUTHORIZED" });
             return;
-        }
+            }
 
         if (isNaN(tokenId)) {
             res.status(400).json({ error: "Некорректный tokenId" });

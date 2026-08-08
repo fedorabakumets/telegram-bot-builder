@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, createWriteStream } from "fs";
 import { join } from "path";
 import { pipeline } from "stream/promises";
 import { Readable } from "stream";
+import { getBotActorId } from "../../../../middleware/bot-api-actor";
 
 /** Пул подключений к PostgreSQL */
 let pool: InstanceType<typeof Pool> | null = null;
@@ -146,10 +147,9 @@ export async function getBotTokenUserHandler(req: Request, res: Response): Promi
     try {
         const tokenId = parseTokenId(req.params.tokenId);
         const userId = parseUserId(req.params.userId);
-        const telegramId = Number(req.query.telegram_id);
-
-        if (!telegramId || isNaN(telegramId)) {
-            res.status(400).json({ error: "Параметр telegram_id обязателен" });
+        const telegramId = getBotActorId(req);
+        if (telegramId === null) {
+            res.status(401).json({ error: "UNAUTHORIZED" });
             return;
         }
         if (isNaN(tokenId)) {

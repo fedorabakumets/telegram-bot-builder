@@ -11,6 +11,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { getBotActorId } from "../../../../middleware/bot-api-actor";
 
 /**
  * Обрабатывает POST-запрос на импорт проекта через Telegram-бота.
@@ -22,10 +23,9 @@ import { storage } from "../../../../storages/storage";
  */
 export async function importBotProjectHandler(req: Request, res: Response): Promise<void> {
     try {
-        const telegramId = Number(req.query.telegram_id);
-
-        if (!telegramId || isNaN(telegramId)) {
-            res.status(400).json({ error: "Параметр telegram_id обязателен" });
+        const telegramId = getBotActorId(req);
+        if (telegramId === null) {
+            res.status(401).json({ error: "UNAUTHORIZED" });
             return;
         }
 

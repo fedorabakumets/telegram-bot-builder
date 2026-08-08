@@ -13,6 +13,7 @@
 
 import type { Request } from "express";
 import { storage } from "../storages/storage";
+import { getBotActorId } from "./bot-api-actor";
 import { requireResourceOwnership } from "./requireResourceOwnership";
 
 /**
@@ -39,4 +40,11 @@ async function resolveProjectIdByEnvParam(req: Request): Promise<number | null> 
 export const requireEnvVariableOwnership = requireResourceOwnership(
     resolveProjectIdByEnvParam,
     "Переменная не найдена",
+);
+
+/** Владение env для `/api/bot/env/*` — по req.botActorId */
+export const requireBotEnvVariableOwnership = requireResourceOwnership(
+    resolveProjectIdByEnvParam,
+    "Переменная не найдена",
+    getBotActorId,
 );

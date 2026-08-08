@@ -85,7 +85,8 @@ export function registerAgentTokenListCreatePaths(
     summary: "Создать токен агента",
     description:
       "Создаёт PAT. Поле `token` (полный секрет `mcp_…`) возвращается **один раз** — сохраните сразу.\n\n" +
-      "**Тело:** `label` (обязательно), `scopes` (`read` | `read,write`, по умолчанию `read,write`), " +
+      "**Тело:** `label` (обязательно), `scopes` (`read` | `read,write` | `read,write,bot_manager`, " +
+      "по умолчанию `read,write`; `bot_manager` — для Bot Manager / `/api/bot`), " +
       "`expiresInDays` (опционально, иначе бессрочный).\n\n" +
       "```bash\n" +
       "curl -s -X POST http://localhost:5000/api/agent-tokens -b cookies.txt \\\n" +

@@ -38,12 +38,12 @@ export function registerBotEnvRevealPaths(
     summary: "Раскрыть секретное значение env (legacy)",
     description:
       REVEAL_RISK +
-      "**Кто может:** `requireEnvVariableOwnership` — владелец/collaborator проекта, " +
-      "к которому привязан токен переменной (env → token → project). " +
-      "Дополнительно query `telegram_id` должен иметь `hasProjectAccess`.\n\n" +
+      "**Кто может:** `resolveBotApiActor` + `requireBotEnvVariableOwnership` " +
+      "(actor = session/PAT user или telegram_id при scope `bot_manager`).\n\n" +
       "UI Studio этот путь **не вызывает** (см. nested `/env-variables/…/reveal`).\n\n" +
       "```bash\n" +
-      "curl -s 'http://localhost:5000/api/bot/env/15/reveal?telegram_id=123456' -b cookies.txt\n" +
+      "curl -s 'http://localhost:5000/api/bot/env/15/reveal?telegram_id=123456' \\\n" +
+      "  -H 'Authorization: Bearer mcp_…'   # PAT с bot_manager или свой id\n" +
       "```",
     security: cookieSecurity,
     request: {

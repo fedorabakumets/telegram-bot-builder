@@ -17,6 +17,8 @@ export const ALLOWED_SERVER_ENV_KEYS = [
   'PGPORT',
   'PGDATABASE',
   'PGUSER',
+  /** Bearer PAT со scope bot_manager для http-нод bot-manager */
+  'STUDIO_BOT_MANAGER_TOKEN',
 ] as const;
 
 /** Тип имени разрешённой серверной переменной */

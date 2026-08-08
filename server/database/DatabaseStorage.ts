@@ -668,6 +668,18 @@ export class DatabaseStorage implements IStorage {
    * @returns Владелец токена или undefined, если токен невалиден
    */
   async resolveAgentToken(rawToken: string): Promise<TelegramUserDB | undefined> {
+    const resolved = await this.resolveAgentTokenAuth(rawToken);
+    return resolved?.user;
+  }
+
+  /**
+   * Резолвит PAT в владельца и scopes (для bot_manager и т.п.).
+   * @param rawToken - Сырой секрет из Authorization
+   * @returns user + scopes или undefined
+   */
+  async resolveAgentTokenAuth(
+    rawToken: string,
+  ): Promise<{ user: TelegramUserDB; scopes: string } | undefined> {
     const tokenHash = hashAgentToken(rawToken);
     const [record] = await this.db.select().from(agentTokens)
       .where(and(eq(agentTokens.tokenHash, tokenHash), isNull(agentTokens.revokedAt)));
@@ -681,7 +693,9 @@ export class DatabaseStorage implements IStorage {
       .set({ lastUsedAt: new Date() })
       .where(eq(agentTokens.id, record.id));
 
-    return await this.getTelegramUser(record.ownerId);
+    const user = await this.getTelegramUser(record.ownerId);
+    if (!user) return undefined;
+    return { user, scopes: record.scopes };
   }
 
   /**

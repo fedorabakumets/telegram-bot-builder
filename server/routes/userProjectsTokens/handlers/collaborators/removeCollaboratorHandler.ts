@@ -9,6 +9,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { getBotActorId } from "../../../../middleware/bot-api-actor";
 
 /**
  * Удаляет коллаборатора из проекта.
@@ -20,14 +21,14 @@ import { storage } from "../../../../storages/storage";
  */
 export async function removeCollaboratorHandler(req: Request, res: Response): Promise<void> {
     try {
-        const telegramId = Number(req.query.telegram_id);
+        const telegramId = getBotActorId(req);
         const projectId = parseInt(req.params.id, 10);
         const userId = Number(req.params.userId);
 
-        if (!telegramId || isNaN(telegramId)) {
-            res.status(400).json({ error: "Параметр telegram_id обязателен" });
+        if (telegramId === null) {
+            res.status(401).json({ error: "UNAUTHORIZED" });
             return;
-        }
+            }
 
         if (isNaN(projectId)) {
             res.status(400).json({ error: "Некорректный project_id" });

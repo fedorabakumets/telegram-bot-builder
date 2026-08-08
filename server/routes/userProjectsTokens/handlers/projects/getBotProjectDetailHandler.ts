@@ -11,6 +11,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { getBotActorId } from "../../../../middleware/bot-api-actor";
 
 /**
  * Извлекает числовой ID из строки вида "project_42" или "42"
@@ -33,10 +34,9 @@ function parseProjectId(raw: string): number {
 export async function getBotProjectDetailHandler(req: Request, res: Response): Promise<void> {
     try {
         const projectId = parseProjectId(req.params.id);
-        const telegramId = Number(req.query.telegram_id);
-
-        if (!telegramId || isNaN(telegramId)) {
-            res.status(400).json({ error: "Параметр telegram_id обязателен" });
+        const telegramId = getBotActorId(req);
+        if (telegramId === null) {
+            res.status(401).json({ error: "UNAUTHORIZED" });
             return;
         }
 

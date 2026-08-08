@@ -387,6 +387,15 @@ export interface IStorage {
    */
   resolveAgentToken(rawToken: string): Promise<TelegramUserDB | undefined>;
 
+  /**
+   * Резолвит PAT в владельца и scopes.
+   * @param rawToken - Сырой секрет токена
+   * @returns user + scopes или undefined
+   */
+  resolveAgentTokenAuth(
+    rawToken: string,
+  ): Promise<{ user: TelegramUserDB; scopes: string } | undefined>;
+
   // User-specific methods (filtered by ownerId)
   /**
    * Получить проекты ботов пользователя

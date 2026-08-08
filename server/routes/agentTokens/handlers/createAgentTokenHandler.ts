@@ -11,6 +11,8 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { storage } from "../../../storages/storage";
 import { toAgentTokenDto } from "../agent-token-dto";
+import { canCreateBotManagerScope } from "../can-create-bot-manager-scope";
+import { BOT_MANAGER_SCOPE } from "../../../middleware/bot-api-actor";
 
 /** Кол-во миллисекунд в одних сутках */
 const DAY_MS = 86_400_000;
@@ -19,8 +21,11 @@ const DAY_MS = 86_400_000;
 const createAgentTokenSchema = z.object({
   /** Пользовательское имя токена */
   label: z.string().min(1, "Название обязательно"),
-  /** Права токена (read — только чтение, read,write — чтение и запись) */
-  scopes: z.enum(["read", "read,write"]).optional().default("read,write"),
+  /** Права: read | read,write | …,bot_manager (impersonation для /api/bot) */
+  scopes: z
+    .enum(["read", "read,write", "read,write,bot_manager", "bot_manager"])
+    .optional()
+    .default("read,write"),
   /** Срок действия токена в днях (не указан — бессрочный) */
   expiresInDays: z.number().int().positive().optional(),
 });
@@ -46,6 +51,16 @@ export async function createAgentTokenHandler(req: Request, res: Response): Prom
     }
 
     const { label, scopes, expiresInDays } = parsed.data;
+    if (
+      scopes.includes(BOT_MANAGER_SCOPE) &&
+      !canCreateBotManagerScope(userId)
+    ) {
+      res.status(403).json({
+        error:
+          "Scope bot_manager недоступен: задайте BOT_MANAGER_ADMIN_IDS или используйте development",
+      });
+      return;
+    }
     const expiresAt = expiresInDays ? new Date(Date.now() + expiresInDays * DAY_MS) : null;
 
     const result = await storage.createAgentToken(userId, label, scopes, expiresAt);

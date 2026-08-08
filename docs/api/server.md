@@ -12,7 +12,7 @@
 
 **Клиент:** вкладка «Переменные» у токена бота — `BotEnvPanel` и кнопка «Подставить из сервера» (`BotEnvServerVarsPopover`). UI подставляет в custom env синтаксис `${{KEY}}`; при генерации `.env` бота такие ссылки резолвятся из окружения Node-процесса на сервере.
 
-**Whitelist (фиксированный):** DATABASE_URL, REDIS_URL, WEBHOOK_BASE_URL, API_BASE_URL, NODE_ENV, PGHOST, PGPORT, PGDATABASE, PGUSER.
+**Whitelist (фиксированный):** DATABASE_URL, REDIS_URL, WEBHOOK_BASE_URL, API_BASE_URL, NODE_ENV, PGHOST, PGPORT, PGDATABASE, PGUSER, STUDIO_BOT_MANAGER_TOKEN.
 
 В `items` только ключи из whitelist, для которых `process.env[KEY]` определён и не пустой. Если переменная не задана на сервере — она не возвращается (UI показывает локальный дефолт без `${{…}}`).
 

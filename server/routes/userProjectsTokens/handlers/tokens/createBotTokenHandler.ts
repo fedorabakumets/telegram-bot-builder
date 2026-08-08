@@ -12,6 +12,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
+import { getBotActorId } from "../../../../middleware/bot-api-actor";
 
 /** Регулярное выражение для проверки формата токена Telegram */
 const TOKEN_REGEX = /^\d+:[A-Za-z0-9_-]{35,}$/;
@@ -27,15 +28,15 @@ const TOKEN_REGEX = /^\d+:[A-Za-z0-9_-]{35,}$/;
  */
 export async function createBotTokenHandler(req: Request, res: Response): Promise<void> {
     try {
-        const telegramId = Number(req.query.telegram_id);
+        const telegramId = getBotActorId(req);
         const raw = req.params.id;
         const match = raw.match(/(\d+)$/);
         const projectId = match ? parseInt(match[1], 10) : NaN;
 
-        if (!telegramId || isNaN(telegramId)) {
-            res.status(400).json({ error: "Параметр telegram_id обязателен" });
+        if (telegramId === null) {
+            res.status(401).json({ error: "UNAUTHORIZED" });
             return;
-        }
+            }
 
         if (isNaN(projectId)) {
             res.status(400).json({ error: "Некорректный project_id" });

@@ -24,6 +24,7 @@ import { registerBotStartOfflinePaths } from "./paths/bot-runtime-start-offline-
 import { registerBotsListPaths } from "./paths/bots-list-paths";
 import { registerBotLogsPaths } from "./paths/bot-logs-paths";
 import { registerBotEnvRevealPaths } from "./paths/bot-env-reveal-paths";
+import { registerBotApiPaths } from "./paths/bot-api-paths";
 import { registerLaunchLogsPaths } from "./paths/launch-logs-paths";
 import { registerMediaPaths } from "./paths/media-paths";
 import { registerConfigSetupPaths } from "./paths/config-setup-paths";
@@ -134,6 +135,7 @@ registerBotStartOfflinePaths(documentedRegistry, cookieSecurity);
 registerBotsListPaths(documentedRegistry, cookieSecurity);
 registerBotLogsPaths(documentedRegistry, cookieSecurity);
 registerBotEnvRevealPaths(documentedRegistry, cookieSecurity);
+registerBotApiPaths(documentedRegistry, cookieSecurity);
 registerLaunchLogsPaths(documentedRegistry, cookieSecurity);
 registerMediaPaths(documentedRegistry, cookieSecurity);
 registerProjectsPaths(documentedRegistry, cookieSecurity);

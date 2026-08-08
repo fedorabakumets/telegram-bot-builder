@@ -1,6 +1,6 @@
 {
   "name": "🤖 Bot Manager — Управление ботами",
-  "description": "Полнофункциональный менеджер Telegram-ботов: список проектов, карточка токена, управление пользователями с пагинацией, администраторы, импорт/экспорт проектов.",
+  "description": "Менеджер Studio из Telegram. Нужен env STUDIO_BOT_MANAGER_TOKEN = PAT со scope bot_manager (подстановка ${{STUDIO_BOT_MANAGER_TOKEN}} с сервера). HTTP-ноды шлют Authorization: Bearer.",
   "category": "utility",
   "tags": [
     "bot-manager",
@@ -14,7 +14,7 @@
   "isPublic": 1,
   "difficulty": "hard",
   "authorName": "Система",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "featured": 1,
   "language": "ru",
   "complexity": 9,
@@ -120,7 +120,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "projects_status",
-              "httpRequestResponseVariable": "projects"
+              "httpRequestResponseVariable": "projects",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -873,7 +875,9 @@
               "httpRequestBodyFormat": "raw",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "import_status",
-              "httpRequestResponseVariable": "import_result"
+              "httpRequestResponseVariable": "import_result",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -1146,7 +1150,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "detail_status",
-              "httpRequestResponseVariable": "project_detail"
+              "httpRequestResponseVariable": "project_detail",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -1200,7 +1206,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "project_tokens_status",
-              "httpRequestResponseVariable": "project_tokens"
+              "httpRequestResponseVariable": "project_tokens",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -1411,7 +1419,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "detail_status",
-              "httpRequestResponseVariable": "project_detail"
+              "httpRequestResponseVariable": "project_detail",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -2117,7 +2127,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "rename_status",
-              "httpRequestResponseVariable": "rename_response"
+              "httpRequestResponseVariable": "rename_response",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -2436,7 +2448,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "delete_status",
-              "httpRequestResponseVariable": "delete_response"
+              "httpRequestResponseVariable": "delete_response",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -2641,7 +2655,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "create_status",
-              "httpRequestResponseVariable": "new_project"
+              "httpRequestResponseVariable": "new_project",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -3082,7 +3098,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "new_project_status",
-              "httpRequestResponseVariable": "new_project"
+              "httpRequestResponseVariable": "new_project",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -3187,7 +3205,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "new_token_status",
-              "httpRequestResponseVariable": "new_token"
+              "httpRequestResponseVariable": "new_token",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -3292,7 +3312,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "detail_status",
-              "httpRequestResponseVariable": "project_detail"
+              "httpRequestResponseVariable": "project_detail",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -3517,7 +3539,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "tokens_status",
-              "httpRequestResponseVariable": "tokens"
+              "httpRequestResponseVariable": "tokens",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -3856,7 +3880,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "add_token_status",
-              "httpRequestResponseVariable": "added_token"
+              "httpRequestResponseVariable": "added_token",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -4572,7 +4598,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "delete_token_status",
-              "httpRequestResponseVariable": "delete_token_response"
+              "httpRequestResponseVariable": "delete_token_response",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -4777,7 +4805,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "token_status_code",
-              "httpRequestResponseVariable": "token_status"
+              "httpRequestResponseVariable": "token_status",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -5672,7 +5702,9 @@
               "enableConditionalMessages": false,
               "httpRequestResponseFormat": "autodetect",
               "httpRequestStatusVariable": "bot_photo_status",
-              "httpRequestResponseVariable": "bot_photo"
+              "httpRequestResponseVariable": "bot_photo",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -5777,7 +5809,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "token_status_code",
-              "httpRequestResponseVariable": "token_status"
+              "httpRequestResponseVariable": "token_status",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -5832,7 +5866,9 @@
               "enableConditionalMessages": false,
               "httpRequestResponseFormat": "autodetect",
               "httpRequestStatusVariable": "bot_photo_status",
-              "httpRequestResponseVariable": "bot_photo"
+              "httpRequestResponseVariable": "bot_photo",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -6653,7 +6689,9 @@
               "httpRequestResponseVariable": "users_data",
               "httpRequestPaginationOffsetVar": "users_offset",
               "httpRequestPaginationItemsField": "items",
-              "httpRequestPaginationTotalField": "count"
+              "httpRequestPaginationTotalField": "count",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {
@@ -7063,7 +7101,9 @@
               "documentInputVariable": "",
               "enableConditionalMessages": false,
               "httpRequestStatusVariable": "user_detail_status",
-              "httpRequestResponseVariable": "user_detail"
+              "httpRequestResponseVariable": "user_detail",
+              "httpRequestAuthType": "bearer",
+              "httpRequestAuthBearerToken": "{STUDIO_BOT_MANAGER_TOKEN}"
             },
             "type": "http_request",
             "position": {

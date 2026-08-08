@@ -10,6 +10,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { getBotActorId } from "../../../../middleware/bot-api-actor";
 
 /**
  * Обрабатывает DELETE-запрос на удаление токена бота через Telegram-бота.
@@ -21,17 +22,17 @@ import { storage } from "../../../../storages/storage";
  */
 export async function deleteBotTokenHandler(req: Request, res: Response): Promise<void> {
     try {
-        const telegramId = Number(req.query.telegram_id);
+        const telegramId = getBotActorId(req);
         const raw = req.params.tokenId;
 
         // Извлекаем числовой id из строки вида "token_42" или просто "42"
         const match = raw.match(/(\d+)$/);
         const tokenId = match ? parseInt(match[1], 10) : NaN;
 
-        if (!telegramId || isNaN(telegramId)) {
-            res.status(400).json({ error: "Параметр telegram_id обязателен" });
+        if (telegramId === null) {
+            res.status(401).json({ error: "UNAUTHORIZED" });
             return;
-        }
+            }
 
         if (isNaN(tokenId)) {
             res.status(400).json({ error: "Некорректный tokenId" });

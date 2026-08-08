@@ -8,10 +8,13 @@ import { z } from "zod";
 
 /** Права токена агента */
 export const AgentTokenScopesSchema = z
-  .enum(["read", "read,write"])
+  .enum(["read", "read,write", "read,write,bot_manager", "bot_manager"])
   .openapi({
     example: "read,write",
-    description: "read — только чтение; read,write — чтение и запись",
+    description:
+      "read | read,write — обычный PAT. " +
+      "…,bot_manager — impersonation на `/api/bot/*` через query telegram_id " +
+      "(выдача в production только BOT_MANAGER_ADMIN_IDS).",
   });
 
 /** Безопасные метаданные токена (без секрета и ownerId) */

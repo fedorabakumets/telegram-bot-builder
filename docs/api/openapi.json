@@ -16,7 +16,7 @@
     },
     {
       "name": "bot",
-      "description": "Runtime/env бота. GET …/bot/env/{id}/reveal отдаёт сырое значение секрета (владелец/collaborator проекта; UI использует nested /env-variables/…/reveal)."
+      "description": "Bot-facing API (`/api/bot/*`) для Bot Manager и части UI. Нужны session или Bearer PAT. Actor: свой user id, либо query telegram_id при PAT scope `bot_manager` (токен в env `STUDIO_BOT_MANAGER_TOKEN`). Чужой telegram_id без bot_manager → 403."
     },
     {
       "name": "bot-logs",
@@ -158,7 +158,7 @@
           "agent-tokens"
         ],
         "summary": "Создать токен агента",
-        "description": "Создаёт PAT. Поле `token` (полный секрет `mcp_…`) возвращается **один раз** — сохраните сразу.\n\n**Тело:** `label` (обязательно), `scopes` (`read` | `read,write`, по умолчанию `read,write`), `expiresInDays` (опционально, иначе бессрочный).\n\n```bash\ncurl -s -X POST http://localhost:5000/api/agent-tokens -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"label\":\"Cursor MCP\",\"scopes\":\"read,write\",\"expiresInDays\":90}'\n```",
+        "description": "Создаёт PAT. Поле `token` (полный секрет `mcp_…`) возвращается **один раз** — сохраните сразу.\n\n**Тело:** `label` (обязательно), `scopes` (`read` | `read,write` | `read,write,bot_manager`, по умолчанию `read,write`; `bot_manager` — для Bot Manager / `/api/bot`), `expiresInDays` (опционально, иначе бессрочный).\n\n```bash\ncurl -s -X POST http://localhost:5000/api/agent-tokens -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"label\":\"Cursor MCP\",\"scopes\":\"read,write\",\"expiresInDays\":90}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -1111,7 +1111,7 @@
           "bot"
         ],
         "summary": "Раскрыть секретное значение env (legacy)",
-        "description": "**Риск:** ответ содержит **сырое** значение env (`API keys`, пароли, webhook secrets). В списке переменных секреты маскируются; этот путь — кнопка «показать». Любой владелец/collaborator проекта может прочитать все secret env токена. Не логируйте тело ответа (прокси, HAR, access logs).\n\n**Кто может:** `requireEnvVariableOwnership` — владелец/collaborator проекта, к которому привязан токен переменной (env → token → project). Дополнительно query `telegram_id` должен иметь `hasProjectAccess`.\n\nUI Studio этот путь **не вызывает** (см. nested `/env-variables/…/reveal`).\n\n```bash\ncurl -s 'http://localhost:5000/api/bot/env/15/reveal?telegram_id=123456' -b cookies.txt\n```",
+        "description": "**Риск:** ответ содержит **сырое** значение env (`API keys`, пароли, webhook secrets). В списке переменных секреты маскируются; этот путь — кнопка «показать». Любой владелец/collaborator проекта может прочитать все secret env токена. Не логируйте тело ответа (прокси, HAR, access logs).\n\n**Кто может:** `resolveBotApiActor` + `requireBotEnvVariableOwnership` (actor = session/PAT user или telegram_id при scope `bot_manager`).\n\nUI Studio этот путь **не вызывает** (см. nested `/env-variables/…/reveal`).\n\n```bash\ncurl -s 'http://localhost:5000/api/bot/env/15/reveal?telegram_id=123456' \\\n  -H 'Authorization: Bearer mcp_…'   # PAT с bot_manager или свой id\n```",
         "security": [
           {
             "cookieAuth": []
@@ -1218,16 +1218,88 @@
         "tags": [
           "bot"
         ],
-        "summary": "GET /api/bot/projects",
+        "summary": "Список проектов актора",
+        "description": "**Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.\n\n**Кто действует (actor):**\n- Личная сессия / обычный PAT: actor = `req.user.id`. Query `telegram_id`, если передан, **обязан совпадать** (иначе 403).\n- PAT со scope **`bot_manager`**: actor = query `telegram_id` (обязателен). Так работает шаблон Bot Manager: Bearer `{STUDIO_BOT_MANAGER_TOKEN}` (значение — PAT с `bot_manager`, кладётся в server env и в env бота).\n\n**Не безопасно:** вызывать с чужим `telegram_id` под обычным логином — будет 403.\n\nSafe DTO без data/token. **Клиент:** Bot Manager; UI не зовёт.\n\n```bash\n# bot_manager PAT\ncurl -s 'http://localhost:5000/api/bot/projects?telegram_id=123' \\\n  -H 'Authorization: Bearer mcp_…'\n\n# личная сессия (telegram_id = свой или опустить)\ncurl -s 'http://localhost:5000/api/bot/projects' -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "123456789"
+            },
+            "required": false,
+            "description": "Telegram user id актора. Обязателен при PAT scope bot_manager. При личной сессии/PAT должен совпадать с req.user.id (или можно опустить).",
+            "example": "123456789",
+            "name": "telegram_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session Studio. Альтернатива — Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie. Для bot-manager предпочтителен Bearer PAT со scope bot_manager.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "items + count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotApiProjectList"
+                },
+                "example": {
+                  "items": [
+                    {
+                      "id": 42,
+                      "name": "Мой бот",
+                      "description": ""
+                    }
+                  ],
+                  "count": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "bot_manager без telegram_id / некорректный id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotApiError"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session/PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "telegram_id ≠ авторизованный user (без bot_manager)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotApiError"
+                }
+              }
+            }
           }
         }
       },
@@ -1307,16 +1379,82 @@
         "tags": [
           "bot"
         ],
-        "summary": "GET /api/bot/projects/{id}/collaborators",
+        "summary": "Список коллабораторов проекта",
+        "description": "**Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.\n\n**Кто действует (actor):**\n- Личная сессия / обычный PAT: actor = `req.user.id`. Query `telegram_id`, если передан, **обязан совпадать** (иначе 403).\n- PAT со scope **`bot_manager`**: actor = query `telegram_id` (обязателен). Так работает шаблон Bot Manager: Bearer `{STUDIO_BOT_MANAGER_TOKEN}` (значение — PAT с `bot_manager`, кладётся в server env и в env бота).\n\n**Не безопасно:** вызывать с чужим `telegram_id` под обычным логином — будет 403.\n\n**Клиент:** `use-collaborators` (UI). Write-операции collaborators только здесь.\n\n```bash\ncurl -s 'http://localhost:5000/api/bot/projects/42/collaborators?telegram_id=123' -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "123456789"
+            },
+            "required": false,
+            "description": "Telegram user id актора. Обязателен при PAT scope bot_manager. При личной сессии/PAT должен совпадать с req.user.id (или можно опустить).",
+            "example": "123456789",
+            "name": "telegram_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session Studio. Альтернатива — Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie. Для bot-manager предпочтителен Bearer PAT со scope bot_manager.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Список коллабораторов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "nullable": true
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа / чужой telegram_id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotApiError"
+                }
+              }
+            }
           }
         }
       },
@@ -1436,16 +1574,91 @@
         "tags": [
           "bot"
         ],
-        "summary": "POST /api/bot/projects/import",
+        "summary": "Импорт project.json → новый проект",
+        "description": "**Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.\n\n**Кто действует (actor):**\n- Личная сессия / обычный PAT: actor = `req.user.id`. Query `telegram_id`, если передан, **обязан совпадать** (иначе 403).\n- PAT со scope **`bot_manager`**: actor = query `telegram_id` (обязателен). Так работает шаблон Bot Manager: Bearer `{STUDIO_BOT_MANAGER_TOKEN}` (значение — PAT с `bot_manager`, кладётся в server env и в env бота).\n\n**Не безопасно:** вызывать с чужим `telegram_id` под обычным логином — будет 403.\n\n**Клиент:** `use-no-projects` (session + свой telegram_id) и Bot Manager.\n\n```bash\ncurl -s -X POST 'http://localhost:5000/api/bot/projects/import?telegram_id=123' \\\n  -H 'Authorization: Bearer mcp_…' -H 'Content-Type: application/json' -d @project.json\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "123456789"
+            },
+            "required": false,
+            "description": "Telegram user id актора. Обязателен при PAT scope bot_manager. При личной сессии/PAT должен совпадать с req.user.id (или можно опустить).",
+            "example": "123456789",
+            "name": "telegram_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session Studio. Альтернатива — Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie. Для bot-manager предпочтителен Bearer PAT со scope bot_manager.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "nullable": true
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Созданный проект",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                },
+                "example": {
+                  "id": 55
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Чужой telegram_id без bot_manager",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotApiError"
+                }
+              }
+            }
           }
         }
       }
@@ -1548,16 +1761,92 @@
         "tags": [
           "bot"
         ],
-        "summary": "GET /api/bot/tokens/{tokenId}/status",
+        "summary": "Статус инстанса бота по tokenId",
+        "description": "**Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.\n\n**Кто действует (actor):**\n- Личная сессия / обычный PAT: actor = `req.user.id`. Query `telegram_id`, если передан, **обязан совпадать** (иначе 403).\n- PAT со scope **`bot_manager`**: actor = query `telegram_id` (обязателен). Так работает шаблон Bot Manager: Bearer `{STUDIO_BOT_MANAGER_TOKEN}` (значение — PAT с `bot_manager`, кладётся в server env и в env бота).\n\n**Не безопасно:** вызывать с чужим `telegram_id` под обычным логином — будет 403.\n\nДоступ: actor имеет hasProjectAccess к проекту токена. Секрет token в ответе не отдаётся. **Клиент:** Bot Manager, `lib/bot-tools`.\n\n```bash\ncurl -s 'http://localhost:5000/api/bot/tokens/7/status?telegram_id=123' \\\n  -H 'Authorization: Bearer mcp_…'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "7"
+            },
+            "required": true,
+            "description": "ID токена или token_7",
+            "example": "7",
+            "name": "tokenId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "123456789"
+            },
+            "required": false,
+            "description": "Telegram user id актора. Обязателен при PAT scope bot_manager. При личной сессии/PAT должен совпадать с req.user.id (или можно опустить).",
+            "example": "123456789",
+            "name": "telegram_id",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session Studio. Альтернатива — Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie. Для bot-manager предпочтителен Bearer PAT со scope bot_manager.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Статус + instance (без token)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "nullable": true
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Токен не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotApiError"
+                }
+              }
+            }
           }
         }
       }
@@ -6928,7 +7217,7 @@
           "server"
         ],
         "summary": "Список серверных env-ключей для подстановки в бот",
-        "description": "Возвращает **только имена** переменных из whitelist серверного `process.env`, которые заданы и не пустые. **Значения не передаются** — секреты (DATABASE_URL, пароли PG и т.д.) не попадают в браузер.\n\n**Клиент:** вкладка «Переменные» у токена бота — `BotEnvPanel` и кнопка «Подставить из сервера» (`BotEnvServerVarsPopover`). UI подставляет в custom env синтаксис `${{KEY}}`; при генерации `.env` бота такие ссылки резолвятся из окружения Node-процесса на сервере.\n\n**Whitelist (фиксированный):** DATABASE_URL, REDIS_URL, WEBHOOK_BASE_URL, API_BASE_URL, NODE_ENV, PGHOST, PGPORT, PGDATABASE, PGUSER.\n\nВ `items` только ключи из whitelist, для которых `process.env[KEY]` определён и не пустой. Если переменная не задана на сервере — она не возвращается (UI показывает локальный дефолт без `${{…}}`).\n\nТребуется авторизация: сессионная cookie или Bearer PAT агента.",
+        "description": "Возвращает **только имена** переменных из whitelist серверного `process.env`, которые заданы и не пустые. **Значения не передаются** — секреты (DATABASE_URL, пароли PG и т.д.) не попадают в браузер.\n\n**Клиент:** вкладка «Переменные» у токена бота — `BotEnvPanel` и кнопка «Подставить из сервера» (`BotEnvServerVarsPopover`). UI подставляет в custom env синтаксис `${{KEY}}`; при генерации `.env` бота такие ссылки резолвятся из окружения Node-процесса на сервере.\n\n**Whitelist (фиксированный):** DATABASE_URL, REDIS_URL, WEBHOOK_BASE_URL, API_BASE_URL, NODE_ENV, PGHOST, PGPORT, PGDATABASE, PGUSER, STUDIO_BOT_MANAGER_TOKEN.\n\nВ `items` только ключи из whitelist, для которых `process.env[KEY]` определён и не пустой. Если переменная не задана на сервере — она не возвращается (UI показывает локальный дефолт без `${{…}}`).\n\nТребуется авторизация: сессионная cookie или Bearer PAT агента.",
         "security": [
           {
             "cookieAuth": []
@@ -10071,10 +10360,12 @@
             "type": "string",
             "enum": [
               "read",
-              "read,write"
+              "read,write",
+              "read,write,bot_manager",
+              "bot_manager"
             ],
             "default": "read,write",
-            "description": "read — только чтение; read,write — чтение и запись",
+            "description": "read | read,write — обычный PAT. …,bot_manager — impersonation на `/api/bot/*` через query telegram_id (выдача в production только BOT_MANAGER_ADMIN_IDS).",
             "example": "read,write"
           },
           "expiresInDays": {
@@ -10760,6 +11051,81 @@
         ]
       },
       "BotEnvRevealError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "BotApiProjectList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "nullable": true
+                    }
+                  ]
+                },
+                "updatedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "nullable": true
+                    }
+                  ]
+                },
+                "sortOrder": {
+                  "type": "number",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "name"
+              ]
+            }
+          },
+          "count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ]
+      },
+      "BotApiError": {
         "type": "object",
         "properties": {
           "error": {
@@ -12372,7 +12738,8 @@
               "PGHOST",
               "PGPORT",
               "PGDATABASE",
-              "PGUSER"
+              "PGUSER",
+              "STUDIO_BOT_MANAGER_TOKEN"
             ],
             "description": "Ключ из фиксированного whitelist. В ответ попадают только ключи, у которых в process.env есть непустое значение.",
             "example": "DATABASE_URL"

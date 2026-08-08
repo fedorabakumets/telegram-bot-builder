@@ -16,6 +16,10 @@ declare global {
       user?: TelegramUserDB;
       /** Сырой Bearer PAT для remote MCP (только на /mcp) */
       mcpAgentToken?: string;
+      /** Scopes PAT через запятую (если личность из Bearer) */
+      agentScopes?: string;
+      /** Действующий telegram id для `/api/bot/*` (после resolveBotApiActor) */
+      botActorId?: number;
     }
   }
 }

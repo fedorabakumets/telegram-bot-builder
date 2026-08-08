@@ -1,13 +1,17 @@
 /**
- * @fileoverview Маршруты MCP/agent API: проекты, токены, коллабораторы и env ботов
+ * @fileoverview Маршруты bot-facing API: проекты, токены, коллабораторы и env
+ *
+ * Auth: session cookie или Bearer PAT + resolveBotApiActor.
+ * Scope `bot_manager` на PAT позволяет действовать от query telegram_id.
  *
  * @module setupUserProjectAndTokenRoutes
  */
 
 import type { Express } from "express";
-import { requireProjectAccess } from "../middleware/requireProjectAccess";
-import { requireTokenOwnership } from "../middleware/requireResourceOwnership";
-import { requireEnvVariableOwnership } from "../middleware/requireEnvVariableOwnership";
+import { resolveBotApiActor } from "../middleware/bot-api-actor";
+import { requireBotProjectAccess } from "../middleware/requireBotProjectAccess";
+import { requireBotTokenOwnership } from "../middleware/requireResourceOwnership";
+import { requireBotEnvVariableOwnership } from "../middleware/requireEnvVariableOwnership";
 import { getBotProjectsHandler } from "./userProjectsTokens/handlers/projects/getBotProjectsHandler";
 import { getBotProjectDetailHandler } from "./userProjectsTokens/handlers/projects/getBotProjectDetailHandler";
 import { exportBotProjectHandler } from "./userProjectsTokens/handlers/projects/exportBotProjectHandler";
@@ -32,33 +36,56 @@ import { deleteEnvVariableHandler } from "./userProjectsTokens/handlers/envVaria
 import { revealEnvVariableHandler } from "./userProjectsTokens/handlers/envVariables/revealEnvVariableHandler";
 
 /**
- * Настраивает маршруты MCP/agent API (`/api/bot/*`)
- * @param app - Экземпляр приложения Express
+ * Настраивает маршруты `/api/bot/*`.
+ * @param app - Экземпляр Express
+ * @returns void
  */
 export function setupUserProjectAndTokenRoutes(app: Express): void {
-    app.get("/api/bot/projects", getBotProjectsHandler);
-    app.get("/api/bot/projects/:id", requireProjectAccess, getBotProjectDetailHandler);
-    app.get("/api/bot/projects/:id/export", requireProjectAccess, exportBotProjectHandler);
-    app.post("/api/bot/projects", createBotProjectHandler);
-    app.post("/api/bot/projects/import", importBotProjectHandler);
-    app.put("/api/bot/projects/:id/data", requireProjectAccess, importBotProjectDataHandler);
-    app.patch("/api/bot/projects/:id", requireProjectAccess, updateBotProjectHandler);
-    app.delete("/api/bot/projects/:id", requireProjectAccess, deleteBotProjectHandler);
+  const actor = resolveBotApiActor;
 
-    app.get("/api/bot/projects/:id/tokens", requireProjectAccess, getBotProjectTokensHandler);
-    app.post("/api/bot/projects/:id/tokens", requireProjectAccess, createBotTokenHandler);
-    app.delete("/api/bot/tokens/:tokenId", deleteBotTokenHandler);
-    app.get("/api/bot/tokens/:tokenId/stats", requireTokenOwnership, getTokenStatsHandler);
-    app.get("/api/bot/tokens/:tokenId/users", getBotTokenUsersHandler);
-    app.get("/api/bot/tokens/:tokenId/users/:userId", getBotTokenUserHandler);
+  app.get("/api/bot/projects", actor, getBotProjectsHandler);
+  app.get("/api/bot/projects/:id", actor, requireBotProjectAccess, getBotProjectDetailHandler);
+  app.get("/api/bot/projects/:id/export", actor, requireBotProjectAccess, exportBotProjectHandler);
+  app.post("/api/bot/projects", actor, createBotProjectHandler);
+  app.post("/api/bot/projects/import", actor, importBotProjectHandler);
+  app.put("/api/bot/projects/:id/data", actor, requireBotProjectAccess, importBotProjectDataHandler);
+  app.patch("/api/bot/projects/:id", actor, requireBotProjectAccess, updateBotProjectHandler);
+  app.delete("/api/bot/projects/:id", actor, requireBotProjectAccess, deleteBotProjectHandler);
 
-    app.get("/api/bot/projects/:id/collaborators", requireProjectAccess, getCollaboratorsHandler);
-    app.post("/api/bot/projects/:id/collaborators", requireProjectAccess, addCollaboratorHandler);
-    app.delete("/api/bot/projects/:id/collaborators/:userId", requireProjectAccess, removeCollaboratorHandler);
+  app.get("/api/bot/projects/:id/tokens", actor, requireBotProjectAccess, getBotProjectTokensHandler);
+  app.post("/api/bot/projects/:id/tokens", actor, requireBotProjectAccess, createBotTokenHandler);
+  app.delete("/api/bot/tokens/:tokenId", actor, requireBotTokenOwnership, deleteBotTokenHandler);
+  app.get("/api/bot/tokens/:tokenId/stats", actor, requireBotTokenOwnership, getTokenStatsHandler);
+  app.get("/api/bot/tokens/:tokenId/users", actor, requireBotTokenOwnership, getBotTokenUsersHandler);
+  app.get(
+    "/api/bot/tokens/:tokenId/users/:userId",
+    actor,
+    requireBotTokenOwnership,
+    getBotTokenUserHandler,
+  );
 
-    app.get("/api/bot/tokens/:tokenId/env", requireTokenOwnership, getEnvVariablesHandler);
-    app.post("/api/bot/tokens/:tokenId/env", requireTokenOwnership, createEnvVariableHandler);
-    app.patch("/api/bot/env/:id", requireEnvVariableOwnership, updateEnvVariableHandler);
-    app.delete("/api/bot/env/:id", requireEnvVariableOwnership, deleteEnvVariableHandler);
-    app.get("/api/bot/env/:id/reveal", requireEnvVariableOwnership, revealEnvVariableHandler);
+  app.get(
+    "/api/bot/projects/:id/collaborators",
+    actor,
+    requireBotProjectAccess,
+    getCollaboratorsHandler,
+  );
+  app.post(
+    "/api/bot/projects/:id/collaborators",
+    actor,
+    requireBotProjectAccess,
+    addCollaboratorHandler,
+  );
+  app.delete(
+    "/api/bot/projects/:id/collaborators/:userId",
+    actor,
+    requireBotProjectAccess,
+    removeCollaboratorHandler,
+  );
+
+  app.get("/api/bot/tokens/:tokenId/env", actor, requireBotTokenOwnership, getEnvVariablesHandler);
+  app.post("/api/bot/tokens/:tokenId/env", actor, requireBotTokenOwnership, createEnvVariableHandler);
+  app.patch("/api/bot/env/:id", actor, requireBotEnvVariableOwnership, updateEnvVariableHandler);
+  app.delete("/api/bot/env/:id", actor, requireBotEnvVariableOwnership, deleteEnvVariableHandler);
+  app.get("/api/bot/env/:id/reveal", actor, requireBotEnvVariableOwnership, revealEnvVariableHandler);
 }

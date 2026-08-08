@@ -5,6 +5,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { getBotActorId } from "../../../../middleware/bot-api-actor";
 
 /**
  * Обновляет значение и/или флаг секретности переменной окружения.
@@ -14,13 +15,13 @@ import { storage } from "../../../../storages/storage";
  */
 export async function updateEnvVariableHandler(req: Request, res: Response): Promise<void> {
   try {
-    const telegramId = Number(req.query.telegram_id);
+    const telegramId = getBotActorId(req);
     const variableId = parseInt(req.params.id, 10);
 
-    if (!telegramId || isNaN(telegramId)) {
-      res.status(400).json({ error: "Параметр telegram_id обязателен" });
+    if (telegramId === null) {
+      res.status(401).json({ error: "UNAUTHORIZED" });
       return;
-    }
+      }
 
     if (isNaN(variableId)) {
       res.status(400).json({ error: "Некорректный id переменной" });

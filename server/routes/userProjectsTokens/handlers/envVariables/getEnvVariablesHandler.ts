@@ -5,6 +5,7 @@
 
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
+import { getBotActorId } from "../../../../middleware/bot-api-actor";
 
 /**
  * Возвращает список переменных окружения для указанного токена.
@@ -15,13 +16,13 @@ import { storage } from "../../../../storages/storage";
  */
 export async function getEnvVariablesHandler(req: Request, res: Response): Promise<void> {
   try {
-    const telegramId = Number(req.query.telegram_id);
+    const telegramId = getBotActorId(req);
     const tokenId = parseInt(req.params.tokenId, 10);
 
-    if (!telegramId || isNaN(telegramId)) {
-      res.status(400).json({ error: "Параметр telegram_id обязателен" });
+    if (telegramId === null) {
+      res.status(401).json({ error: "UNAUTHORIZED" });
       return;
-    }
+      }
 
     if (isNaN(tokenId)) {
       res.status(400).json({ error: "Некорректный tokenId" });
