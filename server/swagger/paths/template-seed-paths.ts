@@ -1,65 +1,53 @@
 /**
- * @fileoverview OpenAPI paths: admin seed refresh/recreate системных сценариев.
+ * @fileoverview OpenAPI paths: admin seed `/admin/api/templates/refresh|recreate`.
  * @module server/swagger/paths/template-seed-paths
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import {
-  MessageErrorSchema,
-  SetupRequiredSchema,
-  UnauthorizedSchema,
-} from "../schemas/common";
+import { z } from "zod";
+import { MessageErrorSchema } from "../schemas/common";
 import { TemplateSeedOkSchema } from "../schemas/templates";
 
+const adminSecurity = [{ adminCookie: [] as string[] }];
+
 /**
- * Регистрирует POST refresh и recreate (`seedDefaultTemplates(true)`).
+ * Регистрирует admin-only seed системных сценариев.
  * @param registry - Реестр zod-to-openapi
- * @param cookieSecurity - Session cookie / Bearer PAT
  * @returns void
  */
-export function registerTemplateSeedPaths(
-  registry: OpenAPIRegistry,
-  cookieSecurity: Array<Record<string, string[]>>,
-): void {
+export function registerTemplateSeedPaths(registry: OpenAPIRegistry): void {
   registry.registerPath({
     method: "post",
-    path: "/api/templates/refresh",
-    tags: ["templates"],
+    path: "/admin/api/templates/refresh",
+    tags: ["admin"],
     summary: "Пересидить системные сценарии (force)",
     description:
-      "Вызывает `seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.\n\n" +
-      "**Статус:** админ/дебаг seed — **UI не использует**.\n\n" +
-      "**Дубль registration:** путь регистрируется **дважды** — в `setupTemplates` " +
-      "(`message: \"Templates refreshed successfully\"`) и позже в `registerRoutes` " +
-      "(ответ с `timestamp`). Express обрабатывает **первый** хендлер (`setupTemplates`); " +
-      "второй — мёртвый код.\n\n" +
-      "**Авторизация:** cookie/PAT; отдельной admin-проверки нет.",
-    security: cookieSecurity,
+      "`seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.\n\n" +
+      "**Авторизация:** только admin cookie (`ADMIN_API_KEY` → `/admin/login`). " +
+      "Обычный user cookie/PAT → 401.\n\n" +
+      "Пути `/api/templates/refresh` и `/recreate` удалены (раньше были без admin-проверки).",
+    security: adminSecurity,
     responses: {
       200: {
-        description: "Seed выполнен (активный хендлер без timestamp)",
+        description: "Seed выполнен",
         content: {
           "application/json": {
             schema: TemplateSeedOkSchema,
-            examples: {
-              setupTemplates: {
-                summary: "Активный (setupTemplates)",
-                value: { message: "Templates refreshed successfully" },
-              },
-              deadDuplicate: {
-                summary: "Мёртвый дубль (не достигается)",
-                value: {
-                  message: "Templates updated successfully",
-                  timestamp: "2026-08-08T19:00:00.000Z",
-                },
-              },
+            example: {
+              message: "Templates refreshed successfully",
+              timestamp: "2026-08-08T19:00:00.000Z",
             },
           },
         },
       },
       401: {
-        description: "Не авторизован",
-        content: { "application/json": { schema: UnauthorizedSchema } },
+        description: "Нет admin-сессии",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+            example: { error: "ADMIN_UNAUTHORIZED" },
+          },
+        },
       },
       500: {
         description: "Ошибка seed",
@@ -70,37 +58,38 @@ export function registerTemplateSeedPaths(
           },
         },
       },
-      503: {
-        description: "Приложение не настроено",
-        content: { "application/json": { schema: SetupRequiredSchema } },
-      },
     },
   });
 
   registry.registerPath({
     method: "post",
-    path: "/api/templates/recreate",
-    tags: ["templates"],
-    summary: "Пересоздать системные сценарии (иерархия)",
+    path: "/admin/api/templates/recreate",
+    tags: ["admin"],
+    summary: "Пересоздать системные сценарии (seed force)",
     description:
-      "Тот же `seedDefaultTemplates(true)`, что и refresh; другое сообщение в ответе.\n\n" +
-      "**Статус:** админ/дебаг seed — **UI не использует**.\n\n" +
-      "**Отдаёт:** `{ message: \"Templates recreated with hierarchy successfully\" }`.\n\n" +
-      "Отдельной admin-проверки нет — достаточно cookie/PAT.",
-    security: cookieSecurity,
+      "Тот же `seedDefaultTemplates(true)`, что refresh. Только admin cookie.",
+    security: adminSecurity,
     responses: {
       200: {
         description: "Seed выполнен",
         content: {
           "application/json": {
             schema: TemplateSeedOkSchema,
-            example: { message: "Templates recreated with hierarchy successfully" },
+            example: {
+              message: "Templates recreated successfully",
+              timestamp: "2026-08-08T19:00:00.000Z",
+            },
           },
         },
       },
       401: {
-        description: "Не авторизован",
-        content: { "application/json": { schema: UnauthorizedSchema } },
+        description: "Нет admin-сессии",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+            example: { error: "ADMIN_UNAUTHORIZED" },
+          },
+        },
       },
       500: {
         description: "Ошибка seed",
@@ -110,10 +99,6 @@ export function registerTemplateSeedPaths(
             example: { message: "Failed to recreate templates" },
           },
         },
-      },
-      503: {
-        description: "Приложение не настроено",
-        content: { "application/json": { schema: SetupRequiredSchema } },
       },
     },
   });

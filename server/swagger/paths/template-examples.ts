@@ -59,7 +59,6 @@ export const CREATE_TEMPLATE_EXAMPLE = {
   complexity: 1,
   estimatedTime: 5,
   authorName: "ivan",
-  featured: 0,
   data: TEMPLATE_DATA_EXAMPLE,
 };
 
@@ -76,7 +75,7 @@ export const USE_TEMPLATE_AUTH_EXAMPLE = {
   },
   copiedTemplate: {
     id: 88,
-    ownerId: null,
+    ownerId: 123456789,
     name: "FAQ-бот",
     description: "Ответы на частые вопросы",
     data: TEMPLATE_DATA_EXAMPLE,

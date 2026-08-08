@@ -31,7 +31,7 @@ export function registerTemplateDeletePaths(
     description:
       "Удаляет запись `bot_templates`.\n\n" +
       "**Зачем:** кнопка удаления на вкладке «Мои».\n\n" +
-      "**Права:** при авторизации — только свой; системные не удаляются (403).\n\n" +
+      "**Права:** только свой шаблон (`ownerId === caller`). Системные → 403.\n\n" +
       "**Отдаёт:** `{ message: \"Template deleted successfully\" }`.\n\n" +
       "**Клиент:** `useUdalitStsenary`.",
     security: cookieSecurity,

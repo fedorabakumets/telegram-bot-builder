@@ -89,11 +89,10 @@ export const TemplateValidationErrorSchema = z
   })
   .openapi("TemplateValidationError");
 
-/** Ответ seed refresh/recreate */
+/** Ответ admin seed refresh/recreate */
 export const TemplateSeedOkSchema = z
   .object({
     message: z.string().openapi({ example: "Templates refreshed successfully" }),
-    /** Есть только у мёртвого дубля registration вне setupTemplates */
-    timestamp: z.string().optional(),
+    timestamp: z.string().openapi({ example: "2026-08-08T19:00:00.000Z" }),
   })
   .openapi("TemplateSeedOk");

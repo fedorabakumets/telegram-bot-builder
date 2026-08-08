@@ -35,8 +35,8 @@ export function registerTemplateGetPutPaths(
       "Один шаблон из `bot_templates`.\n\n" +
       "**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает** " +
       "(карточки берут данные из list/featured/category).\n\n" +
-      "**Доступ при ownerId в сессии:** свой или системный (`ownerId=null`). " +
-      "Чужой (даже публичный) → **403** — особенность хендлера.\n\n" +
+      "**Доступ (`canViewOrUseTemplate`):** системный, публичный или свой. " +
+      "Чужой private → **403**.\n\n" +
       "**Отдаёт:** сырой шаблон **без** алиаса `flow_data`.",
     security: cookieSecurity,
     request: { params: TemplateIdParamsSchema },
@@ -84,10 +84,10 @@ export function registerTemplateGetPutPaths(
     tags: ["templates"],
     summary: "Обновить сценарий",
     description:
-      "Частичное обновление (`insertBotTemplateSchema.partial()`).\n\n" +
+      "Частичное обновление (клиентская схема без featured/счётчиков).\n\n" +
       "**Статус:** marketplace/legacy — **текущий UI не использует**.\n\n" +
-      "**Права:** при `ownerId` в сессии — только свой; системные пользователь " +
-      "изменить не может (403).",
+      "**Права:** только свой шаблон (`ownerId === caller`). Системные и чужие → 403.\n" +
+      "**Не принимает:** `featured`, rating/счётчики, `ownerId`.",
     security: cookieSecurity,
     request: {
       params: TemplateIdParamsSchema,

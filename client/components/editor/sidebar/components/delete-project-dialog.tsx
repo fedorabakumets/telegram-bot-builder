@@ -63,7 +63,6 @@ export function DeleteProjectDialog({
         requiresToken: 1,
         complexity: 1,
         estimatedTime: 5,
-        featured: 0,
         data: projectData,
       });
       toast({ title: '✅ Сценарий сохранён', description: `"${projectName}" сохранён в ваши сценарии` });

@@ -64,7 +64,7 @@
     },
     {
       "name": "templates",
-      "description": "Библиотека готовых сценариев ботов (`bot_templates`). UI: страница «Сценарии» + сохранить/загрузить в шапке. Не путать с `lib/templates/` (Jinja2 → Python). Живые: list/featured/category/create/use/delete. Остальное — marketplace/legacy или admin seed."
+      "description": "Библиотека готовых сценариев (`bot_templates`). UI: «Сценарии». Живые: list/featured/category/create/use/delete. Доступ: canViewOrUseTemplate; featured с клиента запрещён; seed — /admin/api/templates/*. Marketplace rate/like/… — legacy. Не путать с lib/templates/ (Jinja2)."
     },
     {
       "name": "tokens",
@@ -5655,7 +5655,7 @@
           "templates"
         ],
         "summary": "Сохранить проект как сценарий",
-        "description": "Создаёт запись в `bot_templates` из текущего проекта.\n\n**Зачем:** «Сохранить сценарий» в шапке; «сохранить перед удалением» в delete-project-dialog.\n\n**Тело:** `name`, `description`, `data` (обязателен JSON проекта), `category`, `tags`, `isPublic` (0/1), `difficulty`, `language`, `authorName`, `featured`, …\n\n**Нюансы:** `ownerId` из body **игнорируется** — ставится из сессии. `isPublic` по умолчанию 0, если не передан.\n\n**Отдаёт:** созданный шаблон (201).\n\n**Клиент:** `save-template-modal`, `delete-project-dialog`.",
+        "description": "Создаёт запись в `bot_templates` из текущего проекта.\n\n**Зачем:** «Сохранить сценарий» в шапке; «сохранить перед удалением» в delete-project-dialog.\n\n**Тело:** `name`, `description`, `data`, `category`, `tags`, `isPublic` (0/1), …\n\n**Не принимает с клиента:** `featured`, rating/счётчики, `ownerId` (mass-assignment закрыт; `featured` всегда 0 на create).\n\n`ownerId` ставится из сессии. **Клиент:** `save-template-modal`.",
         "security": [
           {
             "cookieAuth": []
@@ -5682,7 +5682,6 @@
                     "complexity": 1,
                     "estimatedTime": 5,
                     "authorName": "ivan",
-                    "featured": 0,
                     "data": {
                       "sheets": [
                         {
@@ -5723,7 +5722,7 @@
             }
           },
           "400": {
-            "description": "Ошибка Zod (insertBotTemplateSchema)",
+            "description": "Ошибка Zod (createBotTemplateBodySchema)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5774,7 +5773,7 @@
           "templates"
         ],
         "summary": "Удалить свой сценарий",
-        "description": "Удаляет запись `bot_templates`.\n\n**Зачем:** кнопка удаления на вкладке «Мои».\n\n**Права:** при авторизации — только свой; системные не удаляются (403).\n\n**Отдаёт:** `{ message: \"Template deleted successfully\" }`.\n\n**Клиент:** `useUdalitStsenary`.",
+        "description": "Удаляет запись `bot_templates`.\n\n**Зачем:** кнопка удаления на вкладке «Мои».\n\n**Права:** только свой шаблон (`ownerId === caller`). Системные → 403.\n\n**Отдаёт:** `{ message: \"Template deleted successfully\" }`.\n\n**Клиент:** `useUdalitStsenary`.",
         "security": [
           {
             "cookieAuth": []
@@ -5863,7 +5862,7 @@
           "templates"
         ],
         "summary": "Сценарий по ID",
-        "description": "Один шаблон из `bot_templates`.\n\n**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает** (карточки берут данные из list/featured/category).\n\n**Доступ при ownerId в сессии:** свой или системный (`ownerId=null`). Чужой (даже публичный) → **403** — особенность хендлера.\n\n**Отдаёт:** сырой шаблон **без** алиаса `flow_data`.",
+        "description": "Один шаблон из `bot_templates`.\n\n**Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает** (карточки берут данные из list/featured/category).\n\n**Доступ (`canViewOrUseTemplate`):** системный, публичный или свой. Чужой private → **403**.\n\n**Отдаёт:** сырой шаблон **без** алиаса `flow_data`.",
         "security": [
           {
             "cookieAuth": []
@@ -5955,7 +5954,7 @@
           "templates"
         ],
         "summary": "Обновить сценарий",
-        "description": "Частичное обновление (`insertBotTemplateSchema.partial()`).\n\n**Статус:** marketplace/legacy — **текущий UI не использует**.\n\n**Права:** при `ownerId` в сессии — только свой; системные пользователь изменить не может (403).",
+        "description": "Частичное обновление (клиентская схема без featured/счётчиков).\n\n**Статус:** marketplace/legacy — **текущий UI не использует**.\n\n**Права:** только свой шаблон (`ownerId === caller`). Системные и чужие → 403.\n**Не принимает:** `featured`, rating/счётчики, `ownerId`.",
         "security": [
           {
             "cookieAuth": []
@@ -6446,7 +6445,7 @@
           "templates"
         ],
         "summary": "Создать проект из сценария",
-        "description": "Применяет шаблон: инкремент `useCount` + (для авторизованного) новый проект и копия в «Мои».\n\n**Зачем:** кнопка «Использовать» на карточке сценария.\n\n**Авторизованный (`ownerId` из сессии):**\n1. `incrementTemplateUseCount`\n2. `createBotProject` с `name`/`description`/`data` шаблона, `userDatabaseEnabled: 1`\n3. Копия шаблона: `category: 'custom'`, **`isPublic: 0`**, `ownerId` = **оригинальный** owner шаблона (системный остаётся `null`)\n4. Ответ: `{ message, project, copiedTemplate }`\n\n**Без ownerId (legacy guest):** только инкремент счётчика → `{ message: \"Template use count incremented\" }`. При deny-by-default обычно недоступно.\n\n**Клиент:** `useIspolzovatStsenary`.",
+        "description": "Применяет шаблон: инкремент `useCount` + новый проект + private-копия в «Мои».\n\n**Доступ (`canViewOrUseTemplate`):** системный (`ownerId=null`), публичный (`isPublic=1`) или **свой**. Чужой private → **403** (IDOR закрыт).\n\n1. `incrementTemplateUseCount`\n2. `createBotProject` с data шаблона, `ownerId` = текущий user\n3. Копия: `category: custom`, `isPublic: 0`, **`ownerId` = текущий user**\n\n**Клиент:** `useIspolzovatStsenary`.",
         "security": [
           {
             "cookieAuth": []
@@ -6466,98 +6465,80 @@
         ],
         "responses": {
           "200": {
-            "description": "Проект и/или инкремент useCount",
+            "description": "Проект + копия в коллекции",
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/UseTemplateAuthResponse"
-                    },
-                    {
-                      "$ref": "#/components/schemas/UseTemplateGuestResponse"
-                    }
-                  ]
+                  "$ref": "#/components/schemas/UseTemplateAuthResponse"
                 },
-                "examples": {
-                  "authenticated": {
-                    "summary": "Авторизованный: проект + копия",
-                    "value": {
-                      "message": "Template copied to your projects and collection",
-                      "project": {
-                        "id": 266,
-                        "ownerId": 123456789,
-                        "name": "FAQ-бот",
-                        "description": "Ответы на частые вопросы",
-                        "data": {
-                          "sheets": [
+                "example": {
+                  "message": "Template copied to your projects and collection",
+                  "project": {
+                    "id": 266,
+                    "ownerId": 123456789,
+                    "name": "FAQ-бот",
+                    "description": "Ответы на частые вопросы",
+                    "data": {
+                      "sheets": [
+                        {
+                          "id": "main",
+                          "name": "Основной",
+                          "nodes": [
                             {
-                              "id": "main",
-                              "name": "Основной",
-                              "nodes": [
-                                {
-                                  "id": "start",
-                                  "type": "start",
-                                  "position": {
-                                    "x": 0,
-                                    "y": 0
-                                  },
-                                  "data": {
-                                    "messageText": "Привет!"
-                                  }
-                                }
-                              ],
-                              "edges": []
+                              "id": "start",
+                              "type": "start",
+                              "position": {
+                                "x": 0,
+                                "y": 0
+                              },
+                              "data": {
+                                "messageText": "Привет!"
+                              }
                             }
-                          ]
-                        },
-                        "userDatabaseEnabled": 1
-                      },
-                      "copiedTemplate": {
-                        "id": 88,
-                        "ownerId": null,
-                        "name": "FAQ-бот",
-                        "description": "Ответы на частые вопросы",
-                        "data": {
-                          "sheets": [
-                            {
-                              "id": "main",
-                              "name": "Основной",
-                              "nodes": [
-                                {
-                                  "id": "start",
-                                  "type": "start",
-                                  "position": {
-                                    "x": 0,
-                                    "y": 0
-                                  },
-                                  "data": {
-                                    "messageText": "Привет!"
-                                  }
-                                }
-                              ],
-                              "edges": []
-                            }
-                          ]
-                        },
-                        "category": "custom",
-                        "isPublic": 0,
-                        "difficulty": "easy",
-                        "useCount": 0,
-                        "rating": 0,
-                        "ratingCount": 0,
-                        "featured": 0,
-                        "language": "ru",
-                        "complexity": 2,
-                        "estimatedTime": 10
-                      }
-                    }
+                          ],
+                          "edges": []
+                        }
+                      ]
+                    },
+                    "userDatabaseEnabled": 1
                   },
-                  "guest": {
-                    "summary": "Legacy guest: только счётчик",
-                    "value": {
-                      "message": "Template use count incremented"
-                    }
+                  "copiedTemplate": {
+                    "id": 88,
+                    "ownerId": 123456789,
+                    "name": "FAQ-бот",
+                    "description": "Ответы на частые вопросы",
+                    "data": {
+                      "sheets": [
+                        {
+                          "id": "main",
+                          "name": "Основной",
+                          "nodes": [
+                            {
+                              "id": "start",
+                              "type": "start",
+                              "position": {
+                                "x": 0,
+                                "y": 0
+                              },
+                              "data": {
+                                "messageText": "Привет!"
+                              }
+                            }
+                          ],
+                          "edges": []
+                        }
+                      ]
+                    },
+                    "category": "custom",
+                    "isPublic": 0,
+                    "difficulty": "easy",
+                    "useCount": 0,
+                    "rating": 0,
+                    "ratingCount": 0,
+                    "featured": 0,
+                    "language": "ru",
+                    "complexity": 2,
+                    "estimatedTime": 10
                   }
                 }
               }
@@ -6569,6 +6550,19 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Чужой приватный шаблон",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "You don't have permission to use this template"
                 }
               }
             }
@@ -6699,7 +6693,7 @@
           "templates"
         ],
         "summary": "Сценарии по категории",
-        "description": "Фильтр по `category`. Особый случай **`custom`** = «Мои».\n\n**custom + сессия:** все шаблоны пользователя с `category=custom` (включая приватные) через `getUserBotTemplates`.\n\n**custom без ownerId (legacy guest):** системные custom (`ownerId=null`) + опционально query `ids` (через запятую) из localStorage UI. При deny-by-default гостевая ветка почти недостижима — UI всё ещё шлёт `?ids=`.\n\n**Прочие категории:** только `isPublic=1` или `ownerId=null`.\n\n**Клиент:** `useMoiStsenary` → `/category/custom`.",
+        "description": "Фильтр по `category`. Особый случай **`custom`** = «Мои».\n\n**custom:** только шаблоны текущего пользователя с `category=custom` (`getUserBotTemplates`). Query `ids` **удалён** (был IDOR).\n\n**Прочие категории:** только `isPublic=1` или `ownerId=null`.\n\n**Клиент:** `useMoiStsenary` → `/category/custom` (требует сессию).",
         "security": [
           {
             "cookieAuth": []
@@ -6715,16 +6709,6 @@
             "required": true,
             "name": "category",
             "in": "path"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Только category=custom без сессии: догрузка по ID из localStorage",
-              "example": "3,7,15"
-            },
-            "required": false,
-            "name": "ids",
-            "in": "query"
           }
         ],
         "responses": {
@@ -6890,142 +6874,6 @@
                 },
                 "example": {
                   "message": "Failed to fetch featured templates"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Приложение не настроено",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetupRequired"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/templates/recreate": {
-      "post": {
-        "tags": [
-          "templates"
-        ],
-        "summary": "Пересоздать системные сценарии (иерархия)",
-        "description": "Тот же `seedDefaultTemplates(true)`, что и refresh; другое сообщение в ответе.\n\n**Статус:** админ/дебаг seed — **UI не использует**.\n\n**Отдаёт:** `{ message: \"Templates recreated with hierarchy successfully\" }`.\n\nОтдельной admin-проверки нет — достаточно cookie/PAT.",
-        "security": [
-          {
-            "cookieAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Seed выполнен",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TemplateSeedOk"
-                },
-                "example": {
-                  "message": "Templates recreated with hierarchy successfully"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Не авторизован",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Ошибка seed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                },
-                "example": {
-                  "message": "Failed to recreate templates"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Приложение не настроено",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SetupRequired"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/templates/refresh": {
-      "post": {
-        "tags": [
-          "templates"
-        ],
-        "summary": "Пересидить системные сценарии (force)",
-        "description": "Вызывает `seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.\n\n**Статус:** админ/дебаг seed — **UI не использует**.\n\n**Дубль registration:** путь регистрируется **дважды** — в `setupTemplates` (`message: \"Templates refreshed successfully\"`) и позже в `registerRoutes` (ответ с `timestamp`). Express обрабатывает **первый** хендлер (`setupTemplates`); второй — мёртвый код.\n\n**Авторизация:** cookie/PAT; отдельной admin-проверки нет.",
-        "security": [
-          {
-            "cookieAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Seed выполнен (активный хендлер без timestamp)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TemplateSeedOk"
-                },
-                "examples": {
-                  "setupTemplates": {
-                    "summary": "Активный (setupTemplates)",
-                    "value": {
-                      "message": "Templates refreshed successfully"
-                    }
-                  },
-                  "deadDuplicate": {
-                    "summary": "Мёртвый дубль (не достигается)",
-                    "value": {
-                      "message": "Templates updated successfully",
-                      "timestamp": "2026-08-08T19:00:00.000Z"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Не авторизован",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Ошибка seed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageError"
-                },
-                "example": {
-                  "message": "Failed to refresh templates"
                 }
               }
             }
@@ -7630,6 +7478,134 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SetupError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/api/templates/refresh": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Пересидить системные сценарии (force)",
+        "description": "`seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.\n\n**Авторизация:** только admin cookie (`ADMIN_API_KEY` → `/admin/login`). Обычный user cookie/PAT → 401.\n\nПути `/api/templates/refresh` и `/recreate` удалены (раньше были без admin-проверки).",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Seed выполнен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateSeedOk"
+                },
+                "example": {
+                  "message": "Templates refreshed successfully",
+                  "timestamp": "2026-08-08T19:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка seed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Failed to refresh templates"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/api/templates/recreate": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Пересоздать системные сценарии (seed force)",
+        "description": "Тот же `seedDefaultTemplates(true)`, что refresh. Только admin cookie.",
+        "security": [
+          {
+            "adminCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Seed выполнен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateSeedOk"
+                },
+                "example": {
+                  "message": "Templates recreated successfully",
+                  "timestamp": "2026-08-08T19:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет admin-сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                },
+                "example": {
+                  "error": "ADMIN_UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка seed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Failed to recreate templates"
                 }
               }
             }
@@ -9684,7 +9660,7 @@
               "entertainment",
               "education",
               "utility",
-              "games",
+              "game",
               "official",
               "community"
             ],
@@ -9730,12 +9706,6 @@
             "type": "string",
             "nullable": true
           },
-          "featured": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "default": 0
-          },
           "language": {
             "type": "string",
             "enum": [
@@ -9769,11 +9739,6 @@
             "minimum": 1,
             "maximum": 120,
             "default": 5
-          },
-          "rating": {
-            "type": "number",
-            "minimum": 1,
-            "maximum": 5
           }
         },
         "required": [
@@ -9788,11 +9753,13 @@
             "example": "Templates refreshed successfully"
           },
           "timestamp": {
-            "type": "string"
+            "type": "string",
+            "example": "2026-08-08T19:00:00.000Z"
           }
         },
         "required": [
-          "message"
+          "message",
+          "timestamp"
         ]
       },
       "UpdateTemplateRequest": {
@@ -9828,7 +9795,7 @@
               "entertainment",
               "education",
               "utility",
-              "games",
+              "game",
               "official",
               "community"
             ],
@@ -9874,12 +9841,6 @@
             "type": "string",
             "nullable": true
           },
-          "featured": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "default": 0
-          },
           "language": {
             "type": "string",
             "enum": [
@@ -9913,11 +9874,6 @@
             "minimum": 1,
             "maximum": 120,
             "default": 5
-          },
-          "rating": {
-            "type": "number",
-            "minimum": 1,
-            "maximum": 5
           }
         }
       },
@@ -9951,18 +9907,6 @@
           "message",
           "project",
           "copiedTemplate"
-        ]
-      },
-      "UseTemplateGuestResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Template use count incremented"
-          }
-        },
-        "required": [
-          "message"
         ]
       },
       "RateTemplateRequest": {

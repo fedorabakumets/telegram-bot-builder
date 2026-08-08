@@ -86,12 +86,10 @@ export function registerTemplateListCreatePaths(
     description:
       "Создаёт запись в `bot_templates` из текущего проекта.\n\n" +
       "**Зачем:** «Сохранить сценарий» в шапке; «сохранить перед удалением» в delete-project-dialog.\n\n" +
-      "**Тело:** `name`, `description`, `data` (обязателен JSON проекта), `category`, `tags`, " +
-      "`isPublic` (0/1), `difficulty`, `language`, `authorName`, `featured`, …\n\n" +
-      "**Нюансы:** `ownerId` из body **игнорируется** — ставится из сессии. " +
-      "`isPublic` по умолчанию 0, если не передан.\n\n" +
-      "**Отдаёт:** созданный шаблон (201).\n\n" +
-      "**Клиент:** `save-template-modal`, `delete-project-dialog`.",
+      "**Тело:** `name`, `description`, `data`, `category`, `tags`, `isPublic` (0/1), …\n\n" +
+      "**Не принимает с клиента:** `featured`, rating/счётчики, `ownerId` " +
+      "(mass-assignment закрыт; `featured` всегда 0 на create).\n\n" +
+      "`ownerId` ставится из сессии. **Клиент:** `save-template-modal`.",
     security: cookieSecurity,
     request: {
       body: {
@@ -111,7 +109,7 @@ export function registerTemplateListCreatePaths(
         content: { "application/json": { schema: BotTemplateDtoSchema } },
       },
       400: {
-        description: "Ошибка Zod (insertBotTemplateSchema)",
+        description: "Ошибка Zod (createBotTemplateBodySchema)",
         content: { "application/json": { schema: TemplateValidationErrorSchema } },
       },
       401: {

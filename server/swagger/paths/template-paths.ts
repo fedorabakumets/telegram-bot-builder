@@ -28,7 +28,7 @@ export function registerTemplatePaths(
   registerTemplateListCreatePaths(registry, cookieSecurity);
   registerTemplateFeaturedCategoryPaths(registry, cookieSecurity);
   registerTemplateSearchPaths(registry, cookieSecurity);
-  registerTemplateSeedPaths(registry, cookieSecurity);
+  registerTemplateSeedPaths(registry);
   registerTemplateGetPutPaths(registry, cookieSecurity);
   registerTemplateDeletePaths(registry, cookieSecurity);
   registerTemplateUsePaths(registry, cookieSecurity);

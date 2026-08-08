@@ -10,7 +10,7 @@ REST API визуального конструктора Telegram-ботов. А
 
 | Тег | Эндпоинтов |
 |-----|------------|
-| [admin](./admin.md) | 2 |
+| [admin](./admin.md) | 4 |
 | [agent-tokens](./agent-tokens.md) | 3 |
 | [auth](./auth.md) | 8 |
 | [bot](./bot.md) | 24 |
@@ -26,7 +26,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [server](./server.md) | 1 |
 | [setup](./setup.md) | 2 |
 | [storage-configs](./storage-configs.md) | 5 |
-| [templates](./templates.md) | 16 |
+| [templates](./templates.md) | 14 |
 | [tokens](./tokens.md) | 4 |
 | [webhook](./webhook.md) | 1 |
 | [workers](./workers.md) | 1 |

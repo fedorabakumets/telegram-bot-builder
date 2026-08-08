@@ -1,6 +1,6 @@
 # templates
 
-Эндпоинтов: **16**
+Эндпоинтов: **14**
 
 ### `GET` /api/templates
 
@@ -41,13 +41,11 @@
 
 **Зачем:** «Сохранить сценарий» в шапке; «сохранить перед удалением» в delete-project-dialog.
 
-**Тело:** `name`, `description`, `data` (обязателен JSON проекта), `category`, `tags`, `isPublic` (0/1), `difficulty`, `language`, `authorName`, `featured`, …
+**Тело:** `name`, `description`, `data`, `category`, `tags`, `isPublic` (0/1), …
 
-**Нюансы:** `ownerId` из body **игнорируется** — ставится из сессии. `isPublic` по умолчанию 0, если не передан.
+**Не принимает с клиента:** `featured`, rating/счётчики, `ownerId` (mass-assignment закрыт; `featured` всегда 0 на create).
 
-**Отдаёт:** созданный шаблон (201).
-
-**Клиент:** `save-template-modal`, `delete-project-dialog`.
+`ownerId` ставится из сессии. **Клиент:** `save-template-modal`.
 
 **Тело запроса:** `CreateTemplateRequest`
 
@@ -56,7 +54,7 @@
 | Код | Описание |
 |-----|----------|
 | 201 | Сценарий создан |
-| 400 | Ошибка Zod (insertBotTemplateSchema) |
+| 400 | Ошибка Zod (createBotTemplateBodySchema) |
 | 401 | Не авторизован |
 | 500 | Ошибка создания |
 | 503 | setupGuard / БД не готова |
@@ -71,7 +69,7 @@
 
 **Зачем:** кнопка удаления на вкладке «Мои».
 
-**Права:** при авторизации — только свой; системные не удаляются (403).
+**Права:** только свой шаблон (`ownerId === caller`). Системные → 403.
 
 **Отдаёт:** `{ message: "Template deleted successfully" }`.
 
@@ -100,7 +98,7 @@
 
 **Статус:** marketplace/legacy — **текущий UI «Сценарии» не вызывает** (карточки берут данные из list/featured/category).
 
-**Доступ при ownerId в сессии:** свой или системный (`ownerId=null`). Чужой (даже публичный) → **403** — особенность хендлера.
+**Доступ (`canViewOrUseTemplate`):** системный, публичный или свой. Чужой private → **403**.
 
 **Отдаёт:** сырой шаблон **без** алиаса `flow_data`.
 
@@ -123,11 +121,12 @@
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Частичное обновление (`insertBotTemplateSchema.partial()`).
+Частичное обновление (клиентская схема без featured/счётчиков).
 
 **Статус:** marketplace/legacy — **текущий UI не использует**.
 
-**Права:** при `ownerId` в сессии — только свой; системные пользователь изменить не может (403).
+**Права:** только свой шаблон (`ownerId === caller`). Системные и чужие → 403.
+**Не принимает:** `featured`, rating/счётчики, `ownerId`.
 
 **Тело запроса:** `UpdateTemplateRequest`
 
@@ -248,17 +247,13 @@
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Применяет шаблон: инкремент `useCount` + (для авторизованного) новый проект и копия в «Мои».
+Применяет шаблон: инкремент `useCount` + новый проект + private-копия в «Мои».
 
-**Зачем:** кнопка «Использовать» на карточке сценария.
+**Доступ (`canViewOrUseTemplate`):** системный (`ownerId=null`), публичный (`isPublic=1`) или **свой**. Чужой private → **403** (IDOR закрыт).
 
-**Авторизованный (`ownerId` из сессии):**
 1. `incrementTemplateUseCount`
-2. `createBotProject` с `name`/`description`/`data` шаблона, `userDatabaseEnabled: 1`
-3. Копия шаблона: `category: 'custom'`, **`isPublic: 0`**, `ownerId` = **оригинальный** owner шаблона (системный остаётся `null`)
-4. Ответ: `{ message, project, copiedTemplate }`
-
-**Без ownerId (legacy guest):** только инкремент счётчика → `{ message: "Template use count incremented" }`. При deny-by-default обычно недоступно.
+2. `createBotProject` с data шаблона, `ownerId` = текущий user
+3. Копия: `category: custom`, `isPublic: 0`, **`ownerId` = текущий user**
 
 **Клиент:** `useIspolzovatStsenary`.
 
@@ -268,8 +263,9 @@
 
 | Код | Описание |
 |-----|----------|
-| 200 | Проект и/или инкремент useCount |
+| 200 | Проект + копия в коллекции |
 | 401 | Не авторизован |
+| 403 | Чужой приватный шаблон |
 | 404 | Шаблон не найден |
 | 500 | Ошибка создания проекта/копии |
 | 503 | setupGuard / БД не готова |
@@ -304,15 +300,13 @@
 
 Фильтр по `category`. Особый случай **`custom`** = «Мои».
 
-**custom + сессия:** все шаблоны пользователя с `category=custom` (включая приватные) через `getUserBotTemplates`.
-
-**custom без ownerId (legacy guest):** системные custom (`ownerId=null`) + опционально query `ids` (через запятую) из localStorage UI. При deny-by-default гостевая ветка почти недостижима — UI всё ещё шлёт `?ids=`.
+**custom:** только шаблоны текущего пользователя с `category=custom` (`getUserBotTemplates`). Query `ids` **удалён** (был IDOR).
 
 **Прочие категории:** только `isPublic=1` или `ownerId=null`.
 
-**Клиент:** `useMoiStsenary` → `/category/custom`.
+**Клиент:** `useMoiStsenary` → `/category/custom` (требует сессию).
 
-**Параметры:** 2
+**Параметры:** 1
 
 #### Ответы
 
@@ -346,52 +340,6 @@
 | 200 | Рекомендуемые после privacy-фильтра |
 | 401 | Не авторизован |
 | 500 | Ошибка БД |
-| 503 | Приложение не настроено |
-
-### `POST` /api/templates/recreate
-
-Пересоздать системные сценарии (иерархия)
-
-**Авторизация:** Cookie (`connect.sid`)
-
-Тот же `seedDefaultTemplates(true)`, что и refresh; другое сообщение в ответе.
-
-**Статус:** админ/дебаг seed — **UI не использует**.
-
-**Отдаёт:** `{ message: "Templates recreated with hierarchy successfully" }`.
-
-Отдельной admin-проверки нет — достаточно cookie/PAT.
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Seed выполнен |
-| 401 | Не авторизован |
-| 500 | Ошибка seed |
-| 503 | Приложение не настроено |
-
-### `POST` /api/templates/refresh
-
-Пересидить системные сценарии (force)
-
-**Авторизация:** Cookie (`connect.sid`)
-
-Вызывает `seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.
-
-**Статус:** админ/дебаг seed — **UI не использует**.
-
-**Дубль registration:** путь регистрируется **дважды** — в `setupTemplates` (`message: "Templates refreshed successfully"`) и позже в `registerRoutes` (ответ с `timestamp`). Express обрабатывает **первый** хендлер (`setupTemplates`); второй — мёртвый код.
-
-**Авторизация:** cookie/PAT; отдельной admin-проверки нет.
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Seed выполнен (активный хендлер без timestamp) |
-| 401 | Не авторизован |
-| 500 | Ошибка seed |
 | 503 | Приложение не настроено |
 
 ### `GET` /api/templates/search

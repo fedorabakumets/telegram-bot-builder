@@ -7,10 +7,7 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/queryClient';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
-import {
-  ochistItIdStsenarievGostya,
-  poluchitIdsParamDlyaGostya,
-} from '../utils/scenariy-hranilishche';
+import { ochistItIdStsenarievGostya } from '../utils/scenariy-hranilishche';
 import type { BotTemplate } from '@shared/schema';
 
 /** Общие настройки кэша для запросов сценариев */
@@ -45,8 +42,7 @@ export function useRekomenduemyeStsenary(enabled: boolean) {
 }
 
 /**
- * Хук для загрузки "моих" сценариев с поддержкой гостевого режима
- * При авторизации очищает localStorage и инвалидирует кэш гостя
+ * Хук для загрузки «моих» сценариев (только авторизованный; без guest ?ids=).
  * @returns объект с данными, флагами загрузки и ошибки
  */
 export function useMoiStsenary() {
@@ -63,11 +59,9 @@ export function useMoiStsenary() {
 
   return useQuery<BotTemplate[]>({
     queryKey: ['/api/templates/category/custom', user?.id ?? 'guest'],
+    enabled: Boolean(user),
     queryFn: async () => {
-      const idsParam = !user ? poluchitIdsParamDlyaGostya() : '';
-      const url = `/api/templates/category/custom${idsParam ? `?ids=${idsParam}` : ''}`;
-
-      const response = await fetch(url, {
+      const response = await fetch('/api/templates/category/custom', {
         credentials: 'include',
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },

@@ -10,7 +10,6 @@ import {
   SetupRequiredSchema,
   UnauthorizedSchema,
 } from "../schemas/common";
-import { TemplateCategoryQuerySchema } from "../schemas/template-bodies";
 import { BotTemplateListSchema } from "../schemas/templates";
 import { TEMPLATE_LIST_ITEM_EXAMPLE } from "./template-examples";
 
@@ -77,13 +76,10 @@ export function registerTemplateFeaturedCategoryPaths(
     summary: "Сценарии по категории",
     description:
       "Фильтр по `category`. Особый случай **`custom`** = «Мои».\n\n" +
-      "**custom + сессия:** все шаблоны пользователя с `category=custom` " +
-      "(включая приватные) через `getUserBotTemplates`.\n\n" +
-      "**custom без ownerId (legacy guest):** системные custom (`ownerId=null`) + " +
-      "опционально query `ids` (через запятую) из localStorage UI. " +
-      "При deny-by-default гостевая ветка почти недостижима — UI всё ещё шлёт `?ids=`.\n\n" +
+      "**custom:** только шаблоны текущего пользователя с `category=custom` " +
+      "(`getUserBotTemplates`). Query `ids` **удалён** (был IDOR).\n\n" +
       "**Прочие категории:** только `isPublic=1` или `ownerId=null`.\n\n" +
-      "**Клиент:** `useMoiStsenary` → `/category/custom`.",
+      "**Клиент:** `useMoiStsenary` → `/category/custom` (требует сессию).",
     security: cookieSecurity,
     request: {
       params: z.object({
@@ -92,7 +88,6 @@ export function registerTemplateFeaturedCategoryPaths(
           description: "custom | business | entertainment | education | utility | games | official | community",
         }),
       }),
-      query: TemplateCategoryQuerySchema,
     },
     responses: {
       200: {

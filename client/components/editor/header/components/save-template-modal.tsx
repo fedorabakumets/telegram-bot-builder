@@ -140,7 +140,6 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
         complexity: 1,
         estimatedTime: 5,
         authorName: data.isAnonymous ? null : (user?.username || 'Пользователь'),
-        featured: 0,
         data: botData,
       });
     },

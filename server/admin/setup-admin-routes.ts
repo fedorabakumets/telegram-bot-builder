@@ -11,6 +11,10 @@ import {
   handleGetAdminAppSettings,
   handlePutAdminAppSettings,
 } from "./handlers/app-settings-handlers";
+import {
+  adminRecreateTemplatesHandler,
+  adminRefreshTemplatesHandler,
+} from "./handlers/template-seed-handlers";
 import { serveApiDocsIndex, serveApiDocsTag } from "./pages/api-docs-page";
 import { serveAdminHubPage } from "./pages/hub-page";
 import { serveAdminLoginPage } from "./pages/login-page";
@@ -68,6 +72,9 @@ export function setupAdminRoutes(app: Express): void {
 
   app.get("/admin/api/app-settings", requireAdminAuth, handleGetAdminAppSettings);
   app.put("/admin/api/app-settings", requireAdminAuth, handlePutAdminAppSettings);
+
+  app.post("/admin/api/templates/refresh", requireAdminAuth, adminRefreshTemplatesHandler);
+  app.post("/admin/api/templates/recreate", requireAdminAuth, adminRecreateTemplatesHandler);
 
   app.get("/admin/settings", requireAdminAuth, serveAdminSettingsPage);
 
