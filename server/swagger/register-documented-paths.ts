@@ -39,6 +39,10 @@ import { registerProjectTablesColumnsMutatePaths } from "./paths/project-tables-
 import { registerProjectTablesRowsPaths } from "./paths/project-tables-rows-paths";
 import { registerProjectTablesRowsMutatePaths } from "./paths/project-tables-rows-mutate-paths";
 import { registerProjectTablesReindexPaths } from "./paths/project-tables-reindex-paths";
+import { registerProjectMessagesAllPaths } from "./paths/project-messages-all-paths";
+import { registerProjectMessagesActivityPaths } from "./paths/project-messages-activity-paths";
+import { registerProjectMessagesDeletePaths } from "./paths/project-messages-delete-paths";
+import { registerProjectMessagesPatchPaths } from "./paths/project-messages-patch-paths";
 import { registerHealthPaths } from "./paths/health-paths";
 import { registerProjectsAdminIdsPaths } from "./paths/projects-admin-ids-paths";
 import { registerProjectsCollaboratorsInfoPaths } from "./paths/projects-collaborators-info-paths";
@@ -89,7 +93,14 @@ documentedRegistry.registerComponent("securitySchemes", "adminCookie", {
   description: "Admin cookie после POST /admin/api/login (ADMIN_API_KEY)",
 });
 
-const cookieSecurity = [{ cookieAuth: [] as string[] }];
+/**
+ * Auth для Studio/MCP: cookie **или** Bearer PAT (OpenAPI OR-список).
+ * Swagger Authorize покажет оба способа; runtime и так принимает любой.
+ */
+const cookieSecurity = [
+  { cookieAuth: [] as string[] },
+  { agentToken: [] as string[] },
+];
 const publicSecurity: never[] = [];
 
 registerHealthPaths(documentedRegistry, publicSecurity);
@@ -153,3 +164,7 @@ registerProjectTablesColumnsMutatePaths(documentedRegistry, cookieSecurity);
 registerProjectTablesReindexPaths(documentedRegistry, cookieSecurity);
 registerProjectTablesRowsPaths(documentedRegistry, cookieSecurity);
 registerProjectTablesRowsMutatePaths(documentedRegistry, cookieSecurity);
+registerProjectMessagesAllPaths(documentedRegistry, cookieSecurity);
+registerProjectMessagesActivityPaths(documentedRegistry, cookieSecurity);
+registerProjectMessagesDeletePaths(documentedRegistry, cookieSecurity);
+registerProjectMessagesPatchPaths(documentedRegistry, cookieSecurity);

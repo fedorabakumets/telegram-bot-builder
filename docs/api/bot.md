@@ -6,7 +6,7 @@
 
 Удалить env-переменную
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -53,7 +53,7 @@ curl -s -X DELETE 'http://localhost:5000/api/bot/env/15?telegram_id=123' \
 
 Обновить env-переменную
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -96,7 +96,7 @@ curl -s -X PATCH 'http://localhost:5000/api/bot/env/15?telegram_id=123' \
 
 Раскрыть секретное значение env (legacy)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -145,7 +145,7 @@ curl -s 'http://localhost:5000/api/bot/env/15/reveal?telegram_id=123' \
 
 Список проектов актора
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -197,7 +197,7 @@ curl -s 'http://localhost:5000/api/bot/projects?telegram_id=123' \
 
 Создать пустой проект
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -245,7 +245,7 @@ curl -s -X POST 'http://localhost:5000/api/bot/projects?telegram_id=123' \
 
 Удалить проект
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -292,7 +292,7 @@ curl -s -X DELETE 'http://localhost:5000/api/bot/projects/42?telegram_id=123' \
 
 Детали проекта (без data)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -341,7 +341,7 @@ curl -s 'http://localhost:5000/api/bot/projects/42?telegram_id=123' \
 
 Переименовать проект
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -392,7 +392,7 @@ curl -s -X PATCH 'http://localhost:5000/api/bot/projects/42?telegram_id=123' \
 
 Список коллабораторов проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -446,7 +446,7 @@ curl -s 'http://localhost:5000/api/bot/projects/42/collaborators?telegram_id=123
 
 Добавить коллаборатора
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -495,7 +495,7 @@ curl -s -X POST 'http://localhost:5000/api/bot/projects/42/collaborators?telegra
 
 Удалить коллаборатора
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -544,7 +544,7 @@ curl -s -X DELETE \
 
 Заменить data существующего проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -594,7 +594,7 @@ curl -s -X PUT 'http://localhost:5000/api/bot/projects/42/data?telegram_id=123' 
 
 Экспорт project.json (base64 file)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -644,7 +644,7 @@ curl -s 'http://localhost:5000/api/bot/projects/42/export?telegram_id=123' \
 
 Список токенов проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -698,7 +698,7 @@ curl -s 'http://localhost:5000/api/bot/projects/42/tokens?telegram_id=123' \
 
 Добавить токен в проект
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -750,7 +750,7 @@ curl -s -X POST 'http://localhost:5000/api/bot/projects/42/tokens?telegram_id=12
 
 Импорт project.json → новый проект
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -796,7 +796,7 @@ curl -s -X POST 'http://localhost:5000/api/bot/projects/import?telegram_id=123' 
 
 Удалить токен
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -843,7 +843,7 @@ curl -s -X DELETE 'http://localhost:5000/api/bot/tokens/7?telegram_id=123' \
 
 Список env токена (секреты маскируются)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -899,7 +899,7 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/env?telegram_id=123' \
 
 Создать env-переменную
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -954,7 +954,7 @@ curl -s -X POST 'http://localhost:5000/api/bot/tokens/7/env?telegram_id=123' \
 
 Аватар бота (локальный URL)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -1002,7 +1002,7 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/photo?telegram_id=123' \
 
 Статистика пользователей токена
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -1052,7 +1052,7 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/stats?telegram_id=123' \
 
 Статус инстанса бота
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -1107,7 +1107,7 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/status?telegram_id=123' \
 
 Список пользователей бота
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 
@@ -1167,7 +1167,7 @@ curl -s 'http://localhost:5000/api/bot/tokens/7/users?telegram_id=123&limit=10&o
 
 Один пользователь бота + аватар
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth (обязательно):** session cookie `connect.sid` **или** `Authorization: Bearer mcp_…`.
 

@@ -9,7 +9,7 @@ import {
   MessageErrorSchema,
   UnauthorizedSchema,
 } from "../schemas/common";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { ProjectTokensProjectTokenParamsSchema } from "../schemas/project-tokens-params";
 import {
   LaunchSettingsRequestSchema,
@@ -66,6 +66,7 @@ export function registerProjectTokensLogLaunchPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: { "application/json": { schema: LogLevelRequestSchema } },
@@ -101,6 +102,7 @@ export function registerProjectTokensLogLaunchPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: {

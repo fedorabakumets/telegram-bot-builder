@@ -6,7 +6,7 @@
 
 Статус бота по токену
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Сверка с процессом / worker pool / `bot_instances`. Ответ без сырого token. `Cache-Control: no-store`.
 
@@ -37,7 +37,7 @@ curl -s http://localhost:5000/api/tokens/7/bot-status -b cookies.txt
 
 История запусков бота
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 До 10 записей `bot_launch_history` + reconcile live-статуса.
 

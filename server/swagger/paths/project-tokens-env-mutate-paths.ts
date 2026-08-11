@@ -10,7 +10,7 @@ import {
   MessageErrorSchema,
   UnauthorizedSchema,
 } from "../schemas/common";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   ProjectTokenEnvDeleteResponseSchema,
   ProjectTokenEnvUpdateBodySchema,
@@ -45,6 +45,7 @@ export function registerProjectTokensEnvMutatePaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: envIdParams,
       body: {
         content: {
@@ -90,7 +91,8 @@ export function registerProjectTokensEnvMutatePaths(
       "```bash\ncurl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7/env-variables/15 \\\n" +
       "  -b cookies.txt\n```",
     security: cookieSecurity,
-    request: { cookies: ProjectsCookiesSchema, params: envIdParams },
+    request: { cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema, params: envIdParams },
     responses: {
       200: {
         description: "Удалена",

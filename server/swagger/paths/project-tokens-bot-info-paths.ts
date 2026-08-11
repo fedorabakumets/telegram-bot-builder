@@ -9,7 +9,7 @@ import {
   MessageErrorSchema,
   UnauthorizedSchema,
 } from "../schemas/common";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { ProjectTokensIdTokenParamsSchema } from "../schemas/project-tokens-params";
 import {
   BotInfoUpdateRequestSchema,
@@ -44,6 +44,7 @@ export function registerProjectTokensBotInfoPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensIdTokenParamsSchema,
       body: {
         content: {

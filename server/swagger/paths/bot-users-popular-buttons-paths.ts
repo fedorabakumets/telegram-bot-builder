@@ -10,7 +10,7 @@ import {
   PopularButtonsQuerySchema,
 } from "../schemas/bot-users-analytics";
 import { BotUsersProjectIdParamsSchema } from "../schemas/bot-users-params";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   BOT_USERS_FORBIDDEN_EXAMPLE,
   BOT_USERS_POPULAR_BUTTONS_EXAMPLE,
@@ -43,6 +43,7 @@ export function registerBotUsersPopularButtonsPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: BotUsersProjectIdParamsSchema,
       query: PopularButtonsQuerySchema,
     },

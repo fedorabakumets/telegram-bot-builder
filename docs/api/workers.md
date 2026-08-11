@@ -6,7 +6,7 @@
 
 Статистика Worker Pool
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Возвращает агрегированную статистику Python Worker Pool для **текущего пользователя**.
 

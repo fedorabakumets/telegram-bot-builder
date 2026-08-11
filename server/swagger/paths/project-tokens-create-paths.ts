@@ -9,7 +9,7 @@ import {
   UnauthorizedSchema,
   ValidationErrorSchema,
 } from "../schemas/common";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { ProjectTokensIdParamsSchema } from "../schemas/project-tokens-params";
 import {
   CreateBotTokenBodySchema,
@@ -46,6 +46,7 @@ export function registerProjectTokensCreatePaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensIdParamsSchema,
       body: {
         content: {

@@ -9,7 +9,7 @@ import { MessageErrorSchema } from "../schemas/common";
 import {
   DuplicateProjectRequestSchema,
   ProjectListItemSchema,
-  ProjectsCookiesSchema,
+  ProjectsCookiesSchema, ProjectsAuthHeadersSchema,
 } from "../schemas/projects";
 import { PROJECT_LIST_ITEM_EXAMPLE } from "./projects-examples";
 import {
@@ -56,6 +56,7 @@ export function registerProjectsDuplicatePaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectIdParamsSchema,
       body: {
         content: {

@@ -6,7 +6,7 @@
 
 Удалить всех пользователей и сообщения проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Wipe: DELETE из `bot_users` и `bot_messages` по project_id (и token_id, если задан). `deletedCount` — сумма rowCount обеих таблиц.
 
@@ -22,7 +22,8 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/users?tokenId=7' -b coo
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -47,7 +48,7 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/users?tokenId=7' -b coo
 
 Список пользователей и диалогов проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Вкладки «Диалоги» / «Пользователи». С `limit` — `{ users, total, hasMore }`; без `limit` — плоский массив. `dialogKind` фильтрует личные/группы/каналы.
 
@@ -73,7 +74,8 @@ curl -s 'http://localhost:5000/api/projects/42/users?limit=50&tokenId=7' -b cook
 | `sortDir` | query | нет | Направление сортировки | `"desc"` |
 | `dialogKind` | query | нет | Фильтр типа диалога (приоритетнее includeGroups) | `"all"` |
 | `includeGroups` | query | нет | Legacy-флаг групп (предпочтительнее dialogKind) | `"true"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -109,7 +111,7 @@ curl -s 'http://localhost:5000/api/projects/42/users?limit=50&tokenId=7' -b cook
 
 Прирост пользователей по времени
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 С `granularity` (1m|5m|1h|1d|7d|30d) — ряд слотов `generate_series`, date в ISO. Без него — legacy `period` (7d|30d|90d, default 30d), date как YYYY-MM-DD; пустой результат — fallback на 90 дней.
 
@@ -128,7 +130,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/growth?granularity=1d&token
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `granularity` | query | нет | — | `"1d"` |
 | `period` | query | нет | — | `"30d"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -158,7 +161,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/growth?granularity=1d&token
 
 Прирост пользователей по источникам
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `granularity` обязателен (иначе 400). Ключи `sources` — `COALESCE(deep_link_param,'direct')`. Для 5m — особый truncate минут.
 
@@ -176,7 +179,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/growth-by-source?granularit
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `granularity` | query | да | — | `"1d"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -212,7 +216,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/growth-by-source?granularit
 
 Топ-10 популярных inline-кнопок
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Нажатия из `bot_messages` (`message_type=user`, `message_data.button_clicked=true`). Label — `button_text` или `callback_data`. Окно по `granularity` (default как 1d → 30 days).
 
@@ -230,7 +234,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/popular-buttons?granularity
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `granularity` | query | нет | — | `"1d"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -260,7 +265,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/popular-buttons?granularity
 
 Агрегированная статистика пользователей
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Счётчики из `bot_users` + `totalInteractions` из `bot_messages` (COUNT входящих и исходящих). Опциональный `tokenId`.
 
@@ -278,7 +283,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/stats?tokenId=7' -b cookies
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -310,7 +316,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/stats?tokenId=7' -b cookies
 
 Источники трафика и языки пользователей
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `sources` — группировка по `COALESCE(deep_link_param,'direct')` с %. `languages` — топ-20 `language_code` (NULL исключены) с %.
 
@@ -326,7 +332,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/traffic?tokenId=7' -b cooki
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -372,7 +379,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/traffic?tokenId=7' -b cooki
 
 Переменные user_data как таблица
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Пользователи с непустым `user_data`. `columns` = user_id, username + ключи user_data (без `_`/`waiting_`/`input_`). Значения — строки.
 
@@ -392,7 +399,8 @@ curl -s 'http://localhost:5000/api/projects/42/users/variables?limit=200&tokenId
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `limit` | query | нет | — | `"200"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -428,7 +436,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/variables?limit=200&tokenId
 
 Удалить одного пользователя и его сообщения
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **UI:** удаление пользователя в редакторе.
 
@@ -448,7 +456,8 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/users/123456789?tokenId
 | `projectId` | path | да | ID проекта | `"42"` |
 | `userId` | path | да | Telegram user_id | `"123456789"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -472,7 +481,7 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/users/123456789?tokenId
 
 Обновить статус активности пользователя
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **UI:** активен / неактивен в базе пользователей.
 
@@ -492,7 +501,8 @@ curl -s -X PUT 'http://localhost:5000/api/projects/42/users/123456789?tokenId=7'
 | `projectId` | path | да | ID проекта | `"42"` |
 | `userId` | path | да | Telegram user_id | `"123456789"` |
 | `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 

@@ -6,7 +6,7 @@
 
 Список токенов (masked + botId)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `toPublicBotToken` + `botId` (префикс до `:`). Секреты вырезаны.
 
@@ -23,7 +23,8 @@ curl -s http://localhost:5000/api/projects/42/tokens -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -72,7 +73,7 @@ curl -s http://localhost:5000/api/projects/42/tokens -b cookies.txt
 
 Создать токен (или вернуть дубликат)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `insertBotTokenSchema`. `ownerId` из body игнорируется (сессия / owner проекта). При отсутствии `botUsername` — auto getMe. Дубликат того же `token` → **200** full. Новый → **201** full + WS `token-created`.
 
@@ -95,7 +96,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens -b cookies.txt \
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -124,7 +126,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens -b cookies.txt \
 
 Обновить токен (masked ответ)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `insertBotTokenSchema.partial()`. Маскированный/`••••` token **игнорируется** (`isMaskedOrPlaceholderToken`). Ответ — `toPublicBotToken`. WS `token-updated` (source=api).
 
@@ -145,7 +147,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt \
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -192,7 +195,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt \
 
 Обновить name/description бота в Telegram
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Body `{ field, value }`. `field`: `name` → setMyName, `description` → setMyDescription, `shortDescription` → setMyShortDescription. Пишет в локальную БД после успеха Telegram.
 
@@ -214,7 +217,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/bot-info -b cookie
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -240,7 +244,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/bot-info -b cookie
 
 Дефолтный токен для codegen (.env)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Дефолтный токен проекта (`getDefaultBotToken`, иначе любой). Ответ: `{ hasToken, id, token }` — **сырой** Telegram token + id.
 
@@ -259,7 +263,8 @@ curl -s http://localhost:5000/api/projects/42/tokens/first -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -284,7 +289,7 @@ curl -s http://localhost:5000/api/projects/42/tokens/first -b cookies.txt
 
 Безопасный whitelist список токенов
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Только `BotTokenListItem` (без token и прочих секретов). MCP/агенты.
 
@@ -301,7 +306,8 @@ curl -s http://localhost:5000/api/projects/42/tokens/list -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -333,7 +339,7 @@ curl -s http://localhost:5000/api/projects/42/tokens/list -b cookies.txt
 
 Распарсить bot token через Telegram getMe
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Body `{ token }`. Вызывает `getMe`, `getMyDescription`, `getMyShortDescription`, опционально фото. **Нет** middleware `requireProjectAccess` / ownership — только глобальный `requireApiAuth` (если включён). `:id` в URL не влияет на Telegram.
 
@@ -352,7 +358,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/parse -b cookies.tx
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -382,7 +389,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/parse -b cookies.tx
 
 Удалить токен бота проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Останавливает бота и удаляет токен. Сверка `token.projectId` с `:projectId`.
 
@@ -400,7 +407,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -424,7 +432,7 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7 -b cookies.txt
 
 Автоперезапуск бота
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `autoRestart` 0|1, `maxRestartAttempts` 1–10.
 
@@ -444,7 +452,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/auto-restart \
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -470,7 +479,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/auto-restart \
 
 Catch-all обработчики (CATCH_ALL_HANDLERS)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `catchAllHandlers` 0|1 — генерация handle_unhandled_* / fallback_callback.
 
@@ -489,7 +498,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/catch-all-handlers
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -514,7 +524,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/catch-all-handlers
 
 Живое обновление _content (CONTENT_CACHE)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `contentCache` 0|1 — load/reload_content / redis subscribe. get_content всегда.
 
@@ -533,7 +543,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/content-cache \
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -558,7 +569,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/content-cache \
 
 Batch-обновление env / системных ключей
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `changes[]`: create/update/delete. Системные KEY → bot_tokens / project (BOT_TOKEN, ADMIN_IDS, USER_DATABASE, LOG_LEVEL, PROTECT_CONTENT, …). Остальные → bot_env_variables. WS `token-updated` при обновлении полей токена.
 
@@ -578,7 +589,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-batch \
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -605,7 +617,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-batch \
 
 Список env токена (секреты маскируются)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `{ items, count }`. Секреты → `••••••••`.
 
@@ -623,7 +635,8 @@ curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables -b cookies.
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -654,7 +667,7 @@ curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables -b cookies.
 
 Создать env-переменную
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `key` regex `^[A-Z][A-Z0-9_]*$`. 409 если ключ есть.
 
@@ -674,7 +687,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/7/env-variables \
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -702,7 +716,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/7/env-variables \
 
 Удалить env-переменную
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Auth:** `requireTokenOwnership`.
 
@@ -718,7 +732,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7/env-variables/1
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
 | `id` | path | да | ID переменной env | `"15"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -741,7 +756,7 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7/env-variables/1
 
 Обновить env-переменную
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Partial `{ key?, value?, isSecret? }`. Чужой id → 404 (сверка tokenId).
 
@@ -761,7 +776,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-variables/15 \
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
 | `id` | path | да | ID переменной env | `"15"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -778,7 +794,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-variables/15 \
 
 Раскрыть секретное значение env токена
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 **Риск:** ответ содержит **сырое** значение env. В списке секреты маскируются. Не логируйте тело ответа.
 
@@ -823,7 +839,7 @@ curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal \
 
 Режим запуска polling/webhook
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `launchMode` polling|webhook; опционально `webhookBaseUrl`, `webhookSecretToken`. При смене webhook→polling вызывается Telegram `deleteWebhook`. **Риск:** ответ может вернуть `webhookSecretToken`.
 
@@ -843,7 +859,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/launch-settings \
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -870,7 +887,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/launch-settings \
 
 Уровень логирования бота
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `logLevel`: DEBUG|INFO|WARNING|ERROR. Пишет LOG_LEVEL в `.env`. WS `token-updated`.
 
@@ -889,7 +906,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/log-level \
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -914,7 +932,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/log-level \
 
 Очистить live-логи токена
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Удаляет live-логи (без launch_id) из БД и буфера.
 
@@ -930,7 +948,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7/logs -b cookies
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -953,7 +972,7 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tokens/7/logs -b cookies
 
 Live-логи бота (bot_logs)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Последние строки `getLatestLaunchLogs` (default limit=500).
 
@@ -972,7 +991,8 @@ curl -s 'http://localhost:5000/api/projects/42/tokens/7/logs?limit=100' -b cooki
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
 | `limit` | query | нет | Максимум строк логов (по умолчанию 500) | `"500"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -1003,7 +1023,7 @@ curl -s 'http://localhost:5000/api/projects/42/tokens/7/logs?limit=100' -b cooki
 
 Срок хранения сообщений диалога
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Обновляет `messagesRetentionDays`. `0` — без автоочистки; иначе раз в час чистит `bot_messages` старше N дней. `message_activity_daily` не трогается.
 
@@ -1024,7 +1044,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/messages-retention
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -1049,7 +1070,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/messages-retention
 
 Защита контента (PROTECT_CONTENT)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `protectContent` 0|1 → `.env` PROTECT_CONTENT=true/false.
 
@@ -1068,7 +1089,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/protect-content \
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -1093,7 +1115,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/protect-content \
 
 Сохранять входящие медиа
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `saveIncomingMedia` 0|1 → `.env` SAVE_INCOMING_MEDIA.
 
@@ -1112,7 +1134,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-medi
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -1137,7 +1160,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/save-incoming-medi
 
 Настройки Telethon userbot
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Сохраняет `userbotEnabled` 0|1 и apiId/hash/session; пишет USERBOT_* в `.env`. WS `token-updated` (changedFields: userbotEnabled).
 
@@ -1157,7 +1180,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/userbot \
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -1182,7 +1206,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/userbot \
 
 Userbot auth: отправить код
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Шаг 1: `{ apiId, apiHash, phone }` → Python `userbotAuth`.
 
@@ -1202,7 +1226,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/send-code
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -1225,7 +1250,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/send-code
 
 Userbot auth: код из SMS/Telegram
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Шаг 2: `{ phone, code }`. При `session_string` — сохраняет в БД + userbotEnabled=1.
 
@@ -1245,7 +1270,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/sign-in \
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -1260,7 +1286,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/sign-in \
 
 Userbot auth: пароль 2FA
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Шаг 3: `{ password }`. При успехе сохраняет session + userbotEnabled=1.
 
@@ -1279,7 +1305,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tokens/7/userbot/sign-in-2
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
 | `tokenId` | path | да | Числовой ID токена бота | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 

@@ -64,7 +64,7 @@
     },
     {
       "name": "project-messages",
-      "description": "Сообщения на уровне проекта: all/activity, CRUD по messageId, responses. Не путать с `…/users/{userId}/messages` (диалоги)."
+      "description": "Сообщения на уровне проекта: all/activity, DELETE/PATCH по messageId. Не путать с `…/users/{userId}/messages` (диалоги)."
     },
     {
       "name": "project-tables",
@@ -126,6 +126,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -202,6 +205,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -317,6 +323,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -993,6 +1002,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -1119,6 +1131,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -1222,6 +1237,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -1343,6 +1361,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -1451,6 +1472,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -1540,6 +1564,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -1624,6 +1651,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -1727,6 +1757,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -1832,6 +1865,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -1947,6 +1983,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -2057,6 +2096,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -2171,6 +2213,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -2287,6 +2332,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -2407,6 +2455,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -2515,6 +2566,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -2625,6 +2679,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -2741,6 +2798,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -2838,6 +2898,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -2943,6 +3006,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -3055,6 +3121,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -3183,6 +3252,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -3289,6 +3361,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -3397,6 +3472,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -3510,6 +3588,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -3648,6 +3729,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -3767,6 +3851,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -3912,6 +3999,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -4043,6 +4133,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -4120,6 +4213,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -4213,6 +4309,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -4310,6 +4409,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -4407,6 +4509,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -4478,6 +4583,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -4552,6 +4660,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -4646,6 +4757,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -4745,6 +4859,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -4832,6 +4949,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -4930,6 +5050,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -5030,6 +5153,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -5104,6 +5230,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -5189,17 +5318,20 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -5287,17 +5419,32 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -5421,6 +5568,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -5439,11 +5589,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -5526,6 +5688,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -5544,11 +5709,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -5652,6 +5829,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -5670,11 +5850,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -5813,6 +6005,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -5831,11 +6026,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -5915,6 +6122,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -5933,11 +6143,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -6010,6 +6232,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -6028,11 +6253,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -6238,6 +6475,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -6378,6 +6618,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -6396,11 +6639,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -6507,6 +6762,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -6525,11 +6783,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -6615,6 +6885,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -6633,11 +6906,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -6775,6 +7060,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -6793,11 +7081,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -6876,6 +7176,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -6918,11 +7221,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -6994,16 +7309,193 @@
         "tags": [
           "project-messages"
         ],
-        "summary": "GET /api/projects/{id}/messages/activity",
+        "summary": "Активность сообщений по времени",
+        "description": "С `granularity` (1m|5m|1h|1d|7d|30d): короткие окна — `bot_messages` + `generate_series` (fill gaps); дневные — `message_activity_daily`. Без granularity — legacy `period` (7d|30d|90d, default 30d) через `queryActivityFromDailyPeriod`.\n\n`split=true` → `[{date, incoming, outgoing}]`, иначе `[{date, count}]`.\n\n**Auth:** `requireApiAuth` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `use-messages-activity` → Analytics/Stats.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/messages/activity?granularity=1h&split=true&tokenId=7' \\\n  -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Скоуп bot_messages по token_id. Без параметра — все токены проекта.",
+              "example": "7"
+            },
+            "required": false,
+            "description": "Опциональный ID токена бота. Без него — все токены.",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1m",
+                "5m",
+                "1h",
+                "1d",
+                "7d",
+                "30d"
+              ],
+              "description": "1m|5m|1h|1d|7d|30d",
+              "example": "1h"
+            },
+            "required": false,
+            "name": "granularity",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "7d",
+                "30d",
+                "90d"
+              ],
+              "description": "Обратная совместимость; игнорируется при granularity",
+              "example": "30d"
+            },
+            "required": false,
+            "name": "period",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ],
+              "description": "При \"true\" — [{date, incoming, outgoing}] вместо [{date, count}]",
+              "example": "true"
+            },
+            "required": false,
+            "description": "true — разбивка incoming/outgoing",
+            "example": "true",
+            "name": "split",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Ряд точек активности",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageActivityList"
+                },
+                "examples": {
+                  "count": {
+                    "summary": "Без split",
+                    "value": [
+                      {
+                        "date": "2026-08-11T13:00:00.000Z",
+                        "count": 4
+                      },
+                      {
+                        "date": "2026-08-11T14:00:00.000Z",
+                        "count": 12
+                      }
+                    ]
+                  },
+                  "split": {
+                    "summary": "split=true",
+                    "value": [
+                      {
+                        "date": "2026-08-11T13:00:00.000Z",
+                        "incoming": 2,
+                        "outgoing": 2
+                      },
+                      {
+                        "date": "2026-08-11T14:00:00.000Z",
+                        "incoming": 7,
+                        "outgoing": 5
+                      }
+                    ]
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Ошибка при получении данных активности сообщений"
+                }
+              }
+            }
           }
         }
       }
@@ -7013,35 +7505,159 @@
         "tags": [
           "project-messages"
         ],
-        "summary": "GET /api/projects/{id}/messages/all",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
+        "summary": "Все сообщения проекта (усечённый список)",
+        "description": "Выборка из `bot_messages`: id, userId, messageType, messageText (SUBSTRING 100), chatType, chatId, createdAt. Сортировка `created_at DESC`. Default limit=200, offset=0.\n\n**Auth:** `requireApiAuth` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `use-system-tables`.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/messages/all?limit=50&tokenId=7' \\\n  -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          {
+            "agentToken": []
           }
-        }
-      }
-    },
-    "/api/projects/{id}/responses": {
-      "get": {
-        "tags": [
-          "project-messages"
         ],
-        "summary": "GET /api/projects/{id}/responses",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Скоуп bot_messages по token_id. Без параметра — все токены проекта.",
+              "example": "7"
+            },
+            "required": false,
+            "description": "Опциональный ID токена бота. Без него — все токены.",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Лимит записей (по умолчанию 200)",
+              "example": "200"
+            },
+            "required": false,
+            "description": "Лимит записей (default 200)",
+            "example": "200",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Смещение (по умолчанию 0)",
+              "example": "0"
+            },
+            "required": false,
+            "description": "Смещение пагинации (default 0)",
+            "example": "0",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив сообщений",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectMessageList"
+                },
+                "example": [
+                  {
+                    "id": 501,
+                    "userId": "123456789",
+                    "messageType": "bot",
+                    "messageText": "Привет! Чем могу помочь?",
+                    "chatType": "private",
+                    "chatId": "123456789",
+                    "createdAt": "2026-08-11T15:00:00.000Z"
+                  },
+                  {
+                    "id": 500,
+                    "userId": "123456789",
+                    "messageType": "user",
+                    "messageText": "/start",
+                    "chatType": "private",
+                    "chatId": "123456789",
+                    "createdAt": "2026-08-11T14:59:00.000Z"
+                  }
+                ]
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Ошибка при получении сообщений"
+                }
+              }
+            }
           }
         }
       }
@@ -7056,6 +7672,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -7074,11 +7693,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -7166,6 +7797,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -7184,11 +7818,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -7299,6 +7945,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -7329,11 +7978,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -7429,6 +8090,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -7459,11 +8123,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -7576,6 +8252,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -7606,11 +8285,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -7704,6 +8395,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -7734,11 +8428,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -7839,6 +8545,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -7881,11 +8590,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -7981,6 +8702,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -8023,11 +8747,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -8140,6 +8876,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -8170,11 +8909,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -8265,6 +9016,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -8295,11 +9049,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -8412,6 +9178,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -8454,11 +9223,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -8554,6 +9335,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -8596,11 +9380,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -8719,6 +9515,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -8749,11 +9548,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -8838,6 +9649,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -8856,11 +9670,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -8959,6 +9785,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -8977,11 +9806,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -9086,6 +9927,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -9116,11 +9960,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -9231,6 +10087,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -9261,11 +10120,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -9355,6 +10226,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -9373,11 +10247,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -9464,6 +10350,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -9482,11 +10371,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -9578,6 +10479,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -9596,11 +10500,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -9678,6 +10594,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -9708,11 +10627,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -9784,6 +10715,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -9927,11 +10861,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -10004,6 +10950,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -10067,11 +11016,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -10150,6 +11111,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -10198,11 +11162,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -10299,6 +11275,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -10347,11 +11326,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -10430,6 +11421,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -10460,11 +11454,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -10545,6 +11551,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -10575,11 +11584,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -10674,6 +11695,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -10714,11 +11738,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -10803,6 +11839,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -10821,11 +11860,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -10938,6 +11989,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -10968,11 +12022,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -11068,6 +12134,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -11098,11 +12167,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -11218,6 +12299,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -11248,11 +12332,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -11370,6 +12466,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -11388,11 +12487,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -11531,6 +12642,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -11549,11 +12663,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -12177,6 +13303,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -12195,11 +13324,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -12451,40 +13592,190 @@
         }
       }
     },
-    "/api/projects/{projectId}/messages": {
-      "post": {
-        "tags": [
-          "project-messages"
-        ],
-        "summary": "POST /api/projects/{projectId}/messages",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
     "/api/projects/{projectId}/messages/{messageId}": {
       "delete": {
         "tags": [
           "project-messages"
         ],
-        "summary": "DELETE /api/projects/{projectId}/messages/{messageId}",
+        "summary": "Удалить сообщение (Telegram + БД)",
+        "description": "Сначала `deleteMessage` в Telegram, при успехе — DELETE из `bot_messages`, затем WS `message-deleted`. Без `telegramMessageId` или при отказе Telegram — 400, БД не трогается.\n\n`tokenId` (query) → `resolveEffectiveProjectToken`.\n\n**Auth:** `requireApiAuth` + `requireProjectAccess`.\n\n**Клиент:** `use-delete-message` (диалоги).\n\n```bash\ncurl -s -X DELETE 'http://localhost:5000/api/projects/42/messages/501?tokenId=7' \\\n  -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID сообщения в bot_messages",
+              "example": "501"
+            },
+            "required": true,
+            "description": "ID сообщения в bot_messages",
+            "example": "501",
+            "name": "messageId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота для Telegram API. Без него — resolveEffectiveProjectToken (default/first).",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота; иначе default/first токен проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Удалено в Telegram и БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteMessageSuccess"
+                },
+                "example": {
+                  "success": true,
+                  "deletedFromTelegram": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные ID / нет telegramMessageId / нет токена / Telegram reject",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "examples": {
+                  "badIds": {
+                    "value": {
+                      "message": "Неверный ID проекта или сообщения"
+                    }
+                  },
+                  "noTelegramId": {
+                    "value": {
+                      "message": "Сообщение не имеет Telegram ID — удаление недоступно"
+                    }
+                  },
+                  "noToken": {
+                    "value": {
+                      "message": "Токен бота не найден для этого проекта"
+                    }
+                  },
+                  "telegramReject": {
+                    "value": {
+                      "message": "Telegram не принял удаление: message to delete not found"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту или message.projectId mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "examples": {
+                  "noAccess": {
+                    "value": {
+                      "message": "Нет прав доступа к проекту"
+                    }
+                  },
+                  "ownership": {
+                    "value": {
+                      "message": "Сообщение не принадлежит данному проекту"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Сообщение не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Сообщение не найдено"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось удалить сообщение"
+                }
+              }
+            }
           }
         }
       },
@@ -12492,16 +13783,199 @@
         "tags": [
           "project-messages"
         ],
-        "summary": "PATCH /api/projects/{projectId}/messages/{messageId}",
+        "summary": "Редактировать сообщение бота (Telegram + БД)",
+        "description": "Только `messageType=bot` с `telegramMessageId`. Telegram `editMessageText`/`editMessageCaption`, затем UPDATE БД, WS `message-edited`. Пустой `buttons` снимает inline-клавиатуру.\n\n`tokenId` (query) → `resolveEffectiveProjectToken`.\n\n**Auth:** `requireApiAuth` + `requireProjectAccess`.\n\n**Клиент:** `use-edit-message`.\n\n```bash\ncurl -s -X PATCH 'http://localhost:5000/api/projects/42/messages/501?tokenId=7' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Обновлённый текст\"}' \\\n  -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID сообщения в bot_messages",
+              "example": "501"
+            },
+            "required": true,
+            "description": "ID сообщения в bot_messages",
+            "example": "501",
+            "name": "messageId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота для Telegram API. Без него — resolveEffectiveProjectToken (default/first).",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота; иначе default/first токен проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditMessageRequest"
+              },
+              "example": {
+                "messageText": "Обновлённый текст сообщения",
+                "buttons": [],
+                "buttonsPerRow": 0
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Отредактировано в Telegram и БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditMessageSuccess"
+                },
+                "example": {
+                  "success": true,
+                  "editedInTelegram": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Пустой текст / не bot / нет telegramMessageId / нет токена / Telegram reject",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "examples": {
+                  "emptyText": {
+                    "value": {
+                      "message": "Текст сообщения не может быть пустым"
+                    }
+                  },
+                  "userMsg": {
+                    "value": {
+                      "message": "Нельзя редактировать сообщения пользователя"
+                    }
+                  },
+                  "noTelegramId": {
+                    "value": {
+                      "message": "Сообщение не имеет Telegram ID — редактирование недоступно"
+                    }
+                  },
+                  "telegramReject": {
+                    "value": {
+                      "message": "Telegram не принял изменение: message is not modified"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту или message.projectId mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "examples": {
+                  "noAccess": {
+                    "value": {
+                      "message": "Нет прав доступа к проекту"
+                    }
+                  },
+                  "ownership": {
+                    "value": {
+                      "message": "Сообщение не принадлежит данному проекту"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Сообщение не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Сообщение не найдено"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось отредактировать сообщение"
+                }
+              }
+            }
           }
         }
       }
@@ -12554,6 +14028,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -12584,11 +14061,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -12670,6 +14159,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -12700,11 +14192,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -12794,6 +14298,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -12824,11 +14331,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -12917,6 +14436,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -12947,11 +14469,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -13040,6 +14574,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -13070,11 +14607,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -13150,6 +14699,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -13180,11 +14732,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -13247,6 +14811,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -13277,11 +14844,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -13367,6 +14946,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -13406,11 +14988,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -13471,6 +15065,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -13510,11 +15107,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -13603,6 +15212,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -13718,6 +15330,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -13748,11 +15363,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -13840,6 +15467,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -13870,11 +15500,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -13960,6 +15602,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -13990,11 +15635,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -14074,6 +15731,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -14115,11 +15775,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -14207,6 +15879,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -14237,11 +15912,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -14331,6 +16018,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -14361,11 +16051,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -14454,6 +16156,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -14484,11 +16189,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -14577,6 +16294,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -14607,11 +16327,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -14697,6 +16429,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -14727,11 +16462,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -14806,6 +16553,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -14836,11 +16586,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -14912,6 +16674,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -14942,11 +16707,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -15018,6 +16795,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -15060,11 +16840,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -15141,6 +16933,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -15183,11 +16978,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -15305,6 +17112,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -15347,11 +17157,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -15434,6 +17256,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -15476,11 +17301,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -15564,6 +17401,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -15630,11 +17470,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -15741,6 +17593,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -15783,11 +17638,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -15891,6 +17758,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -15933,11 +17803,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -16065,17 +17947,20 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -16155,17 +18040,32 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -16266,6 +18166,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "responses": {
@@ -16349,6 +18252,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "responses": {
@@ -16438,6 +18344,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "requestBody": {
@@ -16544,6 +18453,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -16622,6 +18534,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -16725,6 +18640,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -16813,6 +18731,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "responses": {
@@ -16944,6 +18865,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "requestBody": {
@@ -17062,6 +18986,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -17153,6 +19080,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -17247,6 +19177,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -17356,6 +19289,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -17525,6 +19461,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -17598,6 +19537,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "responses": {
@@ -17731,6 +19673,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -17814,6 +19759,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -17883,6 +19831,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "parameters": [
@@ -18125,6 +20076,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "agentToken": []
           }
         ],
         "responses": {
@@ -25015,6 +26969,183 @@
         },
         "required": [
           "data"
+        ]
+      },
+      "ProjectMessageListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 501
+          },
+          "userId": {
+            "type": "string",
+            "example": "123456789"
+          },
+          "messageType": {
+            "type": "string",
+            "example": "bot"
+          },
+          "messageText": {
+            "type": "string",
+            "example": "Привет! Чем могу помочь?"
+          },
+          "chatType": {
+            "type": "string",
+            "nullable": true,
+            "example": "private"
+          },
+          "chatId": {
+            "type": "string",
+            "nullable": true,
+            "example": "123456789"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "example": "2026-08-11T15:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "messageType",
+          "messageText",
+          "createdAt"
+        ]
+      },
+      "ProjectMessageList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ProjectMessageListItem"
+        }
+      },
+      "MessageActivityCountPoint": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-08-11T14:00:00.000Z"
+          },
+          "count": {
+            "type": "integer",
+            "example": 12
+          }
+        },
+        "required": [
+          "date",
+          "count"
+        ]
+      },
+      "MessageActivitySplitPoint": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-08-11T14:00:00.000Z"
+          },
+          "incoming": {
+            "type": "integer",
+            "example": 7
+          },
+          "outgoing": {
+            "type": "integer",
+            "example": 5
+          }
+        },
+        "required": [
+          "date",
+          "incoming",
+          "outgoing"
+        ]
+      },
+      "MessageActivityList": {
+        "type": "array",
+        "items": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/MessageActivityCountPoint"
+            },
+            {
+              "$ref": "#/components/schemas/MessageActivitySplitPoint"
+            }
+          ]
+        }
+      },
+      "DeleteMessageSuccess": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          },
+          "deletedFromTelegram": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          }
+        },
+        "required": [
+          "success",
+          "deletedFromTelegram"
+        ]
+      },
+      "EditMessageSuccess": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          },
+          "editedInTelegram": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          }
+        },
+        "required": [
+          "success",
+          "editedInTelegram"
+        ]
+      },
+      "EditMessageRequest": {
+        "type": "object",
+        "properties": {
+          "messageText": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Обновлённый текст сообщения"
+          },
+          "buttons": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            },
+            "example": []
+          },
+          "buttonsPerRow": {
+            "type": "integer",
+            "example": 0
+          }
+        },
+        "required": [
+          "messageText"
         ]
       }
     },

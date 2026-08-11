@@ -14,7 +14,7 @@ import {
   BotProjectSchema,
   CreateProjectRequestSchema,
   CreateProjectUnauthorizedSchema,
-  ProjectsCookiesSchema,
+  ProjectsCookiesSchema, ProjectsAuthHeadersSchema,
 } from "../schemas/projects";
 import {
   BOT_PROJECT_EXAMPLE,
@@ -53,6 +53,7 @@ export function registerProjectsCreateGetPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       body: {
         content: {
           "application/json": {
@@ -116,6 +117,7 @@ export function registerProjectsCreateGetPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: z.object({
         /** ID проекта */
         id: z.string().openapi({

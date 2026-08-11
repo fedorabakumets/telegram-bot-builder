@@ -75,19 +75,37 @@ export const BotProjectListSchema = z
   .array(BotProjectSchema)
   .openapi("BotProjectList");
 
-/** Session cookie для /api/projects* (или Bearer PAT) */
+/** Session cookie Studio (`connect.sid`) */
 export const ProjectsCookiesSchema = z.object({
   "connect.sid": z
     .string()
     .optional()
     .openapi({
       description:
-        "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+        "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
       example: "s%3Axxxx.yyyy",
       param: {
         description:
-          "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+          "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
         example: "s%3Axxxx.yyyy",
+      },
+    }),
+});
+
+/** Header Bearer PAT (альтернатива cookie) — виден в Parameters Swagger */
+export const ProjectsAuthHeadersSchema = z.object({
+  /** Персональный токен агента */
+  Authorization: z
+    .string()
+    .optional()
+    .openapi({
+      description:
+        "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+      example: "Bearer mcp_xxxxxxxx",
+      param: {
+        description:
+          "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+        example: "Bearer mcp_xxxxxxxx",
       },
     }),
 });

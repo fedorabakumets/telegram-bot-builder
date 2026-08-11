@@ -6,7 +6,7 @@
 
 Список системных и публичных сценариев
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Каталог готовых сценариев ботов (`bot_templates`).
 
@@ -109,7 +109,7 @@
 
 Сохранить проект как сценарий
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Создаёт запись в `bot_templates` из текущего проекта.
 
@@ -177,7 +177,7 @@
 
 Удалить свой сценарий
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Удаляет запись `bot_templates`.
 
@@ -218,7 +218,7 @@
 
 Сценарий по ID
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Один шаблон из `bot_templates`.
 
@@ -249,7 +249,7 @@
 
 Обновить сценарий
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Частичное обновление (клиентская схема без featured/счётчиков).
 
@@ -282,7 +282,7 @@
 
 Создать проект из сценария
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Применяет шаблон: инкремент `useCount` + новый проект + private-копия в «Мои».
 
@@ -390,7 +390,7 @@
 
 Сценарии по категории
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Фильтр по `category`. Особый случай **`custom`** = «Мои».
 
@@ -419,7 +419,7 @@
 
 Рекомендуемые сценарии
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Шаблоны с `featured=1`.
 
@@ -518,7 +518,7 @@
 
 Поиск сценариев
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Поиск по строке `q`.
 

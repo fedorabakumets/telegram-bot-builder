@@ -10,7 +10,7 @@ import {
   ExportCodeResponseSchema,
   ProjectCodeIdParamsSchema,
 } from "../schemas/project-code";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 
 /** Успешный ответ */
 const EXPORT_OK_EXAMPLE = {
@@ -45,6 +45,7 @@ export function registerProjectsExportPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectCodeIdParamsSchema,
     },
     responses: {

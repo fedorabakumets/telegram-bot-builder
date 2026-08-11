@@ -6,7 +6,7 @@
 
 Список токенов агента
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 PAT текущего пользователя **без секрета** (только `prefix` и метаданные).
 
@@ -57,7 +57,7 @@ curl -s http://localhost:5000/api/agent-tokens \
 
 Создать токен агента
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Создаёт PAT. Поле `token` (полный секрет `mcp_…`) возвращается **один раз** — сохраните сразу.
 
@@ -118,7 +118,7 @@ curl -s -X POST http://localhost:5000/api/agent-tokens -b cookies.txt \
 
 Отозвать токен агента
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Отзывает только токен **текущего** пользователя (`ownerId`). Чужой / несуществующий → 404.
 

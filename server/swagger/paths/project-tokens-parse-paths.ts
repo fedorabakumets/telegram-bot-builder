@@ -4,7 +4,7 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { ProjectTokensIdParamsSchema } from "../schemas/project-tokens-params";
 import {
   ParseTokenErrorSchema,
@@ -41,6 +41,7 @@ export function registerProjectTokensParsePaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensIdParamsSchema,
       body: {
         content: {

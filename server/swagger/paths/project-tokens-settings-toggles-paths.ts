@@ -4,7 +4,7 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { ProjectTokensProjectTokenParamsSchema } from "../schemas/project-tokens-params";
 import {
   AutoRestartRequestSchema,
@@ -44,6 +44,7 @@ export function registerProjectTokensSettingsTogglesPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: { "application/json": { schema: AutoRestartRequestSchema } },
@@ -76,6 +77,7 @@ export function registerProjectTokensSettingsTogglesPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: { "application/json": { schema: ProtectContentRequestSchema } },
@@ -108,6 +110,7 @@ export function registerProjectTokensSettingsTogglesPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: {

@@ -5,7 +5,7 @@
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { MessageErrorSchema, UnauthorizedSchema } from "../schemas/common";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   VersionDeleteResponseSchema,
   VersionsProjectVersionParamsSchema,
@@ -38,6 +38,7 @@ export function registerProjectsVersionsDeletePaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: VersionsProjectVersionParamsSchema,
     },
     responses: {

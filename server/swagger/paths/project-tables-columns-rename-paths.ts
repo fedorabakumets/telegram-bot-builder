@@ -5,7 +5,7 @@
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { MessageErrorSchema } from "../schemas/common";
-import { DatabaseCookiesSchema } from "../schemas/database";
+import { DatabaseCookiesSchema, DatabaseAuthHeadersSchema } from "../schemas/database";
 import {
   BotTableColumnSchema,
   RenameBotTableColumnBodySchema,
@@ -44,6 +44,7 @@ export function registerProjectTablesColumnsRenamePaths(
     security: cookieSecurity,
     request: {
       cookies: DatabaseCookiesSchema,
+      headers: DatabaseAuthHeadersSchema,
       params: ColumnParamsSchema,
       body: {
         content: {

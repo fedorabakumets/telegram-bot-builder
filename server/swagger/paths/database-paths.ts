@@ -7,7 +7,7 @@ import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { MessageErrorSchema } from "../schemas/common";
 import {
   BotTableListSchema,
-  DatabaseCookiesSchema,
+  DatabaseCookiesSchema, DatabaseAuthHeadersSchema,
   DatabaseProjectIdParamsSchema,
 } from "../schemas/database";
 import { PROJECT_TABLES_AUTH_ERRORS } from "./project-tables-errors";
@@ -38,6 +38,7 @@ export function registerDatabasePaths(
     security: cookieSecurity,
     request: {
       cookies: DatabaseCookiesSchema,
+      headers: DatabaseAuthHeadersSchema,
       params: DatabaseProjectIdParamsSchema,
     },
     responses: {

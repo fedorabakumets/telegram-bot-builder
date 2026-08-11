@@ -3162,20 +3162,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * @query split - "true" — вернуть [{date, incoming, outgoing}] вместо [{date, count}]
    * @returns Массив объектов [{date, count}] или [{date, incoming, outgoing}] при split=true
    */
-  app.get("/api/projects/:id/messages/activity", async (req, res) => {
+  app.get("/api/projects/:id/messages/activity", requireProjectAccess, async (req, res) => {
     const projectId = parseInt(req.params.id);
     const tokenId = getRequestTokenId(req);
     const granularity = req.query.granularity as string | undefined;
     const period = (req.query.period as string) || "30d";
     const split = req.query.split === "true";
-
-    const ownerId = getOwnerIdFromRequest(req);
-    if (ownerId !== null) {
-      const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-      if (!hasAccess) {
-        return res.status(403).json({ message: "Нет прав доступа к проекту" });
-      }
-    }
 
     try {
       // Режим гранулярности — новый параметр
@@ -3338,130 +3330,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error("Error fetching messages activity:", error);
       res.status(500).json({ message: "Ошибка при получении данных активности сообщений" });
-    }
-  });
-
-  // Get detailed user responses for a project
-  app.get("/api/projects/:id/responses", requireProjectAccess, async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-
-      // Используем общий пул соединений
-      const result = await dbPool.query(`
-        SELECT 
-          user_id,
-          username,
-          first_name,
-          last_name,
-          user_data,
-          registered_at,
-          last_interaction
-        FROM bot_users 
-        WHERE project_id = $1
-          AND user_data IS NOT NULL 
-          AND user_data != '{}'
-        ORDER BY last_interaction DESC
-      `, [projectId]);
-
-      // Обрабатываем и структурируем ответы
-      const processedResponses = result.rows.map(user => {
-        const responses: any[] = [];
-
-        if (user.user_data && typeof user.user_data === 'object') {
-          Object.entries(user.user_data).forEach(([key, value]) => {
-            // Принимаем все переменные кроме служебных и generic button clicks
-            if (!key.startsWith('input_') && !key.startsWith('waiting_') && key !== 'button_click' && key !== 'last_button_click') {
-              let responseData;
-              let responseType = 'text';
-              let timestamp = null;
-              let nodeId = null;
-              let responseValue = value;
-
-              try {
-                // Если value является объектом, извлекаем данные
-                if (typeof value === 'object' && value !== null) {
-                  responseData = value as any;
-                  responseValue = responseData.value || value;
-                  responseType = responseData.type || 'text';
-                  timestamp = responseData.timestamp;
-                  nodeId = responseData.nodeId;
-                } else {
-                  // Простое значение
-                  responseValue = value;
-                  responseType = 'text';
-                }
-
-                // Определяем тип ответа по контексту
-                if (key === 'button_click') {
-                  responseType = 'button';
-                  // Если это callback data (выглядит как node ID), заменяем на понятное название
-                  if (typeof responseValue === 'string' &&
-                    (responseValue.match(/^[a-zA-Z0-9_-]{15,25}$/) ||
-                      responseValue.match(/^--[a-zA-Z0-9_-]{10,}$/) ||
-                      responseValue.includes('-') && responseValue.length > 10)) {
-                    responseValue = 'Переход к следующему шагу';
-                  }
-                } else if (key.includes('желание') || key.includes('пол') || key.includes('choice')) {
-                  responseType = 'button';
-                } else if (typeof responseValue === 'string' &&
-                  (responseValue === 'Да' || responseValue === 'Нет' ||
-                    responseValue === 'Женщина' || responseValue === 'Мужчина')) {
-                  responseType = 'button';
-                }
-
-                // Дополнительная проверка для замены node IDs на понятные названия
-                if (typeof responseValue === 'string') {
-                  // Проверяем различные форматы node ID
-                  if (responseValue.match(/^--[a-zA-Z0-9_-]{10,}$/) ||
-                    responseValue.match(/^[a-zA-Z0-9_-]{15,}$/) ||
-                    responseValue.match(/^[a-zA-Z0-9-]{20,}$/)) {
-                    responseValue = 'Переход к следующему шагу';
-                    responseType = 'button';
-                  }
-                }
-
-                // Если нет временной метки, используем последнее взаимодействие
-                if (!timestamp) {
-                  timestamp = user.last_interaction;
-                }
-
-              } catch (error) {
-                // Если не удается обработать, создаем простую структуру
-                responseValue = value;
-                responseType = 'text';
-                timestamp = user.last_interaction;
-              }
-
-              responses.push({
-                key,
-                value: responseValue,
-                type: responseType,
-                timestamp: timestamp,
-                nodeId: nodeId,
-                variable: key
-              });
-            }
-          });
-        }
-
-        return {
-          user_id: user.user_id,
-          username: user.username,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          registered_at: user.registered_at,
-          last_interaction: user.last_interaction,
-          responses: responses.sort((a, b) =>
-            new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
-          ),
-          responseCount: responses.length
-        };
-      }).filter(user => user.responses.length > 0); // Показываем только пользователей с ответами
-
-      res.json(processedResponses);
-    } catch (error) {
-      console.error("Ошибка получения ответов пользователей:", error);
-      res.status(500).json({ message: "Failed to fetch user responses" });
     }
   });
 

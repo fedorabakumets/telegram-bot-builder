@@ -6,7 +6,7 @@
 
 Аватар пользователя или бота (прокси)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Проксирует фото профиля из Telegram (или кэш `avatar_url` / `bot_photo_url`). `userId=bot` или id бота — аватар бота проекта.
 
@@ -26,7 +26,8 @@ curl -s -o avatar.jpg -b cookies.txt \
 | `projectId` | path | да | ID проекта | `"42"` |
 | `userId` | path | да | Telegram user_id (или `bot` для аватара бота) | `"123456789"` |
 | `tokenId` | query | нет | ID токена бота проекта | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -42,7 +43,7 @@ curl -s -o avatar.jpg -b cookies.txt \
 
 Удалить историю сообщений диалога
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Удаляет все `bot_messages` пользователя в скоупе проекта/токена. Не удаляет сообщения в Telegram — только запись в Studio БД.
 
@@ -60,7 +61,8 @@ curl -s -X DELETE -b cookies.txt \
 | `projectId` | path | да | ID проекта | `"42"` |
 | `userId` | path | да | Telegram user_id (или `bot` для аватара бота) | `"123456789"` |
 | `tokenId` | query | нет | ID токена бота проекта | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -85,7 +87,7 @@ curl -s -X DELETE -b cookies.txt \
 
 История сообщений диалога
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Последние N сообщений `bot_messages` (+ media), в хронологическом порядке. По умолчанию limit=100. Фильтр `messageType=user|bot`. Скоуп по `tokenId`.
 
@@ -105,7 +107,8 @@ curl -s -b cookies.txt \
 | `tokenId` | query | нет | ID токена бота проекта | `"7"` |
 | `limit` | query | нет | — | `"100"` |
 | `messageType` | query | нет | — | `"bot"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -142,7 +145,7 @@ curl -s -b cookies.txt \
 
 Отправить сообщение пользователю от бота
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Шлёт текст/медиа/кнопки через Telegram Bot API, пишет в `bot_messages`, публикует WS `new-message`. Подставляет переменные из `user_data`.
 
@@ -165,7 +168,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 | `projectId` | path | да | ID проекта | `"42"` |
 | `userId` | path | да | Telegram user_id (или `bot` для аватара бота) | `"123456789"` |
 | `tokenId` | query | нет | ID токена бота проекта | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -205,7 +209,7 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 
 Отправить содержимое узла сценария пользователю
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Берёт узел по `nodeId` из `project.data`, рендерит текст/медиа/кнопки (с переменными) и шлёт через бота. В `messageData` помечает `sentFromAdmin` + `nodeId`.
 
@@ -226,7 +230,8 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 | `projectId` | path | да | ID проекта | `"42"` |
 | `userId` | path | да | Telegram user_id (или `bot` для аватара бота) | `"123456789"` |
 | `tokenId` | query | нет | ID токена бота проекта | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 

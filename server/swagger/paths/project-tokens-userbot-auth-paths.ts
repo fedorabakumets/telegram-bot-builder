@@ -9,7 +9,7 @@ import {
   MessageErrorSchema,
   UnauthorizedSchema,
 } from "../schemas/common";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { ProjectTokensProjectTokenParamsSchema } from "../schemas/project-tokens-params";
 import {
   UserbotAuthResultSchema,
@@ -65,6 +65,7 @@ export function registerProjectTokensUserbotAuthPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: {
@@ -100,6 +101,7 @@ export function registerProjectTokensUserbotAuthPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: {
@@ -129,6 +131,7 @@ export function registerProjectTokensUserbotAuthPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: {

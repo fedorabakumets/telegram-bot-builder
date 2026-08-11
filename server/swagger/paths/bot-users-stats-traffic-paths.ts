@@ -13,7 +13,7 @@ import {
   BotUsersProjectIdParamsSchema,
   BotUsersTokenQuerySchema,
 } from "../schemas/bot-users-params";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   BOT_USERS_FORBIDDEN_EXAMPLE,
   BOT_USERS_STATS_EXAMPLE,
@@ -46,6 +46,7 @@ export function registerBotUsersStatsTrafficPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: BotUsersProjectIdParamsSchema,
       query: BotUsersTokenQuerySchema,
     },
@@ -104,6 +105,7 @@ export function registerBotUsersStatsTrafficPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: BotUsersProjectIdParamsSchema,
       query: BotUsersTokenQuerySchema,
     },

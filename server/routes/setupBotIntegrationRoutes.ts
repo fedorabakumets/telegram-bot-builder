@@ -17,7 +17,7 @@ import { getProjectFilesHandler, addProjectFileHandler, deleteProjectFilesHandle
 import { updateMediaFileIdHandler } from "./botIntegration/handlers/botData/updateMediaFileIdHandler";
 import { getStorageQuotaHandler } from "./botIntegration/handlers/botData/getStorageQuotaHandler";
 import { getCollaboratorsInfoHandler } from "./botIntegration/handlers/botData/getCollaboratorsInfoHandler";
-import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, saveMessageHandler, deleteMessagesHandler, deleteSingleMessageHandler, editSingleMessageHandler, getGroupMessagesHandler } from "./botIntegration/handlers/messages";
+import { getMessagesHandler, sendMessageHandler, sendNodeMessageHandler, deleteMessagesHandler, deleteSingleMessageHandler, editSingleMessageHandler, getGroupMessagesHandler } from "./botIntegration/handlers/messages";
 import { getGroupsHandler, createGroupHandler, updateGroupHandler, deleteGroupHandler, syncGroupHandler } from "./botIntegration/handlers/groups";
 import { getBotInfoHandler, updateBotNameHandler, updateBotDescriptionHandler, updateBotShortDescriptionHandler } from "./botIntegration/handlers/botInfo";
 import { sendGroupMessageHandler, getGroupInfoHandler, getGroupMembersCountHandler, getBotAdminStatusHandler, getGroupAdminsHandler, getGroupMembersHandler, getSavedMembersHandler } from "./botIntegration/handlers/telegramGroups";
@@ -39,7 +39,6 @@ import { createBroadcastHandler, getBroadcastsHandler, getBroadcastDetailHandler
  * Функция устанавливает следующие маршруты:
  * - GET /api/projects/:projectId/users/:userId/messages - получение сообщений пользователя
  * - POST /api/projects/:projectId/users/:userId/send-message - отправка сообщения пользователю
- * - POST /api/projects/:projectId/messages - сохранение сообщения от бота
  * - DELETE /api/projects/:projectId/users/:userId/messages - удаление истории сообщений
  * - POST /api/projects/:projectId/media/register-telegram-photo - регистрация медиафайла
  * - Маршруты для работы с группами ботов
@@ -176,15 +175,6 @@ export function setupBotIntegrationRoutes(app: Express) {
      * @route POST /api/projects/:projectId/users/:userId/send-node-message
      */
     app.post("/api/projects/:projectId/users/:userId/send-node-message", requireProjectAccess, sendNodeMessageHandler);
-
-    /**
-     * Обработчик маршрута POST /api/projects/:projectId/messages
-     *
-     * Сохраняет сообщение от бота в базу данных
-     *
-     * @route POST /api/projects/:projectId/messages
-     */
-    app.post("/api/projects/:projectId/messages", requireProjectAccess, saveMessageHandler);
 
     /**
      * Обработчик маршрута DELETE /api/projects/:projectId/users/:userId/messages

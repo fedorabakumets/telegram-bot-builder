@@ -6,7 +6,7 @@
 
 Список версий проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Метаданные снимков **без** `snapshot` (экономия трафика). `authorName` — из Telegram или «ИИ-агент» при `authorKind=agent`.
 
@@ -25,7 +25,8 @@ curl -s http://localhost:5000/api/projects/42/versions -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -68,7 +69,7 @@ curl -s http://localhost:5000/api/projects/42/versions -b cookies.txt
 
 Удалить одну версию
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Необратимо удаляет запись истории. Broadcast `versions-changed`.
 
@@ -87,7 +88,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/versions/7 \
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `versionId` | path | да | Числовой ID версии | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -112,7 +114,7 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/versions/7 \
 
 Версия со snapshot
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Полная запись включая тяжёлый `snapshot` (`project.data`). versionId должен принадлежать проекту, иначе 404.
 
@@ -130,7 +132,8 @@ curl -s http://localhost:5000/api/projects/42/versions/7 -b cookies.txt
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `versionId` | path | да | Числовой ID версии | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -173,7 +176,7 @@ curl -s http://localhost:5000/api/projects/42/versions/7 -b cookies.txt
 
 Откатить проект к версии
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Пишет `version.snapshot` в `project.data`, sync `_content`, Redis `bot:table_updated`. Тело не требуется.
 
@@ -194,7 +197,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/versions/7/restore \
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `versionId` | path | да | Числовой ID версии | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -239,7 +243,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/versions/7/restore \
 
 Создать ручной чекпоинт версии
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Снимок **текущего** `project.data` с `kind=manual`. Всегда создаётся (без дедупликации). Broadcast `versions-changed`.
 
@@ -262,7 +266,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/versions/commit \
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -313,7 +318,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/versions/commit \
 
 Массово удалить версии (prune)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Необратимая чистка по фильтру. Broadcast `versions-changed`.
 
@@ -336,7 +341,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/versions/prune \
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 

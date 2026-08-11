@@ -6,7 +6,7 @@
 
 Список таблиц контента проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Пользовательские таблицы `bot_tables` для панели Database в редакторе.
 
@@ -23,7 +23,8 @@ curl -s http://localhost:5000/api/projects/42/tables -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | ID проекта bot_projects | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -52,7 +53,7 @@ curl -s http://localhost:5000/api/projects/42/tables -b cookies.txt
 
 Создать таблицу контента
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Создаёт `bot_tables` с полем `name`.
 
@@ -72,7 +73,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tables -b cookies.txt \
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | ID проекта bot_projects | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -107,7 +109,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/tables -b cookies.txt \
 
 Удалить таблицу
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Удаляет таблицу и связанные колонки/строки (CASCADE).
 
@@ -125,7 +127,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tables/1 -b cookies.txt
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | ID проекта bot_projects | `"42"` |
 | `tableId` | path | да | ID таблицы bot_tables | `"1"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -150,7 +153,7 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tables/1 -b cookies.txt
 
 Переименовать таблицу
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Обновляет `name`. API есть; UI-хук `useRenameTable` в TablesPanel не подключён.
 
@@ -171,7 +174,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1 -b cookies.txt \
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | ID проекта bot_projects | `"42"` |
 | `tableId` | path | да | ID таблицы bot_tables | `"1"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -207,7 +211,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1 -b cookies.txt \
 
 Список колонок таблицы
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Колонки `bot_table_columns` для панели Database.
 
@@ -225,7 +229,8 @@ curl -s http://localhost:5000/api/projects/42/tables/1/columns -b cookies.txt
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | ID проекта bot_projects | `"42"` |
 | `tableId` | path | да | ID таблицы bot_tables | `"1"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -260,7 +265,7 @@ curl -s http://localhost:5000/api/projects/42/tables/1/columns -b cookies.txt
 
 Создать колонку
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Тело: `{ name, position? }` — `position` по умолчанию `0`.
 
@@ -282,7 +287,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tables/1/columns \
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | ID проекта bot_projects | `"42"` |
 | `tableId` | path | да | ID таблицы bot_tables | `"1"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -318,7 +324,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/tables/1/columns \
 
 Удалить колонку
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Удаляет колонку таблицы.
 
@@ -338,7 +344,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tables/1/columns/3 \
 | `id` | path | да | ID проекта bot_projects | `"42"` |
 | `tableId` | path | да | ID таблицы bot_tables | `"1"` |
 | `columnId` | path | да | ID колонки bot_table_columns | `"3"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -363,7 +370,7 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tables/1/columns/3 \
 
 Переименовать колонку
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Обновляет `name` колонки `bot_table_columns`.
 
@@ -386,7 +393,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1/columns/3 \
 | `id` | path | да | ID проекта bot_projects | `"42"` |
 | `tableId` | path | да | ID таблицы bot_tables | `"1"` |
 | `columnId` | path | да | ID колонки bot_table_columns | `"3"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -422,7 +430,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1/columns/3 \
 
 Список строк таблицы
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Строки `bot_table_rows` с `data: Record<string,string>`.
 
@@ -440,7 +448,8 @@ curl -s http://localhost:5000/api/projects/42/tables/1/rows -b cookies.txt
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | ID проекта bot_projects | `"42"` |
 | `tableId` | path | да | ID таблицы bot_tables | `"1"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -472,7 +481,7 @@ curl -s http://localhost:5000/api/projects/42/tables/1/rows -b cookies.txt
 
 Создать строки (батч)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Тело `{ rows: [{ rowIndex?, data? }] }` — массив **непустой**. Без `rowIndex` берётся индекс в массиве; `data` по умолчанию `{}`.
 
@@ -494,7 +503,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tables/1/rows \
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | ID проекта bot_projects | `"42"` |
 | `tableId` | path | да | ID таблицы bot_tables | `"1"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -542,7 +552,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/tables/1/rows \
 
 Удалить строку
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Удаляет строку `bot_table_rows`.
 
@@ -562,7 +572,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tables/1/rows/10 \
 | `id` | path | да | ID проекта bot_projects | `"42"` |
 | `tableId` | path | да | ID таблицы bot_tables | `"1"` |
 | `rowId` | path | да | ID строки bot_table_rows | `"10"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -587,7 +598,7 @@ curl -s -X DELETE http://localhost:5000/api/projects/42/tables/1/rows/10 \
 
 Обновить строку
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Тело `{ data: object }`. Side-effects: если таблица `_content` — `syncTableToScenario`; Redis `bot:table_updated:{projectId}` с JSON `{tableId}`.
 
@@ -610,7 +621,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1/rows/10 \
 | `id` | path | да | ID проекта bot_projects | `"42"` |
 | `tableId` | path | да | ID таблицы bot_tables | `"1"` |
 | `rowId` | path | да | ID строки bot_table_rows | `"10"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -652,7 +664,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tables/1/rows/10 \
 
 Переиндексировать строки
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Пересчитывает `rowIndex` строк таблицы. В Express регистрируется **до** `/rows/:rowId`, чтобы `reindex` не воспринимался как rowId.
 
@@ -671,7 +683,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/tables/1/rows/reindex \
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | ID проекта bot_projects | `"42"` |
 | `tableId` | path | да | ID таблицы bot_tables | `"1"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401. | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 

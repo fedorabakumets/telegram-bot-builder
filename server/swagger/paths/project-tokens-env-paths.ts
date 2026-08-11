@@ -9,7 +9,7 @@ import {
   MessageErrorSchema,
   UnauthorizedSchema,
 } from "../schemas/common";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   ProjectTokensEnvIdParamsSchema,
   ProjectTokensProjectTokenParamsSchema,
@@ -47,6 +47,7 @@ export function registerProjectTokensEnvPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
     },
     responses: {
@@ -89,6 +90,7 @@ export function registerProjectTokensEnvPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: {

@@ -10,7 +10,7 @@ import {
   UnauthorizedSchema,
 } from "../schemas/common";
 import {
-  ProjectsCookiesSchema,
+  ProjectsCookiesSchema, ProjectsAuthHeadersSchema,
   ReorderProjectsRequestSchema,
   ReorderProjectsResponseSchema,
 } from "../schemas/projects";
@@ -51,6 +51,7 @@ export function registerProjectsReorderPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       body: {
         content: {
           "application/json": {

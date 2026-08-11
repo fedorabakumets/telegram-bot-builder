@@ -11,7 +11,7 @@ import {
   GenerateCodeResponseSchema,
   ProjectCodeIdParamsSchema,
 } from "../schemas/project-code";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   GENERATE_BODY_EXAMPLE,
   GENERATE_FAILED_EXAMPLE,
@@ -50,6 +50,7 @@ export function registerProjectsGeneratePaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectCodeIdParamsSchema,
       body: {
         content: {

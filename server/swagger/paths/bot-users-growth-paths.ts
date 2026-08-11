@@ -10,7 +10,7 @@ import {
   GrowthPointListSchema,
 } from "../schemas/bot-users-growth";
 import { BotUsersProjectIdParamsSchema } from "../schemas/bot-users-params";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   BOT_USERS_FORBIDDEN_EXAMPLE,
   BOT_USERS_GROWTH_EXAMPLE,
@@ -44,6 +44,7 @@ export function registerBotUsersGrowthPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: BotUsersProjectIdParamsSchema,
       query: BotUsersGrowthQuerySchema,
     },

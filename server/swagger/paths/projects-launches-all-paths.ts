@@ -9,7 +9,7 @@ import {
   ProjectSystemLaunchListSchema,
   SystemTablesProjectIdParamsSchema,
 } from "../schemas/project-system-tables";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 
 /** Пример истории запусков */
 const LAUNCHES_ALL_EXAMPLE = [
@@ -57,6 +57,7 @@ export function registerProjectsLaunchesAllPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: SystemTablesProjectIdParamsSchema,
     },
     responses: {

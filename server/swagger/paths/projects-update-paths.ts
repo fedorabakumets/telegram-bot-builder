@@ -12,7 +12,7 @@ import {
 } from "../schemas/common";
 import {
   BotProjectSchema,
-  ProjectsCookiesSchema,
+  ProjectsCookiesSchema, ProjectsAuthHeadersSchema,
   UpdateProjectRequestSchema,
 } from "../schemas/projects";
 import { BOT_PROJECT_EXAMPLE } from "./projects-examples";
@@ -61,6 +61,7 @@ export function registerProjectsUpdatePaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectIdParamsSchema,
       body: {
         content: {

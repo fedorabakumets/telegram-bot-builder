@@ -10,7 +10,7 @@ import {
   MessageErrorSchema,
   UnauthorizedSchema,
 } from "../schemas/common";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   DeleteDialogMessagesResponseSchema,
   DialogMessageListSchema,
@@ -60,6 +60,7 @@ export function registerProjectsUserDialogPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: DialogProjectUserParamsSchema,
       query: DialogTokenQuerySchema,
     },
@@ -127,6 +128,7 @@ export function registerProjectsUserDialogPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: DialogProjectUserParamsSchema,
       query: DialogMessagesQuerySchema,
     },
@@ -204,6 +206,7 @@ export function registerProjectsUserDialogPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: DialogProjectUserParamsSchema,
       query: DialogTokenQuerySchema,
     },
@@ -275,6 +278,7 @@ export function registerProjectsUserDialogPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: DialogProjectUserParamsSchema,
       query: DialogTokenQuerySchema,
       body: {
@@ -352,6 +356,7 @@ export function registerProjectsUserDialogPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: DialogProjectUserParamsSchema,
       query: DialogTokenQuerySchema,
       body: {

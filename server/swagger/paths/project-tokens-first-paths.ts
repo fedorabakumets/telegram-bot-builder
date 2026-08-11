@@ -5,7 +5,7 @@
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { MessageErrorSchema, UnauthorizedSchema } from "../schemas/common";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { ProjectTokensIdParamsSchema } from "../schemas/project-tokens-params";
 import { TokensFirstResponseSchema } from "../schemas/project-tokens-dto";
 import { TOKENS_FIRST_EXAMPLE } from "./project-tokens-examples";
@@ -35,6 +35,7 @@ export function registerProjectTokensFirstPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensIdParamsSchema,
     },
     responses: {

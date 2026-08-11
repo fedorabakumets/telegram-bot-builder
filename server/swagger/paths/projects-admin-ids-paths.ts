@@ -5,7 +5,7 @@
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { UnauthorizedSchema } from "../schemas/common";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   AdminIdsErrorSchema,
   AdminIdsMutationResponseSchema,
@@ -53,6 +53,7 @@ export function registerProjectsAdminIdsPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: AdminIdsProjectIdParamsSchema,
     },
     responses: {
@@ -114,6 +115,7 @@ export function registerProjectsAdminIdsPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: AdminIdsProjectIdParamsSchema,
       body: {
         content: {
@@ -173,6 +175,7 @@ export function registerProjectsAdminIdsPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: AdminIdsProjectIdParamsSchema,
       body: {
         content: {

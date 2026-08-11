@@ -9,7 +9,7 @@ import {
   CollaboratorInfoListSchema,
   CollaboratorsInfoParamsSchema,
 } from "../schemas/project-collaborators-info";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 
 /** Пример ответа Files UI */
 const COLLABORATORS_INFO_EXAMPLE = [
@@ -52,6 +52,7 @@ export function registerProjectsCollaboratorsInfoPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: CollaboratorsInfoParamsSchema,
     },
     responses: {

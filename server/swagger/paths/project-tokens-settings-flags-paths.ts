@@ -4,7 +4,7 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { ProjectTokensProjectTokenParamsSchema } from "../schemas/project-tokens-params";
 import {
   CatchAllHandlersRequestSchema,
@@ -40,6 +40,7 @@ export function registerProjectTokensSettingsFlagsPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: {
@@ -74,6 +75,7 @@ export function registerProjectTokensSettingsFlagsPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: {

@@ -10,7 +10,7 @@ import {
   BotUsersListQuerySchema,
   BotUsersProjectIdParamsSchema,
 } from "../schemas/bot-users-params";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   BOT_USERS_FORBIDDEN_EXAMPLE,
   BOT_USERS_PAGE_EXAMPLE,
@@ -44,6 +44,7 @@ export function registerBotUsersPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: BotUsersProjectIdParamsSchema,
       query: BotUsersListQuerySchema,
     },

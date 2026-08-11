@@ -6,7 +6,7 @@
 
 Удалить медиафайл
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `requireMediaOwnership`. **Клиент:** `use-media`.
 
@@ -33,7 +33,7 @@ curl -s -X DELETE http://localhost:5000/api/media/10 -b cookies.txt
 
 Медиафайл по ID
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `requireMediaOwnership`. UI почти не вызывает (список через project).
 
@@ -80,7 +80,7 @@ curl -s http://localhost:5000/api/media/10 -b cookies.txt
 
 Обновить метаданные медиа
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `requireMediaOwnership`. **Клиент:** `use-media` / thumbnail.
 
@@ -127,7 +127,7 @@ curl -s -X PUT http://localhost:5000/api/media/10 -b cookies.txt \
 
 Upsert Telegram file_id для токена
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `requireMediaFileOwnership`. Для бот/integration; UI не вызывает.
 
@@ -155,7 +155,7 @@ curl -s -X POST http://localhost:5000/api/media/10/file-id -b cookies.txt \
 
 Инкремент usageCount
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `requireMediaOwnership`. **Клиент:** `use-media`.
 
@@ -182,7 +182,7 @@ curl -s -X POST http://localhost:5000/api/media/10/use -b cookies.txt
 
 Проверить внешний URL медиа
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Probe доступности/типа URL. SSRF ограничен `validateExternalUrl`. Только global auth (без projectId). **Клиент:** url-downloader.
 
@@ -216,7 +216,7 @@ curl -s -X POST http://localhost:5000/api/media/check-url -b cookies.txt \
 
 Скачать один URL в медиа проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `requireProjectAccess` + SSRF-check. **Клиент:** url-downloader.
 
@@ -252,7 +252,7 @@ curl -s -X POST http://localhost:5000/api/media/download-url/42 -b cookies.txt \
 
 Скачать несколько URL в медиа проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Batch download. `requireProjectAccess`. **Клиент:** url-downloader.
 
@@ -290,7 +290,7 @@ curl -s -X POST http://localhost:5000/api/media/download-urls/42 -b cookies.txt 
 
 Список медиафайлов проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 `requireProjectAccess`. **Клиент:** `use-media`.
 
@@ -338,7 +338,7 @@ curl -s http://localhost:5000/api/media/project/42 -b cookies.txt
 
 Поиск медиафайлов проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Query `q` — строка поиска. `requireProjectAccess`. **Клиент:** `use-media`.
 
@@ -387,7 +387,7 @@ curl -s 'http://localhost:5000/api/media/search/42?q=photo' -b cookies.txt
 
 Сохранить картинку по URL/base64 в uploads/
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Пишет файл в `uploads/{projectId}/…`. **Доступ:** `hasProjectAccess(projectId)` (раньше не проверялся — IDOR закрыт).
 
@@ -430,7 +430,7 @@ curl -s -X POST http://localhost:5000/api/media/upload-from-url -b cookies.txt \
 
 Загрузить до 20 файлов (multipart)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 multipart field `files` (≤20). `requireProjectAccess`.
 
@@ -457,7 +457,7 @@ curl -s -X POST http://localhost:5000/api/media/upload-multiple/42 -b cookies.tx
 
 Загрузить один файл (multipart)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 multipart field `file`. `requireProjectAccess`. **Клиент:** `use-media`.
 

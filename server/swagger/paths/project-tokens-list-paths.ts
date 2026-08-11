@@ -6,7 +6,7 @@
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 import { MessageErrorSchema, UnauthorizedSchema } from "../schemas/common";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { ProjectTokensIdParamsSchema } from "../schemas/project-tokens-params";
 import {
   BotTokenListItemSchema,
@@ -43,6 +43,7 @@ export function registerProjectTokensListPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensIdParamsSchema,
     },
     responses: {
@@ -98,6 +99,7 @@ export function registerProjectTokensListPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensIdParamsSchema,
     },
     responses: {

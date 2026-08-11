@@ -22,7 +22,7 @@ export const PROJECT_TAG_DESCRIPTIONS: Record<string, string> = {
     "Пользователи бота проекта: список, аналитика, поиск, CRUD по userId. " +
     "Не включает диалоги (avatar/messages/send-*) — см. `project-dialogs`.",
   "project-messages":
-    "Сообщения на уровне проекта: all/activity, CRUD по messageId, responses. " +
+    "Сообщения на уровне проекта: all/activity, DELETE/PATCH по messageId. " +
     "Не путать с `…/users/{userId}/messages` (диалоги).",
   "project-groups":
     "Telegram-группы проекта и модерация через bot API: groups*, saved-members, " +
@@ -93,11 +93,8 @@ export function inferProjectTag(openApiPath: string): string | null {
     return "project-users";
   }
 
-  // Сообщения уровня проекта (+ responses)
-  if (
-    /^\/api\/projects\/[^/]+\/messages(\/|$)/.test(openApiPath) ||
-    /^\/api\/projects\/[^/]+\/responses(\/|$)/.test(openApiPath)
-  ) {
+  // Сообщения уровня проекта
+  if (/^\/api\/projects\/[^/]+\/messages(\/|$)/.test(openApiPath)) {
     return "project-messages";
   }
 

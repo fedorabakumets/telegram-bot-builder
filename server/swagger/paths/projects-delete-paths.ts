@@ -12,7 +12,7 @@ import {
 } from "../schemas/common";
 import {
   DeleteProjectResponseSchema,
-  ProjectsCookiesSchema,
+  ProjectsCookiesSchema, ProjectsAuthHeadersSchema,
 } from "../schemas/projects";
 import {
   DELETE_PROJECT_FORBIDDEN_EXAMPLE,
@@ -56,6 +56,7 @@ export function registerProjectsDeletePaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectIdParamsSchema,
     },
     responses: {

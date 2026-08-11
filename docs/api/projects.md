@@ -6,7 +6,7 @@
 
 Полный список проектов (со сценарием data)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Сырые записи `bot_projects` владельца/коллаборатора, **включая** `data` (весь сценарий). Может содержать устаревшее поле `botToken`.
 
@@ -24,7 +24,7 @@ curl -s http://localhost:5000/api/projects -b cookies.txt
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -68,7 +68,7 @@ curl -s http://localhost:5000/api/projects -b cookies.txt
 
 Создать проект
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Создаёт проект для текущего пользователя. **`ownerId` берётся из сессии**, поле в body игнорируется. После insert создаётся таблица `_content`, шлётся live-событие `projects-changed`.
 
@@ -88,7 +88,8 @@ curl -s -X POST http://localhost:5000/api/projects -b cookies.txt \
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -151,7 +152,7 @@ curl -s -X POST http://localhost:5000/api/projects -b cookies.txt \
 
 Удалить проект
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Останавливает бота, удаляет токены, медиа, user data и проект. Шлёт `projects-changed` (deleted) членам команды.
 
@@ -168,7 +169,8 @@ curl -s -X DELETE http://localhost:5000/api/projects/42 -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -192,7 +194,7 @@ curl -s -X DELETE http://localhost:5000/api/projects/42 -b cookies.txt
 
 Получить проект по ID
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Полная запись проекта (включая `data` сценария). Доступ: владелец или collaborator (`requireProjectAccess`).
 
@@ -209,7 +211,8 @@ curl -s http://localhost:5000/api/projects/42 -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -253,7 +256,7 @@ curl -s http://localhost:5000/api/projects/42 -b cookies.txt
 
 Обновить проект
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Частичное обновление полей. При изменении `data` — синхронизация `_content`, снимок версии, Redis `bot:table_updated`, canvas-sync.
 
@@ -275,7 +278,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42 -b cookies.txt \
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -327,7 +331,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42 -b cookies.txt \
 
 Список ADMIN_IDS проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Читает ID администраторов бота. Сначала `bot_projects.admin_ids`, если пусто — fallback на `ADMIN_IDS` в `.env` папки бота.
 
@@ -344,7 +348,8 @@ curl -s http://localhost:5000/api/projects/42/admin-ids -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -375,7 +380,7 @@ curl -s http://localhost:5000/api/projects/42/admin-ids -b cookies.txt
 
 Заменить ADMIN_IDS проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Полностью перезаписывает список админов в БД. Если есть папка бота — синхронизирует `ADMIN_IDS` в `.env`.
 
@@ -396,7 +401,8 @@ curl -s -X PUT http://localhost:5000/api/projects/42/admin-ids -b cookies.txt \
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -427,7 +433,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/admin-ids -b cookies.txt \
 
 Удалить одного администратора из ADMIN_IDS
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Убирает один Telegram ID из списка. Body `adminId` — число или `del_admin_{id}` (callback из шаблона «Менеджер ботов»).
 
@@ -446,7 +452,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/admin-ids/remove \
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -477,7 +484,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/admin-ids/remove \
 
 Дублировать проект
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Копия сценария без `botToken`. Имя из body или «{имя} (копия)». Создаёт `_content`, шлёт `projects-changed` (created).
 
@@ -500,7 +507,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/duplicate \
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -542,7 +550,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/duplicate \
 
 Экспорт Python-кода бота (простой)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Генерирует код без кэша media `file_id` и без флагов токена. `userDatabaseEnabled` берётся из проекта (`=== 1`). Тело запроса не нужно.
 
@@ -561,7 +569,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/export -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -585,7 +594,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/export -b cookies.txt
 
 Сгенерировать Python-код бота (полный)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Собирает сценарий проекта в Python. На сервере подтягиваются флаги первого токена (`catchAllHandlers`, `protectContent`, `contentCache`) и кэшированные Telegram `file_id` / обложки медиа из `/uploads/`.
 
@@ -610,7 +619,8 @@ curl -s -X POST http://localhost:5000/api/projects/42/generate -b cookies.txt \
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
@@ -645,7 +655,7 @@ curl -s -X POST http://localhost:5000/api/projects/42/generate -b cookies.txt \
 
 История запусков ботов проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 До 100 записей `bot_launch_history` по всем токенам проекта: `status`, `startedAt`, `stoppedAt`, `errorMessage` (до 100 символов). Сортировка по `started_at` DESC.
 
@@ -666,7 +676,8 @@ curl -s http://localhost:5000/api/projects/42/launches/all -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -699,7 +710,7 @@ curl -s http://localhost:5000/api/projects/42/launches/all -b cookies.txt
 
 Системные логи бота проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Укороченные строки `bot_logs`: `level` (= type), `message` (до 150 символов content), `createdAt` (= timestamp). Сортировка DESC.
 
@@ -723,7 +734,8 @@ curl -s 'http://localhost:5000/api/projects/42/logs/all?limit=200&tokenId=7' \
 | `id` | path | да | Числовой ID проекта | `"42"` |
 | `limit` | query | нет | Лимит записей (default 200) | `"200"` |
 | `tokenId` | query | нет | Опциональный фильтр bot_logs.token_id | `"7"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -754,7 +766,7 @@ curl -s 'http://localhost:5000/api/projects/42/logs/all?limit=200&tokenId=7' \
 
 Участники проекта (владелец + коллабораторы)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Read-only список для Files UI: владелец и приглашённые с именем и аватаркой, без дублей. Не путать с CRUD `/api/bot/projects/{id}/collaborators`.
 
@@ -771,7 +783,8 @@ curl -s http://localhost:5000/api/projects/42/collaborators -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | Числовой ID проекта | `"42"` |
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -805,7 +818,7 @@ curl -s http://localhost:5000/api/projects/42/collaborators -b cookies.txt
 
 Лёгкий список проектов (без секретов и data)
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Метаданные проектов владельца и коллаборатора: id, name, sortOrder, `nodeCount` / `sheetsCount`. **Без** `data`, `botToken`, `sessionId` (whitelist DTO `toProjectListItem`).
 
@@ -823,7 +836,7 @@ curl -s http://localhost:5000/api/projects/list -b cookies.txt
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -857,7 +870,7 @@ curl -s http://localhost:5000/api/projects/list -b cookies.txt
 
 Изменить порядок проектов в списке
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Задаёт `sortOrder` по порядку ID в теле. После успеха шлёт live-событие `projects-changed` (reordered) владельцу.
 
@@ -877,7 +890,8 @@ curl -s -X PUT http://localhost:5000/api/projects/reorder -b cookies.txt \
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 

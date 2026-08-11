@@ -6,7 +6,7 @@
 
 Логи конкретного запуска бота
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Все строки `bot_logs` с данным `launchId` (хронология запуска).
 

@@ -11,7 +11,7 @@ import {
   UnauthorizedSchema,
 } from "../schemas/common";
 import { BotLogDtoSchema } from "../schemas/bot-logs";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { ProjectTokensProjectTokenParamsSchema } from "../schemas/project-tokens-params";
 import { LIVE_LOG_EXAMPLE } from "./project-tokens-examples";
 
@@ -53,6 +53,7 @@ export function registerProjectTokensLiveLogsPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       query: LiveLogsQuerySchema,
     },
@@ -103,6 +104,7 @@ export function registerProjectTokensLiveLogsPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
     },
     responses: {

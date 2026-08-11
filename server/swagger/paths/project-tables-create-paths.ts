@@ -8,7 +8,7 @@ import { MessageErrorSchema } from "../schemas/common";
 import {
   BotTableSchema,
   CreateBotTableBodySchema,
-  DatabaseCookiesSchema,
+  DatabaseCookiesSchema, DatabaseAuthHeadersSchema,
   DatabaseProjectIdParamsSchema,
 } from "../schemas/database";
 import { PROJECT_TABLES_AUTH_ERRORS } from "./project-tables-errors";
@@ -43,6 +43,7 @@ export function registerProjectTablesCreatePaths(
     security: cookieSecurity,
     request: {
       cookies: DatabaseCookiesSchema,
+      headers: DatabaseAuthHeadersSchema,
       params: DatabaseProjectIdParamsSchema,
       body: {
         content: {

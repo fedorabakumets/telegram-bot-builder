@@ -17,7 +17,7 @@ import {
   UpdateMessagesRetentionRequestSchema,
   UpdateMessagesRetentionResponseSchema,
 } from "../schemas/bot-tokens";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { ProjectTokensProjectTokenParamsSchema } from "../schemas/project-tokens-params";
 import { registerBotTokensRuntimePaths } from "./bot-tokens-runtime-paths";
 
@@ -50,6 +50,7 @@ export function registerBotTokensPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
       body: {
         content: {
@@ -103,6 +104,7 @@ export function registerBotTokensPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: ProjectTokensProjectTokenParamsSchema,
     },
     responses: {

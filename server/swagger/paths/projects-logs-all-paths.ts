@@ -10,7 +10,7 @@ import {
   ProjectSystemLogListSchema,
   SystemTablesProjectIdParamsSchema,
 } from "../schemas/project-system-tables";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 
 /** Пример системной таблицы логов */
 const LOGS_ALL_EXAMPLE = [
@@ -55,6 +55,7 @@ export function registerProjectsLogsAllPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: SystemTablesProjectIdParamsSchema,
       query: ProjectLogsAllQuerySchema,
     },

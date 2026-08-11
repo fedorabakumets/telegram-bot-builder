@@ -5,6 +5,16 @@
 
 import "./common";
 import { z } from "zod";
+import {
+  ProjectsAuthHeadersSchema,
+  ProjectsCookiesSchema,
+} from "./projects";
+
+/** Session cookie — алиас ProjectsCookiesSchema */
+export const DatabaseCookiesSchema = ProjectsCookiesSchema;
+
+/** Bearer PAT header — алиас ProjectsAuthHeadersSchema */
+export const DatabaseAuthHeadersSchema = ProjectsAuthHeadersSchema;
 
 /** Запись таблицы контента проекта */
 export const BotTableSchema = z
@@ -37,23 +47,6 @@ export const DatabaseProjectIdParamsSchema = z.object({
       example: "42",
     },
   }),
-});
-
-/** Session cookie (или Bearer PAT) */
-export const DatabaseCookiesSchema = z.object({
-  "connect.sid": z
-    .string()
-    .optional()
-    .openapi({
-      description:
-        "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
-      example: "s%3Axxxx.yyyy",
-      param: {
-        description:
-          "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
-        example: "s%3Axxxx.yyyy",
-      },
-    }),
 });
 
 /** Тело POST …/tables */

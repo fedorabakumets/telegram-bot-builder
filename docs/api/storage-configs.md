@@ -6,7 +6,7 @@
 
 Список конфигов хранилищ
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Реестр бэкендов медиа: **local** (папка) и **S3**/MinIO.
 
@@ -63,7 +63,7 @@
 
 Создать конфиг хранилища
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Регистрирует **local** или **S3** с `isActive=false` (активация — `PATCH`).
 
@@ -99,7 +99,7 @@
 
 Удалить конфиг хранилища
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Удаляет запись и перезагружает реестр.
 
@@ -127,7 +127,7 @@
 
 Обновить конфиг хранилища
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Частичное обновление: имя, `config` (**полная замена** объекта), `readOnly`, креды S3, `isActive`.
 
@@ -167,7 +167,7 @@
 
 Проверить доступность хранилища
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Connectivity-check **без** активации.
 

@@ -5,7 +5,7 @@
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { MessageErrorSchema } from "../schemas/common";
-import { DatabaseCookiesSchema } from "../schemas/database";
+import { DatabaseCookiesSchema, DatabaseAuthHeadersSchema } from "../schemas/database";
 import { TableIdParamsSchema } from "../schemas/project-tables-params";
 import { TablesSuccessSchema } from "../schemas/project-tables-rows";
 import { PROJECT_TABLES_AUTH_ERRORS } from "./project-tables-errors";
@@ -38,6 +38,7 @@ export function registerProjectTablesReindexPaths(
     security: cookieSecurity,
     request: {
       cookies: DatabaseCookiesSchema,
+      headers: DatabaseAuthHeadersSchema,
       params: TableIdParamsSchema,
     },
     responses: {

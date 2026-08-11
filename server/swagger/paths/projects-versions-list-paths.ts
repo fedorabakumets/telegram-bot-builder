@@ -5,7 +5,7 @@
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { MessageErrorSchema, UnauthorizedSchema } from "../schemas/common";
-import { ProjectVersionListSchema, ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectVersionListSchema, ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import { VersionsProjectIdParamsSchema } from "../schemas/project-versions";
 import { VERSIONS_LIST_EXAMPLE } from "./projects-versions-examples";
 
@@ -36,6 +36,7 @@ export function registerProjectsVersionsListPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: VersionsProjectIdParamsSchema,
     },
     responses: {

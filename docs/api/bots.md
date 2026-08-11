@@ -6,7 +6,7 @@
 
 Инстансы ботов текущего пользователя
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Все `bot_instances` по проектам владельца (и доступным). **Секрет Telegram token в ответе не отдаётся**.
 
@@ -53,7 +53,7 @@ curl -s http://localhost:5000/api/bots -b cookies.txt
 
 Запустить всех офлайн-ботов проекта
 
-**Авторизация:** Cookie (`connect.sid`)
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
 Последовательно запускает токены проекта со status !== running. Уже running не трогает (в отличие от restart-all).
 

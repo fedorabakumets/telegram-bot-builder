@@ -14,7 +14,7 @@ import {
   BotUsersVariablesResponseSchema,
   WipeAllBotUsersSuccessSchema,
 } from "../schemas/bot-users-variables";
-import { ProjectsCookiesSchema } from "../schemas/projects";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   BOT_USERS_FORBIDDEN_EXAMPLE,
   BOT_USERS_VARIABLES_EXAMPLE,
@@ -51,6 +51,7 @@ export function registerBotUsersExtraPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: BotUsersProjectIdParamsSchema,
       query: BotUsersVariablesQuerySchema,
     },
@@ -109,6 +110,7 @@ export function registerBotUsersExtraPaths(
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
       params: BotUsersProjectIdParamsSchema,
       query: BotUsersTokenQuerySchema,
     },
