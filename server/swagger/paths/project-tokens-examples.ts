@@ -44,9 +44,10 @@ export const TOKEN_LIST_ITEM_EXAMPLE = {
   messagesRetentionDays: 60,
 };
 
-/** GET …/tokens/first с секретом */
+/** GET …/tokens/first с секретом и id */
 export const TOKENS_FIRST_EXAMPLE = {
   hasToken: true,
+  id: 7,
   token: "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw",
 };
 

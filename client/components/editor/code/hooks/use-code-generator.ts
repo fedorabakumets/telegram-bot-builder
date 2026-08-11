@@ -59,17 +59,15 @@ export function useCodeGenerator({
     staleTime: 60000,
   });
 
-  /** Кастомные переменные окружения из БД */
+  /** Кастомные env-переменные дефолтного токена (по id из /tokens/first) */
   const { data: envVarsData } = useQuery({
-    queryKey: [`/api/projects/${projectId}/tokens/first/env-variables`],
-    queryFn: async () => {
-      if (!projectId) return { items: [] };
-      // Сначала получаем первый токен, потом его переменные
-      const tokenData = await apiRequest('GET', `/api/projects/${projectId}/tokens/first`);
-      if (!tokenData?.id) return { items: [] };
-      return apiRequest('GET', `/api/projects/${projectId}/tokens/${tokenData.id}/env-variables`);
-    },
-    enabled: !!projectId,
+    queryKey: [`/api/projects/${projectId}/tokens/${tokenData?.id}/env-variables`],
+    queryFn: () =>
+      apiRequest(
+        'GET',
+        `/api/projects/${projectId}/tokens/${tokenData!.id}/env-variables`,
+      ),
+    enabled: !!projectId && typeof tokenData?.id === 'number',
     staleTime: 60000,
   });
 

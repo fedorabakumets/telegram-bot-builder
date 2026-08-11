@@ -4,14 +4,14 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { MessageErrorSchema } from "../schemas/common";
+import { MessageErrorSchema, UnauthorizedSchema } from "../schemas/common";
 import { ProjectsCookiesSchema } from "../schemas/projects";
 import { ProjectTokensIdParamsSchema } from "../schemas/project-tokens-params";
 import { TokensFirstResponseSchema } from "../schemas/project-tokens-dto";
 import { TOKENS_FIRST_EXAMPLE } from "./project-tokens-examples";
 
 /**
- * Регистрирует GET tokens/first (сырой секрет).
+ * Регистрирует GET tokens/first (сырой секрет + id).
  * @param registry - Реестр zod-to-openapi
  * @param cookieSecurity - Session cookie / Bearer PAT
  * @returns void
@@ -24,12 +24,13 @@ export function registerProjectTokensFirstPaths(
     method: "get",
     path: "/api/projects/{id}/tokens/first",
     tags: ["project-tokens"],
-    summary: "Первый токен — RAW SECRET (codegen)",
+    summary: "Дефолтный токен для codegen (.env)",
     description:
-      "**Риск:** `{ hasToken, token }` — сырой Telegram token **без id**. " +
-      "Для генерации `.env`/codegen UI. Не логировать ответ. " +
-      "Предпочитайте `/tokens/list` + отдельный reveal, если нужен id.\n\n" +
-      "**Auth:** опционально `getOwnerIdFromRequest` + `hasProjectAccess` при сессии.\n\n" +
+      "Дефолтный токен проекта (`getDefaultBotToken`, иначе любой). " +
+      "Ответ: `{ hasToken, id, token }` — **сырой** Telegram token + id.\n\n" +
+      "**Риск:** не логировать тело. `Cache-Control: no-store`.\n\n" +
+      "**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n" +
+      "**Клиент:** `use-code-generator` (BOT_TOKEN + env-variables по `id`).\n\n" +
       "```bash\ncurl -s http://localhost:5000/api/projects/42/tokens/first -b cookies.txt\n```",
     security: cookieSecurity,
     request: {
@@ -38,7 +39,7 @@ export function registerProjectTokensFirstPaths(
     },
     responses: {
       200: {
-        description: "Сырой token или hasToken=false",
+        description: "Сырой token + id, или hasToken=false",
         content: {
           "application/json": {
             schema: TokensFirstResponseSchema,
@@ -46,19 +47,38 @@ export function registerProjectTokensFirstPaths(
               withToken: { summary: "Есть токен", value: TOKENS_FIRST_EXAMPLE },
               empty: {
                 summary: "Нет токенов",
-                value: { hasToken: false, token: null },
+                value: { hasToken: false, id: null, token: null },
               },
             },
           },
         },
       },
-      403: {
-        description: "Нет доступа (при auth)",
-        content: { "application/json": { schema: MessageErrorSchema } },
+      400: {
+        description: "Невалидный id проекта",
+        content: {
+          "application/json": {
+            schema: MessageErrorSchema,
+            example: { message: "Некорректный projectId" },
+          },
+        },
       },
-      404: {
-        description: "Проект не найден (при auth)",
-        content: { "application/json": { schema: MessageErrorSchema } },
+      401: {
+        description: "Нет session cookie и Bearer PAT",
+        content: {
+          "application/json": {
+            schema: UnauthorizedSchema,
+            example: { error: "UNAUTHORIZED" },
+          },
+        },
+      },
+      403: {
+        description: "Нет доступа к проекту",
+        content: {
+          "application/json": {
+            schema: MessageErrorSchema,
+            example: { message: "Нет прав доступа к проекту" },
+          },
+        },
       },
     },
   });

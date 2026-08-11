@@ -104,15 +104,20 @@ export const BotTokenListItemSchema = z
   })
   .openapi("BotTokenListItem");
 
-/** GET …/tokens/first — сырой секрет, без id токена */
+/** GET …/tokens/first — сырой секрет + id (codegen / env) */
 export const TokensFirstResponseSchema = z
   .object({
-    /** Есть ли хотя бы один токен */
+    /** Есть ли дефолтный/любой токен проекта */
     hasToken: z.boolean().openapi({ example: true }),
-    /** Сырой token первого токена или null */
+    /** ID токена для …/env-variables; null если токенов нет */
+    id: z.number().int().nullable().openapi({
+      example: 7,
+      description: "bot_tokens.id — для загрузки env-variables",
+    }),
+    /** Сырой Telegram token или null */
     token: z.string().nullable().openapi({
       example: "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw",
-      description: "RAW SECRET. Нет поля id — нельзя адресовать конкретный токен.",
+      description: "RAW SECRET для .env. Не логировать. Cache-Control: no-store.",
     }),
   })
   .openapi("TokensFirstResponse");

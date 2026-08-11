@@ -7896,8 +7896,8 @@
         "tags": [
           "project-tokens"
         ],
-        "summary": "Первый токен — RAW SECRET (codegen)",
-        "description": "**Риск:** `{ hasToken, token }` — сырой Telegram token **без id**. Для генерации `.env`/codegen UI. Не логировать ответ. Предпочитайте `/tokens/list` + отдельный reveal, если нужен id.\n\n**Auth:** опционально `getOwnerIdFromRequest` + `hasProjectAccess` при сессии.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/tokens/first -b cookies.txt\n```",
+        "summary": "Дефолтный токен для codegen (.env)",
+        "description": "Дефолтный токен проекта (`getDefaultBotToken`, иначе любой). Ответ: `{ hasToken, id, token }` — **сырой** Telegram token + id.\n\n**Риск:** не логировать тело. `Cache-Control: no-store`.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** `use-code-generator` (BOT_TOKEN + env-variables по `id`).\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/tokens/first -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -7931,7 +7931,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Сырой token или hasToken=false",
+            "description": "Сырой token + id, или hasToken=false",
             "content": {
               "application/json": {
                 "schema": {
@@ -7942,6 +7942,7 @@
                     "summary": "Есть токен",
                     "value": {
                       "hasToken": true,
+                      "id": 7,
                       "token": "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw"
                     }
                   },
@@ -7949,6 +7950,7 @@
                     "summary": "Нет токенов",
                     "value": {
                       "hasToken": false,
+                      "id": null,
                       "token": null
                     }
                   }
@@ -7956,22 +7958,41 @@
               }
             }
           },
-          "403": {
-            "description": "Нет доступа (при auth)",
+          "400": {
+            "description": "Невалидный id проекта",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Некорректный projectId"
                 }
               }
             }
           },
-          "404": {
-            "description": "Проект не найден (при auth)",
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
                 }
               }
             }
@@ -19754,15 +19775,22 @@
             "type": "boolean",
             "example": true
           },
+          "id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "bot_tokens.id — для загрузки env-variables",
+            "example": 7
+          },
           "token": {
             "type": "string",
             "nullable": true,
-            "description": "RAW SECRET. Нет поля id — нельзя адресовать конкретный токен.",
+            "description": "RAW SECRET для .env. Не логировать. Cache-Control: no-store.",
             "example": "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw"
           }
         },
         "required": [
           "hasToken",
+          "id",
           "token"
         ]
       },

@@ -238,13 +238,17 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/bot-info -b cookie
 
 ### `GET` /api/projects/{id}/tokens/first
 
-Первый токен — RAW SECRET (codegen)
+Дефолтный токен для codegen (.env)
 
 **Авторизация:** Cookie (`connect.sid`)
 
-**Риск:** `{ hasToken, token }` — сырой Telegram token **без id**. Для генерации `.env`/codegen UI. Не логировать ответ. Предпочитайте `/tokens/list` + отдельный reveal, если нужен id.
+Дефолтный токен проекта (`getDefaultBotToken`, иначе любой). Ответ: `{ hasToken, id, token }` — **сырой** Telegram token + id.
 
-**Auth:** опционально `getOwnerIdFromRequest` + `hasProjectAccess` при сессии.
+**Риск:** не логировать тело. `Cache-Control: no-store`.
+
+**Auth:** cookie / Bearer PAT + `requireProjectAccess`.
+
+**Клиент:** `use-code-generator` (BOT_TOKEN + env-variables по `id`).
 
 ```bash
 curl -s http://localhost:5000/api/projects/42/tokens/first -b cookies.txt
@@ -261,15 +265,17 @@ curl -s http://localhost:5000/api/projects/42/tokens/first -b cookies.txt
 
 | Код | Описание |
 |-----|----------|
-| 200 | Сырой token или hasToken=false |
-| 403 | Нет доступа (при auth) |
-| 404 | Проект не найден (при auth) |
+| 200 | Сырой token + id, или hasToken=false |
+| 400 | Невалидный id проекта |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |
 
 #### Пример ответа `200`
 
 ```json
 {
   "hasToken": true,
+  "id": 7,
   "token": "7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw"
 }
 ```

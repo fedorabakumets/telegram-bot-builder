@@ -85,6 +85,7 @@ import {
 } from "./messages/queryActivityFromDaily";
 import { queryActivityFromDailyPeriod } from "./messages/queryActivityFromDailyPeriod";
 import { updateMessagesRetentionHandler } from "./userProjectsTokens/handlers/tokens/updateMessagesRetentionHandler";
+import { getFirstProjectTokenHandler } from "./projectRoutes/handlers/getFirstProjectTokenHandler";
 
 /**
  * Глобальное хранилище активных процессов ботов
@@ -1626,37 +1627,12 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Get first token for .env generation (full token value)
-  app.get("/api/projects/:id/tokens/first", async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-
-      // Check project ownership if user is authenticated
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const project = await storage.getBotProject(projectId);
-        if (!project) {
-          return res.status(404).json({ message: "Project not found" });
-        }
-        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-        if (!hasAccess) {
-          return res.status(403).json({ message: "You don't have permission to access this project's tokens" });
-        }
-      }
-
-      const tokens = await storage.getBotTokensByProject(projectId);
-
-      if (tokens.length === 0) {
-        return res.json({ hasToken: false, token: null });
-      }
-
-      // Return full token value for .env generation
-      res.json({ hasToken: true, token: tokens[0].token });
-    } catch (error) {
-      console.error("Failed to fetch first token:", error);
-      res.status(500).json({ message: "Failed to fetch token", error: (error as any).message });
-    }
-  });
+  // Get default/first token for .env generation (raw secret + id)
+  app.get(
+    "/api/projects/:id/tokens/first",
+    requireProjectAccess,
+    getFirstProjectTokenHandler,
+  );
 
   // === МЕДИАФАЙЛЫ ===
 
