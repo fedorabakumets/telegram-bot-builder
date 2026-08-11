@@ -31,13 +31,16 @@ export function registerProjectMessagesDeletePaths(
     method: "delete",
     path: "/api/projects/{projectId}/messages/{messageId}",
     tags: ["project-messages"],
-    summary: "Удалить сообщение (Telegram + БД)",
+    summary: "Удалить сообщение из чата и базы",
     description:
-      "Сначала `deleteMessage` в Telegram, при успехе — DELETE из `bot_messages`, " +
-      "затем WS `message-deleted`. Без `telegramMessageId` или при отказе Telegram — 400, БД не трогается.\n\n" +
-      "`tokenId` (query) → `resolveEffectiveProjectToken`.\n\n" +
-      "**Auth:** `requireApiAuth` + `requireProjectAccess`.\n\n" +
-      "**Клиент:** `use-delete-message` (диалоги).\n\n" +
+      "Удаляет одно сообщение из панели Диалогов: сначала в Telegram, " +
+      "при успехе — из нашей БД, затем обновление UI по WebSocket.\n\n" +
+      "Нужен Telegram message id у записи. Если Telegram отклонил запрос — " +
+      "запись в БД не трогаем (400).\n\n" +
+      "Query `tokenId` — каким ботом слать `deleteMessage` " +
+      "(иначе дефолтный/первый токен проекта).\n\n" +
+      "**Auth:** cookie или Bearer PAT + доступ к проекту.\n\n" +
+      "**Клиент:** диалоги → `use-delete-message`.\n\n" +
       "```bash\n" +
       "curl -s -X DELETE 'http://localhost:5000/api/projects/42/messages/501?tokenId=7' \\\n" +
       "  -b cookies.txt\n" +

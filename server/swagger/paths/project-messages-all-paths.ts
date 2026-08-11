@@ -30,13 +30,15 @@ export function registerProjectMessagesAllPaths(
     method: "get",
     path: "/api/projects/{id}/messages/all",
     tags: ["project-messages"],
-    summary: "Все сообщения проекта (усечённый список)",
+    summary: "Список сообщений проекта",
     description:
-      "Выборка из `bot_messages`: id, userId, messageType, messageText " +
-      "(SUBSTRING 100), chatType, chatId, createdAt. " +
-      "Сортировка `created_at DESC`. Default limit=200, offset=0.\n\n" +
-      "**Auth:** `requireApiAuth` + `requireProjectAccess` (cookie / Bearer PAT).\n\n" +
-      "**Клиент:** `use-system-tables`.\n\n" +
+      "Лента всех сообщений бота в проекте (системная таблица «Сообщения» в Database). " +
+      "Текст обрезается до 100 символов; полный диалог — через " +
+      "`…/users/{userId}/messages`.\n\n" +
+      "Новые сверху. Можно ограничить токеном (`tokenId`), " +
+      "пагинация: `limit` (по умолчанию 200) и `offset`.\n\n" +
+      "**Auth:** cookie или Bearer PAT + доступ к проекту.\n\n" +
+      "**Клиент:** панель Database → системные таблицы (`use-system-tables`).\n\n" +
       "```bash\n" +
       "curl -s 'http://localhost:5000/api/projects/42/messages/all?limit=50&tokenId=7' \\\n" +
       "  -b cookies.txt\n" +

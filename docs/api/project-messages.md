@@ -4,17 +4,23 @@
 
 ### `GET` /api/projects/{id}/messages/activity
 
-Активность сообщений по времени
+График активности сообщений
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-С `granularity` (1m|5m|1h|1d|7d|30d): короткие окна — `bot_messages` + `generate_series` (fill gaps); дневные — `message_activity_daily`. Без granularity — legacy `period` (7d|30d|90d, default 30d) через `queryActivityFromDailyPeriod`.
+Точки для графика в Analytics / Stats: сколько сообщений за интервалы времени.
 
-`split=true` → `[{date, incoming, outgoing}]`, иначе `[{date, count}]`.
+**granularity** (предпочтительно): `1m` / `5m` / `1h` — короткие окна с заполнением пустых слотов нулями; `1d` / `7d` / `30d` — дневные агрегаты (не зависят от удаления старых сообщений).
 
-**Auth:** `requireApiAuth` + `requireProjectAccess` (cookie / Bearer PAT).
+**period** (legacy, если нет granularity): `7d` / `30d` / `90d` (по умолчанию 30d).
 
-**Клиент:** `use-messages-activity` → Analytics/Stats.
+**split=true** — отдельно входящие (от пользователей) и исходящие (от бота), иначе одно поле `count`.
+
+Опционально `tokenId` — только этот бот.
+
+**Auth:** cookie или Bearer PAT + доступ к проекту.
+
+**Клиент:** `use-messages-activity` → Analytics / Stats.
 
 ```bash
 curl -s 'http://localhost:5000/api/projects/42/messages/activity?granularity=1h&split=true&tokenId=7' \
@@ -59,15 +65,17 @@ curl -s 'http://localhost:5000/api/projects/42/messages/activity?granularity=1h&
 
 ### `GET` /api/projects/{id}/messages/all
 
-Все сообщения проекта (усечённый список)
+Список сообщений проекта
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Выборка из `bot_messages`: id, userId, messageType, messageText (SUBSTRING 100), chatType, chatId, createdAt. Сортировка `created_at DESC`. Default limit=200, offset=0.
+Лента всех сообщений бота в проекте (системная таблица «Сообщения» в Database). Текст обрезается до 100 символов; полный диалог — через `…/users/{userId}/messages`.
 
-**Auth:** `requireApiAuth` + `requireProjectAccess` (cookie / Bearer PAT).
+Новые сверху. Можно ограничить токеном (`tokenId`), пагинация: `limit` (по умолчанию 200) и `offset`.
 
-**Клиент:** `use-system-tables`.
+**Auth:** cookie или Bearer PAT + доступ к проекту.
+
+**Клиент:** панель Database → системные таблицы (`use-system-tables`).
 
 ```bash
 curl -s 'http://localhost:5000/api/projects/42/messages/all?limit=50&tokenId=7' \
@@ -121,17 +129,19 @@ curl -s 'http://localhost:5000/api/projects/42/messages/all?limit=50&tokenId=7' 
 
 ### `DELETE` /api/projects/{projectId}/messages/{messageId}
 
-Удалить сообщение (Telegram + БД)
+Удалить сообщение из чата и базы
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Сначала `deleteMessage` в Telegram, при успехе — DELETE из `bot_messages`, затем WS `message-deleted`. Без `telegramMessageId` или при отказе Telegram — 400, БД не трогается.
+Удаляет одно сообщение из панели Диалогов: сначала в Telegram, при успехе — из нашей БД, затем обновление UI по WebSocket.
 
-`tokenId` (query) → `resolveEffectiveProjectToken`.
+Нужен Telegram message id у записи. Если Telegram отклонил запрос — запись в БД не трогаем (400).
 
-**Auth:** `requireApiAuth` + `requireProjectAccess`.
+Query `tokenId` — каким ботом слать `deleteMessage` (иначе дефолтный/первый токен проекта).
 
-**Клиент:** `use-delete-message` (диалоги).
+**Auth:** cookie или Bearer PAT + доступ к проекту.
+
+**Клиент:** диалоги → `use-delete-message`.
 
 ```bash
 curl -s -X DELETE 'http://localhost:5000/api/projects/42/messages/501?tokenId=7' \
@@ -170,17 +180,19 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/messages/501?tokenId=7'
 
 ### `PATCH` /api/projects/{projectId}/messages/{messageId}
 
-Редактировать сообщение бота (Telegram + БД)
+Редактировать текст сообщения бота
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Только `messageType=bot` с `telegramMessageId`. Telegram `editMessageText`/`editMessageCaption`, затем UPDATE БД, WS `message-edited`. Пустой `buttons` снимает inline-клавиатуру.
+Правит исходящее сообщение бота в диалоге: сначала в Telegram, потом у нас в БД, UI обновляется по WebSocket.
 
-`tokenId` (query) → `resolveEffectiveProjectToken`.
+Только сообщения бота (не пользователя) с известным Telegram id. Тело: обязательный `messageText`; опционально `buttons` / `buttonsPerRow` (пустой массив кнопок снимает клавиатуру).
 
-**Auth:** `requireApiAuth` + `requireProjectAccess`.
+Query `tokenId` — каким ботом слать edit (иначе дефолтный/первый токен проекта).
 
-**Клиент:** `use-edit-message`.
+**Auth:** cookie или Bearer PAT + доступ к проекту.
+
+**Клиент:** диалоги → `use-edit-message`.
 
 ```bash
 curl -s -X PATCH 'http://localhost:5000/api/projects/42/messages/501?tokenId=7' \

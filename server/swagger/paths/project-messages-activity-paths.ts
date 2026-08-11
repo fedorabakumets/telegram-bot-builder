@@ -31,15 +31,19 @@ export function registerProjectMessagesActivityPaths(
     method: "get",
     path: "/api/projects/{id}/messages/activity",
     tags: ["project-messages"],
-    summary: "Активность сообщений по времени",
+    summary: "График активности сообщений",
     description:
-      "С `granularity` (1m|5m|1h|1d|7d|30d): короткие окна — `bot_messages` + " +
-      "`generate_series` (fill gaps); дневные — `message_activity_daily`. " +
-      "Без granularity — legacy `period` (7d|30d|90d, default 30d) через " +
-      "`queryActivityFromDailyPeriod`.\n\n" +
-      '`split=true` → `[{date, incoming, outgoing}]`, иначе `[{date, count}]`.\n\n' +
-      "**Auth:** `requireApiAuth` + `requireProjectAccess` (cookie / Bearer PAT).\n\n" +
-      "**Клиент:** `use-messages-activity` → Analytics/Stats.\n\n" +
+      "Точки для графика в Analytics / Stats: сколько сообщений за интервалы времени.\n\n" +
+      "**granularity** (предпочтительно): `1m` / `5m` / `1h` — короткие окна " +
+      "с заполнением пустых слотов нулями; `1d` / `7d` / `30d` — дневные агрегаты " +
+      "(не зависят от удаления старых сообщений).\n\n" +
+      "**period** (legacy, если нет granularity): `7d` / `30d` / `90d` " +
+      "(по умолчанию 30d).\n\n" +
+      "**split=true** — отдельно входящие (от пользователей) и исходящие (от бота), " +
+      "иначе одно поле `count`.\n\n" +
+      "Опционально `tokenId` — только этот бот.\n\n" +
+      "**Auth:** cookie или Bearer PAT + доступ к проекту.\n\n" +
+      "**Клиент:** `use-messages-activity` → Analytics / Stats.\n\n" +
       "```bash\n" +
       "curl -s 'http://localhost:5000/api/projects/42/messages/activity" +
       "?granularity=1h&split=true&tokenId=7' \\\n" +

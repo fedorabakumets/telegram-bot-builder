@@ -35,14 +35,17 @@ export function registerProjectMessagesPatchPaths(
     method: "patch",
     path: "/api/projects/{projectId}/messages/{messageId}",
     tags: ["project-messages"],
-    summary: "Редактировать сообщение бота (Telegram + БД)",
+    summary: "Редактировать текст сообщения бота",
     description:
-      "Только `messageType=bot` с `telegramMessageId`. " +
-      "Telegram `editMessageText`/`editMessageCaption`, затем UPDATE БД, " +
-      "WS `message-edited`. Пустой `buttons` снимает inline-клавиатуру.\n\n" +
-      "`tokenId` (query) → `resolveEffectiveProjectToken`.\n\n" +
-      "**Auth:** `requireApiAuth` + `requireProjectAccess`.\n\n" +
-      "**Клиент:** `use-edit-message`.\n\n" +
+      "Правит исходящее сообщение бота в диалоге: сначала в Telegram, " +
+      "потом у нас в БД, UI обновляется по WebSocket.\n\n" +
+      "Только сообщения бота (не пользователя) с известным Telegram id. " +
+      "Тело: обязательный `messageText`; опционально `buttons` / `buttonsPerRow` " +
+      "(пустой массив кнопок снимает клавиатуру).\n\n" +
+      "Query `tokenId` — каким ботом слать edit " +
+      "(иначе дефолтный/первый токен проекта).\n\n" +
+      "**Auth:** cookie или Bearer PAT + доступ к проекту.\n\n" +
+      "**Клиент:** диалоги → `use-edit-message`.\n\n" +
       "```bash\n" +
       "curl -s -X PATCH 'http://localhost:5000/api/projects/42/messages/501?tokenId=7' \\\n" +
       "  -H 'Content-Type: application/json' \\\n" +
