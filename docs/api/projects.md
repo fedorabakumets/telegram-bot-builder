@@ -1,20 +1,68 @@
 # projects
 
-Эндпоинтов: **137**
+Эндпоинтов: **16**
 
 ### `GET` /api/projects
 
-GET /api/projects
+Полный список проектов (со сценарием data)
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+Сырые записи `bot_projects` владельца/коллаборатора, **включая** `data` (весь сценарий). Может содержать устаревшее поле `botToken`.
+
+**Параметры:** path/query/body нет. Auth — cookie или Bearer PAT.
+
+**Клиент:** сайдбар редактора (`use-projects-query`), canvas, bot-queries.
+
+Для списков в UI предпочтительнее `GET /api/projects/list`; полный сценарий — `GET /api/projects/{id}`.
+
+```bash
+curl -s http://localhost:5000/api/projects -b cookies.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+| 200 | Массив полных BotProject |
+| 401 | Нет session cookie и Bearer PAT |
+| 500 | Ошибка БД |
+
+#### Пример ответа `200`
+
+```json
+[
+  {
+    "id": 42,
+    "ownerId": 123456789,
+    "name": "Мой бот",
+    "description": "Приветственный бот",
+    "data": {
+      "sheets": [
+        {
+          "id": "main",
+          "name": "Основной",
+          "nodes": [],
+          "edges": []
+        }
+      ]
+    },
+    "botToken": null,
+    "sessionId": null,
+    "userDatabaseEnabled": 1,
+    "sortOrder": 0,
+    "adminIds": null,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-08-11T12:00:00.000Z"
+  }
+]
+```
 
 ### `POST` /api/projects
 
@@ -22,9 +70,45 @@ GET /api/projects
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Требует авторизацию. ownerId берётся из сессии, не из тела запроса.
+Создаёт проект для текущего пользователя. **`ownerId` берётся из сессии**, поле в body игнорируется. После insert создаётся таблица `_content`, шлётся live-событие `projects-changed`.
+
+**Тело:** `name` обязателен; `data` — опциональный стартовый сценарий.
+
+**Клиент:** home, сайдбар, NoProjectsScreen, импорт.
+
+```bash
+curl -s -X POST http://localhost:5000/api/projects -b cookies.txt \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Мой бот"}'
+```
 
 **Тело запроса:** `CreateProjectRequest`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Пример тела запроса
+
+```json
+{
+  "name": "Мой бот",
+  "description": "Приветственный бот",
+  "data": {
+    "sheets": [
+      {
+        "id": "main",
+        "nodes": [],
+        "edges": []
+      }
+    ]
+  },
+  "userDatabaseEnabled": 1,
+  "sortOrder": 0
+}
+```
 
 #### Ответы
 
@@ -32,7 +116,36 @@ GET /api/projects
 |-----|----------|
 | 201 | Проект создан |
 | 400 | Ошибка валидации Zod |
-| 401 | Гость без авторизации |
+| 401 | Гость без Telegram-сессии (ownerId === null) |
+| 500 | Ошибка БД / создания |
+
+#### Пример ответа `201`
+
+```json
+{
+  "id": 42,
+  "ownerId": 123456789,
+  "name": "Мой бот",
+  "description": "Приветственный бот",
+  "data": {
+    "sheets": [
+      {
+        "id": "main",
+        "name": "Основной",
+        "nodes": [],
+        "edges": []
+      }
+    ]
+  },
+  "botToken": null,
+  "sessionId": null,
+  "userDatabaseEnabled": 1,
+  "sortOrder": 0,
+  "adminIds": null,
+  "createdAt": "2026-08-01T10:00:00.000Z",
+  "updatedAt": "2026-08-11T12:00:00.000Z"
+}
+```
 
 ### `DELETE` /api/projects/{id}
 
@@ -40,21 +153,40 @@ GET /api/projects
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Останавливает бота, удаляет токены, медиа, user data и сам проект. Требует прав владельца или collaborator.
+Останавливает бота, удаляет токены, медиа, user data и проект. Шлёт `projects-changed` (deleted) членам команды.
+
+**Auth:** cookie / Bearer PAT + `requireProjectAccess` (владелец или collaborator).
+
+**Клиент:** сайдбар / удаление проекта.
+
+```bash
+curl -s -X DELETE http://localhost:5000/api/projects/42 -b cookies.txt
+```
 
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"42"` |
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
 | 200 | Проект удалён |
+| 401 | Нет session cookie и Bearer PAT |
 | 403 | Нет прав на удаление |
 | 404 | Проект не найден |
+| 500 | Сбой очистки связанных данных |
+
+#### Пример ответа `200`
+
+```json
+{
+  "message": "Проект успешно удалён"
+}
+```
 
 ### `GET` /api/projects/{id}
 
@@ -62,13 +194,22 @@ GET /api/projects
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Требует доступ к проекту (владелец или collaborator).
+Полная запись проекта (включая `data` сценария). Доступ: владелец или collaborator (`requireProjectAccess`).
+
+**Параметры:** path `id` — числовой ID проекта.
+
+**Клиент:** редактор (`use-project-loader`), сохранение, MCP.
+
+```bash
+curl -s http://localhost:5000/api/projects/42 -b cookies.txt
+```
 
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"42"` |
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
@@ -76,8 +217,37 @@ GET /api/projects
 |-----|----------|
 | 200 | Данные проекта |
 | 400 | id не число |
-| 401 | Не авторизован |
-| 404 | Проект не найден |
+| 401 | Нет session cookie и Bearer PAT |
+| 404 | Проект не найден или нет доступа |
+| 500 | Ошибка БД |
+
+#### Пример ответа `200`
+
+```json
+{
+  "id": 42,
+  "ownerId": 123456789,
+  "name": "Мой бот",
+  "description": "Приветственный бот",
+  "data": {
+    "sheets": [
+      {
+        "id": "main",
+        "name": "Основной",
+        "nodes": [],
+        "edges": []
+      }
+    ]
+  },
+  "botToken": null,
+  "sessionId": null,
+  "userDatabaseEnabled": 1,
+  "sortOrder": 0,
+  "adminIds": null,
+  "createdAt": "2026-08-01T10:00:00.000Z",
+  "updatedAt": "2026-08-11T12:00:00.000Z"
+}
+```
 
 ### `PUT` /api/projects/{id}
 
@@ -85,7 +255,18 @@ GET /api/projects
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Частичное обновление полей проекта. При изменении data создаётся снимок версии. Поля commitMessage, agentEdit — для истории версий и live-редактирования MCP.
+Частичное обновление полей. При изменении `data` — синхронизация `_content`, снимок версии, Redis `bot:table_updated`, canvas-sync.
+
+**Тело:** partial `insertBotProject` + `commitMessage`, `agentEdit`, `agentSessionId`, `agentDisplayName`, `restartOnUpdate`.
+
+**Auth:** cookie / Bearer PAT + `requireProjectAccess`.
+
+**Клиент:** редактор (save), MCP live-edit.
+
+```bash
+curl -s -X PUT http://localhost:5000/api/projects/42 -b cookies.txt \
+  -H 'Content-Type: application/json' -d '{"name":"Новое имя"}'
+```
 
 **Тело запроса:** `UpdateProjectRequest`
 
@@ -93,169 +274,204 @@ GET /api/projects
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"42"` |
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Пример тела запроса
+
+```json
+{
+  "name": "Новое имя"
+}
+```
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
 | 200 | Обновлённый проект |
-| 400 | Невалидный id или тело запроса |
+| 400 | Невалидный id или тело (Zod) |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |
 | 404 | Проект не найден |
+
+#### Пример ответа `200`
+
+```json
+{
+  "id": 42,
+  "ownerId": 123456789,
+  "name": "Мой бот",
+  "description": "Приветственный бот",
+  "data": {
+    "sheets": [
+      {
+        "id": "main",
+        "name": "Основной",
+        "nodes": [],
+        "edges": []
+      }
+    ]
+  },
+  "botToken": null,
+  "sessionId": null,
+  "userDatabaseEnabled": 1,
+  "sortOrder": 0,
+  "adminIds": null,
+  "createdAt": "2026-08-01T10:00:00.000Z",
+  "updatedAt": "2026-08-11T12:00:00.000Z"
+}
+```
 
 ### `GET` /api/projects/{id}/admin-ids
 
-GET /api/projects/{id}/admin-ids
+Список ADMIN_IDS проекта
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+Читает ID администраторов бота. Сначала `bot_projects.admin_ids`, если пусто — fallback на `ADMIN_IDS` в `.env` папки бота.
+
+**Параметры:** path `id`. Auth — cookie / Bearer PAT + `requireProjectAccess`.
+
+**Клиент:** `BotAdminIds` / `use-admin-ids`, генератор кода, шаблон «Менеджер ботов» (HTTP GET).
+
+```bash
+curl -s http://localhost:5000/api/projects/42/admin-ids -b cookies.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+| 200 | Список админов (может быть пустым) |
+| 401 | Нет session cookie и Bearer PAT |
+| 500 | Ошибка чтения БД / .env |
+
+#### Пример ответа `200`
+
+```json
+{
+  "adminIds": "123456789,987654321",
+  "items": [
+    {
+      "id": "123456789"
+    },
+    {
+      "id": "987654321"
+    }
+  ],
+  "count": 2
+}
+```
 
 ### `PUT` /api/projects/{id}/admin-ids
 
-PUT /api/projects/{id}/admin-ids
+Заменить ADMIN_IDS проекта
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+Полностью перезаписывает список админов в БД. Если есть папка бота — синхронизирует `ADMIN_IDS` в `.env`.
+
+**Тело:** `{ adminIds: "id1,id2" }` — строка через запятую.
+
+**Клиент:** сохранение в профиле бота, панель env, «Менеджер ботов» (добавление админа через PUT).
+
+```bash
+curl -s -X PUT http://localhost:5000/api/projects/42/admin-ids -b cookies.txt \
+  -H 'Content-Type: application/json' \
+  -d '{"adminIds":"123456789,987654321"}'
+```
+
+**Тело запроса:** `UpdateAdminIdsRequest`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Пример тела запроса
+
+```json
+{
+  "adminIds": "123456789,987654321"
+}
+```
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+| 200 | Список сохранён |
+| 401 | Нет session cookie и Bearer PAT |
+| 500 | Ошибка записи БД / .env |
+
+#### Пример ответа `200`
+
+```json
+{
+  "success": true,
+  "adminIds": "123456789,987654321"
+}
+```
 
 ### `POST` /api/projects/{id}/admin-ids/remove
 
-POST /api/projects/{id}/admin-ids/remove
+Удалить одного администратора из ADMIN_IDS
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
 
-#### Ответы
+Убирает один Telegram ID из списка. Body `adminId` — число или `del_admin_{id}` (callback из шаблона «Менеджер ботов»).
 
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+Обновляет БД и `.env` при наличии. Studio UI обычно делает `PUT` с новым списком; этот эндпоинт — для HTTP из бота-менеджера.
 
-### `PUT` /api/projects/{id}/bot/description
+```bash
+curl -s -X POST http://localhost:5000/api/projects/42/admin-ids/remove \
+  -b cookies.txt -H 'Content-Type: application/json' \
+  -d '{"adminId":"del_admin_987654321"}'
+```
 
-PUT /api/projects/{id}/bot/description
+**Тело запроса:** `RemoveAdminIdRequest`
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+#### Параметры
 
-#### Ответы
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+#### Пример тела запроса
 
-### `GET` /api/projects/{id}/bot/info
-
-GET /api/projects/{id}/bot/info
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{id}/bot/name
-
-PUT /api/projects/{id}/bot/name
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+```json
+{
+  "adminId": "del_admin_987654321"
+}
+```
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+| 200 | Админ удалён, возвращён новый список |
+| 401 | Нет session cookie и Bearer PAT |
+| 500 | Ошибка удаления |
 
-### `POST` /api/projects/{id}/bot/restart
+#### Пример ответа `200`
 
-POST /api/projects/{id}/bot/restart
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/bot/restart-all
-
-POST /api/projects/{id}/bot/restart-all
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{id}/bot/short-description
-
-PUT /api/projects/{id}/bot/short-description
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/bot/start
-
-POST /api/projects/{id}/bot/start
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/bot/stop
-
-POST /api/projects/{id}/bot/stop
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+```json
+{
+  "success": true,
+  "adminIds": "123456789"
+}
+```
 
 ### `POST` /api/projects/{id}/duplicate
 
@@ -263,7 +479,19 @@ POST /api/projects/{id}/bot/stop
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Создаёт копию сценария без botToken (два бота не могут делить токен). Ответ — безопасный ProjectListItem.
+Копия сценария без `botToken`. Имя из body или «{имя} (копия)». Создаёт `_content`, шлёт `projects-changed` (created).
+
+**Ответ:** безопасный `ProjectListItem` (без секретов).
+
+**Auth:** cookie / Bearer PAT + `requireProjectAccess`; гость → 401.
+
+**Клиент:** сайдбар / MCP `db_duplicate_project`.
+
+```bash
+curl -s -X POST http://localhost:5000/api/projects/42/duplicate \
+  -b cookies.txt -H 'Content-Type: application/json' \
+  -d '{"name":"Мой бот (копия)"}'
+```
 
 **Тело запроса:** `DuplicateProjectRequest`
 
@@ -271,1658 +499,125 @@ POST /api/projects/{id}/bot/stop
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"42"` |
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Пример тела запроса
+
+```json
+{
+  "name": "Мой бот (копия)"
+}
+```
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
 | 201 | Копия создана |
-| 401 | Гость без авторизации |
+| 401 | Гость без Telegram-сессии |
+| 403 | Нет доступа к проекту-источнику |
 | 404 | Проект-источник не найден |
+| 500 | Ошибка создания копии |
+
+#### Пример ответа `201`
+
+```json
+{
+  "id": 42,
+  "ownerId": 123456789,
+  "name": "Мой бот",
+  "description": "Приветственный бот",
+  "userDatabaseEnabled": 1,
+  "sortOrder": 0,
+  "adminIds": null,
+  "createdAt": "2026-08-01T10:00:00.000Z",
+  "updatedAt": "2026-08-11T12:00:00.000Z",
+  "nodeCount": 12,
+  "sheetsCount": 2
+}
+```
 
 ### `POST` /api/projects/{id}/export
 
-POST /api/projects/{id}/export
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/generate
-
-POST /api/projects/{id}/generate
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/groups
-
-GET /api/projects/{id}/groups
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/groups
-
-POST /api/projects/{id}/groups
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/launches/all
-
-GET /api/projects/{id}/launches/all
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/logs/all
-
-GET /api/projects/{id}/logs/all
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/messages/activity
-
-GET /api/projects/{id}/messages/activity
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/messages/all
-
-GET /api/projects/{id}/messages/all
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/responses
-
-GET /api/projects/{id}/responses
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/tables
-
-POST /api/projects/{id}/tables
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{id}/tables/{tableId}
-
-DELETE /api/projects/{id}/tables/{tableId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{id}/tables/{tableId}
-
-PUT /api/projects/{id}/tables/{tableId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/tables/{tableId}/columns
-
-GET /api/projects/{id}/tables/{tableId}/columns
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/tables/{tableId}/columns
-
-POST /api/projects/{id}/tables/{tableId}/columns
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{id}/tables/{tableId}/columns/{columnId}
-
-DELETE /api/projects/{id}/tables/{tableId}/columns/{columnId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{id}/tables/{tableId}/columns/{columnId}
-
-PUT /api/projects/{id}/tables/{tableId}/columns/{columnId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/tables/{tableId}/rows
-
-GET /api/projects/{id}/tables/{tableId}/rows
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/tables/{tableId}/rows
-
-POST /api/projects/{id}/tables/{tableId}/rows
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{id}/tables/{tableId}/rows/{rowId}
-
-DELETE /api/projects/{id}/tables/{tableId}/rows/{rowId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{id}/tables/{tableId}/rows/{rowId}
-
-PUT /api/projects/{id}/tables/{tableId}/rows/{rowId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/tables/{tableId}/rows/reindex
-
-POST /api/projects/{id}/tables/{tableId}/rows/reindex
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{id}/token
-
-DELETE /api/projects/{id}/token
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/token
-
-GET /api/projects/{id}/token
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/tokens
-
-GET /api/projects/{id}/tokens
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/tokens
-
-POST /api/projects/{id}/tokens
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{id}/tokens/{tokenId}
-
-PUT /api/projects/{id}/tokens/{tokenId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{id}/tokens/{tokenId}/bot-info
-
-PUT /api/projects/{id}/tokens/{tokenId}/bot-info
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/tokens/default
-
-GET /api/projects/{id}/tokens/default
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/tokens/first
-
-GET /api/projects/{id}/tokens/first
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/tokens/list
-
-GET /api/projects/{id}/tokens/list
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/tokens/parse
-
-POST /api/projects/{id}/tokens/parse
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{id}/users
-
-DELETE /api/projects/{id}/users
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/users
-
-Список пользователей и диалогов проекта
+Экспорт Python-кода бота (простой)
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Вкладка «Диалоги» / «Пользователи». С `limit` — страница `{ users, total, hasMore }`. Без `limit` — плоский массив (обратная совместимость). `dialogKind` фильтрует личные / группы / каналы на сервере.
+Генерирует код без кэша media `file_id` и без флагов токена. `userDatabaseEnabled` берётся из проекта (`=== 1`). Тело запроса не нужно.
+
+**Ответ:** `{ code }` — строка Python.
+
+**Auth:** cookie / Bearer PAT + `requireProjectAccess`.
+
+**Клиент:** MCP `db_export_project` (`exportProjectInDb`). Полная генерация с media — `POST …/generate`.
+
+```bash
+curl -s -X POST http://localhost:5000/api/projects/42/export -b cookies.txt
+```
 
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"42"` |
-| `tokenId` | query | нет | — | `"7"` |
-| `limit` | query | нет | — | `"50"` |
-| `offset` | query | нет | — | `"0"` |
-| `search` | query | нет | — | `"иван"` |
-| `filterActive` | query | нет | — | — |
-| `sortBy` | query | нет | — | `"lastInteraction"` |
-| `sortDir` | query | нет | — | `"desc"` |
-| `dialogKind` | query | нет | — | `"all"` |
-| `includeGroups` | query | нет | — | `"true"` |
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Пагинированный список или массив пользователей |
-| 401 | Не авторизован |
+| 200 | Сгенерированный код |
+| 401 | Нет session cookie и Bearer PAT |
 | 403 | Нет доступа к проекту |
-
-### `POST` /api/projects/{id}/users
-
-Создать или обновить пользователя бота
-
-**Авторизация:** Cookie (`connect.sid`)
-
-INSERT в `bot_users` по (user_id, project_id, token_id). При конфликте обновляет `last_interaction` (upsert). `tokenId` — в query или в теле; иначе подставляется 0.
-
-**Тело запроса:** `CreateBotUserRequest`
-
-#### Параметры
-
-| Имя | In | Обязательный | Описание | Пример |
-|-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"42"` |
-| `tokenId` | query | нет | — | `"7"` |
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 201 | Пользователь создан или обновлён (строка bot_users) |
-| 400 | Нет userId или невалидные данные |
-| 401 | Не авторизован |
-| 403 | Нет доступа к проекту |
-| 500 | Ошибка БД |
-
-### `GET` /api/projects/{id}/users/growth
-
-GET /api/projects/{id}/users/growth
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/users/growth-by-source
-
-GET /api/projects/{id}/users/growth-by-source
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/users/popular-buttons
-
-GET /api/projects/{id}/users/popular-buttons
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/users/search
-
-GET /api/projects/{id}/users/search
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/users/stats
-
-GET /api/projects/{id}/users/stats
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/users/traffic
-
-GET /api/projects/{id}/users/traffic
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/users/variables
-
-GET /api/projects/{id}/users/variables
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/versions
-
-Список версий проекта
-
-**Авторизация:** Cookie (`connect.sid`)
-
-Метаданные снимков для истории и отката. Поле snapshot не включается.
-
-#### Параметры
-
-| Имя | In | Обязательный | Описание | Пример |
-|-----|-----|--------------|----------|--------|
-| `id` | path | да | — | `"42"` |
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Массив версий |
-| 400 | Невалидный ID проекта |
-
-### `DELETE` /api/projects/{id}/versions/{versionId}
-
-DELETE /api/projects/{id}/versions/{versionId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{id}/versions/{versionId}
-
-GET /api/projects/{id}/versions/{versionId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/versions/{versionId}/restore
-
-POST /api/projects/{id}/versions/{versionId}/restore
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/versions/commit
-
-POST /api/projects/{id}/versions/commit
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{id}/versions/prune
-
-POST /api/projects/{id}/versions/prune
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/bot/admin-status/{groupId}
-
-GET /api/projects/{projectId}/bot/admin-status/{groupId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/ban-member
-
-POST /api/projects/{projectId}/bot/ban-member
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/bot/check-member/{groupId}/{userId}
-
-GET /api/projects/{projectId}/bot/check-member/{groupId}/{userId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/create-invite-link
-
-POST /api/projects/{projectId}/bot/create-invite-link
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/bot/data
-
-GET /api/projects/{projectId}/bot/data
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/delete-message
-
-POST /api/projects/{projectId}/bot/delete-message
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/demote-member
-
-POST /api/projects/{projectId}/bot/demote-member
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/bot/group-admins/{groupId}
-
-GET /api/projects/{projectId}/bot/group-admins/{groupId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/bot/group-info/{groupId}
-
-GET /api/projects/{projectId}/bot/group-info/{groupId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/bot/group-members-count/{groupId}
-
-GET /api/projects/{projectId}/bot/group-members-count/{groupId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/bot/group-members/{groupId}
-
-GET /api/projects/{projectId}/bot/group-members/{groupId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/pin-message
-
-POST /api/projects/{projectId}/bot/pin-message
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/promote-member
-
-POST /api/projects/{projectId}/bot/promote-member
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/restrict-member
-
-POST /api/projects/{projectId}/bot/restrict-member
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/bot/search-user/{query}
-
-GET /api/projects/{projectId}/bot/search-user/{query}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/send-group-message
-
-POST /api/projects/{projectId}/bot/send-group-message
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/set-group-description
-
-POST /api/projects/{projectId}/bot/set-group-description
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/set-group-photo
-
-POST /api/projects/{projectId}/bot/set-group-photo
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/set-group-title
-
-POST /api/projects/{projectId}/bot/set-group-title
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/unban-member
-
-POST /api/projects/{projectId}/bot/unban-member
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/bot/unpin-message
-
-POST /api/projects/{projectId}/bot/unpin-message
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/broadcasts
-
-GET /api/projects/{projectId}/broadcasts
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/broadcasts
-
-POST /api/projects/{projectId}/broadcasts
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{projectId}/broadcasts/{broadcastId}
-
-DELETE /api/projects/{projectId}/broadcasts/{broadcastId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/broadcasts/{broadcastId}
-
-GET /api/projects/{projectId}/broadcasts/{broadcastId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/broadcasts/{broadcastId}
-
-PUT /api/projects/{projectId}/broadcasts/{broadcastId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/broadcasts/{broadcastId}/stop
-
-POST /api/projects/{projectId}/broadcasts/{broadcastId}/stop
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/broadcasts/preview-audience
-
-POST /api/projects/{projectId}/broadcasts/preview-audience
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/collaborators
-
-GET /api/projects/{projectId}/collaborators
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{projectId}/files
-
-DELETE /api/projects/{projectId}/files
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/files
-
-GET /api/projects/{projectId}/files
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/files
-
-POST /api/projects/{projectId}/files
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{projectId}/groups/{groupId}
-
-DELETE /api/projects/{projectId}/groups/{groupId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/groups/{groupId}
-
-PUT /api/projects/{projectId}/groups/{groupId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/groups/{groupId}/messages
-
-GET /api/projects/{projectId}/groups/{groupId}/messages
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/groups/{groupId}/saved-members
-
-GET /api/projects/{projectId}/groups/{groupId}/saved-members
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/groups/{groupId}/sync
-
-POST /api/projects/{projectId}/groups/{groupId}/sync
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/messages
-
-POST /api/projects/{projectId}/messages
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{projectId}/messages/{messageId}
-
-DELETE /api/projects/{projectId}/messages/{messageId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PATCH` /api/projects/{projectId}/messages/{messageId}
-
-PATCH /api/projects/{projectId}/messages/{messageId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/storage-quota
-
-GET /api/projects/{projectId}/storage-quota
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/telegram-file
-
-GET /api/projects/{projectId}/telegram-file
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/tokens/{tokenId}/auto-restart
-
-PUT /api/projects/{projectId}/tokens/{tokenId}/auto-restart
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/tokens/{tokenId}/catch-all-handlers
-
-PUT /api/projects/{projectId}/tokens/{tokenId}/catch-all-handlers
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/tokens/{tokenId}/content-cache
-
-PUT /api/projects/{projectId}/tokens/{tokenId}/content-cache
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/tokens/{tokenId}/env-batch
-
-PUT /api/projects/{projectId}/tokens/{tokenId}/env-batch
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/tokens/{tokenId}/env-variables
-
-GET /api/projects/{projectId}/tokens/{tokenId}/env-variables
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/tokens/{tokenId}/env-variables
-
-POST /api/projects/{projectId}/tokens/{tokenId}/env-variables
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}
-
-DELETE /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}
-
-PUT /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/tokens/{tokenId}/launch-settings
-
-PUT /api/projects/{projectId}/tokens/{tokenId}/launch-settings
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/tokens/{tokenId}/log-level
-
-PUT /api/projects/{projectId}/tokens/{tokenId}/log-level
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{projectId}/tokens/{tokenId}/logs
-
-DELETE /api/projects/{projectId}/tokens/{tokenId}/logs
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/tokens/{tokenId}/logs
-
-GET /api/projects/{projectId}/tokens/{tokenId}/logs
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/tokens/{tokenId}/protect-content
-
-PUT /api/projects/{projectId}/tokens/{tokenId}/protect-content
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/tokens/{tokenId}/save-incoming-media
-
-PUT /api/projects/{projectId}/tokens/{tokenId}/save-incoming-media
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/tokens/{tokenId}/set-default
-
-POST /api/projects/{projectId}/tokens/{tokenId}/set-default
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `PUT` /api/projects/{projectId}/tokens/{tokenId}/userbot
-
-PUT /api/projects/{projectId}/tokens/{tokenId}/userbot
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/tokens/{tokenId}/userbot/send-code
-
-POST /api/projects/{projectId}/tokens/{tokenId}/userbot/send-code
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in
-
-POST /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa
-
-POST /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{projectId}/users/{userId}
-
-Удалить пользователя и его сообщения
-
-**Авторизация:** Cookie (`connect.sid`)
-
-**UI:** удаление пользователя из базы в редакторе.
-
-Удаляет все сообщения из `bot_messages` и строку из `bot_users` для (user_id, project_id, token_id). `tokenId` — в query.
-
-Заменяет legacy `DELETE /api/users/{id}` с `projectId` в body. Не путать с `DELETE /api/projects/{id}/users` — массовое удаление всех пользователей проекта.
-
-#### Параметры
-
-| Имя | In | Обязательный | Описание | Пример |
-|-----|-----|--------------|----------|--------|
-| `projectId` | path | да | — | `"42"` |
-| `userId` | path | да | — | `"123456789"` |
-| `tokenId` | query | нет | — | `"7"` |
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешное удаление |
-| 401 | Не авторизован |
-| 403 | Нет доступа к проекту |
-| 404 | Пользователь не найден |
-| 500 | Ошибка БД |
-| 503 | Сервис не настроен (setupGuard) |
+| 404 | Проект не найден |
+| 500 | Ошибка генерации |
 
 #### Пример ответа `200`
 
 ```json
 {
-  "message": "User data deleted successfully"
+  "code": "import asyncio\nfrom aiogram import Bot, Dispatcher\n# ...\n"
 }
 ```
 
-### `GET` /api/projects/{projectId}/users/{userId}
+### `POST` /api/projects/{id}/generate
 
-Один пользователь бота по projectId и userId
+Сгенерировать Python-код бота (полный)
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Возвращает одну строку `bot_users` для пары (project_id, user_id, token_id). `tokenId` в query — скоуп по токену бота (как в остальных users-эндпоинтах). Используется карточкой пользователя в редакторе.
+Собирает сценарий проекта в Python. На сервере подтягиваются флаги первого токена (`catchAllHandlers`, `protectContent`, `contentCache`) и кэшированные Telegram `file_id` / обложки медиа из `/uploads/`.
+
+**Тело:** `{ userDatabaseEnabled?, enableLogging? }` — остальное не из body.
+
+**Auth:** cookie / Bearer PAT + `requireProjectAccess`.
+
+**Клиент:** Code panel (`use-code-generator`, mode=server).
+
+Проще экспорт без media/file_ids — `POST …/export`.
+
+```bash
+curl -s -X POST http://localhost:5000/api/projects/42/generate -b cookies.txt \
+  -H 'Content-Type: application/json' \
+  -d '{"userDatabaseEnabled":true,"enableLogging":false}'
+```
+
+**Тело запроса:** `GenerateCodeRequest`
 
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `projectId` | path | да | — | `"42"` |
-| `userId` | path | да | — | `"123456789"` |
-| `tokenId` | query | нет | — | `"7"` |
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Строка bot_users |
-| 401 | Не авторизован |
-| 403 | Нет доступа к проекту |
-| 404 | Пользователь не найден |
-| 500 | Ошибка БД |
-| 503 | Сервис не настроен (setupGuard) |
-
-### `PUT` /api/projects/{projectId}/users/{userId}
-
-Обновить пользователя бота (статус активности)
-
-**Авторизация:** Cookie (`connect.sid`)
-
-**UI:** смена статуса «активен / неактивен» в базе пользователей.
-
-Обновляет `is_active` в `bot_users` и `last_interaction`. `projectId` и `userId` — в path; `tokenId` — в query (`?tokenId=7`). Резолв токена через `resolveEffectiveProjectTokenId`.
-
-Заменяет legacy `PUT /api/users/{id}` с `projectId` в body.
-
-**Тело запроса:** `UpdateBotUserRequest`
-
-#### Параметры
-
-| Имя | In | Обязательный | Описание | Пример |
-|-----|-----|--------------|----------|--------|
-| `projectId` | path | да | — | `"42"` |
-| `userId` | path | да | — | `"123456789"` |
-| `tokenId` | query | нет | — | `"7"` |
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
 
 ```json
 {
-  "isActive": 1
+  "userDatabaseEnabled": true,
+  "enableLogging": false
 }
 ```
 
@@ -1930,109 +625,286 @@ POST /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa
 
 | Код | Описание |
 |-----|----------|
-| 200 | Обновлённая строка bot_users |
-| 400 | Нет полей для обновления |
-| 401 | Не авторизован |
+| 200 | Код, число строк и timestamp |
+| 401 | Нет session cookie и Bearer PAT |
 | 403 | Нет доступа к проекту |
-| 404 | Пользователь не найден |
-| 500 | Ошибка БД |
-| 503 | Сервис не настроен (setupGuard) |
+| 404 | Проект не найден |
+| 500 | Сбой генератора |
 
-### `GET` /api/projects/{projectId}/users/{userId}/avatar
+#### Пример ответа `200`
 
-GET /api/projects/{projectId}/users/{userId}/avatar
+```json
+{
+  "code": "import asyncio\nfrom aiogram import Bot, Dispatcher\n# ...\n",
+  "lines": 2157,
+  "generatedAt": 1723392000000
+}
+```
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+### `GET` /api/projects/{id}/launches/all
 
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `DELETE` /api/projects/{projectId}/users/{userId}/messages
-
-DELETE /api/projects/{projectId}/users/{userId}/messages
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/users/{userId}/messages
-
-GET /api/projects/{projectId}/users/{userId}/messages
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/users/{userId}/send-message
-
-POST /api/projects/{projectId}/users/{userId}/send-message
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `POST` /api/projects/{projectId}/users/{userId}/send-node-message
-
-POST /api/projects/{projectId}/users/{userId}/send-node-message
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/list
-
-Список проектов пользователя
+История запусков ботов проекта
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Возвращает метаданные проектов владельца без секретов (botToken, sessionId). Включает nodeCount и sheetsCount, вычисленные из data.
+До 100 записей `bot_launch_history` по всем токенам проекта: `status`, `startedAt`, `stoppedAt`, `errorMessage` (до 100 символов). Сортировка по `started_at` DESC.
+
+**Параметры:** path `id`. Query `tokenId` UI может слать, хендлер его не фильтрует.
+
+**Auth:** cookie / Bearer PAT + `requireProjectAccess`.
+
+**Клиент:** системная таблица «Запуски» (`use-system-tables`).
+
+При ошибке БД — **200** с `[]`.
+
+```bash
+curl -s http://localhost:5000/api/projects/42/launches/all -b cookies.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Массив проектов |
-| 401 | Не авторизован |
+| 200 | Массив запусков (или [] при ошибке БД) |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |
+
+#### Пример ответа `200`
+
+```json
+[
+  {
+    "status": "stopped",
+    "startedAt": "2026-08-08T19:55:00.000Z",
+    "stoppedAt": "2026-08-08T20:10:00.000Z",
+    "errorMessage": null
+  },
+  {
+    "status": "error",
+    "startedAt": "2026-08-07T12:00:00.000Z",
+    "stoppedAt": "2026-08-07T12:01:00.000Z",
+    "errorMessage": "Token revoked"
+  }
+]
+```
+
+### `GET` /api/projects/{id}/logs/all
+
+Системные логи бота проекта
+
+**Авторизация:** Cookie (`connect.sid`)
+
+Укороченные строки `bot_logs`: `level` (= type), `message` (до 150 символов content), `createdAt` (= timestamp). Сортировка DESC.
+
+**Query:** `limit` (default 200), опционально `tokenId`.
+
+**Auth:** cookie / Bearer PAT + `requireProjectAccess`.
+
+**Клиент:** системная таблица «Логи» (`use-system-tables`).
+
+При ошибке БД хендлер отвечает **200** с `[]` (не 500).
+
+```bash
+curl -s 'http://localhost:5000/api/projects/42/logs/all?limit=200&tokenId=7' \
+  -b cookies.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `limit` | query | нет | Лимит записей (default 200) | `"200"` |
+| `tokenId` | query | нет | Опциональный фильтр bot_logs.token_id | `"7"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Массив логов (или [] при ошибке БД) |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |
+
+#### Пример ответа `200`
+
+```json
+[
+  {
+    "level": "stdout",
+    "message": "Bot started successfully",
+    "createdAt": "2026-08-08T20:00:00.000Z"
+  },
+  {
+    "level": "stderr",
+    "message": "Warning: deprecated handler",
+    "createdAt": "2026-08-08T19:59:50.000Z"
+  }
+]
+```
+
+### `GET` /api/projects/{projectId}/collaborators
+
+Участники проекта (владелец + коллабораторы)
+
+**Авторизация:** Cookie (`connect.sid`)
+
+Read-only список для Files UI: владелец и приглашённые с именем и аватаркой, без дублей. Не путать с CRUD `/api/bot/projects/{id}/collaborators`.
+
+**Параметры:** path `projectId`. Auth — cookie / Bearer PAT + `requireProjectAccess`.
+
+**Клиент:** `use-project-collaborators` — фильтр «Сотрудник», колонка аватара.
+
+```bash
+curl -s http://localhost:5000/api/projects/42/collaborators -b cookies.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | Числовой ID проекта | `"42"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Массив CollaboratorInfo (может быть пустым) |
+| 400 | projectId не число |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |
+| 404 | Проект не найден |
+| 500 | Ошибка БД |
+
+#### Пример ответа `200`
+
+```json
+[
+  {
+    "userId": 123456789,
+    "name": "Иван Иванов",
+    "photoUrl": "https://t.me/i/userpic/320/example.jpg"
+  },
+  {
+    "userId": 987654321,
+    "name": "@collaborator",
+    "photoUrl": null
+  }
+]
+```
+
+### `GET` /api/projects/list
+
+Лёгкий список проектов (без секретов и data)
+
+**Авторизация:** Cookie (`connect.sid`)
+
+Метаданные проектов владельца и коллаборатора: id, name, sortOrder, `nodeCount` / `sheetsCount`. **Без** `data`, `botToken`, `sessionId` (whitelist DTO `toProjectListItem`).
+
+**Параметры:** path/query/body нет. Auth — cookie `connect.sid` или Bearer PAT.
+
+**Клиент:** `App`, home, `use-project-loader`, MCP `db_list_projects`.
+
+Предпочтительнее тяжёлого `GET /api/projects` для списков в UI.
+
+```bash
+curl -s http://localhost:5000/api/projects/list -b cookies.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Массив ProjectListItem (может быть пустым) |
+| 401 | Нет session cookie и Bearer PAT |
+| 500 | Ошибка БД / маппинга |
+
+#### Пример ответа `200`
+
+```json
+[
+  {
+    "id": 42,
+    "ownerId": 123456789,
+    "name": "Мой бот",
+    "description": "Приветственный бот",
+    "userDatabaseEnabled": 1,
+    "sortOrder": 0,
+    "adminIds": null,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-08-11T12:00:00.000Z",
+    "nodeCount": 12,
+    "sheetsCount": 2
+  }
+]
+```
 
 ### `PUT` /api/projects/reorder
 
-PUT /api/projects/reorder
+Изменить порядок проектов в списке
 
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+**Авторизация:** Cookie (`connect.sid`)
+
+Задаёт `sortOrder` по порядку ID в теле. После успеха шлёт live-событие `projects-changed` (reordered) владельцу.
+
+**Тело:** `{ projectIds: number[] }` — непустой массив положительных целых. Каждый ID должен быть доступен текущему пользователю (владелец или collaborator); иначе **403** (защита от IDOR).
+
+**Клиент:** drag-and-drop в сайдбаре, MCP `db_reorder_projects`.
+
+```bash
+curl -s -X PUT http://localhost:5000/api/projects/reorder -b cookies.txt \
+  -H 'Content-Type: application/json' \
+  -d '{"projectIds":[42,7,15]}'
+```
+
+**Тело запроса:** `ReorderProjectsRequest`
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Пример тела запроса
+
+```json
+{
+  "projectIds": [
+    42,
+    7,
+    15
+  ]
+}
+```
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
+| 200 | Порядок сохранён |
+| 400 | Пустой или невалидный projectIds |
+| 401 | Нет session cookie и Bearer PAT / нет личности |
+| 403 | Нет доступа хотя бы к одному projectId |
+| 500 | Ошибка БД при сохранении порядка |
+
+#### Пример ответа `200`
+
+```json
+{
+  "success": true
+}
+```

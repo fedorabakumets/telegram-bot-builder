@@ -43,8 +43,48 @@
       "description": "Медиа проекта: upload/list/search/download URL, CRUD по id. Auth: requireProjectAccess | requireMediaOwnership | requireMediaFileOwnership. upload-from-url проверяет hasProjectAccess."
     },
     {
+      "name": "project-bot",
+      "description": "Lifecycle и профиль бота проекта: start/stop/restart, info, name, description, data. Auth: requireProjectAccess. Модерация групп — тег `project-groups`."
+    },
+    {
+      "name": "project-broadcasts",
+      "description": "Рассылки проекта: список, создание, редактирование, stop, preview аудитории. Auth: requireProjectAccess."
+    },
+    {
+      "name": "project-dialogs",
+      "description": "Диалоги с пользователями бота: история сообщений, отправка текста/ноды, аватар. UI: панель «Диалоги». Auth: requireProjectAccess. Не путать со списком users и с `/api/bot/*`."
+    },
+    {
+      "name": "project-files",
+      "description": "Файлы проекта, квота хранилища и прокси telegram-file. Не путать с `/api/media` и реестром `storage-configs`."
+    },
+    {
+      "name": "project-groups",
+      "description": "Telegram-группы проекта и модерация через bot API: groups*, saved-members, ban/promote/restrict, pin, invite-link и т.п. Lifecycle бота — `project-bot`."
+    },
+    {
+      "name": "project-messages",
+      "description": "Сообщения на уровне проекта: all/activity, CRUD по messageId, responses. Не путать с `…/users/{userId}/messages` (диалоги)."
+    },
+    {
+      "name": "project-tables",
+      "description": "Пользовательские таблицы проекта (`bot_tables`): список, CRUD таблиц/колонок/строк. Auth: requireProjectAccess. UI: панель Database."
+    },
+    {
+      "name": "project-tokens",
+      "description": "Токены бота внутри проекта: список, CRUD, настройки, env, userbot, logs. Включая legacy `…/token`. Не путать с `/api/tokens` и agent PAT."
+    },
+    {
+      "name": "project-users",
+      "description": "Пользователи бота проекта: список, аналитика, поиск, CRUD по userId. Не включает диалоги (avatar/messages/send-*) — см. `project-dialogs`."
+    },
+    {
+      "name": "project-versions",
+      "description": "Версии и коммиты проекта: список, commit, prune, restore, удаление. Auth: requireProjectAccess. Не путать с CRUD самого проекта."
+    },
+    {
       "name": "projects",
-      "description": "Проекты, версии, экспорт и дублирование"
+      "description": "CRUD проектов: список, создание, get/put/delete, reorder, duplicate, export, generate, collaborators, admin-ids; также logs/all и launches/all. Подгруппы (токены, users, bot, …) — отдельные теги `project-*`."
     },
     {
       "name": "server",
@@ -5144,16 +5184,97 @@
         "tags": [
           "projects"
         ],
-        "summary": "GET /api/projects",
+        "summary": "Полный список проектов (со сценарием data)",
+        "description": "Сырые записи `bot_projects` владельца/коллаборатора, **включая** `data` (весь сценарий). Может содержать устаревшее поле `botToken`.\n\n**Параметры:** path/query/body нет. Auth — cookie или Bearer PAT.\n\n**Клиент:** сайдбар редактора (`use-projects-query`), canvas, bot-queries.\n\nДля списков в UI предпочтительнее `GET /api/projects/list`; полный сценарий — `GET /api/projects/{id}`.\n\n```bash\ncurl -s http://localhost:5000/api/projects -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив полных BotProject",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotProjectList"
+                },
+                "examples": {
+                  "withProjects": {
+                    "summary": "Есть проекты",
+                    "value": [
+                      {
+                        "id": 42,
+                        "ownerId": 123456789,
+                        "name": "Мой бот",
+                        "description": "Приветственный бот",
+                        "data": {
+                          "sheets": [
+                            {
+                              "id": "main",
+                              "name": "Основной",
+                              "nodes": [],
+                              "edges": []
+                            }
+                          ]
+                        },
+                        "botToken": null,
+                        "sessionId": null,
+                        "userDatabaseEnabled": 1,
+                        "sortOrder": 0,
+                        "adminIds": null,
+                        "createdAt": "2026-08-01T10:00:00.000Z",
+                        "updatedAt": "2026-08-11T12:00:00.000Z"
+                      }
+                    ]
+                  },
+                  "empty": {
+                    "summary": "Пустой список",
+                    "value": []
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить проекты"
+                }
+              }
+            }
           }
         }
       },
@@ -5162,10 +5283,24 @@
           "projects"
         ],
         "summary": "Создать проект",
-        "description": "Требует авторизацию. ownerId берётся из сессии, не из тела запроса.",
+        "description": "Создаёт проект для текущего пользователя. **`ownerId` берётся из сессии**, поле в body игнорируется. После insert создаётся таблица `_content`, шлётся live-событие `projects-changed`.\n\n**Тело:** `name` обязателен; `data` — опциональный стартовый сценарий.\n\n**Клиент:** home, сайдбар, NoProjectsScreen, импорт.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"name\":\"Мой бот\"}'\n```",
         "security": [
           {
             "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
           }
         ],
         "requestBody": {
@@ -5173,6 +5308,21 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateProjectRequest"
+              },
+              "example": {
+                "name": "Мой бот",
+                "description": "Приветственный бот",
+                "data": {
+                  "sheets": [
+                    {
+                      "id": "main",
+                      "nodes": [],
+                      "edges": []
+                    }
+                  ]
+                },
+                "userDatabaseEnabled": 1,
+                "sortOrder": 0
               }
             }
           }
@@ -5184,6 +5334,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BotProject"
+                },
+                "example": {
+                  "id": 42,
+                  "ownerId": 123456789,
+                  "name": "Мой бот",
+                  "description": "Приветственный бот",
+                  "data": {
+                    "sheets": [
+                      {
+                        "id": "main",
+                        "name": "Основной",
+                        "nodes": [],
+                        "edges": []
+                      }
+                    ]
+                  },
+                  "botToken": null,
+                  "sessionId": null,
+                  "userDatabaseEnabled": 1,
+                  "sortOrder": 0,
+                  "adminIds": null,
+                  "createdAt": "2026-08-01T10:00:00.000Z",
+                  "updatedAt": "2026-08-11T12:00:00.000Z"
                 }
               }
             }
@@ -5194,16 +5367,43 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationError"
+                },
+                "example": {
+                  "message": "Неверные данные",
+                  "errors": [
+                    {
+                      "path": [
+                        "name"
+                      ],
+                      "message": "Required"
+                    }
+                  ]
                 }
               }
             }
           },
           "401": {
-            "description": "Гость без авторизации",
+            "description": "Гость без Telegram-сессии (ownerId === null)",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateProjectUnauthorized"
+                },
+                "example": {
+                  "message": "Требуется авторизация через Telegram"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД / создания",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось создать проект"
                 }
               }
             }
@@ -5217,7 +5417,7 @@
           "projects"
         ],
         "summary": "Удалить проект",
-        "description": "Останавливает бота, удаляет токены, медиа, user data и сам проект. Требует прав владельца или collaborator.",
+        "description": "Останавливает бота, удаляет токены, медиа, user data и проект. Шлёт `projects-changed` (deleted) членам команды.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess` (владелец или collaborator).\n\n**Клиент:** сайдбар / удаление проекта.\n\n```bash\ncurl -s -X DELETE http://localhost:5000/api/projects/42 -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -5227,12 +5427,26 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID проекта",
+              "description": "Числовой ID проекта",
               "example": "42"
             },
             "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
           }
         ],
         "responses": {
@@ -5242,6 +5456,22 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DeleteProjectResponse"
+                },
+                "example": {
+                  "message": "Проект успешно удалён"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
                 }
               }
             }
@@ -5252,6 +5482,9 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет прав на удаление проекта"
                 }
               }
             }
@@ -5262,6 +5495,22 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Проект не найден"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Сбой очистки связанных данных",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось удалить проект"
                 }
               }
             }
@@ -5273,7 +5522,7 @@
           "projects"
         ],
         "summary": "Получить проект по ID",
-        "description": "Требует доступ к проекту (владелец или collaborator).",
+        "description": "Полная запись проекта (включая `data` сценария). Доступ: владелец или collaborator (`requireProjectAccess`).\n\n**Параметры:** path `id` — числовой ID проекта.\n\n**Клиент:** редактор (`use-project-loader`), сохранение, MCP.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42 -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -5283,12 +5532,26 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID проекта",
+              "description": "Числовой ID проекта",
               "example": "42"
             },
             "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
           }
         ],
         "responses": {
@@ -5298,6 +5561,29 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BotProject"
+                },
+                "example": {
+                  "id": 42,
+                  "ownerId": 123456789,
+                  "name": "Мой бот",
+                  "description": "Приветственный бот",
+                  "data": {
+                    "sheets": [
+                      {
+                        "id": "main",
+                        "name": "Основной",
+                        "nodes": [],
+                        "edges": []
+                      }
+                    ]
+                  },
+                  "botToken": null,
+                  "sessionId": null,
+                  "userDatabaseEnabled": 1,
+                  "sortOrder": 0,
+                  "adminIds": null,
+                  "createdAt": "2026-08-01T10:00:00.000Z",
+                  "updatedAt": "2026-08-11T12:00:00.000Z"
                 }
               }
             }
@@ -5308,26 +5594,49 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта",
+                  "error": "ID проекта должен быть числом"
                 }
               }
             }
           },
           "401": {
-            "description": "Не авторизован",
+            "description": "Нет session cookie и Bearer PAT",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
                 }
               }
             }
           },
           "404": {
-            "description": "Проект не найден",
+            "description": "Проект не найден или нет доступа",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Проект не найден"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить проект"
                 }
               }
             }
@@ -5339,7 +5648,7 @@
           "projects"
         ],
         "summary": "Обновить проект",
-        "description": "Частичное обновление полей проекта. При изменении data создаётся снимок версии. Поля commitMessage, agentEdit — для истории версий и live-редактирования MCP.",
+        "description": "Частичное обновление полей. При изменении `data` — синхронизация `_content`, снимок версии, Redis `bot:table_updated`, canvas-sync.\n\n**Тело:** partial `insertBotProject` + `commitMessage`, `agentEdit`, `agentSessionId`, `agentDisplayName`, `restartOnUpdate`.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** редактор (save), MCP live-edit.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42 -b cookies.txt \\\n  -H 'Content-Type: application/json' -d '{\"name\":\"Новое имя\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -5349,12 +5658,26 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID проекта",
+              "description": "Числовой ID проекта",
               "example": "42"
             },
             "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
           }
         ],
         "requestBody": {
@@ -5362,6 +5685,30 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateProjectRequest"
+              },
+              "examples": {
+                "rename": {
+                  "summary": "Переименование",
+                  "value": {
+                    "name": "Новое имя"
+                  }
+                },
+                "withCheckpoint": {
+                  "summary": "Сценарий + commitMessage",
+                  "value": {
+                    "data": {
+                      "sheets": [
+                        {
+                          "id": "main",
+                          "name": "Основной",
+                          "nodes": [],
+                          "edges": []
+                        }
+                      ]
+                    },
+                    "commitMessage": "Добавил приветствие"
+                  }
+                }
               }
             }
           }
@@ -5373,16 +5720,69 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BotProject"
+                },
+                "example": {
+                  "id": 42,
+                  "ownerId": 123456789,
+                  "name": "Мой бот",
+                  "description": "Приветственный бот",
+                  "data": {
+                    "sheets": [
+                      {
+                        "id": "main",
+                        "name": "Основной",
+                        "nodes": [],
+                        "edges": []
+                      }
+                    ]
+                  },
+                  "botToken": null,
+                  "sessionId": null,
+                  "userDatabaseEnabled": 1,
+                  "sortOrder": 0,
+                  "adminIds": null,
+                  "createdAt": "2026-08-01T10:00:00.000Z",
+                  "updatedAt": "2026-08-11T12:00:00.000Z"
                 }
               }
             }
           },
           "400": {
-            "description": "Невалидный id или тело запроса",
+            "description": "Невалидный id или тело (Zod)",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта",
+                  "error": "ID проекта должен быть числом"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
                 }
               }
             }
@@ -5393,6 +5793,9 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Проект не найден"
                 }
               }
             }
@@ -5405,16 +5808,101 @@
         "tags": [
           "projects"
         ],
-        "summary": "GET /api/projects/{id}/admin-ids",
+        "summary": "Список ADMIN_IDS проекта",
+        "description": "Читает ID администраторов бота. Сначала `bot_projects.admin_ids`, если пусто — fallback на `ADMIN_IDS` в `.env` папки бота.\n\n**Параметры:** path `id`. Auth — cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** `BotAdminIds` / `use-admin-ids`, генератор кода, шаблон «Менеджер ботов» (HTTP GET).\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/admin-ids -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Список админов (может быть пустым)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminIdsResponse"
+                },
+                "examples": {
+                  "withAdmins": {
+                    "summary": "Есть админы",
+                    "value": {
+                      "adminIds": "123456789,987654321",
+                      "items": [
+                        {
+                          "id": "123456789"
+                        },
+                        {
+                          "id": "987654321"
+                        }
+                      ],
+                      "count": 2
+                    }
+                  },
+                  "empty": {
+                    "summary": "Пусто",
+                    "value": {
+                      "adminIds": "",
+                      "items": [],
+                      "count": 0
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "500": {
+            "description": "Ошибка чтения БД / .env",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminIdsError"
+                },
+                "example": {
+                  "message": "Ошибка чтения ADMIN_IDS",
+                  "error": "Error: ..."
+                }
+              }
+            }
           }
         }
       },
@@ -5422,16 +5910,92 @@
         "tags": [
           "projects"
         ],
-        "summary": "PUT /api/projects/{id}/admin-ids",
+        "summary": "Заменить ADMIN_IDS проекта",
+        "description": "Полностью перезаписывает список админов в БД. Если есть папка бота — синхронизирует `ADMIN_IDS` в `.env`.\n\n**Тело:** `{ adminIds: \"id1,id2\" }` — строка через запятую.\n\n**Клиент:** сохранение в профиле бота, панель env, «Менеджер ботов» (добавление админа через PUT).\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/admin-ids -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"adminIds\":\"123456789,987654321\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdminIdsRequest"
+              },
+              "example": {
+                "adminIds": "123456789,987654321"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Список сохранён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminIdsMutationResponse"
+                },
+                "example": {
+                  "success": true,
+                  "adminIds": "123456789,987654321"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "500": {
+            "description": "Ошибка записи БД / .env",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminIdsError"
+                },
+                "example": {
+                  "message": "Ошибка обновления ADMIN_IDS",
+                  "error": "Error: ..."
+                }
+              }
+            }
           }
         }
       }
@@ -5441,16 +6005,92 @@
         "tags": [
           "projects"
         ],
-        "summary": "POST /api/projects/{id}/admin-ids/remove",
+        "summary": "Удалить одного администратора из ADMIN_IDS",
+        "description": "Убирает один Telegram ID из списка. Body `adminId` — число или `del_admin_{id}` (callback из шаблона «Менеджер ботов»).\n\nОбновляет БД и `.env` при наличии. Studio UI обычно делает `PUT` с новым списком; этот эндпоинт — для HTTP из бота-менеджера.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/admin-ids/remove \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"adminId\":\"del_admin_987654321\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveAdminIdRequest"
+              },
+              "example": {
+                "adminId": "del_admin_987654321"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Админ удалён, возвращён новый список",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminIdsMutationResponse"
+                },
+                "example": {
+                  "success": true,
+                  "adminIds": "123456789"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "500": {
+            "description": "Ошибка удаления",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminIdsError"
+                },
+                "example": {
+                  "message": "Ошибка удаления администратора",
+                  "error": "Error: ..."
+                }
+              }
+            }
           }
         }
       }
@@ -5458,7 +6098,7 @@
     "/api/projects/{id}/bot/description": {
       "put": {
         "tags": [
-          "projects"
+          "project-bot"
         ],
         "summary": "PUT /api/projects/{id}/bot/description",
         "responses": {
@@ -5477,7 +6117,7 @@
     "/api/projects/{id}/bot/info": {
       "get": {
         "tags": [
-          "projects"
+          "project-bot"
         ],
         "summary": "GET /api/projects/{id}/bot/info",
         "responses": {
@@ -5496,7 +6136,7 @@
     "/api/projects/{id}/bot/name": {
       "put": {
         "tags": [
-          "projects"
+          "project-bot"
         ],
         "summary": "PUT /api/projects/{id}/bot/name",
         "responses": {
@@ -5515,7 +6155,7 @@
     "/api/projects/{id}/bot/restart": {
       "post": {
         "tags": [
-          "projects"
+          "project-bot"
         ],
         "summary": "POST /api/projects/{id}/bot/restart",
         "responses": {
@@ -5534,7 +6174,7 @@
     "/api/projects/{id}/bot/restart-all": {
       "post": {
         "tags": [
-          "projects"
+          "project-bot"
         ],
         "summary": "POST /api/projects/{id}/bot/restart-all",
         "responses": {
@@ -5553,7 +6193,7 @@
     "/api/projects/{id}/bot/short-description": {
       "put": {
         "tags": [
-          "projects"
+          "project-bot"
         ],
         "summary": "PUT /api/projects/{id}/bot/short-description",
         "responses": {
@@ -5572,7 +6212,7 @@
     "/api/projects/{id}/bot/start": {
       "post": {
         "tags": [
-          "projects"
+          "project-bot"
         ],
         "summary": "POST /api/projects/{id}/bot/start",
         "responses": {
@@ -5712,7 +6352,7 @@
     "/api/projects/{id}/bot/stop": {
       "post": {
         "tags": [
-          "projects"
+          "project-bot"
         ],
         "summary": "POST /api/projects/{id}/bot/stop",
         "responses": {
@@ -5734,7 +6374,7 @@
           "projects"
         ],
         "summary": "Дублировать проект",
-        "description": "Создаёт копию сценария без botToken (два бота не могут делить токен). Ответ — безопасный ProjectListItem.",
+        "description": "Копия сценария без `botToken`. Имя из body или «{имя} (копия)». Создаёт `_content`, шлёт `projects-changed` (created).\n\n**Ответ:** безопасный `ProjectListItem` (без секретов).\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`; гость → 401.\n\n**Клиент:** сайдбар / MCP `db_duplicate_project`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/duplicate \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"name\":\"Мой бот (копия)\"}'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -5744,12 +6384,26 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID проекта",
+              "description": "Числовой ID проекта",
               "example": "42"
             },
             "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
           }
         ],
         "requestBody": {
@@ -5757,6 +6411,9 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/DuplicateProjectRequest"
+              },
+              "example": {
+                "name": "Мой бот (копия)"
               }
             }
           }
@@ -5768,16 +6425,45 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProjectListItem"
+                },
+                "example": {
+                  "id": 42,
+                  "ownerId": 123456789,
+                  "name": "Мой бот",
+                  "description": "Приветственный бот",
+                  "userDatabaseEnabled": 1,
+                  "sortOrder": 0,
+                  "adminIds": null,
+                  "createdAt": "2026-08-01T10:00:00.000Z",
+                  "updatedAt": "2026-08-11T12:00:00.000Z",
+                  "nodeCount": 12,
+                  "sheetsCount": 2
                 }
               }
             }
           },
           "401": {
-            "description": "Гость без авторизации",
+            "description": "Гость без Telegram-сессии",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Требуется авторизация через Telegram"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту-источнику",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
                 }
               }
             }
@@ -5788,6 +6474,22 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Проект-источник не найден"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка создания копии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось дублировать проект"
                 }
               }
             }
@@ -5800,16 +6502,105 @@
         "tags": [
           "projects"
         ],
-        "summary": "POST /api/projects/{id}/export",
+        "summary": "Экспорт Python-кода бота (простой)",
+        "description": "Генерирует код без кэша media `file_id` и без флагов токена. `userDatabaseEnabled` берётся из проекта (`=== 1`). Тело запроса не нужно.\n\n**Ответ:** `{ code }` — строка Python.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** MCP `db_export_project` (`exportProjectInDb`). Полная генерация с media — `POST …/generate`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/export -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Сгенерированный код",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportCodeResponse"
+                },
+                "example": {
+                  "code": "import asyncio\nfrom aiogram import Bot, Dispatcher\n# ...\n"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Проект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportCodeError"
+                },
+                "example": {
+                  "message": "Проект не найден"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка генерации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportCodeError"
+                },
+                "example": {
+                  "message": "Не удалось сгенерировать код",
+                  "error": "Error: ..."
+                }
+              }
+            }
           }
         }
       }
@@ -5819,16 +6610,121 @@
         "tags": [
           "projects"
         ],
-        "summary": "POST /api/projects/{id}/generate",
+        "summary": "Сгенерировать Python-код бота (полный)",
+        "description": "Собирает сценарий проекта в Python. На сервере подтягиваются флаги первого токена (`catchAllHandlers`, `protectContent`, `contentCache`) и кэшированные Telegram `file_id` / обложки медиа из `/uploads/`.\n\n**Тело:** `{ userDatabaseEnabled?, enableLogging? }` — остальное не из body.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** Code panel (`use-code-generator`, mode=server).\n\nПроще экспорт без media/file_ids — `POST …/export`.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/generate -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"userDatabaseEnabled\":true,\"enableLogging\":false}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateCodeRequest"
+              },
+              "example": {
+                "userDatabaseEnabled": true,
+                "enableLogging": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Код, число строк и timestamp",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateCodeResponse"
+                },
+                "example": {
+                  "code": "import asyncio\nfrom aiogram import Bot, Dispatcher\n# ...\n",
+                  "lines": 2157,
+                  "generatedAt": 1723392000000
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Проект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateCodeError"
+                },
+                "example": {
+                  "error": "Project not found",
+                  "message": "Project 42 not found"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Сбой генератора",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateCodeError"
+                },
+                "example": {
+                  "error": "Generation failed",
+                  "message": "Unknown error"
+                }
+              }
+            }
           }
         }
       }
@@ -5836,7 +6732,7 @@
     "/api/projects/{id}/groups": {
       "get": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "GET /api/projects/{id}/groups",
         "responses": {
@@ -5853,7 +6749,7 @@
       },
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{id}/groups",
         "responses": {
@@ -5874,16 +6770,98 @@
         "tags": [
           "projects"
         ],
-        "summary": "GET /api/projects/{id}/launches/all",
+        "summary": "История запусков ботов проекта",
+        "description": "До 100 записей `bot_launch_history` по всем токенам проекта: `status`, `startedAt`, `stoppedAt`, `errorMessage` (до 100 символов). Сортировка по `started_at` DESC.\n\n**Параметры:** path `id`. Query `tokenId` UI может слать, хендлер его не фильтрует.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** системная таблица «Запуски» (`use-system-tables`).\n\nПри ошибке БД — **200** с `[]`.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/launches/all -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив запусков (или [] при ошибке БД)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectSystemLaunchList"
+                },
+                "examples": {
+                  "withLaunches": {
+                    "summary": "Есть запуски",
+                    "value": [
+                      {
+                        "status": "stopped",
+                        "startedAt": "2026-08-08T19:55:00.000Z",
+                        "stoppedAt": "2026-08-08T20:10:00.000Z",
+                        "errorMessage": null
+                      },
+                      {
+                        "status": "error",
+                        "startedAt": "2026-08-07T12:00:00.000Z",
+                        "stoppedAt": "2026-08-07T12:01:00.000Z",
+                        "errorMessage": "Token revoked"
+                      }
+                    ]
+                  },
+                  "empty": {
+                    "summary": "Пусто / ошибка БД",
+                    "value": []
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
           }
         }
       }
@@ -5893,16 +6871,120 @@
         "tags": [
           "projects"
         ],
-        "summary": "GET /api/projects/{id}/logs/all",
+        "summary": "Системные логи бота проекта",
+        "description": "Укороченные строки `bot_logs`: `level` (= type), `message` (до 150 символов content), `createdAt` (= timestamp). Сортировка DESC.\n\n**Query:** `limit` (default 200), опционально `tokenId`.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** системная таблица «Логи» (`use-system-tables`).\n\nПри ошибке БД хендлер отвечает **200** с `[]` (не 500).\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/logs/all?limit=200&tokenId=7' \\\n  -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Лимит записей, по умолчанию 200",
+              "example": "200"
+            },
+            "required": false,
+            "description": "Лимит записей (default 200)",
+            "example": "200",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID токена; без параметра — логи всех токенов проекта",
+              "example": "7"
+            },
+            "required": false,
+            "description": "Опциональный фильтр bot_logs.token_id",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив логов (или [] при ошибке БД)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectSystemLogList"
+                },
+                "examples": {
+                  "withLogs": {
+                    "summary": "Есть логи",
+                    "value": [
+                      {
+                        "level": "stdout",
+                        "message": "Bot started successfully",
+                        "createdAt": "2026-08-08T20:00:00.000Z"
+                      },
+                      {
+                        "level": "stderr",
+                        "message": "Warning: deprecated handler",
+                        "createdAt": "2026-08-08T19:59:50.000Z"
+                      }
+                    ]
+                  },
+                  "empty": {
+                    "summary": "Пусто / ошибка БД",
+                    "value": []
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
           }
         }
       }
@@ -5910,7 +6992,7 @@
     "/api/projects/{id}/messages/activity": {
       "get": {
         "tags": [
-          "projects"
+          "project-messages"
         ],
         "summary": "GET /api/projects/{id}/messages/activity",
         "responses": {
@@ -5929,7 +7011,7 @@
     "/api/projects/{id}/messages/all": {
       "get": {
         "tags": [
-          "projects"
+          "project-messages"
         ],
         "summary": "GET /api/projects/{id}/messages/all",
         "responses": {
@@ -5948,7 +7030,7 @@
     "/api/projects/{id}/responses": {
       "get": {
         "tags": [
-          "projects"
+          "project-messages"
         ],
         "summary": "GET /api/projects/{id}/responses",
         "responses": {
@@ -5967,10 +7049,10 @@
     "/api/projects/{id}/tables": {
       "get": {
         "tags": [
-          "database"
+          "project-tables"
         ],
         "summary": "Список таблиц контента проекта",
-        "description": "Пользовательские таблицы `bot_tables` для панели Database в редакторе.\n\n**Доступ:** `requireProjectAccess` (владелец / collaborator).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/tables -b cookies.txt\n```",
+        "description": "Пользовательские таблицы `bot_tables` для панели Database в редакторе.\n\n**Тег:** `project-tables` (вместе с CRUD tables/rows/columns).\n\n**Доступ:** `requireProjectAccess` (владелец / collaborator).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/tables -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -6077,7 +7159,7 @@
       },
       "post": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "POST /api/projects/{id}/tables",
         "responses": {
@@ -6096,7 +7178,7 @@
     "/api/projects/{id}/tables/{tableId}": {
       "delete": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "DELETE /api/projects/{id}/tables/{tableId}",
         "responses": {
@@ -6113,7 +7195,7 @@
       },
       "put": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "PUT /api/projects/{id}/tables/{tableId}",
         "responses": {
@@ -6132,7 +7214,7 @@
     "/api/projects/{id}/tables/{tableId}/columns": {
       "get": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "GET /api/projects/{id}/tables/{tableId}/columns",
         "responses": {
@@ -6149,7 +7231,7 @@
       },
       "post": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "POST /api/projects/{id}/tables/{tableId}/columns",
         "responses": {
@@ -6168,7 +7250,7 @@
     "/api/projects/{id}/tables/{tableId}/columns/{columnId}": {
       "delete": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "DELETE /api/projects/{id}/tables/{tableId}/columns/{columnId}",
         "responses": {
@@ -6185,7 +7267,7 @@
       },
       "put": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "PUT /api/projects/{id}/tables/{tableId}/columns/{columnId}",
         "responses": {
@@ -6204,7 +7286,7 @@
     "/api/projects/{id}/tables/{tableId}/rows": {
       "get": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "GET /api/projects/{id}/tables/{tableId}/rows",
         "responses": {
@@ -6221,7 +7303,7 @@
       },
       "post": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "POST /api/projects/{id}/tables/{tableId}/rows",
         "responses": {
@@ -6240,7 +7322,7 @@
     "/api/projects/{id}/tables/{tableId}/rows/{rowId}": {
       "delete": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "DELETE /api/projects/{id}/tables/{tableId}/rows/{rowId}",
         "responses": {
@@ -6257,7 +7339,7 @@
       },
       "put": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "PUT /api/projects/{id}/tables/{tableId}/rows/{rowId}",
         "responses": {
@@ -6276,7 +7358,7 @@
     "/api/projects/{id}/tables/{tableId}/rows/reindex": {
       "post": {
         "tags": [
-          "projects"
+          "project-tables"
         ],
         "summary": "POST /api/projects/{id}/tables/{tableId}/rows/reindex",
         "responses": {
@@ -6295,7 +7377,7 @@
     "/api/projects/{id}/token": {
       "delete": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "DELETE /api/projects/{id}/token",
         "responses": {
@@ -6312,7 +7394,7 @@
       },
       "get": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "GET /api/projects/{id}/token",
         "responses": {
@@ -6331,7 +7413,7 @@
     "/api/projects/{id}/tokens": {
       "get": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "GET /api/projects/{id}/tokens",
         "responses": {
@@ -6348,7 +7430,7 @@
       },
       "post": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "POST /api/projects/{id}/tokens",
         "responses": {
@@ -6367,7 +7449,7 @@
     "/api/projects/{id}/tokens/{tokenId}": {
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{id}/tokens/{tokenId}",
         "responses": {
@@ -6386,7 +7468,7 @@
     "/api/projects/{id}/tokens/{tokenId}/bot-info": {
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{id}/tokens/{tokenId}/bot-info",
         "responses": {
@@ -6405,7 +7487,7 @@
     "/api/projects/{id}/tokens/default": {
       "get": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "GET /api/projects/{id}/tokens/default",
         "responses": {
@@ -6424,7 +7506,7 @@
     "/api/projects/{id}/tokens/first": {
       "get": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "GET /api/projects/{id}/tokens/first",
         "responses": {
@@ -6443,7 +7525,7 @@
     "/api/projects/{id}/tokens/list": {
       "get": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "GET /api/projects/{id}/tokens/list",
         "responses": {
@@ -6462,7 +7544,7 @@
     "/api/projects/{id}/tokens/parse": {
       "post": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "POST /api/projects/{id}/tokens/parse",
         "responses": {
@@ -6481,7 +7563,7 @@
     "/api/projects/{id}/users": {
       "delete": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "DELETE /api/projects/{id}/users",
         "responses": {
@@ -6498,7 +7580,7 @@
       },
       "get": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "Список пользователей и диалогов проекта",
         "description": "Вкладка «Диалоги» / «Пользователи». С `limit` — страница `{ users, total, hasMore }`. Без `limit` — плоский массив (обратная совместимость). `dialogKind` фильтрует личные / группы / каналы на сервере.",
@@ -6654,7 +7736,7 @@
       },
       "post": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "Создать или обновить пользователя бота",
         "description": "INSERT в `bot_users` по (user_id, project_id, token_id). При конфликте обновляет `last_interaction` (upsert). `tokenId` — в query или в теле; иначе подставляется 0.",
@@ -6759,7 +7841,7 @@
     "/api/projects/{id}/users/growth": {
       "get": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "GET /api/projects/{id}/users/growth",
         "responses": {
@@ -6778,7 +7860,7 @@
     "/api/projects/{id}/users/growth-by-source": {
       "get": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "GET /api/projects/{id}/users/growth-by-source",
         "responses": {
@@ -6797,7 +7879,7 @@
     "/api/projects/{id}/users/popular-buttons": {
       "get": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "GET /api/projects/{id}/users/popular-buttons",
         "responses": {
@@ -6816,7 +7898,7 @@
     "/api/projects/{id}/users/search": {
       "get": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "GET /api/projects/{id}/users/search",
         "responses": {
@@ -6835,7 +7917,7 @@
     "/api/projects/{id}/users/stats": {
       "get": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "GET /api/projects/{id}/users/stats",
         "responses": {
@@ -6854,7 +7936,7 @@
     "/api/projects/{id}/users/traffic": {
       "get": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "GET /api/projects/{id}/users/traffic",
         "responses": {
@@ -6873,7 +7955,7 @@
     "/api/projects/{id}/users/variables": {
       "get": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "GET /api/projects/{id}/users/variables",
         "responses": {
@@ -6892,10 +7974,10 @@
     "/api/projects/{id}/versions": {
       "get": {
         "tags": [
-          "projects"
+          "project-versions"
         ],
         "summary": "Список версий проекта",
-        "description": "Метаданные снимков для истории и отката. Поле snapshot не включается.",
+        "description": "Метаданные снимков **без** `snapshot` (экономия трафика). `authorName` — из Telegram или «ИИ-агент» при `authorKind=agent`.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** VersionsPanel / `useProjectVersions`; MCP `db_list_versions`.\n\nПолный снимок — `GET …/versions/{versionId}`.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/versions -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -6905,21 +7987,66 @@
           {
             "schema": {
               "type": "string",
-              "description": "ID проекта",
+              "description": "Числовой ID проекта",
               "example": "42"
             },
             "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
           }
         ],
         "responses": {
           "200": {
-            "description": "Массив версий",
+            "description": "Массив метаданных версий",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProjectVersionList"
+                },
+                "examples": {
+                  "withVersions": {
+                    "summary": "Есть версии",
+                    "value": [
+                      {
+                        "id": 7,
+                        "projectId": 42,
+                        "label": "Добавил приветствие",
+                        "authorId": 123456789,
+                        "authorName": "Иван @ivan",
+                        "authorKind": null,
+                        "kind": "manual",
+                        "createdAt": "2026-08-11T12:00:00.000Z"
+                      },
+                      {
+                        "id": 6,
+                        "projectId": 42,
+                        "label": null,
+                        "authorId": null,
+                        "authorName": "ИИ-агент",
+                        "authorKind": "agent",
+                        "kind": "auto",
+                        "createdAt": "2026-08-11T11:30:00.000Z"
+                      }
+                    ]
+                  },
+                  "empty": {
+                    "summary": "Пусто",
+                    "value": []
+                  }
                 }
               }
             }
@@ -6930,6 +8057,48 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить версии проекта"
                 }
               }
             }
@@ -6940,35 +8109,279 @@
     "/api/projects/{id}/versions/{versionId}": {
       "delete": {
         "tags": [
-          "projects"
+          "project-versions"
         ],
-        "summary": "DELETE /api/projects/{id}/versions/{versionId}",
+        "summary": "Удалить одну версию",
+        "description": "Необратимо удаляет запись истории. Broadcast `versions-changed`.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** UI не вызывает. MCP `db_delete_version` / `deleteVersionInDb`.\n\n```bash\ncurl -s -X DELETE http://localhost:5000/api/projects/42/versions/7 \\\n  -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID версии",
+              "example": "7"
+            },
+            "required": true,
+            "description": "Числовой ID версии",
+            "example": "7",
+            "name": "versionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Результат удаления",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionDeleteResponse"
+                },
+                "example": {
+                  "deleted": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидный id / versionId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта или версии"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Версия не найдена или чужой projectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Версия не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось удалить версию проекта"
+                }
+              }
+            }
           }
         }
       },
       "get": {
         "tags": [
-          "projects"
+          "project-versions"
         ],
-        "summary": "GET /api/projects/{id}/versions/{versionId}",
+        "summary": "Версия со snapshot",
+        "description": "Полная запись включая тяжёлый `snapshot` (`project.data`). versionId должен принадлежать проекту, иначе 404.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** diff (`useProjectVersionSnapshot`); MCP restore читает snapshot отсюда и пишет через `PUT /api/projects/{id}`.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/versions/7 -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID версии",
+              "example": "7"
+            },
+            "required": true,
+            "description": "Числовой ID версии",
+            "example": "7",
+            "name": "versionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Версия со snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectVersionFull"
+                },
+                "example": {
+                  "id": 7,
+                  "projectId": 42,
+                  "label": "Добавил приветствие",
+                  "authorId": 123456789,
+                  "authorName": "Иван @ivan",
+                  "authorKind": null,
+                  "kind": "manual",
+                  "createdAt": "2026-08-11T12:00:00.000Z",
+                  "snapshot": {
+                    "sheets": [
+                      {
+                        "id": "main",
+                        "name": "Основной",
+                        "nodes": [],
+                        "edges": []
+                      }
+                    ],
+                    "activeSheetId": "main"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидный id / versionId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта или версии"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Версия не найдена или чужой projectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Версия не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить версию проекта"
+                }
+              }
+            }
           }
         }
       }
@@ -6976,18 +8389,151 @@
     "/api/projects/{id}/versions/{versionId}/restore": {
       "post": {
         "tags": [
-          "projects"
+          "project-versions"
         ],
-        "summary": "POST /api/projects/{id}/versions/{versionId}/restore",
+        "summary": "Откатить проект к версии",
+        "description": "Пишет `version.snapshot` в `project.data`, sync `_content`, Redis `bot:table_updated`. Тело не требуется.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** VersionsPanel / `useRestoreProjectVersion`.\n\n**MCP:** этот URL **не** вызывает — читает GET snapshot и делает `PUT /api/projects/{id}` (live + новый чекпоинт отката).\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/versions/7/restore \\\n  -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID версии",
+              "example": "7"
+            },
+            "required": true,
+            "description": "Числовой ID версии",
+            "example": "7",
+            "name": "versionId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Обновлённый проект после отката",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotProject"
+                },
+                "example": {
+                  "id": 42,
+                  "ownerId": 123456789,
+                  "name": "Мой бот",
+                  "description": "Приветственный бот",
+                  "data": {
+                    "sheets": [
+                      {
+                        "id": "main",
+                        "name": "Основной",
+                        "nodes": [],
+                        "edges": []
+                      }
+                    ]
+                  },
+                  "botToken": null,
+                  "sessionId": null,
+                  "userDatabaseEnabled": 1,
+                  "sortOrder": 0,
+                  "adminIds": null,
+                  "createdAt": "2026-08-01T10:00:00.000Z",
+                  "updatedAt": "2026-08-11T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидный id / versionId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта или версии"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Версия или проект не найдены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Версия не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Сбой отката",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось восстановить версию проекта"
+                }
+              }
+            }
           }
         }
       }
@@ -6995,18 +8541,160 @@
     "/api/projects/{id}/versions/commit": {
       "post": {
         "tags": [
-          "projects"
+          "project-versions"
         ],
-        "summary": "POST /api/projects/{id}/versions/commit",
+        "summary": "Создать ручной чекпоинт версии",
+        "description": "Снимок **текущего** `project.data` с `kind=manual`. Всегда создаётся (без дедупликации). Broadcast `versions-changed`.\n\n**Тело:** `{ message }` — непустая строка после trim.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** CommitForm / `useCreateProjectCommit`. MCP-тула commit нет.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/versions/commit \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"message\":\"Добавил приветствие\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionCommitRequest"
+              },
+              "example": {
+                "message": "Добавил приветствие"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Успешный ответ"
+          "201": {
+            "description": "Созданная версия (со snapshot)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectVersionFull"
+                },
+                "example": {
+                  "id": 7,
+                  "projectId": 42,
+                  "label": "Добавил приветствие",
+                  "authorId": 123456789,
+                  "authorName": "Иван @ivan",
+                  "authorKind": null,
+                  "kind": "manual",
+                  "createdAt": "2026-08-11T12:00:00.000Z",
+                  "snapshot": {
+                    "sheets": [
+                      {
+                        "id": "main",
+                        "name": "Основной",
+                        "nodes": [],
+                        "edges": []
+                      }
+                    ],
+                    "activeSheetId": "main"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Пустой message или невалидный id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "examples": {
+                  "emptyMessage": {
+                    "summary": "Нет message",
+                    "value": {
+                      "message": "Сообщение чекпоинта обязательно"
+                    }
+                  },
+                  "badId": {
+                    "summary": "Плохой id",
+                    "value": {
+                      "message": "Неверный ID проекта"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Проект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Проект не найден"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Сбой создания чекпоинта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось создать чекпоинт"
+                }
+              }
+            }
           }
         }
       }
@@ -7014,18 +8702,119 @@
     "/api/projects/{id}/versions/prune": {
       "post": {
         "tags": [
-          "projects"
+          "project-versions"
         ],
-        "summary": "POST /api/projects/{id}/versions/prune",
+        "summary": "Массово удалить версии (prune)",
+        "description": "Необратимая чистка по фильтру. Broadcast `versions-changed`.\n\n**Тело (все поля опциональны):** `keep` — сколько последних оставить; `kind` — `auto`|`manual`; `authorKind` — `agent`|`user`.\n\n**Auth:** cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** UI нет. MCP `db_prune_versions`. Авто-prune при save (keep≈30) — отдельный серверный путь, не этот API.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/versions/prune \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"keep\":30,\"kind\":\"auto\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionPruneRequest"
+              },
+              "example": {
+                "keep": 30,
+                "kind": "auto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Число удалённых версий",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionPruneResponse"
+                },
+                "example": {
+                  "deleted": 12
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Невалидный ID проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось удалить версии проекта"
+                }
+              }
+            }
           }
         }
       }
@@ -7033,7 +8822,7 @@
     "/api/projects/{projectId}/bot/admin-status/{groupId}": {
       "get": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "GET /api/projects/{projectId}/bot/admin-status/{groupId}",
         "responses": {
@@ -7052,7 +8841,7 @@
     "/api/projects/{projectId}/bot/ban-member": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/ban-member",
         "responses": {
@@ -7071,7 +8860,7 @@
     "/api/projects/{projectId}/bot/check-member/{groupId}/{userId}": {
       "get": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "GET /api/projects/{projectId}/bot/check-member/{groupId}/{userId}",
         "responses": {
@@ -7090,7 +8879,7 @@
     "/api/projects/{projectId}/bot/create-invite-link": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/create-invite-link",
         "responses": {
@@ -7109,7 +8898,7 @@
     "/api/projects/{projectId}/bot/data": {
       "get": {
         "tags": [
-          "projects"
+          "project-bot"
         ],
         "summary": "GET /api/projects/{projectId}/bot/data",
         "responses": {
@@ -7128,7 +8917,7 @@
     "/api/projects/{projectId}/bot/delete-message": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/delete-message",
         "responses": {
@@ -7147,7 +8936,7 @@
     "/api/projects/{projectId}/bot/demote-member": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/demote-member",
         "responses": {
@@ -7166,7 +8955,7 @@
     "/api/projects/{projectId}/bot/group-admins/{groupId}": {
       "get": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "GET /api/projects/{projectId}/bot/group-admins/{groupId}",
         "responses": {
@@ -7185,7 +8974,7 @@
     "/api/projects/{projectId}/bot/group-info/{groupId}": {
       "get": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "GET /api/projects/{projectId}/bot/group-info/{groupId}",
         "responses": {
@@ -7204,7 +8993,7 @@
     "/api/projects/{projectId}/bot/group-members-count/{groupId}": {
       "get": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "GET /api/projects/{projectId}/bot/group-members-count/{groupId}",
         "responses": {
@@ -7223,7 +9012,7 @@
     "/api/projects/{projectId}/bot/group-members/{groupId}": {
       "get": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "GET /api/projects/{projectId}/bot/group-members/{groupId}",
         "responses": {
@@ -7242,7 +9031,7 @@
     "/api/projects/{projectId}/bot/pin-message": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/pin-message",
         "responses": {
@@ -7261,7 +9050,7 @@
     "/api/projects/{projectId}/bot/promote-member": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/promote-member",
         "responses": {
@@ -7280,7 +9069,7 @@
     "/api/projects/{projectId}/bot/restrict-member": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/restrict-member",
         "responses": {
@@ -7299,7 +9088,7 @@
     "/api/projects/{projectId}/bot/search-user/{query}": {
       "get": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "GET /api/projects/{projectId}/bot/search-user/{query}",
         "responses": {
@@ -7318,7 +9107,7 @@
     "/api/projects/{projectId}/bot/send-group-message": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/send-group-message",
         "responses": {
@@ -7337,7 +9126,7 @@
     "/api/projects/{projectId}/bot/set-group-description": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/set-group-description",
         "responses": {
@@ -7356,7 +9145,7 @@
     "/api/projects/{projectId}/bot/set-group-photo": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/set-group-photo",
         "responses": {
@@ -7375,7 +9164,7 @@
     "/api/projects/{projectId}/bot/set-group-title": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/set-group-title",
         "responses": {
@@ -7394,7 +9183,7 @@
     "/api/projects/{projectId}/bot/unban-member": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/unban-member",
         "responses": {
@@ -7413,7 +9202,7 @@
     "/api/projects/{projectId}/bot/unpin-message": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/bot/unpin-message",
         "responses": {
@@ -7432,7 +9221,7 @@
     "/api/projects/{projectId}/broadcasts": {
       "get": {
         "tags": [
-          "projects"
+          "project-broadcasts"
         ],
         "summary": "GET /api/projects/{projectId}/broadcasts",
         "responses": {
@@ -7449,7 +9238,7 @@
       },
       "post": {
         "tags": [
-          "projects"
+          "project-broadcasts"
         ],
         "summary": "POST /api/projects/{projectId}/broadcasts",
         "responses": {
@@ -7468,7 +9257,7 @@
     "/api/projects/{projectId}/broadcasts/{broadcastId}": {
       "delete": {
         "tags": [
-          "projects"
+          "project-broadcasts"
         ],
         "summary": "DELETE /api/projects/{projectId}/broadcasts/{broadcastId}",
         "responses": {
@@ -7485,7 +9274,7 @@
       },
       "get": {
         "tags": [
-          "projects"
+          "project-broadcasts"
         ],
         "summary": "GET /api/projects/{projectId}/broadcasts/{broadcastId}",
         "responses": {
@@ -7502,7 +9291,7 @@
       },
       "put": {
         "tags": [
-          "projects"
+          "project-broadcasts"
         ],
         "summary": "PUT /api/projects/{projectId}/broadcasts/{broadcastId}",
         "responses": {
@@ -7521,7 +9310,7 @@
     "/api/projects/{projectId}/broadcasts/{broadcastId}/stop": {
       "post": {
         "tags": [
-          "projects"
+          "project-broadcasts"
         ],
         "summary": "POST /api/projects/{projectId}/broadcasts/{broadcastId}/stop",
         "responses": {
@@ -7540,7 +9329,7 @@
     "/api/projects/{projectId}/broadcasts/preview-audience": {
       "post": {
         "tags": [
-          "projects"
+          "project-broadcasts"
         ],
         "summary": "POST /api/projects/{projectId}/broadcasts/preview-audience",
         "responses": {
@@ -7561,16 +9350,135 @@
         "tags": [
           "projects"
         ],
-        "summary": "GET /api/projects/{projectId}/collaborators",
+        "summary": "Участники проекта (владелец + коллабораторы)",
+        "description": "Read-only список для Files UI: владелец и приглашённые с именем и аватаркой, без дублей. Не путать с CRUD `/api/bot/projects/{id}/collaborators`.\n\n**Параметры:** path `projectId`. Auth — cookie / Bearer PAT + `requireProjectAccess`.\n\n**Клиент:** `use-project-collaborators` — фильтр «Сотрудник», колонка аватара.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/collaborators -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив CollaboratorInfo (может быть пустым)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollaboratorInfoList"
+                },
+                "examples": {
+                  "withMembers": {
+                    "summary": "Есть участники",
+                    "value": [
+                      {
+                        "userId": 123456789,
+                        "name": "Иван Иванов",
+                        "photoUrl": "https://t.me/i/userpic/320/example.jpg"
+                      },
+                      {
+                        "userId": 987654321,
+                        "name": "@collaborator",
+                        "photoUrl": null
+                      }
+                    ]
+                  },
+                  "empty": {
+                    "summary": "Пусто",
+                    "value": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "projectId не число",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный projectId"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Проект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Проект не найден"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить коллабораторов"
+                }
+              }
+            }
           }
         }
       }
@@ -7578,7 +9486,7 @@
     "/api/projects/{projectId}/files": {
       "delete": {
         "tags": [
-          "projects"
+          "project-files"
         ],
         "summary": "DELETE /api/projects/{projectId}/files",
         "responses": {
@@ -7595,7 +9503,7 @@
       },
       "get": {
         "tags": [
-          "projects"
+          "project-files"
         ],
         "summary": "GET /api/projects/{projectId}/files",
         "responses": {
@@ -7612,7 +9520,7 @@
       },
       "post": {
         "tags": [
-          "projects"
+          "project-files"
         ],
         "summary": "POST /api/projects/{projectId}/files",
         "responses": {
@@ -7631,7 +9539,7 @@
     "/api/projects/{projectId}/groups/{groupId}": {
       "delete": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "DELETE /api/projects/{projectId}/groups/{groupId}",
         "responses": {
@@ -7648,7 +9556,7 @@
       },
       "put": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "PUT /api/projects/{projectId}/groups/{groupId}",
         "responses": {
@@ -7667,7 +9575,7 @@
     "/api/projects/{projectId}/groups/{groupId}/messages": {
       "get": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "GET /api/projects/{projectId}/groups/{groupId}/messages",
         "responses": {
@@ -7686,7 +9594,7 @@
     "/api/projects/{projectId}/groups/{groupId}/saved-members": {
       "get": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "GET /api/projects/{projectId}/groups/{groupId}/saved-members",
         "responses": {
@@ -7705,7 +9613,7 @@
     "/api/projects/{projectId}/groups/{groupId}/sync": {
       "post": {
         "tags": [
-          "projects"
+          "project-groups"
         ],
         "summary": "POST /api/projects/{projectId}/groups/{groupId}/sync",
         "responses": {
@@ -7724,7 +9632,7 @@
     "/api/projects/{projectId}/messages": {
       "post": {
         "tags": [
-          "projects"
+          "project-messages"
         ],
         "summary": "POST /api/projects/{projectId}/messages",
         "responses": {
@@ -7743,7 +9651,7 @@
     "/api/projects/{projectId}/messages/{messageId}": {
       "delete": {
         "tags": [
-          "projects"
+          "project-messages"
         ],
         "summary": "DELETE /api/projects/{projectId}/messages/{messageId}",
         "responses": {
@@ -7760,7 +9668,7 @@
       },
       "patch": {
         "tags": [
-          "projects"
+          "project-messages"
         ],
         "summary": "PATCH /api/projects/{projectId}/messages/{messageId}",
         "responses": {
@@ -7779,7 +9687,7 @@
     "/api/projects/{projectId}/storage-quota": {
       "get": {
         "tags": [
-          "projects"
+          "project-files"
         ],
         "summary": "GET /api/projects/{projectId}/storage-quota",
         "responses": {
@@ -7798,7 +9706,7 @@
     "/api/projects/{projectId}/telegram-file": {
       "get": {
         "tags": [
-          "projects"
+          "project-files"
         ],
         "summary": "GET /api/projects/{projectId}/telegram-file",
         "responses": {
@@ -7914,7 +9822,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/auto-restart": {
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/auto-restart",
         "responses": {
@@ -7933,7 +9841,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/catch-all-handlers": {
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/catch-all-handlers",
         "responses": {
@@ -7952,7 +9860,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/content-cache": {
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/content-cache",
         "responses": {
@@ -7971,7 +9879,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/env-batch": {
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/env-batch",
         "responses": {
@@ -7990,7 +9898,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/env-variables": {
       "get": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "GET /api/projects/{projectId}/tokens/{tokenId}/env-variables",
         "responses": {
@@ -8007,7 +9915,7 @@
       },
       "post": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "POST /api/projects/{projectId}/tokens/{tokenId}/env-variables",
         "responses": {
@@ -8026,7 +9934,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}": {
       "delete": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "DELETE /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}",
         "responses": {
@@ -8043,7 +9951,7 @@
       },
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}",
         "responses": {
@@ -8168,7 +10076,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/launch-settings": {
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/launch-settings",
         "responses": {
@@ -8187,7 +10095,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/log-level": {
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/log-level",
         "responses": {
@@ -8206,7 +10114,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/logs": {
       "delete": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "DELETE /api/projects/{projectId}/tokens/{tokenId}/logs",
         "responses": {
@@ -8223,7 +10131,7 @@
       },
       "get": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "GET /api/projects/{projectId}/tokens/{tokenId}/logs",
         "responses": {
@@ -8346,7 +10254,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/protect-content": {
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/protect-content",
         "responses": {
@@ -8365,7 +10273,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/save-incoming-media": {
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/save-incoming-media",
         "responses": {
@@ -8384,7 +10292,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/set-default": {
       "post": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "POST /api/projects/{projectId}/tokens/{tokenId}/set-default",
         "responses": {
@@ -8403,7 +10311,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/userbot": {
       "put": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "PUT /api/projects/{projectId}/tokens/{tokenId}/userbot",
         "responses": {
@@ -8422,7 +10330,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/userbot/send-code": {
       "post": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "POST /api/projects/{projectId}/tokens/{tokenId}/userbot/send-code",
         "responses": {
@@ -8441,7 +10349,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in": {
       "post": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "POST /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in",
         "responses": {
@@ -8460,7 +10368,7 @@
     "/api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa": {
       "post": {
         "tags": [
-          "projects"
+          "project-tokens"
         ],
         "summary": "POST /api/projects/{projectId}/tokens/{tokenId}/userbot/sign-in-2fa",
         "responses": {
@@ -8479,7 +10387,7 @@
     "/api/projects/{projectId}/users/{userId}": {
       "delete": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "Удалить пользователя и его сообщения",
         "description": "**UI:** удаление пользователя из базы в редакторе.\n\nУдаляет все сообщения из `bot_messages` и строку из `bot_users` для (user_id, project_id, token_id). `tokenId` — в query.\n\nЗаменяет legacy `DELETE /api/users/{id}` с `projectId` в body. Не путать с `DELETE /api/projects/{id}/users` — массовое удаление всех пользователей проекта.",
@@ -8588,7 +10496,7 @@
       },
       "get": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "Один пользователь бота по projectId и userId",
         "description": "Возвращает одну строку `bot_users` для пары (project_id, user_id, token_id). `tokenId` в query — скоуп по токену бота (как в остальных users-эндпоинтах). Используется карточкой пользователя в редакторе.",
@@ -8694,7 +10602,7 @@
       },
       "put": {
         "tags": [
-          "projects"
+          "project-users"
         ],
         "summary": "Обновить пользователя бота (статус активности)",
         "description": "**UI:** смена статуса «активен / неактивен» в базе пользователей.\n\nОбновляет `is_active` в `bot_users` и `last_interaction`. `projectId` и `userId` — в path; `tokenId` — в query (`?tokenId=7`). Резолв токена через `resolveEffectiveProjectTokenId`.\n\nЗаменяет legacy `PUT /api/users/{id}` с `projectId` в body.",
@@ -8836,18 +10744,128 @@
     "/api/projects/{projectId}/users/{userId}/avatar": {
       "get": {
         "tags": [
-          "projects"
+          "project-dialogs"
         ],
-        "summary": "GET /api/projects/{projectId}/users/{userId}/avatar",
+        "summary": "Аватар пользователя или бота (прокси)",
+        "description": "Проксирует фото профиля из Telegram (или кэш `avatar_url` / `bot_photo_url`). `userId=bot` или id бота — аватар бота проекта.\n\n**Ответ 200:** бинарное изображение (`image/jpeg` и т.п.), Cache-Control 1 день.\n\n**Клиент:** `user-avatar`, PanelHeader диалогов.\n\n```bash\ncurl -s -o avatar.jpg -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/users/123456789/avatar?tokenId=7'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Telegram user_id. Для аватарки бота — `bot` или id бота.",
+              "example": "123456789"
+            },
+            "required": true,
+            "description": "Telegram user_id (или `bot` для аватара бота)",
+            "example": "123456789",
+            "name": "userId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него — resolveEffectiveProjectToken (default/first).",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Байты изображения",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Нет фото / не удалось скачать",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить аватарку"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка прокси / БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить аватарку"
+                }
+              }
+            }
           }
         }
       }
@@ -8855,35 +10873,306 @@
     "/api/projects/{projectId}/users/{userId}/messages": {
       "delete": {
         "tags": [
-          "projects"
+          "project-dialogs"
         ],
-        "summary": "DELETE /api/projects/{projectId}/users/{userId}/messages",
+        "summary": "Удалить историю сообщений диалога",
+        "description": "Удаляет все `bot_messages` пользователя в скоупе проекта/токена. Не удаляет сообщения в Telegram — только запись в Studio БД.\n\nUI сейчас почти не вызывает; API доступен для очистки истории.\n\n```bash\ncurl -s -X DELETE -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/users/123456789/messages?tokenId=7'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Telegram user_id. Для аватарки бота — `bot` или id бота.",
+              "example": "123456789"
+            },
+            "required": true,
+            "description": "Telegram user_id (или `bot` для аватара бота)",
+            "example": "123456789",
+            "name": "userId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него — resolveEffectiveProjectToken (default/first).",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "История очищена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteDialogMessagesResponse"
+                },
+                "example": {
+                  "message": "Сообщения успешно удалены",
+                  "deleted": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный projectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось удалить сообщения"
+                }
+              }
+            }
           }
         }
       },
       "get": {
         "tags": [
-          "projects"
+          "project-dialogs"
         ],
-        "summary": "GET /api/projects/{projectId}/users/{userId}/messages",
+        "summary": "История сообщений диалога",
+        "description": "Последние N сообщений `bot_messages` (+ media), в хронологическом порядке. По умолчанию limit=100. Фильтр `messageType=user|bot`. Скоуп по `tokenId`.\n\n**Клиент:** панель диалога, last-message, детали пользователя.\n\n```bash\ncurl -s -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/users/123456789/messages?tokenId=7&limit=50'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Telegram user_id. Для аватарки бота — `bot` или id бота.",
+              "example": "123456789"
+            },
+            "required": true,
+            "description": "Telegram user_id (или `bot` для аватара бота)",
+            "example": "123456789",
+            "name": "userId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него — resolveEffectiveProjectToken (default/first).",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Лимит последних сообщений (default 100)",
+              "example": "100"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "user",
+                "bot"
+              ],
+              "description": "Фильтр по типу сообщения",
+              "example": "bot"
+            },
+            "required": false,
+            "name": "messageType",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив сообщений (может быть пустым)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DialogMessageList"
+                },
+                "examples": {
+                  "withMessages": {
+                    "summary": "Есть сообщения",
+                    "value": [
+                      {
+                        "id": 501,
+                        "projectId": 42,
+                        "tokenId": 7,
+                        "userId": "123456789",
+                        "messageType": "bot",
+                        "messageText": "Привет! Чем могу помочь?",
+                        "messageData": {
+                          "sentFromAdmin": true
+                        },
+                        "telegramMessageId": 1001,
+                        "createdAt": "2026-08-11T15:00:00.000Z",
+                        "media": []
+                      }
+                    ]
+                  },
+                  "empty": {
+                    "summary": "Пусто",
+                    "value": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный projectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить сообщения"
+                }
+              }
+            }
           }
         }
       }
@@ -8891,18 +11180,149 @@
     "/api/projects/{projectId}/users/{userId}/send-message": {
       "post": {
         "tags": [
-          "projects"
+          "project-dialogs"
         ],
-        "summary": "POST /api/projects/{projectId}/users/{userId}/send-message",
+        "summary": "Отправить сообщение пользователю от бота",
+        "description": "Шлёт текст/медиа/кнопки через Telegram Bot API, пишет в `bot_messages`, публикует WS `new-message`. Подставляет переменные из `user_data`.\n\n**Тело:** `messageText`, опционально `mediaUrls`, `buttons`, `buttonsPerRow`. Нужен токен проекта (`tokenId` в query или default).\n\n**Клиент:** поле ввода панели диалога (`use-send-message`).\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  'http://localhost:5000/api/projects/42/users/123456789/send-message?tokenId=7' \\\n  -d '{\"messageText\":\"Здравствуйте!\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Telegram user_id. Для аватарки бота — `bot` или id бота.",
+              "example": "123456789"
+            },
+            "required": true,
+            "description": "Telegram user_id (или `bot` для аватара бота)",
+            "example": "123456789",
+            "name": "userId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него — resolveEffectiveProjectToken (default/first).",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendDialogMessageRequest"
+              },
+              "example": {
+                "messageText": "Здравствуйте!",
+                "mediaUrls": [],
+                "buttons": [],
+                "buttonsPerRow": 0
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Отправлено в Telegram и сохранено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendDialogMessageResponse"
+                },
+                "example": {
+                  "message": "Сообщение успешно отправлено",
+                  "result": {
+                    "ok": true,
+                    "result": {
+                      "message_id": 1002
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Валидация / нет токена / нечего отправлять",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendDialogMessageError"
+                },
+                "examples": {
+                  "noToken": {
+                    "summary": "Нет токена",
+                    "value": {
+                      "message": "Токен бота не найден для этого проекта"
+                    }
+                  },
+                  "empty": {
+                    "summary": "Пустое тело",
+                    "value": {
+                      "message": "Нечего отправлять: добавьте текст, медиа или кнопки"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
           }
         }
       }
@@ -8910,18 +11330,173 @@
     "/api/projects/{projectId}/users/{userId}/send-node-message": {
       "post": {
         "tags": [
-          "projects"
+          "project-dialogs"
         ],
-        "summary": "POST /api/projects/{projectId}/users/{userId}/send-node-message",
+        "summary": "Отправить содержимое узла сценария пользователю",
+        "description": "Берёт узел по `nodeId` из `project.data`, рендерит текст/медиа/кнопки (с переменными) и шлёт через бота. В `messageData` помечает `sentFromAdmin` + `nodeId`.\n\n**Клиент:** «Отправить ноду» в диалоге (`use-send-node`).\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  'http://localhost:5000/api/projects/42/users/123456789/send-node-message?tokenId=7' \\\n  -d '{\"nodeId\":\"welcome-msg\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Telegram user_id. Для аватарки бота — `bot` или id бота.",
+              "example": "123456789"
+            },
+            "required": true,
+            "description": "Telegram user_id (или `bot` для аватара бота)",
+            "example": "123456789",
+            "name": "userId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него — resolveEffectiveProjectToken (default/first).",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendNodeMessageRequest"
+              },
+              "example": {
+                "nodeId": "welcome-msg",
+                "userData": {
+                  "order_id": "A-100"
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Узел отправлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendDialogMessageResponse"
+                },
+                "example": {
+                  "message": "Сообщение успешно отправлено",
+                  "result": {
+                    "ok": true,
+                    "result": {
+                      "message_id": 1002
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет nodeId / нет токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "examples": {
+                  "missing": {
+                    "summary": "Нет nodeId",
+                    "value": {
+                      "message": "projectId и nodeId обязательны"
+                    }
+                  },
+                  "noToken": {
+                    "summary": "Нет токена",
+                    "value": {
+                      "message": "Токен бота не найден"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Проект или узел не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "examples": {
+                  "project": {
+                    "summary": "Нет проекта",
+                    "value": {
+                      "message": "Проект не найден"
+                    }
+                  },
+                  "node": {
+                    "summary": "Нет узла",
+                    "value": {
+                      "message": "Узел не найден"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -8931,30 +11506,84 @@
         "tags": [
           "projects"
         ],
-        "summary": "Список проектов пользователя",
-        "description": "Возвращает метаданные проектов владельца без секретов (botToken, sessionId). Включает nodeCount и sheetsCount, вычисленные из data.",
+        "summary": "Лёгкий список проектов (без секретов и data)",
+        "description": "Метаданные проектов владельца и коллаборатора: id, name, sortOrder, `nodeCount` / `sheetsCount`. **Без** `data`, `botToken`, `sessionId` (whitelist DTO `toProjectListItem`).\n\n**Параметры:** path/query/body нет. Auth — cookie `connect.sid` или Bearer PAT.\n\n**Клиент:** `App`, home, `use-project-loader`, MCP `db_list_projects`.\n\nПредпочтительнее тяжёлого `GET /api/projects` для списков в UI.\n\n```bash\ncurl -s http://localhost:5000/api/projects/list -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
           }
         ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Массив проектов",
+            "description": "Массив ProjectListItem (может быть пустым)",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProjectList"
+                },
+                "examples": {
+                  "withProjects": {
+                    "summary": "Есть проекты",
+                    "value": [
+                      {
+                        "id": 42,
+                        "ownerId": 123456789,
+                        "name": "Мой бот",
+                        "description": "Приветственный бот",
+                        "userDatabaseEnabled": 1,
+                        "sortOrder": 0,
+                        "adminIds": null,
+                        "createdAt": "2026-08-01T10:00:00.000Z",
+                        "updatedAt": "2026-08-11T12:00:00.000Z",
+                        "nodeCount": 12,
+                        "sheetsCount": 2
+                      }
+                    ]
+                  },
+                  "empty": {
+                    "summary": "Пустой список",
+                    "value": []
+                  }
                 }
               }
             }
           },
           "401": {
-            "description": "Не авторизован",
+            "description": "Нет session cookie и Bearer PAT",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД / маппинга",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить список проектов"
                 }
               }
             }
@@ -8967,16 +11596,108 @@
         "tags": [
           "projects"
         ],
-        "summary": "PUT /api/projects/reorder",
+        "summary": "Изменить порядок проектов в списке",
+        "description": "Задаёт `sortOrder` по порядку ID в теле. После успеха шлёт live-событие `projects-changed` (reordered) владельцу.\n\n**Тело:** `{ projectIds: number[] }` — непустой массив положительных целых. Каждый ID должен быть доступен текущему пользователю (владелец или collaborator); иначе **403** (защита от IDOR).\n\n**Клиент:** drag-and-drop в сайдбаре, MCP `db_reorder_projects`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/reorder -b cookies.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"projectIds\":[42,7,15]}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderProjectsRequest"
+              },
+              "example": {
+                "projectIds": [
+                  42,
+                  7,
+                  15
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Порядок сохранён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderProjectsResponse"
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Пустой или невалидный projectIds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный список projectIds"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT / нет личности",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Требуется авторизация через Telegram"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа хотя бы к одному projectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет прав на один или несколько проектов"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД при сохранении порядка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось переупорядочить проекты"
+                }
+              }
+            }
           }
         }
       }
@@ -11805,6 +14526,113 @@
           "user"
         ]
       },
+      "ProjectListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 42
+          },
+          "ownerId": {
+            "type": "number",
+            "nullable": true,
+            "example": 123456789
+          },
+          "name": {
+            "type": "string",
+            "example": "Мой бот"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Приветственный бот"
+          },
+          "userDatabaseEnabled": {
+            "type": "number",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "number",
+            "nullable": true
+          },
+          "adminIds": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "nodeCount": {
+            "type": "number",
+            "example": 12
+          },
+          "sheetsCount": {
+            "type": "number",
+            "example": 2
+          }
+        },
+        "required": [
+          "id",
+          "ownerId",
+          "name",
+          "description",
+          "nodeCount",
+          "sheetsCount"
+        ]
+      },
+      "ProjectList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ProjectListItem"
+        }
+      },
+      "UnauthorizedError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "UNAUTHORIZED"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "MessageError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Проект не найден"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
       "BotProject": {
         "type": "object",
         "properties": {
@@ -11823,23 +14651,46 @@
           },
           "description": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "example": "Приветственный бот"
           },
           "data": {
             "nullable": true,
             "example": {
-              "sheets": []
+              "sheets": [
+                {
+                  "id": "main",
+                  "name": "Основной",
+                  "nodes": [],
+                  "edges": []
+                }
+              ]
             }
           },
           "botToken": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "example": null
+          },
+          "sessionId": {
+            "type": "string",
+            "nullable": true,
+            "example": null
           },
           "userDatabaseEnabled": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "example": 1
           },
           "sortOrder": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "example": 0
+          },
+          "adminIds": {
+            "type": "string",
+            "nullable": true,
+            "example": null
           },
           "createdAt": {
             "anyOf": [
@@ -11848,8 +14699,12 @@
               },
               {
                 "type": "string"
+              },
+              {
+                "nullable": true
               }
-            ]
+            ],
+            "example": "2026-08-01T10:00:00.000Z"
           },
           "updatedAt": {
             "anyOf": [
@@ -11858,8 +14713,12 @@
               },
               {
                 "type": "string"
+              },
+              {
+                "nullable": true
               }
-            ]
+            ],
+            "example": "2026-08-11T12:00:00.000Z"
           }
         },
         "required": [
@@ -11867,6 +14726,12 @@
           "ownerId",
           "name"
         ]
+      },
+      "BotProjectList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BotProject"
+        }
       },
       "ValidationError": {
         "type": "object",
@@ -11963,28 +14828,801 @@
           "sortOrder": 0
         }
       },
-      "MessageError": {
+      "UpdateProjectRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "nullable": true
+          },
+          "botToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "userDatabaseEnabled": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1
+          },
+          "lastExportedGoogleSheetId": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedGoogleSheetUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedStructureSheetId": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedStructureSheetUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastExportedStructureAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "number",
+            "default": 0
+          },
+          "adminIds": {
+            "type": "string",
+            "default": ""
+          },
+          "restartOnUpdate": {
+            "type": "boolean"
+          },
+          "commitMessage": {
+            "type": "string",
+            "example": "Добавил приветствие"
+          },
+          "agentEdit": {
+            "type": "boolean"
+          },
+          "agentSessionId": {
+            "type": "string"
+          },
+          "agentDisplayName": {
+            "type": "string"
+          }
+        }
+      },
+      "DeleteProjectResponse": {
         "type": "object",
         "properties": {
           "message": {
             "type": "string",
-            "example": "Проект не найден"
+            "example": "Проект успешно удалён"
           }
         },
         "required": [
           "message"
         ]
       },
-      "UnauthorizedError": {
+      "ForbiddenError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Нет прав на удаление проекта"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "DuplicateProjectRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Мой бот (копия)"
+          }
+        }
+      },
+      "AdminIdItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123456789"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "AdminIdsResponse": {
+        "type": "object",
+        "properties": {
+          "adminIds": {
+            "type": "string",
+            "example": "123456789,987654321"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminIdItem"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "example": 2
+          }
+        },
+        "required": [
+          "adminIds",
+          "items",
+          "count"
+        ]
+      },
+      "AdminIdsError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Ошибка чтения ADMIN_IDS"
+          },
+          "error": {
+            "type": "string",
+            "example": "Error: ..."
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "AdminIdsMutationResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          },
+          "adminIds": {
+            "type": "string",
+            "example": "123456789,987654321"
+          }
+        },
+        "required": [
+          "success",
+          "adminIds"
+        ]
+      },
+      "UpdateAdminIdsRequest": {
+        "type": "object",
+        "properties": {
+          "adminIds": {
+            "type": "string",
+            "example": "123456789,987654321"
+          }
+        },
+        "required": [
+          "adminIds"
+        ]
+      },
+      "RemoveAdminIdRequest": {
+        "type": "object",
+        "properties": {
+          "adminId": {
+            "type": "string",
+            "example": "del_admin_987654321"
+          }
+        },
+        "required": [
+          "adminId"
+        ]
+      },
+      "ReorderProjectsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
+      "ReorderProjectsRequest": {
+        "type": "object",
+        "properties": {
+          "projectIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "minItems": 1,
+            "example": [
+              42,
+              7,
+              15
+            ]
+          }
+        },
+        "required": [
+          "projectIds"
+        ]
+      },
+      "GenerateCodeResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "import asyncio\n..."
+          },
+          "lines": {
+            "type": "integer",
+            "example": 2157
+          },
+          "generatedAt": {
+            "type": "number",
+            "example": 1723392000000
+          }
+        },
+        "required": [
+          "code",
+          "lines",
+          "generatedAt"
+        ]
+      },
+      "GenerateCodeError": {
         "type": "object",
         "properties": {
           "error": {
             "type": "string",
-            "example": "UNAUTHORIZED"
+            "example": "Project not found"
+          },
+          "message": {
+            "type": "string",
+            "example": "Project 42 not found"
           }
         },
         "required": [
-          "error"
+          "error",
+          "message"
+        ]
+      },
+      "GenerateCodeRequest": {
+        "type": "object",
+        "properties": {
+          "userDatabaseEnabled": {
+            "type": "boolean",
+            "example": true
+          },
+          "enableLogging": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "ExportCodeResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "import asyncio\n..."
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "ExportCodeError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Проект не найден"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "CollaboratorInfo": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "example": 123456789
+          },
+          "name": {
+            "type": "string",
+            "example": "Иван Иванов"
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://t.me/i/userpic/..."
+          }
+        },
+        "required": [
+          "userId",
+          "name"
+        ]
+      },
+      "CollaboratorInfoList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/CollaboratorInfo"
+        }
+      },
+      "ProjectSystemLogRow": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "example": "stdout"
+          },
+          "message": {
+            "type": "string",
+            "example": "Bot started successfully"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "example": "2026-08-08T20:00:00.000Z"
+          }
+        },
+        "required": [
+          "level",
+          "message",
+          "createdAt"
+        ]
+      },
+      "ProjectSystemLogList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ProjectSystemLogRow"
+        }
+      },
+      "ProjectSystemLaunchRow": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "stopped"
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ],
+            "example": "2026-08-08T19:55:00.000Z"
+          },
+          "stoppedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ],
+            "example": "2026-08-08T20:10:00.000Z"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          }
+        },
+        "required": [
+          "status",
+          "startedAt",
+          "stoppedAt",
+          "errorMessage"
+        ]
+      },
+      "ProjectSystemLaunchList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ProjectSystemLaunchRow"
+        }
+      },
+      "ProjectVersionMeta": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 7
+          },
+          "projectId": {
+            "type": "number",
+            "example": 42
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorId": {
+            "type": "number",
+            "nullable": true
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "authorKind": {
+            "type": "string",
+            "nullable": true
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "manual"
+            ]
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "projectId"
+        ]
+      },
+      "ProjectVersionList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ProjectVersionMeta"
+        }
+      },
+      "ProjectVersionFull": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProjectVersionMeta"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "snapshot": {
+                "nullable": true,
+                "example": {
+                  "sheets": [
+                    {
+                      "id": "main",
+                      "name": "Основной",
+                      "nodes": [],
+                      "edges": []
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      "VersionCommitRequest": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Добавил приветствие"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "VersionDeleteResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "VersionPruneResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "integer",
+            "example": 12
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "VersionPruneRequest": {
+        "type": "object",
+        "properties": {
+          "keep": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 30
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "manual"
+            ],
+            "example": "auto"
+          },
+          "authorKind": {
+            "type": "string",
+            "enum": [
+              "agent",
+              "user"
+            ],
+            "example": "agent"
+          }
+        }
+      },
+      "DialogMessageMedia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "url": {
+            "type": "string",
+            "example": "/uploads/42/photo.jpg"
+          },
+          "type": {
+            "type": "string",
+            "example": "photo"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "type"
+        ]
+      },
+      "DialogMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 501
+          },
+          "projectId": {
+            "type": "integer",
+            "example": 42
+          },
+          "tokenId": {
+            "type": "integer",
+            "nullable": true,
+            "example": 7
+          },
+          "userId": {
+            "type": "string",
+            "example": "123456789"
+          },
+          "messageType": {
+            "type": "string",
+            "enum": [
+              "user",
+              "bot"
+            ],
+            "example": "bot"
+          },
+          "messageText": {
+            "type": "string",
+            "nullable": true,
+            "example": "Привет! Чем могу помочь?"
+          },
+          "messageData": {
+            "nullable": true,
+            "example": {
+              "sentFromAdmin": true
+            }
+          },
+          "telegramMessageId": {
+            "type": "integer",
+            "nullable": true
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ],
+            "example": "2026-08-11T15:00:00.000Z"
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DialogMessageMedia"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "userId",
+          "messageType"
+        ]
+      },
+      "DialogMessageList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/DialogMessage"
+        }
+      },
+      "DeleteDialogMessagesResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Сообщения успешно удалены"
+          },
+          "deleted": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "message",
+          "deleted"
+        ]
+      },
+      "SendDialogMessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Сообщение успешно отправлено"
+          },
+          "result": {
+            "nullable": true
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "SendDialogMessageError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Бот заблокирован пользователем"
+          },
+          "errorType": {
+            "type": "string",
+            "example": "bot_blocked"
+          },
+          "details": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            }
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "SendDialogMessageRequest": {
+        "type": "object",
+        "properties": {
+          "messageText": {
+            "type": "string",
+            "maxLength": 4096,
+            "default": "",
+            "example": "Здравствуйте!"
+          },
+          "mediaUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "/uploads/42/photo.jpg"
+            ]
+          },
+          "buttons": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            },
+            "example": []
+          },
+          "buttonsPerRow": {
+            "type": "integer",
+            "example": 0
+          }
+        }
+      },
+      "SendNodeMessageRequest": {
+        "type": "object",
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "minLength": 1,
+            "example": "welcome-msg"
+          },
+          "userData": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "example": {
+              "order_id": "A-100"
+            }
+          }
+        },
+        "required": [
+          "nodeId"
         ]
       },
       "AgentToken": {
@@ -12254,18 +15892,6 @@
           "users",
           "total",
           "hasMore"
-        ]
-      },
-      "ForbiddenError": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Нет прав на удаление проекта"
-          }
-        },
-        "required": [
-          "message"
         ]
       },
       "BotUserRow": {
@@ -13849,242 +17475,6 @@
           "projectId",
           "nodeName"
         ]
-      },
-      "ProjectListItem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "number",
-            "example": 42
-          },
-          "ownerId": {
-            "type": "number",
-            "nullable": true,
-            "example": 123456789
-          },
-          "name": {
-            "type": "string",
-            "example": "Мой бот"
-          },
-          "description": {
-            "type": "string",
-            "nullable": true,
-            "example": "Приветственный бот"
-          },
-          "userDatabaseEnabled": {
-            "type": "number",
-            "nullable": true
-          },
-          "sortOrder": {
-            "type": "number",
-            "nullable": true
-          },
-          "adminIds": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "string"
-              },
-              {
-                "nullable": true
-              }
-            ]
-          },
-          "updatedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "string"
-              },
-              {
-                "nullable": true
-              }
-            ]
-          },
-          "nodeCount": {
-            "type": "number",
-            "example": 12
-          },
-          "sheetsCount": {
-            "type": "number",
-            "example": 2
-          }
-        },
-        "required": [
-          "id",
-          "ownerId",
-          "name",
-          "description",
-          "nodeCount",
-          "sheetsCount"
-        ]
-      },
-      "ProjectList": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/ProjectListItem"
-        }
-      },
-      "UpdateProjectRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 1
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "data": {
-            "nullable": true
-          },
-          "botToken": {
-            "type": "string",
-            "nullable": true
-          },
-          "userDatabaseEnabled": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "default": 1
-          },
-          "lastExportedGoogleSheetId": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastExportedGoogleSheetUrl": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastExportedAt": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastExportedStructureSheetId": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastExportedStructureSheetUrl": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastExportedStructureAt": {
-            "type": "string",
-            "nullable": true
-          },
-          "sortOrder": {
-            "type": "number",
-            "default": 0
-          },
-          "adminIds": {
-            "type": "string",
-            "default": ""
-          },
-          "restartOnUpdate": {
-            "type": "boolean"
-          },
-          "commitMessage": {
-            "type": "string",
-            "example": "Добавил приветствие"
-          },
-          "agentEdit": {
-            "type": "boolean"
-          },
-          "agentSessionId": {
-            "type": "string"
-          },
-          "agentDisplayName": {
-            "type": "string"
-          }
-        }
-      },
-      "DeleteProjectResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Проект успешно удалён"
-          }
-        },
-        "required": [
-          "message"
-        ]
-      },
-      "DuplicateProjectRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Мой бот (копия)"
-          }
-        }
-      },
-      "ProjectVersionMeta": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "number",
-            "example": 7
-          },
-          "projectId": {
-            "type": "number",
-            "example": 42
-          },
-          "label": {
-            "type": "string",
-            "nullable": true
-          },
-          "authorId": {
-            "type": "number",
-            "nullable": true
-          },
-          "authorName": {
-            "type": "string"
-          },
-          "authorKind": {
-            "type": "string",
-            "nullable": true
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "auto",
-              "manual"
-            ]
-          },
-          "createdAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "string"
-              },
-              {
-                "nullable": true
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "projectId"
-        ]
-      },
-      "ProjectVersionList": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/ProjectVersionMeta"
-        }
       },
       "PublicConfig": {
         "type": "object",
