@@ -21,7 +21,6 @@ const PUBLIC_PREFIXES = [
   "/setup",
   "/config",
   "/webhook/",
-  "/projects/import-from-files",
 ];
 
 /**

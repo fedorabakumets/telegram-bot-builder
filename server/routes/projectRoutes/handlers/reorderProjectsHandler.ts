@@ -11,28 +11,47 @@ import { getOwnerIdFromRequest } from "../../../telegram/auth-middleware";
 import { broadcastProjectsChanged } from "../../../terminal/broadcastProjectsChanged";
 
 /**
- * Обрабатывает запрос на переупорядочивание проектов
+ * Обрабатывает запрос на переупорядочивание проектов.
+ * Каждый ID должен принадлежать владельцу или быть доступен как collaborator —
+ * иначе 403 (защита от IDOR по чужим projectIds).
+ *
  * @param req - Объект запроса (тело: { projectIds: number[] })
  * @param res - Объект ответа
  * @returns Promise<void>
  */
 export async function reorderProjectsHandler(req: Request, res: Response): Promise<void> {
   try {
+    const ownerId = getOwnerIdFromRequest(req);
+    if (ownerId === null) {
+      res.status(401).json({ message: "Требуется авторизация через Telegram" });
+      return;
+    }
+
     const { projectIds } = req.body;
 
-    if (!Array.isArray(projectIds) || projectIds.some((id) => typeof id !== 'number')) {
-      res.status(400).json({ message: 'Неверный ID проекта' });
+    if (
+      !Array.isArray(projectIds) ||
+      projectIds.length === 0 ||
+      projectIds.some((id) => typeof id !== "number" || !Number.isInteger(id) || id <= 0)
+    ) {
+      res.status(400).json({ message: "Неверный список projectIds" });
       return;
+    }
+
+    // Нельзя менять sortOrder чужих проектов
+    for (const projectId of projectIds) {
+      const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+      if (!hasAccess) {
+        res.status(403).json({ message: "Нет прав на один или несколько проектов" });
+        return;
+      }
     }
 
     await storage.reorderBotProjects(projectIds);
 
     // Live-обновление порядка проектов во всех открытых вкладках владельца
     try {
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId != null) {
-        broadcastProjectsChanged(ownerId, 'reordered');
-      }
+      broadcastProjectsChanged(ownerId, "reordered");
     } catch (err) {
       console.error("[reorderProjectsHandler] Ошибка broadcast projects-changed:", err);
     }

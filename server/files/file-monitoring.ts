@@ -2,8 +2,8 @@
  * @fileoverview Модуль мониторинга файлов проектов (отключён)
  *
  * Polling директории bots/ каждую секунду создавал постоянную нагрузку на CPU и память.
- * Синхронизация теперь выполняется только по явному запросу через API:
- * GET /api/projects/import-from-files
+ * Раньше sync шёл через публичный GET /api/projects/import-from-files — эндпоинт удалён
+ * как небезопасный и неиспользуемый UI/MCP. Импорт сценариев — через UI/API проекта.
  */
 
 import { EnhancedDatabaseStorage } from '../database/EnhancedDatabaseStorage';
@@ -16,6 +16,6 @@ import { EnhancedDatabaseStorage } from '../database/EnhancedDatabaseStorage';
  * @returns Пустую функцию остановки
  */
 export async function startFileMonitoring(_storage: EnhancedDatabaseStorage): Promise<() => void> {
-  console.log('Мониторинг файлов отключён — используйте GET /api/projects/import-from-files для синхронизации');
+  console.log('Мониторинг файлов отключён (polling bots/ не используется)');
   return () => {};
 }

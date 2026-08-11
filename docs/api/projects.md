@@ -1,6 +1,6 @@
 # projects
 
-Эндпоинтов: **138**
+Эндпоинтов: **137**
 
 ### `GET` /api/projects
 
@@ -2027,20 +2027,6 @@ POST /api/projects/{projectId}/users/{userId}/send-message
 POST /api/projects/{projectId}/users/{userId}/send-node-message
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/import-from-files
-
-GET /api/projects/import-from-files
-
-**Авторизация:** Публичный
 
 #### Ответы
 

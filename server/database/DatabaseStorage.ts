@@ -69,6 +69,11 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return project || undefined;
   }
+  /**
+   * Переупорядочивает проекты: sortOrder = индекс в массиве ID.
+   * Вызывающий обязан заранее проверить доступ ко всем ID (см. reorderProjectsHandler).
+   * @param projectIds - ID проектов в желаемом порядке
+   */
   async reorderBotProjects(projectIds: number[]): Promise<void> {
     await Promise.all(
       projectIds.map((id, index) =>
@@ -1294,14 +1299,6 @@ export class DatabaseStorage implements IStorage {
     );
 
     return messagesWithMedia;
-  }
-
-  /**
-   * Импортировать проекты из файлов в директории bots/
-   * @returns Массив импортированных проектов
-   */
-  async importProjectsFromFiles(): Promise<BotProject[]> {
-    return [];
   }
 
   /**

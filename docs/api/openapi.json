@@ -8964,26 +8964,6 @@
         }
       }
     },
-    "/api/projects/import-from-files": {
-      "get": {
-        "tags": [
-          "projects"
-        ],
-        "summary": "GET /api/projects/import-from-files",
-        "security": [],
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
     "/api/projects/list": {
       "get": {
         "tags": [

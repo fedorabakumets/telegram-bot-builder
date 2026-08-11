@@ -25,6 +25,7 @@ import { registerProjectsAdminIdsPaths } from "./paths/projects-admin-ids-paths"
 import { registerProjectsCreateGetPaths } from "./paths/projects-create-get-paths";
 import { registerProjectsListPaths } from "./paths/projects-list-paths";
 import { registerProjectsPaths } from "./paths/projects-paths";
+import { registerProjectsReorderPaths } from "./paths/projects-reorder-paths";
 import { registerStorageConfigPaths } from "./paths/storage-config-paths";
 import { registerTemplatePaths } from "./paths/template-paths";
 import { registerWorkerPaths } from "./paths/worker-paths";
@@ -64,6 +65,7 @@ registerAuthPaths(documentedRegistry, publicSecurity);
 registerProjectsListPaths(documentedRegistry, cookieSecurity);
 registerProjectsCreateGetPaths(documentedRegistry, cookieSecurity);
 registerProjectsAdminIdsPaths(documentedRegistry, cookieSecurity);
+registerProjectsReorderPaths(documentedRegistry, cookieSecurity);
 registerProjectsPaths(documentedRegistry, cookieSecurity);
 
 registerAgentTokenPaths(documentedRegistry, cookieSecurity);

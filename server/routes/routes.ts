@@ -446,17 +446,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Экспортируем для использования в WebSocket (прикрепление сессии к WS запросам)
   exportedSessionMiddleware = sessionMiddleware;
 
-  // Import projects from files in bots directory (public route - no auth required)
-  app.get("/api/projects/import-from-files", async (_req, res) => {
-    try {
-      const importedProjects = await storage.importProjectsFromFiles();
-      res.json(importedProjects);
-    } catch (error) {
-      console.error("Failed to import projects from files:", error);
-      res.status(500).json({ message: "Failed to import projects from files" });
-    }
-  });
-
   // Auth middleware для всех API роутов (устанавливает req.user если пользователь авторизован)
   // ВАЖНО: должен быть подключен ПОСЛЕ session middleware
   app.use("/api", setupGuard);

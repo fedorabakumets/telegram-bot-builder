@@ -205,7 +205,7 @@ const safeTokens = tokens.map(({ token, ...rest }) => ({
 | Эндпоинт | Файл | Риск |
 |----------|------|------|
 | `GET /api/workers/stats` | setupBotManagementRoutes.ts | Утечка внутренней информации |
-| `GET /api/projects/import-from-files` | routes.ts | Импорт проектов без авторизации |
+| `GET /api/projects/import-from-files` | routes.ts | ~~Импорт без авторизации~~ **Удалён** (не использовался UI/MCP) |
 | `POST /api/bot-folders/cleanup` | setupProjectRoutes.ts | Удаление папок без авторизации |
 | `GET /api/tokens/:tokenId/bot-status` | setupBotManagementRoutes.ts | Статус чужого бота |
 | `GET /api/tokens/:tokenId/launch-history` | setupBotManagementRoutes.ts | История запусков чужого бота |

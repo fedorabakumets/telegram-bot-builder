@@ -94,7 +94,10 @@ export interface IStorage {
   updateBotProject(id: number, project: StorageBotProjectUpdate): Promise<BotProject | undefined>;
 
   /**
-   * Переупорядочивает проекты по переданному массиву ID
+   * Переупорядочивает проекты по переданному массиву ID.
+   * Вызывающий обязан проверить доступ ко всем ID заранее.
+   * @param projectIds - ID проектов в желаемом порядке
+   * @returns void
    */
   reorderBotProjects(projectIds: number[]): Promise<void>;
 
@@ -672,12 +675,6 @@ export interface IStorage {
    * @returns Массив медиафайлов сообщения
    */
   getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number }>>;
-
-  /**
-   * Импортировать проекты из файлов в директории bots/
-   * @returns Массив импортированных проектов
-   */
-  importProjectsFromFiles(): Promise<BotProject[]>;
 
   /**
    * Сохранить батч записей логов бота

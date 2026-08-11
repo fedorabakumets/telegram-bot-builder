@@ -190,3 +190,25 @@ export const DeleteProjectResponseSchema = z
     message: z.string().openapi({ example: "Проект успешно удалён" }),
   })
   .openapi("DeleteProjectResponse");
+
+/** Тело PUT /api/projects/reorder */
+export const ReorderProjectsRequestSchema = z
+  .object({
+    /**
+     * Полный список ID проектов в желаемом порядке.
+     * Каждый ID — владелец или collaborator текущего пользователя.
+     */
+    projectIds: z
+      .array(z.number().int().positive())
+      .min(1)
+      .openapi({ example: [42, 7, 15] }),
+  })
+  .openapi("ReorderProjectsRequest");
+
+/** Успех PUT /api/projects/reorder */
+export const ReorderProjectsResponseSchema = z
+  .object({
+    /** Признак успеха */
+    success: z.literal(true).openapi({ example: true }),
+  })
+  .openapi("ReorderProjectsResponse");

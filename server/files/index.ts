@@ -1,5 +1,4 @@
 // Files module exports
-export { importProjectsFromFiles } from './file-import';
 export { startFileMonitoring } from './file-monitoring';
 export { getFileType } from './getFileType';
 export { normalizeProjectNameToFile } from './normalizeFileName';
