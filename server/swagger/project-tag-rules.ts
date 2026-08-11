@@ -14,7 +14,7 @@ export const PROJECT_TAG_DESCRIPTIONS: Record<string, string> = {
     "Auth: requireProjectAccess. Не путать с CRUD самого проекта.",
   "project-tokens":
     "Токены бота внутри проекта: список, CRUD, настройки, env, userbot, logs. " +
-    "Включая legacy `…/token`. Не путать с `/api/tokens` и agent PAT.",
+    "Не путать с `/api/tokens` (runtime status) и agent PAT.",
   "project-bot":
     "Lifecycle и профиль бота проекта: start/stop/restart, info, name, description, data. " +
     "Auth: requireProjectAccess. Модерация групп — тег `project-groups`.",
@@ -70,11 +70,8 @@ export function inferProjectTag(openApiPath: string): string | null {
     return "project-versions";
   }
 
-  // Токены проекта (+ legacy …/token)
-  if (
-    /^\/api\/projects\/[^/]+\/tokens(\/|$)/.test(openApiPath) ||
-    /^\/api\/projects\/[^/]+\/token$/.test(openApiPath)
-  ) {
+  // Токены проекта (`bot_tokens`)
+  if (/^\/api\/projects\/[^/]+\/tokens(\/|$)/.test(openApiPath)) {
     return "project-tokens";
   }
 

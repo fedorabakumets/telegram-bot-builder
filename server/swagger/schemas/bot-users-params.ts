@@ -37,9 +37,11 @@ export const BotUsersTokenQuerySchema = z.object({
   /** ID токена бота */
   tokenId: z.string().optional().openapi({
     example: "7",
-    description: "Фильтр bot_users/bot_messages.token_id; без параметра — все токены",
+    description:
+      "Скоуп bot_users/bot_messages по token_id. Без параметра — данные всех токенов проекта.",
     param: {
-      description: "Опциональный token_id бота",
+      description:
+        "Опциональный ID токена бота. Без него — все токены проекта.",
       example: "7",
     },
   }),
@@ -55,27 +57,83 @@ export const BotUsersListQuerySchema = z.object({
   /** ID токена бота */
   tokenId: z.string().optional().openapi({
     example: "7",
-    description: "Фильтр по токену бота",
+    description:
+      "Скоуп данных по bot_tokens.id. Без параметра — пользователи/группы всех токенов проекта.",
+    param: {
+      description:
+        "Скоуп по token_id бота. Без параметра — все токены проекта.",
+      example: "7",
+    },
   }),
   /** Размер страницы; без limit — legacy-массив */
-  limit: z.string().optional().openapi({ example: "50" }),
+  limit: z.string().optional().openapi({
+    example: "50",
+    description: "Лимит записей. Без limit — плоский массив (legacy).",
+    param: {
+      description: "Размер страницы; без параметра — legacy-массив без пагинации",
+      example: "50",
+    },
+  }),
   /** Смещение пагинации */
-  offset: z.string().optional().openapi({ example: "0" }),
+  offset: z.string().optional().openapi({
+    example: "0",
+    description: "Смещение для пагинации (с limit)",
+    param: { description: "Смещение страницы (нужен limit)", example: "0" },
+  }),
   /** Поиск по имени, username, user_id или тексту */
-  search: z.string().optional().openapi({ example: "иван" }),
+  search: z.string().optional().openapi({
+    example: "иван",
+    description:
+      "ILIKE по имени/username/user_id и тексту сообщений диалога (только в режиме с limit)",
+    param: {
+      description: "Поиск по имени, username, user_id или тексту сообщений",
+      example: "иван",
+    },
+  }),
   /** Фильтр активности */
-  filterActive: z.enum(["true", "false"]).optional(),
+  filterActive: z.enum(["true", "false"]).optional().openapi({
+    description: "true — только is_active=1; false — только неактивные",
+    param: {
+      description: "Фильтр активности: true | false",
+      example: "true",
+    },
+  }),
   /** Поле сортировки (whitelist на сервере) */
-  sortBy: z.string().optional().openapi({ example: "lastInteraction" }),
+  sortBy: z.string().optional().openapi({
+    example: "lastInteraction",
+    description:
+      "Whitelist: lastInteraction | createdAt | interactionCount | firstName | userName",
+    param: {
+      description: "Поле сортировки (whitelist на сервере)",
+      example: "lastInteraction",
+    },
+  }),
   /** Направление сортировки */
-  sortDir: z.enum(["asc", "desc"]).optional().openapi({ example: "desc" }),
+  sortDir: z.enum(["asc", "desc"]).optional().openapi({
+    example: "desc",
+    description: "asc или desc (по умолчанию desc)",
+    param: { description: "Направление сортировки", example: "desc" },
+  }),
   /**
    * Тип диалогов: all | users | groups | channels.
    * Имеет приоритет над includeGroups.
    */
   dialogKind: z.enum(["all", "users", "groups", "channels"]).optional().openapi({
     example: "all",
+    description:
+      "all — люди+группы+каналы; users — только люди; groups — group/supergroup; channels — каналы",
+    param: {
+      description: "Фильтр типа диалога (приоритетнее includeGroups)",
+      example: "all",
+    },
   }),
   /** Legacy: включить группы (≈ dialogKind=all) */
-  includeGroups: z.enum(["true", "false"]).optional().openapi({ example: "true" }),
+  includeGroups: z.enum(["true", "false"]).optional().openapi({
+    example: "true",
+    description: "Legacy: true ≈ dialogKind=all. Лучше использовать dialogKind",
+    param: {
+      description: "Legacy-флаг групп (предпочтительнее dialogKind)",
+      example: "true",
+    },
+  }),
 });

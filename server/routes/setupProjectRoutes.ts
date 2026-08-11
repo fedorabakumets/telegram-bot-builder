@@ -25,7 +25,6 @@ import { pruneProjectVersionsHandler } from "./projectRoutes/handlers/pruneProje
 import { reorderProjectsHandler } from "./projectRoutes/handlers/reorderProjectsHandler";
 import { exportProjectHandler } from "./projectRoutes/handlers/exportProjectHandler";
 import { duplicateProjectHandler } from "./projectRoutes/handlers/duplicateProjectHandler";
-import { getTokenHandler, clearTokenHandler } from "./projectRoutes/handlers/tokenHandlers";
 import { listBotTokensHandler } from "./projectRoutes/handlers/listBotTokensHandler";
 import { uploadImageHandler } from "./projectManagement/handlers/uploadImageHandler";
 import { handleGenerateCode } from "./projects/generateCode";
@@ -68,10 +67,6 @@ export function setupProjectRoutes(app: Express, requireDbReady: (_req: any, res
 
     // Генерация Python кода
     app.post("/api/projects/:id/generate", requireDbReady, requireProjectAccess, handleGenerateCode);
-
-    // Управление токеном
-    app.get("/api/projects/:id/token", requireProjectAccess, getTokenHandler);
-    app.delete("/api/projects/:id/token", requireProjectAccess, clearTokenHandler);
 
     // Безопасный список токенов проекта (без секрета token) — для дискавери MCP-агентом
     app.get("/api/projects/:id/tokens/list", requireDbReady, requireProjectAccess, listBotTokensHandler);

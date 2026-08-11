@@ -84,11 +84,13 @@ export function registerBotEnvRevealPaths(
   registry.registerPath({
     method: "get",
     path: "/api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal",
-    tags: ["tokens"],
+    tags: ["project-tokens"],
     summary: "Раскрыть секретное значение env токена",
     description:
       REVEAL_RISK +
-      "**Кто:** `requireTokenOwnership`. **Клиент:** `use-env-variables` / BotEnvRow.\n\n" +
+      "Сверка `variable.tokenId` с `:tokenId` (чужой id → 404).\n\n" +
+      "**Auth:** `requireTokenOwnership` (владелец/collaborator + IDOR-check projectId).\n\n" +
+      "**Клиент:** `use-env-variables` / BotEnvRow (кнопка «показать»).\n\n" +
       "```bash\ncurl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal \\\n" +
       "  -b cookies.txt\n```",
     security: cookieSecurity,
@@ -105,15 +107,30 @@ export function registerBotEnvRevealPaths(
       },
       401: {
         description: "Не авторизован",
-        content: { "application/json": { schema: UnauthorizedSchema } },
+        content: {
+          "application/json": {
+            schema: UnauthorizedSchema,
+            example: { error: "UNAUTHORIZED" },
+          },
+        },
       },
       403: {
-        description: "Нет доступа",
-        content: { "application/json": { schema: BotEnvRevealErrorSchema } },
+        description: "Нет владения токеном",
+        content: {
+          "application/json": {
+            schema: BotEnvRevealErrorSchema,
+            example: { error: "Нет доступа" },
+          },
+        },
       },
       404: {
         description: "Не найдено / чужой tokenId",
-        content: { "application/json": { schema: BotEnvRevealErrorSchema } },
+        content: {
+          "application/json": {
+            schema: BotEnvRevealErrorSchema,
+            example: { message: "Переменная не найдена" },
+          },
+        },
       },
     },
   });

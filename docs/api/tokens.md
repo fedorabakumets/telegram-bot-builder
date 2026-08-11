@@ -1,99 +1,6 @@
 # tokens
 
-Эндпоинтов: **5**
-
-### `DELETE` /api/projects/{projectId}/tokens/{tokenId}
-
-Удалить токен бота проекта
-
-**Авторизация:** Cookie (`connect.sid`)
-
-Удаляет токен из проекта. Доступ: **владелец или коллаборатор** проекта (`requireTokenOwnership` → `hasProjectAccess`). Сверяет `token.projectId` с `:projectId` (защита от IDOR). Перед удалением останавливает бота. **Side-effect:** WebSocket `token-deleted` (UI обновляет список без F5). Ответы list/status токенов не содержат сырой Telegram token.
-
-#### Параметры
-
-| Имя | In | Обязательный | Описание | Пример |
-|-----|-----|--------------|----------|--------|
-| `projectId` | path | да | — | `"42"` |
-| `tokenId` | path | да | — | `"7"` |
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Токен удалён |
-| 400 | Некорректный projectId или tokenId |
-| 401 | Не авторизован |
-| 403 | Нет доступа к проекту токена |
-| 404 | Токен не найден в этом проекте |
-
-### `GET` /api/projects/{projectId}/tokens/{tokenId}/env-variables/{id}/reveal
-
-Раскрыть секретное значение env токена
-
-**Авторизация:** Cookie (`connect.sid`)
-
-**Риск:** ответ содержит **сырое** значение env. В списке секреты маскируются. Не логируйте тело ответа.
-
-**Кто:** `requireTokenOwnership`. **Клиент:** `use-env-variables` / BotEnvRow.
-
-```bash
-curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal \
-  -b cookies.txt
-```
-
-#### Параметры
-
-| Имя | In | Обязательный | Описание | Пример |
-|-----|-----|--------------|----------|--------|
-| `projectId` | path | да | ID проекта | `"42"` |
-| `tokenId` | path | да | ID токена бота | `"7"` |
-| `id` | path | да | ID переменной env | `"15"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Не нужна при Bearer PAT. Без обоих — 401. | `"s%3Axxxx.yyyy"` |
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Сырое значение |
-| 401 | Не авторизован |
-| 403 | Нет доступа |
-| 404 | Не найдено / чужой tokenId |
-
-#### Пример ответа `200`
-
-```json
-{
-  "value": "super-secret-api-key"
-}
-```
-
-### `PUT` /api/projects/{projectId}/tokens/{tokenId}/messages-retention
-
-Срок хранения сообщений диалога
-
-**Авторизация:** Cookie (`connect.sid`)
-
-Обновляет `messages_retention_days` у токена. `0` — без автоочистки; иначе сервер раз в час удаляет из `bot_messages` сообщения этого токена старше N дней. Таблица `message_activity_daily` (длинный график «Активность») не трогается. Требуется владение токеном (`requireTokenOwnership`). **Side-effect:** после успеха эмитит WebSocket `token-updated` (безопасный снимок токена без секретов; см. docs/features/token-settings-realtime.md). UI и другие клиенты обновляются без F5.
-
-**Тело запроса:** `UpdateMessagesRetentionRequest`
-
-#### Параметры
-
-| Имя | In | Обязательный | Описание | Пример |
-|-----|-----|--------------|----------|--------|
-| `projectId` | path | да | — | `"42"` |
-| `tokenId` | path | да | — | `"7"` |
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Настройка сохранена |
-| 400 | Неверный ID или значение вне whitelist |
-| 401 | Не авторизован |
-| 403 | Нет доступа к проекту токена |
-| 404 | Токен не найден |
+Эндпоинтов: **2**
 
 ### `GET` /api/tokens/{tokenId}/bot-status
 
@@ -101,13 +8,21 @@ curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal \
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Возвращает актуальный статус бота для токена: сверка с активным процессом, worker pool и записью `bot_instances`. При расхождении обновляет БД и launch-history. Требуется доступ к проекту токена (`hasProjectAccess`). Ответ не содержит сырой Telegram token (instance без поля token). Кэш отключён (`Cache-Control: no-store`). Для MCP/agent API см. `GET /api/bot/tokens/{tokenId}/status` (тег `bot`).
+Сверка с процессом / worker pool / `bot_instances`. Ответ без сырого token. `Cache-Control: no-store`.
+
+**Auth:** `hasProjectAccess` к проекту токена.
+
+MCP: `GET /api/bot/tokens/{tokenId}/status` (тег `bot`).
+
+```bash
+curl -s http://localhost:5000/api/tokens/7/bot-status -b cookies.txt
+```
 
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `tokenId` | path | да | — | `"7"` |
+| `tokenId` | path | да | ID токена бота | `"7"` |
 
 #### Ответы
 
@@ -124,20 +39,26 @@ curl -s http://localhost:5000/api/projects/42/tokens/7/env-variables/15/reveal \
 
 **Авторизация:** Cookie (`connect.sid`)
 
-Возвращает до 10 последних записей `bot_launch_history` для токена. Перед ответом выполняет reconcile с live-статусом (self-heal orphans). Требуется доступ к проекту токена (`hasProjectAccess`).
+До 10 записей `bot_launch_history` + reconcile live-статуса.
+
+**Auth:** `hasProjectAccess`.
+
+```bash
+curl -s http://localhost:5000/api/tokens/7/launch-history -b cookies.txt
+```
 
 #### Параметры
 
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
-| `tokenId` | path | да | — | `"7"` |
+| `tokenId` | path | да | ID токена бота | `"7"` |
 
 #### Ответы
 
 | Код | Описание |
 |-----|----------|
-| 200 | Список записей истории (до 10) |
+| 200 | Список записей (до 10) |
 | 400 | Некорректный tokenId |
 | 401 | Не авторизован |
-| 403 | Нет доступа к проекту токена |
+| 403 | Нет доступа |
 | 404 | Токен не найден |

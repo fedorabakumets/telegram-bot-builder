@@ -1626,46 +1626,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Set default token
-  app.post("/api/projects/:projectId/tokens/:tokenId/set-default", requireTokenOwnership, async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.projectId);
-      const tokenId = parseInt(req.params.tokenId);
-
-      const success = await storage.setDefaultBotToken(projectId, tokenId);
-      if (!success) {
-        return res.status(404).json({ message: "Token not found" });
-      }
-
-      void emitTokenUpdated({
-        projectId,
-        tokenId,
-        changedFields: ['isDefault'],
-        source: 'api',
-      }).catch((err) => console.error('[set-default] emitTokenUpdated:', err));
-
-      res.json({ message: "Default token set successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to set default token" });
-    }
-  });
-
-  // Get default token for a project
-  app.get("/api/projects/:id/tokens/default", requireProjectAccess, async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      const token = await storage.getDefaultBotToken(projectId);
-
-      if (!token) {
-        return res.json({ hasDefault: false, token: null });
-      }
-
-      res.json({ hasDefault: true, token });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch default token" });
-    }
-  });
-
   // Get first token for .env generation (full token value)
   app.get("/api/projects/:id/tokens/first", async (req, res) => {
     try {

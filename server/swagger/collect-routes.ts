@@ -59,8 +59,8 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
     "Инстансы ботов (GET /api/bots без секрета token) и массовый старт офлайн " +
     "(POST …/bot/start-offline-all). Доступ по владельцу/проекту.",
   tokens:
-    "Токены ботов, retention и reveal env (`…/env-variables/{id}/reveal` — сырой секрет, " +
-    "только владелец/collaborator). Список env секреты маскирует.",
+    "Runtime токена вне проекта: `GET /api/tokens/{tokenId}/bot-status` и launch-history. " +
+    "CRUD/настройки/env токенов проекта — тег `project-tokens`.",
   users: "Пользователи ботов и статистика",
   database:
     "Устаревший ярлык: таблицы проекта перенесены в тег `project-tables` " +

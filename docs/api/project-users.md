@@ -21,7 +21,7 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/users?tokenId=7' -b coo
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `tokenId` | query | нет | Опциональный token_id бота | `"7"` |
+| `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
@@ -64,15 +64,15 @@ curl -s 'http://localhost:5000/api/projects/42/users?limit=50&tokenId=7' -b cook
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `tokenId` | query | нет | — | `"7"` |
-| `limit` | query | нет | — | `"50"` |
-| `offset` | query | нет | — | `"0"` |
-| `search` | query | нет | — | `"иван"` |
-| `filterActive` | query | нет | — | — |
-| `sortBy` | query | нет | — | `"lastInteraction"` |
-| `sortDir` | query | нет | — | `"desc"` |
-| `dialogKind` | query | нет | — | `"all"` |
-| `includeGroups` | query | нет | — | `"true"` |
+| `tokenId` | query | нет | Скоуп по token_id бота. Без параметра — все токены проекта. | `"7"` |
+| `limit` | query | нет | Размер страницы; без параметра — legacy-массив без пагинации | `"50"` |
+| `offset` | query | нет | Смещение страницы (нужен limit) | `"0"` |
+| `search` | query | нет | Поиск по имени, username, user_id или тексту сообщений | `"иван"` |
+| `filterActive` | query | нет | Фильтр активности: true | false | `"true"` |
+| `sortBy` | query | нет | Поле сортировки (whitelist на сервере) | `"lastInteraction"` |
+| `sortDir` | query | нет | Направление сортировки | `"desc"` |
+| `dialogKind` | query | нет | Фильтр типа диалога (приоритетнее includeGroups) | `"all"` |
+| `includeGroups` | query | нет | Legacy-флаг групп (предпочтительнее dialogKind) | `"true"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
@@ -125,7 +125,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/growth?granularity=1d&token
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `tokenId` | query | нет | Опциональный token_id бота | `"7"` |
+| `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `granularity` | query | нет | — | `"1d"` |
 | `period` | query | нет | — | `"30d"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
@@ -174,7 +174,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/growth-by-source?granularit
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `tokenId` | query | нет | Опциональный token_id бота | `"7"` |
+| `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `granularity` | query | да | — | `"1d"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
@@ -228,7 +228,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/popular-buttons?granularity
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `tokenId` | query | нет | Опциональный token_id бота | `"7"` |
+| `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `granularity` | query | нет | — | `"1d"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
@@ -277,7 +277,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/stats?tokenId=7' -b cookies
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `tokenId` | query | нет | Опциональный token_id бота | `"7"` |
+| `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
@@ -325,7 +325,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/traffic?tokenId=7' -b cooki
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `tokenId` | query | нет | Опциональный token_id бота | `"7"` |
+| `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
@@ -390,7 +390,7 @@ curl -s 'http://localhost:5000/api/projects/42/users/variables?limit=200&tokenId
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `id` | path | да | Числовой ID проекта | `"42"` |
-| `tokenId` | query | нет | Опциональный token_id бота | `"7"` |
+| `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `limit` | query | нет | — | `"200"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
@@ -447,7 +447,7 @@ curl -s -X DELETE 'http://localhost:5000/api/projects/42/users/123456789?tokenId
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | ID проекта | `"42"` |
 | `userId` | path | да | Telegram user_id | `"123456789"` |
-| `tokenId` | query | нет | Опциональный token_id бота | `"7"` |
+| `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Ответы
@@ -491,7 +491,7 @@ curl -s -X PUT 'http://localhost:5000/api/projects/42/users/123456789?tokenId=7'
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | ID проекта | `"42"` |
 | `userId` | path | да | Telegram user_id | `"123456789"` |
-| `tokenId` | query | нет | Опциональный token_id бота | `"7"` |
+| `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Альтернатива — Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 
 #### Пример тела запроса
