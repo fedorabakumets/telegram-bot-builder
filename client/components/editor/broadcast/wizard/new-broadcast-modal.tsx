@@ -178,6 +178,7 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
             {step === 3 && (
               <StepConfirm
                 projectId={projectId}
+                tokenId={tokenId}
                 formData={formData}
                 isLoading={createMutation.isPending}
                 onConfirm={() => createMutation.mutate(formData)}

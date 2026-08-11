@@ -13,6 +13,79 @@ import { getSetting } from "../../../services/app-settings.service";
 import { isSkipAuthEnabled } from "../utils/isSkipAuthEnabled";
 
 /**
+ * HTML + JS формы dev-входа (вызывается только при SKIP_AUTH).
+ * Сама бьёт в POST /api/auth/dev-login, затем уведомляет opener или редиректит.
+ * @returns Фрагмент HTML
+ */
+function buildDevLoginFormHtml(): string {
+  return `
+    <form id="devForm" style="margin-top:20px" method="post" action="/api/auth/dev-login">
+      <p style="color:#e67e22;font-size:12px;margin-bottom:16px">⚠️ Dev-режим: введите ваш Telegram ID</p>
+      <input id="devId" name="id" type="number" required placeholder="Ваш Telegram ID"
+        style="display:block;width:100%;margin-bottom:16px;padding:10px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;font-size:16px" />
+      <button id="devSubmit" type="submit"
+        style="width:100%;padding:10px;background:#0088cc;color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">Войти</button>
+      <p id="devStatus" style="margin-top:12px;font-size:12px;color:#666;min-height:1.2em"></p>
+    </form>
+    <p style="margin-top:12px;font-size:11px;color:#999">Узнать свой ID: напишите <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a> в Telegram</p>
+    <script>
+      (function () {
+        var form = document.getElementById('devForm');
+        var statusEl = document.getElementById('devStatus');
+        var submitBtn = document.getElementById('devSubmit');
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var id = parseInt(document.getElementById('devId').value, 10);
+          if (!id) {
+            statusEl.textContent = 'Введите Telegram ID';
+            statusEl.style.color = '#c0392b';
+            return;
+          }
+          submitBtn.disabled = true;
+          statusEl.style.color = '#666';
+          statusEl.textContent = 'Вход…';
+          fetch('/api/auth/dev-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ id: id, firstName: 'Dev', username: 'dev_' + id })
+          })
+            .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+            .then(function (result) {
+              if (!result.data || !result.data.success || !result.data.user) {
+                throw new Error((result.data && result.data.error) || 'Ошибка входа');
+              }
+              var user = result.data.user;
+              var mapped = {
+                id: user.id,
+                firstName: user.firstName || user.first_name || 'Dev',
+                lastName: user.lastName || user.last_name,
+                username: user.username,
+                photoUrl: user.photoUrl || user.photo_url
+              };
+              statusEl.style.color = '#27ae60';
+              statusEl.textContent = 'Успешно';
+              if (window.opener && !window.opener.closed) {
+                window.opener.postMessage(
+                  { type: 'telegram-auth', user: mapped, sessionReady: true },
+                  window.location.origin
+                );
+                setTimeout(function () { window.close(); }, 400);
+              } else {
+                window.location.href = '/';
+              }
+            })
+            .catch(function (err) {
+              submitBtn.disabled = false;
+              statusEl.style.color = '#c0392b';
+              statusEl.textContent = err.message || 'Ошибка входа';
+            });
+        });
+      })();
+    </script>`;
+}
+
+/**
  * Обрабатывает запрос на страницу входа
  *
  * @param _req - Объект запроса (не используется)
@@ -20,29 +93,10 @@ import { isSkipAuthEnabled } from "../utils/isSkipAuthEnabled";
  * @returns Promise<void>
  */
 export async function handleLogin(_req: Request, res: Response): Promise<void> {
-    const botUsernameRaw = await getSetting("telegram_bot_username") || 'botcraft_studio_bot';
-    const botUsername = botUsernameRaw;
-    const cleanBotUsername = botUsername.replace('@', '');
-    const clientId = await getSetting("telegram_client_id") || '0';
-    const isDev = isSkipAuthEnabled();
+  const clientId = (await getSetting("telegram_client_id")) || "0";
+  const isDev = isSkipAuthEnabled();
 
-    const devForm = `
-    <form id="devForm" style="margin-top:20px">
-      <p style="color:#e67e22;font-size:12px;margin-bottom:16px">⚠️ Dev-режим: введите ваш Telegram ID</p>
-      <input id="devId" type="number" placeholder="Ваш Telegram ID" style="display:block;width:100%;margin-bottom:16px;padding:10px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;font-size:16px" />
-      <button type="submit" style="width:100%;padding:10px;background:#0088cc;color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">Войти</button>
-    </form>
-    <p style="margin-top:12px;font-size:11px;color:#999">Узнать свой ID: напишите <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a> в Telegram</p>
-    <script>
-      document.getElementById('devForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const id = parseInt(document.getElementById('devId').value);
-        if (!id) { alert('Введите Telegram ID'); return; }
-        onTelegramAuth({ id, first_name: 'Dev', username: 'dev_' + id });
-      });
-    </script>`;
-
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -75,7 +129,10 @@ export async function handleLogin(_req: Request, res: Response): Promise<void> {
   <div class="container">
     <h1>Вход в BotCraft Studio</h1>
     <p>Используйте свой аккаунт Telegram для входа</p>
-    ${isDev ? devForm : `<script src="https://telegram.org/js/telegram-login.js"></script>
+    ${
+      isDev
+        ? buildDevLoginFormHtml()
+        : `<script src="https://telegram.org/js/telegram-login.js"></script>
     <button id="tgLoginBtn" style="padding:10px 24px;background:#0088cc;color:white;border:none;border-radius:6px;font-size:14px;cursor:pointer">Войти через Telegram</button>
     <script>
       Telegram.Login.init({
@@ -84,9 +141,13 @@ export async function handleLogin(_req: Request, res: Response): Promise<void> {
       }, function(user) { if (user) onTelegramAuth(user); });
       document.getElementById('tgLoginBtn').addEventListener('click', function() { Telegram.Login.open(); });
       window.addEventListener('load', function() { Telegram.Login.open(); });
-    </script>`}
+    </script>`
+    }
   </div>
-  <script>
+  ${
+    isDev
+      ? ""
+      : `<script>
     function onTelegramAuth(user) {
       const mapped = {
         id: user.id,
@@ -100,10 +161,11 @@ export async function handleLogin(_req: Request, res: Response): Promise<void> {
         setTimeout(() => window.close(), 500);
       }
     }
-  </script>
+  </script>`
+  }
 </body>
 </html>`;
 
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(html);
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(html);
 }

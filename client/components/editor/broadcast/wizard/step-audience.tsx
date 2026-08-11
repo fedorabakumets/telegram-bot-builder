@@ -14,6 +14,7 @@ import { useAudiencePreview } from '../hooks/use-audience-preview';
 import { ManualUserSelect } from './manual-user-select';
 import { GroupSelect } from './group-select';
 import { AudienceFilters } from './audience-filters';
+import { AudienceContextHint } from './audience-context-hint';
 import type { NewBroadcastFormData } from '../types';
 
 /**
@@ -55,7 +56,7 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
     audienceType === 'date' ? { registeredFrom: formData.filters.registeredFrom, registeredTo: formData.filters.registeredTo } :
     audienceType === 'activity' ? { activeFrom: formData.filters.activeFrom, activeTo: formData.filters.activeTo } : {};
 
-  const { count, isLoading } = useAudiencePreview(projectId, apiFilters);
+  const { count, isLoading } = useAudiencePreview(projectId, apiFilters, tokenId);
 
   /** Количество получателей: для ручного выбора — длина массива userIds */
   const recipientCount = audienceType === 'manual'
@@ -109,6 +110,7 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
           <Users className="w-3.5 h-3.5 text-blue-500" />
           Аудитория
         </Label>
+        <AudienceContextHint projectId={projectId} tokenId={tokenId} />
         <RadioGroup
           value={audienceType}
           onValueChange={(v) => onChange({ filters: { ...formData.filters, audienceType: v as NewBroadcastFormData['filters']['audienceType'] } })}

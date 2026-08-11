@@ -19,6 +19,8 @@ import type { NewBroadcastFormData } from '../types';
 interface StepConfirmProps {
   /** Идентификатор проекта */
   projectId: number;
+  /** Идентификатор токена бота */
+  tokenId?: number | null;
   /** Данные формы */
   formData: NewBroadcastFormData;
   /** Флаг загрузки (создание рассылки) */
@@ -37,7 +39,7 @@ const SEND_RATE = 25;
  * @param props - Свойства компонента
  * @returns JSX элемент шага подтверждения
  */
-export function StepConfirm({ projectId, formData, isLoading, onConfirm, onBack }: StepConfirmProps) {
+export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm, onBack }: StepConfirmProps) {
   const { audienceType, ...filterFields } = formData.filters;
   /**
    * Фильтры для preview-аудитории. Для ручного выбора передаём userIds,
@@ -48,7 +50,7 @@ export function StepConfirm({ projectId, formData, isLoading, onConfirm, onBack 
     audienceType === 'activity' ? { activeFrom: filterFields.activeFrom, activeTo: filterFields.activeTo } :
     audienceType === 'manual' ? { userIds: filterFields.userIds ?? [] } : {};
 
-  const { count, isLoading: isCountLoading } = useAudiencePreview(projectId, apiFilters);
+  const { count, isLoading: isCountLoading } = useAudiencePreview(projectId, apiFilters, tokenId);
 
   /**
    * Итоговое число получателей. Для ручного выбора берём длину userIds,

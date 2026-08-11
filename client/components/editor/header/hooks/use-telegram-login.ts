@@ -167,6 +167,12 @@ export function useTelegramLogin() {
 
         const user = event.data.user;
         try {
+          // Popup уже создал сессию через POST /api/auth/dev-login
+          if (event.data?.sessionReady && user) {
+            await acceptSession(user, false);
+            return;
+          }
+
           const resp = await fetch('/api/auth/dev-login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -175,12 +181,11 @@ export function useTelegramLogin() {
           });
           const data = await resp.json();
           if (data.success && data.user) {
-            // Сессия уже создана dev-login — только синхронизируем клиент
             await acceptSession(data.user, Boolean(data.switched));
           } else {
             toast({ title: 'Ошибка входа', description: data.error, variant: 'destructive' });
           }
-        } catch (e) {
+        } catch {
           toast({ title: 'Ошибка входа', description: 'Не удалось выполнить dev-login', variant: 'destructive' });
         }
       };

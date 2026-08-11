@@ -38,19 +38,21 @@ export function ProjectSwitcher({ projects, currentProjectId, onSelect }: Projec
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="h-8 min-w-0 max-w-28 gap-1 border-none px-1.5 text-sm font-medium shadow-none focus-visible:ring-0 xl:max-w-44"
+          title={current?.name ?? 'Проект'}
+          className="h-8 min-w-0 max-w-[min(100%,18rem)] gap-1 border-none px-1.5 text-sm font-medium shadow-none focus-visible:ring-0 sm:max-w-72 md:max-w-80 xl:max-w-96"
         >
           <span className="truncate">{current?.name ?? 'Проект'}</span>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="min-w-48">
+      <DropdownMenuContent align="start" className="min-w-[14rem] max-w-[min(100vw-2rem,24rem)]">
         {projects.map((project) => (
           <DropdownMenuItem
             key={project.id}
             onClick={() => onSelect(project.id)}
             className="flex items-center gap-2"
+            title={project.name}
           >
             <FolderOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="flex-1 truncate">{project.name}</span>
