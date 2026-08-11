@@ -25,7 +25,6 @@ export function useUpdateUser(
   const qClient = useQueryClient();
   const usersQueryKey = buildUsersApiUrl(`/api/projects/${projectId}/users`, selectedTokenId);
   const statsQueryKey = buildUsersApiUrl(`/api/projects/${projectId}/users/stats`, selectedTokenId);
-  const searchQueryKey = buildUsersApiUrl(`/api/projects/${projectId}/users/search`, selectedTokenId);
 
   return useMutation({
     mutationFn: async (updates: Partial<UserBotData>) => {
@@ -42,7 +41,6 @@ export function useUpdateUser(
     onSuccess: () => {
       qClient.invalidateQueries({ queryKey: [usersQueryKey, selectedTokenId] });
       qClient.invalidateQueries({ queryKey: [statsQueryKey, selectedTokenId] });
-      qClient.invalidateQueries({ queryKey: [searchQueryKey, selectedTokenId] });
       toast({
         title: 'Сохранено',
         description: 'Данные пользователя обновлены',

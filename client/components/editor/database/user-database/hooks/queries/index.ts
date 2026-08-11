@@ -12,7 +12,6 @@ export * from './use-growth';
 export * from './use-growth-by-source';
 export * from './use-popular-buttons';
 export * from './use-messages-activity';
-export * from './use-search-users';
 export * from './use-dialog-messages';
 export * from './use-user-details-messages';
 export * from './use-last-message';

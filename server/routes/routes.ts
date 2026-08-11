@@ -3529,25 +3529,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
   });
 
-  // Get user data by project and telegram user ID
-  app.get("/api/projects/:projectId/users/:userId", requireProjectAccess, async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.projectId);
-      const userId = req.params.userId;
-      const tokenId = getRequestTokenId(req);
-      const result = await dbPool.query(
-        `SELECT * FROM bot_users WHERE project_id = $1 AND user_id = $2 AND token_id = $3 LIMIT 1`,
-        [projectId, userId, tokenId ?? 0]
-      );
-      if (result.rows.length === 0) {
-        return res.status(404).json({ message: "User data not found" });
-      }
-      res.json(result.rows[0]);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user data" });
-    }
-  });
-
   app.put(
     "/api/projects/:projectId/users/:userId",
     requireProjectAccess,
@@ -3558,31 +3539,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     requireProjectAccess,
     deleteBotUserHandler,
   );
-
-  // Create new user data
-  app.post("/api/projects/:id/users", requireProjectAccess, async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      const tokenId = getRequestTokenId(req) ?? 0;
-      const { userId, username, firstName, lastName, languageCode, isBot, isPremium } = req.body;
-      if (!userId) {
-        return res.status(400).json({ message: "userId обязателен" });
-      }
-      const result = await dbPool.query(
-        `INSERT INTO bot_users (user_id, project_id, token_id, username, first_name, last_name, language_code, is_bot, is_premium, registered_at, last_interaction)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
-         ON CONFLICT (user_id, project_id, token_id) DO UPDATE SET last_interaction = NOW()
-         RETURNING *`,
-        [userId, projectId, tokenId, username ?? null, firstName ?? null, lastName ?? null, languageCode ?? null, isBot ?? 0, isPremium ?? 0]
-      );
-      res.status(201).json(result.rows[0]);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create user data" });
-    }
-  });
 
   // Delete all user data for a project
   app.delete("/api/projects/:id/users", async (req, res) => {
@@ -3639,40 +3595,6 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     } catch (error) {
       console.error("Failed to delete user data:", error);
       res.status(500).json({ message: "Failed to delete user data" });
-    }
-  });
-
-  // Search user data
-  app.get("/api/projects/:id/users/search", async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      const tokenId = getRequestTokenId(req);
-      const query = req.query.q as string;
-
-      // Проверяем права доступа к проекту для авторизованных пользователей
-      const ownerId = getOwnerIdFromRequest(req);
-      if (ownerId !== null) {
-        const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
-        if (!hasAccess) {
-          return res.status(403).json({ message: "Нет прав доступа к проекту" });
-        }
-      }
-
-      if (!query || query.trim().length === 0) {
-        return res.status(400).json({ message: "Search query is required" });
-      }
-
-      const searchTerm = `%${query.trim().toLowerCase()}%`;
-      const result = await dbPool.query(
-        `SELECT * FROM bot_users
-         WHERE project_id = $1 AND token_id = $2
-           AND (username ILIKE $3 OR first_name ILIKE $3 OR last_name ILIKE $3 OR user_id::text ILIKE $3)
-         ORDER BY last_interaction DESC`,
-        [projectId, tokenId ?? 0, searchTerm]
-      );
-      res.json(result.rows);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to search user data" });
     }
   });
 

@@ -1,5 +1,5 @@
 /**
- * @fileoverview OpenAPI-схемы пользователей бота (bot_users / диалоги)
+ * @fileoverview OpenAPI-схемы списка/CRUD одного пользователя бота.
  * @module server/swagger/schemas/bot-users
  */
 
@@ -54,43 +54,18 @@ export const BotUsersPageSchema = z
   })
   .openapi("BotUsersPage");
 
-/** Тело POST — создать / upsert пользователя бота */
-export const CreateBotUserRequestSchema = z
-  .object({
-    /** Telegram user_id (обязателен) */
-    userId: z.union([z.string(), z.number()]).openapi({
-      example: "123456789",
-      description: "ID пользователя в Telegram",
-    }),
-    /** Опциональный tokenId бота (иначе из query) */
-    tokenId: z.number().int().positive().optional().openapi({ example: 7 }),
-    /** Username без @ */
-    username: z.string().optional().openapi({ example: "ivan" }),
-    /** Имя */
-    firstName: z.string().optional().openapi({ example: "Иван" }),
-    /** Фамилия */
-    lastName: z.string().optional().openapi({ example: "Петров" }),
-    /** Код языка Telegram */
-    languageCode: z.string().optional().openapi({ example: "ru" }),
-    /** 1 если это бот */
-    isBot: z.number().int().optional().openapi({ example: 0 }),
-    /** 1 если Telegram Premium */
-    isPremium: z.number().int().optional().openapi({ example: 0 }),
-  })
-  .openapi("CreateBotUserRequest");
-
-/** Тело PUT — обновление пользователя бота */
+/** Тело PUT — обновление статуса активности */
 export const UpdateBotUserRequestSchema = z
   .object({
     /** 1 / true — активен; 0 / false — неактивен */
     isActive: z.union([z.number().int(), z.boolean(), z.string()]).optional().openapi({
       example: 1,
-      description: "Статус активности пользователя в bot_users",
+      description: "Статус активности в bot_users",
     }),
   })
   .openapi("UpdateBotUserRequest");
 
-/** Успешное удаление пользователя */
+/** Успешное удаление одного пользователя */
 export const DeleteBotUserSuccessSchema = z
   .object({
     /** Текстовое сообщение об успехе */
@@ -98,7 +73,7 @@ export const DeleteBotUserSuccessSchema = z
   })
   .openapi("DeleteBotUserSuccess");
 
-/** Строка bot_users после INSERT/UPSERT */
+/** Строка bot_users после PUT */
 export const BotUserRowSchema = z
   .object({
     user_id: z.union([z.string(), z.number()]).openapi({ example: "123456789" }),
