@@ -46,13 +46,8 @@ const broadcastFiltersSafeSchema = broadcastFiltersSchema.extend({
 
 /** Тело POST …/broadcasts */
 export const createBroadcastBodySchema = z.object({
-  /** Название рассылки (пустое → «Без названия») */
-  name: z
-    .string()
-    .trim()
-    .max(200)
-    .optional()
-    .transform((value) => (value && value.length > 0 ? value : "Без названия")),
+  /** Название рассылки (пустое — сервер соберёт из даты и текста) */
+  name: z.string().trim().max(200).optional().default(""),
   /** HTML-текст сообщения */
   messageText: z
     .string()

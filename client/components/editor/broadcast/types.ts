@@ -53,7 +53,7 @@ export interface BroadcastPanelProps {
  * Данные формы wizard создания рассылки
  */
 export interface NewBroadcastFormData {
-  /** Название рассылки (необязательно; на сервере пустое → «Без названия») */
+  /** Название рассылки (необязательно; пустое → дата + начало текста) */
   name: string;
   /** HTML-текст сообщения */
   messageText: string;

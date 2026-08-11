@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useBroadcastLiveProgress } from '../hooks/use-broadcast-live-progress';
 import { useBroadcastDetail } from '../hooks/use-broadcast-detail';
 import { useStopBroadcast } from '../hooks/use-stop-broadcast';
+import { resolveBroadcastDisplayName } from '../utils/resolve-broadcast-display-name';
 import type { Broadcast } from '../types';
 
 /**
@@ -59,7 +60,9 @@ export function BroadcastProgress({ projectId, broadcast, refetch, onClose }: Br
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">{broadcast.name || 'Без названия'}</p>
+        <p className="text-sm font-medium truncate">
+          {resolveBroadcastDisplayName(broadcast.name, broadcast.messageText, broadcast.createdAt)}
+        </p>
         <span className="text-xs text-muted-foreground">{percent}%</span>
       </div>
 

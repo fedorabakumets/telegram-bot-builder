@@ -104,7 +104,7 @@ export function registerProjectBroadcastsListPaths(
     description:
       "Создаёт рассылку со статусом `running` и запускает очередь отправки. " +
       "`tokenId` — query или body; иначе default токен. Текст ≤4096, media ≤10, buttons ≤100. " +
-      "`name` необязательно (пустое → «Без названия»).\n\n" +
+      "`name` необязательно (пустое → дата + начало текста сообщения).\n\n" +
       "**Клиент:** `use-create-broadcast`.\n\n" +
       "```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n" +
       "  -d '{\"messageText\":\"Привет!\",\"filters\":{}}' \\\n" +

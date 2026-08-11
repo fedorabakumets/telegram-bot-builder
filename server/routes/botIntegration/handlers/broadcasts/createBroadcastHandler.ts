@@ -6,6 +6,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { getRequestTokenId, resolveEffectiveProjectToken } from "../../../utils/resolve-request-token";
+import { buildBroadcastDefaultName } from "./build-broadcast-default-name";
 import { createBroadcastBodySchema } from "./broadcast-body-schemas";
 import { runBroadcastQueue } from "./broadcastQueue";
 
@@ -42,13 +43,14 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
     }
 
     const { name, messageText, mediaUrls, buttons, buttonsPerRow, filters } = validation.data;
+    const resolvedName = name.trim() || buildBroadcastDefaultName(messageText);
     const users = await storage.getUsersForBroadcast(projectId, effectiveTokenId, filters);
     const totalCount = users.length;
 
     const broadcast = await storage.createBroadcast({
       projectId,
       tokenId: effectiveTokenId,
-      name,
+      name: resolvedName,
       messageText,
       mediaUrls,
       buttons,

@@ -7,6 +7,7 @@ import { Users, CheckCircle2, XCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { BroadcastStatusBadge } from './broadcast-status-badge';
 import { useBroadcastLiveProgress } from '../hooks/use-broadcast-live-progress';
+import { resolveBroadcastDisplayName } from '../utils/resolve-broadcast-display-name';
 import { cn } from '@/utils/utils';
 import type { Broadcast } from '../types';
 
@@ -72,7 +73,9 @@ function BroadcastCard({
       )}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="font-medium text-sm truncate">{broadcast.name || 'Без названия'}</span>
+        <span className="font-medium text-sm truncate">
+          {resolveBroadcastDisplayName(broadcast.name, broadcast.messageText, broadcast.createdAt)}
+        </span>
         <div className="flex items-center gap-2 shrink-0">
           <BroadcastStatusBadge status={liveStatus} />
           <span className="text-xs text-muted-foreground whitespace-nowrap">

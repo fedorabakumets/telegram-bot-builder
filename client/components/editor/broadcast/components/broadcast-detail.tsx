@@ -14,6 +14,7 @@ import { BroadcastDeliveryErrors } from './broadcast-delivery-errors';
 import { useBroadcastDetail } from '../hooks/use-broadcast-detail';
 import { useStopBroadcast } from '../hooks/use-stop-broadcast';
 import { useBroadcastLiveProgress } from '../hooks/use-broadcast-live-progress';
+import { resolveBroadcastDisplayName } from '../utils/resolve-broadcast-display-name';
 import type { Broadcast } from '../types';
 
 /**
@@ -72,7 +73,9 @@ export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: Broa
       <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
         <div className="flex items-center gap-2 min-w-0">
           <BroadcastStatusBadge status={liveStatus} />
-          <span className="font-semibold text-sm truncate">{broadcast.name || 'Без названия'}</span>
+          <span className="font-semibold text-sm truncate">
+            {resolveBroadcastDisplayName(broadcast.name, broadcast.messageText, broadcast.createdAt)}
+          </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {liveStatus === 'running' && (

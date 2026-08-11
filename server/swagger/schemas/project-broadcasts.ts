@@ -99,7 +99,7 @@ export const CreateBroadcastRequestSchema = z
   .object({
     name: z.string().max(200).optional().openapi({
       example: "Акция августа",
-      description: "Необязательно. Пустое → «Без названия»",
+      description: "Необязательно. Пустое → «12 авг, 01:48 · начало текста…»",
     }),
     messageText: z.string().min(1).max(4096).openapi({ example: "Привет! Скидка 20%." }),
     mediaUrls: z.array(z.string()).max(10).optional().openapi({ example: [] }),
