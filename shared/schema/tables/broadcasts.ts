@@ -92,8 +92,8 @@ export const insertBroadcastSchema = z.object({
   projectId: z.number().int().positive(),
   /** Идентификатор токена бота */
   tokenId: z.number().int().min(0).default(0),
-  /** Название рассылки */
-  name: z.string().min(1),
+  /** Название рассылки (может быть пустым до нормализации на API) */
+  name: z.string().max(200),
   /** HTML-текст сообщения */
   messageText: z.string().min(1),
   /** URL медиафайлов для отправки */

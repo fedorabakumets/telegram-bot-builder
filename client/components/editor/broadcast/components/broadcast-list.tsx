@@ -72,7 +72,7 @@ function BroadcastCard({
       )}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="font-medium text-sm truncate">{broadcast.name}</span>
+        <span className="font-medium text-sm truncate">{broadcast.name || 'Без названия'}</span>
         <div className="flex items-center gap-2 shrink-0">
           <BroadcastStatusBadge status={liveStatus} />
           <span className="text-xs text-muted-foreground whitespace-nowrap">

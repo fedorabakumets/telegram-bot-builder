@@ -59,7 +59,7 @@ export function BroadcastProgress({ projectId, broadcast, refetch, onClose }: Br
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">{broadcast.name}</p>
+        <p className="text-sm font-medium">{broadcast.name || 'Без названия'}</p>
         <span className="text-xs text-muted-foreground">{percent}%</span>
       </div>
 

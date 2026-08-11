@@ -89,11 +89,12 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
 
   return (
     <div className="space-y-4">
-      {/* Название рассылки */}
+      {/* Название рассылки (необязательно) */}
       <div className="space-y-1.5">
         <Label className="flex items-center gap-1.5">
           <Tag className="w-3.5 h-3.5 text-blue-500" />
           Название рассылки
+          <span className="text-xs font-normal text-muted-foreground">необязательно</span>
         </Label>
         <Input
           value={formData.name}
@@ -178,7 +179,6 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
         <Button variant="ghost" onClick={onCancel}>Отмена</Button>
         <Button
           onClick={onNext}
-          disabled={!formData.name.trim()}
           className="bg-gradient-to-r from-blue-500 to-violet-500 text-white hover:from-blue-600 hover:to-violet-600"
         >
           Далее →

@@ -72,7 +72,7 @@ export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: Broa
       <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
         <div className="flex items-center gap-2 min-w-0">
           <BroadcastStatusBadge status={liveStatus} />
-          <span className="font-semibold text-sm truncate">{broadcast.name}</span>
+          <span className="font-semibold text-sm truncate">{broadcast.name || 'Без названия'}</span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {liveStatus === 'running' && (

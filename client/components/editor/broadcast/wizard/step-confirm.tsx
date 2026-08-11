@@ -76,7 +76,7 @@ export function StepConfirm({ projectId, formData, isLoading, onConfirm, onBack 
         <div className="flex items-center gap-3 px-4 py-3">
           <Tag className="w-4 h-4 text-blue-500 shrink-0" />
           <span className="text-muted-foreground">Название</span>
-          <span className="ml-auto font-medium">{formData.name}</span>
+          <span className="ml-auto font-medium">{formData.name.trim() || 'Без названия'}</span>
         </div>
         <div className="flex items-center gap-3 px-4 py-3">
           <Users className="w-4 h-4 text-violet-500 shrink-0" />

@@ -97,7 +97,10 @@ export const BroadcastsListResponseSchema = z
 /** Тело POST …/broadcasts */
 export const CreateBroadcastRequestSchema = z
   .object({
-    name: z.string().min(1).max(200).openapi({ example: "Акция августа" }),
+    name: z.string().max(200).optional().openapi({
+      example: "Акция августа",
+      description: "Необязательно. Пустое → «Без названия»",
+    }),
     messageText: z.string().min(1).max(4096).openapi({ example: "Привет! Скидка 20%." }),
     mediaUrls: z.array(z.string()).max(10).optional().openapi({ example: [] }),
     buttons: z.array(z.unknown()).max(100).optional().openapi({ example: [] }),
