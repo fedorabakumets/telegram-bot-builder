@@ -109,11 +109,23 @@ export function useFileStoragePanelState({ mode, projectId, selectedTokenId, att
   /** Копирование file_id в буфер обмена */
   const copyFileId = useCallback((fileId: string) => { navigator.clipboard?.writeText(fileId); }, []);
 
-  /** Массовое удаление выбранных файлов */
-  const deleteSelected = useCallback(() => deleteFiles([...selectedIds], category), [deleteFiles, selectedIds, category]);
+  /** Массовое удаление выбранных файлов (source берём из строк списка) */
+  const deleteSelected = useCallback(() => {
+    const items = files
+      .filter((f) => selectedIds.has(f.id))
+      .map((f) => ({ id: f.id, source: f.source }));
+    deleteFiles(items);
+  }, [deleteFiles, files, selectedIds]);
 
-  /** Удаление одного файла (кнопка в строке таблицы, Req 3.6 / 7.1) */
-  const deleteOne = useCallback((id: number) => deleteFiles([id], category), [deleteFiles, category]);
+  /** Удаление одного файла (кнопка в строке таблицы) */
+  const deleteOne = useCallback(
+    (id: number) => {
+      const file = files.find((f) => f.id === id);
+      if (!file) return;
+      deleteFiles([{ id: file.id, source: file.source }]);
+    },
+    [deleteFiles, files],
+  );
 
   /**
    * Прикрепление выбранных файлов: собирает дедуплицированные ссылки единого

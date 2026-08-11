@@ -13,8 +13,6 @@ import { queryUploadedFiles } from "./project-files-uploaded-query";
 import { queryMessageFiles } from "./project-files-messages-query";
 import { queryAllFiles } from "./project-files-all-query";
 
-// Реэкспорт для обратной совместимости импортов в setupBotIntegrationRoutes
-export { addProjectFileHandler } from "./addProjectFileHandler";
 export { deleteProjectFilesHandler } from "./deleteProjectFilesHandler";
 
 /**

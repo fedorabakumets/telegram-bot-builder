@@ -56,7 +56,7 @@
     },
     {
       "name": "project-files",
-      "description": "Файлы проекта, квота хранилища и прокси telegram-file. Не путать с `/api/media` и реестром `storage-configs`."
+      "description": "Файлы проекта (список/удаление), квота локального хранилища и прокси telegram-file. Auth: requireProjectAccess. Не путать с `/api/media` и реестром `storage-configs`."
     },
     {
       "name": "project-groups",
@@ -13186,16 +13186,128 @@
         "tags": [
           "project-files"
         ],
-        "summary": "DELETE /api/projects/{projectId}/files",
+        "summary": "Удалить файлы проекта",
+        "description": "Массовое удаление из «Файлы». Предпочтительно `{ items: [{ id, source }] }` (вкладка «Все»). Легаси: `{ ids, source }` (`source` ≠ all). `uploaded` — media_files+диск; incoming/outgoing — bot_messages.\n\n**Клиент:** `use-file-delete-mutation`.\n\n```bash\ncurl -s -X DELETE -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"items\":[{\"id\":88,\"source\":\"uploaded\"}]}' \\\n  'http://localhost:5000/api/projects/42/files'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectFilesDeleteRequest"
+              },
+              "example": {
+                "items": [
+                  {
+                    "id": 88,
+                    "source": "uploaded"
+                  },
+                  {
+                    "id": 501,
+                    "source": "incoming"
+                  }
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Сколько записей удалено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectFilesDeleteResponse"
+                },
+                "example": {
+                  "success": true,
+                  "deleted": 2
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Пустой/неверный body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "source обязателен: incoming | outgoing | uploaded (не all)"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
           }
         }
       },
@@ -13203,33 +13315,240 @@
         "tags": [
           "project-files"
         ],
-        "summary": "GET /api/projects/{projectId}/files",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
+        "summary": "Список файлов проекта",
+        "description": "Таблица «Файлы»: `uploaded` / входящие / исходящие / `all`. Фильтры: имя, даты, тип, сотрудник, размер, хранилище, `tokenId`. Пагинация `page`/`limit`.\n\n**Auth:** cookie или Bearer PAT + доступ к проекту. **Клиент:** `use-project-files`.\n\n```bash\ncurl -s -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/files?category=uploaded&page=1'\n```",
+        "security": [
+          {
+            "cookieAuth": []
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          {
+            "agentToken": []
           }
-        }
-      },
-      "post": {
-        "tags": [
-          "project-files"
         ],
-        "summary": "POST /api/projects/{projectId}/files",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Категория (или легаси `source`). Обязателен category|source.",
+              "example": "uploaded"
+            },
+            "required": false,
+            "description": "all | incoming | outgoing | uploaded",
+            "example": "uploaded",
+            "name": "category",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Алиас category",
+              "example": "uploaded"
+            },
+            "required": false,
+            "name": "source",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "photo"
+            },
+            "required": false,
+            "name": "fileName",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "2026-08-01"
+            },
+            "required": false,
+            "name": "dateFrom",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "2026-08-12"
+            },
+            "required": false,
+            "name": "dateTo",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "photo"
+            },
+            "required": false,
+            "name": "mediaType",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "1001"
+            },
+            "required": false,
+            "name": "uploadedBy",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "1024"
+            },
+            "required": false,
+            "name": "sizeMin",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "10485760"
+            },
+            "required": false,
+            "name": "sizeMax",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "local-default"
+            },
+            "required": false,
+            "name": "storageConfigId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "7"
+            },
+            "required": false,
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "1"
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "50"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Страница файлов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectFilesListResponse"
+                },
+                "example": {
+                  "files": [
+                    {
+                      "id": 88,
+                      "source": "uploaded",
+                      "mediaType": "photo",
+                      "fileId": "AgACAgIAAxkBAA",
+                      "fileName": "cover.jpg",
+                      "fileSize": 245760,
+                      "createdAt": "2026-08-11T12:00:00.000Z"
+                    }
+                  ],
+                  "total": 120,
+                  "page": 1,
+                  "limit": 50
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет/неверный category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Параметр category обязателен: all | incoming | outgoing | uploaded"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
           }
         }
       }
@@ -13240,7 +13559,7 @@
           "project-groups"
         ],
         "summary": "Список Telegram-групп проекта",
-        "description": "Группы/каналы проекта (Database → группы, выбор аудитории рассылки). Название и аватарка — через `…/sync`.\n\n**Auth:** cookie или Bearer PAT + доступ к проекту.\n\n**Клиент:** `use-system-tables`, `group-select`.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/groups' -b cookies.txt\n```",
+        "description": "Группы/каналы проекта (Database → группы, выбор аудитории рассылки). Название и аватарка — через `…/sync`.\n\n**Auth:** cookie или Bearer PAT + доступ к проекту. **Клиент:** `use-system-tables`, `group-select`.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/groups' -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -13540,7 +13859,7 @@
           "project-groups"
         ],
         "summary": "Синхронизировать группу из Telegram",
-        "description": "Актуализирует название, тип и аватарку через `getChat`. Нет записи — создаёт. `tokenId` — от какого бота ходить в Telegram.\n\n**Клиент:** `use-sync-groups`.\n\n```bash\ncurl -s -X POST -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/groups/-1001234567890/sync?tokenId=7'\n```",
+        "description": "Актуализирует название, тип и аватарку через `getChat`. Нет записи — создаёт. `tokenId` — бот для Telegram. **Клиент:** `use-sync-groups`.\n\n```bash\ncurl -s -X POST -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/groups/-1001234567890/sync?tokenId=7'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -14086,16 +14405,95 @@
         "tags": [
           "project-files"
         ],
-        "summary": "GET /api/projects/{projectId}/storage-quota",
+        "summary": "Квота локального хранилища",
+        "description": "Занято байт по локальным бэкендам проекта, лимит (`STORAGE_LIMIT_GB`, null = безлимит) и мягкий флаг `quotaExceeded`. S3 в квоту не входит.\n\n**Клиент:** `StorageQuotaBar` / `use-storage-quota`.\n\n```bash\ncurl -s -b cookies.txt 'http://localhost:5000/api/projects/42/storage-quota'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Квота",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageQuotaResponse"
+                },
+                "example": {
+                  "usedBytes": 52428800,
+                  "limitBytes": 1073741824,
+                  "quotaExceeded": false
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
           }
         }
       }
@@ -14105,16 +14503,149 @@
         "tags": [
           "project-files"
         ],
-        "summary": "GET /api/projects/{projectId}/telegram-file",
+        "summary": "Прокси файла из Telegram CDN",
+        "description": "Стримит файл по `fileId` через бота проекта (токен не светится клиенту). Поддерживает Range. Cache-Control: private. Превью в таблице файлов, диалогах, медиа-карточках.\n\n```bash\ncurl -s -o out.jpg -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/telegram-file?fileId=AgAC&tokenId=7'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "file_id из Bot API",
+              "example": "AgACAgIAAxkBAA"
+            },
+            "required": true,
+            "description": "Telegram file_id",
+            "example": "AgACAgIAAxkBAA",
+            "name": "fileId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "photo.jpg"
+            },
+            "required": false,
+            "name": "fileName",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Байты файла (или 206 Partial Content)",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет fileId / projectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверные параметры запроса"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Нет токена или файла в Telegram",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Файл не найден в Telegram"
+                }
+              }
+            }
           }
         }
       }
@@ -27410,6 +27941,185 @@
         },
         "required": [
           "groupId"
+        ]
+      },
+      "ProjectFileItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 88
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "incoming",
+              "outgoing",
+              "uploaded"
+            ],
+            "example": "uploaded"
+          },
+          "mediaType": {
+            "type": "string",
+            "nullable": true,
+            "example": "photo"
+          },
+          "fileId": {
+            "type": "string",
+            "nullable": true,
+            "example": "AgACAgIAAxkBAA"
+          },
+          "fileName": {
+            "type": "string",
+            "nullable": true,
+            "example": "cover.jpg"
+          },
+          "fileSize": {
+            "type": "number",
+            "nullable": true,
+            "example": 245760
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "mediaType"
+        ]
+      },
+      "ProjectFilesListResponse": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectFileItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 120
+          },
+          "page": {
+            "type": "integer",
+            "example": 1
+          },
+          "limit": {
+            "type": "integer",
+            "example": 50
+          }
+        },
+        "required": [
+          "files",
+          "total",
+          "page",
+          "limit"
+        ]
+      },
+      "ProjectFilesDeleteResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          },
+          "deleted": {
+            "type": "integer",
+            "example": 2
+          }
+        },
+        "required": [
+          "success",
+          "deleted"
+        ]
+      },
+      "ProjectFileDeleteItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 88
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "incoming",
+              "outgoing",
+              "uploaded"
+            ],
+            "example": "uploaded"
+          }
+        },
+        "required": [
+          "id",
+          "source"
+        ]
+      },
+      "ProjectFilesDeleteRequest": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectFileDeleteItem"
+            },
+            "minItems": 1,
+            "description": "Предпочтительный формат (вкладка «all»)"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 1,
+            "description": "Легаси: вместе с source"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "incoming",
+              "outgoing",
+              "uploaded"
+            ]
+          }
+        }
+      },
+      "StorageQuotaResponse": {
+        "type": "object",
+        "properties": {
+          "usedBytes": {
+            "type": "integer",
+            "example": 52428800
+          },
+          "limitBytes": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1073741824
+          },
+          "quotaExceeded": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "usedBytes",
+          "limitBytes",
+          "quotaExceeded"
         ]
       }
     },

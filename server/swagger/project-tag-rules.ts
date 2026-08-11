@@ -34,8 +34,8 @@ export const PROJECT_TAG_DESCRIPTIONS: Record<string, string> = {
     "Пользовательские таблицы проекта (`bot_tables`): список, CRUD таблиц/колонок/строк. " +
     "Auth: requireProjectAccess. UI: панель Database.",
   "project-files":
-    "Файлы проекта, квота хранилища и прокси telegram-file. " +
-    "Не путать с `/api/media` и реестром `storage-configs`.",
+    "Файлы проекта (список/удаление), квота локального хранилища и прокси telegram-file. " +
+    "Auth: requireProjectAccess. Не путать с `/api/media` и реестром `storage-configs`.",
 };
 
 /** Действия bot API, относящиеся к группам (не lifecycle) */

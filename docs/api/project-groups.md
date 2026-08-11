@@ -68,9 +68,7 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 
 Группы/каналы проекта (Database → группы, выбор аудитории рассылки). Название и аватарка — через `…/sync`.
 
-**Auth:** cookie или Bearer PAT + доступ к проекту.
-
-**Клиент:** `use-system-tables`, `group-select`.
+**Auth:** cookie или Bearer PAT + доступ к проекту. **Клиент:** `use-system-tables`, `group-select`.
 
 ```bash
 curl -s 'http://localhost:5000/api/projects/42/groups' -b cookies.txt
@@ -186,9 +184,7 @@ curl -s -b cookies.txt \
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Актуализирует название, тип и аватарку через `getChat`. Нет записи — создаёт. `tokenId` — от какого бота ходить в Telegram.
-
-**Клиент:** `use-sync-groups`.
+Актуализирует название, тип и аватарку через `getChat`. Нет записи — создаёт. `tokenId` — бот для Telegram. **Клиент:** `use-sync-groups`.
 
 ```bash
 curl -s -X POST -b cookies.txt \

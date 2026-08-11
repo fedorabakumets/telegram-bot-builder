@@ -114,7 +114,7 @@ export async function getTelegramFileHandler(req: Request, res: Response): Promi
     res.status(fileResp.status);
     res.set("Content-Type", contentType);
     res.set("Accept-Ranges", acceptRanges);
-    res.set("Cache-Control", "public, max-age=86400");
+    res.set("Cache-Control", "private, max-age=86400");
     res.set("Content-Disposition", `inline; filename="${encodeURIComponent(fileName)}"`);
 
     if (contentLength) res.set("Content-Length", contentLength);

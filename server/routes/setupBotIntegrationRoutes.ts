@@ -10,7 +10,6 @@ import { getBotDataHandler, getAvatarHandler } from "./botIntegration/handlers/b
 import { getTelegramFileHandler } from "./botIntegration/handlers/botData/getTelegramFileHandler";
 import {
   getProjectFilesHandler,
-  addProjectFileHandler,
   deleteProjectFilesHandler,
 } from "./botIntegration/handlers/botData/getProjectFilesHandler";
 import { updateMediaFileIdHandler } from "./botIntegration/handlers/botData/updateMediaFileIdHandler";
@@ -53,7 +52,6 @@ export function setupBotIntegrationRoutes(app: Express) {
     getTelegramFileHandler,
   );
   app.get("/api/projects/:projectId/files", requireProjectAccess, getProjectFilesHandler);
-  app.post("/api/projects/:projectId/files", requireProjectAccess, addProjectFileHandler);
   app.post("/api/media/:id/file-id", requireMediaFileOwnership, updateMediaFileIdHandler);
   app.delete(
     "/api/projects/:projectId/files",

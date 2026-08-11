@@ -2,8 +2,8 @@
  * @fileoverview Интеграционные тесты денормализации file_id (задача 10.3, Req 8.4, 8.5).
  *
  * Проверяют сквозной путь:
- *  - `POST /api/projects/:projectId/files` (`addProjectFileHandler`) создаёт
- *    запись media_files и денормализует `fileIdsByToken` в `media_file_tokens`;
+ *  - `addProjectFileHandler` создаёт запись media_files и денормализует
+ *    `fileIdsByToken` в `media_file_tokens` (HTTP POST /files снят — только хендлер);
  *  - обратная сборка карты при чтении (`buildFileIdsByTokenMap`) восстанавливает
  *    исходный `fileIdsByToken`;
  *  - валидация тела (400 при отсутствии mediaType / пустом fileIdsByToken);
@@ -48,7 +48,7 @@ beforeEach(() => {
   resetFakeDb();
 });
 
-describe("POST /files → денормализация в media_file_tokens (Req 8.4)", () => {
+describe("addProjectFileHandler → денормализация в media_file_tokens (Req 8.4)", () => {
   it("создаёт media_files и пишет пары (медиафайл, токен)", async () => {
     const req = {
       params: { projectId: "5" },

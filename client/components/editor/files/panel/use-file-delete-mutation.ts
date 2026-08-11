@@ -1,37 +1,47 @@
 /**
- * @fileoverview Хук мутации массового удаления файлов проекта.
- * Вынесен из оркестратора FileStoragePanel, чтобы тело панели и хук
- * состояния оставались в пределах лимита строк. Используется
- * SelectionActionBar (Req 3.5, 3.6).
+ * @fileoverview Хук мутации массового удаления файлов проекта
  * @module components/editor/files/panel/use-file-delete-mutation
  */
 
 import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { FileSource } from '../hooks/use-project-files';
+
+/** Элемент удаления с источником записи */
+export interface FileDeleteItem {
+  /** ID media_files или bot_messages */
+  id: number;
+  /** Источник: incoming | outgoing | uploaded */
+  source: FileSource;
+}
 
 /** Результат хука удаления файлов */
 export interface UseFileDeleteMutationResult {
-  /** Удалить файлы по списку id (источник нужен для серверного резолва) */
-  deleteFiles: (ids: number[], category: string) => void;
+  /** Удалить файлы (с source на каждый id — нужно для вкладки «all») */
+  deleteFiles: (items: FileDeleteItem[]) => void;
   /** Идёт ли удаление */
   isDeleting: boolean;
 }
 
 /**
- * Хук массового удаления файлов проекта с инвалидацией кэша списка.
- * @param projectId - Идентификатор проекта
- * @param onDeleted - Колбэк после успешного удаления (например, сброс выбора)
+ * Массовое удаление файлов проекта с инвалидацией кэша списка.
+ * @param projectId - ID проекта
+ * @param onDeleted - Колбэк после успеха
  * @returns Функция удаления и флаг процесса
  */
-export function useFileDeleteMutation(projectId: number, onDeleted?: () => void): UseFileDeleteMutationResult {
+export function useFileDeleteMutation(
+  projectId: number,
+  onDeleted?: () => void,
+): UseFileDeleteMutationResult {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: async (payload: { ids: number[]; category: string }) => {
+    mutationFn: async (items: FileDeleteItem[]) => {
       const res = await fetch(`/api/projects/${projectId}/files`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ items }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Ошибка удаления файлов');
       return res.json();
@@ -39,13 +49,14 @@ export function useFileDeleteMutation(projectId: number, onDeleted?: () => void)
     onSuccess: () => {
       onDeleted?.();
       queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'files'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'storage-quota'] });
     },
   });
 
   const deleteFiles = useCallback(
-    (ids: number[], category: string) => {
-      if (ids.length === 0) return;
-      mutation.mutate({ ids, category });
+    (items: FileDeleteItem[]) => {
+      if (items.length === 0) return;
+      mutation.mutate(items);
     },
     [mutation],
   );
