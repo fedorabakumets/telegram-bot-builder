@@ -5,6 +5,7 @@
 
 import type { Express } from "express";
 import listEndpoints from "express-list-endpoints";
+import { inferProjectTag, PROJECT_TAG_DESCRIPTIONS } from "./project-tag-rules";
 
 /** HTTP-метод и путь одного эндпоинта */
 export interface CollectedRoute {
@@ -29,7 +30,11 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
   config:
     "Bootstrap экрана входа Studio (до сессии): Client ID / bot username / skipAuth. " +
     "Не конфиг бота — только что показать на AuthScreen (widget vs dev-login).",
-  projects: "Проекты, версии, экспорт и дублирование",
+  projects:
+    "CRUD проектов: список, создание, get/put/delete, reorder, duplicate, export, " +
+    "generate, collaborators, admin-ids; также logs/all и launches/all. " +
+    "Подгруппы (токены, users, bot, …) — отдельные теги `project-*`.",
+  ...PROJECT_TAG_DESCRIPTIONS,
   templates:
     "Библиотека готовых сценариев (`bot_templates`). UI: «Сценарии». " +
     "CRUD + use; доступ canViewOrUseTemplate. " +
@@ -58,8 +63,8 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
     "только владелец/collaborator). Список env секреты маскирует.",
   users: "Пользователи ботов и статистика",
   database:
-    "Пользовательские таблицы проекта (bot_tables). Сейчас в OpenAPI: список GET …/tables. " +
-    "Доступ requireProjectAccess.",
+    "Устаревший ярлык: таблицы проекта перенесены в тег `project-tables` " +
+    "(`/api/projects/…/tables*`).",
   "storage-configs":
     "Реестр медиа-хранилищ (local / S3): список, создание, обновление, удаление, тест связности. " +
     "Секреты наружу не отдаются — только hasSecrets. UI: вкладка «Файлы» → «Хранилища».",
@@ -84,10 +89,15 @@ function toOpenApiPath(path: string): string {
 
 /**
  * Определяет тег OpenAPI по URL.
+ * Сначала — подгруппы `/api/projects/…` (`project-tag-rules`), иначе сегмент после `/api/`.
  * @param path - Полный путь эндпоинта
  * @returns Имя тега
  */
 function inferTag(path: string): string {
+  const openApiPath = toOpenApiPath(path);
+  const projectTag = inferProjectTag(openApiPath);
+  if (projectTag) return projectTag;
+
   const segments = path.split("/").filter(Boolean);
   if (segments[0] !== "api") return "other";
   return segments[1] ?? "other";

@@ -1536,34 +1536,6 @@ PATCH /api/projects/{projectId}/messages/{messageId}
 | 401 | Требуется авторизация (сессия или Bearer PAT) |
 | 503 | Приложение не настроено — настройка в /admin |
 
-### `GET` /api/projects/{projectId}/nodes
-
-GET /api/projects/{projectId}/nodes
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
-### `GET` /api/projects/{projectId}/nodes/{nodeId}
-
-GET /api/projects/{projectId}/nodes/{nodeId}
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Успешный ответ |
-| 401 | Требуется авторизация (сессия или Bearer PAT) |
-| 503 | Приложение не настроено — настройка в /admin |
-
 ### `GET` /api/projects/{projectId}/storage-quota
 
 GET /api/projects/{projectId}/storage-quota

@@ -1,5 +1,5 @@
 /**
- * @fileoverview OpenAPI paths: список диалогов и создание пользователя бота
+ * @fileoverview OpenAPI paths: список/CRUD пользователей бота проекта (`project-users`)
  * @module server/swagger/paths/bot-users-paths
  */
 
@@ -85,7 +85,7 @@ export function registerBotUsersPaths(
   registry.registerPath({
     method: "get",
     path: "/api/projects/{id}/users",
-    tags: ["projects"],
+    tags: ["project-users"],
     summary: "Список пользователей и диалогов проекта",
     description:
       "Вкладка «Диалоги» / «Пользователи». С `limit` — страница `{ users, total, hasMore }`. " +
@@ -112,7 +112,7 @@ export function registerBotUsersPaths(
   registry.registerPath({
     method: "post",
     path: "/api/projects/{id}/users",
-    tags: ["projects"],
+    tags: ["project-users"],
     summary: "Создать или обновить пользователя бота",
     description:
       "INSERT в `bot_users` по (user_id, project_id, token_id). " +
@@ -163,7 +163,7 @@ export function registerBotUsersPaths(
   registry.registerPath({
     method: "get",
     path: "/api/projects/{projectId}/users/{userId}",
-    tags: ["projects"],
+    tags: ["project-users"],
     summary: "Один пользователь бота по projectId и userId",
     description:
       "Возвращает одну строку `bot_users` для пары (project_id, user_id, token_id). " +
@@ -202,7 +202,7 @@ export function registerBotUsersPaths(
   registry.registerPath({
     method: "put",
     path: "/api/projects/{projectId}/users/{userId}",
-    tags: ["projects"],
+    tags: ["project-users"],
     summary: "Обновить пользователя бота (статус активности)",
     description:
       "**UI:** смена статуса «активен / неактивен» в базе пользователей.\n\n" +
@@ -268,7 +268,7 @@ export function registerBotUsersPaths(
   registry.registerPath({
     method: "delete",
     path: "/api/projects/{projectId}/users/{userId}",
-    tags: ["projects"],
+    tags: ["project-users"],
     summary: "Удалить пользователя и его сообщения",
     description:
       "**UI:** удаление пользователя из базы в редакторе.\n\n" +

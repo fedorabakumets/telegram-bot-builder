@@ -38,10 +38,11 @@ export function registerDatabasePaths(
   registry.registerPath({
     method: "get",
     path: "/api/projects/{id}/tables",
-    tags: ["database"],
+    tags: ["project-tables"],
     summary: "Список таблиц контента проекта",
     description:
       "Пользовательские таблицы `bot_tables` для панели Database в редакторе.\n\n" +
+      "**Тег:** `project-tables` (вместе с CRUD tables/rows/columns).\n\n" +
       "**Доступ:** `requireProjectAccess` (владелец / collaborator).\n\n" +
       "**Клиент:** `tables-api` → TablesPanel.\n\n" +
       "```bash\n" +

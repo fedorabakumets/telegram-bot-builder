@@ -1,77 +1,69 @@
 /**
- * @fileoverview Модуль для настройки маршрута удаления проекта
- *
- * Этот модуль предоставляет функцию для настройки маршрута удаления проекта,
- * включающую проверку прав доступа, остановку бота и удаление всех связанных данных.
- *
+ * @fileoverview Маршрут DELETE /api/projects/:id
+ * Доступ: requireApiAuth + requireProjectAccess (как у остальных project-роутов).
  * @module setupDeleteProjectRoute
  */
 
 import type { Express } from "express";
-import { getOwnerIdFromRequest } from "../telegram/auth-middleware";
+import { requireProjectAccess } from "../middleware/requireProjectAccess";
 import { deleteProject } from "./projectManagement/utils/projectDeleter";
 import { storage } from "../storages/storage";
 import { broadcastProjectsChangedToUsers } from "../terminal/broadcastProjectsChanged";
 import { getProjectMemberIds } from "../terminal/resolveProjectMembers";
 
 /**
- * Настраивает маршрут удаления проекта
- *
- * @function setupDeleteProjectRoute
- * @param {Express} app - Экземпляр приложения Express
- * @param {Function} requireDbReady - Middleware для проверки готовности базы данных
- * @returns {void}
+ * Регистрирует удаление проекта с ACL через requireProjectAccess.
+ * @param app - Express-приложение
+ * @param requireDbReady - Middleware готовности БД
+ * @returns void
  */
-export function setupDeleteProjectRoute(app: Express, requireDbReady: (_req: any, res: any, next: any) => any) {
-    app.delete("/api/projects/:id", requireDbReady, async (req, res) => {
-        try {
-            const id = parseInt(req.params.id);
-            console.log(`🗑️ Начинаем удаление проекта ${id}`);
+export function setupDeleteProjectRoute(
+  app: Express,
+  requireDbReady: (_req: any, res: any, next: any) => any,
+): void {
+  app.delete(
+    "/api/projects/:id",
+    requireDbReady,
+    requireProjectAccess,
+    async (req, res) => {
+      try {
+        const id = parseInt(req.params.id, 10);
+        console.log(`🗑️ Начинаем удаление проекта ${id}`);
 
-            const project = await storage.getBotProject(id);
-            if (!project) {
-                console.log(`❌ Проект ${id} не найден`);
-                return res.status(404).json({ message: "Проект не найден" });
-            }
-            console.log(`✅ Проект ${id} найден: ${project.name}`);
-
-            const ownerId = getOwnerIdFromRequest(req);
-            if (ownerId !== null) {
-                const hasAccess = await storage.hasProjectAccess(id, ownerId);
-                if (!hasAccess) {
-                    console.log(`❌ Пользователь ${ownerId} не имеет прав на удаление проекта ${id}`);
-                    return res.status(403).json({ message: "Нет прав на удаление проекта" });
-                }
-            }
-
-            // Собираем получателей live-обновления ДО удаления проекта:
-            // записи project_collaborators удаляются каскадно вместе с проектом.
-            const members = await getProjectMemberIds(id, project.ownerId ?? null);
-
-            const result = await deleteProject(id);
-
-            if (!result.success) {
-                return res.status(500).json({ message: result.message });
-            }
-
-            console.log(`🎉 Проект ${id} успешно удален`);
-
-            // Live-обновление списка проектов во всех открытых вкладках.
-            // Члены проекта (владелец + коллабораторы) собраны ДО удаления,
-            // т.к. записи project_collaborators удаляются каскадно.
-            try {
-                broadcastProjectsChangedToUsers(members, 'deleted');
-            } catch (err) {
-                console.error(`[setupDeleteProjectRoute] Ошибка broadcast projects-changed для проекта ${id}:`, err);
-            }
-
-            return res.json({ message: result.message });
-        } catch (error) {
-            console.error("❌ Критическая ошибка удаления проекта:", error);
-            return res.status(500).json({
-                message: "Не удалось удалить проект",
-                error: error instanceof Error ? error.message : String(error)
-            });
+        const project = await storage.getBotProject(id);
+        if (!project) {
+          console.log(`❌ Проект ${id} не найден`);
+          return res.status(404).json({ message: "Проект не найден" });
         }
-    });
+        console.log(`✅ Проект ${id} найден: ${project.name}`);
+
+        // Члены для live-события — до удаления (collaborators каскадом уйдут).
+        const members = await getProjectMemberIds(id, project.ownerId ?? null);
+
+        const result = await deleteProject(id);
+        if (!result.success) {
+          return res.status(500).json({ message: result.message });
+        }
+
+        console.log(`🎉 Проект ${id} успешно удален`);
+
+        try {
+          broadcastProjectsChangedToUsers(members, "deleted");
+        } catch (err) {
+          console.error(
+            `[setupDeleteProjectRoute] Ошибка broadcast projects-changed для проекта ${id}:`,
+            err,
+          );
+        }
+
+        return res.json({ message: result.message });
+      } catch (error) {
+        console.error("❌ Критическая ошибка удаления проекта:", error);
+        return res.status(500).json({
+          message: "Не удалось удалить проект",
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    },
+  );
 }

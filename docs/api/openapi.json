@@ -7776,44 +7776,6 @@
         }
       }
     },
-    "/api/projects/{projectId}/nodes": {
-      "get": {
-        "tags": [
-          "projects"
-        ],
-        "summary": "GET /api/projects/{projectId}/nodes",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/nodes/{nodeId}": {
-      "get": {
-        "tags": [
-          "projects"
-        ],
-        "summary": "GET /api/projects/{projectId}/nodes/{nodeId}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
     "/api/projects/{projectId}/storage-quota": {
       "get": {
         "tags": [
