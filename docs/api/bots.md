@@ -1,6 +1,6 @@
 # bots
 
-Эндпоинтов: **2**
+Эндпоинтов: **1**
 
 ### `GET` /api/bots
 
@@ -47,63 +47,4 @@ curl -s http://localhost:5000/api/bots -b cookies.txt
     "errorMessage": null
   }
 ]
-```
-
-### `POST` /api/projects/{id}/bot/start-offline-all
-
-Запустить всех офлайн-ботов проекта
-
-**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
-
-Последовательно запускает токены проекта со status !== running. Уже running не трогает (в отличие от restart-all).
-
-**Доступ:** `requireProjectAccess`.
-
-**Side-effects:** WS `bot-started`, `start-offline-progress` (без секретов; см. docs/api/realtime-events.md).
-
-**Клиент:** `use-bot-mutations` / BotManagement. MCP: `db_start_offline_bots`.
-
-При большом числе токенов HTTP долгий (пауза ~400ms между стартами).
-
-```bash
-curl -s -X POST http://localhost:5000/api/projects/1/bot/start-offline-all -b cookies.txt
-```
-
-#### Параметры
-
-| Имя | In | Обязательный | Описание | Пример |
-|-----|-----|--------------|----------|--------|
-| `id` | path | да | ID проекта bot_projects | `"1"` |
-| `connect.sid` | cookie | нет | Session cookie Studio. Без личности ответ — пустой массив. Альтернатива — Bearer PAT. | `"s%3Axxxx.yyyy"` |
-
-#### Ответы
-
-| Код | Описание |
-|-----|----------|
-| 200 | Сводка запуска |
-| 400 | Неверный ID проекта |
-| 401 | Не авторизован |
-| 403 | Нет доступа к проекту |
-| 404 | Токены не найдены |
-
-#### Пример ответа `200`
-
-```json
-{
-  "started": 2,
-  "failed": 0,
-  "skippedRunning": 1,
-  "results": [
-    {
-      "tokenId": 7,
-      "success": true,
-      "processId": "12345"
-    },
-    {
-      "tokenId": 8,
-      "success": true,
-      "processId": "12346"
-    }
-  ]
-}
 ```

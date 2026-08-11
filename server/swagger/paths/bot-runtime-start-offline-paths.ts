@@ -4,17 +4,17 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { z } from "zod";
 import {
   ForbiddenSchema,
   MessageErrorSchema,
   UnauthorizedSchema,
 } from "../schemas/common";
+import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/projects";
 import {
   StartOfflineAllResponseSchema,
   StartOfflineProgressEventDataSchema,
 } from "../schemas/bot-runtime-start-offline";
-import { BotsCookiesSchema } from "../schemas/bots";
+import { ProjectBotIdParamsSchema } from "../schemas/project-bot";
 
 /** Регистрация схем события в OpenAPI */
 void StartOfflineProgressEventDataSchema;
@@ -42,7 +42,7 @@ export function registerBotStartOfflinePaths(
   registry.registerPath({
     method: "post",
     path: "/api/projects/{id}/bot/start-offline-all",
-    tags: ["bots"],
+    tags: ["project-bot"],
     summary: "Запустить всех офлайн-ботов проекта",
     description:
       "Последовательно запускает токены проекта со status !== running. " +
@@ -57,14 +57,9 @@ export function registerBotStartOfflinePaths(
       "```",
     security: cookieSecurity,
     request: {
-      cookies: BotsCookiesSchema,
-      params: z.object({
-        id: z.string().openapi({
-          example: "1",
-          description: "ID проекта",
-          param: { description: "ID проекта bot_projects", example: "1" },
-        }),
-      }),
+      cookies: ProjectsCookiesSchema,
+      headers: ProjectsAuthHeadersSchema,
+      params: ProjectBotIdParamsSchema,
     },
     responses: {
       200: {

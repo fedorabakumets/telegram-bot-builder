@@ -11,7 +11,7 @@
 import { BotCard } from '../card/BotCard';
 import { useBotControl } from '../bot-control-context';
 import type { BotProject, BotToken } from '@shared/schema';
-import type { BotInfo } from '../profile/BotProfileEditor';
+import type { BotInfo } from '../bot-types';
 
 /** Свойства списка ботов проекта */
 interface ProjectBotsListProps {

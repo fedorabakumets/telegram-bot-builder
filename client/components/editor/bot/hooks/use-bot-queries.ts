@@ -19,7 +19,7 @@ import { useQuery, useQueries } from '@tanstack/react-query';
 import { apiRequest } from '@/queryClient';
 import { type BotProject, BotToken } from '@shared/schema';
 import type { BotStatusResponse } from '../bot-types';
-import type { BotInfo } from '../profile/BotProfileEditor';
+import type { BotInfo } from '../bot-types';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { isTelegramUser } from '@/types/telegram-user';
 

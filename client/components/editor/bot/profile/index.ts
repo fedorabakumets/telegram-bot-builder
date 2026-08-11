@@ -1,10 +1,7 @@
 /**
- * @fileoverview Публичный API поддомена "Профиль бота"
- * @module bot/profile
+ * @fileoverview Реэкспорт профиля бота
+ * @module client/components/editor/bot/profile
  */
-export { BotAdminIds } from './BotAdminIds';
-export { BotProfileEditor } from './BotProfileEditor';
+
+export type { BotInfo } from '../bot-types';
 export { BotProfileSheet } from './BotProfileSheet';
-export { useAdminIds } from './use-admin-ids';
-export { ProjectCollaborators } from './ProjectCollaborators';
-export { useCollaborators } from './use-collaborators';

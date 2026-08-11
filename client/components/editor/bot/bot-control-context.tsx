@@ -77,6 +77,8 @@ interface BotControlContextValue {
   setSelectedProject: (project: BotProject | null) => void;
   /** Установить информацию о боте для редактирования профиля */
   setSelectedBotInfo: (info: BotInfo | null) => void;
+  /** Установить tokenId редактируемого бота */
+  setSelectedTokenId: (tokenId: number | null) => void;
   /** Открыть/закрыть панель профиля */
   setIsProfileSheetOpen: (open: boolean) => void;
 

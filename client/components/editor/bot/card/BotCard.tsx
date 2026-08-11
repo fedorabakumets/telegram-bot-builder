@@ -26,7 +26,7 @@ import { useEnvPendingChanges } from './use-env-pending-changes';
 import { useBotControl } from '../bot-control-context';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import type { BotProject, BotToken } from '@shared/schema';
-import type { BotInfo } from '../profile/BotProfileEditor';
+import type { BotInfo } from '../bot-types';
 
 /** Свойства карточки бота */
 interface BotCardProps {
@@ -57,7 +57,7 @@ export function BotCard({
     editingField, editValue, setEditValue, handleSaveEdit, handleCancelEdit,
     handleStartEdit, getStatusBadge, startBotMutation, stopBotMutation,
     deleteBotMutation, toggleDatabaseMutation, currentElapsedSeconds,
-    allBotStatuses, setSelectedProject, setSelectedBotInfo,
+    allBotStatuses, setSelectedProject, setSelectedBotInfo, setSelectedTokenId,
     setIsProfileSheetOpen, queryClient,
   } = useBotControl();
 
@@ -103,6 +103,7 @@ export function BotCard({
           onEditProfile={() => {
             setSelectedProject(project);
             setSelectedBotInfo(projectBotInfo ?? null);
+            setSelectedTokenId(token.id);
             setIsProfileSheetOpen(true);
           }}
           isProfileLoading={!projectBotInfo}

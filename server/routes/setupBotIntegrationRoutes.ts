@@ -25,12 +25,7 @@ import {
   getGroupMessagesHandler,
 } from "./botIntegration/handlers/messages";
 import { getGroupsHandler, syncGroupHandler } from "./botIntegration/handlers/groups";
-import {
-  getBotInfoHandler,
-  updateBotNameHandler,
-  updateBotDescriptionHandler,
-  updateBotShortDescriptionHandler,
-} from "./botIntegration/handlers/botInfo";
+import { getBotInfoHandler } from "./botIntegration/handlers/botInfo";
 import { sendGroupMessageHandler } from "./botIntegration/handlers/telegramGroups";
 import { setupBroadcastRoutes } from "./setupBroadcastRoutes";
 
@@ -113,17 +108,6 @@ export function setupBotIntegrationRoutes(app: Express) {
   );
 
   app.get("/api/projects/:projectId/bot/info", requireProjectAccess, getBotInfoHandler);
-  app.put("/api/projects/:projectId/bot/name", requireProjectAccess, updateBotNameHandler);
-  app.put(
-    "/api/projects/:projectId/bot/description",
-    requireProjectAccess,
-    updateBotDescriptionHandler,
-  );
-  app.put(
-    "/api/projects/:projectId/bot/short-description",
-    requireProjectAccess,
-    updateBotShortDescriptionHandler,
-  );
   app.post(
     "/api/projects/:projectId/bot/send-group-message",
     requireProjectAccess,

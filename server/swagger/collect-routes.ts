@@ -56,8 +56,8 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
     "при scope `bot_manager` (`STUDIO_BOT_MANAGER_TOKEN`). " +
     "См. `docs/features/bot-manager-api-auth.md`.",
   bots:
-    "Инстансы ботов (GET /api/bots без секрета token) и массовый старт офлайн " +
-    "(POST …/bot/start-offline-all). Доступ по владельцу/проекту.",
+    "Инстансы ботов (GET /api/bots без секрета token). " +
+    "Lifecycle (start/stop/restart/start-offline-all) — тег `project-bot`.",
   tokens:
     "Runtime токена вне проекта: `GET /api/tokens/{tokenId}/bot-status` и launch-history. " +
     "CRUD/настройки/env токенов проекта — тег `project-tokens`.",

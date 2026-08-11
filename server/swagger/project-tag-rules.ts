@@ -16,8 +16,9 @@ export const PROJECT_TAG_DESCRIPTIONS: Record<string, string> = {
     "Токены бота внутри проекта: список, CRUD, настройки, env, userbot, logs. " +
     "Не путать с `/api/tokens` (runtime status) и agent PAT.",
   "project-bot":
-    "Lifecycle и профиль бота проекта: start/stop/restart, info, name, description, data. " +
-    "Auth: requireProjectAccess. Группы и диалог группы — тег `project-groups`.",
+    "Lifecycle и профиль бота проекта: start/stop/restart, restart-all, start-offline-all, " +
+    "info (getMe), data. Auth: requireProjectAccess. " +
+    "Профиль name/description — `project-tokens` …/bot-info. Группы — `project-groups`.",
   "project-users":
     "Пользователи бота проекта: список, аналитика, поиск, CRUD по userId. " +
     "Не включает диалоги (avatar/messages/send-*) — см. `project-dialogs`.",
@@ -43,7 +44,7 @@ const BOT_GROUP_ACTIONS = "send-group-message";
 
 /** Lifecycle / профиль бота проекта */
 const BOT_LIFECYCLE_ACTIONS =
-  "start|stop|restart|restart-all|start-offline-all|info|name|description|short-description|data";
+  "start|stop|restart|restart-all|start-offline-all|info|data";
 
 /**
  * Определяет подтег для пути `/api/projects/…` (OpenAPI-формат с `{param}`).

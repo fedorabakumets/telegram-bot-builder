@@ -15,12 +15,12 @@ REST API визуального конструктора Telegram-ботов. А
 | [auth](./auth.md) | 8 |
 | [bot](./bot.md) | 24 |
 | [bot-logs](./bot-logs.md) | 1 |
-| [bots](./bots.md) | 2 |
+| [bots](./bots.md) | 1 |
 | [config](./config.md) | 1 |
 | [health](./health.md) | 2 |
 | [launch](./launch.md) | 1 |
 | [media](./media.md) | 13 |
-| [project-bot](./project-bot.md) | 9 |
+| [project-bot](./project-bot.md) | 7 |
 | [project-broadcasts](./project-broadcasts.md) | 7 |
 | [project-dialogs](./project-dialogs.md) | 5 |
 | [project-files](./project-files.md) | 4 |

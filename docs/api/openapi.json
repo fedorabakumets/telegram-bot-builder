@@ -24,7 +24,7 @@
     },
     {
       "name": "bots",
-      "description": "Инстансы ботов (GET /api/bots без секрета token) и массовый старт офлайн (POST …/bot/start-offline-all). Доступ по владельцу/проекту."
+      "description": "Инстансы ботов (GET /api/bots без секрета token). Lifecycle (start/stop/restart/start-offline-all) — тег `project-bot`."
     },
     {
       "name": "config",
@@ -44,7 +44,7 @@
     },
     {
       "name": "project-bot",
-      "description": "Lifecycle и профиль бота проекта: start/stop/restart, info, name, description, data. Auth: requireProjectAccess. Группы и диалог группы — тег `project-groups`."
+      "description": "Lifecycle и профиль бота проекта: start/stop/restart, restart-all, start-offline-all, info (getMe), data. Auth: requireProjectAccess. Профиль name/description — `project-tokens` …/bot-info. Группы — `project-groups`."
     },
     {
       "name": "project-broadcasts",
@@ -6337,16 +6337,103 @@
         "tags": [
           "project-bot"
         ],
-        "summary": "POST /api/projects/{id}/bot/restart",
+        "summary": "Перезапустить бота",
+        "description": "Stop → cooldown → start. С `tokenId` — конкретный бот; без — legacy (инстанс + default). **MCP:** `db_restart_bot`.\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"tokenId\":7}' 'http://localhost:5000/api/projects/42/bot/restart'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectBotTokenBody"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Перезапущен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBotStartOk"
+                },
+                "example": {
+                  "message": "Бот успешно перезапущен",
+                  "processId": "12345"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа / чужой tokenId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
           }
         }
       }
@@ -6356,16 +6443,118 @@
         "tags": [
           "project-bot"
         ],
-        "summary": "POST /api/projects/{id}/bot/restart-all",
+        "summary": "Перезапустить всех running ботов",
+        "description": "Останавливает все running-токены проекта, cooldown, затем start со stagger. Офлайн не трогает (для них — start-offline-all).\n\n**Клиент/MCP:** `restartAllBotsMutation`, `db_restart_all_bots`.\n\n```bash\ncurl -s -X POST -b cookies.txt 'http://localhost:5000/api/projects/42/bot/restart-all'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Сводка перезапуска",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBotRestartAllOk"
+                },
+                "example": {
+                  "restarted": 2,
+                  "results": [
+                    {
+                      "tokenId": 7,
+                      "success": true,
+                      "processId": "12345"
+                    },
+                    {
+                      "tokenId": 8,
+                      "success": true,
+                      "processId": "12346"
+                    }
+                  ]
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Нет токенов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Токены проекта не найдены"
+                }
+              }
+            }
           }
         }
       }
@@ -6375,16 +6564,117 @@
         "tags": [
           "project-bot"
         ],
-        "summary": "POST /api/projects/{id}/bot/start",
+        "summary": "Запустить бота",
+        "description": "Старт по `tokenId` (или default). Сырой `token` не принимается. **Клиент/MCP:** `use-bot-mutations`, `db_start_bot`.\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"tokenId\":7}' 'http://localhost:5000/api/projects/42/bot/start'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectBotTokenBody"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Запущен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBotStartOk"
+                },
+                "example": {
+                  "message": "Бот успешно запущен",
+                  "processId": "12345",
+                  "tokenUsed": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Уже running / нет токена / сырой token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Бот уже запущен"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа / чужой tokenId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
           }
         }
       }
@@ -6392,7 +6682,7 @@
     "/api/projects/{id}/bot/start-offline-all": {
       "post": {
         "tags": [
-          "bots"
+          "project-bot"
         ],
         "summary": "Запустить всех офлайн-ботов проекта",
         "description": "Последовательно запускает токены проекта со status !== running. Уже running не трогает (в отличие от restart-all).\n\n**Доступ:** `requireProjectAccess`.\n\n**Side-effects:** WS `bot-started`, `start-offline-progress` (без секретов; см. docs/api/realtime-events.md).\n\n**Клиент:** `use-bot-mutations` / BotManagement. MCP: `db_start_offline_bots`.\n\nПри большом числе токенов HTTP долгий (пауза ~400ms между стартами).\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/1/bot/start-offline-all -b cookies.txt\n```",
@@ -6409,22 +6699,34 @@
             "schema": {
               "type": "string",
               "description": "ID проекта",
-              "example": "1"
+              "example": "42"
             },
             "required": true,
-            "description": "ID проекта bot_projects",
-            "example": "1",
+            "description": "ID проекта",
+            "example": "42",
             "name": "id",
             "in": "path"
           },
           {
             "schema": {
               "type": "string",
-              "description": "Session cookie. Без cookie/PAT → []. Не нужна при Bearer PAT.",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
               "example": "s%3Axxxx.yyyy"
             },
             "required": false,
-            "description": "Session cookie Studio. Без личности ответ — пустой массив. Альтернатива — Bearer PAT.",
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
             "example": "s%3Axxxx.yyyy",
             "name": "connect.sid",
             "in": "cookie"
@@ -6518,16 +6820,115 @@
         "tags": [
           "project-bot"
         ],
-        "summary": "POST /api/projects/{id}/bot/stop",
+        "summary": "Остановить бота",
+        "description": "Остановка по обязательному `tokenId`. **Клиент/MCP:** `use-bot-mutations`, `db_stop_bot`.\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"tokenId\":7}' 'http://localhost:5000/api/projects/42/bot/stop'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectBotTokenBody"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Остановлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBotStopOk"
+                },
+                "example": {
+                  "message": "Бот успешно остановлен"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет tokenId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Требуется ID токена"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа / чужой tokenId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Токен не принадлежит этому проекту"
+                }
+              }
+            }
           }
         }
       }
@@ -12660,35 +13061,98 @@
         "tags": [
           "project-bot"
         ],
-        "summary": "GET /api/projects/{projectId}/bot/data",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
+        "summary": "Данные бота для диалогов",
+        "description": "Кэш профиля default-токена в формате, совместимом с bot_users (аватар/username для панели Database → диалоги).\n\n**Клиент:** `use-bot-data`.\n\n```bash\ncurl -s -b cookies.txt 'http://localhost:5000/api/projects/42/bot/data'\n```",
+        "security": [
+          {
+            "cookieAuth": []
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          {
+            "agentToken": []
           }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/description": {
-      "put": {
-        "tags": [
-          "project-bot"
         ],
-        "summary": "PUT /api/projects/{projectId}/bot/description",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Профиль или null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBotData"
+                },
+                "example": {
+                  "id": "123456789",
+                  "userId": "123456789",
+                  "avatarUrl": "AgACAgIAAxkBAA",
+                  "userName": "my_support_bot",
+                  "firstName": "Support Bot",
+                  "isBot": true
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
           }
         }
       }
@@ -12698,35 +13162,109 @@
         "tags": [
           "project-bot"
         ],
-        "summary": "GET /api/projects/{projectId}/bot/info",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
+        "summary": "Профиль бота (getMe)",
+        "description": "Telegram getMe для токена проекта (`tokenId` или default). `photoUrl: true` — фото есть (клиент грузит через avatar proxy). Без токена: `{ hasToken: false }`.\n\nИмя/описание менять через `PUT …/tokens/{tokenId}/bot-info`.\n\n**Клиент:** `use-bot-queries` / карточки ботов.\n\n```bash\ncurl -s -b cookies.txt 'http://localhost:5000/api/projects/42/bot/info?tokenId=7'\n```",
+        "security": [
+          {
+            "cookieAuth": []
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          {
+            "agentToken": []
           }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/name": {
-      "put": {
-        "tags": [
-          "project-bot"
         ],
-        "summary": "PUT /api/projects/{projectId}/bot/name",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "getMe или hasToken:false",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBotInfo"
+                },
+                "example": {
+                  "id": 123456789,
+                  "is_bot": true,
+                  "first_name": "Support Bot",
+                  "username": "my_support_bot",
+                  "photoUrl": true,
+                  "tokenId": 7
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа / чужой tokenId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
           }
         }
       }
@@ -12878,25 +13416,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/short-description": {
-      "put": {
-        "tags": [
-          "project-bot"
-        ],
-        "summary": "PUT /api/projects/{projectId}/bot/short-description",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
           }
         }
       }
@@ -24993,6 +25512,175 @@
           "failed",
           "skippedRunning",
           "results"
+        ]
+      },
+      "ProjectBotStartOk": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Бот успешно запущен"
+          },
+          "processId": {
+            "type": "string",
+            "example": "12345"
+          },
+          "tokenUsed": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "ProjectBotTokenBody": {
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "tokenId проекта. Без него start/restart — default токен.",
+            "example": 7
+          }
+        }
+      },
+      "ProjectBotStopOk": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Бот успешно остановлен"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "ProjectBotRestartAllOk": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "restarted": {
+            "type": "integer",
+            "example": 2
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tokenId": {
+                  "type": "integer"
+                },
+                "success": {
+                  "type": "boolean"
+                },
+                "processId": {
+                  "type": "string"
+                },
+                "error": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tokenId",
+                "success"
+              ]
+            }
+          }
+        },
+        "required": [
+          "restarted"
+        ]
+      },
+      "ProjectBotInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 123456789
+          },
+          "is_bot": {
+            "type": "boolean",
+            "example": true
+          },
+          "first_name": {
+            "type": "string",
+            "example": "Support Bot"
+          },
+          "username": {
+            "type": "string",
+            "example": "my_support_bot"
+          },
+          "hasToken": {
+            "type": "boolean",
+            "example": false
+          },
+          "photoUrl": {
+            "anyOf": [
+              {
+                "type": "boolean",
+                "enum": [
+                  true
+                ]
+              },
+              {
+                "nullable": true
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "tokenId": {
+            "type": "integer",
+            "example": 7
+          }
+        }
+      },
+      "ProjectBotData": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "123456789"
+          },
+          "userId": {
+            "type": "string",
+            "example": "123456789"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true,
+            "example": "my_support_bot"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true,
+            "example": "Support Bot"
+          },
+          "isBot": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "id",
+          "userId"
         ]
       },
       "BotInstancePublic": {

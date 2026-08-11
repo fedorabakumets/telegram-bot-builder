@@ -14,7 +14,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { BotToken, BotProject } from '@shared/schema';
-import { type BotInfo } from './profile/BotProfileEditor';
+import { type BotInfo } from './bot-types';
 import { BotProfileSheet } from './profile/BotProfileSheet';
 import { BotControlPanel } from './panel/BotControlPanel';
 import { BotControlProvider } from './bot-control-context';
@@ -65,6 +65,7 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<BotProject | null>(null);
   const [selectedBotInfo, setSelectedBotInfo] = useState<BotInfo | null>(null);
+  const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
 
   const [currentElapsedSeconds, setCurrentElapsedSeconds] = useState<Record<number, number>>({});
   /** Ref для хранения статусов без попадания в зависимости useEffect */
@@ -252,6 +253,7 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
       startOfflineAllMutation,
       setSelectedProject,
       setSelectedBotInfo,
+      setSelectedTokenId,
       setIsProfileSheetOpen,
       queryClient,
       setShowAddBot,
@@ -276,6 +278,7 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
 
       <BotProfileSheet
         projectId={selectedProject?.id || 0}
+        tokenId={selectedTokenId}
         botInfo={selectedBotInfo}
         onProfileUpdated={() => {
           queryClient.invalidateQueries({ queryKey: ['/api/projects/bot/info'] });
