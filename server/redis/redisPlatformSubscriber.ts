@@ -28,6 +28,12 @@ const CHANNEL_TYPE_MAP: Record<string, ProjectEvent['type']> = {
 };
 
 /**
+ * Каналы `bot:*`, которые слушает только Python-бот (не платформа Node).
+ * На общем subscriber они матчят `bot:*`, но не должны warn'ить.
+ */
+const BOT_ONLY_CHANNEL_PREFIXES = ['bot:table_updated:'] as const;
+
+/**
  * Проверяет, относится ли канал к Redis-логам бота.
  * @param channel - Имя Redis-канала
  * @returns `true`, если канал начинается с `bot:logs:`
@@ -37,12 +43,12 @@ function isLogsChannel(channel: string): boolean {
 }
 
 /**
- * Проверяет, относится ли канал к сообщениям диалога.
+ * Канал только для бота (content reload и т.п.) — платформа не обрабатывает.
  * @param channel - Имя Redis-канала
- * @returns `true`, если канал начинается с `bot:message:`
+ * @returns true, если канал известен как bot-only
  */
-function isMessageChannel(channel: string): boolean {
-  return channel.startsWith('bot:message:');
+function isBotOnlyChannel(channel: string): boolean {
+  return BOT_ONLY_CHANNEL_PREFIXES.some((prefix) => channel.startsWith(prefix));
 }
 
 /**
@@ -125,13 +131,23 @@ async function maybeEmitNewUser(projectId: number, tokenId: number, data: unknow
 /**
  * Обрабатывает входящее сообщение из Redis-канала.
  * Парсит канал, формирует ProjectEvent и вызывает broadcastProjectEvent.
- * @param pattern - Паттерн подписки (не используется)
+ * @param pattern - Паттерн подписки (фильтр общего subscriber)
  * @param channel - Имя канала, из которого пришло сообщение
  * @param message - Тело сообщения в формате JSON
+ * @returns void
  */
-function handleMessage(_pattern: string, channel: string, message: string): void {
-  // Общий subscriber: сюда же приходят platform:project_event:* и bot:logs:*
-  if (!channel.startsWith('bot:') || isLogsChannel(channel)) {
+function handleMessage(pattern: string, channel: string, message: string): void {
+  // Общий ioredis subscriber шлёт все pmessage — только свой паттерн
+  if (pattern !== SUBSCRIBE_PATTERN) {
+    return;
+  }
+
+  // Логи и bot-only каналы (table_updated → Python content reload)
+  if (isLogsChannel(channel) || isBotOnlyChannel(channel)) {
+    return;
+  }
+
+  if (!channel.startsWith('bot:')) {
     return;
   }
 

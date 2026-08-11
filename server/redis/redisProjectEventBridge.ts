@@ -1,6 +1,8 @@
 /**
- * @fileoverview Redis fan-out подписчик событий проекта между репликами Node
- * @description Канал platform:project_event:{projectId}. Anti-loop через originInstanceId.
+ * @fileoverview Redis fan-out подписчик событий проекта между репликами Node.
+ * Канал `platform:project_event:{projectId}`. Anti-loop через originInstanceId.
+ * Общий ioredis subscriber шлёт все pmessage всем listeners — обрабатываем
+ * только свой паттерн (как redisLogsSubscriber).
  * @module server/redis/redisProjectEventBridge
  */
 
@@ -17,9 +19,10 @@ const SUBSCRIBE_PATTERN = 'platform:project_event:*';
 export { shouldSkipBridgedProjectEvent };
 
 /**
- * Обрабатывает сообщение из Redis: чужие инстансы → local WS fan-out
+ * Обрабатывает сообщение из Redis: чужие инстансы → local WS fan-out.
  * @param channel - Имя канала
- * @param message - JSON события
+ * @param message - JSON события ProjectEvent
+ * @returns void
  */
 function handleBridgeMessage(channel: string, message: string): void {
   try {
@@ -37,7 +40,8 @@ function handleBridgeMessage(channel: string, message: string): void {
 }
 
 /**
- * Инициализирует подписку на platform:project_event:*
+ * Инициализирует подписку на platform:project_event:*.
+ * @returns void
  */
 export function initRedisProjectEventBridge(): void {
   waitForRedis('[RedisProjectEvent]', () => {
@@ -49,10 +53,11 @@ export function initRedisProjectEventBridge(): void {
     );
 
     sub.on('pmessage', (...args: unknown[]) => {
-      const [, channel, message] = args as [string, string, string];
-      if (typeof channel === 'string' && typeof message === 'string') {
-        handleBridgeMessage(channel, message);
-      }
+      const [pattern, channel, message] = args as [string, string, string];
+      // Общий subscriber: игнор чужих паттернов (bot:*, bot:logs:*, …)
+      if (pattern !== SUBSCRIBE_PATTERN) return;
+      if (typeof channel !== 'string' || typeof message !== 'string') return;
+      handleBridgeMessage(channel, message);
     });
 
     console.log(`[RedisProjectEvent] Подписка на "${SUBSCRIBE_PATTERN}" активна`);
