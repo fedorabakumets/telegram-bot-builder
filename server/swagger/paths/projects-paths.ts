@@ -1,20 +1,20 @@
 /**
- * @fileoverview OpenAPI paths для projects (список, обновление, удаление, версии)
+ * @fileoverview OpenAPI paths для projects (update / delete / duplicate / versions)
  * @module server/swagger/paths/projects-paths
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { ForbiddenSchema, MessageErrorSchema, UnauthorizedSchema, ValidationErrorSchema } from "../schemas/common";
+import { ForbiddenSchema, MessageErrorSchema, ValidationErrorSchema } from "../schemas/common";
 import {
   BotProjectSchema,
   DeleteProjectResponseSchema,
   DuplicateProjectRequestSchema,
   ProjectListItemSchema,
-  ProjectListSchema,
   ProjectVersionListSchema,
   UpdateProjectRequestSchema,
 } from "../schemas/projects";
+import { BOT_PROJECT_EXAMPLE, PROJECT_LIST_ITEM_EXAMPLE } from "./projects-examples";
 
 /**
  * Регистрирует детальные OpenAPI paths управления проектами.
@@ -32,34 +32,17 @@ export function registerProjectsPaths(
   });
 
   registry.registerPath({
-    method: "get",
-    path: "/api/projects/list",
-    tags: ["projects"],
-    summary: "Список проектов пользователя",
-    description:
-      "Возвращает метаданные проектов владельца без секретов (botToken, sessionId). " +
-      "Включает nodeCount и sheetsCount, вычисленные из data.",
-    security: cookieSecurity,
-    responses: {
-      200: {
-        description: "Массив проектов",
-        content: { "application/json": { schema: ProjectListSchema } },
-      },
-      401: {
-        description: "Не авторизован",
-        content: { "application/json": { schema: UnauthorizedSchema } },
-      },
-    },
-  });
-
-  registry.registerPath({
     method: "put",
     path: "/api/projects/{id}",
     tags: ["projects"],
     summary: "Обновить проект",
     description:
       "Частичное обновление полей проекта. При изменении data создаётся снимок версии. " +
-      "Поля commitMessage, agentEdit — для истории версий и live-редактирования MCP.",
+      "Поля commitMessage, agentEdit — для истории версий и live-редактирования MCP.\n\n" +
+      "```bash\n" +
+      "curl -s -X PUT http://localhost:5000/api/projects/42 -b cookies.txt \\\n" +
+      "  -H 'Content-Type: application/json' -d '{\"name\":\"Новое имя\"}'\n" +
+      "```",
     security: cookieSecurity,
     request: {
       params: projectIdParam,
@@ -68,7 +51,12 @@ export function registerProjectsPaths(
     responses: {
       200: {
         description: "Обновлённый проект",
-        content: { "application/json": { schema: BotProjectSchema } },
+        content: {
+          "application/json": {
+            schema: BotProjectSchema,
+            example: BOT_PROJECT_EXAMPLE,
+          },
+        },
       },
       400: {
         description: "Невалидный id или тело запроса",
@@ -76,7 +64,12 @@ export function registerProjectsPaths(
       },
       404: {
         description: "Проект не найден",
-        content: { "application/json": { schema: MessageErrorSchema } },
+        content: {
+          "application/json": {
+            schema: MessageErrorSchema,
+            example: { message: "Проект не найден" },
+          },
+        },
       },
     },
   });
@@ -123,7 +116,12 @@ export function registerProjectsPaths(
     responses: {
       201: {
         description: "Копия создана",
-        content: { "application/json": { schema: ProjectListItemSchema } },
+        content: {
+          "application/json": {
+            schema: ProjectListItemSchema,
+            example: PROJECT_LIST_ITEM_EXAMPLE,
+          },
+        },
       },
       401: {
         description: "Гость без авторизации",

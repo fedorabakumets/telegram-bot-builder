@@ -4,18 +4,7 @@
  */
 
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import { z } from "zod";
 import "./schemas/common";
-import {
-  MessageErrorSchema,
-  UnauthorizedSchema,
-  ValidationErrorSchema,
-} from "./schemas/common";
-import {
-  BotProjectSchema,
-  CreateProjectRequestSchema,
-  CreateProjectUnauthorizedSchema,
-} from "./schemas/projects";
 import { registerAgentTokenPaths } from "./paths/agent-token-paths";
 import { registerAuthPaths } from "./paths/auth-paths";
 import { registerBotUsersPaths } from "./paths/bot-users-paths";
@@ -32,6 +21,9 @@ import { registerAdminAppSettingsPaths } from "./paths/admin-app-settings-paths"
 import { registerAdminBotFoldersCleanupPaths } from "./paths/admin-bot-folders-cleanup-paths";
 import { registerDatabasePaths } from "./paths/database-paths";
 import { registerHealthPaths } from "./paths/health-paths";
+import { registerProjectsAdminIdsPaths } from "./paths/projects-admin-ids-paths";
+import { registerProjectsCreateGetPaths } from "./paths/projects-create-get-paths";
+import { registerProjectsListPaths } from "./paths/projects-list-paths";
 import { registerProjectsPaths } from "./paths/projects-paths";
 import { registerStorageConfigPaths } from "./paths/storage-config-paths";
 import { registerTemplatePaths } from "./paths/template-paths";
@@ -69,64 +61,10 @@ const publicSecurity: never[] = [];
 registerHealthPaths(documentedRegistry, publicSecurity);
 registerAuthPaths(documentedRegistry, publicSecurity);
 
-documentedRegistry.registerPath({
-  method: "post",
-  path: "/api/projects",
-  tags: ["projects"],
-  summary: "Создать проект",
-  description: "Требует авторизацию. ownerId берётся из сессии, не из тела запроса.",
-  security: cookieSecurity,
-  request: {
-    body: { content: { "application/json": { schema: CreateProjectRequestSchema } } },
-  },
-  responses: {
-    201: {
-      description: "Проект создан",
-      content: { "application/json": { schema: BotProjectSchema } },
-    },
-    400: {
-      description: "Ошибка валидации Zod",
-      content: { "application/json": { schema: ValidationErrorSchema } },
-    },
-    401: {
-      description: "Гость без авторизации",
-      content: { "application/json": { schema: CreateProjectUnauthorizedSchema } },
-    },
-  },
-});
-
-documentedRegistry.registerPath({
-  method: "get",
-  path: "/api/projects/{id}",
-  tags: ["projects"],
-  summary: "Получить проект по ID",
-  description: "Требует доступ к проекту (владелец или collaborator).",
-  security: cookieSecurity,
-  request: {
-    params: z.object({
-      /** ID проекта */
-      id: z.string().openapi({ example: "42", description: "ID проекта" }),
-    }),
-  },
-  responses: {
-    200: {
-      description: "Данные проекта",
-      content: { "application/json": { schema: BotProjectSchema } },
-    },
-    400: {
-      description: "id не число",
-      content: { "application/json": { schema: MessageErrorSchema } },
-    },
-    401: {
-      description: "Не авторизован",
-      content: { "application/json": { schema: UnauthorizedSchema } },
-    },
-    404: {
-      description: "Проект не найден",
-      content: { "application/json": { schema: MessageErrorSchema } },
-    },
-  },
-});
+registerProjectsListPaths(documentedRegistry, cookieSecurity);
+registerProjectsCreateGetPaths(documentedRegistry, cookieSecurity);
+registerProjectsAdminIdsPaths(documentedRegistry, cookieSecurity);
+registerProjectsPaths(documentedRegistry, cookieSecurity);
 
 registerAgentTokenPaths(documentedRegistry, cookieSecurity);
 registerBotUsersPaths(documentedRegistry, cookieSecurity);
@@ -138,7 +76,6 @@ registerBotEnvRevealPaths(documentedRegistry, cookieSecurity);
 registerBotApiPaths(documentedRegistry, cookieSecurity);
 registerLaunchLogsPaths(documentedRegistry, cookieSecurity);
 registerMediaPaths(documentedRegistry, cookieSecurity);
-registerProjectsPaths(documentedRegistry, cookieSecurity);
 registerConfigSetupPaths(documentedRegistry, publicSecurity);
 registerAdminAppSettingsPaths(documentedRegistry);
 registerAdminBotFoldersCleanupPaths(documentedRegistry);

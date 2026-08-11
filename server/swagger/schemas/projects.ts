@@ -29,31 +29,68 @@ export const CreateProjectRequestSchema = insertBotProjectSchema
     },
   });
 
-/** Ответ с данными проекта */
+/** Ответ с данными проекта (полная запись bot_projects) */
 export const BotProjectSchema = z
   .object({
     /** ID проекта */
     id: z.number().openapi({ example: 42 }),
-    /** ID владельца */
+    /** ID владельца Telegram */
     ownerId: z.number().nullable().openapi({ example: 123456789 }),
     /** Название */
     name: z.string().openapi({ example: "Мой бот" }),
     /** Описание */
-    description: z.string().nullable().optional(),
-    /** JSON проекта (nodes, edges, sheets) */
-    data: z.unknown().openapi({ example: { sheets: [] } }),
-    /** Токен бота (может быть null) */
-    botToken: z.string().nullable().optional(),
-    /** Включена ли user DB */
-    userDatabaseEnabled: z.number().optional(),
-    /** Порядок в списке */
-    sortOrder: z.number().optional(),
+    description: z.string().nullable().optional().openapi({
+      example: "Приветственный бот",
+    }),
+    /** JSON сценария (sheets / nodes / edges) */
+    data: z.unknown().openapi({
+      example: { sheets: [{ id: "main", name: "Основной", nodes: [], edges: [] }] },
+    }),
+    /**
+     * Устаревшее поле токена на проекте (часто null).
+     * Актуальные токены — в bot_tokens / /api/projects/{id}/tokens.
+     */
+    botToken: z.string().nullable().optional().openapi({ example: null }),
+    /** Сессия гостя (для Studio обычно null) */
+    sessionId: z.string().nullable().optional().openapi({ example: null }),
+    /** Включена ли user DB (0/1) */
+    userDatabaseEnabled: z.number().nullable().optional().openapi({ example: 1 }),
+    /** Порядок в списке сайдбара */
+    sortOrder: z.number().nullable().optional().openapi({ example: 0 }),
+    /** ID админов бота через запятую */
+    adminIds: z.string().nullable().optional().openapi({ example: null }),
     /** Дата создания */
-    createdAt: z.union([z.string(), z.date()]).optional(),
+    createdAt: z.union([z.string(), z.date()]).nullable().optional().openapi({
+      example: "2026-08-01T10:00:00.000Z",
+    }),
     /** Дата обновления */
-    updatedAt: z.union([z.string(), z.date()]).optional(),
+    updatedAt: z.union([z.string(), z.date()]).nullable().optional().openapi({
+      example: "2026-08-11T12:00:00.000Z",
+    }),
   })
   .openapi("BotProject");
+
+/** Ответ GET /api/projects — массив полных проектов */
+export const BotProjectListSchema = z
+  .array(BotProjectSchema)
+  .openapi("BotProjectList");
+
+/** Session cookie для /api/projects* (или Bearer PAT) */
+export const ProjectsCookiesSchema = z.object({
+  "connect.sid": z
+    .string()
+    .optional()
+    .openapi({
+      description:
+        "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+      example: "s%3Axxxx.yyyy",
+      param: {
+        description:
+          "Session cookie после login. Альтернатива — Authorization: Bearer mcp_…",
+        example: "s%3Axxxx.yyyy",
+      },
+    }),
+});
 
 /** Ответ при отсутствии авторизации на create */
 export const CreateProjectUnauthorizedSchema = z
