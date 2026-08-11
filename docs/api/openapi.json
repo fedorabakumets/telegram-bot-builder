@@ -52,7 +52,7 @@
     },
     {
       "name": "project-broadcasts",
-      "description": "Рассылки проекта: список, создание, редактирование, stop, preview аудитории. Auth: requireProjectAccess."
+      "description": "Рассылки проекта: список, создание, детали, редактирование текста, stop, delete, preview аудитории. Auth: requireProjectAccess. UI: панель Broadcast. Не путать с canvas-нодой broadcast."
     },
     {
       "name": "project-dialogs",
@@ -13429,16 +13429,178 @@
         "tags": [
           "project-broadcasts"
         ],
-        "summary": "GET /api/projects/{projectId}/broadcasts",
+        "summary": "Список рассылок проекта",
+        "description": "История рассылок (Broadcast panel) с пагинацией. `tokenId` фильтрует по боту.\n\n**Auth:** cookie или Bearer PAT + доступ к проекту. **Клиент:** `use-broadcasts`.\n\n```bash\ncurl -s -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/broadcasts?page=1&tokenId=7'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Фильтр / выбор бота. Без него — default токен проекта.",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Номер страницы (default 1)",
+              "example": "1"
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Размер страницы (1..100, default 20)",
+              "example": "20"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Страница рассылок",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BroadcastsListResponse"
+                },
+                "example": {
+                  "broadcasts": [
+                    {
+                      "id": 15,
+                      "projectId": 42,
+                      "tokenId": 7,
+                      "name": "Акция августа",
+                      "messageText": "Привет! Скидка 20%.",
+                      "status": "done",
+                      "totalCount": 120,
+                      "sentCount": 120,
+                      "deliveredCount": 115,
+                      "failedCount": 5,
+                      "mediaUrls": [],
+                      "buttons": [],
+                      "buttonsPerRow": 0,
+                      "filters": {
+                        "tags": [
+                          "vip"
+                        ]
+                      },
+                      "createdAt": "2026-08-10T10:00:00.000Z",
+                      "startedAt": "2026-08-10T10:00:01.000Z",
+                      "finishedAt": "2026-08-10T10:05:00.000Z"
+                    }
+                  ],
+                  "total": 1,
+                  "page": 1,
+                  "limit": 20
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный projectId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
           }
         }
       },
@@ -13446,16 +13608,153 @@
         "tags": [
           "project-broadcasts"
         ],
-        "summary": "POST /api/projects/{projectId}/broadcasts",
+        "summary": "Создать и запустить рассылку",
+        "description": "Создаёт рассылку со статусом `running` и запускает очередь отправки. `tokenId` — query или body; иначе default токен. Текст ≤4096, media ≤10, buttons ≤100.\n\n**Клиент:** `use-create-broadcast`.\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"name\":\"Акция\",\"messageText\":\"Привет!\",\"filters\":{}}' \\\n  'http://localhost:5000/api/projects/42/broadcasts?tokenId=7'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Фильтр / выбор бота. Без него — default токен проекта.",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBroadcastRequest"
+              },
+              "example": {
+                "name": "Акция августа",
+                "messageText": "Привет! Скидка 20%.",
+                "mediaUrls": [],
+                "buttons": [],
+                "buttonsPerRow": 0,
+                "filters": {
+                  "tags": [
+                    "vip"
+                  ]
+                }
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Успешный ответ"
+          "201": {
+            "description": "Рассылка создана и запущена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateBroadcastResponse"
+                },
+                "example": {
+                  "broadcastId": 15
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Валидация / нет токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "example": {
+                  "message": "Неверное тело запроса",
+                  "errors": []
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
           }
         }
       }
@@ -13465,16 +13764,145 @@
         "tags": [
           "project-broadcasts"
         ],
-        "summary": "DELETE /api/projects/{projectId}/broadcasts/{broadcastId}",
+        "summary": "Удалить рассылку",
+        "description": "Удаляет сообщения в Telegram (если есть `telegramMessageId`), запись рассылки и связанные `bot_messages`. Токен только своего проекта.\n\n**Клиент:** `broadcast-dialog-panel`.\n\n```bash\ncurl -s -X DELETE -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/broadcasts/15'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID рассылки",
+              "example": "15"
+            },
+            "required": true,
+            "description": "ID рассылки",
+            "example": "15",
+            "name": "broadcastId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Удалено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteBroadcastResponse"
+                },
+                "example": {
+                  "ok": true,
+                  "deleted": 115
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверные параметры запроса"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Рассылка не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
           }
         }
       },
@@ -13482,16 +13910,177 @@
         "tags": [
           "project-broadcasts"
         ],
-        "summary": "GET /api/projects/{projectId}/broadcasts/{broadcastId}",
+        "summary": "Детали рассылки",
+        "description": "Карточка рассылки + результаты с ошибками (`status ≠ sent`). Чужой projectId → 403.\n\n**Клиент:** `use-broadcast-detail`.\n\n```bash\ncurl -s -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/broadcasts/15'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID рассылки",
+              "example": "15"
+            },
+            "required": true,
+            "description": "ID рассылки",
+            "example": "15",
+            "name": "broadcastId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Рассылка и ошибки доставки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BroadcastDetailResponse"
+                },
+                "example": {
+                  "broadcast": {
+                    "id": 15,
+                    "projectId": 42,
+                    "tokenId": 7,
+                    "name": "Акция августа",
+                    "messageText": "Привет! Скидка 20%.",
+                    "status": "done",
+                    "totalCount": 120,
+                    "sentCount": 120,
+                    "deliveredCount": 115,
+                    "failedCount": 5,
+                    "mediaUrls": [],
+                    "buttons": [],
+                    "buttonsPerRow": 0,
+                    "filters": {
+                      "tags": [
+                        "vip"
+                      ]
+                    },
+                    "createdAt": "2026-08-10T10:00:00.000Z",
+                    "startedAt": "2026-08-10T10:00:01.000Z",
+                    "finishedAt": "2026-08-10T10:05:00.000Z"
+                  },
+                  "results": [
+                    {
+                      "id": 901,
+                      "broadcastId": 15,
+                      "userId": "987654321",
+                      "status": "blocked",
+                      "errorMessage": "Forbidden: bot was blocked by the user",
+                      "telegramMessageId": null,
+                      "sentAt": "2026-08-10T10:01:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта или рассылки"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Рассылка другого проекта / нет доступа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Рассылка не принадлежит этому проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Рассылка не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
           }
         }
       },
@@ -13499,16 +14088,159 @@
         "tags": [
           "project-broadcasts"
         ],
-        "summary": "PUT /api/projects/{projectId}/broadcasts/{broadcastId}",
+        "summary": "Редактировать текст рассылки",
+        "description": "Обновляет `messageText` в БД и через `editMessageText` у получателей (throttle ~25/s). Текст 1…4096 после trim.\n\n**Клиент:** `broadcast-dialog-panel`.\n\n```bash\ncurl -s -X PUT -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Обновлённый текст\"}' \\\n  'http://localhost:5000/api/projects/42/broadcasts/15'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID рассылки",
+              "example": "15"
+            },
+            "required": true,
+            "description": "ID рассылки",
+            "example": "15",
+            "name": "broadcastId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditBroadcastRequest"
+              },
+              "example": {
+                "messageText": "Обновлённый текст рассылки"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Сколько сообщений отредактировано",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditBroadcastResponse"
+                },
+                "example": {
+                  "ok": true,
+                  "edited": 110,
+                  "failed": 5
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Валидация body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "example": {
+                  "message": "Неверное тело запроса",
+                  "errors": []
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Рассылка не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
           }
         }
       }
@@ -13518,16 +14250,166 @@
         "tags": [
           "project-broadcasts"
         ],
-        "summary": "POST /api/projects/{projectId}/broadcasts/{broadcastId}/stop",
+        "summary": "Остановить рассылку",
+        "description": "Ставит флаг остановки очереди. Только для `status=running`.\n\n**Клиент:** `use-stop-broadcast`.\n\n```bash\ncurl -s -X POST -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/broadcasts/15/stop'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID рассылки",
+              "example": "15"
+            },
+            "required": true,
+            "description": "ID рассылки",
+            "example": "15",
+            "name": "broadcastId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Рассылка остановлена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopBroadcastResponse"
+                },
+                "example": {
+                  "broadcast": {
+                    "id": 15,
+                    "projectId": 42,
+                    "tokenId": 7,
+                    "name": "Акция августа",
+                    "messageText": "Привет! Скидка 20%.",
+                    "status": "stopped",
+                    "totalCount": 120,
+                    "sentCount": 120,
+                    "deliveredCount": 115,
+                    "failedCount": 5,
+                    "mediaUrls": [],
+                    "buttons": [],
+                    "buttonsPerRow": 0,
+                    "filters": {
+                      "tags": [
+                        "vip"
+                      ]
+                    },
+                    "createdAt": "2026-08-10T10:00:00.000Z",
+                    "startedAt": "2026-08-10T10:00:01.000Z",
+                    "finishedAt": "2026-08-10T10:05:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не запущена / неверные ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Рассылка не запущена"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Чужой проект",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Рассылка не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
           }
         }
       }
@@ -13537,16 +14419,156 @@
         "tags": [
           "project-broadcasts"
         ],
-        "summary": "POST /api/projects/{projectId}/broadcasts/preview-audience",
+        "summary": "Предпросмотр аудитории рассылки",
+        "description": "Считает получателей по `filters` (+ до 3 примеров). `tokenId` — query/body. Не создаёт рассылку.\n\n**Клиент:** `use-audience-preview`.\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"filters\":{\"tags\":[\"vip\"]}}' \\\n  'http://localhost:5000/api/projects/42/broadcasts/preview-audience?tokenId=7'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Фильтр / выбор бота. Без него — default токен проекта.",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewAudienceRequest"
+              },
+              "example": {
+                "filters": {
+                  "tags": [
+                    "vip"
+                  ]
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Количество и sample",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewAudienceResponse"
+                },
+                "example": {
+                  "count": 42,
+                  "sample": [
+                    {
+                      "userId": "123456789",
+                      "userName": "ivan",
+                      "firstName": "Иван",
+                      "lastName": "Петров"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Валидация / нет токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "example": {
+                  "message": "Неверное тело запроса",
+                  "errors": []
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
           }
         }
       }
@@ -28954,6 +29976,449 @@
           "usedBytes",
           "limitBytes",
           "quotaExceeded"
+        ]
+      },
+      "BroadcastFilters": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "vip"
+            ]
+          },
+          "registeredFrom": {
+            "type": "string",
+            "example": "2026-01-01T00:00:00.000Z"
+          },
+          "registeredTo": {
+            "type": "string",
+            "example": "2026-08-01T00:00:00.000Z"
+          },
+          "activeFrom": {
+            "type": "string",
+            "example": "2026-07-01T00:00:00.000Z"
+          },
+          "activeTo": {
+            "type": "string",
+            "example": "2026-08-12T00:00:00.000Z"
+          },
+          "userIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "123456789"
+            ]
+          },
+          "groupIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "-1001234567890"
+            ]
+          }
+        }
+      },
+      "BroadcastItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 15
+          },
+          "projectId": {
+            "type": "integer",
+            "example": 42
+          },
+          "tokenId": {
+            "type": "integer",
+            "example": 7
+          },
+          "name": {
+            "type": "string",
+            "example": "Акция августа"
+          },
+          "messageText": {
+            "type": "string",
+            "example": "Привет! Скидка 20%."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "stopped",
+              "done",
+              "failed"
+            ],
+            "example": "done"
+          },
+          "totalCount": {
+            "type": "integer",
+            "example": 120
+          },
+          "sentCount": {
+            "type": "integer",
+            "example": 120
+          },
+          "deliveredCount": {
+            "type": "integer",
+            "example": 115
+          },
+          "failedCount": {
+            "type": "integer",
+            "example": 5
+          },
+          "mediaUrls": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "buttons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "nullable": true
+            }
+          },
+          "buttonsPerRow": {
+            "type": "integer",
+            "nullable": true
+          },
+          "filters": {
+            "$ref": "#/components/schemas/BroadcastFilters"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "tokenId",
+          "name",
+          "messageText",
+          "status",
+          "totalCount",
+          "sentCount",
+          "deliveredCount",
+          "failedCount"
+        ]
+      },
+      "BroadcastsListResponse": {
+        "type": "object",
+        "properties": {
+          "broadcasts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BroadcastItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 3
+          },
+          "page": {
+            "type": "integer",
+            "example": 1
+          },
+          "limit": {
+            "type": "integer",
+            "example": 20
+          }
+        },
+        "required": [
+          "broadcasts",
+          "total",
+          "page",
+          "limit"
+        ]
+      },
+      "CreateBroadcastResponse": {
+        "type": "object",
+        "properties": {
+          "broadcastId": {
+            "type": "integer",
+            "example": 15
+          }
+        },
+        "required": [
+          "broadcastId"
+        ]
+      },
+      "CreateBroadcastRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "example": "Акция августа"
+          },
+          "messageText": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "example": "Привет! Скидка 20%."
+          },
+          "mediaUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "example": []
+          },
+          "buttons": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            },
+            "maxItems": 100,
+            "example": []
+          },
+          "buttonsPerRow": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8,
+            "example": 0
+          },
+          "filters": {
+            "$ref": "#/components/schemas/BroadcastFilters"
+          },
+          "tokenId": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 7
+          }
+        },
+        "required": [
+          "name",
+          "messageText"
+        ]
+      },
+      "PreviewAudienceResponse": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "example": 42
+          },
+          "sample": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            },
+            "description": "До 3 примеров пользователей аудитории"
+          }
+        },
+        "required": [
+          "count",
+          "sample"
+        ]
+      },
+      "PreviewAudienceRequest": {
+        "type": "object",
+        "properties": {
+          "filters": {
+            "$ref": "#/components/schemas/BroadcastFilters"
+          },
+          "tokenId": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "example": 7
+          }
+        }
+      },
+      "BroadcastResultError": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 901
+          },
+          "broadcastId": {
+            "type": "integer",
+            "example": 15
+          },
+          "userId": {
+            "type": "string",
+            "example": "123456789"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "failed",
+              "blocked",
+              "not_found"
+            ],
+            "example": "blocked"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true,
+            "example": "Forbidden: bot was blocked"
+          },
+          "telegramMessageId": {
+            "type": "integer",
+            "nullable": true
+          },
+          "sentAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "broadcastId",
+          "userId",
+          "status"
+        ]
+      },
+      "BroadcastDetailResponse": {
+        "type": "object",
+        "properties": {
+          "broadcast": {
+            "$ref": "#/components/schemas/BroadcastItem"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BroadcastResultError"
+            }
+          }
+        },
+        "required": [
+          "broadcast",
+          "results"
+        ]
+      },
+      "StopBroadcastResponse": {
+        "type": "object",
+        "properties": {
+          "broadcast": {
+            "$ref": "#/components/schemas/BroadcastItem"
+          }
+        },
+        "required": [
+          "broadcast"
+        ]
+      },
+      "EditBroadcastResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          },
+          "edited": {
+            "type": "integer",
+            "example": 110
+          },
+          "failed": {
+            "type": "integer",
+            "example": 5
+          }
+        },
+        "required": [
+          "ok",
+          "edited",
+          "failed"
+        ]
+      },
+      "EditBroadcastRequest": {
+        "type": "object",
+        "properties": {
+          "messageText": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "Новый HTML-текст (лимит Telegram 4096)",
+            "example": "Обновлённый текст рассылки"
+          }
+        },
+        "required": [
+          "messageText"
+        ]
+      },
+      "DeleteBroadcastResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          },
+          "deleted": {
+            "type": "integer",
+            "description": "Сколько сообщений пытались удалить в Telegram",
+            "example": 115
+          }
+        },
+        "required": [
+          "ok",
+          "deleted"
         ]
       }
     },

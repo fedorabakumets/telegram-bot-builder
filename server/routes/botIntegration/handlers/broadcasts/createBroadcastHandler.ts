@@ -4,36 +4,17 @@
  */
 
 import type { Request, Response } from "express";
-import { z } from "zod";
 import { storage } from "../../../../storages/storage";
-import { broadcastFiltersSchema } from "@shared/schema";
 import { getRequestTokenId, resolveEffectiveProjectToken } from "../../../utils/resolve-request-token";
+import { createBroadcastBodySchema } from "./broadcast-body-schemas";
 import { runBroadcastQueue } from "./broadcastQueue";
-
-/** Схема тела запроса на создание рассылки */
-const createBroadcastBodySchema = z.object({
-  /** Название рассылки */
-  name: z.string().min(1, "Название обязательно"),
-  /** HTML-текст сообщения */
-  messageText: z.string().min(1, "Текст сообщения обязателен"),
-  /** URL медиафайлов для отправки */
-  mediaUrls: z.array(z.string()).default([]),
-  /** Инлайн-кнопки сообщения рассылки */
-  buttons: z.array(z.any()).default([]),
-  /** Кол-во кнопок в ряду (0 = все в один ряд) */
-  buttonsPerRow: z.number().int().min(0).default(0),
-  /** Фильтры аудитории */
-  filters: broadcastFiltersSchema.default({}),
-  /** ID токена бота */
-  tokenId: z.number().int().positive().optional(),
-});
 
 /**
  * Обрабатывает POST /api/projects/:projectId/broadcasts
  * Создаёт рассылку и запускает очередь отправки асинхронно
  * @param req - Объект запроса
  * @param res - Объект ответа
- * @returns Результат обработки HTTP-запроса
+ * @returns void
  */
 export async function createBroadcastHandler(req: Request, res: Response): Promise<void> {
   try {
@@ -50,7 +31,10 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
     }
 
     const requestedTokenId = getRequestTokenId(req);
-    const { selectedToken, effectiveTokenId } = await resolveEffectiveProjectToken(projectId, requestedTokenId);
+    const { selectedToken, effectiveTokenId } = await resolveEffectiveProjectToken(
+      projectId,
+      requestedTokenId,
+    );
 
     if (!selectedToken || effectiveTokenId === null) {
       res.status(400).json({ message: "Токен бота не найден для этого проекта" });
@@ -58,8 +42,6 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
     }
 
     const { name, messageText, mediaUrls, buttons, buttonsPerRow, filters } = validation.data;
-
-    // Подсчитываем аудиторию
     const users = await storage.getUsersForBroadcast(projectId, effectiveTokenId, filters);
     const totalCount = users.length;
 
@@ -77,8 +59,7 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
       startedAt: new Date(),
     });
 
-    // Запускаем очередь асинхронно (fire-and-forget)
-    runBroadcastQueue(broadcast.id, selectedToken.token).catch(err => {
+    runBroadcastQueue(broadcast.id, selectedToken.token).catch((err) => {
       console.error(`[broadcast] Ошибка очереди рассылки ${broadcast.id}:`, err);
     });
 

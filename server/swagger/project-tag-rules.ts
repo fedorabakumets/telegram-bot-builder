@@ -29,8 +29,9 @@ export const PROJECT_TAG_DESCRIPTIONS: Record<string, string> = {
     "Telegram-группы проекта: список, sync названия/аватарки, история и отправка " +
     "в групповой диалог. Auth: requireProjectAccess. Lifecycle бота — `project-bot`.",
   "project-broadcasts":
-    "Рассылки проекта: список, создание, редактирование, stop, preview аудитории. " +
-    "Auth: requireProjectAccess.",
+    "Рассылки проекта: список, создание, детали, редактирование текста, stop, delete, " +
+    "preview аудитории. Auth: requireProjectAccess. UI: панель Broadcast. " +
+    "Не путать с canvas-нодой broadcast.",
   "project-tables":
     "Пользовательские таблицы проекта (`bot_tables`): список, CRUD таблиц/колонок/строк. " +
     "Auth: requireProjectAccess. UI: панель Database.",

@@ -4,25 +4,16 @@
  */
 
 import type { Request, Response } from "express";
-import { z } from "zod";
 import { storage } from "../../../../storages/storage";
-import { broadcastFiltersSchema } from "@shared/schema";
 import { getRequestTokenId, resolveEffectiveProjectToken } from "../../../utils/resolve-request-token";
-
-/** Схема тела запроса предпросмотра аудитории */
-const previewAudienceBodySchema = z.object({
-  /** Фильтры аудитории */
-  filters: broadcastFiltersSchema.default({}),
-  /** ID токена бота */
-  tokenId: z.number().int().positive().optional(),
-});
+import { previewAudienceBodySchema } from "./broadcast-body-schemas";
 
 /**
  * Обрабатывает POST /api/projects/:projectId/broadcasts/preview-audience
  * Подсчитывает количество пользователей по фильтрам и возвращает 3 примера
  * @param req - Объект запроса
  * @param res - Объект ответа
- * @returns Результат обработки HTTP-запроса
+ * @returns void
  */
 export async function previewAudienceHandler(req: Request, res: Response): Promise<void> {
   try {
@@ -39,7 +30,10 @@ export async function previewAudienceHandler(req: Request, res: Response): Promi
     }
 
     const requestedTokenId = getRequestTokenId(req);
-    const { selectedToken, effectiveTokenId } = await resolveEffectiveProjectToken(projectId, requestedTokenId);
+    const { selectedToken, effectiveTokenId } = await resolveEffectiveProjectToken(
+      projectId,
+      requestedTokenId,
+    );
 
     if (!selectedToken || effectiveTokenId === null) {
       res.status(400).json({ message: "Токен бота не найден для этого проекта" });

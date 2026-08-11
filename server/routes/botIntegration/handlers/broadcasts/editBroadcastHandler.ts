@@ -7,61 +7,38 @@ import type { Request, Response } from "express";
 import { eq, and, sql, isNotNull } from "drizzle-orm";
 import { db } from "../../../../database/db";
 import { broadcasts, broadcastResults, botMessages, botTokens } from "@shared/schema";
-import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import { broadcastProjectEvent } from "../../../../terminal/broadcastProjectEvent";
-
-/**
- * Редактирует текст сообщения рассылки в Telegram у конкретного получателя
- * @param token - Токен бота
- * @param chatId - Telegram user_id получателя
- * @param messageId - ID сообщения в Telegram
- * @param newText - Новый текст сообщения (HTML)
- * @returns true если успешно, false если ошибка
- */
-async function editTelegramMessage(
-  token: string,
-  chatId: string,
-  messageId: number,
-  newText: string,
-): Promise<boolean> {
-  try {
-    const url = `https://api.telegram.org/bot${token}/editMessageText`;
-    const response = await fetchWithProxy(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        message_id: messageId,
-        text: newText,
-        parse_mode: "HTML",
-      }),
-    });
-    const json = await response.json() as { ok?: boolean };
-    return json.ok === true;
-  } catch (err) {
-    console.warn(`[editBroadcast] Не удалось отредактировать сообщение ${messageId} у ${chatId}:`, err);
-    return false;
-  }
-}
+import { editBroadcastBodySchema } from "./broadcast-body-schemas";
+import {
+  editTelegramBroadcastMessage,
+  throttleBroadcastTelegramOps,
+} from "./broadcast-telegram-ops";
 
 /**
  * Обрабатывает PUT /api/projects/:projectId/broadcasts/:broadcastId
  * Редактирует текст рассылки в Telegram у получателей и обновляет БД
  * @param req - Объект запроса
  * @param res - Объект ответа
+ * @returns void
  */
 export async function editBroadcastHandler(req: Request, res: Response): Promise<void> {
   try {
     const projectId = Number.parseInt(req.params.projectId, 10);
     const broadcastId = Number.parseInt(req.params.broadcastId, 10);
-    const { messageText } = req.body as { messageText?: string };
 
-    if (Number.isNaN(projectId) || Number.isNaN(broadcastId) || !messageText?.trim()) {
+    if (Number.isNaN(projectId) || Number.isNaN(broadcastId)) {
       res.status(400).json({ message: "Неверные параметры запроса" });
       return;
     }
 
-    // Получаем рассылку
+    const validation = editBroadcastBodySchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(400).json({ message: "Неверное тело запроса", errors: validation.error.errors });
+      return;
+    }
+
+    const { messageText } = validation.data;
+
     const [broadcast] = await db
       .select()
       .from(broadcasts)
@@ -72,13 +49,11 @@ export async function editBroadcastHandler(req: Request, res: Response): Promise
       return;
     }
 
-    // Получаем токен бота
     const [tokenRecord] = await db
       .select()
       .from(botTokens)
-      .where(eq(botTokens.id, broadcast.tokenId));
+      .where(and(eq(botTokens.id, broadcast.tokenId), eq(botTokens.projectId, projectId)));
 
-    // Получаем результаты с telegramMessageId
     const results = await db
       .select()
       .from(broadcastResults)
@@ -87,37 +62,32 @@ export async function editBroadcastHandler(req: Request, res: Response): Promise
     let edited = 0;
     let failed = 0;
 
-    // Редактируем сообщения в Telegram
     if (tokenRecord?.token && results.length > 0) {
       for (const r of results) {
-        const ok = await editTelegramMessage(tokenRecord.token, r.userId, r.telegramMessageId!, messageText);
+        const ok = await editTelegramBroadcastMessage(
+          tokenRecord.token,
+          r.userId,
+          r.telegramMessageId!,
+          messageText,
+        );
         if (ok) edited++;
         else failed++;
-        // Throttle: 25 запросов в секунду
-        if (results.length > 25) {
-          await new Promise((resolve) => setTimeout(resolve, 40));
-        }
+        await throttleBroadcastTelegramOps(results.length);
       }
     }
 
-    // Обновляем текст рассылки в БД
-    await db
-      .update(broadcasts)
-      .set({ messageText })
-      .where(eq(broadcasts.id, broadcastId));
+    await db.update(broadcasts).set({ messageText }).where(eq(broadcasts.id, broadcastId));
 
-    // Обновляем связанные bot_messages
     await db
       .update(botMessages)
       .set({ messageText })
       .where(
         and(
           eq(botMessages.projectId, projectId),
-          sql`${botMessages.messageData}->>'broadcastId' = ${String(broadcastId)}`
-        )
+          sql`${botMessages.messageData}->>'broadcastId' = ${String(broadcastId)}`,
+        ),
       );
 
-    // Публикуем WS-событие message-edited для каждого получателя
     const allResults = await db
       .select()
       .from(broadcastResults)
@@ -128,11 +98,7 @@ export async function editBroadcastHandler(req: Request, res: Response): Promise
         type: "message-edited",
         projectId,
         tokenId: broadcast.tokenId,
-        data: {
-          messageId: 0,
-          userId: r.userId,
-          messageText,
-        },
+        data: { messageId: 0, userId: r.userId, messageText },
         timestamp: new Date().toISOString(),
       });
     }

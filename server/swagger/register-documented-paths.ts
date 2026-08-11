@@ -54,6 +54,10 @@ import { registerProjectGroupsSendPaths } from "./paths/project-groups-send-path
 import { registerProjectFilesGetPaths } from "./paths/project-files-get-paths";
 import { registerProjectFilesDeletePaths } from "./paths/project-files-delete-paths";
 import { registerProjectFilesProxyPaths } from "./paths/project-files-proxy-paths";
+import { registerProjectBroadcastsListPaths } from "./paths/project-broadcasts-list-paths";
+import { registerProjectBroadcastsPreviewPaths } from "./paths/project-broadcasts-preview-paths";
+import { registerProjectBroadcastsDetailPaths } from "./paths/project-broadcasts-detail-paths";
+import { registerProjectBroadcastsMutatePaths } from "./paths/project-broadcasts-mutate-paths";
 import { registerHealthPaths } from "./paths/health-paths";
 import { registerProjectsAdminIdsPaths } from "./paths/projects-admin-ids-paths";
 import { registerProjectsCollaboratorsInfoPaths } from "./paths/projects-collaborators-info-paths";
@@ -192,3 +196,7 @@ registerProjectGroupsSendPaths(documentedRegistry, cookieSecurity);
 registerProjectFilesGetPaths(documentedRegistry, cookieSecurity);
 registerProjectFilesDeletePaths(documentedRegistry, cookieSecurity);
 registerProjectFilesProxyPaths(documentedRegistry, cookieSecurity);
+registerProjectBroadcastsListPaths(documentedRegistry, cookieSecurity);
+registerProjectBroadcastsPreviewPaths(documentedRegistry, cookieSecurity);
+registerProjectBroadcastsDetailPaths(documentedRegistry, cookieSecurity);
+registerProjectBroadcastsMutatePaths(documentedRegistry, cookieSecurity);
