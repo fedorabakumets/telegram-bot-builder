@@ -7052,7 +7052,7 @@
           "project-tables"
         ],
         "summary": "Список таблиц контента проекта",
-        "description": "Пользовательские таблицы `bot_tables` для панели Database в редакторе.\n\n**Тег:** `project-tables` (вместе с CRUD tables/rows/columns).\n\n**Доступ:** `requireProjectAccess` (владелец / collaborator).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/tables -b cookies.txt\n```",
+        "description": "Пользовательские таблицы `bot_tables` для панели Database в редакторе.\n\n**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/tables -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -7161,16 +7161,130 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "POST /api/projects/{id}/tables",
+        "summary": "Создать таблицу контента",
+        "description": "Создаёт `bot_tables` с полем `name`.\n\n**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tables -b cookies.txt \\\n  -H 'Content-Type: application/json' -d '{\"name\":\"Товары\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBotTableBody"
+              },
+              "example": {
+                "name": "Товары"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Успешный ответ"
+          "201": {
+            "description": "Созданная таблица",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTable"
+                },
+                "example": {
+                  "id": 1,
+                  "projectId": 42,
+                  "name": "Товары",
+                  "createdAt": "2026-08-01T10:00:00.000Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет name или некорректный ID проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "examples": {
+                  "missingName": {
+                    "summary": "Нет name",
+                    "value": {
+                      "message": "Название таблицы обязательно"
+                    }
+                  },
+                  "badId": {
+                    "summary": "Плохой id",
+                    "value": {
+                      "message": "Некорректный ID проекта"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось создать таблицу"
+                }
+              }
+            }
           }
         }
       }
@@ -7180,16 +7294,129 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "DELETE /api/projects/{id}/tables/{tableId}",
+        "summary": "Удалить таблицу",
+        "description": "Удаляет таблицу и связанные колонки/строки (CASCADE).\n\n**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s -X DELETE http://localhost:5000/api/projects/42/tables/1 -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Удалено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TablesSuccess"
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный tableId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Некорректный ID таблицы"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Таблица не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Таблица не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось удалить таблицу"
+                }
+              }
+            }
           }
         }
       },
@@ -7197,16 +7424,144 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "PUT /api/projects/{id}/tables/{tableId}",
+        "summary": "Переименовать таблицу",
+        "description": "Обновляет `name`. API есть; UI-хук `useRenameTable` в TablesPanel не подключён.\n\n**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `tables-api.renameTable`.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tables/1 -b cookies.txt \\\n  -H 'Content-Type: application/json' -d '{\"name\":\"Услуги\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameBotTableBody"
+              },
+              "example": {
+                "name": "Услуги"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Обновлённая таблица",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTable"
+                },
+                "example": {
+                  "id": 1,
+                  "projectId": 42,
+                  "name": "Услуги",
+                  "createdAt": "2026-08-01T10:00:00.000Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет name или некорректный tableId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Новое название обязательно"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Таблица не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Таблица не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось переименовать таблицу"
+                }
+              }
+            }
           }
         }
       }
@@ -7216,16 +7571,127 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "GET /api/projects/{id}/tables/{tableId}/columns",
+        "summary": "Список колонок таблицы",
+        "description": "Колонки `bot_table_columns` для панели Database.\n\n**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/tables/1/columns -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив колонок",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTableColumnList"
+                },
+                "example": [
+                  {
+                    "id": 3,
+                    "tableId": 1,
+                    "name": "Цена",
+                    "position": 0
+                  },
+                  {
+                    "id": 4,
+                    "tableId": 1,
+                    "name": "Название",
+                    "position": 1
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный tableId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Некорректный ID таблицы"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить колонки"
+                }
+              }
+            }
           }
         }
       },
@@ -7233,16 +7699,132 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "POST /api/projects/{id}/tables/{tableId}/columns",
+        "summary": "Создать колонку",
+        "description": "Тело: `{ name, position? }` — `position` по умолчанию `0`.\n\n**Auth:** `requireDbReady` + `requireProjectAccess`.\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tables/1/columns \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"name\":\"Цена\",\"position\":0}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBotTableColumnBody"
+              },
+              "example": {
+                "name": "Цена",
+                "position": 0
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Успешный ответ"
+          "201": {
+            "description": "Созданная колонка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTableColumn"
+                },
+                "example": {
+                  "id": 3,
+                  "tableId": 1,
+                  "name": "Цена",
+                  "position": 0
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет name или некорректный tableId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Название колонки обязательно"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось создать колонку"
+                }
+              }
+            }
           }
         }
       }
@@ -7252,16 +7834,141 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "DELETE /api/projects/{id}/tables/{tableId}/columns/{columnId}",
+        "summary": "Удалить колонку",
+        "description": "Удаляет колонку таблицы.\n\n**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s -X DELETE http://localhost:5000/api/projects/42/tables/1/columns/3 \\\n  -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID колонки bot_table_columns",
+              "example": "3"
+            },
+            "required": true,
+            "description": "ID колонки bot_table_columns",
+            "example": "3",
+            "name": "columnId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Удалено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TablesSuccess"
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный columnId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Некорректный ID колонки"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Колонка не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Колонка не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось удалить колонку"
+                }
+              }
+            }
           }
         }
       },
@@ -7269,16 +7976,156 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "PUT /api/projects/{id}/tables/{tableId}/columns/{columnId}",
+        "summary": "Переименовать колонку",
+        "description": "Обновляет `name` колонки `bot_table_columns`.\n\n**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tables/1/columns/3 \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"name\":\"Стоимость\"}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID колонки bot_table_columns",
+              "example": "3"
+            },
+            "required": true,
+            "description": "ID колонки bot_table_columns",
+            "example": "3",
+            "name": "columnId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameBotTableColumnBody"
+              },
+              "example": {
+                "name": "Стоимость"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Обновлённая колонка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTableColumn"
+                },
+                "example": {
+                  "id": 3,
+                  "tableId": 1,
+                  "name": "Стоимость",
+                  "position": 0
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет name или некорректный columnId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Новое название обязательно"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Колонка не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Колонка не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось переименовать колонку"
+                }
+              }
+            }
           }
         }
       }
@@ -7288,16 +8135,124 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "GET /api/projects/{id}/tables/{tableId}/rows",
+        "summary": "Список строк таблицы",
+        "description": "Строки `bot_table_rows` с `data: Record<string,string>`.\n\n**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/tables/1/rows -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив строк",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTableRowList"
+                },
+                "example": [
+                  {
+                    "id": 10,
+                    "tableId": 1,
+                    "rowIndex": 0,
+                    "data": {
+                      "3": "100",
+                      "4": "Товар A"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный tableId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Некорректный ID таблицы"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить строки"
+                }
+              }
+            }
           }
         }
       },
@@ -7305,16 +8260,144 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "POST /api/projects/{id}/tables/{tableId}/rows",
+        "summary": "Создать строки (батч)",
+        "description": "Тело `{ rows: [{ rowIndex?, data? }] }` — массив **непустой**. Без `rowIndex` берётся индекс в массиве; `data` по умолчанию `{}`.\n\n**Auth:** `requireDbReady` + `requireProjectAccess`.\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tables/1/rows \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"rows\":[{\"rowIndex\":0,\"data\":{\"3\":\"100\"}}]}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBotTableRowsBody"
+              },
+              "example": {
+                "rows": [
+                  {
+                    "rowIndex": 0,
+                    "data": {
+                      "3": "100",
+                      "4": "Товар A"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
         "responses": {
-          "200": {
-            "description": "Успешный ответ"
+          "201": {
+            "description": "Созданные строки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTableRowList"
+                },
+                "example": [
+                  {
+                    "id": 10,
+                    "tableId": 1,
+                    "rowIndex": 0,
+                    "data": {
+                      "3": "100",
+                      "4": "Товар A"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Пустой rows или некорректный tableId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Массив rows обязателен и не может быть пустым"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось создать строки"
+                }
+              }
+            }
           }
         }
       }
@@ -7324,16 +8407,141 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "DELETE /api/projects/{id}/tables/{tableId}/rows/{rowId}",
+        "summary": "Удалить строку",
+        "description": "Удаляет строку `bot_table_rows`.\n\n**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s -X DELETE http://localhost:5000/api/projects/42/tables/1/rows/10 \\\n  -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID строки bot_table_rows",
+              "example": "10"
+            },
+            "required": true,
+            "description": "ID строки bot_table_rows",
+            "example": "10",
+            "name": "rowId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Удалено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TablesSuccess"
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный rowId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Некорректный ID строки"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Строка не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Строка не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось удалить строку"
+                }
+              }
+            }
           }
         }
       },
@@ -7341,16 +8549,162 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "PUT /api/projects/{id}/tables/{tableId}/rows/{rowId}",
+        "summary": "Обновить строку",
+        "description": "Тело `{ data: object }`. Side-effects: если таблица `_content` — `syncTableToScenario`; Redis `bot:table_updated:{projectId}` с JSON `{tableId}`.\n\n**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tables/1/rows/10 \\\n  -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"data\":{\"3\":\"150\",\"4\":\"Товар A\"}}'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID строки bot_table_rows",
+              "example": "10"
+            },
+            "required": true,
+            "description": "ID строки bot_table_rows",
+            "example": "10",
+            "name": "rowId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBotTableRowBody"
+              },
+              "example": {
+                "data": {
+                  "3": "150",
+                  "4": "Товар A"
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Обновлённая строка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotTableRow"
+                },
+                "example": {
+                  "id": 10,
+                  "tableId": 1,
+                  "rowIndex": 0,
+                  "data": {
+                    "3": "150",
+                    "4": "Товар A"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет data или некорректный rowId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Поле data обязательно и должно быть объектом"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Строка не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Строка не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось обновить строку"
+                }
+              }
+            }
           }
         }
       }
@@ -7360,16 +8714,116 @@
         "tags": [
           "project-tables"
         ],
-        "summary": "POST /api/projects/{id}/tables/{tableId}/rows/reindex",
+        "summary": "Переиндексировать строки",
+        "description": "Пересчитывает `rowIndex` строк таблицы. В Express регистрируется **до** `/rows/:rowId`, чтобы `reindex` не воспринимался как rowId.\n\n**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n**Клиент:** `tables-api` → TablesPanel.\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/42/tables/1/rows/reindex \\\n  -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта bot_projects",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта bot_projects",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID таблицы bot_tables",
+              "example": "1"
+            },
+            "required": true,
+            "description": "ID таблицы bot_tables",
+            "example": "1",
+            "name": "tableId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie. Не нужна при Bearer PAT. Без обоих — 401.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie Studio. Не нужна при Bearer PAT. Без cookie и без PAT — 401.",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Индексы обновлены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TablesSuccess"
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный tableId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Некорректный ID таблицы"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось переиндексировать строки"
+                }
+              }
+            }
           }
         }
       }
@@ -23363,6 +24817,205 @@
         "items": {
           "$ref": "#/components/schemas/BotTable"
         }
+      },
+      "CreateBotTableBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Товары"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "RenameBotTableBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Услуги"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "TablesSuccess": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
+      "BotTableColumn": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 3
+          },
+          "tableId": {
+            "type": "number",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Цена"
+          },
+          "position": {
+            "type": "integer",
+            "example": 0
+          }
+        },
+        "required": [
+          "id",
+          "tableId",
+          "name",
+          "position"
+        ]
+      },
+      "BotTableColumnList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BotTableColumn"
+        }
+      },
+      "CreateBotTableColumnBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Цена"
+          },
+          "position": {
+            "type": "integer",
+            "example": 0
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "RenameBotTableColumnBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Стоимость"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "BotTableRow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 10
+          },
+          "tableId": {
+            "type": "number",
+            "example": 1
+          },
+          "rowIndex": {
+            "type": "integer",
+            "example": 0
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "3": "100",
+              "4": "Товар A"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "tableId",
+          "rowIndex",
+          "data"
+        ]
+      },
+      "BotTableRowList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BotTableRow"
+        }
+      },
+      "CreateBotTableRowsBody": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rowIndex": {
+                  "type": "integer",
+                  "example": 0
+                },
+                "data": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "example": {
+                    "3": "100"
+                  }
+                }
+              }
+            },
+            "minItems": 1,
+            "example": [
+              {
+                "rowIndex": 0,
+                "data": {
+                  "3": "100"
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "rows"
+        ]
+      },
+      "UpdateBotTableRowBody": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "3": "150",
+              "4": "Товар A"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
       }
     },
     "parameters": {}

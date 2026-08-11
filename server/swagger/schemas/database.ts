@@ -55,3 +55,19 @@ export const DatabaseCookiesSchema = z.object({
       },
     }),
 });
+
+/** Тело POST …/tables */
+export const CreateBotTableBodySchema = z
+  .object({
+    /** Название новой таблицы */
+    name: z.string().min(1).openapi({ example: "Товары" }),
+  })
+  .openapi("CreateBotTableBody");
+
+/** Тело PUT …/tables/{tableId} */
+export const RenameBotTableBodySchema = z
+  .object({
+    /** Новое название таблицы */
+    name: z.string().min(1).openapi({ example: "Услуги" }),
+  })
+  .openapi("RenameBotTableBody");

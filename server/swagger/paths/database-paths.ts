@@ -4,26 +4,14 @@
  */
 
 import type { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
-import {
-  ForbiddenSchema,
-  MessageErrorSchema,
-  UnauthorizedSchema,
-} from "../schemas/common";
+import { MessageErrorSchema } from "../schemas/common";
 import {
   BotTableListSchema,
   DatabaseCookiesSchema,
   DatabaseProjectIdParamsSchema,
 } from "../schemas/database";
-
-/** Пример списка таблиц */
-const TABLES_LIST_EXAMPLE = [
-  {
-    id: 1,
-    projectId: 42,
-    name: "Товары",
-    createdAt: "2026-08-01T10:00:00.000Z",
-  },
-];
+import { PROJECT_TABLES_AUTH_ERRORS } from "./project-tables-errors";
+import { TABLES_LIST_EXAMPLE } from "./project-tables-examples";
 
 /**
  * Регистрирует OpenAPI path списка bot_tables.
@@ -42,8 +30,7 @@ export function registerDatabasePaths(
     summary: "Список таблиц контента проекта",
     description:
       "Пользовательские таблицы `bot_tables` для панели Database в редакторе.\n\n" +
-      "**Тег:** `project-tables` (вместе с CRUD tables/rows/columns).\n\n" +
-      "**Доступ:** `requireProjectAccess` (владелец / collaborator).\n\n" +
+      "**Auth:** `requireDbReady` + `requireProjectAccess` (cookie / Bearer PAT).\n\n" +
       "**Клиент:** `tables-api` → TablesPanel.\n\n" +
       "```bash\n" +
       "curl -s http://localhost:5000/api/projects/42/tables -b cookies.txt\n" +
@@ -72,24 +59,7 @@ export function registerDatabasePaths(
           },
         },
       },
-      401: {
-        description: "Нет session cookie и Bearer PAT",
-        content: {
-          "application/json": {
-            schema: UnauthorizedSchema,
-            example: { error: "UNAUTHORIZED" },
-          },
-        },
-      },
-      403: {
-        description: "Нет доступа к проекту",
-        content: {
-          "application/json": {
-            schema: ForbiddenSchema,
-            example: { message: "Нет доступа к проекту" },
-          },
-        },
-      },
+      ...PROJECT_TABLES_AUTH_ERRORS,
       500: {
         description: "Ошибка БД",
         content: {
