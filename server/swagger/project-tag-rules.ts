@@ -17,7 +17,7 @@ export const PROJECT_TAG_DESCRIPTIONS: Record<string, string> = {
     "Не путать с `/api/tokens` (runtime status) и agent PAT.",
   "project-bot":
     "Lifecycle и профиль бота проекта: start/stop/restart, info, name, description, data. " +
-    "Auth: requireProjectAccess. Модерация групп — тег `project-groups`.",
+    "Auth: requireProjectAccess. Группы и диалог группы — тег `project-groups`.",
   "project-users":
     "Пользователи бота проекта: список, аналитика, поиск, CRUD по userId. " +
     "Не включает диалоги (avatar/messages/send-*) — см. `project-dialogs`.",
@@ -25,8 +25,8 @@ export const PROJECT_TAG_DESCRIPTIONS: Record<string, string> = {
     "Сообщения на уровне проекта: all/activity, DELETE/PATCH по messageId. " +
     "Не путать с `…/users/{userId}/messages` (диалоги).",
   "project-groups":
-    "Telegram-группы проекта и модерация через bot API: groups*, saved-members, " +
-    "ban/promote/restrict, pin, invite-link и т.п. Lifecycle бота — `project-bot`.",
+    "Telegram-группы проекта: список, sync названия/аватарки, история и отправка " +
+    "в групповой диалог. Auth: requireProjectAccess. Lifecycle бота — `project-bot`.",
   "project-broadcasts":
     "Рассылки проекта: список, создание, редактирование, stop, preview аудитории. " +
     "Auth: requireProjectAccess.",
@@ -38,12 +38,8 @@ export const PROJECT_TAG_DESCRIPTIONS: Record<string, string> = {
     "Не путать с `/api/media` и реестром `storage-configs`.",
 };
 
-/** Действия bot API, относящиеся к модерации/группам (не lifecycle) */
-const BOT_GROUP_ACTIONS =
-  "send-group-message|group-info|group-members-count|admin-status|group-admins|" +
-  "group-members|check-member|ban-member|unban-member|promote-member|demote-member|" +
-  "restrict-member|set-group-photo|set-group-title|set-group-description|" +
-  "pin-message|unpin-message|create-invite-link|delete-message|search-user";
+/** Действия bot API, относящиеся к группам (не lifecycle) */
+const BOT_GROUP_ACTIONS = "send-group-message";
 
 /** Lifecycle / профиль бота проекта */
 const BOT_LIFECYCLE_ACTIONS =

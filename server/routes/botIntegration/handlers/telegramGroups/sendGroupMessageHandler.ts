@@ -22,6 +22,7 @@ import {
     getRequestTokenId,
     resolveEffectiveProjectToken,
 } from "../../../utils/resolve-request-token";
+import { assertProjectGroup } from "../../utils/assert-project-group";
 
 /**
  * Обрабатывает запрос на отправку сообщения в группу
@@ -33,7 +34,7 @@ import {
  */
 export async function sendGroupMessageHandler(req: Request, res: Response): Promise<void> {
     try {
-        const projectId = parseInt(req.params.projectId);
+        const projectId = parseInt(req.params.projectId, 10);
         const { groupId, message } = req.body;
         /** Массив URL медиафайлов из тела запроса (опционально) */
         const mediaUrls: string[] = Array.isArray(req.body.mediaUrls) ? req.body.mediaUrls : [];
@@ -42,13 +43,23 @@ export async function sendGroupMessageHandler(req: Request, res: Response): Prom
         /** Инлайн-кнопки в формате Telegram API */
         const buttons = extractButtonsFromNode({ buttons: rawButtons });
         /** Кол-во кнопок в ряду (0 = все в один ряд) */
-        const buttonsPerRow = Number.isFinite(Number(req.body.buttonsPerRow)) ? Number(req.body.buttonsPerRow) : 0;
+        const buttonsPerRow = Number.isFinite(Number(req.body.buttonsPerRow))
+            ? Number(req.body.buttonsPerRow)
+            : 0;
+
+        if (isNaN(projectId)) {
+            res.status(400).json({ message: "Неверный ID проекта" });
+            return;
+        }
 
         // Требуется ID группы и хотя бы текст, медиа или кнопки
         if (!groupId || (!message && mediaUrls.length === 0 && buttons.length === 0)) {
             res.status(400).json({ message: "Требуется ID группы и сообщение" });
             return;
         }
+
+        const linkedOk = await assertProjectGroup(projectId, String(groupId), res);
+        if (!linkedOk) return;
 
         const requestedTokenId = getRequestTokenId(req);
         const { selectedToken, effectiveTokenId } = await resolveEffectiveProjectToken(projectId, requestedTokenId);

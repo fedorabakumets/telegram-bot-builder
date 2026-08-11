@@ -43,6 +43,9 @@ import { registerProjectMessagesAllPaths } from "./paths/project-messages-all-pa
 import { registerProjectMessagesActivityPaths } from "./paths/project-messages-activity-paths";
 import { registerProjectMessagesDeletePaths } from "./paths/project-messages-delete-paths";
 import { registerProjectMessagesPatchPaths } from "./paths/project-messages-patch-paths";
+import { registerProjectGroupsListPaths } from "./paths/project-groups-list-paths";
+import { registerProjectGroupsMessagesPaths } from "./paths/project-groups-messages-paths";
+import { registerProjectGroupsSendPaths } from "./paths/project-groups-send-paths";
 import { registerHealthPaths } from "./paths/health-paths";
 import { registerProjectsAdminIdsPaths } from "./paths/projects-admin-ids-paths";
 import { registerProjectsCollaboratorsInfoPaths } from "./paths/projects-collaborators-info-paths";
@@ -168,3 +171,6 @@ registerProjectMessagesAllPaths(documentedRegistry, cookieSecurity);
 registerProjectMessagesActivityPaths(documentedRegistry, cookieSecurity);
 registerProjectMessagesDeletePaths(documentedRegistry, cookieSecurity);
 registerProjectMessagesPatchPaths(documentedRegistry, cookieSecurity);
+registerProjectGroupsListPaths(documentedRegistry, cookieSecurity);
+registerProjectGroupsMessagesPaths(documentedRegistry, cookieSecurity);
+registerProjectGroupsSendPaths(documentedRegistry, cookieSecurity);

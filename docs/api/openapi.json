@@ -44,7 +44,7 @@
     },
     {
       "name": "project-bot",
-      "description": "Lifecycle и профиль бота проекта: start/stop/restart, info, name, description, data. Auth: requireProjectAccess. Модерация групп — тег `project-groups`."
+      "description": "Lifecycle и профиль бота проекта: start/stop/restart, info, name, description, data. Auth: requireProjectAccess. Группы и диалог группы — тег `project-groups`."
     },
     {
       "name": "project-broadcasts",
@@ -60,7 +60,7 @@
     },
     {
       "name": "project-groups",
-      "description": "Telegram-группы проекта и модерация через bot API: groups*, saved-members, ban/promote/restrict, pin, invite-link и т.п. Lifecycle бота — `project-bot`."
+      "description": "Telegram-группы проекта: список, sync названия/аватарки, история и отправка в групповой диалог. Auth: requireProjectAccess. Lifecycle бота — `project-bot`."
     },
     {
       "name": "project-messages",
@@ -6332,63 +6332,6 @@
         }
       }
     },
-    "/api/projects/{id}/bot/description": {
-      "put": {
-        "tags": [
-          "project-bot"
-        ],
-        "summary": "PUT /api/projects/{id}/bot/description",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{id}/bot/info": {
-      "get": {
-        "tags": [
-          "project-bot"
-        ],
-        "summary": "GET /api/projects/{id}/bot/info",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{id}/bot/name": {
-      "put": {
-        "tags": [
-          "project-bot"
-        ],
-        "summary": "PUT /api/projects/{id}/bot/name",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
     "/api/projects/{id}/bot/restart": {
       "post": {
         "tags": [
@@ -6414,25 +6357,6 @@
           "project-bot"
         ],
         "summary": "POST /api/projects/{id}/bot/restart-all",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{id}/bot/short-description": {
-      "put": {
-        "tags": [
-          "project-bot"
-        ],
-        "summary": "PUT /api/projects/{id}/bot/short-description",
         "responses": {
           "200": {
             "description": "Успешный ответ"
@@ -7010,42 +6934,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/projects/{id}/groups": {
-      "get": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "GET /api/projects/{id}/groups",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "POST /api/projects/{id}/groups",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
           }
         }
       }
@@ -12767,82 +12655,6 @@
         }
       }
     },
-    "/api/projects/{projectId}/bot/admin-status/{groupId}": {
-      "get": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "GET /api/projects/{projectId}/bot/admin-status/{groupId}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/ban-member": {
-      "post": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "POST /api/projects/{projectId}/bot/ban-member",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/check-member/{groupId}/{userId}": {
-      "get": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "GET /api/projects/{projectId}/bot/check-member/{groupId}/{userId}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/create-invite-link": {
-      "post": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "POST /api/projects/{projectId}/bot/create-invite-link",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
     "/api/projects/{projectId}/bot/data": {
       "get": {
         "tags": [
@@ -12862,12 +12674,12 @@
         }
       }
     },
-    "/api/projects/{projectId}/bot/delete-message": {
-      "post": {
+    "/api/projects/{projectId}/bot/description": {
+      "put": {
         "tags": [
-          "project-groups"
+          "project-bot"
         ],
-        "summary": "POST /api/projects/{projectId}/bot/delete-message",
+        "summary": "PUT /api/projects/{projectId}/bot/description",
         "responses": {
           "200": {
             "description": "Успешный ответ"
@@ -12881,31 +12693,12 @@
         }
       }
     },
-    "/api/projects/{projectId}/bot/demote-member": {
-      "post": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "POST /api/projects/{projectId}/bot/demote-member",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/group-admins/{groupId}": {
+    "/api/projects/{projectId}/bot/info": {
       "get": {
         "tags": [
-          "project-groups"
+          "project-bot"
         ],
-        "summary": "GET /api/projects/{projectId}/bot/group-admins/{groupId}",
+        "summary": "GET /api/projects/{projectId}/bot/info",
         "responses": {
           "200": {
             "description": "Успешный ответ"
@@ -12919,126 +12712,12 @@
         }
       }
     },
-    "/api/projects/{projectId}/bot/group-info/{groupId}": {
-      "get": {
+    "/api/projects/{projectId}/bot/name": {
+      "put": {
         "tags": [
-          "project-groups"
+          "project-bot"
         ],
-        "summary": "GET /api/projects/{projectId}/bot/group-info/{groupId}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/group-members-count/{groupId}": {
-      "get": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "GET /api/projects/{projectId}/bot/group-members-count/{groupId}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/group-members/{groupId}": {
-      "get": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "GET /api/projects/{projectId}/bot/group-members/{groupId}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/pin-message": {
-      "post": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "POST /api/projects/{projectId}/bot/pin-message",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/promote-member": {
-      "post": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "POST /api/projects/{projectId}/bot/promote-member",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/restrict-member": {
-      "post": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "POST /api/projects/{projectId}/bot/restrict-member",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/search-user/{query}": {
-      "get": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "GET /api/projects/{projectId}/bot/search-user/{query}",
+        "summary": "PUT /api/projects/{projectId}/bot/name",
         "responses": {
           "200": {
             "description": "Успешный ответ"
@@ -13057,102 +12736,158 @@
         "tags": [
           "project-groups"
         ],
-        "summary": "POST /api/projects/{projectId}/bot/send-group-message",
+        "summary": "Отправить сообщение в группу",
+        "description": "Текст / медиа / кнопки в группу из панели диалогов. `groupId` в теле — chat_id; группа должна относиться к проекту. Пишется в историю + WS `new-message`. `tokenId` — от какого бота слать.\n\n**Клиент:** `use-send-group-message`.\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"groupId\":\"-1001234567890\",\"message\":\"Здравствуйте!\"}' \\\n  'http://localhost:5000/api/projects/42/bot/send-group-message?tokenId=7'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него — default/first токен проекта.",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendGroupMessageRequest"
+              },
+              "example": {
+                "groupId": "-1001234567890",
+                "message": "Здравствуйте!",
+                "mediaUrls": [],
+                "buttons": [],
+                "buttonsPerRow": 0
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Отправлено и сохранено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendGroupMessageResponse"
+                },
+                "example": {
+                  "message": "Сообщение успешно отправлено",
+                  "messageId": 98765
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет токена / пустое тело / Telegram отклонил",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendDialogMessageError"
+                },
+                "example": {
+                  "message": "Требуется ID группы и сообщение"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Группа не привязана к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Группа не найдена в проекте"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/api/projects/{projectId}/bot/set-group-description": {
-      "post": {
+    "/api/projects/{projectId}/bot/short-description": {
+      "put": {
         "tags": [
-          "project-groups"
+          "project-bot"
         ],
-        "summary": "POST /api/projects/{projectId}/bot/set-group-description",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/set-group-photo": {
-      "post": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "POST /api/projects/{projectId}/bot/set-group-photo",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/set-group-title": {
-      "post": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "POST /api/projects/{projectId}/bot/set-group-title",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/unban-member": {
-      "post": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "POST /api/projects/{projectId}/bot/unban-member",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
-          },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
-          }
-        }
-      }
-    },
-    "/api/projects/{projectId}/bot/unpin-message": {
-      "post": {
-        "tags": [
-          "project-groups"
-        ],
-        "summary": "POST /api/projects/{projectId}/bot/unpin-message",
+        "summary": "PUT /api/projects/{projectId}/bot/short-description",
         "responses": {
           "200": {
             "description": "Успешный ответ"
@@ -13499,38 +13234,123 @@
         }
       }
     },
-    "/api/projects/{projectId}/groups/{groupId}": {
-      "delete": {
+    "/api/projects/{projectId}/groups": {
+      "get": {
         "tags": [
           "project-groups"
         ],
-        "summary": "DELETE /api/projects/{projectId}/groups/{groupId}",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
+        "summary": "Список Telegram-групп проекта",
+        "description": "Группы/каналы проекта (Database → группы, выбор аудитории рассылки). Название и аватарка — через `…/sync`.\n\n**Auth:** cookie или Bearer PAT + доступ к проекту.\n\n**Клиент:** `use-system-tables`, `group-select`.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/groups' -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          {
+            "agentToken": []
           }
-        }
-      },
-      "put": {
-        "tags": [
-          "project-groups"
         ],
-        "summary": "PUT /api/projects/{projectId}/groups/{groupId}",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив групп",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotGroupList"
+                },
+                "example": [
+                  {
+                    "id": 15,
+                    "projectId": 42,
+                    "groupId": "-1001234567890",
+                    "name": "Поддержка клиентов",
+                    "url": "https://t.me/support_chat",
+                    "isAdmin": 1,
+                    "isActive": 1,
+                    "avatarUrl": "/api/projects/42/telegram-file?fileId=AgAC&tokenId=7",
+                    "chatType": "supergroup",
+                    "createdAt": "2026-08-01T10:00:00.000Z",
+                    "updatedAt": "2026-08-11T12:00:00.000Z"
+                  }
+                ]
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить группы"
+                }
+              }
+            }
           }
         }
       }
@@ -13540,35 +13360,176 @@
         "tags": [
           "project-groups"
         ],
-        "summary": "GET /api/projects/{projectId}/groups/{groupId}/messages",
-        "responses": {
-          "200": {
-            "description": "Успешный ответ"
+        "summary": "История сообщений группы",
+        "description": "Лента группового диалога (хронологически). Группа должна относиться к проекту (`bot_groups` или уже есть сообщения) — иначе 404. `tokenId` / `limit` (default 100).\n\n**Клиент:** `dialog-panel` (режим группы).\n\n```bash\ncurl -s -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/groups/-1001234567890/messages?limit=50'\n```",
+        "security": [
+          {
+            "cookieAuth": []
           },
-          "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
-          },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          {
+            "agentToken": []
           }
-        }
-      }
-    },
-    "/api/projects/{projectId}/groups/{groupId}/saved-members": {
-      "get": {
-        "tags": [
-          "project-groups"
         ],
-        "summary": "GET /api/projects/{projectId}/groups/{groupId}/saved-members",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Telegram chat_id группы",
+              "example": "-1001234567890"
+            },
+            "required": true,
+            "description": "Telegram chat_id группы",
+            "example": "-1001234567890",
+            "name": "groupId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него — default/first токен проекта.",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Сколько последних сообщений вернуть (default 100)",
+              "example": "100"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Массив сообщений (от старых к новым)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DialogMessageList"
+                },
+                "example": [
+                  {
+                    "id": 880,
+                    "projectId": 42,
+                    "tokenId": 7,
+                    "userId": "-1001234567890",
+                    "messageType": "user",
+                    "messageText": "Нужна помощь с заказом",
+                    "messageData": null,
+                    "telegramMessageId": 101,
+                    "createdAt": "2026-08-11T14:00:00.000Z"
+                  },
+                  {
+                    "id": 881,
+                    "projectId": 42,
+                    "tokenId": 7,
+                    "userId": "-1001234567890",
+                    "messageType": "bot",
+                    "messageText": "Здравствуйте! Чем помочь?",
+                    "messageData": {
+                      "sentFromAdmin": true
+                    },
+                    "telegramMessageId": 102,
+                    "createdAt": "2026-08-11T14:01:00.000Z"
+                  }
+                ]
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Группа не привязана к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Группа не найдена в проекте"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось получить сообщения группы"
+                }
+              }
+            }
           }
         }
       }
@@ -13578,16 +13539,156 @@
         "tags": [
           "project-groups"
         ],
-        "summary": "POST /api/projects/{projectId}/groups/{groupId}/sync",
+        "summary": "Синхронизировать группу из Telegram",
+        "description": "Актуализирует название, тип и аватарку через `getChat`. Нет записи — создаёт. `tokenId` — от какого бота ходить в Telegram.\n\n**Клиент:** `use-sync-groups`.\n\n```bash\ncurl -s -X POST -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/groups/-1001234567890/sync?tokenId=7'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Telegram chat_id группы",
+              "example": "-1001234567890"
+            },
+            "required": true,
+            "description": "Telegram chat_id группы",
+            "example": "-1001234567890",
+            "name": "groupId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него — default/first токен проекта.",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Успешный ответ"
+            "description": "Группа обновлена или создана",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncGroupResponse"
+                },
+                "example": {
+                  "synced": true,
+                  "group": {
+                    "id": 15,
+                    "projectId": 42,
+                    "groupId": "-1001234567890",
+                    "name": "Поддержка клиентов",
+                    "url": "https://t.me/support_chat",
+                    "isAdmin": 1,
+                    "isActive": 1,
+                    "avatarUrl": "/api/projects/42/telegram-file?fileId=AgAC&tokenId=7",
+                    "chatType": "supergroup",
+                    "createdAt": "2026-08-01T10:00:00.000Z",
+                    "updatedAt": "2026-08-11T12:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Нет токена или Telegram отклонил getChat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Токен бота не найден"
+                }
+              }
+            }
           },
           "401": {
-            "description": "Требуется авторизация (сессия или Bearer PAT)"
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
           },
-          "503": {
-            "description": "Приложение не настроено — настройка в /admin"
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Не удалось синхронизировать группу"
+                }
+              }
+            }
           }
         }
       }
@@ -27146,6 +27247,169 @@
         },
         "required": [
           "messageText"
+        ]
+      },
+      "BotGroup": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 15
+          },
+          "projectId": {
+            "type": "integer",
+            "example": 42
+          },
+          "groupId": {
+            "type": "string",
+            "nullable": true,
+            "example": "-1001234567890"
+          },
+          "name": {
+            "type": "string",
+            "example": "Поддержка клиентов"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://t.me/support_chat"
+          },
+          "isAdmin": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1
+          },
+          "memberCount": {
+            "type": "integer",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "/api/projects/42/telegram-file?fileId=AgAC&tokenId=7"
+          },
+          "chatType": {
+            "type": "string",
+            "nullable": true,
+            "example": "supergroup"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "name",
+          "url"
+        ]
+      },
+      "BotGroupList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BotGroup"
+        }
+      },
+      "SyncGroupResponse": {
+        "type": "object",
+        "properties": {
+          "synced": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          },
+          "group": {
+            "$ref": "#/components/schemas/BotGroup"
+          }
+        },
+        "required": [
+          "synced",
+          "group"
+        ]
+      },
+      "SendGroupMessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Сообщение успешно отправлено"
+          },
+          "messageId": {
+            "type": "integer",
+            "nullable": true,
+            "example": 98765
+          }
+        },
+        "required": [
+          "message",
+          "messageId"
+        ]
+      },
+      "SendGroupMessageRequest": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string",
+            "minLength": 1,
+            "example": "-1001234567890"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 4096,
+            "example": "Здравствуйте!"
+          },
+          "mediaUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "/uploads/42/photo.jpg"
+            ]
+          },
+          "buttons": {
+            "type": "array",
+            "items": {
+              "nullable": true
+            },
+            "example": []
+          },
+          "buttonsPerRow": {
+            "type": "integer",
+            "example": 0
+          }
+        },
+        "required": [
+          "groupId"
         ]
       }
     },
