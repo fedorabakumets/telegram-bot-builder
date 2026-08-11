@@ -34,6 +34,7 @@ import { registerBotApiPaths } from "./paths/bot-api-paths";
 import { registerLaunchLogsPaths } from "./paths/launch-logs-paths";
 import { registerMediaPaths } from "./paths/media-paths";
 import { registerConfigSetupPaths } from "./paths/config-setup-paths";
+import { registerAdminAuthPaths } from "./paths/admin-auth-paths";
 import { registerAdminAppSettingsPaths } from "./paths/admin-app-settings-paths";
 import { registerAdminBotFoldersCleanupPaths } from "./paths/admin-bot-folders-cleanup-paths";
 import { registerDatabasePaths } from "./paths/database-paths";
@@ -100,7 +101,9 @@ documentedRegistry.registerComponent("securitySchemes", "adminCookie", {
   type: "apiKey",
   in: "cookie",
   name: "admin_auth",
-  description: "Admin cookie после POST /admin/api/login (ADMIN_API_KEY)",
+  description:
+    "Admin cookie после POST /admin/api/login (ключ ADMIN_API_KEY). " +
+    "Path=/admin, httpOnly, 7 дней. User connect.sid / Bearer PAT не подходят.",
 });
 
 /**
@@ -164,6 +167,7 @@ registerBotApiPaths(documentedRegistry, cookieSecurity);
 registerLaunchLogsPaths(documentedRegistry, cookieSecurity);
 registerMediaPaths(documentedRegistry, cookieSecurity);
 registerConfigSetupPaths(documentedRegistry, publicSecurity);
+registerAdminAuthPaths(documentedRegistry);
 registerAdminAppSettingsPaths(documentedRegistry);
 registerAdminBotFoldersCleanupPaths(documentedRegistry);
 registerStorageConfigPaths(documentedRegistry, cookieSecurity);

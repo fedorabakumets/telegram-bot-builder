@@ -19,6 +19,11 @@ export interface CollectedRoute {
 
 /** Описания тегов OpenAPI по префиксу /api/{segment} */
 const TAG_DESCRIPTIONS: Record<string, string> = {
+  admin:
+    "Платформенная админка (`/admin/*`): вход по `ADMIN_API_KEY` → cookie `admin_auth` " +
+    "(Path=/admin, 7 дней). Настройки Studio, seed/featured сценариев, cleanup `bots/`. " +
+    "User cookie / Bearer PAT **не** работают. Не путать с `projects` …/admin-ids " +
+    "(админы бота) и с `/api/bot/*`.",
   auth:
     "Вход в Studio: Telegram Widget, Mini App initData, dev-login по ID; " +
     "сессия (`/me`, logout). Публичные; cookie `connect.sid` после успешного login. " +
@@ -129,11 +134,14 @@ export function collectApiRoutes(app: Express): CollectedRoute[] {
 
 /**
  * Возвращает описания тегов для OpenAPI document.
+ * Включает теги только из Zod (например `admin` — пути `/admin/*` не в collect `/api`).
  * @param routes - Собранные маршруты
  * @returns Массив тегов с описаниями
  */
 export function buildOpenApiTags(routes: CollectedRoute[]): Array<{ name: string; description: string }> {
-  const tagNames = [...new Set(routes.map((route) => route.tag))].sort();
+  /** Теги только из Zod (`admin` — `/admin/*` не в collect `/api`) */
+  const EXTRA_DOCUMENTED_TAGS = ["admin"];
+  const tagNames = [...new Set([...routes.map((r) => r.tag), ...EXTRA_DOCUMENTED_TAGS])].sort();
   return tagNames.map((name) => ({
     name,
     description: TAG_DESCRIPTIONS[name] ?? `Эндпоинты /api/${name}`,

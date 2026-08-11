@@ -27,11 +27,11 @@ export function registerTemplateSeedPaths(registry: OpenAPIRegistry): void {
     method: "post",
     path: "/admin/api/templates/refresh",
     tags: ["admin"],
-    summary: "Пересидить системные сценарии (force)",
+    summary: "Обновить встроенные сценарии каталога",
     description:
-      "`seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.\n\n" +
-      "**Авторизация:** только `admin_auth`. User cookie/PAT → 401.\n" +
-      "Публичные `/api/templates/refresh|recreate` удалены.\n\n" +
+      "Принудительно перезаписывает системные шаблоны в `bot_templates` " +
+      "(каталог «Сценарии» в Studio).\n\n" +
+      "**Auth:** только `admin_auth`. Ops / curl / Swagger.\n\n" +
       "```bash\n" +
       `${ADMIN_CURL_LOGIN}\n` +
       "curl -s -X POST http://localhost:5000/admin/api/templates/refresh -b admin.txt\n" +
@@ -73,9 +73,10 @@ export function registerTemplateSeedPaths(registry: OpenAPIRegistry): void {
     method: "post",
     path: "/admin/api/templates/recreate",
     tags: ["admin"],
-    summary: "Пересоздать системные сценарии (seed force)",
+    summary: "Пересоздать встроенные сценарии (алиас refresh)",
     description:
-      "Тот же `seedDefaultTemplates(true)`, что refresh. Только admin cookie.\n\n" +
+      "То же force-seed, что `POST …/templates/refresh` (совместимый алиас).\n\n" +
+      "**Auth:** только `admin_auth`.\n\n" +
       "```bash\n" +
       `${ADMIN_CURL_LOGIN}\n` +
       "curl -s -X POST http://localhost:5000/admin/api/templates/recreate -b admin.txt\n" +

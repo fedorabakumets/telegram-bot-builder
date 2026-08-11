@@ -33,10 +33,11 @@ export function registerAdminAppSettingsPaths(registry: OpenAPIRegistry): void {
     method: "get",
     path: "/admin/api/app-settings",
     tags: ["admin"],
-    summary: "Настройки приложения (по провайдерам)",
+    summary: "Настройки платформы (вход Studio + Telegram)",
     description:
-      "Текущие настройки platform setup. Секреты и токены **не** отдаются — только флаги `*Configured`.\n\n" +
-      "**Авторизация:** cookie `admin_auth` после `/admin/login`.\n\n" +
+      "Читает режим входа Studio (`dev_login` | `telegram_widget`) и статус " +
+      "Telegram-провайдера. Секреты **не** отдаются — только флаги `*Configured`.\n\n" +
+      "**Auth:** cookie `admin_auth`. **UI:** `/admin/settings` (SSR; GET для curl/Swagger).\n\n" +
       "```bash\n" +
       `${ADMIN_CURL_LOGIN}\n` +
       "curl -s http://localhost:5000/admin/api/app-settings -b admin.txt\n" +
@@ -69,12 +70,13 @@ export function registerAdminAppSettingsPaths(registry: OpenAPIRegistry): void {
     method: "put",
     path: "/admin/api/app-settings",
     tags: ["admin"],
-    summary: "Сохранить настройки приложения",
+    summary: "Сохранить настройки платформы",
     description:
-      "Upsert секций `auth` (режим входа) и `telegram`. Пустой `clientSecret` / `botToken` " +
-      "не затирает уже сохранённые значения.\n\n" +
+      "Upsert секций `auth` (режим входа) и `telegram` (Client ID / secret / bot token / username). " +
+      "Пустой `clientSecret` / `botToken` не затирает уже сохранённые значения.\n\n" +
       "При `dev_login` поля Telegram необязательны. `botUsername` можно не слать — " +
       "резолв через getMe при заданном bot token.\n\n" +
+      "**UI:** форма `/admin/settings`.\n\n" +
       "```bash\n" +
       `${ADMIN_CURL_LOGIN}\n` +
       "curl -s -X PUT http://localhost:5000/admin/api/app-settings -b admin.txt \\\n" +

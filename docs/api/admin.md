@@ -1,16 +1,16 @@
 # admin
 
-Эндпоинтов: **6**
+Эндпоинтов: **9**
 
 ### `GET` /admin/api/app-settings
 
-Настройки приложения (по провайдерам)
+Настройки платформы (вход Studio + Telegram)
 
 **Авторизация:** Admin cookie
 
-Текущие настройки platform setup. Секреты и токены **не** отдаются — только флаги `*Configured`.
+Читает режим входа Studio (`dev_login` | `telegram_widget`) и статус Telegram-провайдера. Секреты **не** отдаются — только флаги `*Configured`.
 
-**Авторизация:** cookie `admin_auth` после `/admin/login`.
+**Auth:** cookie `admin_auth`. **UI:** `/admin/settings` (SSR; GET для curl/Swagger).
 
 ```bash
 curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
@@ -55,13 +55,15 @@ curl -s http://localhost:5000/admin/api/app-settings -b admin.txt
 
 ### `PUT` /admin/api/app-settings
 
-Сохранить настройки приложения
+Сохранить настройки платформы
 
 **Авторизация:** Admin cookie
 
-Upsert секций `auth` (режим входа) и `telegram`. Пустой `clientSecret` / `botToken` не затирает уже сохранённые значения.
+Upsert секций `auth` (режим входа) и `telegram` (Client ID / secret / bot token / username). Пустой `clientSecret` / `botToken` не затирает уже сохранённые значения.
 
 При `dev_login` поля Telegram необязательны. `botUsername` можно не слать — резолв через getMe при заданном bot token.
+
+**UI:** форма `/admin/settings`.
 
 ```bash
 curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
@@ -126,14 +128,13 @@ curl -s -X PUT http://localhost:5000/admin/api/app-settings -b admin.txt \
 
 ### `POST` /admin/api/bot-folders/cleanup
 
-Удалить осиротевшие папки в bots/
+Очистить осиротевшие папки bots/
 
 **Авторизация:** Admin cookie
 
-Сканирует `bots/`, парсит `…_{projectId}_{tokenId}` и **рекурсивно удаляет** каталоги без проекта в БД. Нераспознанные имена → `skipped`.
+Сканирует каталог `bots/`, парсит имена `…_{projectId}_{tokenId}` и удаляет папки, чей проект уже нет в БД. Непонятные имена → `skipped` (не трогает).
 
-**Авторизация:** только `admin_auth`. User cookie/PAT → 401.
-**Было:** `POST /api/bot-folders/cleanup` — удалено.
+**Auth:** только `admin_auth`. Ops / curl / Swagger (UI в hub пока нет).
 
 ```bash
 curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
@@ -169,15 +170,99 @@ curl -s -X POST http://localhost:5000/admin/api/bot-folders/cleanup -b admin.txt
 }
 ```
 
+### `POST` /admin/api/login
+
+Войти в админку
+
+**Авторизация:** Публичный
+
+Форма с полем `key` = `ADMIN_API_KEY`. При успехе ставит httpOnly cookie `admin_auth` (Path=/admin, 7 дней, HMAC от ключа) и редиректит на `/admin` или `/admin/settings` (если платформа ещё не настроена).
+
+Неверный ключ → 302 на `/admin/login?error=1`. Без ключа в non-prod → 503; в production без `ADMIN_API_KEY` весь `/admin` не монтируется.
+
+**UI:** `/admin/login`. User `connect.sid` / Bearer PAT здесь не работают.
+
+```bash
+curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'key=YOUR_ADMIN_API_KEY'
+```
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 302 | Успех → Location `/admin` или `/admin/settings` + Set-Cookie. Ошибка ключа → `/admin/login?error=1` |
+| 503 | Admin не настроен (нет ключа) |
+
+### `POST` /admin/api/logout
+
+Выйти из админки
+
+**Авторизация:** Публичный
+
+Сбрасывает cookie `admin_auth` и редиректит на `/admin/login`.
+
+**UI:** кнопка «Выйти» на hub `/admin`.
+
+```bash
+curl -s -c admin.txt -b admin.txt -X POST http://localhost:5000/admin/api/logout
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 302 | Location `/admin/login`, cookie очищена |
+
+### `GET` /admin/api/status
+
+Статус admin-сессии
+
+**Авторизация:** Публичный
+
+Публичный JSON: валидна ли `admin_auth` и доступна ли админка. `adminEnabled` всегда `true`, если роут смонтирован.
+
+```bash
+curl -s -b admin.txt http://localhost:5000/admin/api/status
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `admin_auth` | cookie | нет | Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED. | `"eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Состояние сессии |
+
+#### Пример ответа `200`
+
+```json
+{
+  "authenticated": true,
+  "adminEnabled": true
+}
+```
+
 ### `PATCH` /admin/api/templates/{id}/featured
 
-Пометить сценарий как featured (или снять)
+Рекомендуемый сценарий (featured on/off)
 
 **Авторизация:** Admin cookie
 
-Выставляет `featured` 0|1. Обычный `PUT /api/templates/{id}` это поле **игнорирует**.
+Включает или снимает «рекомендуемый» шаблон в каталоге Studio (`featured` 0|1). Обычный `PUT /api/templates/{id}` это поле **игнорирует**.
 
-**Path:** `id` — ID `bot_templates`.
+**Auth:** только `admin_auth`. Ops / curl / Swagger.
 
 ```bash
 curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
@@ -287,11 +372,13 @@ curl -s -X PATCH http://localhost:5000/admin/api/templates/12/featured -b admin.
 
 ### `POST` /admin/api/templates/recreate
 
-Пересоздать системные сценарии (seed force)
+Пересоздать встроенные сценарии (алиас refresh)
 
 **Авторизация:** Admin cookie
 
-Тот же `seedDefaultTemplates(true)`, что refresh. Только admin cookie.
+То же force-seed, что `POST …/templates/refresh` (совместимый алиас).
+
+**Auth:** только `admin_auth`.
 
 ```bash
 curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \
@@ -325,14 +412,13 @@ curl -s -X POST http://localhost:5000/admin/api/templates/recreate -b admin.txt
 
 ### `POST` /admin/api/templates/refresh
 
-Пересидить системные сценарии (force)
+Обновить встроенные сценарии каталога
 
 **Авторизация:** Admin cookie
 
-`seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.
+Принудительно перезаписывает системные шаблоны в `bot_templates` (каталог «Сценарии» в Studio).
 
-**Авторизация:** только `admin_auth`. User cookie/PAT → 401.
-Публичные `/api/templates/refresh|recreate` удалены.
+**Auth:** только `admin_auth`. Ops / curl / Swagger.
 
 ```bash
 curl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \

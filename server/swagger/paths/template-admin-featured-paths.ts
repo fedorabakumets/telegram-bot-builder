@@ -37,10 +37,11 @@ export function registerAdminTemplateFeaturedPaths(registry: OpenAPIRegistry): v
     method: "patch",
     path: "/admin/api/templates/{id}/featured",
     tags: ["admin"],
-    summary: "Пометить сценарий как featured (или снять)",
+    summary: "Рекомендуемый сценарий (featured on/off)",
     description:
-      "Выставляет `featured` 0|1. Обычный `PUT /api/templates/{id}` это поле **игнорирует**.\n\n" +
-      "**Path:** `id` — ID `bot_templates`.\n\n" +
+      "Включает или снимает «рекомендуемый» шаблон в каталоге Studio " +
+      "(`featured` 0|1). Обычный `PUT /api/templates/{id}` это поле **игнорирует**.\n\n" +
+      "**Auth:** только `admin_auth`. Ops / curl / Swagger.\n\n" +
       "```bash\n" +
       `${ADMIN_CURL_LOGIN}\n` +
       "curl -s -X PATCH http://localhost:5000/admin/api/templates/12/featured -b admin.txt \\\n" +

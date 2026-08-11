@@ -7,6 +7,10 @@
   },
   "tags": [
     {
+      "name": "admin",
+      "description": "Платформенная админка (`/admin/*`): вход по `ADMIN_API_KEY` → cookie `admin_auth` (Path=/admin, 7 дней). Настройки Studio, seed/featured сценариев, cleanup `bots/`. User cookie / Bearer PAT **не** работают. Не путать с `projects` …/admin-ids (админы бота) и с `/api/bot/*`."
+    },
+    {
       "name": "agent-tokens",
       "description": "Персональные токены агента (PAT) для MCP/CLI: список, создание, отзыв. Секрет `mcp_…` отдаётся один раз при POST. Авторизация: session cookie или Bearer PAT."
     },
@@ -21317,13 +21321,121 @@
         }
       }
     },
+    "/admin/api/login": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Войти в админку",
+        "description": "Форма с полем `key` = `ADMIN_API_KEY`. При успехе ставит httpOnly cookie `admin_auth` (Path=/admin, 7 дней, HMAC от ключа) и редиректит на `/admin` или `/admin/settings` (если платформа ещё не настроена).\n\nНеверный ключ → 302 на `/admin/login?error=1`. Без ключа в non-prod → 503; в production без `ADMIN_API_KEY` весь `/admin` не монтируется.\n\n**UI:** `/admin/login`. User `connect.sid` / Bearer PAT здесь не работают.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\n```",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginForm"
+              },
+              "example": {
+                "key": "YOUR_ADMIN_API_KEY"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Успех → Location `/admin` или `/admin/settings` + Set-Cookie. Ошибка ключа → `/admin/login?error=1`"
+          },
+          "503": {
+            "description": "Admin не настроен (нет ключа)",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Admin не настроен"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/api/logout": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Выйти из админки",
+        "description": "Сбрасывает cookie `admin_auth` и редиректит на `/admin/login`.\n\n**UI:** кнопка «Выйти» на hub `/admin`.\n\n```bash\ncurl -s -c admin.txt -b admin.txt -X POST http://localhost:5000/admin/api/logout\n```",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Location `/admin/login`, cookie очищена"
+          }
+        }
+      }
+    },
+    "/admin/api/status": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Статус admin-сессии",
+        "description": "Публичный JSON: валидна ли `admin_auth` и доступна ли админка. `adminEnabled` всегда `true`, если роут смонтирован.\n\n```bash\ncurl -s -b admin.txt http://localhost:5000/admin/api/status\n```",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Admin cookie после `/admin/login` (ключ `ADMIN_API_KEY`). Без неё — 401.",
+              "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0"
+            },
+            "required": false,
+            "description": "Admin cookie после `/admin/login` (`ADMIN_API_KEY`). Без неё — 401 ADMIN_UNAUTHORIZED.",
+            "example": "eyJib2R5IjoiLi4uIiwic2lnIjoiLi4uIn0",
+            "name": "admin_auth",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Состояние сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStatusResponse"
+                },
+                "example": {
+                  "authenticated": true,
+                  "adminEnabled": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/api/app-settings": {
       "get": {
         "tags": [
           "admin"
         ],
-        "summary": "Настройки приложения (по провайдерам)",
-        "description": "Текущие настройки platform setup. Секреты и токены **не** отдаются — только флаги `*Configured`.\n\n**Авторизация:** cookie `admin_auth` после `/admin/login`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s http://localhost:5000/admin/api/app-settings -b admin.txt\n```",
+        "summary": "Настройки платформы (вход Studio + Telegram)",
+        "description": "Читает режим входа Studio (`dev_login` | `telegram_widget`) и статус Telegram-провайдера. Секреты **не** отдаются — только флаги `*Configured`.\n\n**Auth:** cookie `admin_auth`. **UI:** `/admin/settings` (SSR; GET для curl/Swagger).\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s http://localhost:5000/admin/api/app-settings -b admin.txt\n```",
         "security": [
           {
             "adminCookie": []
@@ -21389,8 +21501,8 @@
         "tags": [
           "admin"
         ],
-        "summary": "Сохранить настройки приложения",
-        "description": "Upsert секций `auth` (режим входа) и `telegram`. Пустой `clientSecret` / `botToken` не затирает уже сохранённые значения.\n\nПри `dev_login` поля Telegram необязательны. `botUsername` можно не слать — резолв через getMe при заданном bot token.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X PUT http://localhost:5000/admin/api/app-settings -b admin.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"auth\":{\"loginMode\":\"dev_login\"}}'\n```",
+        "summary": "Сохранить настройки платформы",
+        "description": "Upsert секций `auth` (режим входа) и `telegram` (Client ID / secret / bot token / username). Пустой `clientSecret` / `botToken` не затирает уже сохранённые значения.\n\nПри `dev_login` поля Telegram необязательны. `botUsername` можно не слать — резолв через getMe при заданном bot token.\n\n**UI:** форма `/admin/settings`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X PUT http://localhost:5000/admin/api/app-settings -b admin.txt \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"auth\":{\"loginMode\":\"dev_login\"}}'\n```",
         "security": [
           {
             "adminCookie": []
@@ -21503,8 +21615,8 @@
         "tags": [
           "admin"
         ],
-        "summary": "Удалить осиротевшие папки в bots/",
-        "description": "Сканирует `bots/`, парсит `…_{projectId}_{tokenId}` и **рекурсивно удаляет** каталоги без проекта в БД. Нераспознанные имена → `skipped`.\n\n**Авторизация:** только `admin_auth`. User cookie/PAT → 401.\n**Было:** `POST /api/bot-folders/cleanup` — удалено.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/bot-folders/cleanup -b admin.txt\n```",
+        "summary": "Очистить осиротевшие папки bots/",
+        "description": "Сканирует каталог `bots/`, парсит имена `…_{projectId}_{tokenId}` и удаляет папки, чей проект уже нет в БД. Непонятные имена → `skipped` (не трогает).\n\n**Auth:** только `admin_auth`. Ops / curl / Swagger (UI в hub пока нет).\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/bot-folders/cleanup -b admin.txt\n```",
         "security": [
           {
             "adminCookie": []
@@ -21577,8 +21689,8 @@
         "tags": [
           "admin"
         ],
-        "summary": "Пересидить системные сценарии (force)",
-        "description": "`seedDefaultTemplates(true)` — принудительное обновление системных шаблонов.\n\n**Авторизация:** только `admin_auth`. User cookie/PAT → 401.\nПубличные `/api/templates/refresh|recreate` удалены.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/templates/refresh -b admin.txt\n```",
+        "summary": "Обновить встроенные сценарии каталога",
+        "description": "Принудительно перезаписывает системные шаблоны в `bot_templates` (каталог «Сценарии» в Studio).\n\n**Auth:** только `admin_auth`. Ops / curl / Swagger.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/templates/refresh -b admin.txt\n```",
         "security": [
           {
             "adminCookie": []
@@ -21647,8 +21759,8 @@
         "tags": [
           "admin"
         ],
-        "summary": "Пересоздать системные сценарии (seed force)",
-        "description": "Тот же `seedDefaultTemplates(true)`, что refresh. Только admin cookie.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/templates/recreate -b admin.txt\n```",
+        "summary": "Пересоздать встроенные сценарии (алиас refresh)",
+        "description": "То же force-seed, что `POST …/templates/refresh` (совместимый алиас).\n\n**Auth:** только `admin_auth`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X POST http://localhost:5000/admin/api/templates/recreate -b admin.txt\n```",
         "security": [
           {
             "adminCookie": []
@@ -21717,8 +21829,8 @@
         "tags": [
           "admin"
         ],
-        "summary": "Пометить сценарий как featured (или снять)",
-        "description": "Выставляет `featured` 0|1. Обычный `PUT /api/templates/{id}` это поле **игнорирует**.\n\n**Path:** `id` — ID `bot_templates`.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X PATCH http://localhost:5000/admin/api/templates/12/featured -b admin.txt \\\n  -H 'Content-Type: application/json' -d '{\"featured\":1}'\n```",
+        "summary": "Рекомендуемый сценарий (featured on/off)",
+        "description": "Включает или снимает «рекомендуемый» шаблон в каталоге Studio (`featured` 0|1). Обычный `PUT /api/templates/{id}` это поле **игнорирует**.\n\n**Auth:** только `admin_auth`. Ops / curl / Swagger.\n\n```bash\ncurl -s -c admin.txt -X POST http://localhost:5000/admin/api/login \\\n  -H 'Content-Type: application/x-www-form-urlencoded' \\\n  -d 'key=YOUR_ADMIN_API_KEY'\ncurl -s -X PATCH http://localhost:5000/admin/api/templates/12/featured -b admin.txt \\\n  -H 'Content-Type: application/json' -d '{\"featured\":1}'\n```",
         "security": [
           {
             "adminCookie": []
@@ -21902,7 +22014,7 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "admin_auth",
-        "description": "Admin cookie после POST /admin/api/login (ADMIN_API_KEY)"
+        "description": "Admin cookie после POST /admin/api/login (ключ ADMIN_API_KEY). Path=/admin, httpOnly, 7 дней. User connect.sid / Bearer PAT не подходят."
       }
     },
     "schemas": {
@@ -26857,6 +26969,40 @@
         },
         "required": [
           "configured",
+          "adminEnabled"
+        ]
+      },
+      "AdminLoginForm": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Ключ админки (`ADMIN_API_KEY`)",
+            "example": "YOUR_ADMIN_API_KEY"
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
+      "AdminStatusResponse": {
+        "type": "object",
+        "properties": {
+          "authenticated": {
+            "type": "boolean",
+            "example": true
+          },
+          "adminEnabled": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          }
+        },
+        "required": [
+          "authenticated",
           "adminEnabled"
         ]
       },

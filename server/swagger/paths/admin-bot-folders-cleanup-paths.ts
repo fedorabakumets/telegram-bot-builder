@@ -23,12 +23,11 @@ export function registerAdminBotFoldersCleanupPaths(registry: OpenAPIRegistry): 
     method: "post",
     path: "/admin/api/bot-folders/cleanup",
     tags: ["admin"],
-    summary: "Удалить осиротевшие папки в bots/",
+    summary: "Очистить осиротевшие папки bots/",
     description:
-      "Сканирует `bots/`, парсит `…_{projectId}_{tokenId}` и **рекурсивно удаляет** " +
-      "каталоги без проекта в БД. Нераспознанные имена → `skipped`.\n\n" +
-      "**Авторизация:** только `admin_auth`. User cookie/PAT → 401.\n" +
-      "**Было:** `POST /api/bot-folders/cleanup` — удалено.\n\n" +
+      "Сканирует каталог `bots/`, парсит имена `…_{projectId}_{tokenId}` и удаляет " +
+      "папки, чей проект уже нет в БД. Непонятные имена → `skipped` (не трогает).\n\n" +
+      "**Auth:** только `admin_auth`. Ops / curl / Swagger (UI в hub пока нет).\n\n" +
       "```bash\n" +
       `${ADMIN_CURL_LOGIN}\n` +
       "curl -s -X POST http://localhost:5000/admin/api/bot-folders/cleanup -b admin.txt\n" +
