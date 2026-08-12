@@ -4,18 +4,21 @@
  */
 
 import { useState, useEffect } from 'react';
+import { Megaphone, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { StepAudience } from './step-audience';
 import { StepMessage } from './step-message';
 import { StepConfirm } from './step-confirm';
 import { BroadcastProgress } from './broadcast-progress';
 import { CampaignProgress } from './campaign-progress';
 import { WizardStepper } from './wizard-stepper';
+import { canNavigateBroadcastStep } from './can-navigate-broadcast-step';
 import { useCreateBroadcast } from '../hooks/use-create-broadcast';
 import type { NewBroadcastFormData, Broadcast } from '../types';
 
@@ -133,92 +136,131 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
   /** Текущий номер шага для stepper */
   const currentStepNumber = typeof step === 'number' ? step : 3;
 
+  /**
+   * Доступен ли клик по шагу в stepper
+   * @param target - Номер шага
+   * @returns true если переход возможен
+   */
+  const isStepEnabled = (target: number) =>
+    typeof step === 'number' && canNavigateBroadcastStep(target, step, formData);
+
+  /**
+   * Переход по клику на шаг в stepper
+   * @param target - Номер шага
+   */
+  const handleStepClick = (target: number) => {
+    if (target === 1 || target === 2 || target === 3) {
+      if (isStepEnabled(target)) setStep(target);
+    }
+  };
+
+  /** Общие пропсы stepper (ПК и мобилка) */
+  const stepperProps = {
+    steps: STEP_TITLES,
+    currentStep: currentStepNumber,
+    onStepClick: handleStepClick,
+    isStepEnabled,
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent
+        hideClose
         className={[
-          '!inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0',
-          '!w-screen !h-screen !max-w-none !max-h-screen',
-          'sm:!max-w-none md:!max-w-none lg:!max-w-none',
-          'rounded-none border-0 p-0 gap-0',
-          '!flex flex-col overflow-hidden',
-          'data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100',
-          'data-[state=open]:slide-in-from-left-0 data-[state=open]:slide-in-from-top-0',
-          'data-[state=closed]:slide-out-to-left-0 data-[state=closed]:slide-out-to-top-0',
+          'p-0 gap-0 !flex flex-col overflow-hidden',
+          // Мобилка — на весь экран
+          'max-sm:!inset-auto max-sm:!left-0 max-sm:!top-0 max-sm:!translate-x-0 max-sm:!translate-y-0',
+          'max-sm:!h-[100dvh] max-sm:!w-screen max-sm:!max-h-none max-sm:!max-w-none',
+          'max-sm:rounded-none max-sm:border-0',
+          // ПК — компактная карточка по ширине формы, без пустых полей по бокам
+          'sm:!max-w-3xl sm:w-full sm:h-[min(90vh,840px)] sm:max-h-[min(90vh,840px)]',
+          'sm:rounded-xl sm:border sm:shadow-2xl',
         ].join(' ')}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          width: '100vw',
-          height: '100vh',
-          maxWidth: '100vw',
-          maxHeight: '100vh',
-          transform: 'none',
-        }}
       >
-        <div className="flex-shrink-0 px-4 sm:px-8 pt-4 sm:pt-6 pb-3 border-b border-border/50 bg-card">
-          <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
-              📢 Новая рассылка
-            </DialogTitle>
-          </DialogHeader>
+        <div className="flex-shrink-0 border-b border-border/60 bg-card">
+          <div className="flex items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3.5">
+            <DialogHeader className="min-w-0 flex-1 space-y-0 text-left">
+              <DialogTitle className="flex items-center gap-2 text-base font-semibold tracking-tight sm:gap-2.5 sm:text-lg">
+                <span className="hidden h-8 w-8 items-center justify-center rounded-lg border border-border/80 bg-muted/40 sm:flex">
+                  <Megaphone className="h-4 w-4 text-muted-foreground" aria-hidden />
+                </span>
+                Новая рассылка
+              </DialogTitle>
+            </DialogHeader>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={handleClose}
+              aria-label="Закрыть"
+              className="h-8 w-8 shrink-0 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground sm:h-9 sm:w-9 sm:rounded-lg"
+            >
+              <X className="h-4 w-4" strokeWidth={2} />
+            </Button>
+          </div>
 
           {step !== 'progress' && (
-            <div className="mt-4 max-w-3xl">
-              <WizardStepper steps={STEP_TITLES} currentStep={currentStepNumber} />
-            </div>
+            <>
+              <div className="flex items-center gap-3 border-t border-border/40 px-3 py-2 sm:hidden">
+                <WizardStepper compact {...stepperProps} />
+                <span className="truncate text-xs text-muted-foreground">
+                  {currentStepNumber}/{STEP_TITLES.length} · {STEP_TITLES[currentStepNumber - 1]}
+                </span>
+              </div>
+              <div className="hidden px-6 pb-3.5 sm:block">
+                <WizardStepper {...stepperProps} />
+              </div>
+            </>
           )}
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6">
-          <div className="mx-auto w-full max-w-3xl">
-            {step === 1 && (
-              <StepAudience
-                projectId={projectId}
-                tokenId={tokenId}
-                formData={formData}
-                onChange={updateForm}
-                onNext={() => setStep(2)}
-                onCancel={handleClose}
-              />
-            )}
-            {step === 2 && (
-              <StepMessage
-                projectId={projectId}
-                formData={formData}
-                onChange={updateForm}
-                onNext={() => setStep(3)}
-                onBack={() => setStep(1)}
-              />
-            )}
-            {step === 3 && (
-              <StepConfirm
-                projectId={projectId}
-                tokenId={tokenId}
-                formData={formData}
-                isLoading={createMutation.isPending}
-                onConfirm={() => createMutation.mutate(formData)}
-                onBack={() => setStep(2)}
-              />
-            )}
-            {step === 'progress' && createdCampaignId && (
-              <CampaignProgress
-                projectId={projectId}
-                campaignId={createdCampaignId}
-                name={formData.name}
-                refetch={refetch}
-                onClose={handleClose}
-              />
-            )}
-            {step === 'progress' && !createdCampaignId && createdBroadcast && (
-              <BroadcastProgress
-                projectId={projectId}
-                broadcast={createdBroadcast}
-                refetch={refetch}
-                onClose={handleClose}
-              />
-            )}
-          </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-6 sm:py-5">
+          {step === 1 && (
+            <StepAudience
+              projectId={projectId}
+              tokenId={tokenId}
+              formData={formData}
+              onChange={updateForm}
+              onNext={() => setStep(2)}
+              onCancel={handleClose}
+            />
+          )}
+          {step === 2 && (
+            <StepMessage
+              projectId={projectId}
+              formData={formData}
+              onChange={updateForm}
+              onNext={() => setStep(3)}
+              onBack={() => setStep(1)}
+            />
+          )}
+          {step === 3 && (
+            <StepConfirm
+              projectId={projectId}
+              tokenId={tokenId}
+              formData={formData}
+              isLoading={createMutation.isPending}
+              onConfirm={() => createMutation.mutate(formData)}
+              onBack={() => setStep(2)}
+            />
+          )}
+          {step === 'progress' && createdCampaignId && (
+            <CampaignProgress
+              projectId={projectId}
+              campaignId={createdCampaignId}
+              name={formData.name}
+              refetch={refetch}
+              onClose={handleClose}
+            />
+          )}
+          {step === 'progress' && !createdCampaignId && createdBroadcast && (
+            <BroadcastProgress
+              projectId={projectId}
+              broadcast={createdBroadcast}
+              refetch={refetch}
+              onClose={handleClose}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>
