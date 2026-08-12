@@ -932,26 +932,70 @@ export class DatabaseStorage implements IStorage {
   }
 
   /**
-   * Получить все группы бота по ID проекта из базы данных
+   * Получить группы проекта, опционально только для токена
    * @param projectId - ID проекта
+   * @param tokenId - ID токена (если задан — только группы этого бота)
    * @returns Массив групп бота
    */
-  async getBotGroupsByProject(projectId: number): Promise<BotGroup[]> {
+  async getBotGroupsByProject(projectId: number, tokenId?: number | null): Promise<BotGroup[]> {
+    const conditions = [eq(botGroups.projectId, projectId)];
+    if (tokenId != null) {
+      conditions.push(eq(botGroups.tokenId, tokenId));
+    }
     return await this.db.select().from(botGroups)
-      .where(eq(botGroups.projectId, projectId))
+      .where(and(...conditions))
       .orderBy(desc(botGroups.createdAt));
   }
 
   /**
-   * Получить группу бота по ID проекта и ID группы из базы данных
+   * Получить группу по проекту, Telegram group_id и опционально токену
    * @param projectId - ID проекта
-   * @param groupId - ID группы
-   * @returns Группа бота или undefined, если не найдена
+   * @param groupId - Telegram chat_id
+   * @param tokenId - ID токена
+   * @returns Группа или undefined
    */
-  async getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined> {
+  async getBotGroupByProjectAndGroupId(
+    projectId: number,
+    groupId: string,
+    tokenId?: number | null,
+  ): Promise<BotGroup | undefined> {
+    const conditions = [eq(botGroups.projectId, projectId), eq(botGroups.groupId, groupId)];
+    if (tokenId != null) {
+      conditions.push(eq(botGroups.tokenId, tokenId));
+    }
     const [group] = await this.db.select().from(botGroups)
-      .where(and(eq(botGroups.projectId, projectId), eq(botGroups.groupId, groupId)));
+      .where(and(...conditions))
+      .limit(1);
     return group || undefined;
+  }
+
+  /**
+   * Chat_id групповых чатов из bot_messages для токена
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   * @returns Список чатов
+   */
+  async listGroupChatsFromMessages(
+    projectId: number,
+    tokenId: number,
+  ): Promise<Array<{ groupId: string; chatType: string; nameHint: string }>> {
+    const rows = await this.db.execute(sql`
+      SELECT DISTINCT ON (chat_id)
+        chat_id AS "groupId",
+        COALESCE(chat_type, 'group') AS "chatType",
+        COALESCE(chat_id, 'Группа') AS "nameHint"
+      FROM bot_messages
+      WHERE project_id = ${projectId}
+        AND token_id = ${tokenId}
+        AND chat_type IN ('group', 'supergroup', 'channel')
+        AND chat_id IS NOT NULL
+      ORDER BY chat_id, created_at DESC
+    `);
+    return (rows.rows as Array<{ groupId: string; chatType: string; nameHint: string }>).map((r) => ({
+      groupId: String(r.groupId),
+      chatType: String(r.chatType || 'group'),
+      nameHint: String(r.nameHint || r.groupId),
+    }));
   }
 
   /**

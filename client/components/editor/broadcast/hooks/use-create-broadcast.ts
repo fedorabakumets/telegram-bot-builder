@@ -66,10 +66,18 @@ export function useCreateBroadcast({
           activeTo: filterFields.activeTo,
         };
 
-      // Добавляем groupIds если выбраны группы
+      const groupsByTokenId = formData.groupsByTokenId ?? {};
+      const groupsByTokenPayload: Record<string, string[]> = {};
+      for (const [tid, ids] of Object.entries(groupsByTokenId)) {
+        if (ids?.length) groupsByTokenPayload[String(tid)] = ids;
+      }
+      const hasPerTokenGroups = Object.keys(groupsByTokenPayload).length > 0;
+
       const filtersWithGroups = {
         ...filters,
-        ...(filterFields.groupIds?.length ? { groupIds: filterFields.groupIds } : {}),
+        ...(!hasPerTokenGroups && filterFields.groupIds?.length
+          ? { groupIds: filterFields.groupIds }
+          : {}),
       };
 
       /** Явно выбранные боты — сервер разложит рассылку по каждому из них */
@@ -87,6 +95,7 @@ export function useCreateBroadcast({
         buttonsPerRow: formData.buttonsPerRow ?? 0,
         filters: filtersWithGroups,
         ...(selectedTokenIds ? { tokenIds: selectedTokenIds } : {}),
+        ...(hasPerTokenGroups ? { groupsByTokenId: groupsByTokenPayload } : {}),
       }) as Promise<CreateBroadcastResponse>;
     },
     onSuccess: (data) => {

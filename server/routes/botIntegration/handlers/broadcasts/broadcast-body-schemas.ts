@@ -21,6 +21,11 @@ const MAX_BUTTONS_PER_ROW = 8;
 /** Максимум ботов в одной «большой рассылке» */
 const MAX_CAMPAIGN_TOKENS = 100;
 
+/** groupsByTokenId: ключ — id токена (строка), значение — Telegram chat_id */
+const groupsByTokenIdSchema = z
+  .record(z.string(), z.array(z.string().max(64)).max(200))
+  .optional();
+
 /** Список выбранных ботов для «большой рассылки» */
 const tokenIdsSchema = z
   .array(z.number().int().positive())
@@ -75,6 +80,8 @@ export const createBroadcastBodySchema = z.object({
   tokenId: z.number().int().positive().optional(),
   /** ID выбранных ботов «большой рассылки» (приоритетнее tokenId) */
   tokenIds: tokenIdsSchema.optional(),
+  /** Группы по ботам: tokenId → Telegram chat_id[] */
+  groupsByTokenId: groupsByTokenIdSchema,
 });
 
 /** Тело POST …/preview-audience */

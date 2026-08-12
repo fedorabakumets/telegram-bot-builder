@@ -55,9 +55,26 @@ export const BroadcastFiltersSchema = z
     activeFrom: z.string().optional().openapi({ example: "2026-07-01T00:00:00.000Z" }),
     activeTo: z.string().optional().openapi({ example: "2026-08-12T00:00:00.000Z" }),
     userIds: z.array(z.string()).optional().openapi({ example: ["123456789"] }),
-    groupIds: z.array(z.string()).optional().openapi({ example: ["-1001234567890"] }),
+    groupIds: z.array(z.string()).optional().openapi({
+      example: ["-1001234567890"],
+      description:
+        "Telegram chat_id групп для одного бота (legacy / child-broadcast). " +
+        "Для нескольких ботов предпочтительнее `groupsByTokenId`.",
+    }),
   })
   .openapi("BroadcastFilters");
+
+/** Группы по ботам: ключ — id токена, значение — Telegram chat_id[] */
+export const GroupsByTokenIdSchema = z
+  .record(z.string(), z.array(z.string()))
+  .optional()
+  .openapi({
+    example: { "7": ["-100111"], "8": ["-100222"] },
+    description:
+      "Группы для каждого бота «большой рассылки». Ключ — tokenId (строка), " +
+      "значение — chat_id групп, в которые шлёт только этот бот. " +
+      "Сервер проверяет принадлежность чата токену.",
+  });
 
 /** Запись рассылки (упрощённый DTO списка/детали) */
 export const BroadcastItemSchema = z
@@ -129,6 +146,7 @@ export const CreateBroadcastRequestSchema = z
     filters: BroadcastFiltersSchema.optional(),
     tokenId: z.number().int().positive().optional().openapi({ example: 7 }),
     tokenIds: BroadcastTokenIdsSchema.optional(),
+    groupsByTokenId: GroupsByTokenIdSchema,
   })
   .openapi("CreateBroadcastRequest");
 

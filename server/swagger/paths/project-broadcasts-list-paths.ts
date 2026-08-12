@@ -114,10 +114,12 @@ export function registerProjectBroadcastsListPaths(
       "ответ `{ broadcastId }`. Без обоих полей берётся default-токен проекта.\n\n" +
       "**Безопасность:** каждый ID из `tokenIds` проверяется на принадлежность проекту; " +
       "чужой или несуществующий токен → 400 «Токены не принадлежат этому проекту: …». " +
-      "Группы (`filters.groupIds`) имеют смысл только при одном боте.\n\n" +
+      "Группы: `groupsByTokenId` (tokenId → chat_id[]) — у каждого бота свои чаты; " +
+      "`filters.groupIds` — для одного бота / дочерней рассылки. " +
+      "Сервер проверяет, что чат виден этому токену (`bot_groups` / `bot_messages`).\n\n" +
       "**Клиенты Studio:** мастер «Новая рассылка» (`use-create-broadcast`).\n\n" +
       "```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n" +
-      "  -d '{\"messageText\":\"Привет!\",\"tokenIds\":[7,8],\"filters\":{}}' \\\n" +
+      "  -d '{\"messageText\":\"Привет!\",\"tokenIds\":[7,8],\"groupsByTokenId\":{\"7\":[\"-1001\"],\"8\":[\"-1002\"]},\"filters\":{}}' \\\n" +
       "  'http://localhost:5000/api/projects/42/broadcasts'\n```",
     security: cookieSecurity,
     request: {

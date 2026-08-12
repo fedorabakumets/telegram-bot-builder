@@ -10,6 +10,7 @@
 |------|------|---------|----------|----------|---------|---------|
 | **id** | serial | - | NO | [group_members.group_id](./group_members.md) | - | Уникальный идентификатор группы |
 | project_id | integer | - | NO | - | [bot_projects.id](./bot_projects.md) | Идентификатор проекта (ссылка на bot_projects.id) |
+| token_id | integer | - | YES | - | [bot_tokens.id](./bot_tokens.md) | ID токена бота, который состоит в этой группе |
 | group_id | text | - | YES | - | - | Идентификатор группы в Telegram |
 | name | text | - | NO | - | - | Отображаемое название группы |
 | url | text | - | NO | - | - | Ссылка на группу |
@@ -38,16 +39,25 @@
 | Name | Type | Definition |
 |------|------|------------|
 | fk_project_id_bot_projects | FOREIGN KEY | (project_id) → bot_projects(id) |
+| fk_token_id_bot_tokens | FOREIGN KEY | (token_id) → bot_tokens(id) |
 
 ### Indexes
 
 | Name | Columns | Unique | Type |
 |------|---------|--------|------|
-| bot_groups_project_group_uniq | project_id, group_id | YES | - |
+| bot_groups_project_token_group_uniq | project_id, token_id, group_id | YES | - |
+| bot_groups_project_token_idx | project_id, token_id | NO | - |
 
 ### Relations
 
 | Parent | Child | Type |
 |--------|-------|------|
 | [bot_projects.id](./bot_projects.md) | **[bot_groups.project_id](./bot_groups.md)** | Many to One |
+| [bot_tokens.id](./bot_tokens.md) | **[bot_groups.token_id](./bot_groups.md)** | Many to One |
 | **[bot_groups.id](./bot_groups.md)** | [group_members.group_id](./group_members.md) | Many to One |
+
+### Notes
+
+- `token_id` — бот, который состоит в чате; уникальность `(project_id, token_id, group_id)`.
+- Бэкфилл и пикер рассылки опираются на `bot_messages` (`chat_id` + `token_id` для group/supergroup/channel).
+- Одна Telegram-группа у двух ботов → две строки справочника (по строке на токен).

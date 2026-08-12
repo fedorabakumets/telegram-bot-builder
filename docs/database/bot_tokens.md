@@ -8,7 +8,7 @@
 
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 |------|------|---------|----------|----------|---------|---------|
-| **id** | serial | - | NO | [bot_env_variables.token_id](./bot_env_variables.md), [bot_instances.token_id](./bot_instances.md), [bot_launch_history.token_id](./bot_launch_history.md), [bot_logs.token_id](./bot_logs.md), [media_file_tokens.token_id](./media_file_tokens.md) | - | Уникальный идентификатор токена |
+| **id** | serial | - | NO | [bot_env_variables.token_id](./bot_env_variables.md), [bot_groups.token_id](./bot_groups.md), [bot_instances.token_id](./bot_instances.md), [bot_launch_history.token_id](./bot_launch_history.md), [bot_logs.token_id](./bot_logs.md), [media_file_tokens.token_id](./media_file_tokens.md) | - | Уникальный идентификатор токена |
 | project_id | integer | - | NO | - | [bot_projects.id](./bot_projects.md) | Идентификатор проекта (ссылка на bot_projects.id) |
 | owner_id | bigint | - | YES | - | [telegram_users.id](./telegram_users.md) | Идентификатор владельца токена (наследуется от проекта) |
 | name | text | - | NO | - | - | Пользовательское имя для токена |
@@ -58,6 +58,7 @@
 | Parent | Child | Type |
 |--------|-------|------|
 | **[bot_tokens.id](./bot_tokens.md)** | [bot_env_variables.token_id](./bot_env_variables.md) | Many to One |
+| **[bot_tokens.id](./bot_tokens.md)** | [bot_groups.token_id](./bot_groups.md) | Many to One |
 | **[bot_tokens.id](./bot_tokens.md)** | [bot_instances.token_id](./bot_instances.md) | Many to One |
 | **[bot_tokens.id](./bot_tokens.md)** | [bot_launch_history.token_id](./bot_launch_history.md) | Many to One |
 | **[bot_tokens.id](./bot_tokens.md)** | [bot_logs.token_id](./bot_logs.md) | Many to One |

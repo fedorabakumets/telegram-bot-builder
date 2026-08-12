@@ -52,6 +52,10 @@ export const BotGroupSchema = z
     id: z.number().int().openapi({ example: 15 }),
     projectId: z.number().int().openapi({ example: 42 }),
     groupId: z.string().nullable().optional().openapi({ example: "-1001234567890" }),
+    tokenId: z.number().int().nullable().optional().openapi({
+      example: 7,
+      description: "ID токена бота, который состоит в этой группе",
+    }),
     name: z.string().openapi({ example: "Поддержка клиентов" }),
     url: z.string().openapi({ example: "https://t.me/support_chat" }),
     isAdmin: z.number().int().nullable().optional().openapi({ example: 1 }),

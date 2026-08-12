@@ -80,7 +80,9 @@ export function buildGroupsSelectSql(chatTypesSql: string): string {
         bm.chat_type AS "chatType"
       FROM bot_messages bm
       LEFT JOIN bot_groups bg
-        ON bg.group_id = bm.chat_id AND bg.project_id = bm.project_id
+        ON bg.group_id = bm.chat_id
+        AND bg.project_id = bm.project_id
+        AND (bg.token_id IS NULL OR bg.token_id = bm.token_id)
       WHERE bm.project_id = $1
         AND bm.chat_type IN ${chatTypesSql}
         AND bm.chat_id IS NOT NULL

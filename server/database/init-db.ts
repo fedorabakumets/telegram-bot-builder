@@ -252,6 +252,7 @@ export async function initializeDatabaseTables() {
       CREATE TABLE IF NOT EXISTS bot_groups (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
+        token_id INTEGER REFERENCES bot_tokens(id) ON DELETE CASCADE,
         group_id TEXT,
         name TEXT NOT NULL,
         url TEXT NOT NULL,
@@ -278,10 +279,15 @@ export async function initializeDatabaseTables() {
     `, "Создание таблицы bot_groups");
 
     await executeWithRetry(db, sql`
-      CREATE UNIQUE INDEX IF NOT EXISTS bot_groups_project_group_uniq
-      ON bot_groups (project_id, group_id)
-      WHERE group_id IS NOT NULL;
-    `, "Уникальный индекс bot_groups (project_id, group_id)");
+      CREATE UNIQUE INDEX IF NOT EXISTS bot_groups_project_token_group_uniq
+      ON bot_groups (project_id, token_id, group_id)
+      WHERE group_id IS NOT NULL AND token_id IS NOT NULL;
+    `, "Уникальный индекс bot_groups (project_id, token_id, group_id)");
+
+    await executeWithRetry(db, sql`
+      CREATE INDEX IF NOT EXISTS bot_groups_project_token_idx
+      ON bot_groups (project_id, token_id);
+    `, "Индекс bot_groups (project_id, token_id)");
 
     await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS group_members (
@@ -783,6 +789,28 @@ export async function initializeDatabaseTables() {
       `, "Миграция: индекс broadcasts_campaign_idx");
     } catch (error) {
       console.log('⚠️ Ошибка при миграции broadcast_campaigns:', error);
+    }
+
+    // Миграция: token_id у bot_groups (группы per-bot для мультибот-рассылки)
+    try {
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_groups
+          ADD COLUMN IF NOT EXISTS token_id INTEGER REFERENCES bot_tokens(id) ON DELETE CASCADE;
+      `, "Миграция: token_id в bot_groups");
+      await executeWithRetry(db, sql`
+        DROP INDEX IF EXISTS bot_groups_project_group_uniq;
+      `, "Миграция: drop bot_groups_project_group_uniq");
+      await executeWithRetry(db, sql`
+        CREATE UNIQUE INDEX IF NOT EXISTS bot_groups_project_token_group_uniq
+          ON bot_groups (project_id, token_id, group_id)
+          WHERE group_id IS NOT NULL AND token_id IS NOT NULL;
+      `, "Миграция: bot_groups_project_token_group_uniq");
+      await executeWithRetry(db, sql`
+        CREATE INDEX IF NOT EXISTS bot_groups_project_token_idx
+          ON bot_groups (project_id, token_id);
+      `, "Миграция: bot_groups_project_token_idx");
+    } catch (error) {
+      console.log('⚠️ Ошибка при миграции token_id в bot_groups:', error);
     }
 
     console.log('✅ Таблицы базы данных успешно инициализированы!');

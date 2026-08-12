@@ -14477,7 +14477,7 @@
           "project-broadcasts"
         ],
         "summary": "Создать и запустить рассылку (один бот или несколько)",
-        "description": "Создаёт рассылку со статусом `running` и запускает очередь отправки. Текст ≤4096, media ≤10, buttons ≤100. `name` необязательно (пустое → дата + начало текста сообщения).\n\n**Выбор ботов.** `tokenIds` (1…100 ID токенов проекта) задаёт «большую рассылку по нескольким ботам»: создаётся кампания, на каждого бота — своя дочерняя рассылка, очереди стартуют параллельно, ответ `{ campaignId, broadcastIds }`. Один элемент в `tokenIds` или обычный `tokenId` (query/body) — рассылка от одного бота, ответ `{ broadcastId }`. Без обоих полей берётся default-токен проекта.\n\n**Безопасность:** каждый ID из `tokenIds` проверяется на принадлежность проекту; чужой или несуществующий токен → 400 «Токены не принадлежат этому проекту: …». Группы (`filters.groupIds`) имеют смысл только при одном боте.\n\n**Клиенты Studio:** мастер «Новая рассылка» (`use-create-broadcast`).\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Привет!\",\"tokenIds\":[7,8],\"filters\":{}}' \\\n  'http://localhost:5000/api/projects/42/broadcasts'\n```",
+        "description": "Создаёт рассылку со статусом `running` и запускает очередь отправки. Текст ≤4096, media ≤10, buttons ≤100. `name` необязательно (пустое → дата + начало текста сообщения).\n\n**Выбор ботов.** `tokenIds` (1…100 ID токенов проекта) задаёт «большую рассылку по нескольким ботам»: создаётся кампания, на каждого бота — своя дочерняя рассылка, очереди стартуют параллельно, ответ `{ campaignId, broadcastIds }`. Один элемент в `tokenIds` или обычный `tokenId` (query/body) — рассылка от одного бота, ответ `{ broadcastId }`. Без обоих полей берётся default-токен проекта.\n\n**Безопасность:** каждый ID из `tokenIds` проверяется на принадлежность проекту; чужой или несуществующий токен → 400 «Токены не принадлежат этому проекту: …». Группы: `groupsByTokenId` (tokenId → chat_id[]) — у каждого бота свои чаты; `filters.groupIds` — для одного бота / дочерней рассылки. Сервер проверяет, что чат виден этому токену (`bot_groups` / `bot_messages`).\n\n**Клиенты Studio:** мастер «Новая рассылка» (`use-create-broadcast`).\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Привет!\",\"tokenIds\":[7,8],\"groupsByTokenId\":{\"7\":[\"-1001\"],\"8\":[\"-1002\"]},\"filters\":{}}' \\\n  'http://localhost:5000/api/projects/42/broadcasts'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -16081,7 +16081,7 @@
           "project-groups"
         ],
         "summary": "Список Telegram-групп проекта",
-        "description": "Группы/каналы проекта (Database → группы, выбор аудитории рассылки). Название и аватарка — через `…/sync`.\n\n**Auth:** cookie или Bearer PAT + доступ к проекту. **Клиент:** `use-system-tables`, `group-select`.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/groups' -b cookies.txt\n```",
+        "description": "Группы/каналы проекта (Database → группы, выбор аудитории рассылки). С `?tokenId=` — только группы этого бота (из `bot_groups` и чаты из `bot_messages`). Без `tokenId` — все группы проекта. Название и аватарка — через `…/sync`.\n\n**Auth:** cookie или Bearer PAT + доступ к проекту. **Клиент:** `group-select`, `use-sync-groups`.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/groups?tokenId=7' -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -16102,6 +16102,18 @@
             "example": "42",
             "name": "projectId",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Токен бота. Без него — default/first токен проекта.",
+              "example": "7"
+            },
+            "required": false,
+            "description": "ID токена бота проекта",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
           },
           {
             "schema": {
@@ -30644,6 +30656,12 @@
             "nullable": true,
             "example": "-1001234567890"
           },
+          "tokenId": {
+            "type": "integer",
+            "nullable": true,
+            "description": "ID токена бота, который состоит в этой группе",
+            "example": 7
+          },
           "name": {
             "type": "string",
             "example": "Поддержка клиентов"
@@ -31012,6 +31030,7 @@
             "items": {
               "type": "string"
             },
+            "description": "Telegram chat_id групп для одного бота (legacy / child-broadcast). Для нескольких ботов предпочтительнее `groupsByTokenId`.",
             "example": [
               "-1001234567890"
             ]
@@ -31284,6 +31303,24 @@
               7,
               8
             ]
+          },
+          "groupsByTokenId": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Группы для каждого бота «большой рассылки». Ключ — tokenId (строка), значение — chat_id групп, в которые шлёт только этот бот. Сервер проверяет принадлежность чата токену.",
+            "example": {
+              "7": [
+                "-100111"
+              ],
+              "8": [
+                "-100222"
+              ]
+            }
           }
         },
         "required": [

@@ -66,12 +66,12 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Группы/каналы проекта (Database → группы, выбор аудитории рассылки). Название и аватарка — через `…/sync`.
+Группы/каналы проекта (Database → группы, выбор аудитории рассылки). С `?tokenId=` — только группы этого бота (из `bot_groups` и чаты из `bot_messages`). Без `tokenId` — все группы проекта. Название и аватарка — через `…/sync`.
 
-**Auth:** cookie или Bearer PAT + доступ к проекту. **Клиент:** `use-system-tables`, `group-select`.
+**Auth:** cookie или Bearer PAT + доступ к проекту. **Клиент:** `group-select`, `use-sync-groups`.
 
 ```bash
-curl -s 'http://localhost:5000/api/projects/42/groups' -b cookies.txt
+curl -s 'http://localhost:5000/api/projects/42/groups?tokenId=7' -b cookies.txt
 ```
 
 #### Параметры
@@ -79,6 +79,7 @@ curl -s 'http://localhost:5000/api/projects/42/groups' -b cookies.txt
 | Имя | In | Обязательный | Описание | Пример |
 |-----|-----|--------------|----------|--------|
 | `projectId` | path | да | ID проекта | `"42"` |
+| `tokenId` | query | нет | ID токена бота проекта | `"7"` |
 | `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
 | `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
 

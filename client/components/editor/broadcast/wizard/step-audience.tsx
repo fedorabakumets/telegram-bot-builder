@@ -13,11 +13,11 @@ import { cn } from '@/utils/utils';
 import { useAudiencePreview } from '../hooks/use-audience-preview';
 import { useDefaultTokenIds } from '../hooks/use-default-token-ids';
 import { ManualUserSelect } from './manual-user-select';
-import { GroupSelect } from './group-select';
 import { AudienceFilters } from './audience-filters';
 import { AudienceContextHint } from './audience-context-hint';
 import { AudienceOverlapWarning } from './audience-overlap-warning';
 import { BotTokenMultiSelect } from './bot-token-multi-select';
+import { BroadcastGroupsByBots } from './broadcast-groups-by-bots';
 import type { NewBroadcastFormData } from '../types';
 
 /**
@@ -58,18 +58,22 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
 
   /**
    * Обработчик изменения выбранных ботов.
-   * Группы поддерживаются только при одном боте, поэтому при выборе нескольких
-   * ранее отмеченные группы сбрасываются.
+   * Сбрасывает groupsByTokenId для снятых ботов.
    */
   const handleTokenIdsChange = useCallback(
     (nextTokenIds: number[]) => {
-      const keepGroups = nextTokenIds.length === 1;
+      const prev = formData.groupsByTokenId ?? {};
+      const nextGroups: Record<number, string[]> = {};
+      for (const tid of nextTokenIds) {
+        if (prev[tid]) nextGroups[tid] = prev[tid];
+      }
       onChange({
         tokenIds: nextTokenIds,
-        ...(keepGroups ? {} : { filters: { ...formData.filters, groupIds: [] } }),
+        groupsByTokenId: nextGroups,
+        filters: { ...formData.filters, groupIds: undefined },
       });
     },
-    [onChange, formData.filters],
+    [onChange, formData.filters, formData.groupsByTokenId],
   );
 
   useDefaultTokenIds(projectId, tokenIds, handleTokenIdsChange);
@@ -90,9 +94,6 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
     ? (formData.filters.userIds?.length ?? 0)
     : count;
 
-  /** Группы доступны только при отправке от одного бота */
-  const groupsAvailable = tokenIds.length === 1;
-
   /** Обработчик добавления тега */
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && tagInput.trim()) {
@@ -111,11 +112,6 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
   /** Обработчик изменения выбранных userId */
   const handleUserIdsChange = (userIds: string[]) => {
     onChange({ filters: { ...formData.filters, userIds } });
-  };
-
-  /** Обработчик изменения выбранных групп */
-  const handleGroupIdsChange = (groupIds: string[]) => {
-    onChange({ filters: { ...formData.filters, groupIds } });
   };
 
   return (
@@ -192,21 +188,18 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
         />
       )}
 
-      {/* Секция групп — доступна только при отправке от одного бота */}
+      {/* Секция групп — у каждого выбранного бота свои */}
       <div className="rounded-xl border border-violet-200/50 dark:border-violet-800/40 bg-gradient-to-r from-violet-500/5 to-fuchsia-500/5 p-3 space-y-2">
         <Label className="flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5 text-violet-500" />
           Также отправить в группы
         </Label>
-        {groupsAvailable ? (
-          <GroupSelect
-            projectId={projectId}
-            selectedGroupIds={formData.filters.groupIds ?? []}
-            onChangeGroupIds={handleGroupIdsChange}
-          />
-        ) : (
-          <p className="text-xs text-muted-foreground">Группы доступны при выборе одного бота</p>
-        )}
+        <BroadcastGroupsByBots
+          projectId={projectId}
+          tokenIds={tokenIds}
+          groupsByTokenId={formData.groupsByTokenId ?? {}}
+          onChange={(groupsByTokenId) => onChange({ groupsByTokenId })}
+        />
       </div>
 
       {/* Счётчик получателей */}

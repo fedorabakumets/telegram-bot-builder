@@ -1,6 +1,5 @@
 /**
- * @fileoverview Хендлер синхронизации данных группы из Telegram
- * Получает актуальное название и аватарку группы через getChat и обновляет bot_groups
+ * @fileoverview Синхронизация группы из Telegram с привязкой к token_id
  * @module botIntegration/handlers/groups/syncGroupHandler
  */
 
@@ -13,11 +12,9 @@ import {
 } from "../../../utils/resolve-request-token";
 
 /**
- * Синхронизирует название и аватарку группы из Telegram Bot API
- * Вызывает getChat по groupId, сохраняет title и photo в bot_groups
- *
- * @param req - Объект запроса (params: projectId, groupId; query: tokenId)
- * @param res - Объект ответа
+ * Синхронизирует название и аватарку группы; пишет token_id бота
+ * @param req - Запрос (params: projectId, groupId; query: tokenId)
+ * @param res - Ответ
  * @returns Promise<void>
  */
 export async function syncGroupHandler(req: Request, res: Response): Promise<void> {
@@ -58,11 +55,11 @@ export async function syncGroupHandler(req: Request, res: Response): Promise<voi
     const chatInfo = chatResult.result;
     const title: string = chatInfo.title || chatInfo.first_name || telegramGroupId;
     const chatType: string = chatInfo.type || "group";
+    const tokenId = botToken.id;
 
-    // file_id привязан к боту — кладём tokenId в URL прокси
     let avatarUrl: string | null = null;
     if (chatInfo.photo?.big_file_id) {
-      const tokenQs = botToken.id ? `&tokenId=${botToken.id}` : "";
+      const tokenQs = tokenId ? `&tokenId=${tokenId}` : "";
       avatarUrl =
         `/api/projects/${projectId}/telegram-file` +
         `?fileId=${encodeURIComponent(chatInfo.photo.big_file_id)}${tokenQs}`;
@@ -71,6 +68,7 @@ export async function syncGroupHandler(req: Request, res: Response): Promise<voi
     const existingGroup = await storage.getBotGroupByProjectAndGroupId(
       projectId,
       telegramGroupId,
+      tokenId,
     );
 
     if (existingGroup) {
@@ -78,21 +76,24 @@ export async function syncGroupHandler(req: Request, res: Response): Promise<voi
         name: title,
         avatarUrl,
         chatType,
+        tokenId,
         updatedAt: new Date(),
       });
       res.json({ synced: true, group: updated });
-    } else {
-      const created = await storage.createBotGroup({
-        projectId,
-        groupId: telegramGroupId,
-        name: title,
-        url: chatInfo.username ? `https://t.me/${chatInfo.username}` : "",
-        avatarUrl,
-        chatType,
-        isActive: 1,
-      });
-      res.json({ synced: true, group: created });
+      return;
     }
+
+    const created = await storage.createBotGroup({
+      projectId,
+      tokenId,
+      groupId: telegramGroupId,
+      name: title,
+      url: chatInfo.username ? `https://t.me/${chatInfo.username}` : "",
+      avatarUrl,
+      chatType,
+      isActive: 1,
+    });
+    res.json({ synced: true, group: created });
   } catch (error) {
     console.error("Ошибка синхронизации группы:", error);
     res.status(500).json({ message: "Не удалось синхронизировать группу" });

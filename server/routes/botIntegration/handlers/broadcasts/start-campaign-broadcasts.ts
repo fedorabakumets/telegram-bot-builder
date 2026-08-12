@@ -6,6 +6,7 @@
 import type { BotToken, BroadcastFilters } from "@shared/schema";
 import { storage } from "../../../../storages/storage";
 import { runBroadcastQueue } from "./broadcastQueue";
+import { resolveGroupIdsForToken } from "./validate-groups-by-token";
 
 /** Общее содержимое кампании, копируемое во все дочерние рассылки */
 export interface CampaignContent {
@@ -21,8 +22,10 @@ export interface CampaignContent {
   buttons: unknown[];
   /** Кол-во кнопок в ряду (0 = все в один ряд) */
   buttonsPerRow: number;
-  /** Фильтры аудитории */
+  /** Фильтры аудитории (без per-token groupIds — они подставляются на child) */
   filters: BroadcastFilters;
+  /** Группы по токенам (Telegram chat_id) */
+  groupsByToken?: Map<number, string[]>;
 }
 
 /** Результат запуска кампании */
@@ -35,16 +38,31 @@ export interface StartedCampaign {
 
 /**
  * Создаёт кампанию, дочернюю рассылку на каждого бота и запускает очереди параллельно.
- * Очереди работают независимо; агрегаты кампании пересчитываются из очередей.
+ * У каждого child в filters.groupIds — только группы его токена.
  * @param content - Общее содержимое кампании
- * @param tokens - Токены ботов проекта, по которым идёт рассылка
- * @returns ID кампании и её дочерних рассылок
+ * @param tokens - Токены ботов проекта
+ * @returns ID кампании и дочерних рассылок
  */
 export async function startBroadcastCampaign(
   content: CampaignContent,
   tokens: BotToken[],
 ): Promise<StartedCampaign> {
-  const { projectId, name, messageText, mediaUrls, buttons, buttonsPerRow, filters } = content;
+  const {
+    projectId,
+    name,
+    messageText,
+    mediaUrls,
+    buttons,
+    buttonsPerRow,
+    filters,
+    groupsByToken = new Map(),
+  } = content;
+
+  const campaignFilters: BroadcastFilters = {
+    ...filters,
+    // На уровне кампании общий groupIds не храним — только per-token в дочерних
+    groupIds: undefined,
+  };
 
   const campaign = await storage.createBroadcastCampaign({
     projectId,
@@ -53,7 +71,7 @@ export async function startBroadcastCampaign(
     mediaUrls,
     buttons: buttons as any[],
     buttonsPerRow,
-    filters,
+    filters: campaignFilters,
     tokenIds: tokens.map((token) => token.id),
     status: "running",
     startedAt: new Date(),
@@ -65,6 +83,11 @@ export async function startBroadcastCampaign(
   for (const token of tokens) {
     const users = await storage.getUsersForBroadcast(projectId, token.id, filters);
     totalCount += users.length;
+    const groupIds = resolveGroupIdsForToken(token.id, groupsByToken, filters.groupIds);
+    const childFilters: BroadcastFilters = {
+      ...filters,
+      ...(groupIds.length ? { groupIds } : { groupIds: undefined }),
+    };
 
     const broadcast = await storage.createBroadcast({
       projectId,
@@ -75,7 +98,7 @@ export async function startBroadcastCampaign(
       mediaUrls,
       buttons: buttons as any[],
       buttonsPerRow,
-      filters,
+      filters: childFilters,
       status: "running",
       totalCount: users.length,
       startedAt: new Date(),
@@ -86,7 +109,6 @@ export async function startBroadcastCampaign(
 
   await storage.updateBroadcastCampaign(campaign.id, { totalCount });
 
-  // Очереди стартуют параллельно — каждая шлёт свой прогресс с campaignId
   tokens.forEach((token, index) => {
     runBroadcastQueue(broadcastIds[index], token.token).catch((err) => {
       console.error(`[campaign] Ошибка очереди рассылки ${broadcastIds[index]}:`, err);

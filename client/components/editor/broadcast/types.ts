@@ -69,6 +69,8 @@ export interface NewBroadcastFormData {
   buttonsPerRow?: number;
   /** Идентификаторы ботов, от имени которых уйдёт рассылка */
   tokenIds: number[];
+  /** Группы по ботам: tokenId → Telegram chat_id[] */
+  groupsByTokenId?: Record<number, string[]>;
   /** Фильтры аудитории */
   filters: {
     /** Тип аудитории */
@@ -85,7 +87,7 @@ export interface NewBroadcastFormData {
     activeTo?: string;
     /** Массив userId выбранных вручную пользователей */
     userIds?: string[];
-    /** Массив groupId (Telegram chat_id) выбранных групп */
+    /** Массив groupId (Telegram chat_id) — режим одного бота / legacy */
     groupIds?: string[];
   };
 }

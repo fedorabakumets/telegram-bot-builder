@@ -1,5 +1,5 @@
 /**
- * @fileoverview Компонент выбора групп для рассылки
+ * @fileoverview Выбор групп для одного токена (GET …/groups?tokenId=)
  * @module client/components/editor/broadcast/wizard/group-select
  */
 
@@ -11,35 +11,32 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/utils';
 
-/**
- * Данные группы из API
- */
+/** Данные группы из API */
 interface GroupData {
-  /** Уникальный идентификатор записи */
+  /** ID записи (может быть отрицательным для «виртуальных» из messages) */
   id: number;
-  /** Telegram chat_id группы */
+  /** Telegram chat_id */
   groupId: string;
-  /** Название группы */
+  /** Название */
   name: string;
-  /** Тип чата: group, supergroup, channel */
+  /** Тип чата */
   chatType: string;
-  /** Количество участников */
+  /** Участники */
   memberCount: number | null;
 }
 
-/**
- * Пропсы компонента GroupSelect
- */
+/** Пропсы GroupSelect */
 interface GroupSelectProps {
-  /** Идентификатор проекта */
+  /** ID проекта */
   projectId: number;
-  /** Массив выбранных groupId (Telegram chat_id) */
+  /** ID токена бота — фильтр списка групп */
+  tokenId: number;
+  /** Выбранные Telegram chat_id */
   selectedGroupIds: string[];
-  /** Колбэк изменения выбранных групп */
+  /** Колбэк изменения выбора */
   onChangeGroupIds: (groupIds: string[]) => void;
 }
 
-/** Маппинг типа чата на отображаемое название */
 const chatTypeLabels: Record<string, string> = {
   group: 'Группа',
   supergroup: 'Супергруппа',
@@ -47,31 +44,32 @@ const chatTypeLabels: Record<string, string> = {
 };
 
 /**
- * Компонент списка групп с чекбоксами для выбора целевых групп рассылки
- * @param props - Свойства компонента
- * @returns JSX элемент списка групп
+ * Список групп одного бота с чекбоксами
+ * @param props - Свойства
+ * @returns JSX
  */
-export function GroupSelect({ projectId, selectedGroupIds, onChangeGroupIds }: GroupSelectProps) {
+export function GroupSelect({ projectId, tokenId, selectedGroupIds, onChangeGroupIds }: GroupSelectProps) {
   const { data: groups = [], isLoading } = useQuery<GroupData[]>({
-    queryKey: ['broadcast-groups', projectId],
+    queryKey: ['broadcast-groups', projectId, tokenId],
     queryFn: async () => {
-      const res = await fetch(`/api/projects/${projectId}/groups`, { credentials: 'include' });
+      const res = await fetch(
+        `/api/projects/${projectId}/groups?tokenId=${tokenId}`,
+        { credentials: 'include' },
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
     },
-    enabled: !!projectId,
+    enabled: !!projectId && !!tokenId,
     staleTime: 30_000,
   });
 
-  /** Фильтруем только группы с groupId */
   const availableGroups = groups.filter((g) => !!g.groupId);
 
-  /** При первой загрузке — выбираем все группы */
   useEffect(() => {
     if (availableGroups.length > 0 && selectedGroupIds.length === 0) {
       onChangeGroupIds(availableGroups.map((g) => g.groupId));
     }
-  }, [availableGroups.length]);
+  }, [availableGroups.length, tokenId]);
 
   if (isLoading) {
     return <div className="text-sm text-muted-foreground py-2">Загрузка групп...</div>;
@@ -79,34 +77,26 @@ export function GroupSelect({ projectId, selectedGroupIds, onChangeGroupIds }: G
 
   if (availableGroups.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 py-4 text-muted-foreground">
-        <Inbox className="w-8 h-8 opacity-40" />
-        <span className="text-sm">Нет доступных групп</span>
+      <div className="flex flex-col items-center gap-2 py-3 text-muted-foreground">
+        <Inbox className="w-7 h-7 opacity-40" />
+        <span className="text-sm">Нет групп у этого бота</span>
       </div>
     );
   }
 
   const allSelected = availableGroups.every((g) => selectedGroupIds.includes(g.groupId));
 
-  /** Переключение чекбокса «Все группы» */
-  const handleToggleAll = (checked: boolean) => {
-    onChangeGroupIds(checked ? availableGroups.map((g) => g.groupId) : []);
-  };
-
-  /** Переключение одной группы */
-  const handleToggleGroup = (groupId: string, checked: boolean) => {
-    if (checked) {
-      onChangeGroupIds([...selectedGroupIds, groupId]);
-    } else {
-      onChangeGroupIds(selectedGroupIds.filter((id) => id !== groupId));
-    }
-  };
-
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 py-1 border-b pb-2">
-        <Checkbox id="select-all-groups" checked={allSelected} onCheckedChange={handleToggleAll} />
-        <Label htmlFor="select-all-groups" className="cursor-pointer text-sm font-semibold">
+        <Checkbox
+          id={`select-all-groups-${tokenId}`}
+          checked={allSelected}
+          onCheckedChange={(checked) =>
+            onChangeGroupIds(checked ? availableGroups.map((g) => g.groupId) : [])
+          }
+        />
+        <Label htmlFor={`select-all-groups-${tokenId}`} className="cursor-pointer text-sm font-semibold">
           Все группы ({availableGroups.length})
         </Label>
       </div>
@@ -119,7 +109,7 @@ export function GroupSelect({ projectId, selectedGroupIds, onChangeGroupIds }: G
 
           return (
             <div
-              key={group.groupId}
+              key={`${tokenId}-${group.groupId}`}
               className={cn(
                 'flex items-center gap-2.5 rounded-lg border p-2 transition-colors',
                 'hover:bg-accent/40',
@@ -127,14 +117,20 @@ export function GroupSelect({ projectId, selectedGroupIds, onChangeGroupIds }: G
               )}
             >
               <Checkbox
-                id={`group-${group.groupId}`}
+                id={`group-${tokenId}-${group.groupId}`}
                 checked={isSelected}
-                onCheckedChange={(checked) => handleToggleGroup(group.groupId, !!checked)}
+                onCheckedChange={(checked) => {
+                  if (checked) onChangeGroupIds([...selectedGroupIds, group.groupId]);
+                  else onChangeGroupIds(selectedGroupIds.filter((id) => id !== group.groupId));
+                }}
               />
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 flex items-center justify-center shrink-0">
                 <Icon className="w-3.5 h-3.5 text-white" />
               </div>
-              <Label htmlFor={`group-${group.groupId}`} className="cursor-pointer text-sm truncate flex-1">
+              <Label
+                htmlFor={`group-${tokenId}-${group.groupId}`}
+                className="cursor-pointer text-sm truncate flex-1"
+              >
                 {group.name}
               </Label>
               <Badge variant="secondary" className="text-[10px] shrink-0">

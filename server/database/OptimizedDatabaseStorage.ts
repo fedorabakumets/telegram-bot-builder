@@ -616,26 +616,28 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
   }
 
   /**
-   * Получить все группы бота по ID проекта из базы данных
+   * Получить группы проекта (наследует фильтрацию по tokenId)
    * @param projectId - ID проекта
-   * @returns Массив групп бота
+   * @param tokenId - ID токена
+   * @returns Массив групп
    */
-  async getBotGroupsByProject(projectId: number): Promise<BotGroup[]> {
-    return await this.db.select().from(botGroups)
-      .where(eq(botGroups.projectId, projectId))
-      .orderBy(desc(botGroups.createdAt));
+  async getBotGroupsByProject(projectId: number, tokenId?: number | null): Promise<BotGroup[]> {
+    return super.getBotGroupsByProject(projectId, tokenId);
   }
 
   /**
-   * Получить группу бота по ID проекта и ID группы из базы данных
+   * Получить группу по проекту / group_id / токену
    * @param projectId - ID проекта
-   * @param groupId - ID группы
-   * @returns Группа бота или undefined, если не найдена
+   * @param groupId - Telegram chat_id
+   * @param tokenId - ID токена
+   * @returns Группа или undefined
    */
-  async getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined> {
-    const [group] = await this.db.select().from(botGroups)
-      .where(and(eq(botGroups.projectId, projectId), eq(botGroups.groupId, groupId)));
-    return group || undefined;
+  async getBotGroupByProjectAndGroupId(
+    projectId: number,
+    groupId: string,
+    tokenId?: number | null,
+  ): Promise<BotGroup | undefined> {
+    return super.getBotGroupByProjectAndGroupId(projectId, groupId, tokenId);
   }
 
   /**

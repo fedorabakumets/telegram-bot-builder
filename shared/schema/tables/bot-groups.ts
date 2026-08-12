@@ -3,11 +3,12 @@
  * @module shared/schema/tables/bot-groups
  */
 
-import { pgTable, text, serial, integer, jsonb, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
+import { botTokens } from "./bot-tokens";
 
 /**
  * Таблица групп бота
@@ -17,6 +18,8 @@ export const botGroups = pgTable("bot_groups", {
   id: serial("id").primaryKey(),
   /** Идентификатор проекта (ссылка на bot_projects.id) */
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  /** ID токена бота, который состоит в этой группе */
+  tokenId: integer("token_id").references(() => botTokens.id, { onDelete: "cascade" }),
   /** Идентификатор группы в Telegram */
   groupId: text("group_id"),
   /** Отображаемое название группы */
@@ -71,16 +74,20 @@ export const botGroups = pgTable("bot_groups", {
   /** Дата последнего обновления группы */
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  /** Уникальный индекс по (project_id, group_id) — нужен для ON CONFLICT при авто-регистрации */
-  uniqueIndex("bot_groups_project_group_uniq")
-    .on(table.projectId, table.groupId)
-    .where(sql`group_id IS NOT NULL`),
+  /** Уникальность группы в рамках бота проекта */
+  uniqueIndex("bot_groups_project_token_group_uniq")
+    .on(table.projectId, table.tokenId, table.groupId)
+    .where(sql`group_id IS NOT NULL AND token_id IS NOT NULL`),
+  /** Быстрый список групп токена */
+  index("bot_groups_project_token_idx").on(table.projectId, table.tokenId),
 ]);
 
 /** Схема для вставки данных группы бота */
 export const insertBotGroupSchema = z.object({
   /** Идентификатор проекта */
   projectId: z.number().int(),
+  /** ID токена бота (кто состоит в группе) */
+  tokenId: z.number().int().positive().nullable().optional(),
   /** Идентификатор группы в Telegram */
   groupId: z.string().nullable().optional(),
   /** Название группы (обязательное поле) */

@@ -36,14 +36,16 @@ export function registerProjectGroupsListPaths(
     summary: "Список Telegram-групп проекта",
     description:
       "Группы/каналы проекта (Database → группы, выбор аудитории рассылки). " +
-      "Название и аватарка — через `…/sync`.\n\n" +
-      "**Auth:** cookie или Bearer PAT + доступ к проекту. **Клиент:** `use-system-tables`, `group-select`.\n\n" +
-      "```bash\ncurl -s 'http://localhost:5000/api/projects/42/groups' -b cookies.txt\n```",
+      "С `?tokenId=` — только группы этого бота (из `bot_groups` и чаты из `bot_messages`). " +
+      "Без `tokenId` — все группы проекта. Название и аватарка — через `…/sync`.\n\n" +
+      "**Auth:** cookie или Bearer PAT + доступ к проекту. **Клиент:** `group-select`, `use-sync-groups`.\n\n" +
+      "```bash\ncurl -s 'http://localhost:5000/api/projects/42/groups?tokenId=7' -b cookies.txt\n```",
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
       headers: ProjectsAuthHeadersSchema,
       params: ProjectGroupsProjectIdParamsSchema,
+      query: ProjectGroupsTokenQuerySchema,
     },
     responses: {
       200: {

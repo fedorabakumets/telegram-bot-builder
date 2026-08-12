@@ -133,13 +133,20 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
             {estimatedSeconds > 0 ? `~${estimatedSeconds} сек` : '—'}
           </span>
         </div>
-        {(formData.filters.groupIds?.length ?? 0) > 0 && (
-          <div className="flex items-center gap-3 px-4 py-3">
-            <Layers className="w-4 h-4 text-fuchsia-500 shrink-0" />
-            <span className="text-muted-foreground">Группы</span>
-            <span className="ml-auto font-medium">{formData.filters.groupIds!.length}</span>
-          </div>
-        )}
+        {(() => {
+          const perTokenCount = Object.values(formData.groupsByTokenId ?? {})
+            .reduce((sum, ids) => sum + (ids?.length ?? 0), 0);
+          const legacyCount = formData.filters.groupIds?.length ?? 0;
+          const groupsCount = perTokenCount || legacyCount;
+          if (groupsCount === 0) return null;
+          return (
+            <div className="flex items-center gap-3 px-4 py-3">
+              <Layers className="w-4 h-4 text-fuchsia-500 shrink-0" />
+              <span className="text-muted-foreground">Группы</span>
+              <span className="ml-auto font-medium">{groupsCount}</span>
+            </div>
+          );
+        })()}
         <div className="px-4 py-3 space-y-2">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-green-500 shrink-0" />

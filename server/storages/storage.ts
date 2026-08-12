@@ -540,19 +540,36 @@ export interface IStorage {
   getBotGroup(id: number): Promise<BotGroup | undefined>;
 
   /**
-   * Получить все группы бота по ID проекта
+   * Получить группы проекта, опционально только для токена
    * @param projectId - ID проекта
+   * @param tokenId - ID токена (если задан — только группы этого бота)
    * @returns Массив групп бота
    */
-  getBotGroupsByProject(projectId: number): Promise<BotGroup[]>;
+  getBotGroupsByProject(projectId: number, tokenId?: number | null): Promise<BotGroup[]>;
 
   /**
-   * Получить группу бота по ID проекта и ID группы
+   * Получить группу по проекту, Telegram group_id и опционально токену
    * @param projectId - ID проекта
-   * @param groupId - ID группы
-   * @returns Группа бота или undefined, если не найдена
+   * @param groupId - Telegram chat_id группы
+   * @param tokenId - ID токена (если задан — точное совпадение)
+   * @returns Группа бота или undefined
    */
-  getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined>;
+  getBotGroupByProjectAndGroupId(
+    projectId: number,
+    groupId: string,
+    tokenId?: number | null,
+  ): Promise<BotGroup | undefined>;
+
+  /**
+   * Chat_id групповых чатов из bot_messages для токена (для пикера без строки в bot_groups)
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   * @returns Список { groupId, chatType, nameHint }
+   */
+  listGroupChatsFromMessages(
+    projectId: number,
+    tokenId: number,
+  ): Promise<Array<{ groupId: string; chatType: string; nameHint: string }>>;
 
   /**
    * Создать новую группу бота
