@@ -19,6 +19,10 @@ export const BotUserStatsSchema = z
     activeUsers: z.number().openapi({ example: 120 }),
     /** is_active = 0 */
     blockedUsers: z.number().openapi({ example: 30 }),
+    /** is_blocked = 1 — заблокировали бота, не в рассылках */
+    blockedBotUsers: z.number().openapi({ example: 8 }),
+    /** is_deleted = 1 — аккаунт удалён, не в рассылках */
+    deletedUsers: z.number().openapi({ example: 3 }),
     /** is_premium = 1 */
     premiumUsers: z.number().openapi({ example: 12 }),
     /** Непустой user_data */

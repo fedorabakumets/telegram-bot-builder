@@ -29,6 +29,7 @@ import { useLiveInvalidate } from '@/components/editor/database/user-database/ho
 import { AnalyticsSourcesChart } from './analytics-sources-chart';
 import { AnalyticsPopularButtonsChart } from './analytics-popular-buttons-chart';
 import { AnalyticsTableChartCard } from './table-chart/analytics-table-chart-card';
+import { AnalyticsAudienceReachNote } from './analytics-audience-reach-note';
 
 
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
@@ -186,6 +187,12 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               chartGranularity={growthGranularity}
               chartHeight={160}
               chartType={growthChartType}
+              footerExtra={
+                <AnalyticsAudienceReachNote
+                  blockedBotUsers={stats.blockedBotUsers}
+                  deletedUsers={stats.deletedUsers}
+                />
+              }
               headerExtra={
                 <div className="flex flex-wrap items-center gap-1">
                   <GrowthGranularitySelector value={growthGranularity} onChange={handleGrowthGranularityChange} />

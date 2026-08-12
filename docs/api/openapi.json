@@ -11781,6 +11781,8 @@
                   "totalUsers": 150,
                   "activeUsers": 120,
                   "blockedUsers": 30,
+                  "blockedBotUsers": 8,
+                  "deletedUsers": 3,
                   "premiumUsers": 12,
                   "usersWithResponses": 45,
                   "totalInteractions": 3200,
@@ -25820,6 +25822,14 @@
             "type": "number",
             "example": 30
           },
+          "blockedBotUsers": {
+            "type": "number",
+            "example": 8
+          },
+          "deletedUsers": {
+            "type": "number",
+            "example": 3
+          },
           "premiumUsers": {
             "type": "number",
             "example": 12
@@ -25853,6 +25863,8 @@
           "totalUsers",
           "activeUsers",
           "blockedUsers",
+          "blockedBotUsers",
+          "deletedUsers",
           "premiumUsers",
           "usersWithResponses",
           "totalInteractions",

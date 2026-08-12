@@ -19,6 +19,7 @@ import { SourceModeToggle, SourceMode } from './source-mode-toggle';
 import { ActivitySplitToggle, ActivitySplitMode } from './activity-split-toggle';
 import { aggregateTopSources } from './source-aggregation-utils';
 import { AnalyticsSourcesChart } from '@/components/editor/analytics/analytics-sources-chart';
+import { AnalyticsAudienceReachNote } from '@/components/editor/analytics/analytics-audience-reach-note';
 
 /**
  * Пропсы компонента StatsDashboard
@@ -150,6 +151,12 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
           chartGranularity={growthGranularity}
           chartType={growthChartType}
           stackHeader
+          footerExtra={
+            <AnalyticsAudienceReachNote
+              blockedBotUsers={stats.blockedBotUsers}
+              deletedUsers={stats.deletedUsers}
+            />
+          }
           headerExtra={
             <div className="flex flex-wrap items-center gap-1">
               <GrowthGranularitySelector value={growthGranularity} onChange={setGrowthGranularity} />
