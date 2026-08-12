@@ -460,7 +460,9 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
   // Подключается ПОСЛЕ identifyUser/identifyAgent — личность уже установлена.
   app.use("/api", requireApiAuth);
 
-  // Отключаем HTTP-кеширование для всех API роутов — ответы зависят от сессии пользователя
+  // Отключаем HTTP-кеширование для API — ответы зависят от сессии.
+  // Успешные аватарки/telegram-file перезаписывают заголовки в setPrivateMediaCacheHeaders
+  // (снимают Pragma/Expires). Ошибки 4xx/5xx остаются no-store — иначе браузер кэширует 404.
   app.use("/api", (_req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.set('Pragma', 'no-cache');

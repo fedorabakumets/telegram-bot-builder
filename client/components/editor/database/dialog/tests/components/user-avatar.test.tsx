@@ -42,6 +42,7 @@ function createTestUser(overrides: Partial<UserBotData> = {}): UserBotData {
 describe('UserAvatar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
   });
 
   describe('Аватар бота', () => {

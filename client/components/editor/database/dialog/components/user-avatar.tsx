@@ -3,15 +3,13 @@
  * Отображает фото пользователя или иконку по умолчанию.
  * Для бота — тот же прокси, что на вкладке «Бот»: /users/bot/avatar?tokenId=…
  * Для пользователя — /users/:userId/avatar; сервер сам подтянет фото из Telegram если в БД пусто.
- * Кэширует неудачные запросы чтобы не спамить сервер.
+ * Кэширует неудачные URL в sessionStorage (общий с BotAvatar).
  */
 
 import { Bot, User } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
 import { useState } from 'react';
-
-/** Кэш неудачных запросов аватарок — не повторяем запрос в течение сессии */
-const failedAvatarCache = new Set<string>();
+import { isAvatarUrlFailed, markAvatarUrlFailed } from '@/lib/avatar-failed-cache';
 
 /** Свойства аватара */
 interface UserAvatarProps {
@@ -58,55 +56,40 @@ function buildBotAvatarUrl(projectId: number, tokenId?: number | null): string {
  * @returns JSX элемент
  */
 export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }: UserAvatarProps) {
-  const [imageError, setImageError] = useState(false);
   const isBot = messageType === 'bot';
   /** Для групп (отрицательный userId) аватарку через этот роут не запрашиваем */
   const isGroupChat = user?.userId ? String(user.userId).startsWith('-') : false;
   const iconSize = size * 0.5;
 
+  const photoUrl = isBot
+    ? (projectId ? buildBotAvatarUrl(projectId, tokenId) : null)
+    : (projectId && user?.userId && !isGroupChat
+      ? buildUserAvatarUrl(projectId, user.userId, tokenId)
+      : null);
+
+  const [imageError, setImageError] = useState(() => !!photoUrl && isAvatarUrlFailed(photoUrl));
+  const canFetchPhoto = !!photoUrl && !imageError && !isAvatarUrlFailed(photoUrl);
+
+  if (canFetchPhoto && photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={isBot ? 'Bot avatar' : 'User avatar'}
+        style={{ width: size, height: size }}
+        className="flex-shrink-0 rounded-full object-cover"
+        onError={() => {
+          markAvatarUrlFailed(photoUrl);
+          setImageError(true);
+        }}
+      />
+    );
+  }
+
   if (isBot) {
-    const botCacheKey = projectId ? `${projectId}:bot:${tokenId ?? ''}` : '';
-    const canFetchBotPhoto = !!projectId && !imageError && !failedAvatarCache.has(botCacheKey);
-
-    if (canFetchBotPhoto) {
-      return (
-        <img
-          src={buildBotAvatarUrl(projectId!, tokenId)}
-          alt="Bot avatar"
-          style={{ width: size, height: size }}
-          className="flex-shrink-0 rounded-full object-cover"
-          onError={() => {
-            setImageError(true);
-            if (botCacheKey) failedAvatarCache.add(botCacheKey);
-          }}
-        />
-      );
-    }
-
     return (
       <div style={{ width: size, height: size }} className="flex-shrink-0 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
         <Bot style={{ width: iconSize, height: iconSize }} className="text-blue-600 dark:text-blue-400" />
       </div>
-    );
-  }
-
-  /** Ключ для кэша неудачных запросов пользователя */
-  const cacheKey = projectId && user?.userId ? `${projectId}:${user.userId}:${tokenId ?? ''}` : '';
-  /** Показываем img если есть projectId и userId — avatarUrl в БД не обязателен */
-  const canFetchPhoto = !!projectId && !!user?.userId && !imageError && !isGroupChat && !failedAvatarCache.has(cacheKey);
-
-  if (canFetchPhoto && user?.userId) {
-    return (
-      <img
-        src={buildUserAvatarUrl(projectId!, user.userId, tokenId)}
-        alt="User avatar"
-        style={{ width: size, height: size }}
-        className="flex-shrink-0 rounded-full object-cover"
-        onError={() => {
-          setImageError(true);
-          if (cacheKey) failedAvatarCache.add(cacheKey);
-        }}
-      />
     );
   }
 

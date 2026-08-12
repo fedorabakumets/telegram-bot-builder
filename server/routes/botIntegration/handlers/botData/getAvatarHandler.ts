@@ -11,6 +11,7 @@ import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import { getRequestTokenId, resolveProjectBotToken } from "../../../utils/resolve-request-token";
+import { setPrivateMediaCacheHeaders } from "./set-private-media-cache";
 
 /**
  * Обрабатывает запрос на получение аватарки пользователя или бота
@@ -355,7 +356,7 @@ export async function getAvatarHandler(req: Request, res: Response): Promise<voi
         }
 
         res.set('Content-Type', response.headers.get('content-type') || 'image/jpeg');
-        res.set('Cache-Control', 'public, max-age=86400');
+        setPrivateMediaCacheHeaders(res);
 
         const buffer = await response.arrayBuffer();
         res.send(Buffer.from(buffer));

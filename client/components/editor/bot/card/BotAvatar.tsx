@@ -2,54 +2,16 @@
  * @fileoverview Компонент аватарки бота
  *
  * Отображает аватарку бота через серверный прокси с передачей tokenId.
- * Кеширует неудачные загрузки (404) в sessionStorage чтобы не мигать сломанным img
- * даже после перезагрузки страницы (сбрасывается при закрытии вкладки).
+ * Неудачные URL кэширует в sessionStorage (общий модуль с UserAvatar).
  * Fallback — инициалы или иконка бота.
  *
  * @module BotAvatar
  */
 
 import { useState } from 'react';
+import { isAvatarUrlFailed, markAvatarUrlFailed } from '@/lib/avatar-failed-cache';
 
-/** Ключ для sessionStorage */
-const STORAGE_KEY = 'bot-avatar-failed-urls';
-
-/**
- * Проверяет, есть ли URL в кеше неудачных загрузок
- * @param url - URL аватарки
- * @returns true если загрузка ранее завершилась ошибкой
- */
-function isUrlFailed(url: string): boolean {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const list: string[] = JSON.parse(raw);
-    return list.includes(url);
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Добавляет URL в кеш неудачных загрузок
- * @param url - URL аватарки который вернул ошибку
- */
-function markUrlFailed(url: string): void {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    const list: string[] = raw ? JSON.parse(raw) : [];
-    if (!list.includes(url)) {
-      list.push(url);
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    }
-  } catch {
-    // sessionStorage недоступен — игнорируем
-  }
-}
-
-/**
- * Свойства аватарки бота
- */
+/** Свойства аватарки бота */
 interface BotAvatarProps {
   /** Наличие фото (true = есть фото, null/undefined = нет) */
   photoUrl?: string | null | boolean;
@@ -90,10 +52,10 @@ export function BotAvatar({
     : null;
 
   /** Локальный флаг ошибки — для ре-рендера при onError */
-  const [imgError, setImgError] = useState(() => !!proxyUrl && isUrlFailed(proxyUrl));
+  const [imgError, setImgError] = useState(() => !!proxyUrl && isAvatarUrlFailed(proxyUrl));
 
   /** Показываем img только если URL есть и не в кеше ошибок */
-  const showImg = proxyUrl && !isUrlFailed(proxyUrl) && !imgError;
+  const showImg = proxyUrl && !isAvatarUrlFailed(proxyUrl) && !imgError;
 
   if (showImg) {
     return (
@@ -112,7 +74,7 @@ export function BotAvatar({
           alt={`${botName} avatar`}
           className="w-full h-full object-cover"
           onError={() => {
-            markUrlFailed(proxyUrl);
+            markAvatarUrlFailed(proxyUrl);
             setImgError(true);
           }}
         />

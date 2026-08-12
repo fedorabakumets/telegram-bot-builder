@@ -9,6 +9,7 @@ import { Readable } from "node:stream";
 import type { Request, Response } from "express";
 import { fetchWithProxy } from "../../../../utils/telegram-proxy";
 import { getRequestTokenId, resolveProjectBotToken } from "../../../utils/resolve-request-token";
+import { setPrivateMediaCacheHeaders } from "./set-private-media-cache";
 
 /**
  * Проксирует запрос на получение файла из Telegram CDN через streaming.
@@ -114,7 +115,7 @@ export async function getTelegramFileHandler(req: Request, res: Response): Promi
     res.status(fileResp.status);
     res.set("Content-Type", contentType);
     res.set("Accept-Ranges", acceptRanges);
-    res.set("Cache-Control", "private, max-age=86400");
+    setPrivateMediaCacheHeaders(res);
     res.set("Content-Disposition", `inline; filename="${encodeURIComponent(fileName)}"`);
 
     if (contentLength) res.set("Content-Length", contentLength);
