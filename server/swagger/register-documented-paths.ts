@@ -58,6 +58,8 @@ import { registerProjectBroadcastsListPaths } from "./paths/project-broadcasts-l
 import { registerProjectBroadcastsPreviewPaths } from "./paths/project-broadcasts-preview-paths";
 import { registerProjectBroadcastsDetailPaths } from "./paths/project-broadcasts-detail-paths";
 import { registerProjectBroadcastsMutatePaths } from "./paths/project-broadcasts-mutate-paths";
+import { registerProjectBroadcastCampaignsListPaths } from "./paths/project-broadcast-campaigns-list-paths";
+import { registerProjectBroadcastCampaignsMutatePaths } from "./paths/project-broadcast-campaigns-mutate-paths";
 import { registerHealthPaths } from "./paths/health-paths";
 import { registerProjectsAdminIdsPaths } from "./paths/projects-admin-ids-paths";
 import { registerProjectsCollaboratorsInfoPaths } from "./paths/projects-collaborators-info-paths";
@@ -200,3 +202,5 @@ registerProjectBroadcastsListPaths(documentedRegistry, cookieSecurity);
 registerProjectBroadcastsPreviewPaths(documentedRegistry, cookieSecurity);
 registerProjectBroadcastsDetailPaths(documentedRegistry, cookieSecurity);
 registerProjectBroadcastsMutatePaths(documentedRegistry, cookieSecurity);
+registerProjectBroadcastCampaignsListPaths(documentedRegistry, cookieSecurity);
+registerProjectBroadcastCampaignsMutatePaths(documentedRegistry, cookieSecurity);

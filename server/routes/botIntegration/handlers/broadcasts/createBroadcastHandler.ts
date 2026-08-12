@@ -9,10 +9,14 @@ import { getRequestTokenId, resolveEffectiveProjectToken } from "../../../utils/
 import { buildBroadcastDefaultName } from "./build-broadcast-default-name";
 import { createBroadcastBodySchema } from "./broadcast-body-schemas";
 import { runBroadcastQueue } from "./broadcastQueue";
+import { resolveProjectTokenIds } from "./resolve-project-token-ids";
+import { startBroadcastCampaign } from "./start-campaign-broadcasts";
 
 /**
  * Обрабатывает POST /api/projects/:projectId/broadcasts
- * Создаёт рассылку и запускает очередь отправки асинхронно
+ * Создаёт рассылку и запускает очередь отправки асинхронно.
+ * При нескольких выбранных ботах (tokenIds) создаёт кампанию с дочерними рассылками
+ * и возвращает { campaignId, broadcastIds } вместо { broadcastId }
  * @param req - Объект запроса
  * @param res - Объект ответа
  * @returns void
@@ -31,7 +35,28 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
       return;
     }
 
-    const requestedTokenId = getRequestTokenId(req);
+    const { name, messageText, mediaUrls, buttons, buttonsPerRow, filters, tokenIds } = validation.data;
+    const resolvedName = name.trim() || buildBroadcastDefaultName(messageText);
+
+    // Явно выбранные боты — «большая рассылка» (кампания с дочерними рассылками)
+    if (tokenIds && tokenIds.length > 0) {
+      const resolved = await resolveProjectTokenIds(projectId, tokenIds);
+      if (resolved.error) {
+        res.status(400).json({ message: resolved.error });
+        return;
+      }
+
+      if (resolved.tokens.length > 1) {
+        const started = await startBroadcastCampaign(
+          { projectId, name: resolvedName, messageText, mediaUrls, buttons, buttonsPerRow, filters },
+          resolved.tokens,
+        );
+        res.status(201).json(started);
+        return;
+      }
+    }
+
+    const requestedTokenId = tokenIds?.[0] ?? getRequestTokenId(req);
     const { selectedToken, effectiveTokenId } = await resolveEffectiveProjectToken(
       projectId,
       requestedTokenId,
@@ -42,8 +67,6 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
       return;
     }
 
-    const { name, messageText, mediaUrls, buttons, buttonsPerRow, filters } = validation.data;
-    const resolvedName = name.trim() || buildBroadcastDefaultName(messageText);
     const users = await storage.getUsersForBroadcast(projectId, effectiveTokenId, filters);
     const totalCount = users.length;
 

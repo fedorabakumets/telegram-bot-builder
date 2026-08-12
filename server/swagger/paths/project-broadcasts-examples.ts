@@ -41,25 +41,60 @@ export const CREATE_BROADCAST_BODY_EXAMPLE = {
   filters: { tags: ["vip"] },
 };
 
-/** POST create 201 */
+/** POST create body для «большой рассылки» по нескольким ботам */
+export const CREATE_BROADCAST_MULTI_BODY_EXAMPLE = {
+  ...CREATE_BROADCAST_BODY_EXAMPLE,
+  tokenIds: [7, 8],
+};
+
+/** POST create 201 (один бот) */
 export const CREATE_BROADCAST_RESPONSE_EXAMPLE = { broadcastId: 15 };
+
+/** POST create 201 («большая рассылка» — 2+ бота) */
+export const CREATE_BROADCAST_CAMPAIGN_RESPONSE_EXAMPLE = {
+  campaignId: 3,
+  broadcastIds: [15, 16],
+};
 
 /** POST preview body */
 export const PREVIEW_AUDIENCE_BODY_EXAMPLE = {
   filters: { tags: ["vip"] },
 };
 
-/** POST preview 200 */
+/** POST preview body для нескольких ботов */
+export const PREVIEW_AUDIENCE_MULTI_BODY_EXAMPLE = {
+  filters: { tags: ["vip"] },
+  tokenIds: [7, 8],
+};
+
+/** Пример пользователя аудитории */
+const AUDIENCE_SAMPLE_USER = {
+  userId: "123456789",
+  userName: "ivan",
+  firstName: "Иван",
+  lastName: "Петров",
+};
+
+/** POST preview 200 (один бот) */
 export const PREVIEW_AUDIENCE_RESPONSE_EXAMPLE = {
   count: 42,
-  sample: [
-    {
-      userId: "123456789",
-      userName: "ivan",
-      firstName: "Иван",
-      lastName: "Петров",
-    },
+  sample: [AUDIENCE_SAMPLE_USER],
+  total: 42,
+  perBot: [{ tokenId: 7, count: 42 }],
+  overlapEstimate: 0,
+};
+
+/** POST preview 200 (несколько ботов) */
+export const PREVIEW_AUDIENCE_MULTI_RESPONSE_EXAMPLE = {
+  count: 90,
+  sample: [AUDIENCE_SAMPLE_USER],
+  total: 90,
+  uniqueCount: 86,
+  perBot: [
+    { tokenId: 7, count: 42 },
+    { tokenId: 8, count: 48 },
   ],
+  overlapEstimate: 4,
 };
 
 /** GET detail */

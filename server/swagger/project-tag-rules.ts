@@ -30,7 +30,9 @@ export const PROJECT_TAG_DESCRIPTIONS: Record<string, string> = {
     "в групповой диалог. Auth: requireProjectAccess. Lifecycle бота — `project-bot`.",
   "project-broadcasts":
     "Рассылки проекта: список, создание, детали, редактирование текста, stop, delete, " +
-    "preview аудитории. Auth: requireProjectAccess. UI: панель Broadcast. " +
+    "preview аудитории, а также «большая рассылка по нескольким ботам» " +
+    "(`/broadcast-campaigns`: список, детали, stop, edit, delete). " +
+    "Auth: requireProjectAccess. UI: панель Broadcast и лента «Диалоги». " +
     "Не путать с canvas-нодой broadcast.",
   "project-tables":
     "Пользовательские таблицы проекта (`bot_tables`): список, CRUD таблиц/колонок/строк. " +
@@ -96,8 +98,11 @@ export function inferProjectTag(openApiPath: string): string | null {
     return "project-messages";
   }
 
-  // Рассылки
-  if (/^\/api\/projects\/[^/]+\/broadcasts(\/|$)/.test(openApiPath)) {
+  // Рассылки: одиночные и кампании «большой рассылки»
+  if (
+    /^\/api\/projects\/[^/]+\/broadcasts(\/|$)/.test(openApiPath) ||
+    /^\/api\/projects\/[^/]+\/broadcast-campaigns(\/|$)/.test(openApiPath)
+  ) {
     return "project-broadcasts";
   }
 

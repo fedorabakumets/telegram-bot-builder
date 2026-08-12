@@ -14,6 +14,7 @@ import { StepAudience } from './step-audience';
 import { StepMessage } from './step-message';
 import { StepConfirm } from './step-confirm';
 import { BroadcastProgress } from './broadcast-progress';
+import { CampaignProgress } from './campaign-progress';
 import { WizardStepper } from './wizard-stepper';
 import { useCreateBroadcast } from '../hooks/use-create-broadcast';
 import type { NewBroadcastFormData, Broadcast } from '../types';
@@ -45,6 +46,7 @@ const INITIAL_FORM: NewBroadcastFormData = {
   mediaUrls: [],
   buttons: [],
   buttonsPerRow: 0,
+  tokenIds: [],
   filters: { audienceType: 'all' },
 };
 
@@ -66,6 +68,8 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
     mediaUrls: initialMediaUrls ?? [],
   });
   const [createdBroadcast, setCreatedBroadcast] = useState<Broadcast | null>(null);
+  /** ID большой рассылки, если отправка идёт сразу от нескольких ботов */
+  const [createdCampaignId, setCreatedCampaignId] = useState<number | null>(null);
 
   /** Синхронизируем messageText и mediaUrls при открытии модалки */
   useEffect(() => {
@@ -86,10 +90,18 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
     projectId,
     tokenId,
     refetch,
-    onSuccess: (broadcastId) => {
+    onSuccess: ({ broadcastId, campaignId }) => {
+      // Несколько ботов — сервер вернул большую рассылку, показываем её общий прогресс
+      if (campaignId) {
+        setCreatedCampaignId(campaignId);
+        setStep('progress');
+        return;
+      }
+      if (!broadcastId) return;
       setCreatedBroadcast({
         id: broadcastId,
         projectId,
+        campaignId: null,
         tokenId: tokenId ?? 0,
         name: formData.name,
         messageText: formData.messageText,
@@ -102,6 +114,9 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
         createdAt: new Date(),
         startedAt: null,
         finishedAt: null,
+        mediaUrls: formData.mediaUrls ?? [],
+        buttons: formData.buttons ?? [],
+        buttonsPerRow: formData.buttonsPerRow ?? 0,
       });
       setStep('progress');
     },
@@ -111,6 +126,7 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
     setStep(1);
     setFormData({ ...INITIAL_FORM, messageText: initialMessageText ?? '', mediaUrls: initialMediaUrls ?? [] });
     setCreatedBroadcast(null);
+    setCreatedCampaignId(null);
     onClose();
   };
 
@@ -185,7 +201,16 @@ export function NewBroadcastModal({ open, onClose, projectId, tokenId, refetch, 
                 onBack={() => setStep(2)}
               />
             )}
-            {step === 'progress' && createdBroadcast && (
+            {step === 'progress' && createdCampaignId && (
+              <CampaignProgress
+                projectId={projectId}
+                campaignId={createdCampaignId}
+                name={formData.name}
+                refetch={refetch}
+                onClose={handleClose}
+              />
+            )}
+            {step === 'progress' && !createdCampaignId && createdBroadcast && (
               <BroadcastProgress
                 projectId={projectId}
                 broadcast={createdBroadcast}

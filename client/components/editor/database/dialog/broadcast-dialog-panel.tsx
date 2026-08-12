@@ -3,7 +3,7 @@
  * @module editor/database/dialog/broadcast-dialog-panel
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Megaphone, X, Send, Paperclip, Hash } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,12 @@ import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inl
 import { MultiMediaSelector } from '@/components/editor/properties/media/multi-media-selector';
 import { FileIdInput } from '@/components/editor/properties/media/file-id-input';
 import { useBroadcasts } from '@/components/editor/broadcast/hooks/use-broadcasts';
+import { useBroadcastCampaigns } from '@/components/editor/broadcast/hooks/use-broadcast-campaigns';
 import { NewBroadcastModal } from '@/components/editor/broadcast/wizard/new-broadcast-modal';
 import { BroadcastMessageBubble } from './components/broadcast-message-bubble';
+import { BroadcastCampaignBubble } from './components/broadcast-campaign-bubble';
+import { BroadcastDeleteConfirm } from './components/broadcast-delete-confirm';
+import { buildBroadcastTimeline } from './utils/build-broadcast-timeline';
 
 /**
  * Пропсы компонента BroadcastDialogPanel
@@ -54,10 +58,25 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
   const [deletingId, setDeletingId] = useState<number | null>(null);
   /** ID рассылки, которая сейчас редактируется */
   const [editingId, setEditingId] = useState<number | null>(null);
+  /** ID одиночной рассылки, для которой открыто подтверждение удаления */
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { broadcasts, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId);
+  const { campaigns, refetch: refetchCampaigns } = useBroadcastCampaigns(projectId);
+
+  /** Лента: большие рассылки одной записью, одиночные — как раньше */
+  const timeline = useMemo(
+    () => buildBroadcastTimeline(campaigns, broadcasts),
+    [campaigns, broadcasts],
+  );
+
+  /** Обновляет и список рассылок, и список больших рассылок */
+  const refetchAll = () => {
+    refetch();
+    refetchCampaigns();
+  };
 
   /** Мутация удаления рассылки */
   const deleteMutation = useMutation({
@@ -69,7 +88,8 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
     onMutate: (broadcastId) => setDeletingId(broadcastId),
     onSettled: () => {
       setDeletingId(null);
-      refetch();
+      setConfirmDeleteId(null);
+      refetchAll();
       queryClient.invalidateQueries({ queryKey: ['infinite-users', projectId] });
     },
   });
@@ -89,19 +109,19 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
     onMutate: ({ broadcastId }) => setEditingId(broadcastId),
     onSettled: () => {
       setEditingId(null);
-      refetch();
+      refetchAll();
       queryClient.invalidateQueries({ queryKey: ['infinite-users', projectId] });
     },
   });
 
   /** Автопрокрутка вниз при загрузке */
   useEffect(() => {
-    if (isLoading || broadcasts.length === 0) return;
+    if (isLoading || timeline.length === 0) return;
     setTimeout(() => {
       const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
       if (viewport) viewport.scrollTop = viewport.scrollHeight;
     }, 100);
-  }, [isLoading, broadcasts.length]);
+  }, [isLoading, timeline.length]);
 
   /** Открыть модалку с предзаполненным текстом и медиа */
   const handleSend = () => {
@@ -134,7 +154,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
     setMediaUrls([]);
     setShowMedia(false);
     setShowFileId(false);
-    setTimeout(() => refetch(), 500);
+    setTimeout(() => refetchAll(), 500);
   };
 
   return (
@@ -160,7 +180,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
           <div className="flex items-center justify-center h-24">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           </div>
-        ) : broadcasts.length === 0 ? (
+        ) : timeline.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground py-12">
             <Megaphone className="h-10 w-10 opacity-20" />
             <p className="text-sm">Нет рассылок</p>
@@ -168,17 +188,28 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
           </div>
         ) : (
           <div className="space-y-3 py-2">
-            {[...broadcasts].reverse().map((b) => (
-              <BroadcastMessageBubble
-                key={b.id}
-                broadcast={b}
-                projectId={projectId}
-                onDelete={(id) => deleteMutation.mutate(id)}
-                isDeleting={deletingId === b.id}
-                onRepeat={handleRepeat}
-                onEdit={handleEdit}
-                isEditing={editingId === b.id}
-              />
+            {[...timeline].reverse().map((item) => (
+              item.kind === 'campaign' ? (
+                <BroadcastCampaignBubble
+                  key={item.key}
+                  campaign={item.campaign}
+                  projectId={projectId}
+                  onRefetch={refetchAll}
+                  onDeleteBroadcast={(id) => deleteMutation.mutate(id)}
+                  deletingBroadcastId={deletingId}
+                />
+              ) : (
+                <BroadcastMessageBubble
+                  key={item.key}
+                  broadcast={item.broadcast}
+                  projectId={projectId}
+                  onDelete={setConfirmDeleteId}
+                  isDeleting={deletingId === item.broadcast.id}
+                  onRepeat={handleRepeat}
+                  onEdit={handleEdit}
+                  isEditing={editingId === item.broadcast.id}
+                />
+              )
             ))}
           </div>
         )}
@@ -256,6 +287,15 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
         </div>
       </div>
 
+      {/* Подтверждение удаления одиночной рассылки */}
+      <BroadcastDeleteConfirm
+        open={confirmDeleteId !== null}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (confirmDeleteId !== null) deleteMutation.mutate(confirmDeleteId);
+        }}
+      />
+
       {/* Модалка создания рассылки с предзаполненным текстом и медиа */}
       <NewBroadcastModal
         key={prefillText + prefillMedia.join(',')}
@@ -263,7 +303,7 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
         onClose={handleModalClose}
         projectId={projectId}
         tokenId={selectedTokenId}
-        refetch={refetch}
+        refetch={refetchAll}
         initialMessageText={prefillText}
         initialMediaUrls={prefillMedia}
       />

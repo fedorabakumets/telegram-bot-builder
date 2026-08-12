@@ -97,6 +97,14 @@ export type StorageBroadcastUpdate = Partial<StorageBroadcastInput>;
 /** Тип вставки результата рассылки по таблице Drizzle */
 export type StorageBroadcastResultInput = typeof broadcastResults.$inferInsert;
 
+import { broadcastCampaigns } from "@shared/schema";
+
+/** Тип вставки кампании рассылки по таблице Drizzle */
+export type StorageBroadcastCampaignInput = typeof broadcastCampaigns.$inferInsert;
+
+/** Тип обновления кампании рассылки */
+export type StorageBroadcastCampaignUpdate = Partial<StorageBroadcastCampaignInput>;
+
 /** Тип вставки переменной окружения бота по таблице Drizzle */
 export type StorageBotEnvVariableInput = typeof botEnvVariables.$inferInsert;
 

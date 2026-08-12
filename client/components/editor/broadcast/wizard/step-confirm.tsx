@@ -4,13 +4,16 @@
  */
 
 import { useMemo } from 'react';
-import { Tag, Users, Clock, MessageSquare, Rocket, Layers } from 'lucide-react';
+import { Tag, Users, Clock, MessageSquare, Rocket, Layers, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useProjectTokens } from '@/hooks/use-project-tokens';
 import { useAudiencePreview } from '../hooks/use-audience-preview';
 import { BroadcastMessagePreview } from '../components/broadcast-message-preview';
 import { BroadcastValidationAlerts } from '../components/broadcast-validation-alerts';
+import { AudienceOverlapWarning } from './audience-overlap-warning';
 import { validateBroadcastMessage } from '../utils/validate-broadcast-message';
 import { resolveBroadcastDisplayName } from '../utils/resolve-broadcast-display-name';
+import { formatBotShortLabel, pluralizeBots } from '../utils/format-bot-label';
 import type { NewBroadcastFormData } from '../types';
 
 /**
@@ -50,7 +53,20 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
     audienceType === 'activity' ? { activeFrom: filterFields.activeFrom, activeTo: filterFields.activeTo } :
     audienceType === 'manual' ? { userIds: filterFields.userIds ?? [] } : {};
 
-  const { count, isLoading: isCountLoading } = useAudiencePreview(projectId, apiFilters, tokenId);
+  const tokenIds = formData.tokenIds ?? [];
+  const tokensInfo = useProjectTokens([projectId]);
+  const tokens = tokensInfo[0]?.tokens ?? [];
+
+  /** Подписи выбранных ботов для итоговой таблицы */
+  const selectedBotLabels = tokenIds
+    .map((id) => formatBotShortLabel(tokens.find((token) => token.id === id), id));
+
+  const { count, perBot, overlapEstimate, isLoading: isCountLoading } = useAudiencePreview(
+    projectId,
+    apiFilters,
+    tokenId,
+    tokenIds,
+  );
 
   /**
    * Итоговое число получателей. Для ручного выбора берём длину userIds,
@@ -60,7 +76,14 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
     ? (filterFields.userIds?.length ?? 0)
     : count;
 
-  const estimatedSeconds = recipientCount > 0 ? Math.ceil(recipientCount / SEND_RATE) : 0;
+  /**
+   * Боты отправляют параллельно, поэтому время оценивается по самому
+   * загруженному боту, а не по сумме всех получателей.
+   */
+  const slowestBotCount = perBot.length > 0
+    ? Math.max(...perBot.map((item) => item.count))
+    : recipientCount;
+  const estimatedSeconds = slowestBotCount > 0 ? Math.ceil(slowestBotCount / SEND_RATE) : 0;
   const validation = useMemo(() => validateBroadcastMessage(formData), [formData]);
   const hasMessageContent = Boolean(
     formData.messageText.trim()
@@ -74,6 +97,8 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
 
       <BroadcastValidationAlerts validation={validation} />
 
+      {audienceType !== 'manual' && <AudienceOverlapWarning overlapEstimate={overlapEstimate} />}
+
       {/* Таблица параметров */}
       <div className="rounded-xl border shadow-sm divide-y text-sm overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3">
@@ -83,6 +108,15 @@ export function StepConfirm({ projectId, tokenId, formData, isLoading, onConfirm
             {resolveBroadcastDisplayName(formData.name, formData.messageText)}
           </span>
         </div>
+        {selectedBotLabels.length > 0 && (
+          <div className="flex items-center gap-3 px-4 py-3">
+            <Bot className="w-4 h-4 text-blue-500 shrink-0" />
+            <span className="text-muted-foreground">Боты</span>
+            <span className="ml-auto font-medium text-right max-w-[70%] truncate">
+              {selectedBotLabels.length} {pluralizeBots(selectedBotLabels.length)} · {selectedBotLabels.join(', ')}
+            </span>
+          </div>
+        )}
         <div className="flex items-center gap-3 px-4 py-3">
           <Users className="w-4 h-4 text-violet-500 shrink-0" />
           <span className="text-muted-foreground">Получателей</span>

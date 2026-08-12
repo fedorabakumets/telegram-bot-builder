@@ -7,6 +7,8 @@ export type {
   Broadcast,
   BroadcastResult,
   BroadcastFilters,
+  BroadcastCampaign,
+  BroadcastCampaignStatus,
 } from '@shared/schema';
 
 import type { Button } from '@shared/schema';
@@ -21,6 +23,8 @@ export interface BroadcastProgressEvent {
   projectId: number;
   /** Идентификатор рассылки */
   broadcastId: number;
+  /** Идентификатор большой рассылки, если рассылка идёт по нескольким ботам */
+  campaignId?: number;
   /** Количество отправленных сообщений */
   sentCount: number;
   /** Количество доставленных сообщений */
@@ -63,6 +67,8 @@ export interface NewBroadcastFormData {
   buttons?: Button[];
   /** Кол-во кнопок в ряду (0 = все в один ряд) */
   buttonsPerRow?: number;
+  /** Идентификаторы ботов, от имени которых уйдёт рассылка */
+  tokenIds: number[];
   /** Фильтры аудитории */
   filters: {
     /** Тип аудитории */

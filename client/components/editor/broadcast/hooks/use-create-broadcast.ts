@@ -8,10 +8,17 @@ import { apiRequest } from '@/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import type { NewBroadcastFormData } from '../types';
 
-/** Ответ сервера POST /api/projects/:projectId/broadcasts */
-interface CreateBroadcastResponse {
-  /** Идентификатор созданной рассылки */
-  broadcastId: number;
+/**
+ * Ответ сервера POST /api/projects/:projectId/broadcasts.
+ * Для одного бота приходит broadcastId, для нескольких — campaignId и broadcastIds
+ */
+export interface CreateBroadcastResponse {
+  /** Идентификатор созданной рассылки (режим одного бота) */
+  broadcastId?: number;
+  /** Идентификатор большой рассылки (несколько ботов) */
+  campaignId?: number;
+  /** Идентификаторы рассылок по каждому боту */
+  broadcastIds?: number[];
 }
 
 /**
@@ -23,7 +30,7 @@ interface UseCreateBroadcastParams {
   /** Идентификатор токена */
   tokenId?: number | null;
   /** Колбэк после успешного создания */
-  onSuccess?: (broadcastId: number) => void;
+  onSuccess?: (result: CreateBroadcastResponse) => void;
   /** Колбэк для обновления списка */
   refetch?: () => void;
 }
@@ -65,7 +72,10 @@ export function useCreateBroadcast({
         ...(filterFields.groupIds?.length ? { groupIds: filterFields.groupIds } : {}),
       };
 
-      const url = tokenId
+      /** Явно выбранные боты — сервер разложит рассылку по каждому из них */
+      const selectedTokenIds = formData.tokenIds?.length ? formData.tokenIds : null;
+
+      const url = !selectedTokenIds && tokenId
         ? `/api/projects/${projectId}/broadcasts?tokenId=${tokenId}`
         : `/api/projects/${projectId}/broadcasts`;
 
@@ -76,12 +86,19 @@ export function useCreateBroadcast({
         buttons: formData.buttons ?? [],
         buttonsPerRow: formData.buttonsPerRow ?? 0,
         filters: filtersWithGroups,
+        ...(selectedTokenIds ? { tokenIds: selectedTokenIds } : {}),
       }) as Promise<CreateBroadcastResponse>;
     },
     onSuccess: (data) => {
-      toast({ title: 'Рассылка создана', description: 'Рассылка запущена успешно' });
+      const botCount = data.broadcastIds?.length ?? 1;
+      toast({
+        title: 'Рассылка создана',
+        description: botCount > 1
+          ? `Рассылка запущена по ${botCount} ботам`
+          : 'Рассылка запущена успешно',
+      });
       refetch?.();
-      onSuccess?.(data.broadcastId);
+      onSuccess?.(data);
     },
     onError: (error: Error) => {
       toast({

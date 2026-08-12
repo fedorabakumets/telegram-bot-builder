@@ -21,7 +21,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [launch](./launch.md) | 1 |
 | [media](./media.md) | 13 |
 | [project-bot](./project-bot.md) | 7 |
-| [project-broadcasts](./project-broadcasts.md) | 7 |
+| [project-broadcasts](./project-broadcasts.md) | 12 |
 | [project-dialogs](./project-dialogs.md) | 5 |
 | [project-files](./project-files.md) | 4 |
 | [project-groups](./project-groups.md) | 4 |

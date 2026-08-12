@@ -143,6 +143,8 @@ export interface BroadcastProgressLiveEvent {
   data: {
     /** Идентификатор рассылки */
     broadcastId: number;
+    /** Идентификатор большой рассылки, если отправка идёт по нескольким ботам */
+    campaignId?: number;
     /** Отправлено сообщений */
     sentCount: number;
     /** Доставлено успешно */

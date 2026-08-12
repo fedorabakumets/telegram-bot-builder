@@ -7,15 +7,20 @@ import { pgTable, text, serial, integer, jsonb, timestamp, json } from "drizzle-
 import { z } from "zod";
 
 import { botProjects } from "./bot-projects";
+import { broadcastCampaigns } from "./broadcast-campaigns";
+import { broadcastFiltersSchema, type BroadcastFilters } from "./broadcast-filters";
 
 /**
- * Таблица рассылок — хранит задания на массовую отправку сообщений
+ * Таблица рассылок — хранит задания на массовую отправку сообщений.
+ * Рассылка может быть дочерней записью кампании («большой рассылки») — тогда заполнен campaignId
  */
 export const broadcasts = pgTable("broadcasts", {
   /** Уникальный идентификатор рассылки */
   id: serial("id").primaryKey(),
   /** Идентификатор проекта */
   projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  /** Идентификатор родительской кампании (null — одиночная рассылка) */
+  campaignId: integer("campaign_id").references(() => broadcastCampaigns.id, { onDelete: "cascade" }),
   /** Идентификатор токена бота */
   tokenId: integer("token_id").notNull().default(0),
   /** Название рассылки */
@@ -68,28 +73,14 @@ export const broadcastResults = pgTable("broadcast_results", {
   sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow(),
 });
 
-/** Схема фильтров аудитории рассылки */
-export const broadcastFiltersSchema = z.object({
-  /** Теги для фильтрации пользователей */
-  tags: z.array(z.string()).optional(),
-  /** Дата регистрации от (ISO) */
-  registeredFrom: z.string().optional(),
-  /** Дата регистрации до (ISO) */
-  registeredTo: z.string().optional(),
-  /** Последняя активность от (ISO) */
-  activeFrom: z.string().optional(),
-  /** Последняя активность до (ISO) */
-  activeTo: z.string().optional(),
-  /** Массив userId выбранных вручную пользователей */
-  userIds: z.array(z.string()).optional(),
-  /** Массив groupId (Telegram chat_id) выбранных групп */
-  groupIds: z.array(z.string()).optional(),
-});
+export { broadcastFiltersSchema };
 
 /** Схема вставки рассылки */
 export const insertBroadcastSchema = z.object({
   /** Идентификатор проекта */
   projectId: z.number().int().positive(),
+  /** Идентификатор родительской кампании (для «большой рассылки») */
+  campaignId: z.number().int().positive().nullable().optional(),
   /** Идентификатор токена бота */
   tokenId: z.number().int().min(0).default(0),
   /** Название рассылки (может быть пустым до нормализации на API) */
@@ -134,5 +125,4 @@ export type BroadcastResult = typeof broadcastResults.$inferSelect;
 /** Тип для вставки результата рассылки */
 export type InsertBroadcastResult = z.infer<typeof insertBroadcastResultSchema>;
 
-/** Тип фильтров аудитории */
-export type BroadcastFilters = z.infer<typeof broadcastFiltersSchema>;
+export type { BroadcastFilters };

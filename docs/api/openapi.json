@@ -52,7 +52,7 @@
     },
     {
       "name": "project-broadcasts",
-      "description": "Рассылки проекта: список, создание, детали, редактирование текста, stop, delete, preview аудитории. Auth: requireProjectAccess. UI: панель Broadcast. Не путать с canvas-нодой broadcast."
+      "description": "Рассылки проекта: список, создание, детали, редактирование текста, stop, delete, preview аудитории, а также «большая рассылка по нескольким ботам» (`/broadcast-campaigns`: список, детали, stop, edit, delete). Auth: requireProjectAccess. UI: панель Broadcast и лента «Диалоги». Не путать с canvas-нодой broadcast."
     },
     {
       "name": "project-dialogs",
@@ -13424,6 +13424,874 @@
         }
       }
     },
+    "/api/projects/{projectId}/broadcast-campaigns": {
+      "get": {
+        "tags": [
+          "project-broadcasts"
+        ],
+        "summary": "Список больших рассылок проекта",
+        "description": "Кампании — «большие рассылки по нескольким ботам» проекта, новые первыми. Одна кампания = одно сообщение, ушедшее параллельно от нескольких ботов; счётчики в карточке — сумма по всем ботам. Обычные рассылки от одного бота сюда не попадают — они в `GET …/broadcasts`.\n\n**Доступ:** `requireProjectAccess` — сессионная cookie или Bearer PAT плюс права на проект (владелец или коллаборатор). Кампания ищется по `campaignId`, но отдаётся только если `campaign.projectId` совпадает с `projectId` из пути — иначе 403, поэтому перебор чужих ID ничего не раскрывает.\n\n**Клиенты Studio:** лента «Диалоги» → строка «Рассылка» (`use-broadcast-campaigns`).\n\n```bash\ncurl -s -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/broadcast-campaigns'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Кампании проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BroadcastCampaignsListResponse"
+                },
+                "example": {
+                  "campaigns": [
+                    {
+                      "id": 3,
+                      "projectId": 42,
+                      "name": "Акция августа",
+                      "messageText": "Привет! Скидка 20%.",
+                      "mediaUrls": [],
+                      "buttons": [],
+                      "buttonsPerRow": 0,
+                      "filters": {
+                        "tags": [
+                          "vip"
+                        ]
+                      },
+                      "tokenIds": [
+                        7,
+                        8
+                      ],
+                      "status": "running",
+                      "totalCount": 240,
+                      "sentCount": 120,
+                      "deliveredCount": 115,
+                      "failedCount": 5,
+                      "createdAt": "2026-08-12T01:48:00.000Z",
+                      "startedAt": "2026-08-12T01:48:01.000Z",
+                      "finishedAt": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный ID проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту или кампания другого проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Кампания не принадлежит этому проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/broadcast-campaigns/{campaignId}": {
+      "delete": {
+        "tags": [
+          "project-broadcasts"
+        ],
+        "summary": "Удалить большую рассылку у всех ботов",
+        "description": "Останавливает активные очереди, удаляет отправленные сообщения в Telegram по каждому боту и саму кампанию. Дочерние рассылки, их результаты и записи `bot_messages` уходят каскадом по `campaign_id`. Токены берутся только из этого проекта.\n\n**Доступ:** `requireProjectAccess` — сессионная cookie или Bearer PAT плюс права на проект (владелец или коллаборатор). Кампания ищется по `campaignId`, но отдаётся только если `campaign.projectId` совпадает с `projectId` из пути — иначе 403, поэтому перебор чужих ID ничего не раскрывает.\n\n**Клиенты Studio:** «Удалить у всех ботов» в пузыре рассылки в «Диалогах» (`use-delete-broadcast-campaign`).\n\n```bash\ncurl -s -X DELETE -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/broadcast-campaigns/3'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID «большой рассылки» (кампании)",
+              "example": "3"
+            },
+            "required": true,
+            "description": "ID кампании рассылки",
+            "example": "3",
+            "name": "campaignId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Кампания удалена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteBroadcastCampaignResponse"
+                },
+                "example": {
+                  "ok": true,
+                  "deleted": 231,
+                  "broadcasts": 2
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта или кампании"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту или кампания другого проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Кампания не принадлежит этому проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Кампания не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Кампания рассылки не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "project-broadcasts"
+        ],
+        "summary": "Детали большой рассылки",
+        "description": "Карточка кампании и её дочерние рассылки — по одной на каждого бота, со своим статусом и счётчиками. Пока кампания идёт, Studio дополняет эти данные WS-событиями `broadcast-progress` (у дочерних событий есть `campaignId`).\n\n**Доступ:** `requireProjectAccess` — сессионная cookie или Bearer PAT плюс права на проект (владелец или коллаборатор). Кампания ищется по `campaignId`, но отдаётся только если `campaign.projectId` совпадает с `projectId` из пути — иначе 403, поэтому перебор чужих ID ничего не раскрывает.\n\n**Клиенты Studio:** экран прогресса мастера и пузырь большой рассылки в «Диалогах» (`use-broadcast-campaign-detail`).\n\n```bash\ncurl -s -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/broadcast-campaigns/3'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID «большой рассылки» (кампании)",
+              "example": "3"
+            },
+            "required": true,
+            "description": "ID кампании рассылки",
+            "example": "3",
+            "name": "campaignId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Кампания и её рассылки по ботам",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BroadcastCampaignDetailResponse"
+                },
+                "example": {
+                  "campaign": {
+                    "id": 3,
+                    "projectId": 42,
+                    "name": "Акция августа",
+                    "messageText": "Привет! Скидка 20%.",
+                    "mediaUrls": [],
+                    "buttons": [],
+                    "buttonsPerRow": 0,
+                    "filters": {
+                      "tags": [
+                        "vip"
+                      ]
+                    },
+                    "tokenIds": [
+                      7,
+                      8
+                    ],
+                    "status": "running",
+                    "totalCount": 240,
+                    "sentCount": 120,
+                    "deliveredCount": 115,
+                    "failedCount": 5,
+                    "createdAt": "2026-08-12T01:48:00.000Z",
+                    "startedAt": "2026-08-12T01:48:01.000Z",
+                    "finishedAt": null
+                  },
+                  "broadcasts": [
+                    {
+                      "id": 15,
+                      "projectId": 42,
+                      "campaignId": 3,
+                      "tokenId": 7,
+                      "name": "Акция августа",
+                      "messageText": "Привет! Скидка 20%.",
+                      "status": "running",
+                      "totalCount": 120,
+                      "sentCount": 60,
+                      "deliveredCount": 58,
+                      "failedCount": 2,
+                      "mediaUrls": [],
+                      "buttons": [],
+                      "buttonsPerRow": 0,
+                      "filters": {
+                        "tags": [
+                          "vip"
+                        ]
+                      },
+                      "createdAt": "2026-08-12T01:48:00.000Z",
+                      "startedAt": "2026-08-12T01:48:01.000Z",
+                      "finishedAt": null
+                    },
+                    {
+                      "id": 16,
+                      "projectId": 42,
+                      "campaignId": 3,
+                      "tokenId": 8,
+                      "name": "Акция августа",
+                      "messageText": "Привет! Скидка 20%.",
+                      "status": "running",
+                      "totalCount": 120,
+                      "sentCount": 60,
+                      "deliveredCount": 57,
+                      "failedCount": 3,
+                      "mediaUrls": [],
+                      "buttons": [],
+                      "buttonsPerRow": 0,
+                      "filters": {
+                        "tags": [
+                          "vip"
+                        ]
+                      },
+                      "createdAt": "2026-08-12T01:48:00.000Z",
+                      "startedAt": "2026-08-12T01:48:01.000Z",
+                      "finishedAt": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта или кампании"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту или кампания другого проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Кампания не принадлежит этому проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Кампания не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Кампания рассылки не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "project-broadcasts"
+        ],
+        "summary": "Изменить текст большой рассылки у всех ботов",
+        "description": "Обновляет `messageText` кампании и правит уже отправленные сообщения через `editMessageText` во всех ботах кампании (throttle ~25/с на бота). Текст 1…4096 после trim. В ответе — сводка и разбивка по ботам.\n\n**Доступ:** `requireProjectAccess` — сессионная cookie или Bearer PAT плюс права на проект (владелец или коллаборатор). Кампания ищется по `campaignId`, но отдаётся только если `campaign.projectId` совпадает с `projectId` из пути — иначе 403, поэтому перебор чужих ID ничего не раскрывает.\n\n**Клиенты Studio:** правка текста в пузыре большой рассылки в «Диалогах» (`use-edit-broadcast-campaign`).\n\n```bash\ncurl -s -X PUT -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Обновлённый текст\"}' \\\n  'http://localhost:5000/api/projects/42/broadcast-campaigns/3'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID «большой рассылки» (кампании)",
+              "example": "3"
+            },
+            "required": true,
+            "description": "ID кампании рассылки",
+            "example": "3",
+            "name": "campaignId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditBroadcastCampaignRequest"
+              },
+              "example": {
+                "messageText": "Обновлённый текст рассылки"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сколько сообщений отредактировано по всем ботам",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EditBroadcastCampaignResponse"
+                },
+                "example": {
+                  "ok": true,
+                  "edited": 221,
+                  "failed": 9,
+                  "perBot": [
+                    {
+                      "broadcastId": 15,
+                      "tokenId": 7,
+                      "edited": 113,
+                      "failed": 5
+                    },
+                    {
+                      "broadcastId": 16,
+                      "tokenId": 8,
+                      "edited": 108,
+                      "failed": 4
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Валидация тела запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "example": {
+                  "message": "Неверное тело запроса",
+                  "errors": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту или кампания другого проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Кампания не принадлежит этому проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Кампания не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Кампания рассылки не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{projectId}/broadcast-campaigns/{campaignId}/stop": {
+      "post": {
+        "tags": [
+          "project-broadcasts"
+        ],
+        "summary": "Остановить большую рассылку у всех ботов",
+        "description": "Выставляет флаг остановки всем дочерним рассылкам со статусом `running` и пересчитывает агрегаты кампании. Очередь читает флаг между батчами, поэтому уже начатый батч может дойти до конца. Уже отправленные сообщения остаются у получателей — удалить их можно только через DELETE.\n\n**Доступ:** `requireProjectAccess` — сессионная cookie или Bearer PAT плюс права на проект (владелец или коллаборатор). Кампания ищется по `campaignId`, но отдаётся только если `campaign.projectId` совпадает с `projectId` из пути — иначе 403, поэтому перебор чужих ID ничего не раскрывает.\n\n**Клиенты Studio:** кнопка «⏸ Остановить у всех ботов» в мастере и в пузыре рассылки в «Диалогах» (`use-stop-broadcast-campaign`).\n\n```bash\ncurl -s -X POST -b cookies.txt \\\n  'http://localhost:5000/api/projects/42/broadcast-campaigns/3/stop'\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID «большой рассылки» (кампании)",
+              "example": "3"
+            },
+            "required": true,
+            "description": "ID кампании рассылки",
+            "example": "3",
+            "name": "campaignId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Кампания и ID остановленных рассылок",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StopBroadcastCampaignResponse"
+                },
+                "example": {
+                  "campaign": {
+                    "id": 3,
+                    "projectId": 42,
+                    "name": "Акция августа",
+                    "messageText": "Привет! Скидка 20%.",
+                    "mediaUrls": [],
+                    "buttons": [],
+                    "buttonsPerRow": 0,
+                    "filters": {
+                      "tags": [
+                        "vip"
+                      ]
+                    },
+                    "tokenIds": [
+                      7,
+                      8
+                    ],
+                    "status": "stopped",
+                    "totalCount": 240,
+                    "sentCount": 120,
+                    "deliveredCount": 115,
+                    "failedCount": 5,
+                    "createdAt": "2026-08-12T01:48:00.000Z",
+                    "startedAt": "2026-08-12T01:48:01.000Z",
+                    "finishedAt": "2026-08-12T01:50:00.000Z"
+                  },
+                  "stopped": [
+                    15,
+                    16
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта или кампании"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session / PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту или кампания другого проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Кампания не принадлежит этому проекту"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Кампания не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Кампания рассылки не найдена"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Внутренняя ошибка сервера"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/projects/{projectId}/broadcasts": {
       "get": {
         "tags": [
@@ -13608,8 +14476,8 @@
         "tags": [
           "project-broadcasts"
         ],
-        "summary": "Создать и запустить рассылку",
-        "description": "Создаёт рассылку со статусом `running` и запускает очередь отправки. `tokenId` — query или body; иначе default токен. Текст ≤4096, media ≤10, buttons ≤100.\n\n**Клиент:** `use-create-broadcast`.\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"name\":\"Акция\",\"messageText\":\"Привет!\",\"filters\":{}}' \\\n  'http://localhost:5000/api/projects/42/broadcasts?tokenId=7'\n```",
+        "summary": "Создать и запустить рассылку (один бот или несколько)",
+        "description": "Создаёт рассылку со статусом `running` и запускает очередь отправки. Текст ≤4096, media ≤10, buttons ≤100. `name` необязательно (пустое → дата + начало текста сообщения).\n\n**Выбор ботов.** `tokenIds` (1…100 ID токенов проекта) задаёт «большую рассылку по нескольким ботам»: создаётся кампания, на каждого бота — своя дочерняя рассылка, очереди стартуют параллельно, ответ `{ campaignId, broadcastIds }`. Один элемент в `tokenIds` или обычный `tokenId` (query/body) — рассылка от одного бота, ответ `{ broadcastId }`. Без обоих полей берётся default-токен проекта.\n\n**Безопасность:** каждый ID из `tokenIds` проверяется на принадлежность проекту; чужой или несуществующий токен → 400 «Токены не принадлежат этому проекту: …». Группы (`filters.groupIds`) имеют смысл только при одном боте.\n\n**Клиенты Studio:** мастер «Новая рассылка» (`use-create-broadcast`).\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"messageText\":\"Привет!\",\"tokenIds\":[7,8],\"filters\":{}}' \\\n  'http://localhost:5000/api/projects/42/broadcasts'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -13674,16 +14542,40 @@
               "schema": {
                 "$ref": "#/components/schemas/CreateBroadcastRequest"
               },
-              "example": {
-                "name": "Акция августа",
-                "messageText": "Привет! Скидка 20%.",
-                "mediaUrls": [],
-                "buttons": [],
-                "buttonsPerRow": 0,
-                "filters": {
-                  "tags": [
-                    "vip"
-                  ]
+              "examples": {
+                "multiBot": {
+                  "summary": "Большая рассылка по нескольким ботам",
+                  "value": {
+                    "name": "Акция августа",
+                    "messageText": "Привет! Скидка 20%.",
+                    "mediaUrls": [],
+                    "buttons": [],
+                    "buttonsPerRow": 0,
+                    "filters": {
+                      "tags": [
+                        "vip"
+                      ]
+                    },
+                    "tokenIds": [
+                      7,
+                      8
+                    ]
+                  }
+                },
+                "singleBot": {
+                  "summary": "Один бот (default-токен проекта)",
+                  "value": {
+                    "name": "Акция августа",
+                    "messageText": "Привет! Скидка 20%.",
+                    "mediaUrls": [],
+                    "buttons": [],
+                    "buttonsPerRow": 0,
+                    "filters": {
+                      "tags": [
+                        "vip"
+                      ]
+                    }
+                  }
                 }
               }
             }
@@ -13695,24 +14587,50 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateBroadcastResponse"
+                  "$ref": "#/components/schemas/CreateBroadcastResult"
                 },
-                "example": {
-                  "broadcastId": 15
+                "examples": {
+                  "multiBot": {
+                    "summary": "Большая рассылка: кампания и дочерние рассылки",
+                    "value": {
+                      "campaignId": 3,
+                      "broadcastIds": [
+                        15,
+                        16
+                      ]
+                    }
+                  },
+                  "singleBot": {
+                    "summary": "Один бот",
+                    "value": {
+                      "broadcastId": 15
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Валидация / нет токена",
+            "description": "Валидация, нет токена или чужой tokenId",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationError"
                 },
-                "example": {
-                  "message": "Неверное тело запроса",
-                  "errors": []
+                "examples": {
+                  "validation": {
+                    "summary": "Тело не прошло валидацию",
+                    "value": {
+                      "message": "Неверное тело запроса",
+                      "errors": []
+                    }
+                  },
+                  "foreignToken": {
+                    "summary": "tokenIds содержит токен другого проекта",
+                    "value": {
+                      "message": "Токены не принадлежат этому проекту: 91"
+                    }
+                  }
                 }
               }
             }
@@ -14420,7 +15338,7 @@
           "project-broadcasts"
         ],
         "summary": "Предпросмотр аудитории рассылки",
-        "description": "Считает получателей по `filters` (+ до 3 примеров). `tokenId` — query/body. Не создаёт рассылку.\n\n**Клиент:** `use-audience-preview`.\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"filters\":{\"tags\":[\"vip\"]}}' \\\n  'http://localhost:5000/api/projects/42/broadcasts/preview-audience?tokenId=7'\n```",
+        "description": "Считает получателей по `filters` (+ до 3 примеров). Не создаёт рассылку.\n\n**Один бот:** `tokenId` в query/body (или default-токен) — `count`, `perBot` из одного элемента, `overlapEstimate: 0`.\n\n**Большая рассылка по нескольким ботам:** `tokenIds` — аудитория считается по каждому боту. `count`/`total` — сколько сообщений уйдёт всего (сумма с дублями), `uniqueCount` — уникальных людей, `overlapEstimate` — сколько человек получат сообщение более чем от одного бота (Studio показывает это предупреждением в мастере).\n\n**Безопасность:** токены из `tokenIds`, не принадлежащие проекту, → 400.\n\n**Клиенты Studio:** шаги «Аудитория» и «Подтверждение» мастера (`use-audience-preview`).\n\n```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n  -d '{\"filters\":{\"tags\":[\"vip\"]},\"tokenIds\":[7,8]}' \\\n  'http://localhost:5000/api/projects/42/broadcasts/preview-audience'\n```",
         "security": [
           {
             "cookieAuth": []
@@ -14485,11 +15403,30 @@
               "schema": {
                 "$ref": "#/components/schemas/PreviewAudienceRequest"
               },
-              "example": {
-                "filters": {
-                  "tags": [
-                    "vip"
-                  ]
+              "examples": {
+                "multiBot": {
+                  "summary": "Несколько ботов",
+                  "value": {
+                    "filters": {
+                      "tags": [
+                        "vip"
+                      ]
+                    },
+                    "tokenIds": [
+                      7,
+                      8
+                    ]
+                  }
+                },
+                "singleBot": {
+                  "summary": "Один бот",
+                  "value": {
+                    "filters": {
+                      "tags": [
+                        "vip"
+                      ]
+                    }
+                  }
                 }
               }
             }
@@ -14497,28 +15434,68 @@
         },
         "responses": {
           "200": {
-            "description": "Количество и sample",
+            "description": "Количество, разбивка по ботам и sample",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PreviewAudienceResponse"
                 },
-                "example": {
-                  "count": 42,
-                  "sample": [
-                    {
-                      "userId": "123456789",
-                      "userName": "ivan",
-                      "firstName": "Иван",
-                      "lastName": "Петров"
+                "examples": {
+                  "multiBot": {
+                    "summary": "Несколько ботов с пересечением аудиторий",
+                    "value": {
+                      "count": 90,
+                      "sample": [
+                        {
+                          "userId": "123456789",
+                          "userName": "ivan",
+                          "firstName": "Иван",
+                          "lastName": "Петров"
+                        }
+                      ],
+                      "total": 90,
+                      "uniqueCount": 86,
+                      "perBot": [
+                        {
+                          "tokenId": 7,
+                          "count": 42
+                        },
+                        {
+                          "tokenId": 8,
+                          "count": 48
+                        }
+                      ],
+                      "overlapEstimate": 4
                     }
-                  ]
+                  },
+                  "singleBot": {
+                    "summary": "Один бот",
+                    "value": {
+                      "count": 42,
+                      "sample": [
+                        {
+                          "userId": "123456789",
+                          "userName": "ivan",
+                          "firstName": "Иван",
+                          "lastName": "Петров"
+                        }
+                      ],
+                      "total": 42,
+                      "perBot": [
+                        {
+                          "tokenId": 7,
+                          "count": 42
+                        }
+                      ],
+                      "overlapEstimate": 0
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Валидация / нет токена",
+            "description": "Валидация, нет токена или чужой tokenId",
             "content": {
               "application/json": {
                 "schema": {
@@ -30037,6 +31014,12 @@
             "type": "integer",
             "example": 42
           },
+          "campaignId": {
+            "type": "integer",
+            "nullable": true,
+            "description": "ID «большой рассылки», если запись — дочерняя рассылка одного бота. `null` — обычная рассылка от одного бота.",
+            "example": null
+          },
           "tokenId": {
             "type": "integer",
             "example": 7
@@ -30191,13 +31174,48 @@
           "broadcastId"
         ]
       },
+      "CreateBroadcastCampaignResponse": {
+        "type": "object",
+        "properties": {
+          "campaignId": {
+            "type": "integer",
+            "description": "ID созданной кампании",
+            "example": 3
+          },
+          "broadcastIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "ID дочерних рассылок в порядке переданных `tokenIds`",
+            "example": [
+              15,
+              16
+            ]
+          }
+        },
+        "required": [
+          "campaignId",
+          "broadcastIds"
+        ]
+      },
+      "CreateBroadcastResult": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/CreateBroadcastResponse"
+          },
+          {
+            "$ref": "#/components/schemas/CreateBroadcastCampaignResponse"
+          }
+        ]
+      },
       "CreateBroadcastRequest": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "minLength": 1,
             "maxLength": 200,
+            "description": "Необязательно. Пустое → «12 авг, 01:48 · начало текста…»",
             "example": "Акция августа"
           },
           "messageText": {
@@ -30236,11 +31254,42 @@
             "minimum": 0,
             "exclusiveMinimum": true,
             "example": 7
+          },
+          "tokenIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "ID токенов ботов проекта для «большой рассылки по нескольким ботам». Приоритетнее `tokenId`. Все ID должны принадлежать этому проекту.",
+            "example": [
+              7,
+              8
+            ]
           }
         },
         "required": [
-          "name",
           "messageText"
+        ]
+      },
+      "AudiencePerBot": {
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "type": "integer",
+            "example": 7
+          },
+          "count": {
+            "type": "integer",
+            "example": 42
+          }
+        },
+        "required": [
+          "tokenId",
+          "count"
         ]
       },
       "PreviewAudienceResponse": {
@@ -30248,6 +31297,7 @@
         "properties": {
           "count": {
             "type": "integer",
+            "description": "Сколько сообщений уйдёт всего (сумма по выбранным ботам)",
             "example": 42
           },
           "sample": {
@@ -30256,11 +31306,36 @@
               "nullable": true
             },
             "description": "До 3 примеров пользователей аудитории"
+          },
+          "total": {
+            "type": "integer",
+            "description": "То же, что `count`",
+            "example": 42
+          },
+          "uniqueCount": {
+            "type": "integer",
+            "description": "Уникальных людей среди всех ботов (только для нескольких ботов)",
+            "example": 38
+          },
+          "perBot": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AudiencePerBot"
+            },
+            "description": "Разбивка аудитории по каждому выбранному боту"
+          },
+          "overlapEstimate": {
+            "type": "integer",
+            "description": "Сколько людей получат сообщение более чем от одного бота",
+            "example": 4
           }
         },
         "required": [
           "count",
-          "sample"
+          "sample",
+          "total",
+          "perBot",
+          "overlapEstimate"
         ]
       },
       "PreviewAudienceRequest": {
@@ -30274,6 +31349,21 @@
             "minimum": 0,
             "exclusiveMinimum": true,
             "example": 7
+          },
+          "tokenIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "ID токенов ботов проекта для «большой рассылки по нескольким ботам». Приоритетнее `tokenId`. Все ID должны принадлежать этому проекту.",
+            "example": [
+              7,
+              8
+            ]
           }
         }
       },
@@ -30419,6 +31509,300 @@
         "required": [
           "ok",
           "deleted"
+        ]
+      },
+      "BroadcastCampaignItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 3
+          },
+          "projectId": {
+            "type": "integer",
+            "example": 42
+          },
+          "name": {
+            "type": "string",
+            "example": "Акция августа"
+          },
+          "messageText": {
+            "type": "string",
+            "example": "Привет! Скидка 20%."
+          },
+          "mediaUrls": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "buttons": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "nullable": true
+            }
+          },
+          "buttonsPerRow": {
+            "type": "integer",
+            "nullable": true
+          },
+          "filters": {
+            "$ref": "#/components/schemas/BroadcastFilters"
+          },
+          "tokenIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Боты проекта, по которым идёт «большая рассылка»",
+            "example": [
+              7,
+              8
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "stopped",
+              "done",
+              "failed",
+              "partial"
+            ],
+            "description": "Агрегат по ботам: есть running → `running`; все одинаковые → этот статус; микс done/stopped → `stopped`; любой микс с failed → `partial`.",
+            "example": "running"
+          },
+          "totalCount": {
+            "type": "integer",
+            "description": "Получателей по всем ботам",
+            "example": 240
+          },
+          "sentCount": {
+            "type": "integer",
+            "example": 240
+          },
+          "deliveredCount": {
+            "type": "integer",
+            "example": 231
+          },
+          "failedCount": {
+            "type": "integer",
+            "example": 9
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "startedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "name",
+          "messageText",
+          "tokenIds",
+          "status",
+          "totalCount",
+          "sentCount",
+          "deliveredCount",
+          "failedCount"
+        ]
+      },
+      "BroadcastCampaignsListResponse": {
+        "type": "object",
+        "properties": {
+          "campaigns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BroadcastCampaignItem"
+            },
+            "description": "Кампании проекта, новые первыми"
+          }
+        },
+        "required": [
+          "campaigns"
+        ]
+      },
+      "BroadcastCampaignDetailResponse": {
+        "type": "object",
+        "properties": {
+          "campaign": {
+            "$ref": "#/components/schemas/BroadcastCampaignItem"
+          },
+          "broadcasts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BroadcastItem"
+            },
+            "description": "Дочерние рассылки — по одной на каждого бота кампании"
+          }
+        },
+        "required": [
+          "campaign",
+          "broadcasts"
+        ]
+      },
+      "StopBroadcastCampaignResponse": {
+        "type": "object",
+        "properties": {
+          "campaign": {
+            "$ref": "#/components/schemas/BroadcastCampaignItem"
+          },
+          "stopped": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "ID дочерних рассылок, которым выставлен флаг остановки",
+            "example": [
+              15,
+              16
+            ]
+          }
+        },
+        "required": [
+          "campaign",
+          "stopped"
+        ]
+      },
+      "CampaignEditPerBot": {
+        "type": "object",
+        "properties": {
+          "broadcastId": {
+            "type": "integer",
+            "example": 15
+          },
+          "tokenId": {
+            "type": "integer",
+            "example": 7
+          },
+          "edited": {
+            "type": "integer",
+            "example": 110
+          },
+          "failed": {
+            "type": "integer",
+            "example": 5
+          }
+        },
+        "required": [
+          "broadcastId",
+          "tokenId",
+          "edited",
+          "failed"
+        ]
+      },
+      "EditBroadcastCampaignResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          },
+          "edited": {
+            "type": "integer",
+            "description": "Отредактировано по всем ботам",
+            "example": 221
+          },
+          "failed": {
+            "type": "integer",
+            "example": 9
+          },
+          "perBot": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CampaignEditPerBot"
+            },
+            "description": "Результат правки по каждому боту кампании"
+          }
+        },
+        "required": [
+          "ok",
+          "edited",
+          "failed",
+          "perBot"
+        ]
+      },
+      "EditBroadcastCampaignRequest": {
+        "type": "object",
+        "properties": {
+          "messageText": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "Новый HTML-текст для всех ботов кампании (лимит Telegram 4096)",
+            "example": "Обновлённый текст рассылки"
+          }
+        },
+        "required": [
+          "messageText"
+        ]
+      },
+      "DeleteBroadcastCampaignResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "example": true
+          },
+          "deleted": {
+            "type": "integer",
+            "description": "Сколько сообщений пытались удалить в Telegram по всем ботам",
+            "example": 231
+          },
+          "broadcasts": {
+            "type": "integer",
+            "description": "Сколько дочерних рассылок удалено вместе с кампанией",
+            "example": 2
+          }
+        },
+        "required": [
+          "ok",
+          "deleted",
+          "broadcasts"
         ]
       }
     },

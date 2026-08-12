@@ -19,6 +19,7 @@ import {
   type Broadcast,
   type BroadcastResult,
   type BroadcastFilters,
+  type BroadcastCampaign,
   type BotEnvVariable,
   type BotTable,
   type BotTableColumn,
@@ -52,6 +53,8 @@ import type {
   StorageBroadcastInput,
   StorageBroadcastUpdate,
   StorageBroadcastResultInput,
+  StorageBroadcastCampaignInput,
+  StorageBroadcastCampaignUpdate,
   StorageBotEnvVariableInput,
   StorageBotEnvVariableUpdate,
   StorageBotTableInput,
@@ -868,6 +871,51 @@ export interface IStorage {
    * @returns Массив пользователей
    */
   getUsersForBroadcast(projectId: number, tokenId: number, filters: BroadcastFilters): Promise<any[]>;
+
+  /**
+   * Получить дочерние рассылки кампании
+   * @param campaignId - ID кампании
+   * @returns Массив дочерних рассылок
+   */
+  getBroadcastsByCampaignId(campaignId: number): Promise<Broadcast[]>;
+
+  // Кампании рассылок («большая рассылка»)
+
+  /**
+   * Создать кампанию рассылки
+   * @param data - Данные кампании
+   * @returns Созданная запись кампании
+   */
+  createBroadcastCampaign(data: StorageBroadcastCampaignInput): Promise<BroadcastCampaign>;
+
+  /**
+   * Получить кампанию рассылки по ID
+   * @param id - ID кампании
+   * @returns Кампания или undefined
+   */
+  getBroadcastCampaignById(id: number): Promise<BroadcastCampaign | undefined>;
+
+  /**
+   * Получить список кампаний рассылок проекта
+   * @param projectId - ID проекта
+   * @returns Массив кампаний (новые первыми)
+   */
+  getBroadcastCampaigns(projectId: number): Promise<BroadcastCampaign[]>;
+
+  /**
+   * Обновить кампанию рассылки (статус, счётчики, текст)
+   * @param id - ID кампании
+   * @param data - Данные для обновления
+   * @returns Обновлённая кампания или undefined
+   */
+  updateBroadcastCampaign(id: number, data: StorageBroadcastCampaignUpdate): Promise<BroadcastCampaign | undefined>;
+
+  /**
+   * Удалить кампанию рассылки вместе с дочерними рассылками (каскад)
+   * @param id - ID кампании
+   * @returns true, если запись была удалена
+   */
+  deleteBroadcastCampaign(id: number): Promise<boolean>;
 
   // Переменные окружения бота
 

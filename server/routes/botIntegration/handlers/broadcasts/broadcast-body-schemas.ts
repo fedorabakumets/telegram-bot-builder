@@ -18,6 +18,15 @@ const MAX_INLINE_BUTTONS = 100;
 /** Максимум кнопок в одном ряду */
 const MAX_BUTTONS_PER_ROW = 8;
 
+/** Максимум ботов в одной «большой рассылке» */
+const MAX_CAMPAIGN_TOKENS = 100;
+
+/** Список выбранных ботов для «большой рассылки» */
+const tokenIdsSchema = z
+  .array(z.number().int().positive())
+  .min(1, "Выберите хотя бы одного бота")
+  .max(MAX_CAMPAIGN_TOKENS, `Не более ${MAX_CAMPAIGN_TOKENS} ботов в одной рассылке`);
+
 /**
  * URL медиа: http(s), относительный путь Studio или JSON file_id.
  * Отсекает javascript:/data:/file: и прочие опасные схемы.
@@ -62,16 +71,30 @@ export const createBroadcastBodySchema = z.object({
   buttonsPerRow: z.number().int().min(0).max(MAX_BUTTONS_PER_ROW).default(0),
   /** Фильтры аудитории */
   filters: broadcastFiltersSafeSchema.default({}),
-  /** ID токена бота (дублирует query) */
+  /** ID токена бота (дублирует query, оставлен для обратной совместимости) */
   tokenId: z.number().int().positive().optional(),
+  /** ID выбранных ботов «большой рассылки» (приоритетнее tokenId) */
+  tokenIds: tokenIdsSchema.optional(),
 });
 
 /** Тело POST …/preview-audience */
 export const previewAudienceBodySchema = z.object({
   /** Фильтры аудитории */
   filters: broadcastFiltersSafeSchema.default({}),
-  /** ID токена бота */
+  /** ID токена бота (обратная совместимость) */
   tokenId: z.number().int().positive().optional(),
+  /** ID выбранных ботов для оценки суммарной аудитории */
+  tokenIds: tokenIdsSchema.optional(),
+});
+
+/** Тело PUT …/broadcast-campaigns/:campaignId */
+export const editBroadcastCampaignBodySchema = z.object({
+  /** Новый HTML-текст (лимит Telegram) */
+  messageText: z
+    .string()
+    .trim()
+    .min(1, "Текст сообщения обязателен")
+    .max(BROADCAST_MAX_TEXT_LENGTH, `Текст не длиннее ${BROADCAST_MAX_TEXT_LENGTH} символов`),
 });
 
 /** Тело PUT …/broadcasts/:broadcastId */

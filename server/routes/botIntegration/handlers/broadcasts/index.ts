@@ -1,5 +1,5 @@
 /**
- * @fileoverview Реэкспорт хендлеров рассылок
+ * @fileoverview Реэкспорт хендлеров рассылок и кампаний рассылок
  * @module botIntegration/handlers/broadcasts
  */
 
@@ -10,3 +10,9 @@ export { stopBroadcastHandler } from "./stopBroadcastHandler";
 export { previewAudienceHandler } from "./previewAudienceHandler";
 export { deleteBroadcastHandler } from "./deleteBroadcastHandler";
 export { editBroadcastHandler } from "./editBroadcastHandler";
+
+export { getBroadcastCampaignHandler } from "./getBroadcastCampaignHandler";
+export { listBroadcastCampaignsHandler } from "./listBroadcastCampaignsHandler";
+export { stopBroadcastCampaignHandler } from "./stopBroadcastCampaignHandler";
+export { editBroadcastCampaignHandler } from "./editBroadcastCampaignHandler";
+export { deleteBroadcastCampaignHandler } from "./deleteBroadcastCampaignHandler";

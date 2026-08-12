@@ -747,6 +747,44 @@ export async function initializeDatabaseTables() {
       console.log('⚠️ Ошибка при миграции buttons_per_row в broadcasts:', error);
     }
 
+    // Миграция: кампании рассылок («большая рассылка» по нескольким ботам)
+    try {
+      await executeWithRetry(db, sql`
+        CREATE TABLE IF NOT EXISTS broadcast_campaigns (
+          id SERIAL PRIMARY KEY,
+          project_id INTEGER NOT NULL REFERENCES bot_projects(id) ON DELETE CASCADE,
+          name TEXT NOT NULL,
+          message_text TEXT NOT NULL,
+          media_urls JSON DEFAULT '[]',
+          buttons JSON DEFAULT '[]',
+          buttons_per_row INTEGER DEFAULT 0,
+          filters JSONB NOT NULL DEFAULT '{}',
+          token_ids JSONB NOT NULL DEFAULT '[]',
+          status TEXT NOT NULL DEFAULT 'pending',
+          total_count INTEGER NOT NULL DEFAULT 0,
+          sent_count INTEGER NOT NULL DEFAULT 0,
+          delivered_count INTEGER NOT NULL DEFAULT 0,
+          failed_count INTEGER NOT NULL DEFAULT 0,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          started_at TIMESTAMP WITH TIME ZONE,
+          finished_at TIMESTAMP WITH TIME ZONE
+        );
+      `, "Миграция: создание таблицы broadcast_campaigns");
+      await executeWithRetry(db, sql`
+        CREATE INDEX IF NOT EXISTS broadcast_campaigns_project_idx
+          ON broadcast_campaigns (project_id, created_at DESC);
+      `, "Миграция: индекс broadcast_campaigns_project_idx");
+      await executeWithRetry(db, sql`
+        ALTER TABLE broadcasts
+          ADD COLUMN IF NOT EXISTS campaign_id INTEGER REFERENCES broadcast_campaigns(id) ON DELETE CASCADE;
+      `, "Миграция: добавление campaign_id в broadcasts");
+      await executeWithRetry(db, sql`
+        CREATE INDEX IF NOT EXISTS broadcasts_campaign_idx ON broadcasts (campaign_id);
+      `, "Миграция: индекс broadcasts_campaign_idx");
+    } catch (error) {
+      console.log('⚠️ Ошибка при миграции broadcast_campaigns:', error);
+    }
+
     console.log('✅ Таблицы базы данных успешно инициализированы!');
     return true;
   } catch (error) {

@@ -2,7 +2,8 @@
 
 ## broadcasts
 
-Таблица рассылок — хранит задания на массовую отправку сообщений
+Таблица рассылок — хранит задания на массовую отправку сообщений.  
+Рассылка может быть дочерней записью кампании («большой рассылки») — тогда заполнен campaignId
 
 ### Columns
 
@@ -10,6 +11,7 @@
 |------|------|---------|----------|----------|---------|---------|
 | **id** | serial | - | NO | [broadcast_results.broadcast_id](./broadcast_results.md) | - | Уникальный идентификатор рассылки |
 | project_id | integer | - | NO | - | [bot_projects.id](./bot_projects.md) | Идентификатор проекта |
+| campaign_id | integer | - | YES | - | [broadcast_campaigns.id](./broadcast_campaigns.md) | Идентификатор родительской кампании (null — одиночная рассылка) |
 | token_id | integer | `0` | NO | - | - | Идентификатор токена бота |
 | name | text | - | NO | - | - | Название рассылки |
 | message_text | text | - | NO | - | - | HTML-текст сообщения рассылки |
@@ -31,6 +33,7 @@
 | Name | Type | Definition |
 |------|------|------------|
 | fk_project_id_bot_projects | FOREIGN KEY | (project_id) → bot_projects(id) |
+| fk_campaign_id_broadcast_campaigns | FOREIGN KEY | (campaign_id) → broadcast_campaigns(id) |
 
 ### Relations
 
@@ -38,3 +41,4 @@
 |--------|-------|------|
 | **[broadcasts.id](./broadcasts.md)** | [broadcast_results.broadcast_id](./broadcast_results.md) | Many to One |
 | [bot_projects.id](./bot_projects.md) | **[broadcasts.project_id](./broadcasts.md)** | Many to One |
+| [broadcast_campaigns.id](./broadcast_campaigns.md) | **[broadcasts.campaign_id](./broadcasts.md)** | Many to One |

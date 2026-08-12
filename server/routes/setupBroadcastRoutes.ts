@@ -1,5 +1,5 @@
 /**
- * @fileoverview Маршруты рассылок проекта
+ * @fileoverview Маршруты рассылок и кампаний рассылок проекта
  * @module setupBroadcastRoutes
  */
 
@@ -13,10 +13,15 @@ import {
   previewAudienceHandler,
   deleteBroadcastHandler,
   editBroadcastHandler,
+  getBroadcastCampaignHandler,
+  listBroadcastCampaignsHandler,
+  stopBroadcastCampaignHandler,
+  editBroadcastCampaignHandler,
+  deleteBroadcastCampaignHandler,
 } from "./botIntegration/handlers/broadcasts";
 
 /**
- * Регистрирует CRUD и preview рассылок.
+ * Регистрирует CRUD и preview рассылок, а также маршруты кампаний («большая рассылка»).
  * @param app - Экземпляр Express
  * @returns void
  */
@@ -47,5 +52,32 @@ export function setupBroadcastRoutes(app: Express): void {
     "/api/projects/:projectId/broadcasts/:broadcastId",
     requireProjectAccess,
     deleteBroadcastHandler,
+  );
+
+  // Кампании рассылок — «большая рассылка» по нескольким ботам проекта
+  app.get(
+    "/api/projects/:projectId/broadcast-campaigns",
+    requireProjectAccess,
+    listBroadcastCampaignsHandler,
+  );
+  app.get(
+    "/api/projects/:projectId/broadcast-campaigns/:campaignId",
+    requireProjectAccess,
+    getBroadcastCampaignHandler,
+  );
+  app.post(
+    "/api/projects/:projectId/broadcast-campaigns/:campaignId/stop",
+    requireProjectAccess,
+    stopBroadcastCampaignHandler,
+  );
+  app.put(
+    "/api/projects/:projectId/broadcast-campaigns/:campaignId",
+    requireProjectAccess,
+    editBroadcastCampaignHandler,
+  );
+  app.delete(
+    "/api/projects/:projectId/broadcast-campaigns/:campaignId",
+    requireProjectAccess,
+    deleteBroadcastCampaignHandler,
   );
 }

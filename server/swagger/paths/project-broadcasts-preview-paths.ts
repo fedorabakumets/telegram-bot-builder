@@ -14,6 +14,8 @@ import {
 } from "../schemas/project-broadcasts";
 import {
   PREVIEW_AUDIENCE_BODY_EXAMPLE,
+  PREVIEW_AUDIENCE_MULTI_BODY_EXAMPLE,
+  PREVIEW_AUDIENCE_MULTI_RESPONSE_EXAMPLE,
   PREVIEW_AUDIENCE_RESPONSE_EXAMPLE,
   PROJECT_BROADCASTS_FORBIDDEN_EXAMPLE,
 } from "./project-broadcasts-examples";
@@ -34,12 +36,18 @@ export function registerProjectBroadcastsPreviewPaths(
     tags: ["project-broadcasts"],
     summary: "Предпросмотр аудитории рассылки",
     description:
-      "Считает получателей по `filters` (+ до 3 примеров). `tokenId` — query/body. " +
-      "Не создаёт рассылку.\n\n" +
-      "**Клиент:** `use-audience-preview`.\n\n" +
+      "Считает получателей по `filters` (+ до 3 примеров). Не создаёт рассылку.\n\n" +
+      "**Один бот:** `tokenId` в query/body (или default-токен) — `count`, `perBot` из одного " +
+      "элемента, `overlapEstimate: 0`.\n\n" +
+      "**Большая рассылка по нескольким ботам:** `tokenIds` — аудитория считается по каждому боту. " +
+      "`count`/`total` — сколько сообщений уйдёт всего (сумма с дублями), `uniqueCount` — " +
+      "уникальных людей, `overlapEstimate` — сколько человек получат сообщение более чем " +
+      "от одного бота (Studio показывает это предупреждением в мастере).\n\n" +
+      "**Безопасность:** токены из `tokenIds`, не принадлежащие проекту, → 400.\n\n" +
+      "**Клиенты Studio:** шаги «Аудитория» и «Подтверждение» мастера (`use-audience-preview`).\n\n" +
       "```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n" +
-      "  -d '{\"filters\":{\"tags\":[\"vip\"]}}' \\\n" +
-      "  'http://localhost:5000/api/projects/42/broadcasts/preview-audience?tokenId=7'\n```",
+      "  -d '{\"filters\":{\"tags\":[\"vip\"]},\"tokenIds\":[7,8]}' \\\n" +
+      "  'http://localhost:5000/api/projects/42/broadcasts/preview-audience'\n```",
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
@@ -50,23 +58,35 @@ export function registerProjectBroadcastsPreviewPaths(
         content: {
           "application/json": {
             schema: PreviewAudienceRequestSchema,
-            example: PREVIEW_AUDIENCE_BODY_EXAMPLE,
+            examples: {
+              multiBot: {
+                summary: "Несколько ботов",
+                value: PREVIEW_AUDIENCE_MULTI_BODY_EXAMPLE,
+              },
+              singleBot: { summary: "Один бот", value: PREVIEW_AUDIENCE_BODY_EXAMPLE },
+            },
           },
         },
       },
     },
     responses: {
       200: {
-        description: "Количество и sample",
+        description: "Количество, разбивка по ботам и sample",
         content: {
           "application/json": {
             schema: PreviewAudienceResponseSchema,
-            example: PREVIEW_AUDIENCE_RESPONSE_EXAMPLE,
+            examples: {
+              multiBot: {
+                summary: "Несколько ботов с пересечением аудиторий",
+                value: PREVIEW_AUDIENCE_MULTI_RESPONSE_EXAMPLE,
+              },
+              singleBot: { summary: "Один бот", value: PREVIEW_AUDIENCE_RESPONSE_EXAMPLE },
+            },
           },
         },
       },
       400: {
-        description: "Валидация / нет токена",
+        description: "Валидация, нет токена или чужой tokenId",
         content: {
           "application/json": {
             schema: ValidationErrorSchema,

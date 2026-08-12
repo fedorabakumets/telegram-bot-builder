@@ -3,7 +3,7 @@
  * @module client/components/editor/broadcast/wizard/step-audience
  */
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Users, Calendar, Activity, UserCheck, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,10 +11,13 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/utils/utils';
 import { useAudiencePreview } from '../hooks/use-audience-preview';
+import { useDefaultTokenIds } from '../hooks/use-default-token-ids';
 import { ManualUserSelect } from './manual-user-select';
 import { GroupSelect } from './group-select';
 import { AudienceFilters } from './audience-filters';
 import { AudienceContextHint } from './audience-context-hint';
+import { AudienceOverlapWarning } from './audience-overlap-warning';
+import { BotTokenMultiSelect } from './bot-token-multi-select';
 import type { NewBroadcastFormData } from '../types';
 
 /**
@@ -51,17 +54,44 @@ const AUDIENCE_OPTIONS = [
 export function StepAudience({ projectId, tokenId, formData, onChange, onNext, onCancel }: StepAudienceProps) {
   const [tagInput, setTagInput] = useState('');
   const audienceType = formData.filters.audienceType;
+  const tokenIds = formData.tokenIds ?? [];
+
+  /**
+   * Обработчик изменения выбранных ботов.
+   * Группы поддерживаются только при одном боте, поэтому при выборе нескольких
+   * ранее отмеченные группы сбрасываются.
+   */
+  const handleTokenIdsChange = useCallback(
+    (nextTokenIds: number[]) => {
+      const keepGroups = nextTokenIds.length === 1;
+      onChange({
+        tokenIds: nextTokenIds,
+        ...(keepGroups ? {} : { filters: { ...formData.filters, groupIds: [] } }),
+      });
+    },
+    [onChange, formData.filters],
+  );
+
+  useDefaultTokenIds(projectId, tokenIds, handleTokenIdsChange);
 
   const apiFilters = audienceType === 'tags' ? { tags: formData.filters.tags } :
     audienceType === 'date' ? { registeredFrom: formData.filters.registeredFrom, registeredTo: formData.filters.registeredTo } :
     audienceType === 'activity' ? { activeFrom: formData.filters.activeFrom, activeTo: formData.filters.activeTo } : {};
 
-  const { count, isLoading } = useAudiencePreview(projectId, apiFilters, tokenId);
+  const { count, isLoading, perBot, overlapEstimate } = useAudiencePreview(
+    projectId,
+    apiFilters,
+    tokenId,
+    tokenIds,
+  );
 
   /** Количество получателей: для ручного выбора — длина массива userIds */
   const recipientCount = audienceType === 'manual'
     ? (formData.filters.userIds?.length ?? 0)
     : count;
+
+  /** Группы доступны только при отправке от одного бота */
+  const groupsAvailable = tokenIds.length === 1;
 
   /** Обработчик добавления тега */
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -104,13 +134,21 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
         />
       </div>
 
+      {/* Выбор ботов, от которых уйдёт рассылка */}
+      <BotTokenMultiSelect
+        projectId={projectId}
+        selectedTokenIds={tokenIds}
+        onChange={handleTokenIdsChange}
+        perBot={perBot}
+      />
+
       {/* Выбор аудитории */}
       <div className="space-y-2">
         <Label className="flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5 text-blue-500" />
           Аудитория
         </Label>
-        <AudienceContextHint projectId={projectId} tokenId={tokenId} />
+        <AudienceContextHint projectId={projectId} tokenId={tokenId} selectedTokenIds={tokenIds} />
         <RadioGroup
           value={audienceType}
           onValueChange={(v) => onChange({ filters: { ...formData.filters, audienceType: v as NewBroadcastFormData['filters']['audienceType'] } })}
@@ -154,17 +192,21 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
         />
       )}
 
-      {/* Секция групп */}
+      {/* Секция групп — доступна только при отправке от одного бота */}
       <div className="rounded-xl border border-violet-200/50 dark:border-violet-800/40 bg-gradient-to-r from-violet-500/5 to-fuchsia-500/5 p-3 space-y-2">
         <Label className="flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5 text-violet-500" />
           Также отправить в группы
         </Label>
-        <GroupSelect
-          projectId={projectId}
-          selectedGroupIds={formData.filters.groupIds ?? []}
-          onChangeGroupIds={handleGroupIdsChange}
-        />
+        {groupsAvailable ? (
+          <GroupSelect
+            projectId={projectId}
+            selectedGroupIds={formData.filters.groupIds ?? []}
+            onChangeGroupIds={handleGroupIdsChange}
+          />
+        ) : (
+          <p className="text-xs text-muted-foreground">Группы доступны при выборе одного бота</p>
+        )}
       </div>
 
       {/* Счётчик получателей */}
@@ -176,11 +218,14 @@ export function StepAudience({ projectId, tokenId, formData, onChange, onNext, o
         </span>
       </div>
 
+      {audienceType !== 'manual' && <AudienceOverlapWarning overlapEstimate={overlapEstimate} />}
+
       {/* Кнопки навигации */}
       <div className="flex justify-between pt-2">
         <Button variant="ghost" onClick={onCancel}>Отмена</Button>
         <Button
           onClick={onNext}
+          disabled={tokenIds.length === 0}
           className="bg-gradient-to-r from-blue-500 to-violet-500 text-white hover:from-blue-600 hover:to-violet-600"
         >
           Далее →

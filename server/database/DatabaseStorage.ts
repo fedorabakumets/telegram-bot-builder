@@ -2,10 +2,10 @@
  * @fileoverview Базовая реализация storage поверх Drizzle для серверной части конструктора
  */
 
-import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, type Broadcast, type BroadcastResult, type BroadcastFilters, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess, projectVersions, type ProjectVersion, agentTokens, type AgentToken } from "@shared/schema";
+import { type BotGroup, botGroups, type BotInstance, botInstances, type BotMessage, type BotMessageMedia, botMessageMedia, botMessages, type BotProject, botProjects, type BotTemplate, botTemplates, type BotToken, botTokens, type BotUser, botUsers, type GroupMember, groupMembers, type MediaFile, mediaFiles, type TelegramUserDB, telegramUsers, botLogs, type BotLog, botLaunchHistory, type BotLaunchHistory, projectCollaborators, type ProjectCollaborator, broadcasts, broadcastResults, broadcastCampaigns, type Broadcast, type BroadcastResult, type BroadcastFilters, type BroadcastCampaign, botEnvVariables, type BotEnvVariable, botTables, botTableColumns, botTableRows, type BotTable, type BotTableColumn, type BotTableRow, workerProcesses, type WorkerProcess, projectVersions, type ProjectVersion, agentTokens, type AgentToken } from "@shared/schema";
 import { and, asc, desc, eq, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { IStorage } from "../storages/storage";
-import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
+import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInput, StorageBotInstanceUpdate, StorageBotLaunchHistoryInput, StorageBotLaunchHistoryUpdate, StorageBotLogInput, StorageBotMessageInput, StorageBotMessageMediaInput, StorageBotProjectInput, StorageBotProjectUpdate, StorageBotTemplateInput, StorageBotTemplateUpdate, StorageBotTokenInput, StorageBotTokenUpdate, StorageGroupMemberInput, StorageGroupMemberUpdate, StorageMediaFileInput, StorageMediaFileUpdate, StorageTelegramUserInput, StorageBroadcastInput, StorageBroadcastUpdate, StorageBroadcastResultInput, StorageBroadcastCampaignInput, StorageBroadcastCampaignUpdate, StorageBotEnvVariableInput, StorageBotEnvVariableUpdate, StorageBotTableInput, StorageBotTableColumnInput, StorageBotTableRowInput, StorageWorkerProcessInput } from "../storages/storageTypes";
 import { db } from "./db";
 import { generateAgentToken, hashAgentToken } from "../utils/agent-token-crypto";
 import { incrementMessageActivityDaily } from "./incrementMessageActivityDaily";
@@ -1714,6 +1714,73 @@ export class DatabaseStorage implements IStorage {
     return await this.db.select().from(broadcastResults)
       .where(eq(broadcastResults.broadcastId, broadcastId))
       .orderBy(asc(broadcastResults.sentAt));
+  }
+
+  /**
+   * Получить дочерние рассылки кампании
+   * @param campaignId - ID кампании
+   * @returns Массив дочерних рассылок, отсортированных по ID
+   */
+  async getBroadcastsByCampaignId(campaignId: number): Promise<Broadcast[]> {
+    return await this.db.select().from(broadcasts)
+      .where(eq(broadcasts.campaignId, campaignId))
+      .orderBy(asc(broadcasts.id));
+  }
+
+  // Кампании рассылок («большая рассылка»)
+
+  /**
+   * Создать кампанию рассылки
+   * @param data - Данные кампании
+   * @returns Созданная запись кампании
+   */
+  async createBroadcastCampaign(data: StorageBroadcastCampaignInput): Promise<BroadcastCampaign> {
+    const [record] = await this.db.insert(broadcastCampaigns).values(data).returning();
+    return record;
+  }
+
+  /**
+   * Получить кампанию рассылки по ID
+   * @param id - ID кампании
+   * @returns Кампания или undefined, если не найдена
+   */
+  async getBroadcastCampaignById(id: number): Promise<BroadcastCampaign | undefined> {
+    const [record] = await this.db.select().from(broadcastCampaigns).where(eq(broadcastCampaigns.id, id));
+    return record || undefined;
+  }
+
+  /**
+   * Получить список кампаний рассылок проекта
+   * @param projectId - ID проекта
+   * @returns Массив кампаний, отсортированных по дате создания (новые первые)
+   */
+  async getBroadcastCampaigns(projectId: number): Promise<BroadcastCampaign[]> {
+    return await this.db.select().from(broadcastCampaigns)
+      .where(eq(broadcastCampaigns.projectId, projectId))
+      .orderBy(desc(broadcastCampaigns.createdAt));
+  }
+
+  /**
+   * Обновить кампанию рассылки
+   * @param id - ID кампании
+   * @param data - Данные для обновления
+   * @returns Обновлённая кампания или undefined
+   */
+  async updateBroadcastCampaign(id: number, data: StorageBroadcastCampaignUpdate): Promise<BroadcastCampaign | undefined> {
+    const [record] = await this.db.update(broadcastCampaigns).set(data)
+      .where(eq(broadcastCampaigns.id, id)).returning();
+    return record || undefined;
+  }
+
+  /**
+   * Удалить кампанию рассылки — дочерние рассылки удаляются каскадом
+   * @param id - ID кампании
+   * @returns true, если запись была удалена
+   */
+  async deleteBroadcastCampaign(id: number): Promise<boolean> {
+    const deleted = await this.db.delete(broadcastCampaigns)
+      .where(eq(broadcastCampaigns.id, id)).returning();
+    return deleted.length > 0;
   }
 
   /**

@@ -1,12 +1,12 @@
 /**
- * @fileoverview Подпись: из какого проекта и бота берётся аудитория рассылки
+ * @fileoverview Подпись: из какого проекта и от каких ботов берётся аудитория рассылки
  * @module client/components/editor/broadcast/wizard/audience-context-hint
  */
 
 import { Bot, FolderKanban } from 'lucide-react';
-import type { BotToken } from '@shared/schema';
 import { useProject } from '@/components/editor/database/user-database/hooks/queries/use-project';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
+import { formatBotLabel, formatBotShortLabel, pluralizeBots } from '../utils/format-bot-label';
 
 /**
  * Пропсы подсказки контекста аудитории
@@ -16,44 +16,43 @@ interface AudienceContextHintProps {
   projectId: number;
   /** ID выбранного токена бота */
   tokenId?: number | null;
+  /** ID ботов, выбранных в форме рассылки */
+  selectedTokenIds?: number[];
 }
 
 /**
- * Читаемая подпись бота
- * @param token - Токен бота или undefined
- * @returns Строка для UI
- */
-function formatBotLabel(token: BotToken | undefined): string {
-  if (!token) return 'бот по умолчанию';
-  if (token.botFirstName && token.botUsername) {
-    return `${token.botFirstName} (@${token.botUsername})`;
-  }
-  if (token.botUsername) return `@${token.botUsername}`;
-  if (token.botFirstName) return token.botFirstName;
-  return token.name || `Бот #${token.id}`;
-}
-
-/**
- * Компактная плашка: аудитория = пользователи этого проекта и этого бота.
+ * Компактная плашка: аудитория = пользователи этого проекта и выбранных ботов.
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
-export function AudienceContextHint({ projectId, tokenId }: AudienceContextHintProps) {
+export function AudienceContextHint({ projectId, tokenId, selectedTokenIds }: AudienceContextHintProps) {
   const { project } = useProject({ projectId });
   const tokensInfo = useProjectTokens([projectId]);
   const tokens = tokensInfo[0]?.tokens ?? [];
-  const selected =
+
+  /** Боты, выбранные в форме; при пустом выборе — режим одного бота */
+  const selectedTokens = (selectedTokenIds ?? [])
+    .map((id) => tokens.find((token) => token.id === id))
+    .filter((token): token is NonNullable<typeof token> => Boolean(token));
+
+  const fallbackToken =
     (tokenId != null ? tokens.find((t) => t.id === tokenId) : undefined) ??
     tokens.find((t) => t.isDefault === 1) ??
     tokens[0];
 
+  const isMulti = selectedTokens.length > 1;
+  const botLabel = isMulti
+    ? `${selectedTokens.length} ${pluralizeBots(selectedTokens.length)}: ${selectedTokens.map((token) => formatBotShortLabel(token)).join(', ')}`
+    : formatBotLabel(selectedTokens[0] ?? fallbackToken);
+
   const projectLabel = project?.name?.trim() || `Проект #${projectId}`;
-  const botLabel = formatBotLabel(selected);
 
   return (
     <div className="rounded-xl border border-border/60 bg-muted/40 px-3 py-2.5 text-sm space-y-1.5">
       <p className="text-xs text-muted-foreground">
-        Получатели — пользователи выбранного проекта и бота
+        {isMulti
+          ? 'Получатели — пользователи проекта у каждого выбранного бота'
+          : 'Получатели — пользователи выбранного проекта и бота'}
       </p>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="inline-flex items-center gap-1.5 min-w-0">

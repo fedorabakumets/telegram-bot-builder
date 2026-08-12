@@ -6,6 +6,7 @@
 import type { Request, Response } from "express";
 import { storage } from "../../../../storages/storage";
 import { activeBroadcasts } from "./broadcastQueue";
+import { syncCampaignAggregates } from "./sync-campaign-aggregates";
 
 /**
  * Обрабатывает POST /api/projects/:projectId/broadcasts/:broadcastId/stop
@@ -44,6 +45,9 @@ export async function stopBroadcastHandler(req: Request, res: Response): Promise
     activeBroadcasts.set(broadcastId, "stopped");
 
     const updated = await storage.stopBroadcast(broadcastId);
+    // Дочерняя рассылка кампании — пересчитываем статус и счётчики родителя
+    await syncCampaignAggregates(broadcast.campaignId);
+
     res.json({ broadcast: updated });
   } catch (error) {
     console.error("[stopBroadcastHandler] Ошибка:", error);

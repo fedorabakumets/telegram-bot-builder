@@ -10,6 +10,7 @@ import {
   type BroadcastProgressLiveEvent,
   type LiveEvent,
 } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
+import { applyCampaignProgress } from './invalidate-campaign-cache';
 import type { Broadcast } from '../types';
 
 /**
@@ -102,7 +103,7 @@ export function useBroadcastLiveInvalidate({
       const msg = event as BroadcastProgressLiveEvent;
       if (msg.projectId !== projectId) return;
 
-      const { broadcastId, sentCount, deliveredCount, failedCount, totalCount, status } = msg.data;
+      const { broadcastId, campaignId, sentCount, deliveredCount, failedCount, totalCount, status } = msg.data;
 
       queryClient.setQueriesData<BroadcastsResponse>(
         { predicate: (query) => isBroadcastsListKey(query.queryKey, projectId) },
@@ -141,6 +142,18 @@ export function useBroadcastLiveInvalidate({
           };
         },
       );
+
+      // Событие дочерней рассылки — обновляем и карточку большой рассылки
+      if (campaignId != null) {
+        applyCampaignProgress(queryClient, projectId, campaignId, {
+          broadcastId,
+          sentCount,
+          deliveredCount,
+          failedCount,
+          totalCount,
+          status,
+        });
+      }
 
       const prevFailed = lastFailedCounts.current.get(broadcastId) ?? 0;
       if (failedCount > prevFailed) {

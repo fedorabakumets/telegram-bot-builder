@@ -9,12 +9,14 @@ import { ProjectsCookiesSchema, ProjectsAuthHeadersSchema } from "../schemas/pro
 import {
   BroadcastsListResponseSchema,
   CreateBroadcastRequestSchema,
-  CreateBroadcastResponseSchema,
+  CreateBroadcastResultSchema,
   ProjectBroadcastsListQuerySchema,
   ProjectBroadcastsProjectIdParamsSchema,
 } from "../schemas/project-broadcasts";
 import {
   CREATE_BROADCAST_BODY_EXAMPLE,
+  CREATE_BROADCAST_CAMPAIGN_RESPONSE_EXAMPLE,
+  CREATE_BROADCAST_MULTI_BODY_EXAMPLE,
   CREATE_BROADCAST_RESPONSE_EXAMPLE,
   PROJECT_BROADCASTS_FORBIDDEN_EXAMPLE,
   PROJECT_BROADCASTS_LIST_EXAMPLE,
@@ -100,15 +102,23 @@ export function registerProjectBroadcastsListPaths(
     method: "post",
     path: "/api/projects/{projectId}/broadcasts",
     tags: ["project-broadcasts"],
-    summary: "Создать и запустить рассылку",
+    summary: "Создать и запустить рассылку (один бот или несколько)",
     description:
       "Создаёт рассылку со статусом `running` и запускает очередь отправки. " +
-      "`tokenId` — query или body; иначе default токен. Текст ≤4096, media ≤10, buttons ≤100. " +
-      "`name` необязательно (пустое → дата + начало текста сообщения).\n\n" +
-      "**Клиент:** `use-create-broadcast`.\n\n" +
+      "Текст ≤4096, media ≤10, buttons ≤100. `name` необязательно " +
+      "(пустое → дата + начало текста сообщения).\n\n" +
+      "**Выбор ботов.** `tokenIds` (1…100 ID токенов проекта) задаёт «большую рассылку " +
+      "по нескольким ботам»: создаётся кампания, на каждого бота — своя дочерняя рассылка, " +
+      "очереди стартуют параллельно, ответ `{ campaignId, broadcastIds }`. " +
+      "Один элемент в `tokenIds` или обычный `tokenId` (query/body) — рассылка от одного бота, " +
+      "ответ `{ broadcastId }`. Без обоих полей берётся default-токен проекта.\n\n" +
+      "**Безопасность:** каждый ID из `tokenIds` проверяется на принадлежность проекту; " +
+      "чужой или несуществующий токен → 400 «Токены не принадлежат этому проекту: …». " +
+      "Группы (`filters.groupIds`) имеют смысл только при одном боте.\n\n" +
+      "**Клиенты Studio:** мастер «Новая рассылка» (`use-create-broadcast`).\n\n" +
       "```bash\ncurl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \\\n" +
-      "  -d '{\"messageText\":\"Привет!\",\"filters\":{}}' \\\n" +
-      "  'http://localhost:5000/api/projects/42/broadcasts?tokenId=7'\n```",
+      "  -d '{\"messageText\":\"Привет!\",\"tokenIds\":[7,8],\"filters\":{}}' \\\n" +
+      "  'http://localhost:5000/api/projects/42/broadcasts'\n```",
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
@@ -119,7 +129,16 @@ export function registerProjectBroadcastsListPaths(
         content: {
           "application/json": {
             schema: CreateBroadcastRequestSchema,
-            example: CREATE_BROADCAST_BODY_EXAMPLE,
+            examples: {
+              multiBot: {
+                summary: "Большая рассылка по нескольким ботам",
+                value: CREATE_BROADCAST_MULTI_BODY_EXAMPLE,
+              },
+              singleBot: {
+                summary: "Один бот (default-токен проекта)",
+                value: CREATE_BROADCAST_BODY_EXAMPLE,
+              },
+            },
           },
         },
       },
@@ -129,17 +148,35 @@ export function registerProjectBroadcastsListPaths(
         description: "Рассылка создана и запущена",
         content: {
           "application/json": {
-            schema: CreateBroadcastResponseSchema,
-            example: CREATE_BROADCAST_RESPONSE_EXAMPLE,
+            schema: CreateBroadcastResultSchema,
+            examples: {
+              multiBot: {
+                summary: "Большая рассылка: кампания и дочерние рассылки",
+                value: CREATE_BROADCAST_CAMPAIGN_RESPONSE_EXAMPLE,
+              },
+              singleBot: {
+                summary: "Один бот",
+                value: CREATE_BROADCAST_RESPONSE_EXAMPLE,
+              },
+            },
           },
         },
       },
       400: {
-        description: "Валидация / нет токена",
+        description: "Валидация, нет токена или чужой tokenId",
         content: {
           "application/json": {
             schema: ValidationErrorSchema,
-            example: { message: "Неверное тело запроса", errors: [] },
+            examples: {
+              validation: {
+                summary: "Тело не прошло валидацию",
+                value: { message: "Неверное тело запроса", errors: [] },
+              },
+              foreignToken: {
+                summary: "tokenIds содержит токен другого проекта",
+                value: { message: "Токены не принадлежат этому проекту: 91" },
+              },
+            },
           },
         },
       },

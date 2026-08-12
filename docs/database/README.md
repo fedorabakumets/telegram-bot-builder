@@ -18,8 +18,9 @@
 | [bot_templates](./bot_templates.md) | 28 | Таблица сценариев ботов |
 | [bot_tokens](./bot_tokens.md) | 37 | Таблица токенов ботов |
 | [bot_users](./bot_users.md) | 17 | Таблица пользователей бота |
+| [broadcast_campaigns](./broadcast_campaigns.md) | 17 | Таблица кампаний рассылок — одна запись на «большую рассылку», дочерние записи хранятся в broadcasts с ссылкой campaign_id |
 | [broadcast_results](./broadcast_results.md) | 7 | Таблица результатов рассылки — по одной записи на каждого получателя |
-| [broadcasts](./broadcasts.md) | 17 | Таблица рассылок — хранит задания на массовую отправку сообщений |
+| [broadcasts](./broadcasts.md) | 18 | Таблица рассылок — хранит задания на массовую отправку сообщений. Рассылка может быть дочерней записью кампании («большой рассылки») — тогда заполнен campaignId |
 | [group_members](./group_members.md) | 18 | Таблица участников групп |
 | [media_file_tokens](./media_file_tokens.md) | 5 | Таблица file_id медиафайла по токенам ботов (денормализация fileIdsByToken). Уникальность пары (медиафайл, токен) гарантирует один file_id на бота. |
 | [media_files](./media_files.md) | 21 | Таблица медиафайлов |
@@ -58,8 +59,10 @@ erDiagram
     bot_templates }o--o| telegram_users : "owner_id"
     bot_tokens }o--|| bot_projects : "project_id"
     bot_tokens }o--o| telegram_users : "owner_id"
+    broadcast_campaigns }o--|| bot_projects : "project_id"
     broadcast_results }o--|| broadcasts : "broadcast_id"
     broadcasts }o--|| bot_projects : "project_id"
+    broadcasts }o--o| broadcast_campaigns : "campaign_id"
     group_members }o--|| bot_groups : "group_id"
     media_file_tokens }o--|| media_files : "media_file_id"
     media_file_tokens }o--|| bot_tokens : "token_id"

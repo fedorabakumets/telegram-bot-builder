@@ -77,6 +77,7 @@ export function useBroadcastLiveProgress(
         type: 'broadcast-progress',
         projectId: event.projectId,
         broadcastId: event.data.broadcastId,
+        ...(event.data.campaignId != null ? { campaignId: event.data.campaignId } : {}),
         sentCount: event.data.sentCount,
         deliveredCount: event.data.deliveredCount,
         failedCount: event.data.failedCount,

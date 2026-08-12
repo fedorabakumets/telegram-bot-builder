@@ -9,6 +9,7 @@ import { replaceVariablesInText } from "../messages/replace-variables";
 import { sendTelegramMessage } from "../messages/send-telegram-message";
 import { buildMediaFiles } from "../messages/build-media-files";
 import { extractButtonsFromNode } from "../messages/extract-buttons";
+import { syncCampaignAggregates } from "./sync-campaign-aggregates";
 import type { InlineButton } from "../messages/extract-buttons";
 import type { SendMediaFile } from "../messages/extract-media";
 
@@ -99,7 +100,9 @@ function resolveErrorStatus(errorCode?: number, description?: string): "blocked"
 }
 
 /**
- * Отправляет WS-событие прогресса рассылки
+ * Отправляет WS-событие прогресса рассылки.
+ * Для дочерней рассылки кампании добавляет campaignId, чтобы клиент
+ * мог агрегировать прогресс «большой рассылки» в реальном времени
  * @param projectId - ID проекта
  * @param broadcastId - ID рассылки
  * @param sentCount - Отправлено
@@ -107,6 +110,7 @@ function resolveErrorStatus(errorCode?: number, description?: string): "blocked"
  * @param failedCount - Ошибок
  * @param totalCount - Всего
  * @param status - Текущий статус
+ * @param campaignId - ID родительской кампании (null для одиночной рассылки)
  */
 async function emitProgress(
   projectId: number,
@@ -116,11 +120,20 @@ async function emitProgress(
   failedCount: number,
   totalCount: number,
   status: "running" | "stopped" | "done",
+  campaignId: number | null = null,
 ): Promise<void> {
   await broadcastProjectEvent(projectId, {
     type: "broadcast-progress",
     projectId,
-    data: { broadcastId, sentCount, deliveredCount, failedCount, totalCount, status },
+    data: {
+      broadcastId,
+      sentCount,
+      deliveredCount,
+      failedCount,
+      totalCount,
+      status,
+      ...(campaignId !== null ? { campaignId } : {}),
+    },
     timestamp: new Date().toISOString(),
   });
 }
@@ -143,6 +156,8 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     }
 
     const { projectId, tokenId, messageText, filters } = broadcast;
+    /** ID родительской кампании — прокидывается в WS-прогресс и агрегаты */
+    const campaignId = broadcast.campaignId ?? null;
     // Медиафайлы из поля mediaUrls рассылки — tokenId нужен для выбора правильного file_id
     const mediaFiles = buildMediaFiles((broadcast.mediaUrls as string[]) ?? [], tokenId);
     // Инлайн-кнопки рассылки: сырой массив из БД и преобразование в формат Telegram
@@ -154,7 +169,8 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     const users = await storage.getUsersForBroadcast(projectId, tokenId, filters as Parameters<typeof storage.getUsersForBroadcast>[2]);
 
     await storage.updateBroadcast(broadcastId, { totalCount: users.length });
-    await emitProgress(projectId, broadcastId, 0, 0, 0, users.length, "running");
+    await emitProgress(projectId, broadcastId, 0, 0, 0, users.length, "running", campaignId);
+    await syncCampaignAggregates(campaignId);
 
     let sentCount = 0;
     let deliveredCount = 0;
@@ -250,7 +266,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
         }
 
         if (sentCount % 10 === 0) {
-          void emitProgress(projectId, broadcastId, sentCount, deliveredCount, failedCount, users.length, "running");
+          void emitProgress(projectId, broadcastId, sentCount, deliveredCount, failedCount, users.length, "running", campaignId);
         }
 
         await sleep(DELAY_BETWEEN_MESSAGES);
@@ -267,7 +283,9 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
         failedCount,
         users.length,
         isStopped ? "stopped" : "running",
+        campaignId,
       );
+      await syncCampaignAggregates(campaignId);
     }
 
     // Отправка в выбранные группы (текст + медиа)
@@ -329,10 +347,12 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     // Определяем финальный статус
     const finalStatus = activeBroadcasts.get(broadcastId) === "stopped" ? "stopped" : "done";
     await storage.updateBroadcast(broadcastId, { status: finalStatus, finishedAt: new Date(), sentCount, deliveredCount, failedCount });
-    await emitProgress(projectId, broadcastId, sentCount, deliveredCount, failedCount, users.length, finalStatus);
+    await emitProgress(projectId, broadcastId, sentCount, deliveredCount, failedCount, users.length, finalStatus, campaignId);
+    await syncCampaignAggregates(campaignId);
   } catch (error) {
     console.error(`[broadcastQueue] Критическая ошибка рассылки ${broadcastId}:`, error);
-    await storage.updateBroadcast(broadcastId, { status: "failed", finishedAt: new Date() });
+    const failed = await storage.updateBroadcast(broadcastId, { status: "failed", finishedAt: new Date() });
+    await syncCampaignAggregates(failed?.campaignId ?? null);
   } finally {
     activeBroadcasts.delete(broadcastId);
   }
