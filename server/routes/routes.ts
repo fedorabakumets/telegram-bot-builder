@@ -2625,6 +2625,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
           COUNT(*) as "totalUsers",
           COUNT(*) FILTER (WHERE is_active = 1) as "activeUsers",
           COUNT(*) FILTER (WHERE is_active = 0) as "blockedUsers",
+          COUNT(*) FILTER (WHERE COALESCE(is_blocked, 0) = 1) as "blockedBotUsers",
+          COUNT(*) FILTER (WHERE COALESCE(is_deleted, 0) = 1) as "deletedUsers",
           COUNT(*) FILTER (WHERE is_premium = 1) as "premiumUsers",
           COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}') as "usersWithResponses",
           (SELECT COALESCE(COUNT(*), 0) FROM bot_messages bm

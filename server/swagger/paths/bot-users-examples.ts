@@ -48,6 +48,8 @@ export const BOT_USERS_STATS_EXAMPLE = {
   totalUsers: 150,
   activeUsers: 120,
   blockedUsers: 30,
+  blockedBotUsers: 8,
+  deletedUsers: 3,
   premiumUsers: 12,
   usersWithResponses: 45,
   totalInteractions: 3200,

@@ -9,11 +9,17 @@ export interface UserStats {
   /** Общее количество зарегистрированных пользователей в боте */
   totalUsers?: number;
 
-  /** Количество активных пользователей (незаблокированных) */
+  /** Количество активных пользователей (is_active = 1) */
   activeUsers?: number;
 
-  /** Количество заблокированных пользователей */
+  /** Количество неактивных по is_active = 0 (legacy) */
   blockedUsers?: number;
+
+  /** Заблокировали бота (is_blocked = 1) — не входят в рассылки */
+  blockedBotUsers?: number;
+
+  /** Аккаунт удалён (is_deleted = 1) — не входят в рассылки */
+  deletedUsers?: number;
 
   /** Количество premium-пользователей (Telegram Premium) */
   premiumUsers?: number;

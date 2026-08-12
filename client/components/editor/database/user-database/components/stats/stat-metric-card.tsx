@@ -54,6 +54,8 @@ export interface StatMetricCardProps {
   stackHeader?: boolean;
   /** Дополнительная подпись под числом (не зависит от тренда) */
   secondarySubtitle?: string;
+  /** Блок под числом / над графиком (счётчики, пояснения) */
+  footerExtra?: React.ReactNode;
 }
 
 /**
@@ -113,6 +115,7 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
     chartType,
     stackHeader,
     secondarySubtitle,
+    footerExtra,
   } = props;
   const fmt = formatValue ?? defaultFormat;
   const displayValue = value !== undefined ? fmt(value) : '—';
@@ -166,6 +169,8 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
           )}
         </div>
       )}
+
+      {footerExtra}
 
       {/* График на всю ширину карточки */}
       {hasChart && (
