@@ -25,16 +25,26 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
 
     console.log(`Перезапускаем бота ${projectId} из-за обновления кода...`);
 
+    const tokenId = instance.tokenId;
+    if (!tokenId) {
+      return { success: false, error: 'У экземпляра бота нет tokenId' };
+    }
+    const tokenRecord = await storage.getBotToken(tokenId);
+    if (!tokenRecord?.token) {
+      return { success: false, error: 'Токен бота не найден в bot_tokens' };
+    }
+    const launchToken = tokenRecord.token;
+
     if (process.env.USE_WORKER_POOL !== 'false') {
-      const stopResult = await stopBot(projectId, instance.tokenId);
+      const stopResult = await stopBot(projectId, tokenId);
       if (!stopResult.success) {
         return { success: false, error: stopResult.error };
       }
       await sleepMs(POST_STOP_COOLDOWN_MS);
-      return await startBot(projectId, instance.token, instance.tokenId);
+      return await startBot(projectId, launchToken, tokenId);
     }
 
-    const stopResult = await stopBot(projectId, instance.tokenId);
+    const stopResult = await stopBot(projectId, tokenId);
     if (!stopResult.success) {
       console.error(`Ошибка перезапуска бота ${projectId}:`, stopResult.error);
       return { success: true };
@@ -48,7 +58,7 @@ export async function restartBotIfRunning(projectId: number): Promise<{ success:
       botProcesses.delete(activeProcessInfo.processKey);
     }
 
-    return await startBot(projectId, instance.token, instance.tokenId);
+    return await startBot(projectId, launchToken, tokenId);
   } catch (error) {
     console.error('Ошибка перезапуска бота:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };

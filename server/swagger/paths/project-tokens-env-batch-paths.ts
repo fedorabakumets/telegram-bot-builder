@@ -35,10 +35,21 @@ export function registerProjectTokensEnvBatchPaths(
       "`changes[]`: create/update/delete. Системные KEY → bot_tokens / project " +
       "(BOT_TOKEN, ADMIN_IDS, USER_DATABASE, LOG_LEVEL, PROTECT_CONTENT, …). " +
       "Остальные → bot_env_variables. WS `token-updated` при обновлении полей токена.\n\n" +
+      "**Маскированные секреты не пишутся в БД.** Значение `BOT_TOKEN` вида " +
+      "`123456:••••••••` / с `•` `*` `…` / не `digits:secret` → `skipped:BOT_TOKEN:masked` " +
+      "(тот же `isMaskedOrPlaceholderToken`, что у PUT токена). " +
+      "`WEBHOOK_SECRET_TOKEN` с символами маски → `skipped:WEBHOOK_SECRET_TOKEN:masked`. " +
+      "Иначе Studio могла затереть реальный токен маской из GET и бот стартовал бы с Not Found.\n\n" +
       "**Auth:** `requireTokenOwnership`.\n\n" +
+      "**Клиент:** `BotEnvPanel` / `use-env-pending-changes` (save / saveAndRestart).\n\n" +
       "```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-batch \\\n" +
       "  -b cookies.txt -H 'Content-Type: application/json' \\\n" +
-      "  -d '{\"changes\":[{\"action\":\"update\",\"key\":\"LOG_LEVEL\",\"value\":\"WARNING\"}]}'\n```",
+      "  -d '{\"changes\":[{\"action\":\"update\",\"key\":\"LOG_LEVEL\",\"value\":\"WARNING\"}]}'\n```\n\n" +
+      "Маскированный BOT_TOKEN (не меняет БД):\n\n" +
+      "```bash\ncurl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-batch \\\n" +
+      "  -b cookies.txt -H 'Content-Type: application/json' \\\n" +
+      "  -d '{\"changes\":[{\"action\":\"update\",\"key\":\"BOT_TOKEN\",\"value\":\"7123456789:••••••••\"}]}'\n" +
+      "# → {\"success\":true,\"applied\":1,\"results\":[\"skipped:BOT_TOKEN:masked\"]}\n```",
     security: cookieSecurity,
     request: {
       cookies: ProjectsCookiesSchema,
@@ -52,14 +63,27 @@ export function registerProjectTokensEnvBatchPaths(
     },
     responses: {
       200: {
-        description: "Применено",
+        description: "Применено (в results могут быть skipped:*:masked)",
         content: {
           "application/json": {
             schema: ProjectTokenEnvBatchResponseSchema,
-            example: {
-              success: true,
-              applied: 1,
-              results: ["updated:LOG_LEVEL"],
+            examples: {
+              updated: {
+                summary: "Системный ключ обновлён",
+                value: {
+                  success: true,
+                  applied: 1,
+                  results: ["updated:LOG_LEVEL"],
+                },
+              },
+              skippedMaskedBotToken: {
+                summary: "Маска BOT_TOKEN проигнорирована",
+                value: {
+                  success: true,
+                  applied: 1,
+                  results: ["skipped:BOT_TOKEN:masked"],
+                },
+              },
             },
           },
         },

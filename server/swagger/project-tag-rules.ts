@@ -14,6 +14,8 @@ export const PROJECT_TAG_DESCRIPTIONS: Record<string, string> = {
     "Auth: requireProjectAccess. Не путать с CRUD самого проекта.",
   "project-tokens":
     "Токены бота внутри проекта: список, CRUD, настройки, env, userbot, logs. " +
+    "В ответах token маскируется (`botId:••••••••`); PUT токена и env-batch " +
+    "игнорируют маску и не затирают секрет в БД. " +
     "Не путать с `/api/tokens` (runtime status) и agent PAT.",
   "project-bot":
     "Lifecycle и профиль бота проекта: start/stop/restart, restart-all, start-offline-all, " +

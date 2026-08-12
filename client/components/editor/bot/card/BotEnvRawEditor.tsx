@@ -55,7 +55,8 @@ export function BotEnvRawEditor({
 
     for (const { key, value } of parsed) {
       if (IGNORED_KEYS.has(key)) continue;
-      if (value === SECRET_MASK) continue;
+      // Пропускаем маски секретов: и голую ••••••••, и вид botId:••••••••
+      if (value === SECRET_MASK || value.includes('•') || /:\*+$/.test(value)) continue;
 
       if (SYSTEM_KEYS.has(key)) {
         /** Обновляем системную если значение изменилось */

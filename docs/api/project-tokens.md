@@ -573,12 +573,25 @@ Batch-обновление env / системных ключей
 
 `changes[]`: create/update/delete. Системные KEY → bot_tokens / project (BOT_TOKEN, ADMIN_IDS, USER_DATABASE, LOG_LEVEL, PROTECT_CONTENT, …). Остальные → bot_env_variables. WS `token-updated` при обновлении полей токена.
 
+**Маскированные секреты не пишутся в БД.** Значение `BOT_TOKEN` вида `123456:••••••••` / с `•` `*` `…` / не `digits:secret` → `skipped:BOT_TOKEN:masked` (тот же `isMaskedOrPlaceholderToken`, что у PUT токена). `WEBHOOK_SECRET_TOKEN` с символами маски → `skipped:WEBHOOK_SECRET_TOKEN:masked`. Иначе Studio могла затереть реальный токен маской из GET и бот стартовал бы с Not Found.
+
 **Auth:** `requireTokenOwnership`.
+
+**Клиент:** `BotEnvPanel` / `use-env-pending-changes` (save / saveAndRestart).
 
 ```bash
 curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-batch \
   -b cookies.txt -H 'Content-Type: application/json' \
   -d '{"changes":[{"action":"update","key":"LOG_LEVEL","value":"WARNING"}]}'
+```
+
+Маскированный BOT_TOKEN (не меняет БД):
+
+```bash
+curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-batch \
+  -b cookies.txt -H 'Content-Type: application/json' \
+  -d '{"changes":[{"action":"update","key":"BOT_TOKEN","value":"7123456789:••••••••"}]}'
+# → {"success":true,"applied":1,"results":["skipped:BOT_TOKEN:masked"]}
 ```
 
 **Тело запроса:** `ProjectTokenEnvBatchRequest`
@@ -596,7 +609,7 @@ curl -s -X PUT http://localhost:5000/api/projects/42/tokens/7/env-batch \
 
 | Код | Описание |
 |-----|----------|
-| 200 | Применено |
+| 200 | Применено (в results могут быть skipped:*:masked) |
 | 400 | Пустой changes |
 | 401 | Не авторизован |
 | 403 | Нет владения |

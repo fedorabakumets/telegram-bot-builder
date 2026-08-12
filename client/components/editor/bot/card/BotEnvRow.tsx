@@ -73,10 +73,21 @@ export function BotEnvRow({
     }
   }
 
-  /** Сохранить инлайн-редактирование в pending */
+  /**
+   * Сохранить инлайн-редактирование в pending.
+   * Маску секрета (•••• / botId:••••) и неизменённое значение не пишем —
+   * иначе env-batch мог затереть реальный BOT_TOKEN в БД.
+   */
   function handleSaveEdit() {
-    if (onPendingChange) {
-      onPendingChange(envKey, editValue, isSystem ? 'system' : 'custom', id ?? undefined);
+    const next = editValue;
+    const isMaskedSecret = isSecret && (
+      next.includes('•') || next.includes('*') || next.includes('…')
+      || (!revealed && next === actualValue && /:•+$/.test(actualValue))
+    );
+    const unchanged = next === (revealed ?? actualValue)
+      || (pendingValue !== undefined && next === pendingValue);
+    if (onPendingChange && !isMaskedSecret && !unchanged) {
+      onPendingChange(envKey, next, isSystem ? 'system' : 'custom', id ?? undefined);
     }
     setEditing(false);
   }
@@ -86,6 +97,9 @@ export function BotEnvRow({
     // Для серверных ссылок — показываем ${{KEY}} как placeholder-значение
     if (isServerRef) {
       setEditValue(`\${{${envKey}}}`);
+    } else if (isSecret && !revealed && (actualValue.includes('•') || actualValue.includes('*'))) {
+      // Маскированный секрет не подставляем в инпут — пользователь вводит новое значение
+      setEditValue('');
     } else {
       setEditValue(revealed ?? actualValue);
     }

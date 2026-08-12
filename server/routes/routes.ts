@@ -3683,6 +3683,19 @@ function setupTokenEnvVariableRoutes(app: Express) {
           // Поля bot_tokens (BOT_TOKEN, LOG_LEVEL, PROTECT_CONTENT, SAVE_INCOMING_MEDIA, AUTO_RESTART, MAX_RESTART_ATTEMPTS)
           if (tokenFieldMap[key]) {
             const field = tokenFieldMap[key];
+            // Маска из GET (botId:••••••••) нельзя писать в bot_tokens.token —
+            // иначе старт бота читает из БД невалидный токен.
+            if (key === 'BOT_TOKEN' && isMaskedOrPlaceholderToken(value)) {
+              results.push(`skipped:${key}:masked`);
+              continue;
+            }
+            if (
+              key === 'WEBHOOK_SECRET_TOKEN'
+              && (value.includes('•') || value.includes('*') || value.includes('…'))
+            ) {
+              results.push(`skipped:${key}:masked`);
+              continue;
+            }
             let dbValue: any = value;
             if (key === 'PROTECT_CONTENT' || key === 'SAVE_INCOMING_MEDIA' || key === 'AUTO_RESTART' || key === 'CATCH_ALL_HANDLERS' || key === 'CONTENT_CACHE') {
               dbValue = value === 'true' || value === '1' ? 1 : 0;

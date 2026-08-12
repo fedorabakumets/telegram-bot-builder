@@ -90,8 +90,11 @@ app.use((req, res, next) => {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
+      // Ошибки — целиком (иначе «Не удалось получить…» без причины).
+      // Успешные ответы режем мягче, чтобы не забивать консоль огромными JSON.
+      const maxLen = res.statusCode >= 400 ? 4000 : 500;
+      if (logLine.length > maxLen) {
+        logLine = logLine.slice(0, maxLen - 1) + "…";
       }
 
       log(logLine);

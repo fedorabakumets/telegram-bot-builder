@@ -80,10 +80,27 @@ export async function restoreRunningBots(): Promise<void> {
           `▶️ Восстанавливаем бота: projectId=${instance.projectId}, tokenId=${instance.tokenId}`
         );
 
-        // Удаляем Redis lock перед запуском — старый процесс мог держать lock
-        await clearBotRedisLock(instance.token, instance.tokenId);
+        // Токен всегда берём из bot_tokens — в bot_instances.token может лежать
+        // устаревшая маска (••••) после env-batch/публичного DTO.
+        const tokenRecord = instance.tokenId
+          ? await storage.getBotToken(instance.tokenId)
+          : undefined;
+        const launchToken = tokenRecord?.token;
+        if (!launchToken || !instance.tokenId) {
+          console.error(
+            `❌ Нет валидного токена для восстановления projectId=${instance.projectId} tokenId=${instance.tokenId}`,
+          );
+          await storage.updateBotInstance(instance.id, {
+            status: "error",
+            errorMessage: "Нет валидного токена для восстановления",
+          });
+          continue;
+        }
 
-        const result = await startBot(instance.projectId, instance.token, instance.tokenId, { clearLogs: false });
+        // Удаляем Redis lock перед запуском — старый процесс мог держать lock
+        await clearBotRedisLock(launchToken, instance.tokenId);
+
+        const result = await startBot(instance.projectId, launchToken, instance.tokenId, { clearLogs: false });
 
         if (result.success) {
           console.log(

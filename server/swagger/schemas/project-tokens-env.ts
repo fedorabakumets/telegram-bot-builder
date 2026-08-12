@@ -89,11 +89,14 @@ export const ProjectTokenEnvBatchResponseSchema = z
   .object({
     /** Успех */
     success: z.literal(true),
-    /** Сколько результатов */
+    /** Сколько результатов (включая skipped) */
     applied: z.number().int().openapi({ example: 2 }),
-    /** Строки вида updated:LOG_LEVEL */
+    /**
+     * Строки вида `updated:LOG_LEVEL` или `skipped:BOT_TOKEN:masked`
+     * (маска из GET не перезаписывает реальный token в БД)
+     */
     results: z.array(z.string()).openapi({
-      example: ["updated:LOG_LEVEL", "updated:PROTECT_CONTENT"],
+      example: ["updated:LOG_LEVEL", "skipped:BOT_TOKEN:masked"],
     }),
   })
   .openapi("ProjectTokenEnvBatchResponse");
