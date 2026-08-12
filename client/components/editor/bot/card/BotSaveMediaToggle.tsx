@@ -74,11 +74,6 @@ export function BotSaveMediaToggle({
     setLocalEnabled(saveIncomingMedia === 1);
   }, [saveIncomingMedia]);
 
-  // Показываем только если база данных пользователей включена
-  if (userDatabaseEnabled !== 1) {
-    return null;
-  }
-
   const mutation = useMutation({
     mutationFn: (enabled: boolean) =>
       updateSaveIncomingMedia(projectId, tokenId, enabled ? 1 : 0),
@@ -98,6 +93,11 @@ export function BotSaveMediaToggle({
       });
     },
   });
+
+  // Показываем только если база данных пользователей включена
+  if (userDatabaseEnabled !== 1) {
+    return null;
+  }
 
   return (
     <SettingCard
