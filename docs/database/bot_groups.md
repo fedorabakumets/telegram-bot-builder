@@ -55,9 +55,3 @@
 | [bot_projects.id](./bot_projects.md) | **[bot_groups.project_id](./bot_groups.md)** | Many to One |
 | [bot_tokens.id](./bot_tokens.md) | **[bot_groups.token_id](./bot_groups.md)** | Many to One |
 | **[bot_groups.id](./bot_groups.md)** | [group_members.group_id](./group_members.md) | Many to One |
-
-### Notes
-
-- `token_id` — бот, который состоит в чате; уникальность `(project_id, token_id, group_id)`.
-- Бэкфилл и пикер рассылки опираются на `bot_messages` (`chat_id` + `token_id` для group/supergroup/channel).
-- Одна Telegram-группа у двух ботов → две строки справочника (по строке на токен).
