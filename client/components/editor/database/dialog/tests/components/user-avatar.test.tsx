@@ -46,19 +46,17 @@ describe('UserAvatar', () => {
 
   describe('Аватар бота', () => {
     describe('Бот с аватаркой', () => {
-      it('должен рендерить img для бота с avatarUrl', () => {
-        const bot = createTestUser({ avatarUrl: '/path/to/avatar.jpg' });
-        render(<UserAvatar messageType="bot" user={bot} projectId={1} />);
+      it('должен рендерить img через /users/bot/avatar при наличии projectId', () => {
+        render(<UserAvatar messageType="bot" projectId={1} tokenId={7} />);
 
         const img = screen.getByRole('img');
         expect(img).toBeInTheDocument();
-        expect(img).toHaveAttribute('src', '/api/projects/1/users/123/avatar');
+        expect(img).toHaveAttribute('src', '/api/projects/1/users/bot/avatar?tokenId=7');
         expect(img).toHaveAttribute('alt', 'Bot avatar');
       });
 
       it('должен применять стили к img бота', () => {
-        const bot = createTestUser({ avatarUrl: '/path/to/avatar.jpg' });
-        render(<UserAvatar messageType="bot" user={bot} projectId={1} />);
+        render(<UserAvatar messageType="bot" projectId={1} />);
 
         const img = screen.getByRole('img');
         expect(img).toHaveClass('flex-shrink-0');
@@ -67,8 +65,7 @@ describe('UserAvatar', () => {
       });
 
       it('должен использовать размер по умолчанию 28px', () => {
-        const bot = createTestUser({ avatarUrl: '/path/to/avatar.jpg' });
-        render(<UserAvatar messageType="bot" user={bot} projectId={1} />);
+        render(<UserAvatar messageType="bot" projectId={1} />);
 
         const img = screen.getByRole('img');
         expect(img).toHaveAttribute('style', expect.stringContaining('width: 28px'));
@@ -76,8 +73,7 @@ describe('UserAvatar', () => {
       });
 
       it('должен использовать кастомный размер', () => {
-        const bot = createTestUser({ avatarUrl: '/path/to/avatar.jpg' });
-        render(<UserAvatar messageType="bot" user={bot} projectId={1} size={50} />);
+        render(<UserAvatar messageType="bot" projectId={1} size={50} />);
 
         const img = screen.getByRole('img');
         expect(img).toHaveAttribute('style', expect.stringContaining('width: 50px'));
@@ -85,8 +81,7 @@ describe('UserAvatar', () => {
       });
 
       it('должен обрабатывать ошибку загрузки изображения', () => {
-        const bot = createTestUser({ avatarUrl: '/path/to/avatar.jpg' });
-        render(<UserAvatar messageType="bot" user={bot} projectId={1} />);
+        render(<UserAvatar messageType="bot" projectId={1} />);
 
         const img = screen.getByRole('img');
         fireEvent.error(img);
@@ -96,41 +91,29 @@ describe('UserAvatar', () => {
       });
 
       it('не должен рендерить img если нет projectId', () => {
-        const bot = createTestUser({ avatarUrl: '/path/to/avatar.jpg' });
-        render(<UserAvatar messageType="bot" user={bot} />);
+        render(<UserAvatar messageType="bot" />);
 
         expect(screen.queryByRole('img')).not.toBeInTheDocument();
         expect(screen.getByTestId('bot-icon')).toBeInTheDocument();
       });
 
-      it('не должен рендерить img если нет userId', () => {
-        const bot = createTestUser({ avatarUrl: '/path/to/avatar.jpg', userId: undefined });
-        render(<UserAvatar messageType="bot" user={bot as any} projectId={1} />);
+      it('должен рендерить img даже без данных пользователя (bot/data)', () => {
+        render(<UserAvatar messageType="bot" user={null} projectId={1} tokenId={274} />);
 
-        expect(screen.queryByRole('img')).not.toBeInTheDocument();
-        expect(screen.getByTestId('bot-icon')).toBeInTheDocument();
-      });
-
-      it('не должен рендерить img если avatarUrl пустой', () => {
-        const bot = createTestUser({ avatarUrl: '' });
-        render(<UserAvatar messageType="bot" user={bot} projectId={1} />);
-
-        expect(screen.queryByRole('img')).not.toBeInTheDocument();
-        expect(screen.getByTestId('bot-icon')).toBeInTheDocument();
+        const img = screen.getByRole('img');
+        expect(img).toHaveAttribute('src', '/api/projects/1/users/bot/avatar?tokenId=274');
       });
     });
 
     describe('Бот без аватарки', () => {
-      it('должен рендерить иконку бота по умолчанию', () => {
-        const bot = createTestUser({ avatarUrl: null });
-        render(<UserAvatar messageType="bot" user={bot} />);
+      it('должен рендерить иконку бота по умолчанию без projectId', () => {
+        render(<UserAvatar messageType="bot" />);
 
         expect(screen.getByTestId('bot-icon')).toBeInTheDocument();
       });
 
       it('должен применять стили к контейнеру иконки бота', () => {
-        const bot = createTestUser({ avatarUrl: null });
-        const { container } = render(<UserAvatar messageType="bot" user={bot} />);
+        const { container } = render(<UserAvatar messageType="bot" />);
 
         const iconContainer = container.firstChild as HTMLElement;
         expect(iconContainer).toHaveClass('flex-shrink-0');

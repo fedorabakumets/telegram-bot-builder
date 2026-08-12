@@ -97,10 +97,34 @@ function testSelectCurrentLive(): void {
   assert.equal(current?.status, 'running');
 }
 
+/**
+ * Online + в истории только stopped (sync закрыл launch) → всё равно Онлайн
+ */
+function testSelectCurrentLiveWithoutRunningRow(): void {
+  const history = [
+    {
+      id: 3104,
+      projectId: 278,
+      tokenId: 275,
+      status: 'stopped',
+      startedAt: new Date('2026-08-11T21:42:35.101Z'),
+      stoppedAt: new Date('2026-08-11T21:42:35.113Z'),
+      errorMessage: 'Синхронизация: процесс не найден',
+      processId: 'worker_278',
+    },
+  ] as BotLaunchHistory[];
+  const { current } = selectCurrentAndPast(history, true, false);
+  assert.ok(current);
+  assert.equal(current!.status, 'running');
+  assert.equal(current!.stoppedAt, null);
+  assert.equal(current!.errorMessage, null);
+}
+
 testMaskBotToken();
 testPublicDto();
 testSelectCurrentOfflineOrphan();
 testSelectCurrentLive();
+testSelectCurrentLiveWithoutRunningRow();
 
 /**
  * MCP delete без confirm

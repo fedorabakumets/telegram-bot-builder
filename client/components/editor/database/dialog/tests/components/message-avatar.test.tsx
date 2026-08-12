@@ -6,12 +6,12 @@
 
 /// <reference types="vitest/globals" />
 
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MessageAvatar } from '../../components/message-avatar';
 
 describe('MessageAvatar', () => {
   describe('Рендеринг аватара', () => {
-    it('должен рендерить контейнер с иконкой бота', () => {
+    it('должен рендерить img бота через /users/bot/avatar', () => {
       const bot = {
         userId: 'bot123',
         firstName: 'Bot',
@@ -19,17 +19,19 @@ describe('MessageAvatar', () => {
         userName: null,
       };
 
-      const { container } = render(
+      render(
         <MessageAvatar
           messageType="bot"
           bot={bot}
           user={null}
           projectId={1}
-        />
+          tokenId={7}
+        />,
       );
 
-      // MessageAvatar делегирует UserAvatar, который рендерит иконку Bot
-      expect(container.querySelector('.lucide-bot')).toBeInTheDocument();
+      const img = screen.getByRole('img');
+      expect(img).toHaveAttribute('src', '/api/projects/1/users/bot/avatar?tokenId=7');
+      expect(img).toHaveAttribute('alt', 'Bot avatar');
     });
 
     it('должен рендерить контейнер с иконкой пользователя', () => {
@@ -46,16 +48,16 @@ describe('MessageAvatar', () => {
           user={user}
           bot={null}
           projectId={1}
-        />
+        />,
       );
 
-      // MessageAvatar делегирует UserAvatar, который рендерит иконку User
-      expect(container.querySelector('.lucide-user')).toBeInTheDocument();
+      // Без успешной загрузки img — fallback User (в jsdom img не грузится, но src есть)
+      expect(container.querySelector('img') || container.querySelector('.lucide-user')).toBeTruthy();
     });
   });
 
   describe('Выбор данных для аватара', () => {
-    it('должен использовать синий контейнер для бота', () => {
+    it('должен показывать аватар бота даже если передан user', () => {
       const bot = {
         userId: 'bot123',
         firstName: 'Bot',
@@ -69,26 +71,19 @@ describe('MessageAvatar', () => {
         userName: null,
       };
 
-      const { container } = render(
+      render(
         <MessageAvatar
           messageType="bot"
           bot={bot}
           user={user}
           projectId={1}
-        />
+        />,
       );
 
-      // Должен использовать bot (синий контейнер)
-      expect(container.querySelector('.bg-blue-100')).toBeInTheDocument();
+      expect(screen.getByRole('img')).toHaveAttribute('alt', 'Bot avatar');
     });
 
-    it('должен использовать зелёный контейнер для пользователя', () => {
-      const bot = {
-        userId: 'bot123',
-        firstName: 'Bot',
-        lastName: null,
-        userName: null,
-      };
+    it('должен использовать зелёный контейнер для пользователя без projectId', () => {
       const user = {
         userId: 'user123',
         firstName: 'User',
@@ -100,28 +95,26 @@ describe('MessageAvatar', () => {
         <MessageAvatar
           messageType="user"
           user={user}
-          bot={bot}
-          projectId={1}
-        />
+          bot={null}
+        />,
       );
 
-      // Должен использовать user (зелёный контейнер)
       expect(container.querySelector('.bg-green-100')).toBeInTheDocument();
     });
   });
 
   describe('Обработка отсутствующих данных', () => {
-    it('должен рендерить аватар бота с null user', () => {
-      const { container } = render(
+    it('должен рендерить img бота без bot-данных (достаточно projectId)', () => {
+      render(
         <MessageAvatar
           messageType="bot"
-          bot={{ userId: 'bot123', firstName: 'Bot', lastName: null, userName: null }}
+          bot={null}
           user={null}
           projectId={1}
-        />
+        />,
       );
 
-      expect(container.querySelector('.lucide-bot')).toBeInTheDocument();
+      expect(screen.getByRole('img')).toHaveAttribute('src', '/api/projects/1/users/bot/avatar');
     });
 
     it('должен рендерить аватар пользователя с null bot', () => {
@@ -130,8 +123,7 @@ describe('MessageAvatar', () => {
           messageType="user"
           user={{ userId: 'user123', firstName: 'User', lastName: null, userName: null }}
           bot={null}
-          projectId={1}
-        />
+        />,
       );
 
       expect(container.querySelector('.lucide-user')).toBeInTheDocument();
@@ -139,51 +131,48 @@ describe('MessageAvatar', () => {
   });
 
   describe('Стили и размеры', () => {
-    it('должен применять классы для контейнера', () => {
-      const { container } = render(
+    it('должен применять классы к img бота', () => {
+      render(
         <MessageAvatar
           messageType="bot"
           bot={{ userId: 'bot123', firstName: 'Bot', lastName: null, userName: null }}
           user={null}
           projectId={1}
-        />
+        />,
       );
 
-      const avatarContainer = container.querySelector('.rounded-full');
-      expect(avatarContainer).toHaveClass('flex-shrink-0');
-      expect(avatarContainer).toHaveClass('rounded-full');
-      expect(avatarContainer).toHaveClass('bg-blue-100');
-      expect(avatarContainer).toHaveClass('flex');
-      expect(avatarContainer).toHaveClass('items-center');
-      expect(avatarContainer).toHaveClass('justify-center');
+      const img = screen.getByRole('img');
+      expect(img).toHaveClass('flex-shrink-0');
+      expect(img).toHaveClass('rounded-full');
+      expect(img).toHaveClass('object-cover');
     });
 
     it('должен использовать размер по умолчанию 28px', () => {
-      const { container } = render(
+      render(
         <MessageAvatar
           messageType="bot"
           bot={{ userId: 'bot123', firstName: 'Bot', lastName: null, userName: null }}
           user={null}
           projectId={1}
-        />
+        />,
       );
 
-      const avatarContainer = container.querySelector('.rounded-full');
-      expect(avatarContainer).toHaveStyle('width: 28px');
-      expect(avatarContainer).toHaveStyle('height: 28px');
+      const img = screen.getByRole('img');
+      expect(img).toHaveStyle('width: 28px');
+      expect(img).toHaveStyle('height: 28px');
     });
 
-    it('должен использовать размер иконки 14px (50% от размера контейнера)', () => {
+    it('должен показывать иконку бота без projectId', () => {
       const { container } = render(
         <MessageAvatar
           messageType="bot"
           bot={{ userId: 'bot123', firstName: 'Bot', lastName: null, userName: null }}
           user={null}
-          projectId={1}
-        />
+        />,
       );
 
       const icon = container.querySelector('.lucide-bot');
+      expect(icon).toBeInTheDocument();
       expect(icon).toHaveStyle('width: 14px');
       expect(icon).toHaveStyle('height: 14px');
     });

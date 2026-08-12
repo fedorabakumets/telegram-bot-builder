@@ -1,29 +1,29 @@
 /**
- * @fileoverview Компонент аватара сообщения
- * Отображает иконку бота или пользователя с поддержкой реальных аватарок
+ * @fileoverview Аватар рядом с пузырьком сообщения в Диалогах
+ * @module client/components/editor/database/dialog/components/message-avatar
  */
 
 import { UserAvatar } from './user-avatar';
 import { UserBotData } from '@shared/schema';
 
-/**
- * Свойства аватара
- */
+/** Свойства аватара сообщения */
 interface MessageAvatarProps {
   /** Тип сообщения: bot или user */
   messageType: 'bot' | 'user';
-  /** Данные пользователя для avatarUrl */
+  /** Данные пользователя (для аватара user) */
   user?: UserBotData | null;
-  /** Данные бота для avatarUrl */
+  /** Данные бота (опционально; для фото бота достаточно projectId) */
   bot?: UserBotData | null;
-  /** Идентификатор проекта для прокси аватара */
+  /** ID проекта для прокси аватара */
   projectId?: number;
-  /** Идентификатор токена для резолва аватара */
+  /** ID токена бота (`/users/bot/avatar?tokenId=`) */
   tokenId?: number | null;
 }
 
 /**
- * Компонент аватара для сообщения
+ * Аватар сообщения: для бота — тот же прокси, что на вкладке «Бот»
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
 export function MessageAvatar({ messageType, user, bot, projectId, tokenId }: MessageAvatarProps) {
   const avatarData = messageType === 'bot' ? bot : user;

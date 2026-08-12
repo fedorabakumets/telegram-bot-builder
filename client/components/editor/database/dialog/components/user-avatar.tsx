@@ -1,8 +1,8 @@
 /**
  * @fileoverview Компонент аватара пользователя
  * Отображает фото пользователя или иконку по умолчанию.
- * Запрашивает аватарку через прокси всегда когда есть projectId и userId —
- * сервер сам получит её из Telegram если в БД пусто.
+ * Для бота — тот же прокси, что на вкладке «Бот»: /users/bot/avatar?tokenId=…
+ * Для пользователя — /users/:userId/avatar; сервер сам подтянет фото из Telegram если в БД пусто.
  * Кэширует неудачные запросы чтобы не спамить сервер.
  */
 
@@ -28,21 +28,32 @@ interface UserAvatarProps {
 }
 
 /**
- * Строит URL аватара с опциональным tokenId
+ * Строит URL аватара пользователя с опциональным tokenId
  * @param projectId - ID проекта
  * @param userId - ID пользователя
  * @param tokenId - ID токена (опционально)
  * @returns URL аватара
  */
-function buildAvatarUrl(projectId: number, userId: string | number, tokenId?: number | null): string {
+function buildUserAvatarUrl(projectId: number, userId: string | number, tokenId?: number | null): string {
   const base = `/api/projects/${projectId}/users/${userId}/avatar`;
   return tokenId ? `${base}?tokenId=${tokenId}` : base;
 }
 
 /**
+ * Строит URL аватара бота (как BotAvatar на вкладке «Бот»)
+ * @param projectId - ID проекта
+ * @param tokenId - ID токена (опционально)
+ * @returns URL аватара бота
+ */
+function buildBotAvatarUrl(projectId: number, tokenId?: number | null): string {
+  const base = `/api/projects/${projectId}/users/bot/avatar`;
+  return tokenId ? `${base}?tokenId=${tokenId}` : base;
+}
+
+/**
  * Компонент аватара с поддержкой реальных фото.
- * Запрашивает аватарку через прокси независимо от наличия avatarUrl в объекте пользователя —
- * сервер получит её из Telegram если в БД пусто. При ошибке показывает иконку.
+ * Бот: /users/bot/avatar?tokenId= — не зависит от bot/data и userId.
+ * Пользователь: /users/:userId/avatar. При ошибке показывает иконку.
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
@@ -51,31 +62,27 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }:
   const isBot = messageType === 'bot';
   /** Для групп (отрицательный userId) аватарку через этот роут не запрашиваем */
   const isGroupChat = user?.userId ? String(user.userId).startsWith('-') : false;
-  /** Ключ для кэша неудачных запросов */
-  const cacheKey = projectId && user?.userId ? `${projectId}:${user.userId}:${tokenId ?? ''}` : '';
-  /** Показываем img если есть projectId и userId — avatarUrl в БД не обязателен */
-  const canFetchPhoto = !!projectId && !!user?.userId && !imageError && !isGroupChat && !failedAvatarCache.has(cacheKey);
   const iconSize = size * 0.5;
 
-  /** Обработчик ошибки загрузки — кэшируем чтобы не повторять */
-  const handleError = () => {
-    setImageError(true);
-    if (cacheKey) failedAvatarCache.add(cacheKey);
-  };
-
-  if (isBot && canFetchPhoto && user?.userId) {
-    return (
-      <img
-        src={buildAvatarUrl(projectId!, user.userId, tokenId)}
-        alt="Bot avatar"
-        style={{ width: size, height: size }}
-        className="flex-shrink-0 rounded-full object-cover"
-        onError={handleError}
-      />
-    );
-  }
-
   if (isBot) {
+    const botCacheKey = projectId ? `${projectId}:bot:${tokenId ?? ''}` : '';
+    const canFetchBotPhoto = !!projectId && !imageError && !failedAvatarCache.has(botCacheKey);
+
+    if (canFetchBotPhoto) {
+      return (
+        <img
+          src={buildBotAvatarUrl(projectId!, tokenId)}
+          alt="Bot avatar"
+          style={{ width: size, height: size }}
+          className="flex-shrink-0 rounded-full object-cover"
+          onError={() => {
+            setImageError(true);
+            if (botCacheKey) failedAvatarCache.add(botCacheKey);
+          }}
+        />
+      );
+    }
+
     return (
       <div style={{ width: size, height: size }} className="flex-shrink-0 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
         <Bot style={{ width: iconSize, height: iconSize }} className="text-blue-600 dark:text-blue-400" />
@@ -83,14 +90,22 @@ export function UserAvatar({ messageType, user, projectId, tokenId, size = 28 }:
     );
   }
 
+  /** Ключ для кэша неудачных запросов пользователя */
+  const cacheKey = projectId && user?.userId ? `${projectId}:${user.userId}:${tokenId ?? ''}` : '';
+  /** Показываем img если есть projectId и userId — avatarUrl в БД не обязателен */
+  const canFetchPhoto = !!projectId && !!user?.userId && !imageError && !isGroupChat && !failedAvatarCache.has(cacheKey);
+
   if (canFetchPhoto && user?.userId) {
     return (
       <img
-        src={buildAvatarUrl(projectId!, user.userId, tokenId)}
+        src={buildUserAvatarUrl(projectId!, user.userId, tokenId)}
         alt="User avatar"
         style={{ width: size, height: size }}
         className="flex-shrink-0 rounded-full object-cover"
-        onError={handleError}
+        onError={() => {
+          setImageError(true);
+          if (cacheKey) failedAvatarCache.add(cacheKey);
+        }}
       />
     );
   }

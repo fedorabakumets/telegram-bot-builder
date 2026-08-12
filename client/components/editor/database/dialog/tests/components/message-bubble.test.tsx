@@ -345,12 +345,13 @@ describe('MessageBubble', () => {
           index={0}
           bot={bot}
           projectId={1}
+          tokenId={7}
         />
       );
 
-      // Проверяем что аватар присутствует (иконка бота)
-      const botIcon = screen.getByTestId('dialog-message-bot-0').querySelector('.lucide-bot');
-      expect(botIcon).toBeInTheDocument();
+      const img = screen.getByTestId('dialog-message-bot-0').querySelector('img');
+      expect(img).toBeInTheDocument();
+      expect(img).toHaveAttribute('src', '/api/projects/1/users/bot/avatar?tokenId=7');
     });
 
     it('должен отображать аватар пользователя', () => {
