@@ -20,7 +20,7 @@
 | total_count | integer | `0` | NO | - | - | Всего получателей |
 | sent_count | integer | `0` | NO | - | - | Отправлено сообщений |
 | delivered_count | integer | `0` | NO | - | - | Доставлено успешно |
-| failed_count | integer | `0` | NO | - | - | Прочие ошибки (не блокировка и не удалённый аккаунт) |
+| failed_count | integer | `0` | NO | - | - | Ошибок при отправке (прочие, не блокировка и не удалённый аккаунт) |
 | blocked_count | integer | `0` | NO | - | - | Получателей, заблокировавших бота |
 | deleted_count | integer | `0` | NO | - | - | Получателей с удалённым/недоступным аккаунтом |
 | created_at | timestamp with time zone | `now()` | YES | - | - | Дата создания рассылки |
