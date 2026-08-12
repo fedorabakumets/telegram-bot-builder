@@ -41,8 +41,12 @@ export const broadcastCampaigns = pgTable("broadcast_campaigns", {
   sentCount: integer("sent_count").notNull().default(0),
   /** Доставлено успешно по всем ботам */
   deliveredCount: integer("delivered_count").notNull().default(0),
-  /** Ошибок при отправке по всем ботам */
+  /** Ошибок при отправке по всем ботам (прочие) */
   failedCount: integer("failed_count").notNull().default(0),
+  /** Заблокировали бота по всем дочерним рассылкам */
+  blockedCount: integer("blocked_count").notNull().default(0),
+  /** Аккаунт удалён / недоступен по всем дочерним рассылкам */
+  deletedCount: integer("deleted_count").notNull().default(0),
   /** Дата создания кампании */
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   /** Дата начала отправки */

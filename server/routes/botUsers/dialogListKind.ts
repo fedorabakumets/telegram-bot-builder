@@ -69,6 +69,7 @@ export function buildGroupsSelectSql(chatTypesSql: string): string {
         TRUE AS "isActive",
         FALSE AS "isPremium",
         FALSE AS "isBlocked",
+        FALSE AS "isDeleted",
         FALSE AS "isBot",
         NULL AS "languageCode",
         NULL AS "deepLinkParam",

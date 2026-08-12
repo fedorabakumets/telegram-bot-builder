@@ -17,8 +17,12 @@ export interface CampaignChildProgress {
   sentCount: number;
   /** Доставлено успешно */
   deliveredCount: number;
-  /** Ошибок при отправке */
+  /** Ошибок при отправке (прочие) */
   failedCount: number;
+  /** Заблокировали бота */
+  blockedCount: number;
+  /** Аккаунт удалён */
+  deletedCount: number;
   /** Всего получателей */
   totalCount: number;
   /** Текущий статус рассылки бота */
@@ -55,6 +59,8 @@ export function applyCampaignProgress(
       sentCount: progress.sentCount,
       deliveredCount: progress.deliveredCount,
       failedCount: progress.failedCount,
+      blockedCount: progress.blockedCount,
+      deletedCount: progress.deletedCount,
       totalCount: progress.totalCount,
     };
 
@@ -64,6 +70,8 @@ export function applyCampaignProgress(
       sentCount: broadcasts.reduce((sum, item) => sum + (item.sentCount ?? 0), 0),
       deliveredCount: broadcasts.reduce((sum, item) => sum + (item.deliveredCount ?? 0), 0),
       failedCount: broadcasts.reduce((sum, item) => sum + (item.failedCount ?? 0), 0),
+      blockedCount: broadcasts.reduce((sum, item) => sum + (item.blockedCount ?? 0), 0),
+      deletedCount: broadcasts.reduce((sum, item) => sum + (item.deletedCount ?? 0), 0),
       totalCount: broadcasts.reduce((sum, item) => sum + (item.totalCount ?? 0), 0),
     };
 

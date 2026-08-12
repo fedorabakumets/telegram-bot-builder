@@ -890,6 +890,22 @@ export interface IStorage {
   getUsersForBroadcast(projectId: number, tokenId: number, filters: BroadcastFilters): Promise<any[]>;
 
   /**
+   * Пометить пользователя как заблокировавшего бота
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   * @param userId - Telegram user id
+   */
+  markBotUserBlocked(projectId: number, tokenId: number, userId: number): Promise<void>;
+
+  /**
+   * Пометить пользователя как удалённый/деактивированный аккаунт
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   * @param userId - Telegram user id
+   */
+  markBotUserDeleted(projectId: number, tokenId: number, userId: number): Promise<void>;
+
+  /**
    * Получить дочерние рассылки кампании
    * @param campaignId - ID кампании
    * @returns Массив дочерних рассылок

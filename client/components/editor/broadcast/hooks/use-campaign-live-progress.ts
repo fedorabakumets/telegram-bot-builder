@@ -18,8 +18,12 @@ export interface CampaignProgressTotals {
   sentCount: number;
   /** Доставлено успешно */
   deliveredCount: number;
-  /** Ошибок при отправке */
+  /** Ошибок при отправке (прочие) */
   failedCount: number;
+  /** Заблокировали бота */
+  blockedCount: number;
+  /** Аккаунт удалён */
+  deletedCount: number;
   /** Всего получателей */
   totalCount: number;
   /** Есть ли хотя бы один бот, который ещё отправляет */
@@ -59,6 +63,8 @@ function aggregate(events: Map<number, BroadcastProgressEvent>): CampaignProgres
   let sentCount = 0;
   let deliveredCount = 0;
   let failedCount = 0;
+  let blockedCount = 0;
+  let deletedCount = 0;
   let totalCount = 0;
   let isRunning = false;
 
@@ -66,11 +72,21 @@ function aggregate(events: Map<number, BroadcastProgressEvent>): CampaignProgres
     sentCount += event.sentCount;
     deliveredCount += event.deliveredCount;
     failedCount += event.failedCount;
+    blockedCount += event.blockedCount ?? 0;
+    deletedCount += event.deletedCount ?? 0;
     totalCount += event.totalCount;
     if (event.status === 'running') isRunning = true;
   });
 
-  return { sentCount, deliveredCount, failedCount, totalCount, isRunning };
+  return {
+    sentCount,
+    deliveredCount,
+    failedCount,
+    blockedCount,
+    deletedCount,
+    totalCount,
+    isRunning,
+  };
 }
 
 /**
@@ -132,6 +148,8 @@ export function useCampaignLiveProgress(
         sentCount: event.data.sentCount,
         deliveredCount: event.data.deliveredCount,
         failedCount: event.data.failedCount,
+        blockedCount: event.data.blockedCount ?? 0,
+        deletedCount: event.data.deletedCount ?? 0,
         totalCount: event.data.totalCount,
         status: event.data.status,
       };

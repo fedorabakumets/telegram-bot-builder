@@ -29,8 +29,12 @@ export interface BroadcastProgressEvent {
   sentCount: number;
   /** Количество доставленных сообщений */
   deliveredCount: number;
-  /** Количество ошибок */
+  /** Количество ошибок (прочие, не блокировка и не удалённый аккаунт) */
   failedCount: number;
+  /** Заблокировали бота */
+  blockedCount: number;
+  /** Аккаунт удалён / недоступен */
+  deletedCount: number;
   /** Всего получателей */
   totalCount: number;
   /** Текущий статус рассылки */

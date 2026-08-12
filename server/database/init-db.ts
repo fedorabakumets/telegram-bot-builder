@@ -327,6 +327,8 @@ export async function initializeDatabaseTables() {
         interaction_count INTEGER DEFAULT 0,
         user_data JSONB DEFAULT '{}',
         is_active INTEGER DEFAULT 1,
+        is_blocked INTEGER DEFAULT 0,
+        is_deleted INTEGER DEFAULT 0,
         is_premium INTEGER DEFAULT 0,
         language_code TEXT,
         deep_link_param TEXT,
@@ -771,6 +773,8 @@ export async function initializeDatabaseTables() {
           sent_count INTEGER NOT NULL DEFAULT 0,
           delivered_count INTEGER NOT NULL DEFAULT 0,
           failed_count INTEGER NOT NULL DEFAULT 0,
+          blocked_count INTEGER NOT NULL DEFAULT 0,
+          deleted_count INTEGER NOT NULL DEFAULT 0,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
           started_at TIMESTAMP WITH TIME ZONE,
           finished_at TIMESTAMP WITH TIME ZONE
@@ -789,6 +793,30 @@ export async function initializeDatabaseTables() {
       `, "Миграция: индекс broadcasts_campaign_idx");
     } catch (error) {
       console.log('⚠️ Ошибка при миграции broadcast_campaigns:', error);
+    }
+
+    // Миграция: is_blocked / is_deleted у bot_users и счётчики рассылок
+    try {
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_users ADD COLUMN IF NOT EXISTS is_blocked INTEGER NOT NULL DEFAULT 0;
+      `, "Миграция: is_blocked в bot_users");
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_users ADD COLUMN IF NOT EXISTS is_deleted INTEGER NOT NULL DEFAULT 0;
+      `, "Миграция: is_deleted в bot_users");
+      await executeWithRetry(db, sql`
+        ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS blocked_count INTEGER NOT NULL DEFAULT 0;
+      `, "Миграция: blocked_count в broadcasts");
+      await executeWithRetry(db, sql`
+        ALTER TABLE broadcasts ADD COLUMN IF NOT EXISTS deleted_count INTEGER NOT NULL DEFAULT 0;
+      `, "Миграция: deleted_count в broadcasts");
+      await executeWithRetry(db, sql`
+        ALTER TABLE broadcast_campaigns ADD COLUMN IF NOT EXISTS blocked_count INTEGER NOT NULL DEFAULT 0;
+      `, "Миграция: blocked_count в broadcast_campaigns");
+      await executeWithRetry(db, sql`
+        ALTER TABLE broadcast_campaigns ADD COLUMN IF NOT EXISTS deleted_count INTEGER NOT NULL DEFAULT 0;
+      `, "Миграция: deleted_count в broadcast_campaigns");
+    } catch (error) {
+      console.log('⚠️ Ошибка при миграции флагов блокировки рассылки:', error);
     }
 
     // Миграция: token_id у bot_groups (группы per-bot для мультибот-рассылки)

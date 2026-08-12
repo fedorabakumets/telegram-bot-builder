@@ -41,6 +41,8 @@ export function CampaignBotProgressRow({
   const sentCount = liveEvent?.sentCount ?? broadcast.sentCount ?? 0;
   const deliveredCount = liveEvent?.deliveredCount ?? broadcast.deliveredCount ?? 0;
   const failedCount = liveEvent?.failedCount ?? broadcast.failedCount ?? 0;
+  const blockedCount = liveEvent?.blockedCount ?? broadcast.blockedCount ?? 0;
+  const deletedCount = liveEvent?.deletedCount ?? broadcast.deletedCount ?? 0;
   const totalCount = liveEvent?.totalCount ?? broadcast.totalCount ?? 0;
   const status = liveEvent?.status ?? broadcast.status;
   const percent = totalCount > 0 ? Math.round((sentCount / totalCount) * 100) : 0;
@@ -70,6 +72,8 @@ export function CampaignBotProgressRow({
 
       <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-muted-foreground">
         <span className="text-green-600 dark:text-green-400">✅ {deliveredCount}</span>
+        {blockedCount > 0 && <span className="text-amber-600">🚫 {blockedCount}</span>}
+        {deletedCount > 0 && <span className="text-orange-600">🗑 {deletedCount}</span>}
         {failedCount > 0 && <span className="text-red-500">❌ {failedCount}</span>}
         <span>
           {sentCount} / {totalCount}

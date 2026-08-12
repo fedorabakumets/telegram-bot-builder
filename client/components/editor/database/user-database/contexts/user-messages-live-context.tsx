@@ -149,8 +149,12 @@ export interface BroadcastProgressLiveEvent {
     sentCount: number;
     /** Доставлено успешно */
     deliveredCount: number;
-    /** Ошибок при отправке */
+    /** Ошибок при отправке (прочие) */
     failedCount: number;
+    /** Заблокировали бота */
+    blockedCount?: number;
+    /** Аккаунт удалён */
+    deletedCount?: number;
     /** Всего получателей */
     totalCount: number;
     /** Текущий статус */

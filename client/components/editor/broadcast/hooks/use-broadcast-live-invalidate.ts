@@ -103,7 +103,17 @@ export function useBroadcastLiveInvalidate({
       const msg = event as BroadcastProgressLiveEvent;
       if (msg.projectId !== projectId) return;
 
-      const { broadcastId, campaignId, sentCount, deliveredCount, failedCount, totalCount, status } = msg.data;
+      const {
+        broadcastId,
+        campaignId,
+        sentCount,
+        deliveredCount,
+        failedCount,
+        blockedCount = 0,
+        deletedCount = 0,
+        totalCount,
+        status,
+      } = msg.data;
 
       queryClient.setQueriesData<BroadcastsResponse>(
         { predicate: (query) => isBroadcastsListKey(query.queryKey, projectId) },
@@ -118,6 +128,8 @@ export function useBroadcastLiveInvalidate({
             sentCount,
             deliveredCount,
             failedCount,
+            blockedCount,
+            deletedCount,
             totalCount,
           };
           return { ...old, broadcasts };
@@ -137,6 +149,8 @@ export function useBroadcastLiveInvalidate({
               sentCount,
               deliveredCount,
               failedCount,
+              blockedCount,
+              deletedCount,
               totalCount,
             },
           };
@@ -150,14 +164,17 @@ export function useBroadcastLiveInvalidate({
           sentCount,
           deliveredCount,
           failedCount,
+          blockedCount,
+          deletedCount,
           totalCount,
           status,
         });
       }
 
       const prevFailed = lastFailedCounts.current.get(broadcastId) ?? 0;
-      if (failedCount > prevFailed) {
-        lastFailedCounts.current.set(broadcastId, failedCount);
+      const problemCount = failedCount + blockedCount + deletedCount;
+      if (problemCount > prevFailed) {
+        lastFailedCounts.current.set(broadcastId, problemCount);
         scheduleDetailInvalidate(broadcastId);
       }
 

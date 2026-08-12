@@ -62,6 +62,8 @@ export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allP
     const countsChanged = fresh.sentCount !== selectedBroadcast.sentCount
       || fresh.deliveredCount !== selectedBroadcast.deliveredCount
       || fresh.failedCount !== selectedBroadcast.failedCount
+      || fresh.blockedCount !== selectedBroadcast.blockedCount
+      || fresh.deletedCount !== selectedBroadcast.deletedCount
       || fresh.totalCount !== selectedBroadcast.totalCount;
     if (statusChanged || countsChanged) {
       setSelectedBroadcast(fresh);

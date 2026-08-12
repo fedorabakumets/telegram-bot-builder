@@ -12,6 +12,7 @@ import { useCampaignLiveProgress } from '../hooks/use-campaign-live-progress';
 import { useStopBroadcast } from '../hooks/use-stop-broadcast';
 import { useStopBroadcastCampaign } from '../hooks/use-stop-broadcast-campaign';
 import { CampaignBotProgressRow } from './campaign-bot-progress-row';
+import { BroadcastProgressCounters } from '../components/broadcast-progress-counters';
 import { formatBotShortLabel, pluralizeBots } from '../utils/format-bot-label';
 
 /**
@@ -57,6 +58,8 @@ export function CampaignProgress({ projectId, campaignId, name, refetch, onClose
   const sentCount = totals?.sentCount ?? campaign?.sentCount ?? 0;
   const deliveredCount = totals?.deliveredCount ?? campaign?.deliveredCount ?? 0;
   const failedCount = totals?.failedCount ?? campaign?.failedCount ?? 0;
+  const blockedCount = totals?.blockedCount ?? campaign?.blockedCount ?? 0;
+  const deletedCount = totals?.deletedCount ?? campaign?.deletedCount ?? 0;
   const totalCount = totals?.totalCount || campaign?.totalCount || 0;
 
   const hasRunningChild = broadcasts.some((item) => item.status === 'running');
@@ -80,20 +83,13 @@ export function CampaignProgress({ projectId, campaignId, name, refetch, onClose
 
       <Progress value={percent} className="h-3" />
 
-      <div className="grid grid-cols-3 gap-3 text-center text-sm">
-        <div className="border rounded p-2">
-          <div className="text-lg font-bold text-green-600">{deliveredCount}</div>
-          <div className="text-xs text-muted-foreground">✅ Доставлено</div>
-        </div>
-        <div className="border rounded p-2">
-          <div className="text-lg font-bold text-red-500">{failedCount}</div>
-          <div className="text-xs text-muted-foreground">❌ Ошибок</div>
-        </div>
-        <div className="border rounded p-2">
-          <div className="text-lg font-bold">{remaining}</div>
-          <div className="text-xs text-muted-foreground">⏳ Осталось</div>
-        </div>
-      </div>
+      <BroadcastProgressCounters
+        deliveredCount={deliveredCount}
+        blockedCount={blockedCount}
+        deletedCount={deletedCount}
+        failedCount={failedCount}
+        remaining={remaining}
+      />
 
       {/* Разбивка по ботам */}
       <div className="space-y-2">

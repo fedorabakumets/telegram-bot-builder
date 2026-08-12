@@ -21,6 +21,8 @@
 | interaction_count | integer | `0` | YES | - | - | Количество взаимодействий |
 | user_data | jsonb | `{}` | YES | - | - | Пользовательские данные |
 | is_active | integer | `1` | YES | - | - | Флаг активности: 0 - неактивен, 1 - активен |
+| is_blocked | integer | `0` | YES | - | - | Заблокировал бота: 0 — нет, 1 — да (снимается при новом сообщении) |
+| is_deleted | integer | `0` | YES | - | - | Аккаунт удалён/деактивирован: 0 — нет, 1 — да |
 | is_premium | integer | `0` | YES | - | - | Флаг Premium пользователя: 0 - обычный, 1 - premium |
 | language_code | text | - | YES | - | - | Код языка пользователя (IETF: ru, en, uk...) |
 | deep_link_param | text | - | YES | - | - | Параметр deep link при первом визите |

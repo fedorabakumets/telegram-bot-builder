@@ -186,6 +186,8 @@ async def save_user_to_db(user_id: int, username: str = None, first_name: str = 
 
     deep_link_param и referrer_id не перезаписываются при повторных визитах —
     сохраняется только значение первого касания (COALESCE).
+    При любом обновлении снимается только is_blocked (разблокировал и снова написал);
+    is_deleted не трогаем.
     """
     from datetime import datetime, timezone
     if not db_pool:
@@ -209,6 +211,7 @@ async def save_user_to_db(user_id: int, username: str = None, first_name: str = 
                     language_code = COALESCE(EXCLUDED.language_code, bot_users.language_code),
                     deep_link_param = COALESCE(bot_users.deep_link_param, EXCLUDED.deep_link_param),
                     referrer_id = COALESCE(bot_users.referrer_id, EXCLUDED.referrer_id),
+                    is_blocked = 0,
                     last_interaction = NOW(),
                     interaction_count = bot_users.interaction_count + 1
                 RETURNING xmax

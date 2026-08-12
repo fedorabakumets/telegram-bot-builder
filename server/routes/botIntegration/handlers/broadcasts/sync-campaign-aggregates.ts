@@ -30,8 +30,17 @@ export async function syncCampaignAggregates(
         sentCount: acc.sentCount + (child.sentCount ?? 0),
         deliveredCount: acc.deliveredCount + (child.deliveredCount ?? 0),
         failedCount: acc.failedCount + (child.failedCount ?? 0),
+        blockedCount: acc.blockedCount + (child.blockedCount ?? 0),
+        deletedCount: acc.deletedCount + (child.deletedCount ?? 0),
       }),
-      { totalCount: 0, sentCount: 0, deliveredCount: 0, failedCount: 0 },
+      {
+        totalCount: 0,
+        sentCount: 0,
+        deliveredCount: 0,
+        failedCount: 0,
+        blockedCount: 0,
+        deletedCount: 0,
+      },
     );
 
     const campaign = await storage.getBroadcastCampaignById(campaignId);

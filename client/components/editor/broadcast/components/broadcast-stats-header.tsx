@@ -70,7 +70,10 @@ export function BroadcastStatsHeader({ broadcasts }: BroadcastStatsHeaderProps) 
   const count = safeList.length;
   const totalSent = safeList.reduce((s, b) => s + (b.sentCount ?? 0), 0);
   const totalDelivered = safeList.reduce((s, b) => s + (b.deliveredCount ?? 0), 0);
-  const totalFailed = safeList.reduce((s, b) => s + (b.failedCount ?? 0), 0);
+  const totalFailed = safeList.reduce(
+    (s, b) => s + (b.failedCount ?? 0) + (b.blockedCount ?? 0) + (b.deletedCount ?? 0),
+    0,
+  );
   const hint = `из ${count} рассыл${count === 1 ? 'ки' : count < 5 ? 'ок' : 'ок'}`;
 
   return (

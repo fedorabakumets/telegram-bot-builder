@@ -81,6 +81,8 @@ export function useBroadcastLiveProgress(
         sentCount: event.data.sentCount,
         deliveredCount: event.data.deliveredCount,
         failedCount: event.data.failedCount,
+        blockedCount: event.data.blockedCount ?? 0,
+        deletedCount: event.data.deletedCount ?? 0,
         totalCount: event.data.totalCount,
         status: event.data.status,
       };

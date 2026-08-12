@@ -61,6 +61,9 @@ function BroadcastCard({
   const total = progressEvent?.totalCount ?? broadcast.totalCount ?? 0;
   const delivered = progressEvent?.deliveredCount ?? broadcast.deliveredCount ?? 0;
   const failed = progressEvent?.failedCount ?? broadcast.failedCount ?? 0;
+  const blocked = progressEvent?.blockedCount ?? broadcast.blockedCount ?? 0;
+  const deleted = progressEvent?.deletedCount ?? broadcast.deletedCount ?? 0;
+  const problemTotal = failed + blocked + deleted;
   const progress = total > 0 ? Math.round((delivered / total) * 100) : 0;
 
   return (
@@ -102,7 +105,7 @@ function BroadcastCard({
         </span>
         <span className="flex items-center gap-1 text-red-500">
           <XCircle className="h-3 w-3" />
-          {failed.toLocaleString('ru-RU')}
+          {problemTotal.toLocaleString('ru-RU')}
         </span>
       </div>
     </div>

@@ -10,6 +10,7 @@ import { useBroadcastLiveProgress } from '../hooks/use-broadcast-live-progress';
 import { useBroadcastDetail } from '../hooks/use-broadcast-detail';
 import { useStopBroadcast } from '../hooks/use-stop-broadcast';
 import { resolveBroadcastDisplayName } from '../utils/resolve-broadcast-display-name';
+import { BroadcastProgressCounters } from '../components/broadcast-progress-counters';
 import type { Broadcast } from '../types';
 
 /**
@@ -42,6 +43,8 @@ export function BroadcastProgress({ projectId, broadcast, refetch, onClose }: Br
   const sentCount = progressEvent?.sentCount ?? base.sentCount ?? 0;
   const deliveredCount = progressEvent?.deliveredCount ?? base.deliveredCount ?? 0;
   const failedCount = progressEvent?.failedCount ?? base.failedCount ?? 0;
+  const blockedCount = progressEvent?.blockedCount ?? base.blockedCount ?? 0;
+  const deletedCount = progressEvent?.deletedCount ?? base.deletedCount ?? 0;
   const totalCount = progressEvent?.totalCount ?? base.totalCount ?? 0;
   const status = progressEvent?.status ?? base.status;
 
@@ -68,20 +71,13 @@ export function BroadcastProgress({ projectId, broadcast, refetch, onClose }: Br
 
       <Progress value={percent} className="h-3" />
 
-      <div className="grid grid-cols-3 gap-3 text-center text-sm">
-        <div className="border rounded p-2">
-          <div className="text-lg font-bold text-green-600">{deliveredCount}</div>
-          <div className="text-xs text-muted-foreground">✅ Доставлено</div>
-        </div>
-        <div className="border rounded p-2">
-          <div className="text-lg font-bold text-red-500">{failedCount}</div>
-          <div className="text-xs text-muted-foreground">❌ Ошибок</div>
-        </div>
-        <div className="border rounded p-2">
-          <div className="text-lg font-bold">{remaining}</div>
-          <div className="text-xs text-muted-foreground">⏳ Осталось</div>
-        </div>
-      </div>
+      <BroadcastProgressCounters
+        deliveredCount={deliveredCount}
+        blockedCount={blockedCount}
+        deletedCount={deletedCount}
+        failedCount={failedCount}
+        remaining={remaining}
+      />
 
       {isDone ? (
         <div className="text-center">

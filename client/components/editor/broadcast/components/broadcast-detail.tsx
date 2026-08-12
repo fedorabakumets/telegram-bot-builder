@@ -65,6 +65,8 @@ export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: Broa
   const total = progressEvent?.totalCount ?? base.totalCount ?? 0;
   const delivered = progressEvent?.deliveredCount ?? base.deliveredCount ?? 0;
   const failed = progressEvent?.failedCount ?? base.failedCount ?? 0;
+  const blocked = progressEvent?.blockedCount ?? base.blockedCount ?? 0;
+  const deleted = progressEvent?.deletedCount ?? base.deletedCount ?? 0;
   const successRate = total > 0 ? Math.round((delivered / total) * 100) : 0;
 
   return (
@@ -96,7 +98,9 @@ export function BroadcastDetail({ broadcast, projectId, onClose, refetch }: Broa
         <div className="grid grid-cols-2 gap-2">
           <StatMini icon={Users} label="Аудитория" value={total} color="text-blue-600" bg="bg-blue-50 dark:bg-blue-900/20" />
           <StatMini icon={CheckCircle2} label="Доставлено" value={delivered} color="text-green-600" bg="bg-green-50 dark:bg-green-900/20" />
-          <StatMini icon={XCircle} label="Ошибок" value={failed} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" />
+          <StatMini icon={XCircle} label="Заблокировали" value={blocked} color="text-amber-600" bg="bg-amber-50 dark:bg-amber-900/20" />
+          <StatMini icon={XCircle} label="Аккаунт удалён" value={deleted} color="text-orange-600" bg="bg-orange-50 dark:bg-orange-900/20" />
+          <StatMini icon={XCircle} label="Прочие ошибки" value={failed} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" />
           <StatMini icon={Percent} label="Успех" value={`${successRate}%`} color="text-purple-600" bg="bg-purple-50 dark:bg-purple-900/20" />
         </div>
 

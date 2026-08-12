@@ -10,6 +10,10 @@ import { sendTelegramMessage } from "../messages/send-telegram-message";
 import { buildMediaFiles } from "../messages/build-media-files";
 import { extractButtonsFromNode } from "../messages/extract-buttons";
 import { syncCampaignAggregates } from "./sync-campaign-aggregates";
+import {
+  markUserAfterBroadcastError,
+  resolveBroadcastErrorStatus,
+} from "./mark-user-delivery-status";
 import type { InlineButton } from "../messages/extract-buttons";
 import type { SendMediaFile } from "../messages/extract-media";
 
@@ -88,26 +92,12 @@ async function sendBroadcastMessage(
 }
 
 /**
- * Определяет статус ошибки по коду ошибки Telegram
- * @param errorCode - Код ошибки Telegram
- * @param description - Описание ошибки
- * @returns Статус результата рассылки
- */
-function resolveErrorStatus(errorCode?: number, description?: string): "blocked" | "not_found" | "failed" {
-  if (errorCode === 403) return "blocked";
-  if (errorCode === 400 && description?.includes("chat not found")) return "not_found";
-  return "failed";
-}
-
-/**
  * Отправляет WS-событие прогресса рассылки.
  * Для дочерней рассылки кампании добавляет campaignId, чтобы клиент
  * мог агрегировать прогресс «большой рассылки» в реальном времени
  * @param projectId - ID проекта
  * @param broadcastId - ID рассылки
- * @param sentCount - Отправлено
- * @param deliveredCount - Доставлено
- * @param failedCount - Ошибок
+ * @param counts - Счётчики отправки
  * @param totalCount - Всего
  * @param status - Текущий статус
  * @param campaignId - ID родительской кампании (null для одиночной рассылки)
@@ -115,9 +105,13 @@ function resolveErrorStatus(errorCode?: number, description?: string): "blocked"
 async function emitProgress(
   projectId: number,
   broadcastId: number,
-  sentCount: number,
-  deliveredCount: number,
-  failedCount: number,
+  counts: {
+    sentCount: number;
+    deliveredCount: number;
+    failedCount: number;
+    blockedCount: number;
+    deletedCount: number;
+  },
   totalCount: number,
   status: "running" | "stopped" | "done",
   campaignId: number | null = null,
@@ -127,9 +121,11 @@ async function emitProgress(
     projectId,
     data: {
       broadcastId,
-      sentCount,
-      deliveredCount,
-      failedCount,
+      sentCount: counts.sentCount,
+      deliveredCount: counts.deliveredCount,
+      failedCount: counts.failedCount,
+      blockedCount: counts.blockedCount,
+      deletedCount: counts.deletedCount,
       totalCount,
       status,
       ...(campaignId !== null ? { campaignId } : {}),
@@ -169,12 +165,30 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     const users = await storage.getUsersForBroadcast(projectId, tokenId, filters as Parameters<typeof storage.getUsersForBroadcast>[2]);
 
     await storage.updateBroadcast(broadcastId, { totalCount: users.length });
-    await emitProgress(projectId, broadcastId, 0, 0, 0, users.length, "running", campaignId);
+    const emptyCounts = {
+      sentCount: 0,
+      deliveredCount: 0,
+      failedCount: 0,
+      blockedCount: 0,
+      deletedCount: 0,
+    };
+    await emitProgress(projectId, broadcastId, emptyCounts, users.length, "running", campaignId);
     await syncCampaignAggregates(campaignId);
 
     let sentCount = 0;
     let deliveredCount = 0;
     let failedCount = 0;
+    let blockedCount = 0;
+    let deletedCount = 0;
+
+    /** Текущие счётчики для WS и обновления БД */
+    const snapshotCounts = () => ({
+      sentCount,
+      deliveredCount,
+      failedCount,
+      blockedCount,
+      deletedCount,
+    });
 
     // Обрабатываем пользователей батчами
     for (let i = 0; i < users.length; i += BATCH_SIZE) {
@@ -245,28 +259,42 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
           } else if (result.errorCode === 429 && result.retryAfter) {
             // Rate limit — ждём retry_after секунд
             await sleep(result.retryAfter * 1000);
-          } else if (result.errorCode === 403 || (result.errorCode === 400 && result.description?.includes("chat not found"))) {
-            // Пользователь заблокировал бота или не найден — не ретраим
-            failedCount++;
-            sentCount++;
-            const status = resolveErrorStatus(result.errorCode, result.description);
-            await storage.createBroadcastResult({ broadcastId, userId: user.userId, status, errorMessage: result.description });
-            sent = true;
           } else {
-            retries++;
-            if (retries >= 3) {
-              failedCount++;
+            const status = resolveBroadcastErrorStatus(result.errorCode, result.description);
+            if (status === "blocked" || status === "not_found") {
+              // Заблокировал бота или аккаунт удалён — не ретраим
               sentCount++;
-              await storage.createBroadcastResult({ broadcastId, userId: user.userId, status: "failed", errorMessage: result.description });
+              if (status === "blocked") blockedCount++;
+              else deletedCount++;
+              await storage.createBroadcastResult({
+                broadcastId,
+                userId: user.userId,
+                status,
+                errorMessage: result.description,
+              });
+              await markUserAfterBroadcastError(projectId, tokenId, user.userId, status);
               sent = true;
             } else {
-              await sleep(1000 * retries);
+              retries++;
+              if (retries >= 3) {
+                failedCount++;
+                sentCount++;
+                await storage.createBroadcastResult({
+                  broadcastId,
+                  userId: user.userId,
+                  status: "failed",
+                  errorMessage: result.description,
+                });
+                sent = true;
+              } else {
+                await sleep(1000 * retries);
+              }
             }
           }
         }
 
         if (sentCount % 10 === 0) {
-          void emitProgress(projectId, broadcastId, sentCount, deliveredCount, failedCount, users.length, "running", campaignId);
+          void emitProgress(projectId, broadcastId, snapshotCounts(), users.length, "running", campaignId);
         }
 
         await sleep(DELAY_BETWEEN_MESSAGES);
@@ -274,13 +302,11 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
 
       // После каждого батча обновляем счётчики и отправляем WS-событие
       const isStopped = activeBroadcasts.get(broadcastId) === "stopped";
-      await storage.updateBroadcast(broadcastId, { sentCount, deliveredCount, failedCount });
+      await storage.updateBroadcast(broadcastId, snapshotCounts());
       await emitProgress(
         projectId,
         broadcastId,
-        sentCount,
-        deliveredCount,
-        failedCount,
+        snapshotCounts(),
         users.length,
         isStopped ? "stopped" : "running",
         campaignId,
@@ -346,8 +372,23 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
 
     // Определяем финальный статус
     const finalStatus = activeBroadcasts.get(broadcastId) === "stopped" ? "stopped" : "done";
-    await storage.updateBroadcast(broadcastId, { status: finalStatus, finishedAt: new Date(), sentCount, deliveredCount, failedCount });
-    await emitProgress(projectId, broadcastId, sentCount, deliveredCount, failedCount, users.length, finalStatus, campaignId);
+    await storage.updateBroadcast(broadcastId, {
+      status: finalStatus,
+      finishedAt: new Date(),
+      sentCount,
+      deliveredCount,
+      failedCount,
+      blockedCount,
+      deletedCount,
+    });
+    await emitProgress(
+      projectId,
+      broadcastId,
+      { sentCount, deliveredCount, failedCount, blockedCount, deletedCount },
+      users.length,
+      finalStatus,
+      campaignId,
+    );
     await syncCampaignAggregates(campaignId);
   } catch (error) {
     console.error(`[broadcastQueue] Критическая ошибка рассылки ${broadcastId}:`, error);

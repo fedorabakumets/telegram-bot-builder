@@ -1840,6 +1840,9 @@ export class DatabaseStorage implements IStorage {
       eq(botUsers.projectId, projectId),
       eq(botUsers.tokenId, tokenId),
       eq(botUsers.isBot, 0),
+      // Не берём заблокировавших бота и удалённые аккаунты
+      sql`COALESCE(${botUsers.isBlocked}, 0) = 0`,
+      sql`COALESCE(${botUsers.isDeleted}, 0) = 0`,
     ];
 
     // Фильтрация по конкретным userId (ручной выбор аудитории)
@@ -1900,13 +1903,52 @@ export class DatabaseStorage implements IStorage {
       deviceInfo: null,
       locationData: null,
       contactData: null,
-      isBlocked: 0,
+      isBlocked: u.isBlocked ?? 0,
+      isDeleted: u.isDeleted ?? 0,
       isActive: u.isActive ?? 1,
       tags: [],
       notes: null,
       createdAt: u.registeredAt ?? null,
       updatedAt: u.lastInteraction ?? null,
     })) as unknown as any[];
+  }
+
+  /**
+   * Пометить пользователя как заблокировавшего бота
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   * @param userId - Telegram user id
+   */
+  async markBotUserBlocked(projectId: number, tokenId: number, userId: number): Promise<void> {
+    await this.db
+      .update(botUsers)
+      .set({ isBlocked: 1 })
+      .where(
+        and(
+          eq(botUsers.projectId, projectId),
+          eq(botUsers.tokenId, tokenId),
+          eq(botUsers.userId, userId),
+        ),
+      );
+  }
+
+  /**
+   * Пометить пользователя как удалённый/деактивированный аккаунт
+   * @param projectId - ID проекта
+   * @param tokenId - ID токена
+   * @param userId - Telegram user id
+   */
+  async markBotUserDeleted(projectId: number, tokenId: number, userId: number): Promise<void> {
+    await this.db
+      .update(botUsers)
+      .set({ isDeleted: 1, isBlocked: 0 })
+      .where(
+        and(
+          eq(botUsers.projectId, projectId),
+          eq(botUsers.tokenId, tokenId),
+          eq(botUsers.userId, userId),
+        ),
+      );
   }
 
   // Переменные окружения бота

@@ -36,6 +36,10 @@ export const botUsers = pgTable("bot_users", {
   userData: jsonb("user_data").default({}),
   /** Флаг активности: 0 - неактивен, 1 - активен */
   isActive: integer("is_active").default(1),
+  /** Заблокировал бота: 0 — нет, 1 — да (снимается при новом сообщении) */
+  isBlocked: integer("is_blocked").default(0),
+  /** Аккаунт удалён/деактивирован: 0 — нет, 1 — да */
+  isDeleted: integer("is_deleted").default(0),
   /** Флаг Premium пользователя: 0 - обычный, 1 - premium */
   isPremium: integer("is_premium").default(0),
   /** Код языка пользователя (IETF: ru, en, uk...) */
@@ -68,6 +72,10 @@ export const insertBotUserSchema = z.object({
   userData: z.record(z.any()).default({}),
   /** Флаг активности: 0 - неактивен, 1 - активен */
   isActive: z.number().min(0).max(1).default(1),
+  /** Заблокировал бота: 0 — нет, 1 — да */
+  isBlocked: z.number().min(0).max(1).default(0).optional(),
+  /** Аккаунт удалён: 0 — нет, 1 — да */
+  isDeleted: z.number().min(0).max(1).default(0).optional(),
   /** Флаг Premium пользователя: 0 - обычный, 1 - premium */
   isPremium: z.number().min(0).max(1).default(0).optional(),
   /** Код языка пользователя (IETF: ru, en, uk...) */

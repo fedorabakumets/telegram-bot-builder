@@ -37,8 +37,12 @@ export const broadcasts = pgTable("broadcasts", {
   sentCount: integer("sent_count").notNull().default(0),
   /** Доставлено успешно */
   deliveredCount: integer("delivered_count").notNull().default(0),
-  /** Ошибок при отправке */
+  /** Ошибок при отправке (прочие, не блокировка и не удалённый аккаунт) */
   failedCount: integer("failed_count").notNull().default(0),
+  /** Получателей, заблокировавших бота */
+  blockedCount: integer("blocked_count").notNull().default(0),
+  /** Получателей с удалённым/недоступным аккаунтом */
+  deletedCount: integer("deleted_count").notNull().default(0),
   /** Дата создания рассылки */
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   /** Дата начала отправки */
