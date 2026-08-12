@@ -599,8 +599,11 @@ export async function initializeDatabaseTables() {
     try {
       await executeWithRetry(db, sql`
         ALTER TABLE bot_tokens
-        ADD COLUMN IF NOT EXISTS content_cache INTEGER DEFAULT 1;
+        ADD COLUMN IF NOT EXISTS content_cache INTEGER DEFAULT 0;
       `, "Миграция: добавление content_cache в bot_tokens");
+      await executeWithRetry(db, sql`
+        ALTER TABLE bot_tokens ALTER COLUMN content_cache SET DEFAULT 0;
+      `, "Миграция: DEFAULT content_cache = 0");
     } catch (error) {
       console.log('⚠️ Ошибка при проверке/добавлении колонки content_cache в bot_tokens:', error);
     }

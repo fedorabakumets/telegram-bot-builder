@@ -10,12 +10,13 @@
  *      ВОТ ЭТО гейтится флагом contentCache.
  *
  * Формула генерации машинерии:
- *   generateContent = (contentCache !== false) && userDatabaseEnabled
+ *   generateContent = (contentCache === true) && userDatabaseEnabled
  *   (live-reload читает таблицу _content через db_pool — без БД бесполезен).
  *   Аксессор get_content/_content_cache генерируется всегда при projectId.
+ *   По умолчанию contentCache выключен (меньше памяти).
  *
  * Блоки:
- *  A. contentCache не задан/true + БД вкл → есть машинерия И есть аксессор
+ *  A. contentCache не задан → НЕТ машинерии, аксессор есть; true → есть машинерия
  *  B. contentCache=false + БД вкл → НЕТ машинерии, НО аксессор ВСЁ РАВНО есть
  *  C. contentCache=false → в main НЕТ вызовов load_content/_content_reload_loop
  *  D. Синтаксис Python OK для обоих вариантов
@@ -96,7 +97,7 @@ function startProject() {
  * ВСЕГДА передаёт projectId — без него контент-кода нет в принципе.
  * БД по умолчанию включена (машинерия live-reload требует БД).
  * @param label - Метка для имени бота
- * @param contentCache - Значение опции (undefined → дефолт true)
+ * @param contentCache - Значение опции (undefined → дефолт false)
  * @param opts - Доп. опции: userDatabaseEnabled (по умолчанию true), projectId (263)
  */
 function gen(
@@ -180,27 +181,27 @@ console.log('║   Фаза 69 — Переключатель «Живое об�
 console.log('╚══════════════════════════════════════════════════════════════╝\n');
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// БЛОК A: contentCache не задан/true + projectId → есть машинерия И аксессор
+// БЛОК A: contentCache не задан → выкл по умолчанию; true → есть машинерия
 // ═══════════════════════════════════════════════════════════════════════════════
 
-console.log('── Блок A: live-reload включён по умолчанию ────────────────────');
+console.log('── Блок A: live-reload по умолчанию выкл, true включает ─────────');
 
-test('A01', 'contentCache не задан → есть async def load_content', () => {
+test('A01', 'contentCache не задан → НЕТ load_content', () => {
   const code = gen('A01');
-  ok(code.includes('async def load_content'),
-    'load_content должен присутствовать при дефолтном флаге');
+  ok(!code.includes('async def load_content'),
+    'load_content НЕ должен присутствовать при дефолтном (выкл) флаге');
 });
 
-test('A02', 'contentCache не задан → есть _content_reload_loop', () => {
+test('A02', 'contentCache не задан → НЕТ _content_reload_loop', () => {
   const code = gen('A02');
-  ok(code.includes('async def _content_reload_loop'),
-    '_content_reload_loop должен присутствовать при дефолтном флаге');
+  ok(!code.includes('async def _content_reload_loop'),
+    '_content_reload_loop НЕ должен присутствовать при дефолтном флаге');
 });
 
-test('A03', 'contentCache не задан → есть _content_subscribe_redis', () => {
+test('A03', 'contentCache не задан → НЕТ _content_subscribe_redis', () => {
   const code = gen('A03');
-  ok(code.includes('async def _content_subscribe_redis'),
-    '_content_subscribe_redis должен присутствовать при дефолтном флаге');
+  ok(!code.includes('async def _content_subscribe_redis'),
+    '_content_subscribe_redis НЕ должен присутствовать при дефолтном флаге');
 });
 
 test('A04', 'contentCache не задан → есть аксессор get_content и _content_cache', () => {

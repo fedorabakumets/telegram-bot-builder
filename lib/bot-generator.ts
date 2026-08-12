@@ -209,7 +209,7 @@ function buildGenerationContext(
     saveIncomingMedia = false,
     catchAllHandlers = true,
     protectContent = false,
-    contentCache = true,
+    contentCache = false,
     telegramFileIds = {},
     thumbnailFileIds = {},
     thumbnailUrls = {},

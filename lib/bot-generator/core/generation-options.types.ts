@@ -47,7 +47,7 @@ export interface GenerationOptions {
   protectContent?: boolean;
   /**
    * Генерировать машинерию live-reload контента (load_content, reload_content,
-   * _content_reload_loop, _content_subscribe_redis). По умолчанию true.
+   * _content_reload_loop, _content_subscribe_redis). По умолчанию false.
    * Аксессор get_content и _content_cache генерируются всегда (при projectId).
    */
   contentCache?: boolean;
@@ -86,7 +86,7 @@ export const DEFAULT_GENERATION_OPTIONS: Required<GenerationOptions> = {
   saveIncomingMedia: false,
   catchAllHandlers: true,
   protectContent: false,
-  contentCache: true,
+  contentCache: false,
   telegramFileIds: {},
   thumbnailFileIds: {},
   thumbnailUrls: {},

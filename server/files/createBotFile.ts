@@ -150,8 +150,8 @@ export async function createCompleteBotFiles(
   const saveIncomingMedia = tokenRecord?.saveIncomingMedia === 1;
   // null/undefined => true (catch-all включены по умолчанию)
   const catchAllHandlers = tokenRecord?.catchAllHandlers !== 0;
-  // null/undefined => true (живое обновление контента включено по умолчанию)
-  const contentCache = tokenRecord?.contentCache !== 0;
+  // null/undefined => false (живое обновление контента выключено по умолчанию)
+  const contentCache = tokenRecord?.contentCache === 1;
 
   // Получаем кастомные переменные окружения из БД
   const customEnvVars = await storage.getEnvVariables(tokenId);

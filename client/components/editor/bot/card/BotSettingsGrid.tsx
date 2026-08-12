@@ -136,7 +136,7 @@ export function BotSettingsGrid({
         <BotContentCacheToggle
           projectId={projectId}
           tokenId={tokenId}
-          contentCache={token.contentCache ?? 1}
+          contentCache={token.contentCache ?? 0}
           userDatabaseEnabled={userDatabaseEnabled}
           onPendingChange={onPendingChange}
         />

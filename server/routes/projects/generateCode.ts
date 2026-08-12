@@ -64,17 +64,17 @@ export async function handleGenerateCode(req: Request, res: Response): Promise<v
     let catchAllHandlers = true;
     // Защита контента из первого токена проекта (дефолт false — защита выключена).
     let protectContent = false;
-    // Живое обновление контента из первого токена проекта (дефолт true).
-    let contentCache = true;
+    // Живое обновление контента из первого токена проекта (дефолт false).
+    let contentCache = false;
     try {
       const tokens = await storage.getBotTokensByProject(projectId);
       if (tokens.length > 0) {
         catchAllHandlers = tokens[0].catchAllHandlers !== 0;
         protectContent = tokens[0].protectContent === 1;
-        contentCache = tokens[0].contentCache !== 0;
+        contentCache = tokens[0].contentCache === 1;
       }
     } catch {
-      // ignore — остаётся дефолт true
+      // ignore — остаётся дефолт false
     }
 
     const botDataForGenerator = project.data as any;

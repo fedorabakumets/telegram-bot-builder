@@ -22,7 +22,7 @@
  * @param tokenId - ID токена бота в системе (для сегментации данных в БД)
  * @param customVariables - Массив пользовательских переменных (переопределяют дефолты)
  * @param catchAllHandlers - Генерировать catch-all обработчики (по умолчанию true)
- * @param contentCache - Живое обновление контента из таблицы _content (по умолчанию true)
+ * @param contentCache - Живое обновление контента из таблицы _content (по умолчанию false)
  * @returns Содержимое .env файла
  */
 export function generateEnvFile(
@@ -38,7 +38,7 @@ export function generateEnvFile(
   tokenId: number = 0,
   customVariables?: Array<{ key: string; value: string }>,
   catchAllHandlers: boolean = true,
-  contentCache: boolean = true,
+  contentCache: boolean = false,
 ): string {
   /** Маппинг кастомных переменных для переопределения дефолтов */
   const overrides = new Map(

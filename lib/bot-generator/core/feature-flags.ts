@@ -157,10 +157,9 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
     // Catch-all генерируются если флаг не выключен ЛИБО есть зависимости-предохранители
     generateCatchAllResult:
       context.options.catchAllHandlers !== false || hasCatchAllDependencies(nodes),
-    // Машинерия live-reload контента генерируется только при включённой БД
-    // (таблица _content читается через db_pool) и не выключенном флаге contentCache.
+    // Машинерия live-reload контента — только при явном contentCache=true и включённой БД.
     // get_content/_content_cache генерируются отдельно (всегда при projectId).
     generateContentResult:
-      context.options.contentCache !== false && !!context.options.userDatabaseEnabled,
+      context.options.contentCache === true && !!context.options.userDatabaseEnabled,
   };
 }

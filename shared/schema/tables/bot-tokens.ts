@@ -77,10 +77,10 @@ export const botTokens = pgTable("bot_tokens", {
   catchAllHandlers: integer("catch_all_handlers").default(1),
   /**
    * Живое обновление контента из таблицы _content без перезапуска
-   * (0 = выключено, 1 = включено). Управляет генерацией load_content/
-   * reload_content/_content_reload_loop/_content_subscribe_redis.
+   * (0 = выключено, 1 = включено). По умолчанию выключено — меньше памяти.
+   * Управляет генерацией load_content/reload_content/_content_reload_loop/_content_subscribe_redis.
    */
-  contentCache: integer("content_cache").default(1),
+  contentCache: integer("content_cache").default(0),
   /** Режим запуска бота: 'polling' (по умолчанию) или 'webhook' */
   launchMode: text("launch_mode").default("polling"),
   /** Базовый URL для webhook режима (например https://example.com) */
@@ -177,8 +177,8 @@ export const insertBotTokenSchema = z.object({
     .optional(),
   /** Генерировать catch-all обработчики (0 = выключено, 1 = включено) */
   catchAllHandlers: z.number().min(0).max(1).default(1),
-  /** Живое обновление контента из таблицы _content (0 = выключено, 1 = включено) */
-  contentCache: z.number().min(0).max(1).default(1),
+  /** Живое обновление контента из таблицы _content (0 = выключено, 1 = включено; по умолчанию выкл) */
+  contentCache: z.number().min(0).max(1).default(0),
   /** Режим запуска бота: polling или webhook */
   launchMode: z.enum(['polling', 'webhook']).default('polling').optional(),
   /** Базовый URL для webhook режима */

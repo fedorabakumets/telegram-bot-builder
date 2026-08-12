@@ -71,13 +71,13 @@ export function BotContentCacheToggle({
   className = '',
   onPendingChange,
 }: BotContentCacheToggleProps) {
-  // По умолчанию включено (1): null/undefined трактуем как включённое
-  const [localEnabled, setLocalEnabled] = useState(contentCache !== 0);
+  // По умолчанию выключено: null/undefined/0 → false
+  const [localEnabled, setLocalEnabled] = useState(contentCache === 1);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   useEffect(() => {
-    setLocalEnabled(contentCache !== 0);
+    setLocalEnabled(contentCache === 1);
   }, [contentCache]);
 
   const mutation = useMutation({
@@ -91,7 +91,7 @@ export function BotContentCacheToggle({
       });
     },
     onError: () => {
-      setLocalEnabled(contentCache !== 0);
+      setLocalEnabled(contentCache === 1);
       toast({
         title: 'Ошибка',
         description: 'Не удалось обновить настройку живого обновления контента',
@@ -112,8 +112,8 @@ export function BotContentCacheToggle({
       title="Живое обновление контента"
       description={
         localEnabled
-          ? 'Бот подхватывает правки таблицы _content без перезапуска'
-          : 'Тексты обновляются только после перезапуска (меньше кода)'
+          ? 'Тексты сообщений, кнопок и т.д. обновляются без перезапуска — расход памяти выше'
+          : 'Тексты и кнопки меняются только после перезапуска — меньше памяти'
       }
       active={localEnabled}
       className={className}

@@ -257,7 +257,7 @@ export async function startBot(projectId: number, token: string, tokenId: number
       saveIncomingMedia: tokenSettings?.saveIncomingMedia === 1,
       catchAllHandlers: tokenSettings?.catchAllHandlers !== 0,
       protectContent: tokenSettings?.protectContent === 1,
-      contentCache: tokenSettings?.contentCache !== 0,
+      contentCache: tokenSettings?.contentCache === 1,
       thumbnailUrls,
     });
     
