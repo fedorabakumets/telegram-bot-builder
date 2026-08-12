@@ -22,9 +22,9 @@
 | total_count | integer | `0` | NO | - | - | Всего получателей по всем ботам |
 | sent_count | integer | `0` | NO | - | - | Обработано сообщений по всем ботам |
 | delivered_count | integer | `0` | NO | - | - | Доставлено успешно по всем ботам |
-| failed_count | integer | `0` | NO | - | - | Прочие ошибки по всем ботам |
-| blocked_count | integer | `0` | NO | - | - | Заблокировали бота (сумма по дочерним) |
-| deleted_count | integer | `0` | NO | - | - | Аккаунт удалён (сумма по дочерним) |
+| failed_count | integer | `0` | NO | - | - | Ошибок при отправке по всем ботам (прочие) |
+| blocked_count | integer | `0` | NO | - | - | Заблокировали бота по всем дочерним рассылкам |
+| deleted_count | integer | `0` | NO | - | - | Аккаунт удалён / недоступен по всем дочерним рассылкам |
 | created_at | timestamp with time zone | `now()` | YES | - | - | Дата создания кампании |
 | started_at | timestamp with time zone | - | YES | - | - | Дата начала отправки |
 | finished_at | timestamp with time zone | - | YES | - | - | Дата завершения отправки |
