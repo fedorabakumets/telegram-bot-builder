@@ -26,10 +26,15 @@ interface BotTokenSelectorProps {
   projectId: number;
   /** Список токенов проекта */
   tokens: BotToken[];
-  /** Идентификатор выбранного токена */
+  /** Идентификатор выбранного токена (`null` = все боты, если allowAll) */
   selectedTokenId: number | null;
   /** Обработчик выбора токена */
   onSelect: (tokenId: number | null) => void;
+  /**
+   * Показывать пункт «Все боты».
+   * В Диалогах выключать — там нужен конкретный бот для отправки/аватаров.
+   */
+  allowAll?: boolean;
 }
 
 /**
@@ -56,6 +61,7 @@ export function BotTokenSelector({
   tokens,
   selectedTokenId,
   onSelect,
+  allowAll = true,
 }: BotTokenSelectorProps): React.JSX.Element {
   const tokenIds = useMemo(() => tokens.map((t) => t.id), [tokens]);
   const userCounts = useTokenUserCounts(projectId, tokenIds);
@@ -73,18 +79,35 @@ export function BotTokenSelector({
     );
   }
 
+  /** Без «Все боты» значение Select всегда конкретный id */
+  const fallbackId = sortedTokens[0]?.id ?? null;
+  const selectValue =
+    selectedTokenId != null
+      ? String(selectedTokenId)
+      : allowAll
+        ? 'all'
+        : fallbackId != null
+          ? String(fallbackId)
+          : undefined;
+
   return (
     <div className="flex items-center gap-1.5">
       <Bot className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
       <Select
-        value={selectedTokenId != null ? String(selectedTokenId) : 'all'}
-        onValueChange={(value) => onSelect(value === 'all' ? null : Number(value))}
+        value={selectValue}
+        onValueChange={(value) => {
+          if (allowAll && value === 'all') {
+            onSelect(null);
+            return;
+          }
+          onSelect(Number(value));
+        }}
       >
         <SelectTrigger className="h-8 text-xs border-border/60 bg-background min-w-[120px]">
           <SelectValue placeholder="Бот" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Все боты</SelectItem>
+          {allowAll ? <SelectItem value="all">Все боты</SelectItem> : null}
           {sortedTokens.map((token) => {
             const count = userCounts.get(token.id);
             const label =

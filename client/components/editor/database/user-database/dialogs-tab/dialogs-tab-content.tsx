@@ -80,18 +80,30 @@ export function DialogsTabContent({
     }
   }, [initialUser]);
 
-  // Автоматически выбираем токен по умолчанию если снаружи не передан
+  // В Диалогах всегда конкретный бот (без «Все боты»)
   const projectTokensInfo = useProjectTokens([projectId]);
   const projectTokens = projectTokensInfo[0]?.tokens ?? [];
-  const [internalTokenId, setInternalTokenId] = useState<number | null>(selectedTokenIdProp ?? null);
-  const resolvedTokenId = selectedTokenIdProp ?? internalTokenId;
+  const [internalTokenId, setInternalTokenId] = useState<number | null>(
+    selectedTokenIdProp !== undefined ? selectedTokenIdProp : null,
+  );
+  const resolvedTokenId =
+    selectedTokenIdProp !== undefined ? selectedTokenIdProp : internalTokenId;
 
   useEffect(() => {
-    if (resolvedTokenId !== null || projectTokens.length === 0) return;
-    const defaultToken = projectTokens.find((t) => t.isDefault === 1) ?? projectTokens[0];
-    if (!defaultToken) return;
-    setInternalTokenId(defaultToken.id);
-    onSelectToken?.(defaultToken.id);
+    if (selectedTokenIdProp !== undefined) {
+      setInternalTokenId(selectedTokenIdProp);
+    }
+  }, [selectedTokenIdProp]);
+
+  useEffect(() => {
+    if (projectTokens.length === 0) return;
+    const tokenExists =
+      resolvedTokenId != null && projectTokens.some((t) => t.id === resolvedTokenId);
+    if (tokenExists) return;
+    const next = projectTokens.find((t) => t.isDefault === 1) ?? projectTokens[0];
+    if (!next) return;
+    setInternalTokenId(next.id);
+    onSelectToken?.(next.id);
   }, [projectTokens, resolvedTokenId, onSelectToken]);
 
   // Подписываемся на WS-события: обновляет кэш infinite-users (lastMessageText, порядок)
@@ -143,7 +155,9 @@ export function DialogsTabContent({
               projectId={projectId}
               tokens={projectTokens}
               selectedTokenId={resolvedTokenId}
+              allowAll={false}
               onSelect={(id) => {
+                if (id == null) return;
                 setInternalTokenId(id);
                 onSelectToken?.(id);
                 setSelectedUser(null);
@@ -240,7 +254,9 @@ export function DialogsTabContent({
                 projectId={projectId}
                 tokens={projectTokens}
                 selectedTokenId={resolvedTokenId}
+                allowAll={false}
                 onSelect={(id) => {
+                  if (id == null) return;
                   setInternalTokenId(id);
                   onSelectToken?.(id);
                   setSelectedUser(null);

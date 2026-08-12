@@ -3,10 +3,11 @@
  * @description Компонент верхнего уровня, объединяющий все подкомпоненты
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
+import { useNormalizeSelectedTokenId } from '@/hooks/use-normalize-selected-token';
 import { useToast } from '@/hooks/use-toast';
 import { DatabaseContent } from './database-content';
 import { useResponsive } from './hooks/use-responsive';
@@ -42,10 +43,13 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
   const projectTokensInfo = useProjectTokens([projectId]);
   const projectTokens = availableTokensProp ?? projectTokensInfo[0]?.tokens ?? [];
   const [internalSelectedTokenId, setInternalSelectedTokenId] = useState<number | null>(
-    selectedTokenIdProp ?? null
+    selectedTokenIdProp !== undefined ? selectedTokenIdProp : null,
   );
-  const resolvedSelectedTokenId = selectedTokenIdProp ?? internalSelectedTokenId;
-  const { state, setters } = useUserDatabasePanelState();  const isMobile = useIsMobile();
+  /** null = «Все боты»; `??` нельзя — null схлопнется во внутренний стейт */
+  const resolvedSelectedTokenId =
+    selectedTokenIdProp !== undefined ? selectedTokenIdProp : internalSelectedTokenId;
+  const { state, setters } = useUserDatabasePanelState();
+  const isMobile = useIsMobile();
   const { toast } = useToast();
 
   const {
@@ -96,26 +100,20 @@ export function UserDatabasePanel(props: UserDatabasePanelProps): React.JSX.Elem
 
   useEffect(() => {
     if (selectedTokenIdProp !== undefined) {
-      setInternalSelectedTokenId(selectedTokenIdProp ?? null);
+      setInternalSelectedTokenId(selectedTokenIdProp);
     }
   }, [selectedTokenIdProp]);
 
-  useEffect(() => {
-    if (projectTokens.length === 0) {
-      return;
-    }
-
-    const hasSelectedToken = projectTokens.some((token) => token.id === resolvedSelectedTokenId);
-    if (hasSelectedToken) {
-      return;
-    }
-
-    const nextToken = projectTokens.find((token) => token.isDefault === 1) ?? projectTokens[0];
-    if (selectedTokenIdProp === undefined) {
-      setInternalSelectedTokenId(nextToken?.id ?? null);
-    }
-    onSelectToken?.(nextToken?.id ?? null);
-  }, [onSelectToken, projectTokens, resolvedSelectedTokenId, selectedTokenIdProp]);
+  const resetDeletedToken = useCallback(
+    (tokenId: null) => {
+      if (selectedTokenIdProp === undefined) {
+        setInternalSelectedTokenId(tokenId);
+      }
+      onSelectToken?.(tokenId);
+    },
+    [onSelectToken, selectedTokenIdProp],
+  );
+  useNormalizeSelectedTokenId(projectTokens, resolvedSelectedTokenId, resetDeletedToken);
 
   const variableToQuestionMap = useVariableToQuestionMap({
     projectData: project?.data,

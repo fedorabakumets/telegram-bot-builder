@@ -3,7 +3,7 @@
  * @description Отображает числовые карточки с графиками и donut-диаграммы
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { BarChart2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -24,6 +24,7 @@ import { ActivitySplitToggle, ActivitySplitMode } from '@/components/editor/data
 import { aggregateTopSources } from '@/components/editor/database/user-database/components/stats/source-aggregation-utils';
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
+import { useNormalizeSelectedTokenId } from '@/hooks/use-normalize-selected-token';
 import { useLiveInvalidate } from '@/components/editor/database/user-database/hooks/use-live-invalidate';
 import { AnalyticsSourcesChart } from './analytics-sources-chart';
 import { AnalyticsPopularButtonsChart } from './analytics-popular-buttons-chart';
@@ -104,14 +105,14 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
     });
   }, [queryClient, projectId, selectedTokenId]);
 
-  /** Автовыбор дефолтного токена при загрузке, если ничего не выбрано */
-  useEffect(() => {
-    if (tokens.length === 0) return;
-    const alreadySelected = tokens.some((t) => t.id === selectedTokenId);
-    if (alreadySelected) return;
-    const next = tokens.find((t) => t.isDefault === 1) ?? tokens[0];
-    onSelectToken?.(next?.id ?? null);
-  }, [tokens, selectedTokenId, onSelectToken]);
+  /** null = «Все боты»; сбрасываем только удалённый tokenId */
+  const resetDeletedToken = useCallback(
+    (tokenId: null) => {
+      onSelectToken?.(tokenId);
+    },
+    [onSelectToken],
+  );
+  useNormalizeSelectedTokenId(tokens, selectedTokenId, resetDeletedToken);
 
   const { stats, refetchStats } = useStats({ projectId, selectedTokenId });
   const { points: growthPoints, weeklyGrowth } = useGrowth({ projectId, selectedTokenId, granularity: growthGranularity });

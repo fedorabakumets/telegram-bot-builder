@@ -3,7 +3,7 @@
  * @module client/components/editor/broadcast/broadcast-panel
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -17,6 +17,7 @@ import { NewBroadcastModal } from './wizard/new-broadcast-modal';
 import { useBroadcasts } from './hooks/use-broadcasts';
 import { useBroadcastLiveInvalidate } from './hooks/use-broadcast-live-invalidate';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
+import { useNormalizeSelectedTokenId } from '@/hooks/use-normalize-selected-token';
 import { BotTokenSelector } from '@/components/editor/database/user-database/components/header/bot-token-selector';
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
 import type { BroadcastPanelProps, Broadcast } from './types';
@@ -38,14 +39,14 @@ export function BroadcastPanel({ projectId, selectedTokenId, onSelectToken, allP
   const projectTokensInfo = useProjectTokens([projectId]);
   const tokens = projectTokensInfo[0]?.tokens ?? [];
 
-  /** Автовыбор дефолтного токена при загрузке, если ничего не выбрано */
-  useEffect(() => {
-    if (tokens.length === 0) return;
-    const alreadySelected = tokens.some((t) => t.id === selectedTokenId);
-    if (alreadySelected) return;
-    const next = tokens.find((t) => t.isDefault === 1) ?? tokens[0];
-    onSelectToken?.(next?.id ?? null);
-  }, [tokens, selectedTokenId, onSelectToken]);
+  /** null = «Все боты»; сбрасываем только удалённый tokenId */
+  const resetDeletedToken = useCallback(
+    (tokenId: null) => {
+      onSelectToken?.(tokenId);
+    },
+    [onSelectToken],
+  );
+  useNormalizeSelectedTokenId(tokens, selectedTokenId, resetDeletedToken);
 
   const { broadcasts, total, isLoading, refetch } = useBroadcasts(projectId, selectedTokenId, page);
   useBroadcastLiveInvalidate({ projectId, selectedTokenId });
