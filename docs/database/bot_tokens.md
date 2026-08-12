@@ -35,7 +35,7 @@
 | save_incoming_media | integer | `0` | YES | - | - | Флаг сохранения входящих медиафайлов от пользователей (0 = выключено, 1 = включено) |
 | messages_retention_days | integer | `0` | NO | - | - | Срок хранения сообщений в bot_messages (дни). 0 = без автоочистки; иначе сервер удаляет сообщения токена старше N дней. Дневные агрегаты аналитики не затрагиваются. |
 | catch_all_handlers | integer | `1` | YES | - | - | Генерировать catch-all обработчики необработанных сообщений/callback (0 = выключено, 1 = включено). При наличии incoming-триггеров/динамических кнопок генератор включает их принудительно независимо от флага. |
-| content_cache | integer | `0` | YES | - | - | Живое обновление контента из таблицы _content без перезапуска (0 = выключено по умолчанию, 1 = включено). Управляет генерацией load_content/ reload_content/_content_reload_loop/_content_subscribe_redis. |
+| content_cache | integer | `0` | YES | - | - | Живое обновление контента из таблицы _content без перезапуска (0 = выключено, 1 = включено). По умолчанию выключено — меньше памяти. Управляет генерацией load_content/reload_content/_content_reload_loop/_content_subscribe_redis. |
 | launch_mode | text | `'polling'` | YES | - | - | Режим запуска бота: 'polling' (по умолчанию) или 'webhook' |
 | webhook_base_url | text | - | YES | - | - | Базовый URL для webhook режима (например https://example.com) |
 | webhook_secret_token | text | - | YES | - | - | Секретный токен для верификации webhook запросов |
