@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
@@ -55,10 +56,16 @@ export function useCollaborators(projectId: number): UseCollaboratorsResult {
   const [isAdding, setIsAdding] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { user, isTelegramUser } = useTelegramAuth();
 
   /** Telegram ID текущего пользователя (null для гостей) */
   const currentTelegramId = user && isTelegramUser(user) ? user.id : null;
+
+  /** Обновить кэш имён/аватаров после изменений */
+  const invalidateProfiles = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'collaborators'] });
+  }, [queryClient, projectId]);
 
   /** Загрузить список коллабораторов */
   const fetchCollaborators = useCallback(async () => {
@@ -96,12 +103,13 @@ export function useCollaborators(projectId: number): UseCollaboratorsResult {
       );
       toast({ title: 'Добавлено', description: `Коллаборатор ${userId} добавлен` });
       await fetchCollaborators();
+      invalidateProfiles();
     } catch {
       toast({ title: 'Ошибка', description: 'Не удалось добавить коллаборатора', variant: 'destructive' });
     } finally {
       setIsAdding(false);
     }
-  }, [projectId, currentTelegramId, fetchCollaborators, toast]);
+  }, [projectId, currentTelegramId, fetchCollaborators, invalidateProfiles, toast]);
 
   /**
    * Удалить коллаборатора
@@ -117,12 +125,13 @@ export function useCollaborators(projectId: number): UseCollaboratorsResult {
       );
       toast({ title: 'Удалено', description: `Коллаборатор ${userId} удалён` });
       await fetchCollaborators();
+      invalidateProfiles();
     } catch {
       toast({ title: 'Ошибка', description: 'Не удалось удалить коллаборатора', variant: 'destructive' });
     } finally {
       setIsRemoving(false);
     }
-  }, [projectId, currentTelegramId, fetchCollaborators, toast]);
+  }, [projectId, currentTelegramId, fetchCollaborators, invalidateProfiles, toast]);
 
   return { collaborators, isLoading, isAdding, isRemoving, add, remove, currentTelegramId };
 }

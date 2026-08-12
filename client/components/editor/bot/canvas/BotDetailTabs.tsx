@@ -3,7 +3,7 @@
  * @module bot/canvas/BotDetailTabs
  */
 
-import { History, Settings, Braces, Terminal } from 'lucide-react';
+import { History, Settings, Users, Braces, Terminal } from 'lucide-react';
 import type { BotDetailTabId } from './bot-detail-tab-context';
 
 /** Описание вкладки */
@@ -12,6 +12,7 @@ const TABS: Array<{ id: BotDetailTabId; label: string; icon: typeof History }> =
   { id: 'settings', label: 'Настройки', icon: Settings },
   { id: 'variables', label: 'Переменные', icon: Braces },
   { id: 'terminal', label: 'Терминал', icon: Terminal },
+  { id: 'collaborators', label: 'Коллабораторы', icon: Users },
 ];
 
 /** Пропсы вкладок */

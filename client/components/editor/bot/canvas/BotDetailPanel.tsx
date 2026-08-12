@@ -16,6 +16,7 @@ import { useBotControl } from '../bot-control-context';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { BotDetailHeader } from './BotDetailHeader';
 import { BotDetailTabs } from './BotDetailTabs';
+import { BotCollaboratorsTab } from './BotCollaboratorsTab';
 import { BotDetailTabProvider, type BotDetailTabId } from './bot-detail-tab-context';
 import type { BotProject, BotToken } from '@shared/schema';
 
@@ -34,7 +35,7 @@ interface BotDetailPanelProps {
 }
 
 /**
- * Панель с вкладками История / Настройки / Переменные / Терминал
+ * Панель с вкладками История / Настройки / Коллабораторы / Переменные / Терминал
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
@@ -117,10 +118,14 @@ export function BotDetailPanel({
               webhookSecretToken={token.webhookSecretToken ?? null}
               canManage={canManage}
               showLaunchHistory={false}
+              showCollaborators={false}
               onPendingChange={(key, value) =>
                 pending.addChange({ action: 'update', type: 'system', key, value })
               }
             />
+          )}
+          {tab === 'collaborators' && (
+            <BotCollaboratorsTab projectId={project.id} canManage={canManage} />
           )}
           {tab === 'variables' && (
             <BotEnvPanel

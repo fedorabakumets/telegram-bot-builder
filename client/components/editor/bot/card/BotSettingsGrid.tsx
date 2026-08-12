@@ -59,6 +59,8 @@ interface BotSettingsGridProps {
   onPendingChange?: (key: string, value: string) => void;
   /** Показывать блок истории запусков (на холсте история — отдельная вкладка) */
   showLaunchHistory?: boolean;
+  /** Показывать коллабораторов (на холсте — отдельная вкладка) */
+  showCollaborators?: boolean;
   /** Live-статус бота для истории (не показывать orphan как Онлайн) */
   isLiveRunning?: boolean;
 }
@@ -81,6 +83,7 @@ export function BotSettingsGrid({
   canManage,
   onPendingChange,
   showLaunchHistory = true,
+  showCollaborators = true,
   isLiveRunning = false,
 }: BotSettingsGridProps) {
   const resolvedBotName = botName ?? `Бот ${tokenId}`;
@@ -160,10 +163,15 @@ export function BotSettingsGrid({
         />
       </SettingsSection>
 
-      <SettingsSection title="Доступ">
+      <SettingsSection title="Администраторы">
         <BotAdminIds projectId={projectId} onPendingChange={onPendingChange} />
-        <ProjectCollaborators projectId={projectId} canManage={canManage} />
       </SettingsSection>
+
+      {showCollaborators && (
+        <SettingsSection title="Коллабораторы">
+          <ProjectCollaborators projectId={projectId} canManage={canManage} />
+        </SettingsSection>
+      )}
 
       <SettingsSection title="Дополнительно">
         <BotUserbotSettings

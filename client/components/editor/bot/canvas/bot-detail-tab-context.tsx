@@ -6,7 +6,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 
 /** Идентификатор вкладки detail-панели */
-export type BotDetailTabId = 'history' | 'settings' | 'variables' | 'terminal';
+export type BotDetailTabId = 'history' | 'settings' | 'collaborators' | 'variables' | 'terminal';
 
 /** API контекста вкладок */
 interface BotDetailTabContextValue {

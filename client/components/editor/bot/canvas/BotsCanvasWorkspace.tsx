@@ -106,7 +106,11 @@ export function BotsCanvasWorkspace({ project, tokens }: BotsCanvasWorkspaceProp
             if (!open) setSelectedTokenId(null);
           }}
         >
-          <SheetContent side="bottom" className="h-[85vh] p-0 flex flex-col">
+          <SheetContent
+            side="bottom"
+            className="top-2 h-auto max-h-none gap-0 overflow-hidden rounded-t-xl p-0 flex flex-col"
+            hideClose
+          >
             {selectedToken && (
               <BotDetailPanel
                 project={project}
