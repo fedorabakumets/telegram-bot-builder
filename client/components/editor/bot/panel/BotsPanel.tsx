@@ -37,7 +37,7 @@ export function BotsPanel({ projectId, projectName, allProjects, onProjectChange
   const { clearLogs } = useBotLogs();
 
   // Загружаем все токены всех проектов для инициализации терминалов
-  const { allTokensFlat, allBotStatuses } = useBotQueries();
+  const { allTokensFlat, allBotStatuses } = useBotQueries({ includeBotInfo: false });
 
   // Инициализируем терминалы при загрузке для всех запущенных ботов (все проекты)
   useEffect(() => {

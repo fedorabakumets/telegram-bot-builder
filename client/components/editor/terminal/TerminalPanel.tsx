@@ -49,7 +49,7 @@ interface TerminalPanelProps {
  */
 export function TerminalPanel({ allProjects, currentProjectId, onProjectChange }: TerminalPanelProps) {
   const { activeTerminalId, terminals, addTerminal } = useActiveTerminals();
-  const { allTokensFlat, allBotStatuses } = useBotQueries();
+  const { allTokensFlat, allBotStatuses } = useBotQueries({ includeBotInfo: false });
 
   // Автоматическая регистрация терминалов для запущенных ботов
   useEffect(() => {

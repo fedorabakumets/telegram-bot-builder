@@ -49,13 +49,18 @@ export function useColumnsQuery(projectId: number, tableId: number | null) {
  * Загрузка строк таблицы
  * @param projectId - ID проекта
  * @param tableId - ID таблицы
+ * @param refetchInterval - Интервал опроса; false — без поллинга (график аналитики)
  * @returns Результат запроса со строками
  */
-export function useRowsQuery(projectId: number, tableId: number | null) {
+export function useRowsQuery(
+  projectId: number,
+  tableId: number | null,
+  refetchInterval: number | false = 5000,
+) {
   return useQuery({
     queryKey: tableKeys.rows(projectId, tableId!),
     queryFn: () => fetchRows(projectId, tableId!),
     enabled: !!projectId && !!tableId,
-    refetchInterval: 5000,
+    refetchInterval,
   });
 }

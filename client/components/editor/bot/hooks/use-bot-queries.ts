@@ -44,9 +44,23 @@ export interface BotQueriesResult {
 }
 
 /**
- * Хук для получения всех данных ботов
+ * Опции хука запросов ботов
  */
-export function useBotQueries(): BotQueriesResult {
+export interface UseBotQueriesOptions {
+  /**
+   * Грузить GET …/bot/info (Telegram getMe) по каждому проекту.
+   * false — только проекты, токены и статусы (терминалы, авторегистрация).
+   */
+  includeBotInfo?: boolean;
+}
+
+/**
+ * Хук для получения всех данных ботов
+ * @param options - Опции: нужен ли getMe по всем проектам
+ * @returns Проекты, токены, статусы и (опционально) профили ботов
+ */
+export function useBotQueries(options?: UseBotQueriesOptions): BotQueriesResult {
+  const includeBotInfo = options?.includeBotInfo !== false;
   const { user } = useTelegramAuth();
   const userId = user && isTelegramUser(user) ? user.id : 'anon';
 
@@ -103,8 +117,9 @@ export function useBotQueries(): BotQueriesResult {
     queries: projects.map((project, idx) => ({
       queryKey: [`/api/projects/${project.id}/bot/info`],
       queryFn: () => apiRequest('GET', `/api/projects/${project.id}/bot/info`),
-      enabled: projects.length > 0 && allTokens[idx].length > 0,
-      refetchInterval: allBotStatuses.some(s => s?.status === 'running') ? 60000 : false,
+      enabled: includeBotInfo && projects.length > 0 && allTokens[idx].length > 0,
+      refetchInterval:
+        includeBotInfo && allBotStatuses.some(s => s?.status === 'running') ? 60000 : false,
       refetchIntervalInBackground: false,
       staleTime: 30000,
       // Сохраняем предыдущие данные при рефетче — аватарки не мигают

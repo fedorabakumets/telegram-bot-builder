@@ -19,7 +19,7 @@ import { getBotDisplayName } from '../contexts/bot-control-utils';
  * на любой вкладке приложения.
  */
 export function useTerminalAutoRegister(): void {
-  const { allTokensFlat, allBotStatuses } = useBotQueries();
+  const { allTokensFlat, allBotStatuses } = useBotQueries({ includeBotInfo: false });
   const { addTerminal } = useActiveTerminals();
 
   useEffect(() => {
