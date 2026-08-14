@@ -80,6 +80,10 @@ import { getRequestTokenId } from "./utils/resolve-request-token";
 import { getTelegramProxyAgent } from "../utils/telegram-proxy";
 import { setupSwagger } from "../swagger/setup-swagger";
 import {
+  CHART_WINDOW_INTERVAL,
+  getChartSeriesGranularity,
+} from "./messages/chart-granularity-config";
+import {
   isDailyActivityGranularity,
   queryActivityFromDaily,
 } from "./messages/queryActivityFromDaily";
@@ -2745,24 +2749,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     try {
       // Режим гранулярности — новый параметр
       if (granularity) {
-        /**
-         * Маппинг гранулярности на SQL-параметры для прироста пользователей.
-         * 1m  — последний час с шагом 1 минута (60 точек)
-         * 5m  — последние 3 часа с шагом 5 минут (36 точек)
-         * 1h  — последние 24 часа с шагом 1 час (24 точки)
-         * 1d  — последние 30 дней с шагом 1 день
-         * 7d  — последние 12 недель с шагом 1 неделя
-         * 30d — последние 12 месяцев с шагом 1 месяц
-         */
-        const granularityConfig: Record<string, { window: string; truncate: string; step: string }> = {
-          "1m":  { window: "1 hour",   truncate: "minute", step: "1 minute" },
-          "5m":  { window: "3 hours",  truncate: "minute", step: "5 minutes" },
-          "1h":  { window: "24 hours", truncate: "hour",   step: "1 hour"   },
-          "1d":  { window: "30 days",  truncate: "day",    step: "1 day"    },
-          "7d":  { window: "84 days",  truncate: "week",   step: "1 week"   },
-          "30d": { window: "365 days", truncate: "month",  step: "1 month"  },
-        };
-        const cfg = granularityConfig[granularity] ?? granularityConfig["1d"];
+        const cfg = getChartSeriesGranularity(granularity);
 
         const queryText = `
           WITH series AS (
@@ -2846,7 +2833,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Эндпоинт для получения данных прироста пользователей с разбивкой по источникам трафика
    * @route GET /api/projects/:id/users/growth-by-source
    * @param id - Идентификатор проекта
-   * @query granularity - Гранулярность: "1m"|"5m"|"1h"|"1d"|"7d"|"30d" (обязательный)
+   * @query granularity - Гранулярность: "1m"|"5m"|"1h"|"1w"|"1d"|"7d"|"30d" (обязательный)
    * @query tokenId - Фильтр по боту (опциональный)
    * @returns Массив объектов [{date, sources}] где sources — объект с количеством пользователей по источникам
    */
@@ -2870,19 +2857,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
 
     try {
-      /**
-       * Маппинг гранулярности на SQL-параметры для прироста пользователей по источникам.
-       * Переиспользуем конфигурацию из /users/growth
-       */
-      const granularityConfig: Record<string, { window: string; truncate: string; step: string }> = {
-        "1m":  { window: "1 hour",   truncate: "minute", step: "1 minute" },
-        "5m":  { window: "3 hours",  truncate: "minute", step: "5 minutes" },
-        "1h":  { window: "24 hours", truncate: "hour",   step: "1 hour"   },
-        "1d":  { window: "30 days",  truncate: "day",    step: "1 day"    },
-        "7d":  { window: "84 days",  truncate: "week",   step: "1 week"   },
-        "30d": { window: "365 days", truncate: "month",  step: "1 month"  },
-      };
-      const cfg = granularityConfig[granularity] ?? granularityConfig["1d"];
+      const cfg = getChartSeriesGranularity(granularity);
 
       // Специальная обработка для 5-минутной гранулярности
       let queryText: string;
@@ -2964,7 +2939,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Считает нажатия кнопок (message_data.button_clicked = true) за окно времени.
    * @route GET /api/projects/:id/users/popular-buttons
    * @param id - Идентификатор проекта
-   * @query granularity - Гранулярность периода: "1m"|"5m"|"1h"|"1d"|"7d"|"30d" (опциональный, по умолчанию "1d")
+   * @query granularity - Гранулярность периода: "1m"|"5m"|"1h"|"1w"|"1d"|"7d"|"30d" (опциональный, по умолчанию "1d")
    * @returns Массив объектов [{label, count}] — топ-10 кнопок по числу нажатий
    */
   app.get("/api/projects/:id/users/popular-buttons", async (req, res) => {
@@ -2982,12 +2957,8 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
     }
 
     try {
-      /** Маппинг гранулярности на окно времени для выборки нажатий кнопок */
-      const windowConfig: Record<string, string> = {
-        "1m": "1 hour", "5m": "3 hours", "1h": "24 hours",
-        "1d": "30 days", "7d": "84 days", "30d": "365 days",
-      };
-      const windowInterval = windowConfig[granularity ?? "1d"] ?? "30 days";
+      const windowInterval =
+        CHART_WINDOW_INTERVAL[granularity ?? "1d"] ?? "30 days";
 
       const queryText = `
         SELECT
@@ -3162,7 +3133,7 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
    * Эндпоинт активности сообщений с поддержкой гранулярности и разбивки по направлению
    * @route GET /api/projects/:id/messages/activity
    * @param id - Идентификатор проекта
-   * @query granularity - Гранулярность: "1m"|"5m"|"1h"|"1d"|"7d"|"30d" (новый параметр)
+   * @query granularity - Гранулярность: "1m"|"5m"|"1h"|"1w"|"1d"|"7d"|"30d" (новый параметр)
    * @query period - Период: "7d"|"30d"|"90d" (старый параметр, для обратной совместимости)
    * @query split - "true" — вернуть [{date, incoming, outgoing}] вместо [{date, count}]
    * @returns Массив объектов [{date, count}] или [{date, incoming, outgoing}] при split=true

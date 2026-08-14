@@ -7603,7 +7603,7 @@
           "project-messages"
         ],
         "summary": "График активности сообщений",
-        "description": "Точки для графика в Analytics / Stats: сколько сообщений за интервалы времени.\n\n**granularity** (предпочтительно): `1m` / `5m` / `1h` — короткие окна с заполнением пустых слотов нулями; `1d` / `7d` / `30d` — дневные агрегаты (не зависят от удаления старых сообщений).\n\n**period** (legacy, если нет granularity): `7d` / `30d` / `90d` (по умолчанию 30d).\n\n**split=true** — отдельно входящие (от пользователей) и исходящие (от бота), иначе одно поле `count`.\n\nОпционально `tokenId` — только этот бот.\n\n**Auth:** cookie или Bearer PAT + доступ к проекту.\n\n**Клиент:** `use-messages-activity` → Analytics / Stats.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/messages/activity?granularity=1h&split=true&tokenId=7' \\\n  -b cookies.txt\n```",
+        "description": "Точки для графика в Analytics / Stats: сколько сообщений за интервалы времени.\n\n**granularity** (предпочтительно): `1m` / `5m` / `1h` — короткие окна с заполнением пустых слотов нулями; `1w` / `1d` / `7d` / `30d` — дневные агрегаты (не зависят от удаления старых сообщений).\n\n**period** (legacy, если нет granularity): `7d` / `30d` / `90d` (по умолчанию 30d).\n\n**split=true** — отдельно входящие (от пользователей) и исходящие (от бота), иначе одно поле `count`.\n\nОпционально `tokenId` — только этот бот.\n\n**Auth:** cookie или Bearer PAT + доступ к проекту.\n\n**Клиент:** `use-messages-activity` → Analytics / Stats.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/messages/activity?granularity=1h&split=true&tokenId=7' \\\n  -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -7644,11 +7644,12 @@
                 "1m",
                 "5m",
                 "1h",
+                "1w",
                 "1d",
                 "7d",
                 "30d"
               ],
-              "description": "1m|5m|1h|1d|7d|30d",
+              "description": "1m|5m|1h|1w|1d|7d|30d",
               "example": "1h"
             },
             "required": false,
@@ -11239,7 +11240,7 @@
           "project-users"
         ],
         "summary": "Прирост пользователей по времени",
-        "description": "С `granularity` (1m|5m|1h|1d|7d|30d) — ряд слотов `generate_series`, date в ISO. Без него — legacy `period` (7d|30d|90d, default 30d), date как YYYY-MM-DD; пустой результат — fallback на 90 дней.\n\n**Клиент:** `use-growth` (всегда шлёт granularity).\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/users/growth?granularity=1d&tokenId=7' \\\n  -b cookies.txt\n```",
+        "description": "С `granularity` (1m|5m|1h|1w|1d|7d|30d) — ряд слотов `generate_series`, date в ISO. Без него — legacy `period` (7d|30d|90d, default 30d), date как YYYY-MM-DD; пустой результат — fallback на 90 дней.\n\n**Клиент:** `use-growth` (всегда шлёт granularity).\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/users/growth?granularity=1d&tokenId=7' \\\n  -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -11280,11 +11281,12 @@
                 "1m",
                 "5m",
                 "1h",
+                "1w",
                 "1d",
                 "7d",
                 "30d"
               ],
-              "description": "1m|5m|1h|1d|7d|30d",
+              "description": "1m|5m|1h|1w|1d|7d|30d",
               "example": "1d"
             },
             "required": false,
@@ -11441,11 +11443,12 @@
                 "1m",
                 "5m",
                 "1h",
+                "1w",
                 "1d",
                 "7d",
                 "30d"
               ],
-              "description": "Обязательный: 1m|5m|1h|1d|7d|30d",
+              "description": "Обязательный: 1m|5m|1h|1w|1d|7d|30d",
               "example": "1d"
             },
             "required": true,
@@ -11605,11 +11608,12 @@
                 "1m",
                 "5m",
                 "1h",
+                "1w",
                 "1d",
                 "7d",
                 "30d"
               ],
-              "description": "1m|5m|1h|1d|7d|30d; без параметра — как 1d",
+              "description": "1m|5m|1h|1w|1d|7d|30d; без параметра — как 1d",
               "example": "1d"
             },
             "required": false,

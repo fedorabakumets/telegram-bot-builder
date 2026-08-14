@@ -19,6 +19,7 @@ import { aggregateTopSources } from '@/components/editor/database/user-database/
 import { fmtTick, fmtTooltipDate, getTickIndices } from '@/components/editor/database/user-database/components/stats/sparkline-utils';
 import { useUserMessagesLiveContext } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 import { ChartTypeToggle, ChartType } from '@/components/editor/database/user-database/components/stats/chart-type-toggle';
+import { GrowthGranularitySelector } from '@/components/editor/database/user-database/components/stats/growth-granularity-selector';
 
 /**
  * Пропсы компонента AnalyticsSourcesChart
@@ -29,19 +30,6 @@ export interface AnalyticsSourcesChartProps {
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
 }
-
-/** Метки кнопок переключателя периодов */
-const PERIOD_LABELS: Record<GrowthGranularity, string> = {
-  '1m':  '1ч',
-  '5m':  '3ч',
-  '1h':  '24ч',
-  '1d':  '30д',
-  '7d':  '12н',
-  '30d': '12м',
-};
-
-/** Порядок кнопок переключателя */
-const PERIOD_ORDER: GrowthGranularity[] = ['1m', '5m', '1h', '1d', '7d', '30d'];
 
 /**
  * Кастомный tooltip для stacked bar графика источников
@@ -152,16 +140,7 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           <ChartTypeToggle value={chartType} onChange={setChartType} />
-          <div className="flex items-center gap-0.5 flex-wrap">
-            {PERIOD_ORDER.map((g) => (
-              <button key={g} type="button" onClick={() => setGranularity(g)}
-                className={['text-xs px-1.5 py-0.5 rounded transition-colors',
-                  g === granularity ? 'bg-primary/20 text-primary font-medium' : 'text-muted-foreground hover:text-foreground',
-                ].join(' ')}>
-                {PERIOD_LABELS[g]}
-              </button>
-            ))}
-          </div>
+          <GrowthGranularitySelector value={granularity} onChange={setGranularity} />
         </div>
       </div>
 

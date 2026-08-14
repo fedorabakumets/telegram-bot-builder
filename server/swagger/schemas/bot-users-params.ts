@@ -47,9 +47,12 @@ export const BotUsersTokenQuerySchema = z.object({
   }),
 });
 
-/** Гранулярность графиков прироста / кнопок */
+/** Строка enum для OpenAPI description */
+export const BOT_USERS_GRANULARITY_OPENAPI = "1m|5m|1h|1w|1d|7d|30d";
+
+/** Гранулярность графиков прироста / кнопок (1w — 7 дней, шаг 1 день) */
 export const BotUsersGranularityEnum = z
-  .enum(["1m", "5m", "1h", "1d", "7d", "30d"])
+  .enum(["1m", "5m", "1h", "1w", "1d", "7d", "30d"])
   .openapi({ example: "1d" });
 
 /** Query списка пользователей / диалогов */

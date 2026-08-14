@@ -33,7 +33,7 @@ export function registerBotUsersGrowthPaths(
     tags: ["project-users"],
     summary: "Прирост пользователей по времени",
     description:
-      "С `granularity` (1m|5m|1h|1d|7d|30d) — ряд слотов `generate_series`, " +
+      "С `granularity` (1m|5m|1h|1w|1d|7d|30d) — ряд слотов `generate_series`, " +
       "date в ISO. Без него — legacy `period` (7d|30d|90d, default 30d), " +
       "date как YYYY-MM-DD; пустой результат — fallback на 90 дней.\n\n" +
       "**Клиент:** `use-growth` (всегда шлёт granularity).\n\n" +

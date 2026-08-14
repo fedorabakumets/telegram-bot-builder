@@ -7,6 +7,7 @@ import "./common";
 import { z } from "zod";
 import {
   BotUsersGranularityEnum,
+  BOT_USERS_GRANULARITY_OPENAPI,
   BotUsersTokenQuerySchema,
 } from "./bot-users-params";
 
@@ -79,7 +80,7 @@ export const PopularButtonsQuerySchema = BotUsersTokenQuerySchema.extend({
   /** Окно времени; default на сервере — 1d → 30 days */
   granularity: BotUsersGranularityEnum.optional().openapi({
     example: "1d",
-    description: "1m|5m|1h|1d|7d|30d; без параметра — как 1d",
+    description: `${BOT_USERS_GRANULARITY_OPENAPI}; без параметра — как 1d`,
   }),
 });
 

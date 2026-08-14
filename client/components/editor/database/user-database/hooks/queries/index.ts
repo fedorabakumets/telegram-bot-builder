@@ -9,6 +9,7 @@ export * from './use-infinite-users';
 export * from './use-stats';
 export * from './use-traffic';
 export * from './use-growth';
+export * from './chart-granularity';
 export * from './use-growth-by-source';
 export * from './use-popular-buttons';
 export * from './use-messages-activity';

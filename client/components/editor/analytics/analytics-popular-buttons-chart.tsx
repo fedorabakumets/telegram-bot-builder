@@ -15,6 +15,7 @@ import { GrowthGranularity } from '@/components/editor/database/user-database/ho
 import { usePopularButtons } from '@/components/editor/database/user-database/hooks/queries/use-popular-buttons';
 import { useUserMessagesLiveContext } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 import { PopularButtonsTooltip } from './analytics-popular-buttons-tooltip';
+import { GrowthGranularitySelector } from '@/components/editor/database/user-database/components/stats/growth-granularity-selector';
 
 /**
  * Пропсы компонента AnalyticsPopularButtonsChart
@@ -25,19 +26,6 @@ export interface AnalyticsPopularButtonsChartProps {
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
 }
-
-/** Метки кнопок переключателя периодов */
-const PERIOD_LABELS: Record<GrowthGranularity, string> = {
-  '1m':  '1ч',
-  '5m':  '3ч',
-  '1h':  '24ч',
-  '1d':  '30д',
-  '7d':  '12н',
-  '30d': '12м',
-};
-
-/** Порядок кнопок переключателя */
-const PERIOD_ORDER: GrowthGranularity[] = ['1m', '5m', '1h', '1d', '7d', '30d'];
 
 /**
  * Карточка-график топ-10 популярных кнопок с переключателем периодов
@@ -77,16 +65,7 @@ export function AnalyticsPopularButtonsChart({ projectId, selectedTokenId }: Ana
             <span className="text-xs text-muted-foreground whitespace-nowrap">{totalForPeriod} нажатий за период</span>
           )}
         </div>
-        <div className="flex items-center gap-0.5 flex-wrap">
-          {PERIOD_ORDER.map((g) => (
-            <button key={g} type="button" onClick={() => setGranularity(g)}
-              className={['text-xs px-1.5 py-0.5 rounded transition-colors',
-                g === granularity ? 'bg-primary/20 text-primary font-medium' : 'text-muted-foreground hover:text-foreground',
-              ].join(' ')}>
-              {PERIOD_LABELS[g]}
-            </button>
-          ))}
-        </div>
+        <GrowthGranularitySelector value={granularity} onChange={setGranularity} />
       </div>
 
       {/* Горизонтальный bar chart или пустое состояние */}

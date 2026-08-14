@@ -1,18 +1,19 @@
 /**
- * @fileoverview Запросы активности сообщений из дневных агрегатов (granularity 1d/7d/30d)
+ * @fileoverview Запросы активности сообщений из дневных агрегатов (granularity 1w/1d/7d/30d)
  * @module server/routes/messages/queryActivityFromDaily
  */
 
 import type { Pool } from "pg";
 
 /** Гранулярности из дневных агрегатов */
-export type DailyActivityGranularity = "1d" | "7d" | "30d";
+export type DailyActivityGranularity = "1w" | "1d" | "7d" | "30d";
 
 /** Конфиг окна для длинных гранулярностей */
 const DAILY_GRANULARITY_CONFIG: Record<
   DailyActivityGranularity,
   { window: string; truncate: string; step: string }
 > = {
+  "1w": { window: "7 days", truncate: "day", step: "1 day" },
   "1d": { window: "30 days", truncate: "day", step: "1 day" },
   "7d": { window: "91 days", truncate: "week", step: "1 week" },
   "30d": { window: "365 days", truncate: "month", step: "1 month" },
@@ -21,12 +22,17 @@ const DAILY_GRANULARITY_CONFIG: Record<
 /**
  * Проверяет, читать ли активность из дневных агрегатов
  * @param granularity - Значение query granularity
- * @returns true для 1d / 7d / 30d
+ * @returns true для 1w / 1d / 7d / 30d
  */
 export function isDailyActivityGranularity(
   granularity: string,
 ): granularity is DailyActivityGranularity {
-  return granularity === "1d" || granularity === "7d" || granularity === "30d";
+  return (
+    granularity === "1w" ||
+    granularity === "1d" ||
+    granularity === "7d" ||
+    granularity === "30d"
+  );
 }
 
 /** Точка без разбивки */
@@ -52,7 +58,7 @@ export interface ActivitySplitPoint {
  * @param pool - Пул PostgreSQL
  * @param projectId - ID проекта
  * @param tokenId - ID токена или null
- * @param granularity - 1d | 7d | 30d
+ * @param granularity - 1w | 1d | 7d | 30d
  * @param split - Разбивка incoming/outgoing
  * @returns Массив точек count или split
  */
