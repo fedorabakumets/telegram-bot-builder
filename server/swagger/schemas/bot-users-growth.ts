@@ -7,6 +7,7 @@ import "./common";
 import { z } from "zod";
 import {
   BotUsersGranularityEnum,
+  BOT_USERS_GRANULARITY_OPENAPI,
   BotUsersTokenQuerySchema,
 } from "./bot-users-params";
 
@@ -18,7 +19,7 @@ export const BotUsersGrowthQuerySchema = BotUsersTokenQuerySchema.extend({
    */
   granularity: BotUsersGranularityEnum.optional().openapi({
     example: "1d",
-    description: "1m|5m|1h|1d|7d|30d",
+    description: BOT_USERS_GRANULARITY_OPENAPI,
   }),
   /** Legacy-период, если нет granularity: 7d|30d|90d (default 30d) */
   period: z.enum(["7d", "30d", "90d"]).optional().openapi({
@@ -47,7 +48,7 @@ export const BotUsersGrowthBySourceQuerySchema = BotUsersTokenQuerySchema.extend
   /** Гранулярность — обязательна (иначе 400) */
   granularity: BotUsersGranularityEnum.openapi({
     example: "1d",
-    description: "Обязательный: 1m|5m|1h|1d|7d|30d",
+    description: `Обязательный: ${BOT_USERS_GRANULARITY_OPENAPI}`,
   }),
 });
 

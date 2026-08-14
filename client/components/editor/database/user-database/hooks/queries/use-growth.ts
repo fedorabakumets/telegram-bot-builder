@@ -5,9 +5,13 @@
 
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { buildUsersApiUrl } from '@/components/editor/database/utils';
+import {
+  ChartGranularity,
+  getChartGranularityRefetchInterval,
+} from './chart-granularity';
 
 /** Доступные значения гранулярности для графика прироста пользователей */
-export type GrowthGranularity = '1m' | '5m' | '1h' | '1d' | '7d' | '30d';
+export type GrowthGranularity = ChartGranularity;
 
 /**
  * Точка данных прироста пользователей за один период
@@ -27,7 +31,7 @@ interface UseGrowthParams {
   projectId: number;
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
-  /** Гранулярность графика: "1h" | "1d" | "7d" | "30d", по умолчанию "1d" */
+  /** Гранулярность графика, по умолчанию "1d" (30 дней) */
   granularity?: GrowthGranularity;
 }
 
@@ -42,22 +46,6 @@ function calcWeeklyGrowth(points: GrowthPoint[]): number {
   return points
     .filter(p => new Date(p.date) >= cutoff)
     .reduce((sum, p) => sum + p.count, 0);
-}
-
-/**
- * Интервал автоматического обновления в миллисекундах по гранулярности.
- * Для коротких периодов — чаще, для длинных — реже.
- * @param granularity - Гранулярность периода
- * @returns Интервал в мс или false если polling не нужен
- */
-function getRefetchInterval(granularity: GrowthGranularity): number | false {
-  switch (granularity) {
-    case '1m':  return 30_000;   // каждые 30 сек — минутный график
-    case '5m':  return 60_000;   // каждую минуту — 5-минутный график
-    case '1h':  return 120_000;  // каждые 2 мин — часовой график
-    case '1d':  return 300_000;  // каждые 5 мин — дневной график
-    default:    return false;    // 7д, 30д — только по WS-событию
-  }
 }
 
 /**
@@ -88,7 +76,7 @@ export function useGrowth(params: UseGrowthParams) {
     retry: false,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
-    refetchInterval: getRefetchInterval(granularity),
+    refetchInterval: getChartGranularityRefetchInterval(granularity),
     placeholderData: keepPreviousData,
   });
 

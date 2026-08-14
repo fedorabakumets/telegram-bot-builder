@@ -43,7 +43,7 @@ export function AnalyticsTableChartCard({ projectId }: AnalyticsTableChartCardPr
 
   const { data: tables = [] } = useTablesQuery(projectId);
   const { data: columns = [] } = useColumnsQuery(projectId, selectedTableId);
-  const { data: rows = [] } = useRowsQuery(projectId, selectedTableId);
+  const { data: rows = [] } = useRowsQuery(projectId, selectedTableId, false);
 
   /** Автовыбор первой таблицы */
   useEffect(() => {

@@ -44,7 +44,7 @@ export interface SparklineChartProps {
   gradientId: string;
   /** Цвет линии и градиента (по умолчанию #3b82f6, только для single-line) */
   lineColor?: string;
-  /** Гранулярность: '1m' | '5m' | '1h' | '1d' | '7d' | '30d' */
+  /** Гранулярность: '1m' | '5m' | '1h' | '1w' | '1d' | '7d' | '30d' */
   granularity?: string;
   /** Накопительный режим: данные суммируются нарастающим итогом */
   cumulative?: boolean;

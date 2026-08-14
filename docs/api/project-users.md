@@ -113,7 +113,7 @@ curl -s 'http://localhost:5000/api/projects/42/users?limit=50&tokenId=7' -b cook
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-С `granularity` (1m|5m|1h|1d|7d|30d) — ряд слотов `generate_series`, date в ISO. Без него — legacy `period` (7d|30d|90d, default 30d), date как YYYY-MM-DD; пустой результат — fallback на 90 дней.
+С `granularity` (1m|5m|1h|1w|1d|7d|30d) — ряд слотов `generate_series`, date в ISO. Без него — legacy `period` (7d|30d|90d, default 30d), date как YYYY-MM-DD; пустой результат — fallback на 90 дней.
 
 **Клиент:** `use-growth` (всегда шлёт granularity).
 

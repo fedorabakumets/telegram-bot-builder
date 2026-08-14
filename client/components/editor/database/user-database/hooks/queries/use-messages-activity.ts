@@ -6,10 +6,14 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { buildUsersApiUrl } from '@/components/editor/database/utils';
+import {
+  ChartGranularity,
+  getChartGranularityRefetchInterval,
+} from './chart-granularity';
 import { GrowthPoint } from './use-growth';
 
 /** Доступные значения гранулярности для графика активности */
-export type Granularity = '1m' | '5m' | '1h' | '1d' | '7d' | '30d';
+export type Granularity = ChartGranularity;
 
 /**
  * Точка активности с разбивкой по направлению
@@ -50,22 +54,6 @@ function calcWeeklyMessages(points: GrowthPoint[]): number {
   return points
     .filter(p => new Date(p.date) >= cutoff)
     .reduce((sum, p) => sum + p.count, 0);
-}
-
-/**
- * Интервал автоматического обновления в миллисекундах по гранулярности.
- * Для коротких периодов — чаще, для длинных — реже.
- * @param granularity - Гранулярность периода
- * @returns Интервал в мс или false если polling не нужен
- */
-function getRefetchInterval(granularity: Granularity | undefined): number | false {
-  switch (granularity) {
-    case '1m':  return 30_000;   // каждые 30 сек — минутный график
-    case '5m':  return 60_000;   // каждую минуту — 5-минутный график
-    case '1h':  return 120_000;  // каждые 2 мин — часовой график
-    case '1d':  return 300_000;  // каждые 5 мин — дневной график
-    default:    return false;    // 7д, 30д — только по WS-событию
-  }
 }
 
 /**
@@ -117,7 +105,7 @@ export function useMessagesActivity(params: UseMessagesActivityParams) {
     retry: false,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
-    refetchInterval: getRefetchInterval(granularity),
+    refetchInterval: getChartGranularityRefetchInterval(granularity),
     placeholderData: undefined,
   });
 

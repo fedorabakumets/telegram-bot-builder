@@ -5,6 +5,7 @@
 
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { buildUsersApiUrl } from '@/components/editor/database/utils';
+import { getChartGranularityRefetchInterval } from './chart-granularity';
 import { GrowthGranularity } from './use-growth';
 
 /**
@@ -25,24 +26,8 @@ interface UsePopularButtonsParams {
   projectId: number;
   /** Идентификатор выбранного токена бота */
   selectedTokenId?: number | null;
-  /** Гранулярность периода: "1m" | "5m" | "1h" | "1d" | "7d" | "30d", по умолчанию "1d" */
+  /** Гранулярность периода, по умолчанию "1d" (30 дней) */
   granularity?: GrowthGranularity;
-}
-
-/**
- * Интервал автоматического обновления в миллисекундах по гранулярности.
- * Для коротких периодов — чаще, для длинных — реже.
- * @param granularity - Гранулярность периода
- * @returns Интервал в мс или false если polling не нужен
- */
-function getRefetchInterval(granularity: GrowthGranularity): number | false {
-  switch (granularity) {
-    case '1m':  return 30_000;   // каждые 30 сек — минутный график
-    case '5m':  return 60_000;   // каждую минуту — 5-минутный график
-    case '1h':  return 120_000;  // каждые 2 мин — часовой график
-    case '1d':  return 300_000;  // каждые 5 мин — дневной график
-    default:    return false;    // 7д, 30д — только по WS-событию
-  }
 }
 
 /**
@@ -74,7 +59,7 @@ export function usePopularButtons(params: UsePopularButtonsParams) {
     retry: false,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
-    refetchInterval: getRefetchInterval(granularity),
+    refetchInterval: getChartGranularityRefetchInterval(granularity),
     placeholderData: keepPreviousData,
   });
 

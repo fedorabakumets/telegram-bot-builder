@@ -23,11 +23,7 @@ export function AnalyticsAudienceReachNote({
   deletedUsers = 0,
 }: AnalyticsAudienceReachNoteProps) {
   if (blockedBotUsers <= 0 && deletedUsers <= 0) {
-    return (
-      <p className="text-[11px] leading-snug text-muted-foreground">
-        Заблокировавшие и удалённые аккаунты в рассылки не попадают
-      </p>
-    );
+    return null;
   }
 
   return (

@@ -119,7 +119,7 @@ function sortTerminalsByUserCount(
  */
 export function TerminalTabs({ onTerminalSelect }: TerminalTabsProps) {
   const { terminals, activeTerminalId, setActiveTerminalById } = useActiveTerminals();
-  const { projects } = useBotQueries();
+  const { projects } = useBotQueries({ includeBotInfo: false });
   const userCounts = useTerminalUserCounts(terminals);
 
   const projectNames = useMemo(

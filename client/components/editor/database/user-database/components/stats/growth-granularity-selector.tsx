@@ -1,52 +1,28 @@
 /**
- * @fileoverview Компактный переключатель гранулярности для графика прироста пользователей
- * @description Отображает кнопки [1м] [5м] [1ч] [1д] [7д] [30д], активная подсвечена
+ * @fileoverview Компактный переключатель гранулярности графиков аналитики
+ * @description Кнопки 1ч / 3ч / 24ч / 7д / 30д / 12н / 12м
  */
 
 import React from 'react';
-import { GrowthGranularity } from '../../hooks/queries/use-growth';
+import {
+  ChartGranularity,
+  CHART_GRANULARITY_LABELS,
+  CHART_GRANULARITY_ORDER,
+  CHART_GRANULARITY_TITLES,
+} from '../../hooks/queries/chart-granularity';
 
 /**
- * Пропсы компонента GrowthGranularitySelector
+ * Пропсы переключателя гранулярности
  */
 export interface GrowthGranularitySelectorProps {
   /** Текущее значение гранулярности */
-  value: GrowthGranularity;
+  value: ChartGranularity;
   /** Обработчик изменения гранулярности */
-  onChange: (g: GrowthGranularity) => void;
+  onChange: (g: ChartGranularity) => void;
 }
 
 /**
- * Метка кнопки для каждого значения гранулярности.
- * Показывает период охвата, чтобы пользователь понимал
- * за какой промежуток времени отображается график.
- */
-const GROWTH_GRANULARITY_LABELS: Record<GrowthGranularity, string> = {
-  '1m':  '1ч',
-  '5m':  '3ч',
-  '1h':  '24ч',
-  '1d':  '30д',
-  '7d':  '12н',
-  '30d': '12м',
-};
-
-/**
- * Подсказка при наведении — поясняет шаг и период охвата
- */
-const GROWTH_GRANULARITY_TITLES: Record<GrowthGranularity, string> = {
-  '1m':  'Последний час, шаг 1 минута',
-  '5m':  'Последние 3 часа, шаг 5 минут',
-  '1h':  'Последние 24 часа, шаг 1 час',
-  '1d':  'Последние 30 дней, шаг 1 день',
-  '7d':  'Последние 12 недель, шаг 1 неделя',
-  '30d': 'Последние 12 месяцев, шаг 1 месяц',
-};
-
-/** Порядок отображения кнопок */
-const GROWTH_GRANULARITY_ORDER: GrowthGranularity[] = ['1m', '5m', '1h', '1d', '7d', '30d'];
-
-/**
- * Компактный переключатель гранулярности графика прироста пользователей
+ * Компактный переключатель гранулярности графиков аналитики
  * @param props - Пропсы компонента
  * @returns JSX элемент переключателя
  */
@@ -56,15 +32,15 @@ export function GrowthGranularitySelector(
   const { value, onChange } = props;
 
   return (
-    <div className="flex items-center gap-0.5">
-      {GROWTH_GRANULARITY_ORDER.map((g) => {
+    <div className="flex items-center gap-0.5 flex-wrap">
+      {CHART_GRANULARITY_ORDER.map((g) => {
         const isActive = g === value;
         return (
           <button
             key={g}
             type="button"
             onClick={() => onChange(g)}
-            title={GROWTH_GRANULARITY_TITLES[g]}
+            title={CHART_GRANULARITY_TITLES[g]}
             className={[
               'text-xs px-1.5 py-0.5 rounded transition-colors',
               isActive
@@ -72,7 +48,7 @@ export function GrowthGranularitySelector(
                 : 'text-muted-foreground hover:text-foreground',
             ].join(' ')}
           >
-            {GROWTH_GRANULARITY_LABELS[g]}
+            {CHART_GRANULARITY_LABELS[g]}
           </button>
         );
       })}

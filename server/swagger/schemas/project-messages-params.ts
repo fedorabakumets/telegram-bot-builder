@@ -5,7 +5,7 @@
 
 import "./common";
 import { z } from "zod";
-import { BotUsersGranularityEnum } from "./bot-users-params";
+import { BotUsersGranularityEnum, BOT_USERS_GRANULARITY_OPENAPI } from "./bot-users-params";
 
 /** Path: ID проекта (`/api/projects/{id}/messages/…`) */
 export const ProjectMessagesProjectIdParamsSchema = z.object({
@@ -84,11 +84,11 @@ export const ProjectMessagesAllQuerySchema = ProjectMessagesTokenQuerySchema.ext
 export const ProjectMessagesActivityQuerySchema = ProjectMessagesTokenQuerySchema.extend({
   /**
    * Гранулярность (предпочтительно). Короткие окна — bot_messages + fill gaps;
-   * 1d|7d|30d — message_activity_daily.
+   * 1w|1d|7d|30d — message_activity_daily.
    */
   granularity: BotUsersGranularityEnum.optional().openapi({
     example: "1h",
-    description: "1m|5m|1h|1d|7d|30d",
+    description: BOT_USERS_GRANULARITY_OPENAPI,
   }),
   /** Legacy-период без granularity: 7d|30d|90d (default 30d) */
   period: z.enum(["7d", "30d", "90d"]).optional().openapi({
