@@ -3,9 +3,10 @@
  * @module client/components/editor/broadcast/wizard/campaign-bot-progress-row
  */
 
-import { Bot, Square } from 'lucide-react';
+import { Bot, CheckCircle2, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { DeliveryProblemChips } from '../components/delivery-problem-chips';
 import type { Broadcast, BroadcastProgressEvent } from '../types';
 
 /**
@@ -70,16 +71,17 @@ export function CampaignBotProgressRow({
 
       <Progress value={percent} className="h-1.5" />
 
-      <div className="flex flex-wrap items-center gap-x-3 text-[11px] text-muted-foreground">
-        <span className="text-green-600 dark:text-green-400">✅ {deliveredCount}</span>
-        {blockedCount > 0 && <span className="text-amber-600">🚫 {blockedCount}</span>}
-        {deletedCount > 0 && <span className="text-orange-600">🗑 {deletedCount}</span>}
-        {failedCount > 0 && <span className="text-red-500">❌ {failedCount}</span>}
+      <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-1.5 py-0.5 font-medium tabular-nums text-emerald-700 dark:text-emerald-400">
+          <CheckCircle2 className="h-3 w-3" />
+          {deliveredCount}
+        </span>
+        <DeliveryProblemChips blocked={blockedCount} deleted={deletedCount} failed={failedCount} />
         <span>
           {sentCount} / {totalCount}
         </span>
         {!isRunning && (
-          <span>{status === 'stopped' ? '⏸ остановлена' : status === 'done' ? '✓ завершена' : status}</span>
+          <span>{status === 'stopped' ? 'остановлена' : status === 'done' ? 'завершена' : status}</span>
         )}
       </div>
     </div>

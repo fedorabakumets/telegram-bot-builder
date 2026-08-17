@@ -3,13 +3,14 @@
  * @module editor/database/dialog/components/broadcast-message-bubble
  */
 
-import { useState, useMemo } from 'react';
-import { Trash2, Loader2, Pencil, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
+import { useMemo, useState } from 'react';
 import { parseHTML } from '@/components/editor/inline-rich/utils/formatting-parser';
 import { BroadcastDeliveryErrors } from '@/components/editor/broadcast/components/broadcast-delivery-errors';
 import { useBroadcastLiveProgress } from '@/components/editor/broadcast/hooks/use-broadcast-live-progress';
+import { getCampaignStatusBadge } from '../utils/campaign-status-badge';
+import { BroadcastBubbleActions } from './broadcast-bubble-actions';
+import { BroadcastBubbleEditForm } from './broadcast-bubble-edit-form';
+import { CampaignBubbleMeta } from './campaign-bubble-meta';
 import type { Broadcast } from '@shared/schema';
 
 /**
@@ -33,38 +34,8 @@ interface BroadcastMessageBubbleProps {
 }
 
 /**
- * Возвращает цвет и текст бейджа статуса рассылки
- * @param status - Статус рассылки
- * @returns Объект с классом и текстом
- */
-function getStatusBadge(status: string): { className: string; label: string } {
-  switch (status) {
-    case 'done':
-      return { className: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300', label: 'Завершена' };
-    case 'running':
-      return { className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300', label: 'Отправка...' };
-    case 'stopped':
-      return { className: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', label: 'Остановлена' };
-    default:
-      return { className: 'bg-muted text-muted-foreground', label: status };
-  }
-}
-
-/**
- * Форматирует дату рассылки
- * @param date - Дата создания
- * @returns Строка с датой и временем
- */
-function formatDate(date: Date | string | null | undefined): string {
-  if (!date) return '';
-  const d = new Date(date);
-  return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-}
-
-/**
- * Компонент пузыря рассылки — отображает одну рассылку как сообщение бота
- * с кнопками удаления и редактирования при наведении и раскрываемым списком ошибок.
- * Статистика и статус обновляются в реальном времени через WS broadcast-progress.
+ * Пузырь одиночной рассылки: текст, те же чипы статистики, что у большой рассылки,
+ * и раскрываемый список ошибок доставки.
  * @param props - Свойства компонента
  * @returns JSX элемент пузыря рассылки
  */
@@ -73,7 +44,6 @@ export function BroadcastMessageBubble({
   projectId,
   onDelete,
   isDeleting,
-  onRepeat,
   onEdit,
   isEditing,
 }: BroadcastMessageBubbleProps) {
@@ -84,52 +54,21 @@ export function BroadcastMessageBubble({
   const { progressEvent } = useBroadcastLiveProgress(projectId, broadcast.id);
 
   const liveStatus = progressEvent?.status ?? broadcast.status;
-  const totalCount = progressEvent?.totalCount ?? broadcast.totalCount ?? 0;
   const isRunning = liveStatus === 'running';
-  const count = isRunning
+  const totalCount = progressEvent?.totalCount ?? broadcast.totalCount ?? 0;
+  const doneCount = isRunning
     ? (progressEvent?.sentCount ?? broadcast.sentCount ?? 0)
     : (progressEvent?.deliveredCount ?? broadcast.deliveredCount ?? 0);
   const failedCount = progressEvent?.failedCount ?? broadcast.failedCount ?? 0;
-  const badge = getStatusBadge(liveStatus);
-  const statsIcon = isRunning ? '⏳' : '✓';
-  const hasErrors = failedCount > 0;
+  const blockedCount = progressEvent?.blockedCount ?? broadcast.blockedCount ?? 0;
+  const deletedCount = progressEvent?.deletedCount ?? broadcast.deletedCount ?? 0;
+  const problemCount = failedCount + blockedCount + deletedCount;
+  const badge = getCampaignStatusBadge(liveStatus);
 
-  /** Парсим HTML-текст рассылки */
   const content = useMemo(() => {
     if (!broadcast.messageText?.trim()) return null;
     return parseHTML(broadcast.messageText.trimEnd());
   }, [broadcast.messageText]);
-
-  /** Показывать ли кнопку удаления */
-  const showDelete = !!onDelete && (isHovered || isDeleting) && !editMode;
-  /** Показывать ли кнопку редактирования */
-  const showEdit = !!onEdit && isHovered && !isDeleting && !editMode;
-
-  /** Начать редактирование */
-  const handleStartEdit = () => {
-    setEditText(broadcast.messageText ?? '');
-    setEditMode(true);
-  };
-
-  /** Сохранить редактирование */
-  const handleSaveEdit = () => {
-    if (editText.trim() && onEdit) {
-      onEdit(broadcast.id, editText.trim());
-      setEditMode(false);
-    }
-  };
-
-  /** Отменить редактирование */
-  const handleCancelEdit = () => {
-    setEditMode(false);
-    setEditText(broadcast.messageText ?? '');
-  };
-
-  /** Переключить раскрытие блока ошибок */
-  const handleToggleExpand = () => {
-    if (editMode) return;
-    setExpanded((v) => !v);
-  };
 
   return (
     <div
@@ -137,113 +76,55 @@ export function BroadcastMessageBubble({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Кнопки действий — слева от пузыря, видны при наведении */}
-      <div className="flex flex-col gap-0.5 self-center mr-1">
-        {showEdit && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10"
-            onClick={handleStartEdit}
-            title="Редактировать рассылку"
-          >
-            <Pencil className="h-3 w-3" />
-          </Button>
-        )}
-        {showDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            onClick={() => onDelete!(broadcast.id)}
-            disabled={isDeleting}
-            title="Удалить рассылку"
-          >
-            {isDeleting
-              ? <Loader2 className="h-3 w-3 animate-spin" />
-              : <Trash2 className="h-3 w-3" />
-            }
-          </Button>
-        )}
-      </div>
+      <BroadcastBubbleActions
+        showEdit={!!onEdit && isHovered && !isDeleting && !editMode}
+        showDelete={!!onDelete && (isHovered || !!isDeleting) && !editMode}
+        isDeleting={!!isDeleting}
+        onStartEdit={() => { setEditText(broadcast.messageText ?? ''); setEditMode(true); }}
+        onDelete={() => onDelete?.(broadcast.id)}
+      />
 
       <div className="max-w-[85%] space-y-1">
-        {/* Режим редактирования */}
         {editMode ? (
-          <div className="rounded-lg px-3 py-2 bg-gradient-to-br from-violet-100 to-fuchsia-50 dark:from-violet-900/50 dark:to-fuchsia-900/30">
-            <div className="flex flex-col gap-1 min-w-[260px]">
-              <CompactInlineEditor
-                value={editText}
-                onChange={setEditText}
-                placeholder="Текст рассылки..."
-              />
-              <div className="flex gap-1 justify-end">
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="h-6 px-2 text-xs"
-                  onClick={handleSaveEdit}
-                  disabled={!editText.trim() || isEditing}
-                >
-                  {isEditing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                  <span className="ml-1">Сохранить</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 px-2 text-xs"
-                  onClick={handleCancelEdit}
-                  disabled={isEditing}
-                >
-                  <X className="h-3 w-3" />
-                  <span className="ml-1">Отмена</span>
-                </Button>
-              </div>
-            </div>
-          </div>
+          <BroadcastBubbleEditForm
+            value={editText}
+            onChange={setEditText}
+            onSave={() => {
+              if (!editText.trim() || !onEdit) return;
+              onEdit(broadcast.id, editText.trim());
+              setEditMode(false);
+            }}
+            onCancel={() => { setEditMode(false); setEditText(broadcast.messageText ?? ''); }}
+            isSaving={isEditing}
+          />
         ) : content && (
-          <div className="rounded-lg px-3 py-2 bg-gradient-to-br from-violet-100 to-fuchsia-50 dark:from-violet-900/50 dark:to-fuchsia-900/30 text-violet-900 dark:text-violet-100">
-            <p className="text-sm whitespace-pre-wrap break-words">{content}</p>
+          <div className="rounded-lg bg-gradient-to-br from-violet-100 to-fuchsia-50 px-3 py-2 text-violet-900 dark:from-violet-900/50 dark:to-fuchsia-900/30 dark:text-violet-100">
+            <p className="whitespace-pre-wrap break-words text-sm">{content}</p>
           </div>
         )}
 
-        {/* Мета-информация: дата, статистика, бейдж */}
-        <div className="flex items-center justify-end gap-2 px-1">
-          <button
-            type="button"
-            className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-            onClick={handleToggleExpand}
-            disabled={editMode}
-            title={expanded ? 'Скрыть детали' : 'Показать детали и ошибки'}
-          >
-            {expanded
-              ? <ChevronUp className="h-3 w-3 shrink-0" />
-              : <ChevronDown className="h-3 w-3 shrink-0" />
-            }
-            <span>{formatDate(broadcast.createdAt)}</span>
-            <span>
-              {statsIcon} {count}/{totalCount}
-            </span>
-            {hasErrors && (
-              <span className="text-red-500 hover:text-red-600 font-medium">
-                {failedCount} {failedCount === 1 ? 'ошибка' : failedCount < 5 ? 'ошибки' : 'ошибок'}
-              </span>
-            )}
-          </button>
-          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${badge.className}`}>
-            {badge.label}
-          </span>
-        </div>
+        <CampaignBubbleMeta
+          createdAt={broadcast.createdAt}
+          isLiveRunning={isRunning}
+          doneCount={doneCount}
+          totalCount={totalCount}
+          blockedCount={blockedCount}
+          deletedCount={deletedCount}
+          failedCount={failedCount}
+          expanded={expanded}
+          onToggle={() => { if (!editMode) setExpanded((v) => !v); }}
+          badge={badge}
+          disabled={editMode}
+        />
 
-        {/* Ошибки доставки — ленивая загрузка при раскрытии */}
         {expanded && !editMode && (
-          <div className="px-1 pt-1 border-t border-border/50">
+          <div className="border-t border-border/50 px-1 pt-1.5">
             <BroadcastDeliveryErrors
               projectId={projectId}
               broadcastId={broadcast.id}
               enabled={expanded}
               compact
-              liveFailedCount={failedCount}
+              liveFailedCount={problemCount}
             />
           </div>
         )}

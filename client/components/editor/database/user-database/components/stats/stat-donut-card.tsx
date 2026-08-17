@@ -76,7 +76,7 @@ function DonutTooltip({ active, payload }: DonutTooltipProps): React.JSX.Element
 }
 
 /**
- * Карточка статистики с Donut-диаграммой: donut слева, легенда справа
+ * Карточка статистики с Donut-диаграммой: donut сверху, легенда снизу
  * @param props - Пропсы компонента
  * @returns JSX элемент карточки
  */
@@ -100,19 +100,19 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
         /* Пустое состояние */
         <p className="text-xs text-muted-foreground/50 italic">Нет данных</p>
       ) : (
-        /* Основной контент: donut слева + легенда справа */
-        <div className="flex items-center gap-4 flex-1">
+        /* Основной контент: donut сверху + легенда снизу */
+        <div className="flex flex-col items-center gap-3 flex-1 min-h-0">
           {/* Donut-диаграмма с центральным числом */}
-          <div className="relative flex-shrink-0" style={{ width: 140, height: 140 }}>
-            <PieChart width={140} height={140}>
+          <div className="relative flex-shrink-0" style={{ width: 200, height: 200 }}>
+            <PieChart width={200} height={200}>
               <Pie
                 data={visible}
                 dataKey="count"
                 nameKey="label"
                 cx="50%"
                 cy="50%"
-                innerRadius={42}
-                outerRadius={64}
+                innerRadius={60}
+                outerRadius={92}
                 strokeWidth={0}
                 isAnimationActive={false}
               >
@@ -127,14 +127,14 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
             </PieChart>
             {/* Центральное число поверх дырки */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span className="text-sm font-bold tabular-nums">{total}</span>
+              <span className="text-lg font-bold tabular-nums">{total}</span>
             </div>
           </div>
 
           {/* Легенда: цветная точка, метка, count, percentage; скролл при большом списке */}
           <div
             className={[
-              'flex flex-col gap-1 min-w-0 flex-1',
+              'flex flex-col gap-1 min-w-0 w-full',
               legendScrollable ? 'max-h-[220px] overflow-y-auto pr-1' : '',
             ].join(' ')}
           >

@@ -4,7 +4,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { Check, ChevronDown, ChevronUp, Loader2, X } from 'lucide-react';
+import { Check, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CompactInlineEditor } from '@/components/editor/inline-rich/compact-inline-editor';
 import { parseHTML } from '@/components/editor/inline-rich/utils/formatting-parser';
@@ -16,8 +16,9 @@ import { useStopBroadcastCampaign } from '@/components/editor/broadcast/hooks/us
 import { pluralizeBots } from '@/components/editor/broadcast/utils/format-bot-label';
 import { CampaignBotsList } from './campaign-bots-list';
 import { CampaignBubbleActions } from './campaign-bubble-actions';
+import { CampaignBubbleMeta } from './campaign-bubble-meta';
 import { BroadcastDeleteConfirm } from './broadcast-delete-confirm';
-import { formatBroadcastDate, getCampaignStatusBadge } from '../utils/campaign-status-badge';
+import { getCampaignStatusBadge } from '../utils/campaign-status-badge';
 import type { BroadcastCampaign } from '@shared/schema';
 
 /**
@@ -77,6 +78,8 @@ export function BroadcastCampaignBubble({
 
   const totalCount = totals?.totalCount || campaign.totalCount || 0;
   const failedCount = totals?.failedCount ?? campaign.failedCount ?? 0;
+  const blockedCount = totals?.blockedCount ?? campaign.blockedCount ?? 0;
+  const deletedCount = totals?.deletedCount ?? campaign.deletedCount ?? 0;
   const doneCount = isLiveRunning
     ? (totals?.sentCount ?? campaign.sentCount ?? 0)
     : (totals?.deliveredCount ?? campaign.deliveredCount ?? 0);
@@ -151,28 +154,22 @@ export function BroadcastCampaignBubble({
         )}
 
         {/* Мета-информация: дата, суммарные счётчики, статус */}
-        <div className="flex items-center justify-end gap-2 px-1">
-          <button
-            type="button"
-            className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => setExpanded((v) => !v)}
-            title={expanded ? 'Скрыть ботов' : 'Показать ботов'}
-          >
-            {expanded ? <ChevronUp className="h-3 w-3 shrink-0" /> : <ChevronDown className="h-3 w-3 shrink-0" />}
-            <span>{formatBroadcastDate(campaign.createdAt)}</span>
-            <span className="font-medium text-violet-600 dark:text-violet-300">
-              {botCount} {pluralizeBots(botCount)}
-            </span>
-            <span>{isLiveRunning ? '⏳' : '✓'} {doneCount}/{totalCount}</span>
-            {failedCount > 0 && <span className="text-red-500 font-medium">{failedCount} ошибок</span>}
-          </button>
-          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${badge.className}`}>
-            {badge.label}
-          </span>
-        </div>
+        <CampaignBubbleMeta
+          createdAt={campaign.createdAt}
+          botCount={botCount}
+          isLiveRunning={isLiveRunning}
+          doneCount={doneCount}
+          totalCount={totalCount}
+          blockedCount={blockedCount}
+          deletedCount={deletedCount}
+          failedCount={failedCount}
+          expanded={expanded}
+          onToggle={() => setExpanded((v) => !v)}
+          badge={badge}
+        />
 
         {expanded && !editMode && (
-          <div className="px-1 pt-1 border-t border-border/50">
+          <div className="border-t border-border/50 px-1 pt-1.5">
             <CampaignBotsList
               projectId={projectId}
               broadcasts={broadcasts}
