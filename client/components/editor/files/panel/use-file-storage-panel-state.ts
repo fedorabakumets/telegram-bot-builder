@@ -106,6 +106,18 @@ export function useFileStoragePanelState({ mode, projectId, selectedTokenId, att
   /** Принудительное обновление списка файлов */
   const refresh = useCallback(() => { queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'files'] }); }, [queryClient, projectId]);
 
+  /**
+   * После загрузки с диска: на входящих/исходящих переключаемся на «Загруженные»,
+   * иначе обновляем текущий список.
+   */
+  const handleUploaded = useCallback(() => {
+    if (category === 'incoming' || category === 'outgoing') {
+      setCategory('uploaded');
+      return;
+    }
+    refresh();
+  }, [category, setCategory, refresh]);
+
   /** Копирование file_id в буфер обмена */
   const copyFileId = useCallback((fileId: string) => { navigator.clipboard?.writeText(fileId); }, []);
 
@@ -148,12 +160,12 @@ export function useFileStoragePanelState({ mode, projectId, selectedTokenId, att
       tokens, files, total, isLoading, quota, collaborators,
       setCategory, setFiltersOpen, applyFilters, resetFilters, removeFilter,
       toggleSelect, selectAll, clearSelection, setAttachModeEnabled, setPage,
-      refresh, copyFileId, deleteSelected, deleteOne, isDeleting, attachSelected,
+      refresh, handleUploaded, copyFileId, deleteSelected, deleteOne, isDeleting, attachSelected,
     }),
     [category, filters, filtersOpen, page, totalPages, selectedIds, attachModeEnabled, canAttach, activeFilterCount,
       tokens, files, total, isLoading, quota, collaborators,
       setCategory, applyFilters, resetFilters, removeFilter, toggleSelect, selectAll, clearSelection,
-      refresh, copyFileId, deleteSelected, deleteOne, isDeleting, attachSelected],
+      refresh, handleUploaded, copyFileId, deleteSelected, deleteOne, isDeleting, attachSelected],
   );
 }
 

@@ -27,6 +27,8 @@ export interface MediaUploadParams {
   tags?: string[];
   /** Публичный доступ */
   isPublic?: boolean;
+  /** ID целевого хранилища (storage_configs.id); без него — активное writable */
+  storageConfigId?: string;
   /** Callback прогресса загрузки */
   onProgress?: (progress: UploadProgress) => void;
 }

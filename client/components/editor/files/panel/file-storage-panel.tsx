@@ -15,8 +15,6 @@ import { Button } from '@/components/ui/button';
 import { useFileStoragePanelState } from './use-file-storage-panel-state';
 import { FileStorageHeader } from './file-storage-header';
 import { FileStorageToolbar } from './file-storage-toolbar';
-import { StorageQuotaBar } from './storage-quota-bar';
-import { CategoryTabs } from './category-tabs';
 import { FiltersRow } from './filters-row';
 import { FiltersModal } from './filters-modal';
 import { SelectionActionBar } from './selection-action-bar';
@@ -33,11 +31,11 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
   const { mode, attachTarget, projectId, selectedTokenId, onSelectToken, allProjects, onProjectChange, allSheets, onGoToNode } = props;
   const s = useFileStoragePanelState(props);
 
-  /** Компактнее в модалке, полноэкранно на странице (Req 1.4) */
+  /** В модалке min-h-0, чтобы таблица скроллилась внутри фиксированной высоты */
   const rootClassName =
     mode === 'modal'
-      ? 'flex flex-col h-full max-h-[80vh] bg-background'
-      : 'flex flex-col h-full bg-background';
+      ? 'flex min-h-0 h-full flex-1 flex-col overflow-hidden bg-background'
+      : 'flex h-full flex-col bg-background';
 
   return (
     <div className={rootClassName} data-testid="file-storage-panel" data-mode={mode}>
@@ -50,26 +48,16 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         allProjects={allProjects}
         onProjectChange={onProjectChange}
         onRefresh={s.refresh}
+        onUploaded={s.handleUploaded}
       />
 
-      {mode === 'page' ? (
-        <FileStorageToolbar
-          category={s.category}
-          onCategoryChange={s.setCategory}
-          usedBytes={s.quota.usedBytes}
-          limitBytes={s.quota.limitBytes}
-          quotaLoading={s.quota.isLoading}
-        />
-      ) : (
-        <>
-          <StorageQuotaBar
-            usedBytes={s.quota.usedBytes}
-            limitBytes={s.quota.limitBytes}
-            isLoading={s.quota.isLoading}
-          />
-          <CategoryTabs category={s.category} onCategoryChange={s.setCategory} />
-        </>
-      )}
+      <FileStorageToolbar
+        category={s.category}
+        onCategoryChange={s.setCategory}
+        usedBytes={s.quota.usedBytes}
+        limitBytes={s.quota.limitBytes}
+        quotaLoading={s.quota.isLoading}
+      />
 
       {/* Фильтры + режим прикрепления в одной строке */}
       <div className={FILE_STORAGE_ACTIONS_ROW_CLASS}>
@@ -114,7 +102,7 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
       />
 
       {/* Таблица файлов: каркас + множественный выбор + адаптивность (Req 3.1, 7.1, 7.8, 13.3) */}
-      <div className="flex-1 overflow-auto" data-testid="files-table-slot">
+      <div className="min-h-0 flex-1 overflow-auto" data-testid="files-table-slot">
         <FilesTable
           files={s.files}
           projectId={projectId}

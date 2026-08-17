@@ -308,8 +308,17 @@ export const EMPTY_STATE_CLASS =
 /*  Шапка и верхняя панель (FileStorageHeader / FileStorageToolbar)         */
 /* ────────────────────────────────────────────────────────────────────────── */
 
-/** Контейнер шапки в модалке: плотные отступы */
-export const HEADER_CONTAINER_MODAL_CLASS = 'px-3 sm:px-4 py-2 border-b bg-background';
+/** Контейнер шапки в модалке: `sm:pr-12` отдельно, иначе `sm:px-4` съедает место под крестик */
+export const HEADER_CONTAINER_MODAL_CLASS =
+  'flex items-center gap-2 border-b bg-background px-3 py-2 pr-12 sm:pl-4 sm:pr-12';
+
+/**
+ * Классы DialogContent модалки «Файлы».
+ * `sm:max-w-4xl` / `sm:p-0` перебивают дефолты Dialog (`sm:max-w-lg`, `sm:p-6`).
+ */
+export const FILE_STORAGE_MODAL_DIALOG_CLASS =
+  'flex h-[min(85vh,44rem)] w-[calc(100%-2rem)] max-w-4xl sm:max-w-4xl ' +
+  'flex-col gap-0 overflow-hidden overflow-y-hidden p-0 sm:p-0';
 
 /** Подзаголовок под TabHeader на странице «Файлы» */
 export const HEADER_SUBTITLE_CLASS =
@@ -317,12 +326,12 @@ export const HEADER_SUBTITLE_CLASS =
 
 /** Верхняя панель: категории слева, квота справа */
 export const FILE_STORAGE_TOOLBAR_CLASS =
-  'flex flex-col gap-3 border-b px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-3 ' +
+  'flex flex-col gap-2 border-b px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4 sm:py-2.5 ' +
   'bg-muted/15';
 
 /** Строка фильтров и режима прикрепления */
 export const FILE_STORAGE_ACTIONS_ROW_CLASS =
-  'flex flex-col gap-2 border-b px-4 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-2.5 ' +
+  'flex flex-col gap-2 border-b px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4 sm:py-2 ' +
   'bg-background/80';
 
 /** Карточка компактной квоты в toolbar — без фона и рамки */

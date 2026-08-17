@@ -108,6 +108,15 @@ export {
 export type { StorageConfigDraft } from './storage/storage-config-draft';
 export { StorageConfigRow } from './storage/storage-config-row';
 export type { StorageConfigRowProps } from './storage/storage-config-row';
+export { FileUploadButton } from './file-upload-button';
+export type { FileUploadButtonProps } from './file-upload-button';
+export { FileClipboardButton } from './file-clipboard-button';
+export type { FileClipboardButtonProps } from './file-clipboard-button';
+export { readClipboardFiles, filesFromClipboardEvent, isPasteHotkey, isClipboardDenied } from './read-clipboard-files';
+export { FileStorageHeaderActions } from './file-storage-header-actions';
+export type { FileStorageHeaderActionsProps } from './file-storage-header-actions';
+export { useFileUpload, MAX_UPLOAD_FILES } from './use-file-upload';
+export type { UseFileUploadResult } from './use-file-upload';
 export { StorageManagerButton } from './storage/storage-manager-button';
 export { useStorageManagerActions } from './storage/use-storage-manager-actions';
 export type { UseStorageManagerActionsResult } from './storage/use-storage-manager-actions';

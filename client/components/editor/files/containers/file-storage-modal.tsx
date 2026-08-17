@@ -10,6 +10,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileStoragePanel } from '../panel/file-storage-panel';
+import { FILE_STORAGE_MODAL_DIALOG_CLASS } from '../panel/panel-styles';
 import type { AttachTarget, SheetInfo } from '../panel/panel-types';
 
 /** Пропсы контейнера модалки файлового хранилища */
@@ -58,12 +59,11 @@ export function FileStorageModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/*
-        Компактное окно: ширина max-w-4xl, высота max-h-[85vh], без внутренних
-        отступов и зазоров (p-0 gap-0), чтобы панель заполняла окно целиком.
-        DialogContent даёт границы и кнопку закрытия (Req 1.4).
+        Ширина sm:max-w-4xl перебивает дефолт Dialog (sm:max-w-lg = 512px).
+        Фиксированная высота, чтобы таблица занимала оставшееся место.
       */}
       <DialogContent
-        className="max-w-4xl w-[calc(100%-2rem)] max-h-[85vh] p-0 gap-0 overflow-hidden flex flex-col"
+        className={FILE_STORAGE_MODAL_DIALOG_CLASS}
         aria-describedby={undefined}
         data-testid="file-storage-modal"
       >

@@ -87,6 +87,7 @@ export function useUploadMedia(projectId: number) {
       description,
       tags,
       isPublic,
+      storageConfigId,
       onProgress
     }: MediaUploadParams): Promise<MediaFile> => {
       const formData = new FormData();
@@ -94,6 +95,7 @@ export function useUploadMedia(projectId: number) {
       if (description) formData.append('description', description);
       if (tags) formData.append('tags', tags.join(','));
       if (isPublic !== undefined) formData.append('isPublic', isPublic.toString());
+      if (storageConfigId) formData.append('storageConfigId', storageConfigId);
 
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -144,6 +146,8 @@ export function useUploadMedia(projectId: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/media/project", projectId], exact: false });
       queryClient.refetchQueries({ queryKey: ["/api/media/project", projectId], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId, "files"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId, "storage-quota"] });
     },
   });
 }
