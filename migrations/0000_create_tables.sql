@@ -275,7 +275,9 @@ CREATE TABLE IF NOT EXISTS bot_groups (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS bot_groups_project_group_uniq ON bot_groups(project_id, group_id) WHERE group_id IS NOT NULL;
+-- Старый unique (project_id, group_id) ломает повторный прогон: после 0013
+-- одна группа может быть у нескольких token_id. Правильный индекс создаёт 0013.
+DROP INDEX IF EXISTS bot_groups_project_group_uniq;
 
 CREATE TABLE IF NOT EXISTS group_members (
   id SERIAL PRIMARY KEY,
