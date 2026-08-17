@@ -50,14 +50,13 @@ export function validateDomainRules(project: Record<string, unknown>): Validatio
 
   for (const { node, sheetId } of entries) {
     for (const { label, target } of collectNodeTransitions(node)) {
-      if (!nodeIds.has(target)) {
-        issues.push({
-          severity: 'error',
-          path: `sheets[${sheetId}].nodes[id=${node.id}].${label}`,
-          message: `Ссылка на несуществующую ноду: ${target}`,
-          code: 'broken_target',
-        });
-      }
+      if (isExternalOrEmptyTarget(target) || nodeIds.has(target)) continue;
+      issues.push({
+        severity: 'error',
+        path: `sheets[${sheetId}].nodes[id=${node.id}].${label}`,
+        message: `Ссылка на несуществующую ноду: ${target}`,
+        code: 'broken_target',
+      });
     }
   }
 
@@ -81,6 +80,17 @@ export function validateDomainRules(project: Record<string, unknown>): Validatio
   }
 
   return issues;
+}
+
+/**
+ * URL, tg-ссылки и пустые строки — не id нод, их не считаем broken_target
+ * @param target - Значение target у кнопки, ветки или автоперехода
+ * @returns true если проверять существование ноды не нужно
+ */
+function isExternalOrEmptyTarget(target: string): boolean {
+  const trimmed = target.trim();
+  if (!trimmed) return true;
+  return /^(https?:\/\/|tg:\/\/)/i.test(trimmed) || /^t\.me\//i.test(trimmed);
 }
 
 /**

@@ -805,10 +805,14 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
         project_id: z.number().describe('Числовой ID проекта из URL редактора'),
         ops: z.array(z.record(z.unknown())).describe('Массив операций; в каждой поле op задаёт тип (add_node, update_node, remove_node, connect_nodes, move_node, add_sheet, rename_sheet, remove_sheet, set_active_sheet)'),
         commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
+        skip_validation: z.boolean().optional().describe('Пропустить валидацию перед записью (для легаси-проектов с битыми ссылками)'),
       },
     },
-    async ({ project_id, ops, commit_message }) =>
-      textResult(await applyOpsInDb(project_id, ops as never, { commitMessage: commit_message })),
+    async ({ project_id, ops, commit_message, skip_validation }) =>
+      textResult(await applyOpsInDb(project_id, ops as never, {
+        commitMessage: commit_message,
+        skipValidation: skip_validation,
+      })),
   );
 
   server.registerTool(

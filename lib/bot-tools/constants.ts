@@ -4,19 +4,14 @@
  */
 
 import { z } from 'zod';
+import { CONDITION_OPERATOR_VALUES } from '@shared/schema/tables/condition-branch-schema';
 import { nodeSchema } from '@shared/schema/tables/node-schema';
 
 /** Все допустимые типы нод из zod-схемы */
 export const NODE_TYPES = nodeSchema.shape.type._def.values as readonly string[];
 
-/** Операторы condition-ноды — белый список (AGENTS.md + shared/types/condition-node.ts) */
-export const CONDITION_OPERATORS = [
-  'filled', 'empty', 'equals', 'not_equals', 'contains', 'not_contains',
-  'starts_with', 'ends_with', 'matches_regex', 'greater_than', 'less_than',
-  'between', 'is_even', 'is_odd', 'divisible_by', 'else',
-  'is_private', 'is_group', 'is_channel', 'is_admin', 'is_premium',
-  'is_bot', 'is_subscribed', 'is_not_subscribed',
-] as const;
+/** Операторы condition-ноды — тот же список, что в zod-схеме ветки */
+export const CONDITION_OPERATORS = CONDITION_OPERATOR_VALUES;
 
 /**
  * Снимает обёртку ZodDefault (например branches: z.array(...).default([]))

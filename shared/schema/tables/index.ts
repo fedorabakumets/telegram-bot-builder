@@ -42,6 +42,11 @@ export type { MessageActivityDaily, InsertMessageActivityDaily } from "./message
 export { buttonSchema } from "./button-schema";
 export type { Button } from "./button-schema";
 
+export { assignmentSchema, ASSIGNMENT_MODES } from "./assignment-schema";
+export type { Assignment } from "./assignment-schema";
+
+export { conditionBranchSchema, CONDITION_OPERATOR_VALUES } from "./condition-branch-schema";
+
 export { nodeSchema } from "./node-schema";
 export type { Node } from "./node-schema";
 

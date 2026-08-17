@@ -4,66 +4,14 @@
  */
 
 import { z } from 'zod';
-
-/** Схема одного присваивания переменной */
-const setVariableAssignmentSchema = z.object({
-  /** Уникальный идентификатор присваивания */
-  id: z.string(),
-  /** Имя переменной для записи */
-  variable: z.string(),
-  /** Значение или шаблон с {переменными} */
-  value: z.string(),
-  /** Режим: "text" — шаблон, "expression" — выражение, "lookup" — поиск, "str_replace" — замена подстроки, "json_push" — добавить объект в массив, "json_format" — форматировать массив в строку, "random" — случайное число, "random_item" — случайный элемент из списка, "array_item" — элемент массива/объекта по индексу/ключу, "timestamp" — временная метка, "format_duration" — форматирование секунд в MM:SS */
-  mode: z.enum(['text', 'expression', 'lookup', 'str_replace', 'json_push', 'json_format', 'random', 'random_item', 'array_item', 'timestamp', 'format_duration', 'format_number', 'regex_extract', 'extract_number', 'split_get', 'json_get', 'substring', 'conditional', 'lowercase', 'uppercase', 'trim', 'length', 'array_concat']),
-  /** Имя таблицы для поиска (только для mode=lookup) */
-  lookupTable: z.string().optional().default(''),
-  /** Поле таблицы, значение которого сохранить (только для mode=lookup) */
-  lookupField: z.string().optional().default(''),
-  /** Условия поиска: массив [{field, value}] (только для mode=lookup) */
-  lookupWhere: z.array(z.object({
-    /** Поле таблицы для сравнения */
-    field: z.string(),
-    /** Значение для сравнения (поддерживает {переменные}) */
-    value: z.string(),
-  })).optional().default([]),
-  /** На что заменить (только для mode=str_replace, поддерживает {переменные}) */
-  replaceWith: z.string().optional().default(''),
-  /** Регулярное выражение (только для mode=regex_extract) */
-  pattern: z.string().optional().default(''),
-  /** Номер группы захвата (только для mode=regex_extract, по умолчанию "0") */
-  regexGroup: z.string().optional().default('0'),
-  /** Максимальное значение для mode=random */
-  maxValue: z.string().optional().default(''),
-  /** Разделитель для split_get */
-  separator: z.string().optional().default(''),
-  /** Путь для json_get (dot notation) */
-  jsonPath: z.string().optional().default(''),
-  /** Начальный индекс для substring */
-  startIndex: z.string().optional().default('0'),
-  /** Конечный индекс для substring */
-  endIndex: z.string().optional().default(''),
-  /** Переменная для проверки (conditional) */
-  conditionVariable: z.string().optional().default(''),
-  /** Оператор сравнения (conditional) */
-  conditionOperator: z.string().optional().default('equals'),
-  /** Значение для сравнения (conditional) */
-  conditionValue: z.string().optional().default(''),
-  /** Значение если true (conditional) */
-  trueValue: z.string().optional().default(''),
-  /** Значение если false (conditional) */
-  falseValue: z.string().optional().default(''),
-  /** Имя второго массива для объединения (только для mode=array_concat) */
-  concatWith: z.string().optional().default(''),
-  /** Условие пропуска: имя переменной — если пустая/0, assignment не выполняется */
-  skipIfEmpty: z.string().optional().default(''),
-});
+import { assignmentSchema } from '@shared/schema/tables/assignment-schema';
 
 /** Схема для валидации параметров узла set_variable */
 export const setVariableParamsSchema = z.object({
   /** ID узла */
   nodeId: z.string(),
   /** Список присваиваний переменных */
-  assignments: z.array(setVariableAssignmentSchema),
+  assignments: z.array(assignmentSchema),
   /** ID следующего узла для автоперехода */
   autoTransitionTo: z.string(),
 });

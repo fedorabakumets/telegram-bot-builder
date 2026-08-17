@@ -4,7 +4,9 @@
  */
 
 import { z } from "zod";
+import { assignmentSchema } from "./assignment-schema";
 import { buttonSchema } from "./button-schema";
+import { conditionBranchSchema } from "./condition-branch-schema";
 
 const forwardMessageTargetRecipientSchema = z.object({
   /** Уникальный ID получателя внутри узла */
@@ -151,8 +153,8 @@ export const nodeSchema = z.object({
     targetMessageId: z.string().optional(),
     /** ID сообщения-источника для пересылки */
     sourceMessageId: z.string().optional(),
-    /** Источник ID сообщения: "manual" — вручную, "variable" — из переменной, "last_message" — последнее, "current_message", "last_bot_message", "last_n", "custom" */
-    messageIdSource: z.enum(['manual', 'variable', 'last_message', 'current_message', 'last_bot_message', 'reply_message', 'range_from_reply', 'last_n', 'custom']).default('last_message'),
+    /** Источник ID сообщения: manual/variable/last_message/current_message/last_bot_message/reply_message/range_from_reply/last_n/custom; last — userbot_click_button */
+    messageIdSource: z.enum(['manual', 'variable', 'last_message', 'current_message', 'last_bot_message', 'reply_message', 'range_from_reply', 'last_n', 'custom', 'last']).default('last_message'),
     /** ID сообщения вручную или {переменная} (для delete_message custom) */
     messageIdManual: z.string().optional(),
     /** Количество последних сообщений для удаления (режим last_n) */
@@ -618,36 +620,7 @@ export const nodeSchema = z.object({
     /** Имя переменной куда положить найденный user_id */
     resolvedUserIdVariable: z.string().optional(),
     /** Ветки узла условия */
-    branches: z.array(z.object({
-      /** Уникальный идентификатор ветки */
-      id: z.string(),
-      /** Отображаемое название ветки */
-      label: z.string(),
-      /** Оператор сравнения: "==", "!=", "contains", "else" */
-      operator: z.enum([
-        'filled',
-        'empty',
-        'equals',
-        'contains',
-        'greater_than',
-        'less_than',
-        'between',
-        'is_private',
-        'is_group',
-        'is_channel',
-        'is_admin',
-        'is_premium',
-        'is_bot',
-        'is_subscribed',
-        'is_not_subscribed',
-        'else',
-      ]),
-      /** Значение для сравнения */
-      value: z.string(),
-      value2: z.string().optional(),
-      /** ID целевого узла для перехода по этой ветке */
-      target: z.string().optional(),
-    })).default([]),
+    branches: z.array(conditionBranchSchema).default([]),
     /** Ветки узла параллельного запуска (parallel_split) */
     parallelBranches: z.array(z.object({
       /** Уникальный идентификатор ветки (порта) */
@@ -791,16 +764,7 @@ export const nodeSchema = z.object({
     /** Шаблон строки для формата text, например "{name} — {value}" */
     textTemplate: z.string().default(''),
     /** Присваивания переменных для узла set_variable */
-    assignments: z.array(z.object({
-      /** Уникальный идентификатор присваивания */
-      id: z.string(),
-      /** Имя переменной для записи */
-      variable: z.string(),
-      /** Значение или шаблон с {переменными} */
-      value: z.string(),
-      /** Режим присваивания: "text" — шаблон, "expression" — арифметическое выражение */
-      mode: z.enum(['text', 'expression']).default('text'),
-    })).default([]),
+    assignments: z.array(assignmentSchema).default([]),
     /** Режим конвертации файла: toFile — данные в файл */
     convertFileMode: z.enum(['toFile']).default('toFile'),
     /** Входная переменная с json-массивом для convert_file */

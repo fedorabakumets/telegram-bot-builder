@@ -11,8 +11,8 @@ export const buttonSchema = z.object({
   id: z.string(),
   /** Текст кнопки */
   text: z.string(),
-  /** Действие кнопки */
-  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'complete', 'default', 'copy_text', 'web_app', 'request_managed_bot']),
+  /** Действие кнопки (в легаси может отсутствовать — тогда переход) */
+  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection', 'complete', 'default', 'copy_text', 'web_app', 'request_managed_bot']).optional().default('goto'),
   /** Текст для копирования в буфер обмена (только для copy_text) */
   copyText: z.string().optional(),
   /** URL для Telegram Mini App (только для web_app, требует HTTPS) */
