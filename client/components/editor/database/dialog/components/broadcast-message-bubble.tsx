@@ -6,6 +6,7 @@
 import { useMemo, useState } from 'react';
 import { parseHTML } from '@/components/editor/inline-rich/utils/formatting-parser';
 import { BroadcastDeliveryErrors } from '@/components/editor/broadcast/components/broadcast-delivery-errors';
+import { BroadcastUnauthorizedHint } from '@/components/editor/broadcast/components/broadcast-unauthorized-hint';
 import { useBroadcastLiveProgress } from '@/components/editor/broadcast/hooks/use-broadcast-live-progress';
 import { getCampaignStatusBadge } from '../utils/campaign-status-badge';
 import { BroadcastBubbleActions } from './broadcast-bubble-actions';
@@ -63,6 +64,7 @@ export function BroadcastMessageBubble({
   const blockedCount = progressEvent?.blockedCount ?? broadcast.blockedCount ?? 0;
   const deletedCount = progressEvent?.deletedCount ?? broadcast.deletedCount ?? 0;
   const problemCount = failedCount + blockedCount + deletedCount;
+  const tokenInvalid = liveStatus === 'failed' || progressEvent?.abortReason === 'unauthorized';
   const badge = getCampaignStatusBadge(liveStatus);
 
   const content = useMemo(() => {
@@ -116,6 +118,11 @@ export function BroadcastMessageBubble({
           badge={badge}
           disabled={editMode}
         />
+        {tokenInvalid && !expanded && (
+          <div className="px-1">
+            <BroadcastUnauthorizedHint />
+          </div>
+        )}
 
         {expanded && !editMode && (
           <div className="border-t border-border/50 px-1 pt-1.5">
@@ -124,7 +131,7 @@ export function BroadcastMessageBubble({
               broadcastId={broadcast.id}
               enabled={expanded}
               compact
-              liveFailedCount={problemCount}
+              liveFailedCount={tokenInvalid ? Math.max(problemCount, 1) : problemCount}
             />
           </div>
         )}

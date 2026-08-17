@@ -6,6 +6,7 @@
 import { Bot, ChevronDown, ChevronUp, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BroadcastDeliveryErrors } from '@/components/editor/broadcast/components/broadcast-delivery-errors';
+import { BroadcastUnauthorizedHint } from '@/components/editor/broadcast/components/broadcast-unauthorized-hint';
 import { DeliveryProblemChips } from '@/components/editor/broadcast/components/delivery-problem-chips';
 import { getCampaignStatusBadge } from '../utils/campaign-status-badge';
 import type { BroadcastProgressEvent } from '@/components/editor/broadcast/types';
@@ -57,6 +58,8 @@ export function CampaignBotRow({
   const blockedCount = live?.blockedCount ?? item.blockedCount ?? 0;
   const deletedCount = live?.deletedCount ?? item.deletedCount ?? 0;
   const problemCount = failedCount + blockedCount + deletedCount;
+  const tokenInvalid = live?.abortReason === 'unauthorized' || status === 'failed';
+  const canExpand = problemCount > 0 || tokenInvalid;
   const badge = getCampaignStatusBadge(status);
   const ExpandIcon = isOpen ? ChevronUp : ChevronDown;
 
@@ -69,7 +72,7 @@ export function CampaignBotRow({
           onClick={onToggle}
           title={isOpen ? 'Скрыть проблемы' : 'Показать проблемы доставки'}
         >
-          {problemCount > 0
+          {canExpand
             ? <ExpandIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             : <Bot className="h-3.5 w-3.5 shrink-0 text-violet-500" />}
           <span className="truncate text-xs font-medium text-foreground">{botLabel}</span>
@@ -95,6 +98,11 @@ export function CampaignBotRow({
           </Button>
         )}
       </div>
+      {tokenInvalid && !isOpen && (
+        <div className="mt-1.5">
+          <BroadcastUnauthorizedHint />
+        </div>
+      )}
       {problemCount > 0 && !isOpen && (
         <button type="button" className="mt-1.5 w-full text-left" onClick={onToggle}>
           <DeliveryProblemChips blocked={blockedCount} deleted={deletedCount} failed={failedCount} />
@@ -107,7 +115,7 @@ export function CampaignBotRow({
             broadcastId={item.id}
             enabled={isOpen}
             compact
-            liveFailedCount={problemCount}
+            liveFailedCount={tokenInvalid ? Math.max(problemCount, 1) : problemCount}
           />
         </div>
       )}

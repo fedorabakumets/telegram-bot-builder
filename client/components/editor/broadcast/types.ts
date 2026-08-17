@@ -38,7 +38,9 @@ export interface BroadcastProgressEvent {
   /** Всего получателей */
   totalCount: number;
   /** Текущий статус рассылки */
-  status: 'running' | 'stopped' | 'done';
+  status: 'running' | 'stopped' | 'done' | 'failed';
+  /** Причина аварийной остановки рассылки */
+  abortReason?: 'unauthorized';
 }
 
 /**

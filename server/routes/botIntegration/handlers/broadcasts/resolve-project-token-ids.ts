@@ -5,6 +5,11 @@
  */
 
 import type { BotToken } from "@shared/schema";
+import {
+  isTokenActiveForBroadcast,
+  NO_ACTIVE_BOT_TOKENS_ERROR,
+  BOT_UNAUTHORIZED_HINT,
+} from "@shared/broadcast-unauthorized";
 import { storage } from "../../../../storages/storage";
 
 /** Результат резолва списка токенов проекта */
@@ -16,9 +21,21 @@ export interface ResolvedProjectTokens {
 }
 
 /**
+ * Возвращает только активные токены либо ошибку, если таких нет
+ * @param tokens - Кандидаты на рассылку
+ * @param emptyError - Текст, если после фильтра список пуст
+ * @returns Активные токены или ошибка
+ */
+function keepActiveOrError(tokens: BotToken[], emptyError: string): ResolvedProjectTokens {
+  const active = tokens.filter((token) => isTokenActiveForBroadcast(token.isActive));
+  if (active.length === 0) return { tokens: [], error: emptyError };
+  return { tokens: active };
+}
+
+/**
  * Возвращает токены проекта для рассылки.
  * Приоритет: явный tokenIds → одиночный tokenId → все токены проекта («все боты»).
- * Любой токен из tokenIds, не принадлежащий проекту, приводит к ошибке.
+ * Неактивные токены (отозванные Telegram) в рассылку не попадают.
  * @param projectId - ID проекта
  * @param requestedTokenIds - Явно выбранные ID токенов (опционально)
  * @param fallbackTokenId - Одиночный tokenId из query/body (обратная совместимость)
@@ -44,18 +61,17 @@ export async function resolveProjectTokenIds(
     if (!single) {
       return { tokens: [], error: `Токен ${fallbackTokenId} не принадлежит этому проекту` };
     }
-    return { tokens: [single] };
+    return keepActiveOrError([single], BOT_UNAUTHORIZED_HINT);
   }
 
-  // Ни tokenIds, ни tokenId не переданы — рассылка по всем ботам проекта
-  return { tokens: projectTokens };
+  return keepActiveOrError(projectTokens, NO_ACTIVE_BOT_TOKENS_ERROR);
 }
 
 /**
  * Отбирает запрошенные токены из токенов проекта, сохраняя порядок запроса
  * @param projectTokens - Все токены проекта
  * @param requestedTokenIds - Запрошенные ID токенов
- * @returns Список токенов либо описание ошибки при чужом/несуществующем токене
+ * @returns Список активных токенов либо описание ошибки
  */
 function pickRequestedTokens(
   projectTokens: BotToken[],
@@ -72,5 +88,6 @@ function pickRequestedTokens(
     };
   }
 
-  return { tokens: uniqueIds.map((id) => byId.get(id)!) };
+  const picked = uniqueIds.map((id) => byId.get(id)!);
+  return keepActiveOrError(picked, NO_ACTIVE_BOT_TOKENS_ERROR);
 }

@@ -14,6 +14,8 @@ import {
   markUserAfterBroadcastError,
   resolveBroadcastErrorStatus,
 } from "./mark-user-delivery-status";
+import { recordBroadcastUnauthorized } from "./record-broadcast-unauthorized";
+import { isBotUnauthorized } from "@shared/broadcast-unauthorized";
 import type { InlineButton } from "../messages/extract-buttons";
 import type { SendMediaFile } from "../messages/extract-media";
 
@@ -113,7 +115,7 @@ async function emitProgress(
     deletedCount: number;
   },
   totalCount: number,
-  status: "running" | "stopped" | "done",
+  status: "running" | "stopped" | "done" | "failed",
   campaignId: number | null = null,
 ): Promise<void> {
   await broadcastProjectEvent(projectId, {
@@ -128,6 +130,7 @@ async function emitProgress(
       deletedCount: counts.deletedCount,
       totalCount,
       status,
+      abortReason: status === "failed" ? "unauthorized" : undefined,
       ...(campaignId !== null ? { campaignId } : {}),
     },
     timestamp: new Date().toISOString(),
@@ -180,6 +183,8 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     let failedCount = 0;
     let blockedCount = 0;
     let deletedCount = 0;
+    /** Токен бота отозван — дальше слать бессмысленно */
+    let tokenInvalid = false;
 
     /** Текущие счётчики для WS и обновления БД */
     const snapshotCounts = () => ({
@@ -256,6 +261,12 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
               timestamp: new Date().toISOString(),
             });
             sent = true;
+          } else if (isBotUnauthorized(result.errorCode, result.description)) {
+            if (tokenId != null) {
+              await recordBroadcastUnauthorized(broadcastId, tokenId, result.description);
+            }
+            tokenInvalid = true;
+            sent = true;
           } else if (result.errorCode === 429 && result.retryAfter) {
             // Rate limit — ждём retry_after секунд
             await sleep(result.retryAfter * 1000);
@@ -293,12 +304,16 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
           }
         }
 
+        if (tokenInvalid) break;
+
         if (sentCount % 10 === 0) {
           void emitProgress(projectId, broadcastId, snapshotCounts(), users.length, "running", campaignId);
         }
 
         await sleep(DELAY_BETWEEN_MESSAGES);
       }
+
+      if (tokenInvalid) break;
 
       // После каждого батча обновляем счётчики и отправляем WS-событие
       const isStopped = activeBroadcasts.get(broadcastId) === "stopped";
@@ -316,7 +331,7 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
 
     // Отправка в выбранные группы (текст + медиа)
     const groupIds = (broadcast.filters as Record<string, unknown>)?.groupIds as string[] | undefined;
-    if (groupIds && groupIds.length > 0 && activeBroadcasts.get(broadcastId) !== "stopped") {
+    if (groupIds && groupIds.length > 0 && !tokenInvalid && activeBroadcasts.get(broadcastId) !== "stopped") {
       for (const groupId of groupIds) {
         try {
           const groupResult = await sendTelegramMessage(token, groupId, broadcast.messageText, mediaFiles, inlineButtons, true, buttonsPerRow) as {
@@ -371,7 +386,11 @@ export async function runBroadcastQueue(broadcastId: number, token: string): Pro
     }
 
     // Определяем финальный статус
-    const finalStatus = activeBroadcasts.get(broadcastId) === "stopped" ? "stopped" : "done";
+    const finalStatus = tokenInvalid
+      ? "failed"
+      : activeBroadcasts.get(broadcastId) === "stopped"
+        ? "stopped"
+        : "done";
     await storage.updateBroadcast(broadcastId, {
       status: finalStatus,
       finishedAt: new Date(),

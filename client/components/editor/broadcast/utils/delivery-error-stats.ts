@@ -4,6 +4,7 @@
  */
 
 import { formatDeliveryErrorReason } from './format-delivery-error-reason';
+import { isBotUnauthorizedResult } from '@shared/broadcast-unauthorized';
 import type { BroadcastResult } from '../types';
 
 /** Счётчики по типам проблем доставки */
@@ -26,9 +27,10 @@ export function filterDeliveryErrors(
   results: BroadcastResult[],
   query: string,
 ): BroadcastResult[] {
+  const users = results.filter((r) => !isBotUnauthorizedResult(r.userId));
   const normalized = query.trim().toLowerCase();
-  if (!normalized) return results;
-  return results.filter((r) => {
+  if (!normalized) return users;
+  return users.filter((r) => {
     const reason = formatDeliveryErrorReason(r.status, r.errorMessage).toLowerCase();
     return r.userId.toLowerCase().includes(normalized) || reason.includes(normalized);
   });
@@ -46,9 +48,19 @@ export function countDeliveryErrorBreakdown(
   let deleted = 0;
   let failed = 0;
   for (const r of results) {
+    if (isBotUnauthorizedResult(r.userId)) continue;
     if (r.status === 'blocked') blocked += 1;
     else if (r.status === 'not_found') deleted += 1;
     else failed += 1;
   }
   return { blocked, deleted, failed };
+}
+
+/**
+ * Есть ли служебная запись «токен не авторизован»
+ * @param results - Результаты рассылки
+ * @returns true, если рассылка остановлена из‑за токена
+ */
+export function hasUnauthorizedBotResult(results: BroadcastResult[]): boolean {
+  return results.some((r) => isBotUnauthorizedResult(r.userId));
 }

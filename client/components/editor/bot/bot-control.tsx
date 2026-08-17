@@ -210,7 +210,14 @@ export function BotControl({ projectId, onBotStarted, onBotStopped, onBotDeleted
     }
   };
 
-  const getStatusBadge = (token: Pick<BotToken, 'id' | 'isDefault'>) => {
+  const getStatusBadge = (token: Pick<BotToken, 'id' | 'isDefault' | 'isActive'>) => {
+    if (token.isActive === 0) {
+      return (
+        <Badge variant="destructive">
+          Токен недействителен
+        </Badge>
+      );
+    }
     // Ищем по tokenId (добавлен при маппинге) или через instance
     const status = allBotStatuses.find(
       s => s.tokenId === token.id || s.instance?.tokenId === token.id,

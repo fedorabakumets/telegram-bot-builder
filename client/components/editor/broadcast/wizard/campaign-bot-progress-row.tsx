@@ -7,6 +7,7 @@ import { Bot, CheckCircle2, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { DeliveryProblemChips } from '../components/delivery-problem-chips';
+import { BroadcastUnauthorizedHint } from '../components/broadcast-unauthorized-hint';
 import type { Broadcast, BroadcastProgressEvent } from '../types';
 
 /**
@@ -81,9 +82,14 @@ export function CampaignBotProgressRow({
           {sentCount} / {totalCount}
         </span>
         {!isRunning && (
-          <span>{status === 'stopped' ? 'остановлена' : status === 'done' ? 'завершена' : status}</span>
+          <span>
+            {status === 'stopped' ? 'остановлена' : status === 'done' ? 'завершена' : status === 'failed' ? 'ошибка' : status}
+          </span>
         )}
       </div>
+      {(status === 'failed' || liveEvent?.abortReason === 'unauthorized') && (
+        <BroadcastUnauthorizedHint />
+      )}
     </div>
   );
 }

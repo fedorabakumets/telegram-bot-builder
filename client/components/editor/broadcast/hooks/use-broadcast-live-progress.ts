@@ -20,6 +20,7 @@ const STATUS_PRIORITY: Record<string, number> = {
   running: 1,
   stopped: 2,
   done: 2,
+  failed: 2,
 };
 
 /**
@@ -85,6 +86,7 @@ export function useBroadcastLiveProgress(
         deletedCount: event.data.deletedCount ?? 0,
         totalCount: event.data.totalCount,
         status: event.data.status,
+        ...(event.data.abortReason ? { abortReason: event.data.abortReason } : {}),
       };
 
       // Обновляем глобальный кеш

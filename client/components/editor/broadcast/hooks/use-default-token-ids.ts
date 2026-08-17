@@ -5,6 +5,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
+import { isTokenActiveForBroadcast } from '@shared/broadcast-unauthorized';
 
 /**
  * Подставляет всех ботов проекта в выбор по умолчанию — один раз,
@@ -33,6 +34,9 @@ export function useDefaultTokenIds(
       return;
     }
     applied.current = true;
-    onChange(tokens.map((token) => token.id));
+    const activeIds = tokens
+      .filter((token) => isTokenActiveForBroadcast(token.isActive))
+      .map((token) => token.id);
+    if (activeIds.length > 0) onChange(activeIds);
   }, [tokens.length, selectedTokenIds.length, onChange]);
 }

@@ -13,6 +13,7 @@ const TELEGRAM_REASON_LABELS: Array<[RegExp, string]> = [
   [/not enough rights|have no rights|chat_write_forbidden/i, 'Нет прав на отправку'],
   [/bot was kicked|kicked from/i, 'Бота исключили из чата'],
   [/forbidden/i, 'Telegram запретил отправку'],
+  [/unauthorized/i, 'Токен бота недействителен'],
 ];
 
 /**

@@ -5,7 +5,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useBroadcastDetail } from '../hooks/use-broadcast-detail';
@@ -13,9 +12,12 @@ import { useBroadcastLiveProgress } from '../hooks/use-broadcast-live-progress';
 import {
   countDeliveryErrorBreakdown,
   filterDeliveryErrors,
+  hasUnauthorizedBotResult,
 } from '../utils/delivery-error-stats';
 import { DeliveryProblemChips } from './delivery-problem-chips';
+import { BroadcastDeliveryEmpty } from './broadcast-delivery-empty';
 import { BroadcastDeliveryErrorsTable } from './broadcast-delivery-errors-table';
+import { BroadcastUnauthorizedHint } from './broadcast-unauthorized-hint';
 
 /**
  * Пропсы компонента BroadcastDeliveryErrors
@@ -50,7 +52,7 @@ export function BroadcastDeliveryErrors({
   const prevFailedRef = useRef<number | undefined>(undefined);
   const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { progressEvent } = useBroadcastLiveProgress(projectId, enabled ? broadcastId : null);
-  const { results, isLoading } = useBroadcastDetail(projectId, enabled ? broadcastId : null);
+  const { results, isLoading, broadcast } = useBroadcastDetail(projectId, enabled ? broadcastId : null);
 
   const resolvedFailedCount =
     liveFailedCount ??
@@ -87,17 +89,25 @@ export function BroadcastDeliveryErrors({
   );
   const byStatus = useMemo(() => countDeliveryErrorBreakdown(results), [results]);
   const isFiltering = search.trim().length > 0;
+  const tokenInvalid =
+    hasUnauthorizedBotResult(results) || progressEvent?.abortReason === 'unauthorized';
 
   if (isLoading) {
     return <Skeleton className={compact ? 'h-10 w-full' : 'h-16 w-full'} />;
   }
 
-  if (results.length === 0) {
+  if (results.length === 0 && !tokenInvalid) {
+    const blocked = progressEvent?.blockedCount ?? broadcast?.blockedCount ?? 0;
+    const deleted = progressEvent?.deletedCount ?? broadcast?.deletedCount ?? 0;
+    const failed = progressEvent?.failedCount ?? broadcast?.failedCount ?? 0;
+    const problemCount = resolvedFailedCount ?? blocked + deleted + failed;
     return (
-      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-        Ошибок нет
-      </p>
+      <BroadcastDeliveryEmpty
+        problemCount={problemCount}
+        blocked={blocked}
+        deleted={deleted}
+        failed={failed}
+      />
     );
   }
 
@@ -105,8 +115,8 @@ export function BroadcastDeliveryErrors({
     <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-1">
       <span className="text-sm font-medium text-foreground">
         {isFiltering
-          ? `Найдено ${filteredResults.length} из ${results.length}`
-          : `Всего проблем: ${results.length}`}
+          ? `Найдено ${filteredResults.length} из ${byStatus.blocked + byStatus.deleted + byStatus.failed}`
+          : `Всего проблем: ${filteredResults.length}`}
       </span>
       {!isFiltering && (
         <DeliveryProblemChips
@@ -132,8 +142,9 @@ export function BroadcastDeliveryErrors({
   if (compact) {
     return (
       <div className="space-y-1.5">
-        {header}
-        {table}
+        {tokenInvalid && <BroadcastUnauthorizedHint />}
+        {(filteredResults.length > 0 || isFiltering) && header}
+        {(filteredResults.length > 0 || isFiltering) && table}
       </div>
     );
   }
@@ -141,7 +152,10 @@ export function BroadcastDeliveryErrors({
   return (
     <Collapsible>
       <CollapsibleTrigger className="w-full text-left">{header}</CollapsibleTrigger>
-      <CollapsibleContent className="mt-2">{table}</CollapsibleContent>
+      <CollapsibleContent className="mt-2 space-y-1.5">
+        {tokenInvalid && <BroadcastUnauthorizedHint />}
+        {table}
+      </CollapsibleContent>
     </Collapsible>
   );
 }

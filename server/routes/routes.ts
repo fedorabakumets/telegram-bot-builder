@@ -987,6 +987,10 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       if (updateData.token && isMaskedOrPlaceholderToken(updateData.token)) {
         delete (updateData as { token?: string }).token;
       }
+      // Новый секрет токена снова делает бота доступным для рассылок
+      if (updateData.token) {
+        updateData.isActive = 1;
+      }
 
       const updatedToken = await storage.updateBotToken(tokenId, updateData);
       if (!updatedToken) {
