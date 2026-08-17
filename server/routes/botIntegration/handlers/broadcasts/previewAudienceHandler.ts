@@ -10,6 +10,7 @@ import { previewAudienceBodySchema } from "./broadcast-body-schemas";
 import { resolveProjectTokenIds } from "./resolve-project-token-ids";
 import { estimateAudienceOverlap, type TokenAudience } from "./overlap-estimate";
 import type { BroadcastFilters } from "@shared/schema";
+import { BOT_UNAUTHORIZED_HINT, isTokenActiveForBroadcast } from "@shared/broadcast-unauthorized";
 
 /**
  * Обрабатывает POST /api/projects/:projectId/broadcasts/preview-audience
@@ -52,6 +53,10 @@ export async function previewAudienceHandler(req: Request, res: Response): Promi
 
     if (!selectedToken || effectiveTokenId === null) {
       res.status(400).json({ message: "Токен бота не найден для этого проекта" });
+      return;
+    }
+    if (!isTokenActiveForBroadcast(selectedToken.isActive)) {
+      res.status(400).json({ message: BOT_UNAUTHORIZED_HINT });
       return;
     }
 

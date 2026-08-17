@@ -36,7 +36,7 @@ interface BotControlContextValue {
   handleCancelEdit: () => void;
 
   /** Получить бейдж статуса для токена */
-  getStatusBadge: (token: Pick<BotToken, 'id' | 'isDefault'>) => JSX.Element;
+  getStatusBadge: (token: Pick<BotToken, 'id' | 'isDefault' | 'isActive'>) => JSX.Element;
 
   /** Мутация запуска бота */
   startBotMutation: {

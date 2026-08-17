@@ -178,7 +178,7 @@ export function useBroadcastLiveInvalidate({
         scheduleDetailInvalidate(broadcastId);
       }
 
-      if (status === 'done' || status === 'stopped') {
+      if (status === 'done' || status === 'stopped' || status === 'failed') {
         queryClient.invalidateQueries({
           predicate: (query) => isBroadcastsListKey(query.queryKey, projectId),
         });

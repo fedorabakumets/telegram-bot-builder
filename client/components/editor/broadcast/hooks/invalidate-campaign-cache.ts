@@ -26,7 +26,7 @@ export interface CampaignChildProgress {
   /** Всего получателей */
   totalCount: number;
   /** Текущий статус рассылки бота */
-  status: 'running' | 'stopped' | 'done';
+  status: 'running' | 'stopped' | 'done' | 'failed';
 }
 
 /**
@@ -78,7 +78,7 @@ export function applyCampaignProgress(
     return { campaign, broadcasts };
   });
 
-  if (progress.status === 'done' || progress.status === 'stopped') {
+  if (progress.status === 'done' || progress.status === 'stopped' || progress.status === 'failed') {
     queryClient.invalidateQueries({ queryKey: detailKey });
     queryClient.invalidateQueries({ queryKey: [buildCampaignsKey(projectId)] });
   }

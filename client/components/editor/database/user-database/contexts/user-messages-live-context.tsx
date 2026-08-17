@@ -158,7 +158,9 @@ export interface BroadcastProgressLiveEvent {
     /** Всего получателей */
     totalCount: number;
     /** Текущий статус */
-    status: 'running' | 'stopped' | 'done';
+    status: 'running' | 'stopped' | 'done' | 'failed';
+    /** Аварийная остановка из‑за недействительного токена */
+    abortReason?: 'unauthorized';
   };
   /** Временная метка события */
   timestamp: string;

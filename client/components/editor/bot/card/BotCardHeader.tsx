@@ -26,7 +26,7 @@ import type { BotToken } from '@shared/schema';
 /** Свойства заголовка карточки бота */
 interface BotCardHeaderProps {
   /** Данные токена бота */
-  token: Pick<BotToken, 'id' | 'botFirstName' | 'name' | 'botUsername' | 'botPhotoUrl' | 'isDefault'>;
+  token: Pick<BotToken, 'id' | 'botFirstName' | 'name' | 'botUsername' | 'botPhotoUrl' | 'isDefault' | 'isActive'>;
   /** Информация о боте из Telegram API */
   projectBotInfo: { photoUrl?: string; id?: number } | null | undefined;
   /** Редактируемое поле */
@@ -42,7 +42,7 @@ interface BotCardHeaderProps {
   /** Начать редактирование поля */
   handleStartEdit: (tokenId: number, field: string, currentValue: string) => void;
   /** Получить бейдж статуса */
-  getStatusBadge: (token: Pick<BotToken, 'id' | 'botFirstName' | 'name' | 'botUsername' | 'botPhotoUrl' | 'isDefault'>) => JSX.Element;
+  getStatusBadge: (token: Pick<BotToken, 'id' | 'botFirstName' | 'name' | 'botUsername' | 'botPhotoUrl' | 'isDefault' | 'isActive'>) => JSX.Element;
   /** Запущен ли бот */
   isBotRunning: boolean;
   /** Мутация запуска бота */

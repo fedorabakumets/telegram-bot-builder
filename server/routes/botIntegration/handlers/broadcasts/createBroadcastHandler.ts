@@ -5,13 +5,13 @@
 
 import type { Request, Response } from "express";
 import type { BroadcastFilters } from "@shared/schema";
+import { BOT_UNAUTHORIZED_HINT, isTokenActiveForBroadcast } from "@shared/broadcast-unauthorized";
 import { storage } from "../../../../storages/storage";
 import { getRequestTokenId, resolveEffectiveProjectToken } from "../../../utils/resolve-request-token";
 import { buildBroadcastDefaultName } from "./build-broadcast-default-name";
 import { createBroadcastBodySchema } from "./broadcast-body-schemas";
 import { runBroadcastQueue } from "./broadcastQueue";
-import { resolveProjectTokenIds } from "./resolve-project-token-ids";
-import { startBroadcastCampaign } from "./start-campaign-broadcasts";
+import { startSelectedTokensBroadcast } from "./start-selected-tokens-broadcast";
 import {
   assertGroupsBelongToToken,
   normalizeGroupsByTokenId,
@@ -22,7 +22,6 @@ import {
  * Обрабатывает POST /api/projects/:projectId/broadcasts
  * @param req - Объект запроса
  * @param res - Объект ответа
- * @returns void
  */
 export async function createBroadcastHandler(req: Request, res: Response): Promise<void> {
   try {
@@ -38,70 +37,36 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
       return;
     }
 
-    const {
-      name,
-      messageText,
-      mediaUrls,
-      buttons,
-      buttonsPerRow,
-      filters,
-      tokenIds,
-      groupsByTokenId,
-    } = validation.data;
+    const { name, messageText, mediaUrls, buttons, buttonsPerRow, filters, tokenIds, groupsByTokenId } =
+      validation.data;
     const resolvedName = name.trim() || buildBroadcastDefaultName(messageText);
     const groupsByToken = normalizeGroupsByTokenId(groupsByTokenId);
+    let singleTokenId = tokenIds?.[0] ?? getRequestTokenId(req);
 
-    // Явно выбранные боты — «большая рассылка»
     if (tokenIds && tokenIds.length > 0) {
-      const resolved = await resolveProjectTokenIds(projectId, tokenIds);
-      if (resolved.error) {
-        res.status(400).json({ message: resolved.error });
+      const selected = await startSelectedTokensBroadcast(
+        { projectId, name: resolvedName, messageText, mediaUrls, buttons, buttonsPerRow, filters, groupsByToken },
+        tokenIds,
+        groupsByToken,
+      );
+      if (selected.kind === "error") {
+        res.status(400).json({ message: selected.message });
         return;
       }
-
-      for (const [tid] of groupsByToken) {
-        if (!tokenIds.includes(tid)) {
-          res.status(400).json({ message: `groupsByTokenId содержит чужой токен ${tid}` });
-          return;
-        }
-      }
-
-      for (const token of resolved.tokens) {
-        const gids = resolveGroupIdsForToken(token.id, groupsByToken, filters.groupIds);
-        const err = await assertGroupsBelongToToken(projectId, token.id, gids);
-        if (err) {
-          res.status(400).json({ message: err });
-          return;
-        }
-      }
-
-      if (resolved.tokens.length > 1) {
-        const started = await startBroadcastCampaign(
-          {
-            projectId,
-            name: resolvedName,
-            messageText,
-            mediaUrls,
-            buttons,
-            buttonsPerRow,
-            filters,
-            groupsByToken,
-          },
-          resolved.tokens,
-        );
-        res.status(201).json(started);
+      if (selected.kind === "campaign") {
+        res.status(201).json(selected.started);
         return;
       }
+      singleTokenId = selected.token.id;
     }
 
-    const requestedTokenId = tokenIds?.[0] ?? getRequestTokenId(req);
-    const { selectedToken, effectiveTokenId } = await resolveEffectiveProjectToken(
-      projectId,
-      requestedTokenId,
-    );
-
+    const { selectedToken, effectiveTokenId } = await resolveEffectiveProjectToken(projectId, singleTokenId);
     if (!selectedToken || effectiveTokenId === null) {
       res.status(400).json({ message: "Токен бота не найден для этого проекта" });
+      return;
+    }
+    if (!isTokenActiveForBroadcast(selectedToken.isActive)) {
+      res.status(400).json({ message: BOT_UNAUTHORIZED_HINT });
       return;
     }
 
@@ -116,10 +81,7 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
       ...filters,
       ...(groupIds.length ? { groupIds } : { groupIds: undefined }),
     };
-
     const users = await storage.getUsersForBroadcast(projectId, effectiveTokenId, childFilters);
-    const totalCount = users.length;
-
     const broadcast = await storage.createBroadcast({
       projectId,
       tokenId: effectiveTokenId,
@@ -130,14 +92,12 @@ export async function createBroadcastHandler(req: Request, res: Response): Promi
       buttonsPerRow,
       filters: childFilters,
       status: "running",
-      totalCount,
+      totalCount: users.length,
       startedAt: new Date(),
     });
-
     runBroadcastQueue(broadcast.id, selectedToken.token).catch((err) => {
       console.error(`[broadcast] Ошибка очереди рассылки ${broadcast.id}:`, err);
     });
-
     res.status(201).json({ broadcastId: broadcast.id });
   } catch (error) {
     console.error("[createBroadcastHandler] Ошибка:", error);
