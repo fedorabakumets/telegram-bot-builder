@@ -16,6 +16,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTokenEdit } from '../token/useTokenEdit';
 import { TokenDisplay } from './TokenDisplay';
 import { TokenEditInput } from '../token/TokenEditInput';
+import { invalidateBotStatusQueries } from '../invalidate-bot-status-queries';
 
 /**
  * Свойства компонента отображения и редактирования токена
@@ -29,12 +30,22 @@ interface TokenDisplayEditProps {
   projectId: number;
   /** Колбэк после успешного обновления токена */
   onTokenUpdate: () => void;
+  /** Скрыть префикс «Токен:» в режиме просмотра */
+  hidePrefix?: boolean;
 }
 
 /**
  * Компонент для отображения и редактирования токена бота
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
-export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: TokenDisplayEditProps) {
+export function TokenDisplayEdit({
+  token,
+  tokenId,
+  projectId,
+  onTokenUpdate,
+  hidePrefix = false,
+}: TokenDisplayEditProps) {
   const { isEditing, tokenValue, isValidating, error, startEditing, stopEditing, setTokenValue, validateToken } = useTokenEdit();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -57,6 +68,7 @@ export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: T
 
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot`] });
+      invalidateBotStatusQueries(queryClient, projectId, tokenId);
 
       toast({ title: 'Токен обновлен', description: 'Токен бота успешно изменён' });
 
@@ -101,5 +113,11 @@ export function TokenDisplayEdit({ token, tokenId, projectId, onTokenUpdate }: T
     );
   }
 
-  return <TokenDisplay token={token} onDoubleClick={() => startEditing(token)} />;
+  return (
+    <TokenDisplay
+      token={token}
+      hidePrefix={hidePrefix}
+      onDoubleClick={() => startEditing(token)}
+    />
+  );
 }

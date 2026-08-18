@@ -19,12 +19,16 @@ interface TokenDisplayProps {
   token: string;
   /** Обработчик двойного клика для начала редактирования */
   onDoubleClick: () => void;
+  /** Скрыть префикс «Токен:» — заголовок уже есть в секции настроек */
+  hidePrefix?: boolean;
 }
 
 /**
- * Компонент отображения маскированного токена с подсказкой
+ * Маскированный токен с подсказкой: двойной клик открывает редактирование
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
-export function TokenDisplay({ token, onDoubleClick }: TokenDisplayProps) {
+export function TokenDisplay({ token, onDoubleClick, hidePrefix = false }: TokenDisplayProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -34,7 +38,9 @@ export function TokenDisplay({ token, onDoubleClick }: TokenDisplayProps) {
           title="Двойной клик для изменения токена"
           aria-label="Токен бота — двойной клик для редактирования"
         >
-          <span className="flex-1">Токен: {maskToken(token)}</span>
+          <span className="flex-1">
+            {hidePrefix ? maskToken(token) : `Токен: ${maskToken(token)}`}
+          </span>
           <Pencil className="h-3 w-3 shrink-0 opacity-0 group-hover:opacity-60 transition-opacity" />
         </p>
       </TooltipTrigger>

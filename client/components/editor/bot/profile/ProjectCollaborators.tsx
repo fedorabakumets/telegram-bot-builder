@@ -60,7 +60,7 @@ export function ProjectCollaborators({ projectId, canManage }: ProjectCollaborat
           <Users className="h-3.5 w-3.5" aria-hidden />
         </div>
         <div className="min-w-0 flex-1 pt-0.5">
-          <p className="text-sm font-medium text-foreground">Коллабораторы</p>
+          <p className="text-sm font-medium text-foreground">Владельцы</p>
           <p className="mt-0.5 text-xs text-muted-foreground">Доступ к проекту в конструкторе</p>
         </div>
         {isLoading && (
@@ -70,7 +70,7 @@ export function ProjectCollaborators({ projectId, canManage }: ProjectCollaborat
 
       <div className="space-y-1.5 pl-10">
         {collaborators.length === 0 && !isLoading && (
-          <p className="text-xs text-muted-foreground/70">Нет коллабораторов</p>
+          <p className="text-xs text-muted-foreground/70">Нет владельцев</p>
         )}
         {collaborators.map((collab) => {
           const profile = profileById.get(collab.userId);
@@ -89,7 +89,7 @@ export function ProjectCollaborators({ projectId, canManage }: ProjectCollaborat
                   className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
                   onClick={() => remove(collab.userId)}
                   disabled={isRemoving}
-                  aria-label={`Удалить коллаборатора ${collab.userId}`}
+                  aria-label={`Удалить владельца ${collab.userId}`}
                 >
                   {isRemoving
                     ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
@@ -107,7 +107,7 @@ export function ProjectCollaborators({ projectId, canManage }: ProjectCollaborat
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              aria-label="Telegram ID нового коллаборатора"
+              aria-label="Telegram ID нового владельца"
               type="number"
             />
             <Button
@@ -116,7 +116,7 @@ export function ProjectCollaborators({ projectId, canManage }: ProjectCollaborat
               className="h-7 w-7 shrink-0 text-muted-foreground"
               onClick={handleAdd}
               disabled={isAdding || !inputValue.trim()}
-              aria-label="Добавить коллаборатора"
+              aria-label="Добавить владельца"
             >
               {isAdding
                 ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />

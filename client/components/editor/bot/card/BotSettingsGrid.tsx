@@ -24,6 +24,7 @@ import { BotAdminIds } from '../profile/BotAdminIds';
 import { ProjectCollaborators } from '../profile/ProjectCollaborators';
 import { BotLaunchHistory } from './BotLaunchHistory';
 import { BotLaunchSettings } from './BotLaunchSettings';
+import { BotTokenSettings } from './BotTokenSettings';
 import { BotUserbotSettings } from './BotUserbotSettings';
 import { SettingsSection } from './SettingsSection';
 import type { BotToken } from '@shared/schema';
@@ -41,7 +42,7 @@ interface BotSettingsGridProps {
   /** Включена ли база данных пользователей (1 — да, 0/null — нет) */
   userDatabaseEnabled: number | null;
   /** Данные токена для настроек автоперезапуска */
-  token: Pick<BotToken, 'id' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia' | 'messagesRetentionDays' | 'catchAllHandlers' | 'contentCache' | 'userbotEnabled' | 'userbotApiId' | 'userbotApiHash' | 'userbotSessionString'>;
+  token: Pick<BotToken, 'id' | 'token' | 'autoRestart' | 'maxRestartAttempts' | 'logLevel' | 'protectContent' | 'saveIncomingMedia' | 'messagesRetentionDays' | 'catchAllHandlers' | 'contentCache' | 'userbotEnabled' | 'userbotApiId' | 'userbotApiHash' | 'userbotSessionString'>;
   /** Мутация переключения базы данных */
   toggleDatabaseMutation: {
     /** Флаг ожидания ответа */
@@ -91,6 +92,11 @@ export function BotSettingsGrid({
   return (
     <div className="space-y-6">
       <SettingsSection title="Запуск">
+        <BotTokenSettings
+          projectId={projectId}
+          tokenId={tokenId}
+          token={token.token}
+        />
         <BotLaunchSettings
           tokenId={tokenId}
           projectId={projectId}
@@ -168,7 +174,7 @@ export function BotSettingsGrid({
       </SettingsSection>
 
       {showCollaborators && (
-        <SettingsSection title="Коллабораторы">
+        <SettingsSection title="Владельцы">
           <ProjectCollaborators projectId={projectId} canManage={canManage} />
         </SettingsSection>
       )}

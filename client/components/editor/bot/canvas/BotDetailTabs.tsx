@@ -12,7 +12,7 @@ const TABS: Array<{ id: BotDetailTabId; label: string; icon: typeof History }> =
   { id: 'settings', label: 'Настройки', icon: Settings },
   { id: 'variables', label: 'Переменные', icon: Braces },
   { id: 'terminal', label: 'Терминал', icon: Terminal },
-  { id: 'collaborators', label: 'Коллабораторы', icon: Users },
+  { id: 'collaborators', label: 'Владельцы', icon: Users },
 ];
 
 /** Пропсы вкладок */

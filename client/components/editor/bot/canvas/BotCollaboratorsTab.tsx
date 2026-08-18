@@ -1,5 +1,5 @@
 /**
- * @fileoverview Вкладка «Коллабораторы» detail-панели бота
+ * @fileoverview Вкладка «Владельцы» detail-панели бота
  * Список участников конструктора + плашка о будущих разрешениях.
  * @module bot/canvas/BotCollaboratorsTab
  */
@@ -7,7 +7,7 @@
 import { Construction } from 'lucide-react';
 import { ProjectCollaborators } from '../profile/ProjectCollaborators';
 
-/** Пропсы вкладки коллабораторов */
+/** Пропсы вкладки владельцев */
 interface BotCollaboratorsTabProps {
   /** ID проекта */
   projectId: number;
@@ -16,7 +16,7 @@ interface BotCollaboratorsTabProps {
 }
 
 /**
- * Контент вкладки: баннер «в разработке» и управление коллабораторами
+ * Контент вкладки: баннер «в разработке» и управление владельцами
  * @param props - Свойства компонента
  * @returns JSX элемент
  */
