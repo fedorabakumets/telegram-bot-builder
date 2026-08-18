@@ -15,6 +15,7 @@ import type { CollaboratorInfo } from '../../hooks/use-project-collaborators';
 import type { SheetInfo } from '../panel-types';
 import {
   EMPTY_STATE_CLASS,
+  FILE_CHECKBOX_CLASS,
   STICKY_COLUMN_NAME_HEADER,
   STICKY_COLUMN_SELECT_HEADER,
   TABLE_HEAD_CLASS,
@@ -83,7 +84,7 @@ export function FilesTable(props: FilesTableProps) {
     <div className="h-full" data-testid="files-table">
       {/* Десктоп: таблица с горизонтальным скроллом и закреплёнными столбцами (Req 7.8) */}
       <div className="hidden sm:block h-full overflow-auto">
-        <table className="w-full text-xs border-collapse">
+        <table className="min-w-full w-max text-xs border-collapse">
           <thead className={TABLE_HEAD_CLASS}>
             <tr>
               {FILES_TABLE_COLUMNS.map((col) => (
@@ -99,6 +100,7 @@ export function FilesTable(props: FilesTableProps) {
                     <Checkbox
                       checked={allSelected}
                       onCheckedChange={(checked) => onSelectAll(checked as boolean)}
+                      className={FILE_CHECKBOX_CLASS}
                       data-testid="files-table-select-all"
                     />
                   ) : col.label}
@@ -118,7 +120,11 @@ export function FilesTable(props: FilesTableProps) {
       <div className="sm:hidden h-full overflow-auto p-3 space-y-2">
         {/* Выбор всех в карточном режиме */}
         <label className="flex items-center gap-2 text-xs text-muted-foreground px-1">
-          <Checkbox checked={allSelected} onCheckedChange={(checked) => onSelectAll(checked as boolean)} />
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={(checked) => onSelectAll(checked as boolean)}
+            className={FILE_CHECKBOX_CLASS}
+          />
           Выбрать все ({files.length})
         </label>
         {files.map((file) => (

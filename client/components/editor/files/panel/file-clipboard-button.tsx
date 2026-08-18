@@ -25,6 +25,8 @@ export interface FileClipboardButtonProps {
   disabled?: boolean;
   /** Передать выбранные из буфера файлы в загрузчик */
   onFiles: (files: File[]) => void;
+  /** Только иконка (узкая панель свойств) */
+  compact?: boolean;
 }
 
 /**
@@ -35,6 +37,7 @@ export interface FileClipboardButtonProps {
 export function FileClipboardButton({
   disabled = false,
   onFiles,
+  compact = false,
 }: FileClipboardButtonProps): React.JSX.Element {
   const { toast } = useToast();
   const catcherRef = useRef<HTMLDivElement>(null);
@@ -118,15 +121,17 @@ export function FileClipboardButton({
       <Button
         type="button"
         variant={awaitingPaste ? 'default' : 'outline'}
-        size="sm"
-        className="h-8"
+        size={compact ? 'icon' : 'sm'}
+        className={compact ? 'h-10 w-10 shrink-0' : 'h-8'}
         disabled={disabled}
         onClick={() => void handleClick()}
         title="Вставить из буфера: Ctrl+V, Ctrl+М или Shift+Insert"
         data-testid="file-storage-upload-clipboard"
       >
-        <ClipboardPaste className="h-3.5 w-3.5 sm:mr-1.5" />
-        <span className="hidden sm:inline">{awaitingPaste ? 'Ctrl+V / М' : 'Из буфера'}</span>
+        <ClipboardPaste className={compact ? 'h-4 w-4' : 'h-3.5 w-3.5 sm:mr-1.5'} />
+        {!compact && (
+          <span className="hidden sm:inline">{awaitingPaste ? 'Ctrl+V / М' : 'Из буфера'}</span>
+        )}
       </Button>
     </>
   );

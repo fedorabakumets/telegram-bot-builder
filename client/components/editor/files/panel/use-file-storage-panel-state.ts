@@ -107,16 +107,18 @@ export function useFileStoragePanelState({ mode, projectId, selectedTokenId, att
   const refresh = useCallback(() => { queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'files'] }); }, [queryClient, projectId]);
 
   /**
-   * После загрузки с диска: на входящих/исходящих переключаемся на «Загруженные»,
-   * иначе обновляем текущий список.
+   * После загрузки: переключаемся на «Загруженные» при входящих/исходящих
+   * и отмечаем новые файлы, чтобы сразу была видна кнопка «Прикрепить».
    */
-  const handleUploaded = useCallback(() => {
+  const handleUploaded = useCallback((uploadedIds: number[] = []) => {
     if (category === 'incoming' || category === 'outgoing') {
-      setCategory('uploaded');
-      return;
+      setCategoryRaw('uploaded');
+      setPage(1);
+    } else {
+      refresh();
     }
-    refresh();
-  }, [category, setCategory, refresh]);
+    setSelectedIds(new Set(uploadedIds));
+  }, [category, refresh]);
 
   /** Копирование file_id в буфер обмена */
   const copyFileId = useCallback((fileId: string) => { navigator.clipboard?.writeText(fileId); }, []);

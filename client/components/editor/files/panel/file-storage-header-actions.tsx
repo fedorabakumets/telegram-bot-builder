@@ -20,8 +20,8 @@ export interface FileStorageHeaderActionsProps {
   projectId: number;
   /** Принудительное обновление списка файлов */
   onRefresh: () => void;
-  /** Колбэк после успешной загрузки файлов */
-  onUploaded?: () => void;
+  /** Колбэк после успешной загрузки файлов (id записей) */
+  onUploaded?: (uploadedIds: number[]) => void;
 }
 
 /**

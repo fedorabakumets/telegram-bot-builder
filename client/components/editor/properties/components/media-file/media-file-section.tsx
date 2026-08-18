@@ -12,7 +12,7 @@ import { MediaFileSectionHeader } from './media-file-section-header';
 import { MultiMediaSelector } from '../../media/multi-media-selector';
 import { InfoBlock } from '@/components/ui/info-block';
 import { VariableSelector } from '../variables/variable-selector';
-import { FileIdInput } from '../../media/file-id-input';
+import { FileIdInputPanel } from './file-id-input-panel';
 import { ContentSyncBadge } from '../content-sync-badge';
 import { extractVariables } from '../../utils/variables-utils';
 import type { Variable } from '../../../inline-rich/types';
@@ -172,16 +172,14 @@ export function MediaFileSection({
             </button>
           </div>
 
-          {/* Встроенный блок ввода Telegram file_id */}
           {showFileIdInput && (
-            <div className="rounded-lg border border-violet-200/60 dark:border-violet-700/60 bg-violet-50/30 dark:bg-violet-900/10 p-3">
-              <FileIdInput
-                projectId={projectId}
-                mediaType={fileIdMediaType}
-                onMediaTypeChange={setFileIdMediaType}
-                onAdd={handleFileIdAdd}
-              />
-            </div>
+            <FileIdInputPanel
+              projectId={projectId}
+              mediaType={fileIdMediaType}
+              onMediaTypeChange={setFileIdMediaType}
+              onAdd={handleFileIdAdd}
+              onClose={() => setShowFileIdInput(false)}
+            />
           )}
 
           <MultiMediaSelector

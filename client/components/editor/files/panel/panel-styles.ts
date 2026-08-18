@@ -247,17 +247,32 @@ export function getFileSizeTextClass(size: number | null | undefined): string {
 /*  Sticky-колонки и секции таблицы / панели                                  */
 /* ────────────────────────────────────────────────────────────────────────── */
 
-/** Sticky-класс для колонки выбора (первая, ширина чекбокса) */
-export const STICKY_COLUMN_SELECT = 'sticky left-0 z-10 bg-background';
+/** Ширина колонки выбора — не сжимать, иначе галочка пропадает под соседним столбцом */
+export const FILE_SELECT_COLUMN_WIDTH_CLASS = 'w-12 min-w-12 max-w-12';
 
-/** Sticky-класс для колонки превью+имя (вторая, после чекбокса) */
-export const STICKY_COLUMN_NAME = 'sticky left-9 z-10 bg-background';
+/**
+ * Чекбокс в таблице файлов. `!` перебивает `dark:border-border/80` у общего
+ * Checkbox — иначе пустая галочка почти не видна.
+ */
+export const FILE_CHECKBOX_CLASS =
+  '!h-6 !w-6 !rounded-[4px] !border-2 !border-foreground !bg-muted !shadow-none !scale-100 ' +
+  'dark:!border-foreground dark:!bg-muted dark:!shadow-none dark:!scale-100 ' +
+  'data-[state=checked]:!bg-primary data-[state=checked]:!border-primary data-[state=checked]:!text-primary-foreground ' +
+  'dark:data-[state=checked]:!bg-primary dark:data-[state=checked]:!border-primary dark:data-[state=checked]:!text-primary-foreground';
+
+/** Sticky-класс для колонки выбора (первая, ширина чекбокса) */
+export const STICKY_COLUMN_SELECT =
+  `sticky left-0 z-20 bg-background ${FILE_SELECT_COLUMN_WIDTH_CLASS}`;
+
+/** Sticky-класс для колонки превью+имя (вторая, после чекбокса `w-12`) */
+export const STICKY_COLUMN_NAME = 'sticky left-12 z-10 bg-background';
 
 /** Sticky-класс для заголовка колонки выбора (поверх фона шапки) */
-export const STICKY_COLUMN_SELECT_HEADER = 'sticky left-0 z-30 bg-muted/60';
+export const STICKY_COLUMN_SELECT_HEADER =
+  `sticky left-0 z-30 bg-muted/60 ${FILE_SELECT_COLUMN_WIDTH_CLASS}`;
 
 /** Sticky-класс для заголовка колонки превью+имя */
-export const STICKY_COLUMN_NAME_HEADER = 'sticky left-9 z-30 bg-muted/60';
+export const STICKY_COLUMN_NAME_HEADER = 'sticky left-12 z-30 bg-muted/60';
 
 /** Класс выделенной строки таблицы (выбран файл) */
 export const TABLE_ROW_SELECTED_CLASS = 'bg-primary/5';
@@ -333,6 +348,10 @@ export const FILE_STORAGE_TOOLBAR_CLASS =
 export const FILE_STORAGE_ACTIONS_ROW_CLASS =
   'flex flex-col gap-2 border-b px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4 sm:py-2 ' +
   'bg-background/80';
+
+/** Баннер «как прикрепить файл к ноде» */
+export const ATTACH_HINT_CLASS =
+  'flex items-start gap-2 border-b bg-primary/5 px-3 py-2 text-xs leading-relaxed text-foreground sm:px-4';
 
 /** Карточка компактной квоты в toolbar — без фона и рамки */
 export const QUOTA_COMPACT_CARD_CLASS =

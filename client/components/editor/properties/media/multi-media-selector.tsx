@@ -6,16 +6,11 @@
  * @module MultiMediaSelector
  */
 
-import { useState, useEffect, useMemo } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useEffect, useMemo } from 'react';
 import { MediaFilesList } from "./media-files-list";
 import type { MediaFileData } from "./media-files-list";
-import { Plus } from "lucide-react";
-import { uploadImageFromUrl } from "@lib/bot-generator/media/uploadImageFromUrl";
-import { toast } from "@/hooks/use-toast";
 import { useMediaFiles, type MediaFileWithTokens } from "../hooks/use-media";
-import { MediaFieldButton } from "./media-field-button";
+import { MediaQuickAddRow } from "./media-quick-add-row";
 import { mergeAttachedMedia } from "../../files/panel/attach-node-refs";
 
 /** Пропсы компонента MultiMediaSelector */
@@ -44,7 +39,7 @@ export function MultiMediaSelector({
   projectId,
   value = [],
   onChange,
-  placeholder = "Введите URL",
+  placeholder = "URL или вставь картинку (Ctrl+V)",
   label = "Медиафайлы",
   nodeName = "node",
   keyboardType = "none",
@@ -54,9 +49,6 @@ export function MultiMediaSelector({
   onThumbnailsChange,
   onSwitchToFilesTab,
 }: MultiMediaSelectorProps) {
-  const [urlInput, setUrlInput] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
-
   // Проверяем, включена ли клавиатура (для определения скрытых файлов)
   const hasKeyboard = keyboardType === 'inline' || keyboardType === 'reply';
 
@@ -109,33 +101,6 @@ export function MultiMediaSelector({
       projectId: projectId,
     };
   });
-
-  const handleAddUrl = async () => {
-    if (!urlInput.trim()) return;
-
-    if (!urlInput.startsWith('http://') && !urlInput.startsWith('https://')) {
-      onChange([...value, urlInput]);
-      setUrlInput('');
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const result = await uploadImageFromUrl(urlInput, projectId, nodeName);
-      if (result.success) {
-        const pathToUse = result.localPath || result.imageUrl || urlInput;
-        onChange([...value, pathToUse]);
-        toast({ title: 'Файл добавлен', description: result.message });
-      } else {
-        onChange([...value, urlInput]);
-      }
-    } catch {
-      onChange([...value, urlInput]);
-    } finally {
-      setIsUploading(false);
-      setUrlInput('');
-    }
-  };
 
   const handleRemoveFile = (index: number) => {
     const newValue = value.filter((_, i) => i !== index);
@@ -210,48 +175,14 @@ export function MultiMediaSelector({
         </div>
       )}
 
-      {/* Add File */}
-      <div className="space-y-3">
-        {/* URL Input */}
-        <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <Input
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              placeholder={placeholder}
-              disabled={isUploading}
-              className="h-10 text-sm"
-              onKeyDown={(e) => e.key === 'Enter' && handleAddUrl()}
-            />
-            {isUploading && (
-              <i className="fas fa-spinner fa-spin absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 text-sm"></i>
-            )}
-          </div>
-          <Button onClick={handleAddUrl} size="sm" disabled={!urlInput.trim()}>
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-
-        {/* Or Divider */}
-        <div className="flex items-center gap-2">
-          <div className="flex-1 h-px bg-slate-300/30"></div>
-          <span className="text-xs text-slate-500">или</span>
-          <div className="flex-1 h-px bg-slate-300/30"></div>
-        </div>
-
-        {/* Единая кнопка выбора файла из хранилища (Req 2.1, 2.2, 2.3) */}
-        <div className="flex gap-2">
-          <MediaFieldButton
-            projectId={projectId}
-            nodeId={nodeId ?? nodeName}
-            nodeName={nodeName}
-            field="attachedMedia"
-            multi={true}
-            onAttach={handleAttach}
-            className="flex-1 h-10 gap-1.5"
-          />
-        </div>
-      </div>
+      <MediaQuickAddRow
+        projectId={projectId}
+        nodeId={nodeId ?? nodeName}
+        nodeName={nodeName}
+        placeholder={placeholder}
+        multiple
+        onAttached={handleAttach}
+      />
     </div>
   );
 }

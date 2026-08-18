@@ -38,6 +38,8 @@ export {
   QUOTA_EXCEEDED_ICON_CLASS,
   QUOTA_EXCEEDED_TEXT_CLASS,
   FILE_SIZE_TEXT_CLASS,
+  FILE_CHECKBOX_CLASS,
+  FILE_SELECT_COLUMN_WIDTH_CLASS,
   ACTIVE_FILTER_CHIP_CLASS,
   ACTIVE_FILTER_CHIP_LABEL_CLASS,
   ACTIVE_FILTER_CHIP_REMOVE_CLASS,
@@ -116,7 +118,13 @@ export { readClipboardFiles, filesFromClipboardEvent, isPasteHotkey, isClipboard
 export { FileStorageHeaderActions } from './file-storage-header-actions';
 export type { FileStorageHeaderActionsProps } from './file-storage-header-actions';
 export { useFileUpload, MAX_UPLOAD_FILES } from './use-file-upload';
-export type { UseFileUploadResult } from './use-file-upload';
+export type { UseFileUploadResult, OnFilesUploaded } from './use-file-upload';
+export { FileAttachHint } from './file-attach-hint';
+export type { FileAttachHintProps } from './file-attach-hint';
+export { getAttachHintKind, getAttachHintText } from './file-attach-hint-text';
+export type { AttachHintKind, AttachHintMode, AttachHintParams } from './file-attach-hint-text';
+export { FileStoragePagination } from './file-storage-pagination';
+export type { FileStoragePaginationProps } from './file-storage-pagination';
 export { StorageManagerButton } from './storage/storage-manager-button';
 export { useStorageManagerActions } from './storage/use-storage-manager-actions';
 export type { UseStorageManagerActionsResult } from './storage/use-storage-manager-actions';

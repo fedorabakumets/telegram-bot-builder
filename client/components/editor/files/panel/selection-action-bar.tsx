@@ -1,10 +1,8 @@
 /**
  * @fileoverview Нижняя плашка массовых действий над выбранными файлами
  * `SelectionActionBar`: показывает количество выбранных и действия
- * «Прикрепить» (только при canAttach — есть attachTarget, Req 3.3, 3.4),
- * «Удалить» (с подтверждением, дизейбл во время удаления) и «Снять выбор»
- * (Req 3.2, 3.5). Использует shadcn/ui Button и смысловые иконки lucide-react
- * (Paperclip/Trash2/X), без декоративных эмодзи (Req 13.1, 13.2).
+ * «Прикрепить» (при canAttach, даже если файлы ещё не отмечены — кнопка
+ * тогда неактивна), «Удалить» и «Снять выбор» (Req 3.2–3.5).
  * @module components/editor/files/panel/selection-action-bar
  */
 
@@ -41,7 +39,7 @@ export interface SelectionActionBarProps {
 }
 
 /**
- * Плашка массовых действий: видна, когда выбран хотя бы один файл (Req 3.2).
+ * Плашка массовых действий: видна при выборе файлов или когда можно прикреплять.
  * @param props - Кол-во выбранных, флаги и колбэки действий
  * @returns JSX элемент плашки действий
  */
@@ -59,62 +57,70 @@ export function SelectionActionBar({
       data-testid="selection-action-bar"
     >
       <span className="text-sm text-muted-foreground tabular-nums" data-testid="selection-count">
-        Выбрано: {selectedCount}
+        {selectedCount > 0
+          ? `Выбрано: ${selectedCount}`
+          : 'Отметь файлы галочкой слева'}
       </span>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onClearSelection}
-          data-testid="clear-selection"
-        >
-          <X className="mr-1.5 h-3.5 w-3.5" />
-          Снять выбор
-        </Button>
+        {selectedCount > 0 && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onClearSelection}
+            data-testid="clear-selection"
+          >
+            <X className="mr-1.5 h-3.5 w-3.5" />
+            Снять выбор
+          </Button>
+        )}
 
         {canAttach && (
           <Button
             type="button"
             variant="default"
             size="sm"
+            disabled={selectedCount === 0}
             onClick={onAttach}
+            title={selectedCount === 0 ? 'Сначала отметь файлы галочкой слева' : 'Прикрепить выбранные файлы к ноде'}
             data-testid="attach-selected"
           >
             <Paperclip className="mr-1.5 h-3.5 w-3.5" />
-            Прикрепить ({selectedCount})
+            {selectedCount > 0 ? `Прикрепить (${selectedCount})` : 'Прикрепить к ноде'}
           </Button>
         )}
 
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              disabled={isDeleting}
-              data-testid="delete-selected"
-            >
-              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-              Удалить ({selectedCount})
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Удалить выбранные файлы?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Будет удалено файлов: {selectedCount}. Действие необратимо.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Отмена</AlertDialogCancel>
-              <AlertDialogAction onClick={onDelete} data-testid="confirm-delete">
-                Удалить
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {selectedCount > 0 && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={isDeleting}
+                data-testid="delete-selected"
+              >
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                Удалить ({selectedCount})
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Удалить выбранные файлы?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Будет удалено файлов: {selectedCount}. Действие необратимо.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogAction onClick={onDelete} data-testid="confirm-delete">
+                  Удалить
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
     </div>
   );

@@ -12,6 +12,8 @@ export * from './media-files-list';
 export * from './camera-capture';
 export * from './file-optimizer';
 export * from './url-downloader';
+export * from './media-quick-add-row';
+export * from './use-quick-attach-upload';
 
 // Типы
 export type { MediaFileData } from './media-files-list';

@@ -34,8 +34,8 @@ export interface FileStorageHeaderProps {
   onProjectChange: (projectId: number) => void;
   /** Принудительное обновление списка файлов */
   onRefresh: () => void;
-  /** Колбэк после загрузки файлов с диска */
-  onUploaded?: () => void;
+  /** Колбэк после загрузки файлов с диска (id успешных записей) */
+  onUploaded?: (uploadedIds: number[]) => void;
 }
 
 /**

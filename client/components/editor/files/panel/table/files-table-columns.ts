@@ -39,7 +39,7 @@ export interface FilesTableColumn {
  * Столбцы `select` и `previewName` закреплены слева для адаптивного скролла.
  */
 export const FILES_TABLE_COLUMNS: FilesTableColumn[] = [
-  { id: 'select', label: '', pinned: true, className: 'w-9 text-center' },
+  { id: 'select', label: '', pinned: true, className: 'w-12 min-w-12 text-center' },
   { id: 'previewName', label: 'Файл', pinned: true, className: 'text-left min-w-[180px]' },
   { id: 'internalId', label: 'ID', className: 'text-left w-14' },
   { id: 'extension', label: 'Расш.', className: 'text-left w-14' },

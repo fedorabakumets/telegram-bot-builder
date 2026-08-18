@@ -19,8 +19,8 @@ import { useFileUpload } from './use-file-upload';
 export interface FileUploadButtonProps {
   /** ID проекта, в который пишутся файлы */
   projectId: number;
-  /** Колбэк после завершения пачки (переключение категории / refresh) */
-  onUploaded?: () => void;
+  /** Колбэк после завершения пачки (id успешных записей) */
+  onUploaded?: (uploadedIds: number[]) => void;
 }
 
 /**

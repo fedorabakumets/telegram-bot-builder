@@ -15,10 +15,12 @@ import { Button } from '@/components/ui/button';
 import { useFileStoragePanelState } from './use-file-storage-panel-state';
 import { FileStorageHeader } from './file-storage-header';
 import { FileStorageToolbar } from './file-storage-toolbar';
+import { FileAttachHint } from './file-attach-hint';
 import { FiltersRow } from './filters-row';
 import { FiltersModal } from './filters-modal';
 import { SelectionActionBar } from './selection-action-bar';
 import { FilesTable } from './table/files-table';
+import { FileStoragePagination } from './file-storage-pagination';
 import { FILE_STORAGE_ACTIONS_ROW_CLASS } from './panel-styles';
 import type { FileStoragePanelProps } from './panel-types';
 
@@ -49,6 +51,13 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         onProjectChange={onProjectChange}
         onRefresh={s.refresh}
         onUploaded={s.handleUploaded}
+      />
+
+      <FileAttachHint
+        mode={mode}
+        attachModeEnabled={s.attachModeEnabled}
+        hasTarget={!!attachTarget}
+        nodeLabel={attachTarget?.nodeLabel}
       />
 
       <FileStorageToolbar
@@ -119,8 +128,8 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         />
       </div>
 
-      {/* Плашка массовых действий при выбранных файлах (Req 3.2–3.5) */}
-      {s.selectedIds.size > 0 && (
+      {/* Плашка: в модалке всегда, на странице — при выборе или режиме прикрепления */}
+      {(s.canAttach || s.selectedIds.size > 0) && (
         <SelectionActionBar
           selectedCount={s.selectedIds.size}
           canAttach={s.canAttach}
@@ -131,20 +140,12 @@ export function FileStoragePanel(props: FileStoragePanelProps) {
         />
       )}
 
-      {/* Пагинация (минимальная; полноценные элементы управления — в дочерних задачах) */}
-      {s.totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-2 border-t text-xs text-muted-foreground">
-          <span>{s.total} файлов • стр. {s.page}/{s.totalPages}</span>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="sm" disabled={s.page <= 1} onClick={() => s.setPage((p) => p - 1)}>
-              Назад
-            </Button>
-            <Button variant="ghost" size="sm" disabled={s.page >= s.totalPages} onClick={() => s.setPage((p) => p + 1)}>
-              Вперёд
-            </Button>
-          </div>
-        </div>
-      )}
+      <FileStoragePagination
+        page={s.page}
+        totalPages={s.totalPages}
+        total={s.total}
+        onPageChange={(next) => s.setPage(next)}
+      />
     </div>
   );
 }

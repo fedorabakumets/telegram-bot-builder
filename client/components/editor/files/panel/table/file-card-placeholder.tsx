@@ -22,6 +22,7 @@ import {
   getFileSizeTextClass,
   getStorageBadgeStyle,
   STORAGE_BADGE_LABEL_WIDE,
+  FILE_CHECKBOX_CLASS,
 } from '../panel-styles';
 
 /**
@@ -46,7 +47,12 @@ export function FileCardPlaceholder({
 
   return (
     <div className={cn('rounded-xl border p-3 flex gap-3 items-start', selected && 'border-primary/50 bg-primary/5')}>
-      <Checkbox checked={selected} onCheckedChange={onToggle} className="mt-1" />
+      <Checkbox
+        checked={selected}
+        onCheckedChange={onToggle}
+        className={cn('mt-1', FILE_CHECKBOX_CLASS)}
+        title="Отметить, чтобы прикрепить к ноде"
+      />
       <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
         {showThumb ? (
           <img src={previewUrl!} alt="" className="w-full h-full object-cover"

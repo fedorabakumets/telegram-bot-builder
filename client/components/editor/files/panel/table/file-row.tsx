@@ -23,6 +23,7 @@ import {
   STICKY_COLUMN_SELECT,
   TABLE_ROW_CLASS,
   TABLE_ROW_SELECTED_CLASS,
+  FILE_CHECKBOX_CLASS,
 } from '../panel-styles';
 import { CellPreviewName } from './cell-preview-name';
 import { CellFileIds } from './cell-file-ids';
@@ -75,8 +76,13 @@ export function FileRow({
   return (
     <tr className={cn(TABLE_ROW_CLASS, selected && TABLE_ROW_SELECTED_CLASS)}>
       {/* 1. Выбор (закреплён) */}
-      <td className={cn('p-2 text-center', STICKY_SELECT, selected && TABLE_ROW_SELECTED_CLASS)}>
-        <Checkbox checked={selected} onCheckedChange={onToggle} />
+      <td className={cn('px-1.5 py-2 text-center', STICKY_SELECT, selected && TABLE_ROW_SELECTED_CLASS)}>
+        <Checkbox
+          checked={selected}
+          onCheckedChange={onToggle}
+          className={FILE_CHECKBOX_CLASS}
+          title="Отметить, чтобы прикрепить к ноде"
+        />
       </td>
       {/* 2. Превью + название (закреплён) */}
       <CellPreviewName
