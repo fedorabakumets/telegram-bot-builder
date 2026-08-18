@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T03:14:29+03:00",
+    "updated_at": "2026-08-18T17:25:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -215,7 +215,7 @@
   {
     "path": "api/project-bot",
     "title": "project-bot",
-    "excerpt": "Эндпоинтов: **7**",
+    "excerpt": "Эндпоинтов: **8**",
     "parts": [
       "api",
       "project-bot"
@@ -223,7 +223,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T01:28:36+03:00",
+    "updated_at": "2026-08-18T17:25:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -448,7 +448,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-12T00:53:11+03:00",
+    "updated_at": "2026-08-18T17:25:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -1235,7 +1235,7 @@
   {
     "path": "features/start-offline-bots",
     "title": "Массовый запуск офлайн-ботов",
-    "excerpt": "Кнопка **«Запустить офлайн»** в шапке проекта и MCP `db_start_offline_bots` поднимают только остановленных ботов текущего проекта. Уже **run",
+    "excerpt": "Кнопка **«Запустить офлайн»** в шапке проекта и MCP `db_start_offline_bots` поднимают только остановленных ботов текущего проекта с **действ",
     "parts": [
       "features",
       "start-offline-bots"
@@ -1243,7 +1243,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-07-28T09:54:28+03:00",
+    "updated_at": "2026-08-18T17:25:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -1303,7 +1303,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-07-28T11:22:23+03:00",
+    "updated_at": "2026-08-18T17:25:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -1777,7 +1777,7 @@
       "futures": "🔮 Планы развития",
       "infrastructure": "🏗️ Инфраструктура"
     },
-    "updated_at": "2026-07-28T22:11:50+03:00",
+    "updated_at": "2026-08-18T17:25:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -1879,7 +1879,7 @@
       "futures": "🔮 Планы развития",
       "mcp": "🤖 MCP"
     },
-    "updated_at": "2026-08-11T22:05:49+03:00",
+    "updated_at": "2026-08-18T17:25:44+03:00",
     "tags": [],
     "author": ""
   },
@@ -2402,7 +2402,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-07-28T11:22:23+03:00",
+    "updated_at": "2026-08-18T17:37:36+03:00",
     "tags": [],
     "author": ""
   },
@@ -2462,7 +2462,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-08-17T22:21:09+03:00",
+    "updated_at": "2026-08-18T14:59:11+03:00",
     "tags": [],
     "author": ""
   },
@@ -2717,8 +2717,8 @@
   },
   {
     "path": "mcp/bot-builder",
-    "title": "Bot builder",
-    "excerpt": "﻿# MCP-сервер конструктора (botcraft-builder)",
+    "title": "MCP-сервер конструктора (botcraft-builder)",
+    "excerpt": "> Подробное руководство по MCP-серверу BotCraft Studio для сборки `project.json` и генерации Python-кода через внешние ИИ-клиенты (Cursor, C",
     "parts": [
       "mcp",
       "bot-builder"
@@ -2726,7 +2726,7 @@
     "folder_titles": {
       "mcp": "🤖 MCP-конструктор"
     },
-    "updated_at": "2026-08-04T17:44:54+03:00",
+    "updated_at": "2026-08-18T17:25:44+03:00",
     "tags": [],
     "author": ""
   },
