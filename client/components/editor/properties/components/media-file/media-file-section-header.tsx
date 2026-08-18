@@ -5,7 +5,6 @@
  */
 
 import { SectionHeader } from '../layout/section-header';
-import { ComingSoonBadge } from '../conditional-message-card/coming-soon-badge';
 
 /** Пропсы заголовка секции медиа */
 interface MediaFileSectionHeaderProps {
@@ -13,8 +12,6 @@ interface MediaFileSectionHeaderProps {
   isOpen: boolean;
   /** Функция переключения открытости */
   onToggle: () => void;
-  /** Показывать бейдж "Скоро обновление" (по умолчанию true) */
-  showComingSoon?: boolean;
 }
 
 /**
@@ -23,7 +20,7 @@ interface MediaFileSectionHeaderProps {
  * @param {MediaFileSectionHeaderProps} props - Пропсы компонента
  * @returns {JSX.Element} Заголовок секции медиа
  */
-export function MediaFileSectionHeader({ isOpen, onToggle, showComingSoon = true }: MediaFileSectionHeaderProps) {
+export function MediaFileSectionHeader({ isOpen, onToggle }: MediaFileSectionHeaderProps) {
   return (
     <SectionHeader
       title="Прикрепленный медиафайл"
@@ -35,7 +32,6 @@ export function MediaFileSectionHeader({ isOpen, onToggle, showComingSoon = true
       iconColor="text-rose-600 dark:text-rose-400"
       titleGradient="bg-gradient-to-r from-rose-900 to-pink-800 dark:from-rose-100 dark:to-pink-200 bg-clip-text text-transparent"
       descriptionColor="text-rose-700/70 dark:text-rose-300/70"
-      extraContent={showComingSoon ? <ComingSoonBadge /> : undefined}
     />
   );
 }

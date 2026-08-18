@@ -111,7 +111,7 @@ export function StepMessage({ projectId, formData, onChange, onNext, onBack }: S
             value={formData.mediaUrls}
             onChange={(urls) => onChange({ mediaUrls: urls })}
             label="Прикреплённые файлы"
-            placeholder="Введите URL или выберите файл"
+            placeholder="Перетащи файл или вставь ссылку"
           />
 
           {/* Кнопка переключения блока ввода Telegram file_id */}

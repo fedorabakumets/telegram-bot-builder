@@ -39,7 +39,7 @@ export function MultiMediaSelector({
   projectId,
   value = [],
   onChange,
-  placeholder = "URL или вставь картинку (Ctrl+V)",
+  placeholder = "Перетащи файл или вставь ссылку",
   label = "Медиафайлы",
   nodeName = "node",
   keyboardType = "none",

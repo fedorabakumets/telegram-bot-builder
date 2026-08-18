@@ -55,7 +55,6 @@ export function MediaNodeProperties({
         onToggle={() => setIsMediaOpen(!isMediaOpen)}
         onNodeUpdate={onNodeUpdate}
         getAllNodesFromAllSheets={getAllNodesFromAllSheets}
-        showComingSoon={false}
       />
       <AutoTransitionSection
         selectedNode={selectedNode}

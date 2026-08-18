@@ -13,7 +13,6 @@ import { MultiMediaSelector } from '../../media/multi-media-selector';
 import { InfoBlock } from '@/components/ui/info-block';
 import { VariableSelector } from '../variables/variable-selector';
 import { FileIdInputPanel } from './file-id-input-panel';
-import { ContentSyncBadge } from '../content-sync-badge';
 import { extractVariables } from '../../utils/variables-utils';
 import type { Variable } from '../../../inline-rich/types';
 
@@ -34,8 +33,6 @@ interface MediaFileSectionProps {
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
   /** Все узлы всех листов для извлечения переменных */
   getAllNodesFromAllSheets?: any[];
-  /** Показывать бейдж "Скоро обновление" (по умолчанию true) */
-  showComingSoon?: boolean;
 }
 
 /**
@@ -74,7 +71,6 @@ export function MediaFileSection({
   onToggle,
   onNodeUpdate,
   getAllNodesFromAllSheets = [],
-  showComingSoon = true
 }: MediaFileSectionProps) {
   const attachedFiles: string[] = selectedNode.data.attachedMedia || [];
   /** imageUrl — одиночное изображение (может быть переменной вида {var.path}) */
@@ -120,11 +116,10 @@ export function MediaFileSection({
 
   return (
     <div className="bg-gradient-to-br from-pink-50/40 to-rose-50/20 dark:from-pink-950/30 dark:to-rose-900/20 rounded-xl p-3 sm:p-4 md:p-5 border border-pink-200/40 dark:border-pink-800/40 backdrop-blur-sm">
-      <MediaFileSectionHeader isOpen={isOpen} onToggle={onToggle} showComingSoon={showComingSoon} />
+      <MediaFileSectionHeader isOpen={isOpen} onToggle={onToggle} />
 
       {isOpen && (
         <div className="space-y-3">
-          <ContentSyncBadge />
           {showMixedWarning && (
             <InfoBlock
               variant="warning"
@@ -188,7 +183,7 @@ export function MediaFileSection({
             onChange={(urls) => onNodeUpdate(selectedNode.id, { attachedMedia: urls })}
             nodeName={selectedNode.id}
             label="Прикреплённые файлы"
-            placeholder="Введите URL или выберите файл"
+            placeholder="Перетащи файл или вставь ссылку"
             keyboardType={selectedNode.data.keyboardType}
             onNodeUpdate={onNodeUpdate}
             nodeId={selectedNode.id}
