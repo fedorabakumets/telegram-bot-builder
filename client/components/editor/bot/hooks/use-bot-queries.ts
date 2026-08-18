@@ -4,7 +4,7 @@
  * Инкапсулирует все useQuery/useQueries вызовы для панели управления ботами:
  * - Список проектов
  * - Токены по каждому проекту
- * - Статусы ботов по каждому токену
+ * - Статусы ботов одним запросом на проект (`GET …/bot/statuses`)
  * - Информация о ботах (getMe) по каждому проекту
  *
  * Важно: allTokens НЕ фильтруется — индексы сохраняются в соответствии с projects,
@@ -22,6 +22,7 @@ import type { BotStatusResponse } from '../bot-types';
 import type { BotInfo } from '../bot-types';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
 import { isTelegramUser } from '@/types/telegram-user';
+import { projectBotStatusesQueryKey } from '../project-bot-statuses-query';
 
 /**
  * Результат хука запросов ботов
@@ -97,21 +98,18 @@ export function useBotQueries(options?: UseBotQueriesOptions): BotQueriesResult 
   );
 
   const statusResults = useQueries({
-    queries: allTokensFlat.map(token => ({
-      queryKey: [`/api/tokens/${token.id}/bot-status`],
-      queryFn: () => apiRequest('GET', `/api/tokens/${token.id}/bot-status`),
-      /**
-       * staleTime: 0 — данные сразу считаются устаревшими,
-       * поэтому при инвалидации через WebSocket-событие рефетч произойдёт немедленно.
-       * Polling убран — обновляем статусы только по событиям WebSocket.
-       */
+    queries: projects.map((project) => ({
+      queryKey: projectBotStatusesQueryKey(project.id),
+      queryFn: () =>
+        apiRequest('GET', `/api/projects/${project.id}/bot/statuses`) as Promise<{
+          statuses: BotStatusResponse[];
+        }>,
+      enabled: projects.length > 0,
       staleTime: 0,
     })),
   });
 
-  const allBotStatuses = statusResults
-    .map((q, idx) => q.data ? { ...q.data, tokenId: allTokensFlat[idx]?.id } : null)
-    .filter(Boolean) as BotStatusResponse[];
+  const allBotStatuses = statusResults.flatMap((q) => q.data?.statuses ?? []);
 
   const botInfoResults = useQueries({
     queries: projects.map((project, idx) => ({

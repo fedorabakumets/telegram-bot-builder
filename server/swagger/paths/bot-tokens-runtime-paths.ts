@@ -42,6 +42,7 @@ export function registerBotTokensRuntimePaths(
       "Сверка с процессом / worker pool / `bot_instances`. " +
       "Ответ без сырого token. `Cache-Control: no-store`.\n\n" +
       "**Auth:** `hasProjectAccess` к проекту токена.\n\n" +
+      "Все боты проекта одним запросом: `GET /api/projects/{id}/bot/statuses`.\n\n" +
       "MCP: `GET /api/bot/tokens/{tokenId}/status` (тег `bot`).\n\n" +
       "```bash\ncurl -s http://localhost:5000/api/tokens/7/bot-status -b cookies.txt\n```",
     security: cookieSecurity,

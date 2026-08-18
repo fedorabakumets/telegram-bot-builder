@@ -20,7 +20,7 @@ REST API визуального конструктора Telegram-ботов. А
 | [health](./health.md) | 2 |
 | [launch](./launch.md) | 1 |
 | [media](./media.md) | 13 |
-| [project-bot](./project-bot.md) | 7 |
+| [project-bot](./project-bot.md) | 8 |
 | [project-broadcasts](./project-broadcasts.md) | 12 |
 | [project-dialogs](./project-dialogs.md) | 5 |
 | [project-files](./project-files.md) | 4 |

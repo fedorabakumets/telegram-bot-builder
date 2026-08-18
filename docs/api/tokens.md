@@ -12,6 +12,8 @@
 
 **Auth:** `hasProjectAccess` к проекту токена.
 
+Все боты проекта одним запросом: `GET /api/projects/{id}/bot/statuses`.
+
 MCP: `GET /api/bot/tokens/{tokenId}/status` (тег `bot`).
 
 ```bash

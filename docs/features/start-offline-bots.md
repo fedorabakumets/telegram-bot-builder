@@ -5,7 +5,7 @@
 ## Поток
 
 1. UI confirm / MCP `confirm: true` → `POST /api/projects/:id/bot/start-offline-all`
-2. Сервер фильтрует токены с `status !== running` и `isActive !== 0`, последовательно вызывает `startBot`
+2. Сервер фильтрует токены с `status !== running` и `isActive !== 0`, последовательно вызывает `startBot` (сам `startBot` тоже отказывает при `isActive=0` и при 401 `deleteWebhook`)
 3. На каждый успех — WS `bot-started` (карточки live)
 4. Во время цикла — WS `start-offline-progress` (счётчики без секретов)
 5. Redis `platform:project_event:{projectId}` разносит события на другие реплики Node

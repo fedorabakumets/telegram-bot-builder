@@ -59,6 +59,10 @@ import {
   getRestartCounter,
   STABLE_UPTIME_MS,
 } from './botRestartManager';
+import { refuseInactiveBotStart } from './refuse-inactive-bot-start';
+import { markBotTokenUnauthorized } from './mark-bot-token-unauthorized';
+import { isTelegramMethodUnauthorized } from './telegram-method-unauthorized';
+import { BOT_UNAUTHORIZED_HINT } from '@shared/broadcast-unauthorized';
 
 
 
@@ -101,6 +105,13 @@ import {
 export async function startBot(projectId: number, token: string, tokenId: number, options?: { clearLogs?: boolean }): Promise<{ success: boolean; error?: string; processId?: string | undefined; }> {
   const shouldClearLogs = options?.clearLogs !== false; // по умолчанию true
   try {
+    const tokenRecord = await storage.getBotToken(tokenId);
+    const inactiveError = refuseInactiveBotStart(tokenRecord?.isActive);
+    if (inactiveError) {
+      console.log(`⏭ Пропуск запуска: токен ${tokenId} недействителен (isActive=0)`);
+      return { success: false, error: inactiveError };
+    }
+
     const processKey = `${projectId}_${tokenId}`;
 
     // КРИТИЧЕСКИ ВАЖНО: Сначала убиваем ВСЕ старые процессы с этим токеном
@@ -202,7 +213,17 @@ export async function startBot(projectId: number, token: string, tokenId: number
     if (!effectiveWebhookUrl) {
       try {
         const webhookUrl = `https://api.telegram.org/bot${token}/deleteWebhook?drop_pending_updates=false`;
-        await fetchWithProxy(webhookUrl);
+        const webhookRes = await fetchWithProxy(webhookUrl);
+        const webhookBody = await webhookRes.json().catch(() => null) as {
+          ok?: boolean;
+          error_code?: number;
+          description?: string;
+        } | null;
+        if (isTelegramMethodUnauthorized(webhookRes.status, webhookBody)) {
+          await markBotTokenUnauthorized(projectId, tokenId);
+          console.log(`⏭ Токен ${tokenId} отклонён Telegram при deleteWebhook — воркер не запускаем`);
+          return { success: false, error: BOT_UNAUTHORIZED_HINT };
+        }
         console.log(`🧹 Webhook сброшен для токена ${tokenId} (апдейты сохранены)`);
       } catch (webhookError) {
         console.log(`Не удалось сбросить webhook:`, webhookError);

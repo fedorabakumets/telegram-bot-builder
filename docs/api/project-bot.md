@@ -1,6 +1,6 @@
 # project-bot
 
-Эндпоинтов: **7**
+Эндпоинтов: **8**
 
 ### `POST` /api/projects/{id}/bot/restart
 
@@ -141,7 +141,7 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Последовательно запускает токены проекта со status !== running и действительным токеном. Уже running и токены с isActive=0 не трогает (в отличие от restart-all).
+Последовательно запускает токены проекта со status !== running и действительным токеном. Уже running и токены с isActive=0 (Telegram отклонил) не трогает (в отличие от restart-all).
 
 **Доступ:** `requireProjectAccess`.
 
@@ -190,6 +190,67 @@ curl -s -X POST http://localhost:5000/api/projects/1/bot/start-offline-all -b co
       "tokenId": 8,
       "success": true,
       "processId": "12346"
+    }
+  ]
+}
+```
+
+### `GET` /api/projects/{id}/bot/statuses
+
+Статусы всех ботов проекта
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Один ответ вместо N запросов `GET /api/tokens/{tokenId}/bot-status`. Сверка с worker pool / in-memory процессом. `instance` без сырого token. `Cache-Control: no-store`.
+
+**Auth:** `requireProjectAccess` — только свои/коллабораторские проекты (не IDOR по чужим tokenId).
+
+Одиночный статус: `GET /api/tokens/{tokenId}/bot-status` (MCP: `db_bot_status`).
+
+```bash
+curl -s http://localhost:5000/api/projects/42/bot/statuses -b cookies.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | ID проекта | `"42"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Статусы токенов проекта |
+| 400 | Неверный ID проекта |
+| 401 | Не авторизован |
+| 403 | Нет доступа к проекту |
+
+#### Пример ответа `200`
+
+```json
+{
+  "statuses": [
+    {
+      "tokenId": 7,
+      "status": "running",
+      "instance": {
+        "id": 1,
+        "projectId": 42,
+        "tokenId": 7,
+        "status": "running",
+        "processId": "worker_42",
+        "startedAt": "2026-08-18T13:42:04.555Z",
+        "stoppedAt": null,
+        "errorMessage": null
+      }
+    },
+    {
+      "tokenId": 8,
+      "status": "stopped",
+      "instance": null
     }
   ]
 }

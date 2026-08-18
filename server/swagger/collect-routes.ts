@@ -62,9 +62,10 @@ const TAG_DESCRIPTIONS: Record<string, string> = {
     "См. `docs/features/bot-manager-api-auth.md`.",
   bots:
     "Инстансы ботов (GET /api/bots без секрета token). " +
-    "Lifecycle (start/stop/restart/start-offline-all) — тег `project-bot`.",
+    "Lifecycle (start/stop/restart/start-offline-all/statuses) — тег `project-bot`.",
   tokens:
-    "Runtime токена вне проекта: `GET /api/tokens/{tokenId}/bot-status` и launch-history. " +
+      "Runtime токена вне проекта: `GET /api/tokens/{tokenId}/bot-status` и launch-history. " +
+      "Список статусов проекта — `GET /api/projects/{id}/bot/statuses` (тег `project-bot`). " +
     "CRUD/настройки/env токенов проекта — тег `project-tokens`.",
   users: "Пользователи ботов и статистика",
   database:

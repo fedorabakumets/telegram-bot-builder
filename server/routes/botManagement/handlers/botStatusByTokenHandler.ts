@@ -1,131 +1,84 @@
 /**
  * @fileoverview Хендлер получения статуса бота по токену
- *
- * Этот модуль предоставляет функцию для обработки запросов
- * на получение статуса бота для указанного токена.
- *
  * @module botManagement/handlers/botStatusByTokenHandler
  */
 
 import type { Request, Response } from 'express';
 import { storage } from '../../../storages/storage';
-import { checkProcessExists, isPythonProcess, findBotProcessPid } from '../utils/processChecker';
-import { restoreProcessTracking } from '../utils/processRestorer';
-import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
-import { workerManager } from '../../../bots/botWorkerManager';
+import { findBotProcessPid } from '../utils/processChecker';
 import { getOwnerIdFromRequest } from '../../../telegram/auth-middleware';
 import { toPublicBotInstance } from '../../botTokens/to-public-bot-token';
 import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
+import { computeLiveBotStatus } from '../compute-live-bot-status';
 
 /**
- * Обрабатывает запрос на получение статуса бота по токену
- *
- * @function handleBotStatusByToken
- * @param {Request} req - Объект запроса Express
- * @param {Response} res - Объект ответа Express
- * @returns {Promise<void>}
- *
- * @description
- * Проверяет статус бота для указанного токена в БД и системе,
- * при необходимости корректирует статус и восстанавливает отслеживание.
+ * Обрабатывает GET /api/tokens/:tokenId/bot-status
+ * @param req - Express request
+ * @param res - Express response
+ * @returns void
  */
 export async function handleBotStatusByToken(req: Request, res: Response): Promise<void> {
-    try {
-        const tokenId = parseInt(req.params.tokenId);
+  try {
+    const tokenId = Number.parseInt(req.params.tokenId, 10);
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
 
-        // Отключаем кэширование — статус должен всегда быть актуальным
-        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.set('Pragma', 'no-cache');
-        res.set('Expires', '0');
-
-        // Проверка владения: резолвим токен → projectId → доступ владельца/коллаборатора
-        const tokenRecord = await storage.getBotToken(tokenId);
-        if (!tokenRecord) {
-            res.status(404).json({ message: 'Токен не найден' });
-            return;
-        }
-        const ownerId = getOwnerIdFromRequest(req);
-        if (ownerId === null) {
-            res.status(403).json({ message: 'Нет прав доступа' });
-            return;
-        }
-        const hasAccess = await storage.hasProjectAccess(tokenRecord.projectId, ownerId);
-        if (!hasAccess) {
-            res.status(403).json({ message: 'Нет прав доступа' });
-            return;
-        }
-
-        const instance = await storage.getBotInstanceByToken(tokenId);
-
-        if (!instance) {
-            res.json({ status: 'stopped', instance: null });
-            return;
-        }
-
-        const projectId = instance.projectId;
-        const activeProcessInfo = findActiveProcessForToken(projectId, tokenId);
-
-        // В режиме воркера проверяем через workerManager
-        const isRunningInWorker = process.env.USE_WORKER_POOL !== 'false' && workerManager.isBotRunning(projectId, tokenId);
-
-        let actualStatus = (activeProcessInfo || isRunningInWorker) ? 'running' : 'stopped';
-
-        // PID-эвристики только для отдельного spawn-процесса (не worker_<projectId>)
-        const isWorkerPoolPid = typeof instance.processId === 'string'
-          && instance.processId.startsWith('worker_');
-
-        if (!isWorkerPoolPid) {
-          // Если процесс не найден в активных, но есть в БД, проверяем его существование
-          if (!activeProcessInfo && instance.processId && checkProcessExists(instance.processId)) {
-            console.log(`Процесс ${instance.processId} для токена ${tokenId} найден в системе`);
-            restoreProcessTracking(projectId, instance.tokenId, parseInt(instance.processId));
-            actualStatus = 'running';
-          }
-
-          // Дополнительная проверка для Python процессов
-          if (!activeProcessInfo && instance.processId && actualStatus === 'stopped' && isPythonProcess(instance.processId)) {
-            restoreProcessTracking(projectId, instance.tokenId, parseInt(instance.processId));
-            actualStatus = 'running';
-          }
-
-          // Поиск PID если не найден
-          if (!activeProcessInfo && actualStatus === 'stopped') {
-            const realPid = findBotProcessPid(projectId);
-            if (realPid) {
-              await storage.updateBotInstance(instance.id, { processId: realPid.toString() });
-              actualStatus = 'running';
-            }
-          }
-        }
-
-        // Обновляем статус в БД если он изменился
-        if (instance.status !== actualStatus) {
-            await storage.updateBotInstance(instance.id, {
-                status: actualStatus,
-                errorMessage: actualStatus === 'stopped' ? 'Процесс завершен' : null
-            });
-            await reconcileLaunchHistoryForToken(tokenId, actualStatus === 'running');
-            const updatedInstance = { ...instance, status: actualStatus };
-            res.json({ status: actualStatus, instance: toPublicBotInstance(updatedInstance) });
-            return;
-        }
-
-        await reconcileLaunchHistoryForToken(tokenId, actualStatus === 'running');
-        res.json({ status: instance.status, instance: toPublicBotInstance(instance) });
-    } catch (error: any) {
-        console.error('[BotStatus] Полная ошибка:', {
-            message: error.message,
-            code: error.code,
-            stack: error.stack
-        });
-        
-        if (error.message?.includes('Connection terminated unexpectedly')) {
-            console.log('⚠️ Соединение с БД прервано при получении статуса бота');
-            res.json({ status: 'stopped', instance: null });
-            return;
-        }
-
-        console.error('Ошибка получения статуса бота по токену:', error);
-        res.status(500).json({ message: "Не удалось получить статус бота" });
+    const tokenRecord = await storage.getBotToken(tokenId);
+    if (!tokenRecord) {
+      res.status(404).json({ message: 'Токен не найден' });
+      return;
     }
+    const ownerId = getOwnerIdFromRequest(req);
+    if (ownerId === null) {
+      res.status(403).json({ message: 'Нет прав доступа' });
+      return;
+    }
+    const hasAccess = await storage.hasProjectAccess(tokenRecord.projectId, ownerId);
+    if (!hasAccess) {
+      res.status(403).json({ message: 'Нет прав доступа' });
+      return;
+    }
+
+    const instance = await storage.getBotInstanceByToken(tokenId);
+    if (!instance) {
+      res.json({ status: 'stopped', instance: null });
+      return;
+    }
+
+    let actualStatus = computeLiveBotStatus(instance.projectId, tokenId, instance, true);
+    const isWorkerPid =
+      typeof instance.processId === 'string' && instance.processId.startsWith('worker_');
+    if (!isWorkerPid && actualStatus === 'stopped') {
+      const realPid = findBotProcessPid(instance.projectId);
+      if (realPid) {
+        await storage.updateBotInstance(instance.id, { processId: realPid.toString() });
+        actualStatus = 'running';
+      }
+    }
+
+    if (instance.status !== actualStatus) {
+      await storage.updateBotInstance(instance.id, {
+        status: actualStatus,
+        errorMessage: actualStatus === 'stopped' ? 'Процесс завершен' : null,
+      });
+    }
+    await reconcileLaunchHistoryForToken(tokenId, actualStatus === 'running');
+    const payload = instance.status === actualStatus
+      ? instance
+      : { ...instance, status: actualStatus };
+    res.json({ status: actualStatus, instance: toPublicBotInstance(payload) });
+  } catch (error: unknown) {
+    const err = error as { message?: string; code?: string; stack?: string };
+    console.error('[BotStatus] Полная ошибка:', {
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
+    });
+    if (err.message?.includes('Connection terminated unexpectedly')) {
+      res.json({ status: 'stopped', instance: null });
+      return;
+    }
+    res.status(500).json({ message: 'Не удалось получить статус бота' });
+  }
 }

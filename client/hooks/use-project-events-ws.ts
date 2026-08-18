@@ -8,6 +8,7 @@ import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { ProjectEvent, StartOfflineProgressPayload } from '@shared/project-sync/project-event';
 import { startOfflineProgressQueryKey } from '@/components/editor/bot/start-offline-progress-query';
+import { invalidateAllBotStatusQueries, invalidateBotStatusQueries } from '@/components/editor/bot/invalidate-bot-status-queries';
 
 /**
  * Опции хука подписки на события проекта
@@ -79,12 +80,7 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
           isFirstConnectRef.current = false;
           return;
         }
-        queryClient.invalidateQueries({
-          predicate: (query) =>
-            typeof query.queryKey[0] === 'string' &&
-            query.queryKey[0].startsWith('/api/tokens/') &&
-            query.queryKey[0].endsWith('/bot-status'),
-        });
+        invalidateAllBotStatusQueries(queryClient);
       };
 
       ws.onmessage = (event) => {
@@ -107,7 +103,7 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
           if (msg.type === 'bot-started' || msg.type === 'bot-stopped' || msg.type === 'bot-error') {
             if (msg.tokenId) {
               queryClient.invalidateQueries({ queryKey: ['launch-history', msg.tokenId] });
-              queryClient.invalidateQueries({ queryKey: [`/api/tokens/${msg.tokenId}/bot-status`] });
+              invalidateBotStatusQueries(queryClient, msg.projectId, msg.tokenId);
             }
             queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/bot/info`] });
           }
@@ -117,9 +113,7 @@ export function useProjectEventsWs(projectId: number, options?: UseProjectEvents
             if (data && typeof data.total === 'number') {
               queryClient.setQueryData(startOfflineProgressQueryKey(msg.projectId), data);
               if (msg.tokenId) {
-                queryClient.invalidateQueries({
-                  queryKey: [`/api/tokens/${msg.tokenId}/bot-status`],
-                });
+                invalidateBotStatusQueries(queryClient, msg.projectId, msg.tokenId);
               }
             }
           }

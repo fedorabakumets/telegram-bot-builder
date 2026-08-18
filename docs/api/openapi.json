@@ -28,7 +28,7 @@
     },
     {
       "name": "bots",
-      "description": "Инстансы ботов (GET /api/bots без секрета token). Lifecycle (start/stop/restart/start-offline-all) — тег `project-bot`."
+      "description": "Инстансы ботов (GET /api/bots без секрета token). Lifecycle (start/stop/restart/start-offline-all/statuses) — тег `project-bot`."
     },
     {
       "name": "config",
@@ -48,7 +48,7 @@
     },
     {
       "name": "project-bot",
-      "description": "Lifecycle и профиль бота проекта: start/stop/restart, restart-all, start-offline-all, info (getMe), data. Auth: requireProjectAccess. Профиль name/description — `project-tokens` …/bot-info. Группы — `project-groups`."
+      "description": "Lifecycle и профиль бота проекта: start/stop/restart, restart-all, start-offline-all, statuses (список live-статусов), info (getMe), data. Auth: requireProjectAccess. Профиль name/description — `project-tokens` …/bot-info. Группы — `project-groups`."
     },
     {
       "name": "project-broadcasts",
@@ -108,7 +108,7 @@
     },
     {
       "name": "tokens",
-      "description": "Runtime токена вне проекта: `GET /api/tokens/{tokenId}/bot-status` и launch-history. CRUD/настройки/env токенов проекта — тег `project-tokens`."
+      "description": "Runtime токена вне проекта: `GET /api/tokens/{tokenId}/bot-status` и launch-history. Список статусов проекта — `GET /api/projects/{id}/bot/statuses` (тег `project-bot`). CRUD/настройки/env токенов проекта — тег `project-tokens`."
     },
     {
       "name": "webhook",
@@ -6689,7 +6689,7 @@
           "project-bot"
         ],
         "summary": "Запустить всех офлайн-ботов проекта",
-        "description": "Последовательно запускает токены проекта со status !== running. Уже running не трогает (в отличие от restart-all).\n\n**Доступ:** `requireProjectAccess`.\n\n**Side-effects:** WS `bot-started`, `start-offline-progress` (без секретов; см. docs/api/realtime-events.md).\n\n**Клиент:** `use-bot-mutations` / BotManagement. MCP: `db_start_offline_bots`.\n\nПри большом числе токенов HTTP долгий (пауза ~400ms между стартами).\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/1/bot/start-offline-all -b cookies.txt\n```",
+        "description": "Последовательно запускает токены проекта со status !== running и действительным токеном. Уже running и токены с isActive=0 (Telegram отклонил) не трогает (в отличие от restart-all).\n\n**Доступ:** `requireProjectAccess`.\n\n**Side-effects:** WS `bot-started`, `start-offline-progress` (без секретов; см. docs/api/realtime-events.md).\n\n**Клиент:** `use-bot-mutations` / BotManagement. MCP: `db_start_offline_bots`.\n\nПри большом числе токенов HTTP долгий (пауза ~400ms между стартами).\n\n```bash\ncurl -s -X POST http://localhost:5000/api/projects/1/bot/start-offline-all -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -6812,6 +6812,132 @@
                 },
                 "example": {
                   "message": "Токены не найдены"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/bot/statuses": {
+      "get": {
+        "tags": [
+          "project-bot"
+        ],
+        "summary": "Статусы всех ботов проекта",
+        "description": "Один ответ вместо N запросов `GET /api/tokens/{tokenId}/bot-status`. Сверка с worker pool / in-memory процессом. `instance` без сырого token. `Cache-Control: no-store`.\n\n**Auth:** `requireProjectAccess` — только свои/коллабораторские проекты (не IDOR по чужим tokenId).\n\nОдиночный статус: `GET /api/tokens/{tokenId}/bot-status` (MCP: `db_bot_status`).\n\n```bash\ncurl -s http://localhost:5000/api/projects/42/bot/statuses -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Статусы токенов проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBotStatusesResponse"
+                },
+                "example": {
+                  "statuses": [
+                    {
+                      "tokenId": 7,
+                      "status": "running",
+                      "instance": {
+                        "id": 1,
+                        "projectId": 42,
+                        "tokenId": 7,
+                        "status": "running",
+                        "processId": "worker_42",
+                        "startedAt": "2026-08-18T13:42:04.555Z",
+                        "stoppedAt": null,
+                        "errorMessage": null
+                      }
+                    },
+                    {
+                      "tokenId": 8,
+                      "status": "stopped",
+                      "instance": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный ID проекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Неверный ID проекта"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
                 }
               }
             }
@@ -22942,7 +23068,7 @@
           "tokens"
         ],
         "summary": "Статус бота по токену",
-        "description": "Сверка с процессом / worker pool / `bot_instances`. Ответ без сырого token. `Cache-Control: no-store`.\n\n**Auth:** `hasProjectAccess` к проекту токена.\n\nMCP: `GET /api/bot/tokens/{tokenId}/status` (тег `bot`).\n\n```bash\ncurl -s http://localhost:5000/api/tokens/7/bot-status -b cookies.txt\n```",
+        "description": "Сверка с процессом / worker pool / `bot_instances`. Ответ без сырого token. `Cache-Control: no-store`.\n\n**Auth:** `hasProjectAccess` к проекту токена.\n\nВсе боты проекта одним запросом: `GET /api/projects/{id}/bot/statuses`.\n\nMCP: `GET /api/bot/tokens/{tokenId}/status` (тег `bot`).\n\n```bash\ncurl -s http://localhost:5000/api/tokens/7/bot-status -b cookies.txt\n```",
         "security": [
           {
             "cookieAuth": []
@@ -27754,6 +27880,39 @@
         },
         "required": [
           "restarted"
+        ]
+      },
+      "ProjectBotStatusItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BotStatusByTokenResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tokenId": {
+                "type": "integer",
+                "example": 7
+              }
+            },
+            "required": [
+              "tokenId"
+            ]
+          }
+        ]
+      },
+      "ProjectBotStatusesResponse": {
+        "type": "object",
+        "properties": {
+          "statuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectBotStatusItem"
+            }
+          }
+        },
+        "required": [
+          "statuses"
         ]
       },
       "ProjectBotInfo": {

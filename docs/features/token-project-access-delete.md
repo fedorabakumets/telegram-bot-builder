@@ -17,6 +17,7 @@
 - Посторонний — 403
 - IDOR по чужому `projectId` в URL — 404
 - `GET .../tokens` и `bot-status.instance` без сырого `token` (маска / omit)
+- `GET /api/projects/:id/bot/statuses` — те же публичные инстансы списком, доступ через `requireProjectAccess`
 - MCP `db_delete_bot_token` только с `confirm: true`
 
 ## Источники правды

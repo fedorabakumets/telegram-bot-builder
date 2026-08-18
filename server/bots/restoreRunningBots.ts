@@ -10,6 +10,7 @@ import {
   RESTORE_START_STAGGER_MS,
   waitRestoreStagger,
 } from "./restoreStartStagger";
+import { refuseInactiveBotStart } from "./refuse-inactive-bot-start";
 
 /**
  * Определяет, был ли бот остановлен внезапно (не вручную пользователем).
@@ -93,6 +94,19 @@ export async function restoreRunningBots(): Promise<void> {
           await storage.updateBotInstance(instance.id, {
             status: "error",
             errorMessage: "Нет валидного токена для восстановления",
+          });
+          continue;
+        }
+
+        const inactiveError = refuseInactiveBotStart(tokenRecord.isActive);
+        if (inactiveError) {
+          console.log(
+            `⏭ Пропуск восстановления: токен ${instance.tokenId} недействителен (isActive=0)`,
+          );
+          await storage.updateBotInstance(instance.id, {
+            status: "stopped",
+            stoppedAt: new Date(),
+            errorMessage: inactiveError,
           });
           continue;
         }

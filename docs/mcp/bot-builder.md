@@ -360,6 +360,8 @@ MCP **не раздувает** `data` дефолтами клавиатуры. 
 #### `db_bot_status` / `db_bot_logs` / `db_bot_launch_history`
 
 Статус, live-логи и история запусков по `token_id` из `db_list_bot_tokens`.
+UI вкладки «Боты» грузит статусы проекта одним запросом `GET /api/projects/{id}/bot/statuses` ([[api/project-bot]]).
+`db_bot_status` по-прежнему смотрит один токен.
 `db_bot_launch_history` после сверки не отдаёт «зомби» running, если бот offline ([[features/launch-history-status-reconciliation]]).
 `db_bot_logs` / live-логи: последний launch из history + live `launch_id IS NULL` для running; изоляция `token_id` в воркере — [[features/bot-worker-pool-isolation]].
 

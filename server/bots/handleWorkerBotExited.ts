@@ -10,6 +10,8 @@ import { getActiveLaunchId, clearActiveLaunchId } from '../terminal/activeLaunch
 import { clearBotRedisLockByTokenId } from './clearBotRedisLock';
 import { isWorkerCleanExit } from './isWorkerCleanExit';
 import { formatBotRuntimeError, formatBotRuntimeErrorShort } from './formatBotRuntimeError';
+import { isBotUnauthorized } from '@shared/broadcast-unauthorized';
+import { markBotTokenUnauthorized } from './mark-bot-token-unauthorized';
 
 /**
  * Обновляет БД и шлёт WS после выхода бота из воркера
@@ -60,8 +62,13 @@ export async function handleWorkerBotExited(
       if (instance && instance.errorMessage !== '__server_restart__') {
         await storage.updateBotInstance(instance.id, {
           status: 'stopped',
+          stoppedAt: new Date(),
           errorMessage,
         });
+      }
+
+      if (isBotUnauthorized(undefined, runtimeError)) {
+        await markBotTokenUnauthorized(projectId, tokenId);
       }
 
       await clearBotRedisLockByTokenId((id) => storage.getBotToken(id), tokenId);

@@ -8,6 +8,7 @@ import { useState, useCallback } from 'react';
 import { apiRequest } from '@/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { invalidateBotStatusQueries } from '../invalidate-bot-status-queries';
 
 /** Одно несохранённое изменение */
 export interface PendingChange {
@@ -98,7 +99,7 @@ export function useEnvPendingChanges(projectId: number, tokenId: number) {
       // Останавливаем и запускаем заново
       try { await apiRequest('POST', `/api/projects/${projectId}/bot/stop`, { tokenId }); } catch { /* может быть уже остановлен */ }
       await apiRequest('POST', `/api/projects/${projectId}/bot/start`, { tokenId });
-      queryClient.invalidateQueries({ queryKey: [`/api/tokens/${tokenId}/bot-status`] });
+      invalidateBotStatusQueries(queryClient, projectId, tokenId);
       toast({ title: 'Бот перезапущен', description: 'Изменения сохранены, бот перезапущен' });
     } catch (error: any) {
       toast({ title: 'Ошибка', description: error.message || 'Не удалось сохранить', variant: 'destructive' });

@@ -16,6 +16,7 @@ import { registerBotStartOfflinePaths } from "./paths/bot-runtime-start-offline-
 import { registerProjectBotLifecyclePaths } from "./paths/project-bot-lifecycle-paths";
 import { registerProjectBotRestartPaths } from "./paths/project-bot-restart-paths";
 import { registerProjectBotRestartAllPaths } from "./paths/project-bot-restart-all-paths";
+import { registerProjectBotStatusesPaths } from "./paths/project-bot-statuses-paths";
 import { registerProjectBotInfoPaths } from "./paths/project-bot-info-paths";
 import { registerBotsListPaths } from "./paths/bots-list-paths";
 import { registerBotLogsPaths } from "./paths/bot-logs-paths";
@@ -165,6 +166,7 @@ registerBotStartOfflinePaths(documentedRegistry, cookieSecurity);
 registerProjectBotLifecyclePaths(documentedRegistry, cookieSecurity);
 registerProjectBotRestartPaths(documentedRegistry, cookieSecurity);
 registerProjectBotRestartAllPaths(documentedRegistry, cookieSecurity);
+registerProjectBotStatusesPaths(documentedRegistry, cookieSecurity);
 registerProjectBotInfoPaths(documentedRegistry, cookieSecurity);
 registerBotsListPaths(documentedRegistry, cookieSecurity);
 registerBotLogsPaths(documentedRegistry, cookieSecurity);

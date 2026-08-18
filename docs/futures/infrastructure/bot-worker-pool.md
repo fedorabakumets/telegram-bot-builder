@@ -67,7 +67,8 @@ Node.js → Worker проекта (Python asyncio) → bot_1, bot_2, bot_3  (150
 
 ### Восстановление (`server/bots/restoreRunningBots.ts`)
 - Ищет в БД боты со статусом `running` или маркером `__server_restart__`
-- Для каждого вызывает `startBot()`
+- Токены с `isActive=0` (Telegram отклонил) не поднимает — воркер не создаётся
+- Для каждого живого токена вызывает `startBot()`
 
 ### Graceful Shutdown (`server/utils/graceful-shutdown.ts`)
 - Маркер `__server_restart__` в БД **до** `shutdownAll()` → затем SIGTERM воркеров → очищает Map → закрывает БД

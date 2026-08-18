@@ -234,7 +234,8 @@ HTTP API запущенного приложения  (PUT /api/projects/:id  и
 - `POST /api/projects/:id/bot/restart` — перезапуск.
 - `POST /api/projects/:id/bot/restart-all` — перезапуск всех **запущенных** токенов проекта.
 - `POST /api/projects/:id/bot/start-offline-all` — запуск всех **офлайн** токенов (см. [[features/start-offline-bots]]).
-- `GET /api/tokens/:tokenId/bot-status` и `GET /api/bot/tokens/:tokenId/status` — статус.
+- `GET /api/projects/:id/bot/statuses` — live-статусы всех ботов проекта (`requireProjectAccess`, без сырого token).
+- `GET /api/tokens/:tokenId/bot-status` и `GET /api/bot/tokens/:tokenId/status` — статус одного токена.
 - `GET /api/projects/:projectId/tokens/:tokenId/logs` — live-логи (stdout/stderr).
 - `GET /api/tokens/:tokenId/launch-history`, `GET /api/launch/:launchId/logs`, `GET /api/bot-logs/:logId` — история запусков и логи по id.
 - `GET /api/workers/stats` — статистика воркеров.

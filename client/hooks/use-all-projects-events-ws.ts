@@ -12,6 +12,7 @@ import { resolveBotDisplayNameFromCache } from '@/components/editor/bot/contexts
 import { subscribeSharedTerminalWs, onSharedTerminalWsReconnect } from '@/lib/shared-terminal-ws';
 import type { ProjectEvent, StartOfflineProgressPayload } from '@shared/project-sync/project-event';
 import { startOfflineProgressQueryKey } from '@/components/editor/bot/start-offline-progress-query';
+import { invalidateAllBotStatusQueries, invalidateBotStatusQueries } from '@/components/editor/bot/invalidate-bot-status-queries';
 
 /**
  * Структура события проекта, получаемого по WebSocket
@@ -68,11 +69,12 @@ function handleBotEvent(
 ): void {
   if (msg.tokenId) {
     queryClient.invalidateQueries({ queryKey: ['launch-history', msg.tokenId] });
-    queryClient.invalidateQueries({ queryKey: [`/api/tokens/${msg.tokenId}/bot-status`] });
-    // Подтянуть логи из БД без F5 (если live-WS пропустил строки)
+    invalidateBotStatusQueries(queryClient, msg.projectId, msg.tokenId);
     queryClient.invalidateQueries({
       queryKey: ['/api/projects', msg.projectId, 'tokens', msg.tokenId, 'logs'],
     });
+  } else {
+    invalidateBotStatusQueries(queryClient, msg.projectId);
   }
   queryClient.invalidateQueries({ queryKey: [`/api/projects/${msg.projectId}/bot/info`] });
 }
@@ -90,7 +92,7 @@ function handleStartOfflineProgress(
   if (!data || typeof data.total !== 'number') return;
   queryClient.setQueryData(startOfflineProgressQueryKey(msg.projectId), data);
   if (msg.tokenId) {
-    queryClient.invalidateQueries({ queryKey: [`/api/tokens/${msg.tokenId}/bot-status`] });
+    invalidateBotStatusQueries(queryClient, msg.projectId, msg.tokenId);
   }
 }
 
@@ -120,11 +122,7 @@ export function useAllProjectsEventsWs(options?: UseAllProjectsEventsWsOptions):
 
   useEffect(() => {
     const unsubscribeReconnect = onSharedTerminalWsReconnect(() => {
-      queryClient.invalidateQueries({
-        predicate: (query) =>
-          typeof query.queryKey[0] === 'string' &&
-          (query.queryKey[0] as string).endsWith('/bot-status'),
-      });
+      invalidateAllBotStatusQueries(queryClient);
     });
 
     const unsubscribe = subscribeSharedTerminalWs((raw) => {

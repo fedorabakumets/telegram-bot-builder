@@ -68,6 +68,14 @@ describe('restoreRunningBots — логика фильтрации', () => {
   });
 });
 
+describe('restoreRunningBots — недействительный токен', () => {
+  it('не стартует воркер при isActive=0', async () => {
+    const { refuseInactiveBotStart } = await import('./refuse-inactive-bot-start');
+    assert.ok(refuseInactiveBotStart(0));
+    assert.equal(refuseInactiveBotStart(1), null);
+  });
+});
+
 describe('graceful-shutdown — маркер при остановке', () => {
   it('маркер отличается от обычного сообщения об остановке', () => {
     assert.notStrictEqual(RESTART_MARKER, 'Сервер остановлен');

@@ -16,6 +16,7 @@ import { handleBotStop } from './botManagement/handlers/botStopHandler';
 import { handleBotRestart } from './botManagement/handlers/botRestartHandler';
 import { handleBotRestartAll } from './botManagement/handlers/botRestartAllHandler';
 import { handleBotStartOfflineAll } from './botManagement/handlers/botStartOfflineAllHandler';
+import { handleBotProjectStatuses } from './botManagement/handlers/botProjectStatusesHandler';
 import { handleBotStatusByToken } from './botManagement/handlers/botStatusByTokenHandler';
 import { getBotTokenStatusHandler } from './botManagement/handlers/getBotTokenStatusHandler';
 import { getBotTokenPhotoHandler } from './botManagement/handlers/getBotTokenPhotoHandler';
@@ -57,5 +58,6 @@ export function setupBotManagementRoutes(app: Express): void {
     app.post("/api/projects/:id/bot/restart", requireProjectAccess, handleBotRestart);
     app.post("/api/projects/:id/bot/restart-all", requireProjectAccess, handleBotRestartAll);
     app.post("/api/projects/:id/bot/start-offline-all", requireProjectAccess, handleBotStartOfflineAll);
+    app.get("/api/projects/:id/bot/statuses", requireProjectAccess, handleBotProjectStatuses);
     app.delete("/api/projects/:projectId/tokens/:tokenId/logs", requireProjectAccess, handleClearLogs);
 }

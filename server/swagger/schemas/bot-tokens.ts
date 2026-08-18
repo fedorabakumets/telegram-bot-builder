@@ -112,6 +112,20 @@ export const BotStatusByTokenResponseSchema = z
   })
   .openapi("BotStatusByTokenResponse");
 
+/** Элемент GET /api/projects/{id}/bot/statuses */
+export const ProjectBotStatusItemSchema = BotStatusByTokenResponseSchema.extend({
+  /** ID токена проекта */
+  tokenId: z.number().int().openapi({ example: 7 }),
+}).openapi("ProjectBotStatusItem");
+
+/** Ответ GET /api/projects/{id}/bot/statuses */
+export const ProjectBotStatusesResponseSchema = z
+  .object({
+    /** Статусы всех токенов проекта, без сырого token */
+    statuses: z.array(ProjectBotStatusItemSchema),
+  })
+  .openapi("ProjectBotStatusesResponse");
+
 /** Запись истории запуска */
 export const BotLaunchHistoryEntrySchema = z
   .object({

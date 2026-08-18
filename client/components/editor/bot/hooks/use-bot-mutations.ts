@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/queryClient';
 import { BotToken } from '@shared/schema';
 import { getBotDisplayName } from '../contexts/bot-control-utils';
+import { invalidateBotStatusQueries } from '../invalidate-bot-status-queries';
 
 /**
  * Параметры хука мутаций ботов
@@ -74,7 +75,7 @@ export function useBotMutations({
       apiRequest('POST', `/api/projects/${pid}/bot/start`, { tokenId }),
     onSuccess: (_, vars) => {
       toast({ title: 'Бот запущен', description: 'Бот успешно запущен и готов к работе.' });
-      queryClient.invalidateQueries({ queryKey: [`/api/tokens/${vars.tokenId}/bot-status`] });
+      invalidateBotStatusQueries(queryClient, vars.projectId, vars.tokenId);
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.projectId}/bot/info`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${vars.projectId}/tokens`] });
       queryClient.invalidateQueries({ queryKey: ['launch-history', vars.tokenId] });
@@ -93,7 +94,7 @@ export function useBotMutations({
       apiRequest('POST', `/api/projects/${pid}/bot/stop`, { tokenId }),
     onSuccess: (_, vars) => {
       toast({ title: 'Бот остановлен', description: 'Бот успешно остановлен.' });
-      queryClient.invalidateQueries({ queryKey: [`/api/tokens/${vars.tokenId}/bot-status`] });
+      invalidateBotStatusQueries(queryClient, vars.projectId, vars.tokenId);
       queryClient.invalidateQueries({ queryKey: ['launch-history', vars.tokenId] });
       if (onBotStopped) onBotStopped(vars.projectId, vars.tokenId);
     },
@@ -212,7 +213,7 @@ export function useBotMutations({
       apiRequest('POST', `/api/projects/${pid}/bot/restart-all`),
     onSuccess: (data: { restarted: number; results?: { tokenId: number }[] }, pid: number) => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${pid}/tokens`] });
-      // Очищаем логи для каждого перезапущенного токена
+      invalidateBotStatusQueries(queryClient, pid);
       if (data.results) {
         data.results.forEach(r => {
           onBotStarted?.(pid, r.tokenId, '');
@@ -240,10 +241,10 @@ export function useBotMutations({
       pid: number,
     ) => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${pid}/tokens`] });
+      invalidateBotStatusQueries(queryClient, pid);
       if (data.results) {
         data.results.filter((r) => r.success).forEach((r) => {
           onBotStarted?.(pid, r.tokenId, '');
-          queryClient.invalidateQueries({ queryKey: [`/api/tokens/${r.tokenId}/bot-status`] });
         });
       }
       if (data.message && data.started === 0) {
