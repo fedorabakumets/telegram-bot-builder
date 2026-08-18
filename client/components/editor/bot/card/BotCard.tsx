@@ -25,6 +25,7 @@ import { BotEnvStagingBar } from './BotEnvStagingBar';
 import { useEnvPendingChanges } from './use-env-pending-changes';
 import { useBotControl } from '../bot-control-context';
 import { useTelegramAuth } from '@/components/editor/header/hooks/use-telegram-auth';
+import { DeleteBotConfirmDialog } from '../DeleteBotConfirmDialog';
 import type { BotProject, BotToken } from '@shared/schema';
 import type { BotInfo } from '../bot-types';
 
@@ -71,6 +72,9 @@ export function BotCard({
 
   /** Общий pending state для переменных окружения (виден в обоих режимах) */
   const pending = useEnvPendingChanges(project.id, token.id);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deletePending =
+    deleteBotMutation.isPending && deleteBotMutation.variables === token.id;
 
   // Синхронизируем с внешним состоянием при его изменении (кнопка "Свернуть все")
   useEffect(() => {
@@ -90,81 +94,94 @@ export function BotCard({
   }
 
   return (
-    <Card className="group/card overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md dark:hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card via-card to-card/95 hover:border-border/50">
-      <CardContent className="p-4 sm:p-5 space-y-3">
-        <BotCardHeader
-          token={token} projectBotInfo={projectBotInfo}
-          editingField={editingField} editValue={editValue}
-          setEditValue={setEditValue} handleSaveEdit={handleSaveEdit}
-          handleCancelEdit={handleCancelEdit} handleStartEdit={handleStartEdit}
-          getStatusBadge={getStatusBadge} isBotRunning={isThisTokenRunning}
-          startBotMutation={startBotMutation} stopBotMutation={stopBotMutation}
-          deleteBotMutation={deleteBotMutation}
-          onEditProfile={() => {
-            setSelectedProject(project);
-            setSelectedBotInfo(projectBotInfo ?? null);
-            setSelectedTokenId(token.id);
-            setIsProfileSheetOpen(true);
-          }}
-          isProfileLoading={!projectBotInfo}
-          tokenId={token.id} projectId={project.id}
-          isCollapsed={isCollapsed} onToggleCollapse={handleToggleCollapse}
-          showTimer={isThisTokenRunning}
-          currentElapsedSeconds={currentElapsedSeconds}
-        />
-
-        <div className={`transition-all duration-200 overflow-hidden ${isCollapsed ? 'hidden' : ''}`}>
-          <Separator className="opacity-40 mb-3" />
-          <BotCardInfo
-            token={token} project={project}
+    <>
+      <Card className="group/card overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md dark:hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-card via-card to-card/95 hover:border-border/50">
+        <CardContent className="p-4 sm:p-5 space-y-3">
+          <BotCardHeader
+            token={token} projectBotInfo={projectBotInfo}
             editingField={editingField} editValue={editValue}
             setEditValue={setEditValue} handleSaveEdit={handleSaveEdit}
             handleCancelEdit={handleCancelEdit} handleStartEdit={handleStartEdit}
-            queryClient={queryClient}
+            getStatusBadge={getStatusBadge} isBotRunning={isThisTokenRunning}
+            startBotMutation={startBotMutation}
+            stopBotMutation={stopBotMutation}
+            onRequestDelete={() => setConfirmDelete(true)}
+            deletePending={deletePending}
+            onEditProfile={() => {
+              setSelectedProject(project);
+              setSelectedBotInfo(projectBotInfo ?? null);
+              setSelectedTokenId(token.id);
+              setIsProfileSheetOpen(true);
+            }}
+            isProfileLoading={!projectBotInfo}
+            tokenId={token.id} projectId={project.id}
+            isCollapsed={isCollapsed} onToggleCollapse={handleToggleCollapse}
+            showTimer={isThisTokenRunning}
+            currentElapsedSeconds={currentElapsedSeconds}
           />
-          <BotCardViewToggle mode={viewMode} onModeChange={setViewMode} />
-          {isThisTokenRunning && (
-            <div className="mt-2 sm:mt-3">
-              <BotExecutionTimer
-                tokenId={token.id}
-                currentElapsedSeconds={currentElapsedSeconds}
-                allBotStatuses={allBotStatuses}
+
+          <div className={`transition-all duration-200 overflow-hidden ${isCollapsed ? 'hidden' : ''}`}>
+            <Separator className="opacity-40 mb-3" />
+            <BotCardInfo
+              token={token} project={project}
+              editingField={editingField} editValue={editValue}
+              setEditValue={setEditValue} handleSaveEdit={handleSaveEdit}
+              handleCancelEdit={handleCancelEdit} handleStartEdit={handleStartEdit}
+              queryClient={queryClient}
+            />
+            <BotCardViewToggle mode={viewMode} onModeChange={setViewMode} />
+            {isThisTokenRunning && (
+              <div className="mt-2 sm:mt-3">
+                <BotExecutionTimer
+                  tokenId={token.id}
+                  currentElapsedSeconds={currentElapsedSeconds}
+                  allBotStatuses={allBotStatuses}
+                />
+              </div>
+            )}
+            {pending.changesCount > 0 && (
+              <BotEnvStagingBar
+                changesCount={pending.changesCount}
+                isSaving={pending.isSaving}
+                onDiscard={pending.discardAll}
+                onSave={pending.saveAll}
+                onSaveAndRestart={pending.saveAndRestart}
               />
-            </div>
-          )}
-          {pending.changesCount > 0 && (
-            <BotEnvStagingBar
-              changesCount={pending.changesCount}
-              isSaving={pending.isSaving}
-              onDiscard={pending.discardAll}
-              onSave={pending.saveAll}
-              onSaveAndRestart={pending.saveAndRestart}
-            />
-          )}
-          {viewMode === 'settings' ? (
-            <BotSettingsGrid
-              projectId={project.id} tokenId={token.id}
-              botName={token.name ?? `Бот ${token.id}`}
-              userDatabaseEnabled={project.userDatabaseEnabled}
-              token={token}
-              toggleDatabaseMutation={toggleDatabaseMutation}
-              launchMode={token.launchMode ?? 'polling'}
-              webhookBaseUrl={token.webhookBaseUrl ?? null}
-              webhookSecretToken={token.webhookSecretToken ?? null}
-              canManage={canManage}
-              onPendingChange={(key, value) => pending.addChange({ action: 'update', type: 'system', key, value })}
-            />
-          ) : (
-            <BotEnvPanel
-              projectId={project.id}
-              tokenId={token.id}
-              token={token}
-              adminIds={project.adminIds || ''}
-              pending={pending}
-            />
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            )}
+            {viewMode === 'settings' ? (
+              <BotSettingsGrid
+                projectId={project.id} tokenId={token.id}
+                botName={token.name ?? `Бот ${token.id}`}
+                userDatabaseEnabled={project.userDatabaseEnabled}
+                token={token}
+                toggleDatabaseMutation={toggleDatabaseMutation}
+                launchMode={token.launchMode ?? 'polling'}
+                webhookBaseUrl={token.webhookBaseUrl ?? null}
+                webhookSecretToken={token.webhookSecretToken ?? null}
+                canManage={canManage}
+                onPendingChange={(key, value) => pending.addChange({ action: 'update', type: 'system', key, value })}
+              />
+            ) : (
+              <BotEnvPanel
+                projectId={project.id}
+                tokenId={token.id}
+                token={token}
+                adminIds={project.adminIds || ''}
+                pending={pending}
+              />
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      <DeleteBotConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        token={token}
+        projectId={project.id}
+        isRunning={isThisTokenRunning}
+        pending={deletePending}
+        onConfirm={() => deleteBotMutation.mutate(token.id)}
+      />
+    </>
   );
 }

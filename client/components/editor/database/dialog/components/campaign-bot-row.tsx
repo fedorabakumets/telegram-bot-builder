@@ -28,10 +28,10 @@ interface CampaignBotRowProps {
   isOpen: boolean;
   /** Переключить раскрытие ошибок */
   onToggle: () => void;
-  /** Удалить рассылку этого бота */
-  onDeleteBroadcast?: (broadcastId: number) => void;
-  /** Идентификатор удаляемой рассылки */
-  deletingBroadcastId?: number | null;
+  /** Запросить удаление рассылки этого бота */
+  onDeleteBroadcast?: () => void;
+  /** Идёт ли удаление этой рассылки */
+  isDeleting?: boolean;
 }
 
 /**
@@ -47,7 +47,7 @@ export function CampaignBotRow({
   isOpen,
   onToggle,
   onDeleteBroadcast,
-  deletingBroadcastId,
+  isDeleting = false,
 }: CampaignBotRowProps) {
   const status = live?.status ?? item.status;
   const totalCount = live?.totalCount ?? item.totalCount ?? 0;
@@ -85,14 +85,19 @@ export function CampaignBotRow({
         </span>
         {onDeleteBroadcast && (
           <Button
+            type="button"
             variant="ghost"
             size="icon"
-            className="h-5 w-5 shrink-0 text-muted-foreground hover:text-destructive"
-            onClick={() => onDeleteBroadcast(item.id)}
-            disabled={deletingBroadcastId === item.id}
+            className="relative z-10 h-5 w-5 shrink-0 text-muted-foreground hover:text-destructive"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onDeleteBroadcast();
+            }}
+            disabled={isDeleting}
             title="Удалить рассылку у этого бота"
           >
-            {deletingBroadcastId === item.id
+            {isDeleting
               ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
               : <Trash2 className="h-2.5 w-2.5" />}
           </Button>

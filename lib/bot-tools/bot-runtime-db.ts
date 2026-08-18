@@ -517,8 +517,8 @@ export async function restartAllBotsInDb(
 
 /**
  * Запускает всех офлайн-ботов проекта через POST .../bot/start-offline-all.
- * Уже running не трогает. confirm: true обязателен. UI обновляется через WS bot-started
- * и start-offline-progress.
+ * Уже running и недействительные токены не трогает. confirm: true обязателен.
+ * UI обновляется через WS bot-started и start-offline-progress.
  * @param projectId - ID проекта
  * @param options - apiBaseUrl и confirm
  * @returns Сводка или ошибка

@@ -47,7 +47,7 @@ export function StartOfflineConfirmDialog({
           <AlertDialogTitle>Запустить офлайн-ботов?</AlertDialogTitle>
           <AlertDialogDescription>
             Будет запущено {offlineCount} остановленных ботов проекта «{projectName}».
-            Уже работающие боты не будут затронуты.
+            Уже работающие боты и боты с недействительным токеном не будут затронуты.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

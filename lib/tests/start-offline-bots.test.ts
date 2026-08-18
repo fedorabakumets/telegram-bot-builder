@@ -4,7 +4,7 @@
  */
 
 import assert from 'node:assert/strict';
-import { isTokenOfflineForBulkStart } from '../../server/routes/botManagement/isTokenOfflineForBulkStart.ts';
+import { isTokenOfflineForBulkStart } from '../../shared/is-token-offline-for-bulk-start.ts';
 import { toStartOfflineProgressPayload } from '../../shared/project-sync/project-event.ts';
 
 /**
@@ -16,6 +16,9 @@ function testOfflineFilter(): void {
   assert.equal(isTokenOfflineForBulkStart('stopped'), true);
   assert.equal(isTokenOfflineForBulkStart('error'), true);
   assert.equal(isTokenOfflineForBulkStart('running'), false);
+  assert.equal(isTokenOfflineForBulkStart('stopped', 0), false);
+  assert.equal(isTokenOfflineForBulkStart('stopped', 1), true);
+  assert.equal(isTokenOfflineForBulkStart('running', 0), false);
 }
 
 /**

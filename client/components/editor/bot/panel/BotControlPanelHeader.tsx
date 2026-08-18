@@ -13,6 +13,7 @@ import { ProjectSelector } from '@/components/editor/database/user-database/comp
 import { WorkerPoolStatus } from './WorkerPoolStatus';
 import { BotViewModeToggle } from '../canvas/BotViewModeToggle';
 import { ProjectBotBulkActions } from '../project/ProjectBotBulkActions';
+import { countStartableOfflineBots } from '../project/count-startable-offline-bots';
 import { useBotControl } from '../bot-control-context';
 import type { BotViewMode } from '../canvas/use-bot-view-mode';
 import type { BotToken } from '@shared/schema';
@@ -59,10 +60,7 @@ export function BotControlPanelHeader({
 
   const projectName =
     allProjects?.find((p) => p.id === currentProjectId)?.name ?? '';
-  const offlineCount = currentProjectTokens.filter((t) => {
-    const st = allBotStatuses.find((s) => s.tokenId === t.id);
-    return st?.status !== 'running';
-  }).length;
+  const offlineCount = countStartableOfflineBots(currentProjectTokens, allBotStatuses);
   const startingThis =
     !!currentProjectId
     && startOfflineAllMutation.isPending

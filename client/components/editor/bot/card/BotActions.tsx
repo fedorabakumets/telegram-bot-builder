@@ -33,12 +33,10 @@ interface BotActionsProps {
     variables?: { tokenId: number; projectId: number };
     mutate: (vars: { tokenId: number; projectId: number }) => void;
   };
-  /** Мутация удаления бота */
-  deleteBotMutation: {
-    isPending: boolean;
-    variables?: number;
-    mutate: (tokenId: number) => void;
-  };
+  /** Запросить подтверждение удаления */
+  onRequestDelete: () => void;
+  /** Идёт удаление этого бота */
+  deletePending: boolean;
   /** Обработчик открытия редактора профиля */
   onEditProfile: () => void;
   /** Загружается ли профиль бота */
@@ -56,7 +54,8 @@ export function BotActions({
   isBotRunning,
   startBotMutation,
   stopBotMutation,
-  deleteBotMutation,
+  onRequestDelete,
+  deletePending,
   onEditProfile,
   isProfileLoading,
   tokenId,
@@ -64,7 +63,6 @@ export function BotActions({
 }: BotActionsProps) {
   const isStartingThisBot = startBotMutation.variables?.tokenId === tokenId;
   const isStoppingThisBot = stopBotMutation.variables?.tokenId === tokenId;
-  const isDeletingThisBot = deleteBotMutation.variables === tokenId;
 
   return (
     <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 flex-wrap">
@@ -117,9 +115,9 @@ export function BotActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onClick={() => deleteBotMutation.mutate(tokenId)}
+            onClick={onRequestDelete}
             className="text-red-600 dark:text-red-400"
-            disabled={deleteBotMutation.isPending && isDeletingThisBot}
+            disabled={deletePending}
           >
             <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
             Удалить

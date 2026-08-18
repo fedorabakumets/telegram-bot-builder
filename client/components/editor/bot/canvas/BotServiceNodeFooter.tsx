@@ -1,10 +1,12 @@
 /**
- * @fileoverview Футер статуса ноды бота (Railway-style online / failed)
+ * @fileoverview Футер статуса ноды бота (Railway-style online / failed / invalid token)
  * @module bot/canvas/BotServiceNodeFooter
  */
 
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, KeyRound } from 'lucide-react';
 import { formatRelativeRu } from '../card/launch-history-utils';
+import { resolveBotCanvasStatus } from './bot-canvas-status';
+import { BotRunStatusBadge } from './bot-run-status-badge';
 import type { BotServiceFailure } from './bot-service-failure';
 
 /** Пропсы футера ноды */
@@ -13,20 +15,41 @@ interface BotServiceNodeFooterProps {
   isRunning: boolean;
   /** Последний failed запуск */
   failure?: BotServiceFailure | null;
+  /** isActive токена: 0 — Telegram отклонил */
+  isActive?: number | null;
 }
 
 /**
- * Нижняя полоса: Online/Offline или «Запуск с ошибкой · N мин назад»
+ * Нижняя полоса: Online/Offline, «токен недействителен» или ошибка запуска.
  * @param props - Свойства
  * @returns JSX
  */
 export function BotServiceNodeFooter({
   isRunning,
   failure,
+  isActive,
 }: BotServiceNodeFooterProps) {
-  const showFailure = !isRunning && !!failure;
+  const status = resolveBotCanvasStatus({
+    isActive,
+    isRunning,
+    hasFailure: !!failure,
+  });
 
-  if (showFailure && failure) {
+  if (status === 'invalid') {
+    return (
+      <div
+        className="flex items-center gap-2 border-t border-red-500/25 bg-red-500/5 px-3 py-2 pointer-events-none"
+        title="Токен отозван или бот удалён. Вставьте новый из @BotFather во вкладке Переменные."
+      >
+        <KeyRound className="h-3.5 w-3.5 shrink-0 text-red-500" aria-hidden />
+        <span className="min-w-0 truncate text-[11px] font-medium text-red-500">
+          Токен недействителен
+        </span>
+      </div>
+    );
+  }
+
+  if (status === 'failed' && failure) {
     const when = formatRelativeRu(failure.at);
     const title = failure.message
       ? `${failure.message} (${when})`
@@ -49,22 +72,7 @@ export function BotServiceNodeFooter({
       <span className="text-[10px] uppercase tracking-wide text-muted-foreground/80 font-medium">
         Bot
       </span>
-      <span
-        className={[
-          'inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-          isRunning
-            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-            : 'border-border bg-muted text-muted-foreground',
-        ].join(' ')}
-      >
-        <span
-          className={[
-            'w-1.5 h-1.5 rounded-full',
-            isRunning ? 'bg-emerald-400' : 'bg-muted-foreground/50',
-          ].join(' ')}
-        />
-        {isRunning ? 'Онлайн' : 'Офлайн'}
-      </span>
+      <BotRunStatusBadge status={status} />
     </div>
   );
 }

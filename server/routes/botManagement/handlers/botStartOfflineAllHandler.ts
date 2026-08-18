@@ -77,9 +77,9 @@ export async function handleBotStartOfflineAll(req: Request, res: Response): Pro
 
     for (const t of tokens) {
       const instance = await storage.getBotInstanceByToken(t.id);
-      if (isTokenOfflineForBulkStart(instance?.status)) {
+      if (isTokenOfflineForBulkStart(instance?.status, t.isActive)) {
         offlineTokens.push(t);
-      } else {
+      } else if (instance?.status === 'running') {
         skippedRunning += 1;
       }
     }

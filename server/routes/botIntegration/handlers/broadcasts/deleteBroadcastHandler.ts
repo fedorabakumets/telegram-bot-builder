@@ -7,7 +7,9 @@ import type { Request, Response } from "express";
 import { eq, and } from "drizzle-orm";
 import { db } from "../../../../database/db";
 import { broadcasts } from "@shared/schema";
+import { activeBroadcasts } from "./broadcastQueue";
 import { deleteBroadcastMessages } from "./delete-broadcast-messages";
+import { pruneCampaignAfterChildDelete } from "./prune-campaign-after-child-delete";
 
 /**
  * Обрабатывает DELETE /api/projects/:projectId/broadcasts/:broadcastId
@@ -36,9 +38,11 @@ export async function deleteBroadcastHandler(req: Request, res: Response): Promi
       return;
     }
 
-    const deleted = await deleteBroadcastMessages(projectId, broadcastId, broadcast.tokenId);
+    if (broadcast.status === "running") activeBroadcasts.set(broadcast.id, "stopped");
 
+    const deleted = await deleteBroadcastMessages(projectId, broadcastId, broadcast.tokenId);
     await db.delete(broadcasts).where(eq(broadcasts.id, broadcastId));
+    await pruneCampaignAfterChildDelete(broadcast.campaignId);
 
     res.json({ ok: true, deleted });
   } catch (error) {

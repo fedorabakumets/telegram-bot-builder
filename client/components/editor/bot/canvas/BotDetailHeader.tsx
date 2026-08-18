@@ -7,6 +7,9 @@ import { Play, Square, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotAvatar } from '../card/BotAvatar';
 import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
+import { isTokenActiveForBroadcast } from '@shared/broadcast-unauthorized';
+import { resolveBotCanvasStatus } from './bot-canvas-status';
+import { BotRunStatusBadge } from './bot-run-status-badge';
 import type { BotToken } from '@shared/schema';
 
 /** Пропсы шапки detail-панели */
@@ -51,6 +54,12 @@ export function BotDetailHeader({
   onDelete,
   onClose,
 }: BotDetailHeaderProps) {
+  const tokenOk = isTokenActiveForBroadcast(token.isActive);
+  const status = resolveBotCanvasStatus({
+    isActive: token.isActive,
+    isRunning,
+  });
+  const badgeStatus = status === 'failed' ? 'offline' : status;
   return (
     <div className="flex items-center gap-3 border-b border-border/60 bg-background px-4 py-3.5 shrink-0">
       <BotAvatar
@@ -67,23 +76,7 @@ export function BotDetailHeader({
             {title}
           </h2>
           <IdBadge id={token.id} className="text-[11px] shrink-0" />
-          <span
-            className={[
-              'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5',
-              'text-[10px] font-medium uppercase tracking-wide',
-              isRunning
-                ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                : 'border-border bg-muted/50 text-muted-foreground',
-            ].join(' ')}
-          >
-            <span
-              className={[
-                'h-1.5 w-1.5 rounded-full',
-                isRunning ? 'bg-emerald-500' : 'bg-muted-foreground/50',
-              ].join(' ')}
-            />
-            {isRunning ? 'Онлайн' : 'Офлайн'}
-          </span>
+          <BotRunStatusBadge status={badgeStatus} />
         </div>
         {token.botUsername ? (
           <a
@@ -98,6 +91,11 @@ export function BotDetailHeader({
         ) : (
           <p className="mt-0.5 truncate text-xs text-muted-foreground">Telegram Bot</p>
         )}
+        {!tokenOk && (
+          <p className="mt-1 text-[11px] leading-snug text-red-500">
+            Вставьте новый токен из @BotFather во вкладке «Переменные» или удалите бота.
+          </p>
+        )}
       </div>
       <div className="flex shrink-0 items-center divide-x divide-border/60 overflow-hidden rounded-md border border-border/60 bg-card">
         <Button
@@ -105,9 +103,10 @@ export function BotDetailHeader({
           size="icon"
           variant="ghost"
           className={ACTION_BTN}
-          disabled={controlPending}
+          disabled={controlPending || !tokenOk}
           onClick={onToggleRun}
           aria-label={isRunning ? 'Остановить' : 'Запустить'}
+          title={!tokenOk ? 'Сначала обновите токен' : undefined}
         >
           {isRunning ? <Square className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
         </Button>

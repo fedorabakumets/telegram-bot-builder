@@ -6,6 +6,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Megaphone, X, Send, Paperclip, Hash } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDeleteBroadcast } from '@/components/editor/broadcast/hooks/use-delete-broadcast';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -78,19 +79,13 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
     refetchCampaigns();
   };
 
-  /** Мутация удаления рассылки */
-  const deleteMutation = useMutation({
-    mutationFn: async (broadcastId: number) => {
-      const res = await fetch(`/api/projects/${projectId}/broadcasts/${broadcastId}`, { method: 'DELETE', credentials: 'include' });
-      if (!res.ok) throw new Error('Ошибка удаления рассылки');
-      return res.json();
-    },
-    onMutate: (broadcastId) => setDeletingId(broadcastId),
-    onSettled: () => {
+  /** Мутация удаления одиночной рассылки */
+  const deleteMutation = useDeleteBroadcast({
+    projectId,
+    refetch: () => {
       setDeletingId(null);
       setConfirmDeleteId(null);
       refetchAll();
-      queryClient.invalidateQueries({ queryKey: ['infinite-users', projectId] });
     },
   });
 
@@ -195,8 +190,6 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
                   campaign={item.campaign}
                   projectId={projectId}
                   onRefetch={refetchAll}
-                  onDeleteBroadcast={(id) => deleteMutation.mutate(id)}
-                  deletingBroadcastId={deletingId}
                 />
               ) : (
                 <BroadcastMessageBubble
@@ -292,7 +285,11 @@ export function BroadcastDialogPanel({ projectId, selectedTokenId, onClose, hide
         open={confirmDeleteId !== null}
         onOpenChange={(open) => !open && setConfirmDeleteId(null)}
         onConfirm={() => {
-          if (confirmDeleteId !== null) deleteMutation.mutate(confirmDeleteId);
+          if (confirmDeleteId === null) return;
+          setDeletingId(confirmDeleteId);
+          deleteMutation.mutate(confirmDeleteId, {
+            onSettled: () => setDeletingId(null),
+          });
         }}
       />
 

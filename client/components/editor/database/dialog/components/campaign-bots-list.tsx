@@ -5,8 +5,10 @@
 
 import { useState } from 'react';
 import { useProjectTokens } from '@/hooks/use-project-tokens';
+import { useDeleteBroadcast } from '@/components/editor/broadcast/hooks/use-delete-broadcast';
 import { formatBotShortLabel } from '@/components/editor/broadcast/utils/format-bot-label';
 import { CampaignBotRow } from './campaign-bot-row';
+import { BroadcastDeleteConfirm } from './broadcast-delete-confirm';
 import type { BroadcastProgressEvent } from '@/components/editor/broadcast/types';
 import type { Broadcast } from '@shared/schema';
 
@@ -20,10 +22,8 @@ interface CampaignBotsListProps {
   broadcasts: Broadcast[];
   /** Live-прогресс по каждой рассылке */
   liveByBroadcast: Map<number, BroadcastProgressEvent>;
-  /** Обработчик удаления рассылки одного бота */
-  onDeleteBroadcast?: (broadcastId: number) => void;
-  /** Идентификатор рассылки, которая сейчас удаляется */
-  deletingBroadcastId?: number | null;
+  /** Обновить ленту и детали большой рассылки после удаления */
+  onRefetch?: () => void;
 }
 
 /**
@@ -35,13 +35,15 @@ export function CampaignBotsList({
   projectId,
   broadcasts,
   liveByBroadcast,
-  onDeleteBroadcast,
-  deletingBroadcastId,
+  onRefetch,
 }: CampaignBotsListProps) {
   const tokensInfo = useProjectTokens([projectId]);
   const tokens = tokensInfo[0]?.tokens ?? [];
   /** ID раскрытой рассылки (показать ошибки) */
   const [openBroadcastId, setOpenBroadcastId] = useState<number | null>(null);
+  /** ID рассылки, для которой открыто подтверждение удаления */
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const deleteMutation = useDeleteBroadcast({ projectId, refetch: onRefetch });
 
   if (broadcasts.length === 0) {
     return <p className="px-1 text-xs text-muted-foreground">Данные по ботам загружаются…</p>;
@@ -58,10 +60,21 @@ export function CampaignBotsList({
           botLabel={formatBotShortLabel(tokens.find((token) => token.id === item.tokenId), item.tokenId)}
           isOpen={openBroadcastId === item.id}
           onToggle={() => setOpenBroadcastId(openBroadcastId === item.id ? null : item.id)}
-          onDeleteBroadcast={onDeleteBroadcast}
-          deletingBroadcastId={deletingBroadcastId}
+          onDeleteBroadcast={() => setConfirmDeleteId(item.id)}
+          isDeleting={deleteMutation.isPending && deleteMutation.variables === item.id}
         />
       ))}
+      <BroadcastDeleteConfirm
+        open={confirmDeleteId !== null}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+        onConfirm={() => {
+          const id = confirmDeleteId;
+          if (id === null) return;
+          deleteMutation.mutate(id, {
+            onSettled: () => setConfirmDeleteId(null),
+          });
+        }}
+      />
     </div>
   );
 }

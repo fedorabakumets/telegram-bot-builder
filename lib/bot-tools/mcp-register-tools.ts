@@ -927,7 +927,7 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
     'db_start_offline_bots',
     {
       description:
-        'Запустить всех ОФЛАЙН ботов проекта (уже running не трогает). ТРЕБУЕТ confirm: true. '
+        'Запустить всех ОФЛАЙН ботов проекта (уже running и недействительные токены не трогает). ТРЕБУЕТ confirm: true. '
         + 'Последовательно вызывает startBot; UI обновляется live через WS bot-started и start-offline-progress. '
         + 'Эквивалент кнопки «Запустить офлайн» и POST /api/projects/:id/bot/start-offline-all.',
       inputSchema: {

@@ -57,12 +57,10 @@ interface BotCardHeaderProps {
     variables?: { tokenId: number; projectId: number };
     mutate: (vars: { tokenId: number; projectId: number }) => void;
   };
-  /** Мутация удаления бота */
-  deleteBotMutation: {
-    isPending: boolean;
-    variables?: number;
-    mutate: (tokenId: number) => void;
-  };
+  /** Запросить подтверждение удаления */
+  onRequestDelete: () => void;
+  /** Идёт удаление этого бота */
+  deletePending: boolean;
   /** Обработчик открытия редактора профиля */
   onEditProfile: () => void;
   /** Загружается ли профиль */
@@ -89,7 +87,8 @@ interface BotCardHeaderProps {
 export function BotCardHeader({
   token, projectBotInfo, editingField, editValue, setEditValue,
   handleSaveEdit, handleCancelEdit, handleStartEdit, getStatusBadge,
-  isBotRunning, startBotMutation, stopBotMutation, deleteBotMutation,
+  isBotRunning, startBotMutation, stopBotMutation,
+  onRequestDelete, deletePending,
   onEditProfile, isProfileLoading, tokenId, projectId,
   isCollapsed, onToggleCollapse, showTimer, currentElapsedSeconds,
 }: BotCardHeaderProps) {
@@ -126,7 +125,9 @@ export function BotCardHeader({
           {CollapseButton}
           <BotActions
             isBotRunning={isBotRunning} startBotMutation={startBotMutation}
-            stopBotMutation={stopBotMutation} deleteBotMutation={deleteBotMutation}
+            stopBotMutation={stopBotMutation}
+            onRequestDelete={onRequestDelete}
+            deletePending={deletePending}
             onEditProfile={onEditProfile} isProfileLoading={isProfileLoading}
             tokenId={tokenId} projectId={projectId}
           />
@@ -189,7 +190,9 @@ export function BotCardHeader({
         {CollapseButton}
         <BotActions
           isBotRunning={isBotRunning} startBotMutation={startBotMutation}
-          stopBotMutation={stopBotMutation} deleteBotMutation={deleteBotMutation}
+          stopBotMutation={stopBotMutation}
+          onRequestDelete={onRequestDelete}
+          deletePending={deletePending}
           onEditProfile={onEditProfile} isProfileLoading={isProfileLoading}
           tokenId={tokenId} projectId={projectId}
         />

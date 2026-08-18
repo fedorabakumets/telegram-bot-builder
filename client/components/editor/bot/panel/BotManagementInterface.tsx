@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { ProjectHeader } from '../project/ProjectHeader';
+import { countStartableOfflineBots } from '../project/count-startable-offline-bots';
 import { EmptyBotsState } from './EmptyBotsState';
 import { ProjectBotsList } from '../project/ProjectBotsList';
 import { useBotControl } from '../bot-control-context';
@@ -113,10 +114,7 @@ export function BotManagementInterface({
           return val === undefined ? defaultCollapsedFallback : val;
         });
 
-        const offlineCount = projectTokens.filter((t) => {
-          const st = allBotStatuses.find((s) => s.tokenId === t.id);
-          return st?.status !== 'running';
-        }).length;
+        const offlineCount = countStartableOfflineBots(projectTokens, allBotStatuses);
         const startingThis =
           startOfflineAllMutation.isPending
           && startOfflineAllMutation.variables === project.id;

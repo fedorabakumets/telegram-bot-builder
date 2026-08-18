@@ -141,7 +141,7 @@ curl -s -X POST -b cookies.txt -H 'Content-Type: application/json' \
 
 **Авторизация:** Cookie (`connect.sid`) или Bearer PAT
 
-Последовательно запускает токены проекта со status !== running. Уже running не трогает (в отличие от restart-all).
+Последовательно запускает токены проекта со status !== running и действительным токеном. Уже running и токены с isActive=0 не трогает (в отличие от restart-all).
 
 **Доступ:** `requireProjectAccess`.
 

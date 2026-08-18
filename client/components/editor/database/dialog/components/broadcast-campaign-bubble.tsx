@@ -31,10 +31,6 @@ interface BroadcastCampaignBubbleProps {
   projectId: number;
   /** Колбэк обновления ленты рассылок */
   onRefetch?: () => void;
-  /** Колбэк удаления рассылки у одного бота */
-  onDeleteBroadcast?: (broadcastId: number) => void;
-  /** Идентификатор рассылки бота, которая сейчас удаляется */
-  deletingBroadcastId?: number | null;
 }
 
 /**
@@ -49,8 +45,6 @@ export function BroadcastCampaignBubble({
   campaign,
   projectId,
   onRefetch,
-  onDeleteBroadcast,
-  deletingBroadcastId,
 }: BroadcastCampaignBubbleProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -174,8 +168,7 @@ export function BroadcastCampaignBubble({
               projectId={projectId}
               broadcasts={broadcasts}
               liveByBroadcast={byBroadcast}
-              onDeleteBroadcast={onDeleteBroadcast}
-              deletingBroadcastId={deletingBroadcastId}
+              onRefetch={refreshAll}
             />
           </div>
         )}

@@ -18,6 +18,7 @@ import { BotDetailHeader } from './BotDetailHeader';
 import { BotDetailTabs } from './BotDetailTabs';
 import { BotCollaboratorsTab } from './BotCollaboratorsTab';
 import { BotDetailTabProvider, type BotDetailTabId } from './bot-detail-tab-context';
+import { DeleteBotConfirmDialog } from '../DeleteBotConfirmDialog';
 import type { BotProject, BotToken } from '@shared/schema';
 
 /** Пропсы detail-панели */
@@ -46,6 +47,7 @@ export function BotDetailPanel({
   onClose,
 }: BotDetailPanelProps) {
   const [tab, setTab] = useState<BotDetailTabId>('history');
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const pending = useEnvPendingChanges(project.id, token.id);
   const { startBotMutation, stopBotMutation, deleteBotMutation, toggleDatabaseMutation } =
     useBotControl();
@@ -76,7 +78,7 @@ export function BotDetailPanel({
               ? stopBotMutation.mutate({ tokenId: token.id, projectId: project.id })
               : startBotMutation.mutate({ tokenId: token.id, projectId: project.id })
           }
-          onDelete={() => deleteBotMutation.mutate(token.id)}
+          onDelete={() => setConfirmDelete(true)}
           onClose={onClose}
         />
         <BotDetailTabs value={tab} onChange={setTab} />
@@ -149,6 +151,15 @@ export function BotDetailPanel({
             </div>
           )}
         </div>
+        <DeleteBotConfirmDialog
+          open={confirmDelete}
+          onOpenChange={setConfirmDelete}
+          token={token}
+          projectId={project.id}
+          isRunning={isRunning}
+          pending={deleteBotMutation.isPending}
+          onConfirm={() => deleteBotMutation.mutate(token.id)}
+        />
       </div>
     </BotDetailTabProvider>
   );

@@ -45,8 +45,8 @@ export function registerBotStartOfflinePaths(
     tags: ["project-bot"],
     summary: "Запустить всех офлайн-ботов проекта",
     description:
-      "Последовательно запускает токены проекта со status !== running. " +
-      "Уже running не трогает (в отличие от restart-all).\n\n" +
+      "Последовательно запускает токены проекта со status !== running и действительным токеном. " +
+      "Уже running и токены с isActive=0 (Telegram отклонил) не трогает (в отличие от restart-all).\n\n" +
       "**Доступ:** `requireProjectAccess`.\n\n" +
       "**Side-effects:** WS `bot-started`, `start-offline-progress` " +
       "(без секретов; см. docs/api/realtime-events.md).\n\n" +

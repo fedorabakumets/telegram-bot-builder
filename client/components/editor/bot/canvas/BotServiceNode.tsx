@@ -7,6 +7,7 @@ import { useRef } from 'react';
 import { BotAvatar } from '../card/BotAvatar';
 import { IdBadge } from '@/components/editor/database/user-database/components/header/project-name-label';
 import { BotServiceNodeFooter } from './BotServiceNodeFooter';
+import { resolveBotCanvasStatus } from './bot-canvas-status';
 import type { BotServiceFailure } from './bot-service-failure';
 import type { BotToken } from '@shared/schema';
 import type { NodePos } from './use-bot-node-layout';
@@ -61,6 +62,12 @@ export function BotServiceNode({
     moved: boolean;
   } | null>(null);
   const hasFailure = !isRunning && !!failure;
+  const canvasStatus = resolveBotCanvasStatus({
+    isActive: token.isActive,
+    isRunning,
+    hasFailure,
+  });
+  const alertBorder = canvasStatus === 'invalid' || canvasStatus === 'failed';
 
   return (
     <button
@@ -76,7 +83,7 @@ export function BotServiceNode({
         'hover:-translate-y-0.5 hover:shadow-md',
         selected
           ? 'z-10 border-blue-500/70 ring-1 ring-blue-500/30 shadow-[0_8px_24px_rgba(37,99,235,0.12)]'
-          : hasFailure
+          : alertBorder
             ? 'border-red-500/40 hover:border-red-500/55'
             : 'border-border/70 hover:border-blue-500/35',
         'cursor-grab active:cursor-grabbing',
@@ -135,7 +142,7 @@ export function BotServiceNode({
           <div className="text-[11px] text-muted-foreground truncate mt-0.5">{username}</div>
         </div>
       </div>
-      <BotServiceNodeFooter isRunning={isRunning} failure={failure} />
+      <BotServiceNodeFooter isRunning={isRunning} failure={failure} isActive={token.isActive} />
     </button>
   );
 }
