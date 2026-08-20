@@ -3,6 +3,7 @@
 Визуальный конструктор Telegram-ботов без программирования.
 
 ## 🚀 Деплой и развертывание
+- [Деплой на VPS через GitHub Actions](deployment/VPS_GITHUB_ACTIONS.md) — сборка в Actions, на сервере только pull
 - [Быстрый деплой на Railway](deployment/RAILWAY_QUICK_DEPLOY.md)
 - [Устранение проблем Railway](deployment/RAILWAY_TROUBLESHOOTING.md)
 
