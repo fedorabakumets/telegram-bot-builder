@@ -29,7 +29,5 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           # На сервере command= в authorized_keys игнорирует эту строку и всегда гоняет deploy-скрипт
           script: true
-          script_stop: true
           command_timeout: 40m
-          # Не печатаем лишнее в логи Actions
           debug: false
