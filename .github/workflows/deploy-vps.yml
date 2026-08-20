@@ -60,7 +60,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Чтобы VPS мог pull без PAT (LXC/прод без интерактива)
+      # Чтобы VPS мог pull без PAT (публичный пакет / без интерактива)
       - name: Make GHCR package public
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
