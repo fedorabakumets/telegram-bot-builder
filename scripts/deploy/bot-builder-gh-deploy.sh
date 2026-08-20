@@ -35,7 +35,24 @@ flock 9
   docker compose pull app
   docker compose up -d --no-build --remove-orphans
   docker compose ps
-  curl -fsS --max-time 30 http://127.0.0.1:5000/api/health
-  echo
+
+  # App needs a few seconds after recreate before /api/health answers
+  ok=0
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    if curl -fsS --max-time 10 http://127.0.0.1:5000/api/health; then
+      echo
+      ok=1
+      break
+    fi
+    echo "health not ready yet (try $i/10), sleep 3s"
+    sleep 3
+  done
+  if [ "$ok" != 1 ]; then
+    echo "ERROR: /api/health failed after retries" >&2
+    docker compose logs --tail=80 app >&2 || true
+    exit 1
+  fi
+
+  docker image prune -f >/dev/null || true
   echo "======== $(date -Is) deploy ok ========"
 } 2>&1 | tee -a "$LOG"
