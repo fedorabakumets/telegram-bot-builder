@@ -1,0 +1,35 @@
+# Автодеплой на VPS при push в main.
+# Хост/ключ только в GitHub Secrets (не в репозитории).
+# На сервере ключ restricted: может запустить только /usr/local/sbin/bot-builder-gh-deploy.sh
+name: Deploy VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Trigger restricted deploy over SSH
+        # pin commit for supply-chain safety
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # На сервере command= в authorized_keys игнорирует эту строку и всегда гоняет deploy-скрипт
+          script: true
+          script_stop: true
+          command_timeout: 40m
+          # Не печатаем лишнее в логи Actions
+          debug: false
