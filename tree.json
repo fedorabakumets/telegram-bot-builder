@@ -43,7 +43,7 @@
       "home"
     ],
     "folder_titles": {},
-    "updated_at": "2026-08-09T02:15:21+03:00",
+    "updated_at": "2026-08-20T22:13:08+03:00",
     "tags": [],
     "author": ""
   },
@@ -959,6 +959,21 @@
       "deployment": "🚀 Деплой"
     },
     "updated_at": "2026-01-26T22:01:11+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
+    "path": "deployment/VPS_GITHUB_ACTIONS",
+    "title": "Деплой на VPS через GitHub Actions",
+    "excerpt": "Конструктор на VPS обновляется **без сборки на проде**.",
+    "parts": [
+      "deployment",
+      "VPS_GITHUB_ACTIONS"
+    ],
+    "folder_titles": {
+      "deployment": "🚀 Деплой"
+    },
+    "updated_at": "2026-08-20T22:13:08+03:00",
     "tags": [],
     "author": ""
   },
