@@ -138,6 +138,11 @@ describe('generateMessageLoggingCode()', () => {
     expect(r).toContain('await event.answer()');
   });
 
+  it('hasInlineButtons без userDatabaseEnabled не добавляет callback_query_logging_middleware', () => {
+    const r = generateMessageLoggingCode(false, true, null, false);
+    expect(r).not.toContain('callback_query_logging_middleware');
+  });
+
   it('без hasInlineButtons нет callback_query_logging_middleware', () => {
     const r = generateMessageLoggingCode(true, false, null, false);
     expect(r).not.toContain('callback_query_logging_middleware');

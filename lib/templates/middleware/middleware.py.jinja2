@@ -254,7 +254,7 @@ async def message_logging_middleware(handler, event: types.Message, data: dict):
 
 {% endif %}
 
-{% if hasInlineButtons %}
+{% if userDatabaseEnabled and hasInlineButtons %}
 # Middleware для сохранения нажатий на кнопки
 async def callback_query_logging_middleware(handler, event: types.CallbackQuery, data: dict):
     """Middleware для автоматического сохранения нажатий на кнопки"""

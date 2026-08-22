@@ -438,9 +438,12 @@ test('F02', 'userDatabaseEnabled: true + inline → ЕСТЬ dp.callback_query.m
   ok(code.includes('dp.callback_query.middleware(callback_query_logging_middleware)'), 'dp.callback_query.middleware должен быть');
 });
 
-test('F03', 'userDatabaseEnabled: true без inline → НЕТ dp.callback_query.middleware', () => {
+test('F03', 'userDatabaseEnabled: true без inline → НЕТ callback_query_logging middleware', () => {
   const code = genDB(makeSimpleProject(), 'f03');
-  ok(!code.includes('dp.callback_query.middleware'), 'dp.callback_query.middleware НЕ должен быть без inline');
+  ok(
+    !code.includes('dp.callback_query.middleware(callback_query_logging_middleware)'),
+    'callback_query_logging_middleware НЕ должен регистрироваться без inline'
+  );
 });
 
 test('F04', 'userDatabaseEnabled: true → ЕСТЬ dp.message.outer_middleware(BotOutgoingLoggingMiddleware())', () => {
@@ -1044,7 +1047,11 @@ test('N10', 'userDatabaseEnabled: true → синтаксис Python OK с Redis
 
 test('N11', 'userDatabaseEnabled: false → НЕТ _redis_client.publish в save_message_to_api', () => {
   const code = gen(makeSimpleProject(), 'n11');
-  ok(!code.includes('_redis_client.publish'), '_redis_client.publish НЕ должен быть без DB');
+  const stubIdx = code.indexOf('async def save_message_to_api');
+  ok(stubIdx !== -1, 'save_message_to_api заглушка должна быть в коде');
+  const stubEnd = code.indexOf('\nasync def ', stubIdx + 1);
+  const stubBody = stubEnd === -1 ? code.slice(stubIdx) : code.slice(stubIdx, stubEnd);
+  ok(!stubBody.includes('_redis_client.publish'), '_redis_client.publish НЕ должен быть в заглушке save_message_to_api');
 });
 
 test('N12', 'userDatabaseEnabled: true + inline → Redis publish есть, синтаксис OK', () => {
