@@ -20,6 +20,7 @@ import { initRedisProjectEventBridge } from './redis/redisProjectEventBridge';
 import { stopCleanup } from "./utils/cache";
 import { shutdownAllBots } from "./utils/graceful-shutdown";
 import { runMigrations } from "./database/runMigrations";
+import { isRedisAvailable, waitForRedisInit } from "./redis/redisClient";
 
 // Настраиваем прокси для Telegram API ДО всех импортов
 dotenv.config({ debug: false });
@@ -230,9 +231,19 @@ app.use((req, res, next) => {
       log(`OpenAPI docs (dev): http://${displayHost}:${port}/docs`);
     }
 
-    // Восстанавливаем боты, которые были запущены до рестарта/редеплоя
-    restoreRunningBots()
-      .then(async (restoreResult) => {
+    // Восстанавливаем боты после готовности Redis (боты используют Redis для FSM/lock/pubsub)
+    void (async () => {
+      try {
+        if (process.env.REDIS_URL?.trim()) {
+          await waitForRedisInit();
+          log(
+            isRedisAvailable()
+              ? "Redis готов — восстанавливаем боты"
+              : "Redis недоступен — восстанавливаем боты (fallback)",
+          );
+        }
+
+        const restoreResult = await restoreRunningBots();
         const closed = await reconcileOrphanLaunchHistories(async (tokenId) => {
           const token = await storage.getBotToken(tokenId);
           if (!token) return false;
@@ -247,10 +258,11 @@ app.use((req, res, next) => {
         }
         // Через минуту добить тех, кто не встал или числится running без воркера
         scheduleRestoreSweep(restoreResult.failedTokenIds);
-      })
-      .catch((err) =>
-        log(`Ошибка при восстановлении ботов: ${err.message}`)
-      );
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        log(`Ошибка при восстановлении ботов: ${message}`);
+      }
+    })();
   });
 
   // Корректное завершение работы

@@ -27,6 +27,12 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
   # Основное приложение (конструктор ботов)
   # image — прод/CI (GHCR); build — локальная разработка (docker compose build)
@@ -43,7 +49,7 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     environment:
       DATABASE_URL: "${DATABASE_URL}"
       PGHOST: "${PGHOST}"
