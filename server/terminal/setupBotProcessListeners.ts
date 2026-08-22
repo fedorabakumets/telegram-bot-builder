@@ -14,6 +14,7 @@ import { workerManager } from '../bots/botWorkerManager';
 import { sendOutputToTerminals } from './sendOutputToTerminals';
 import { getActiveLaunchId } from './activeLaunchIds';
 import { handleWorkerBotExited } from '../bots/handleWorkerBotExited';
+import { resetRestartCounter, STABLE_UPTIME_MS } from '../bots/botRestartManager';
 
 /**
  * Хранилище функций очистки слушателей для каждого процесса.
@@ -27,6 +28,9 @@ export const processCleanups = new Map<string, () => void>();
  * Ключ — processKey в формате `${projectId}_${tokenId}`.
  */
 export const pendingLaunchIds = new Map<string, number>();
+
+/** Таймеры сброса счётчика autoRestart после стабильной работы */
+const stableUptimeTimers = new Map<number, ReturnType<typeof setTimeout>>();
 
 /**
  * Настройка прослушивания вывода процессов ботов
@@ -92,8 +96,38 @@ export function setupBotProcessListeners() {
         workerManager.on('bot-log', routeWorkerLog);
       }
 
-      workerManager.on('bot-exited', (projectId: number, tokenId: number, exitStatus: string | number, runtimeError?: string) => {
-        void handleWorkerBotExited(projectId, tokenId, exitStatus, runtimeError);
+      workerManager.on('bot-exited', (
+        projectId: number,
+        tokenId: number,
+        exitStatus: string | number,
+        runtimeError?: string,
+        processDeathUnexpected?: boolean,
+      ) => {
+        const prev = stableUptimeTimers.get(tokenId);
+        if (prev) {
+          clearTimeout(prev);
+          stableUptimeTimers.delete(tokenId);
+        }
+        void handleWorkerBotExited(
+          projectId,
+          tokenId,
+          exitStatus,
+          runtimeError,
+          processDeathUnexpected === true,
+        );
+      });
+
+      workerManager.on('bot-started', (_projectId: number, tokenId: number) => {
+        const prev = stableUptimeTimers.get(tokenId);
+        if (prev) clearTimeout(prev);
+        const timer = setTimeout(() => {
+          resetRestartCounter(tokenId);
+          stableUptimeTimers.delete(tokenId);
+          console.log(
+            `[AutoRestart] Счётчик сброшен после ${STABLE_UPTIME_MS / 1000}с uptime token=${tokenId}`,
+          );
+        }, STABLE_UPTIME_MS);
+        stableUptimeTimers.set(tokenId, timer);
       });
 
       console.log('[Terminal] Подписка на логи и exit воркеров настроена');

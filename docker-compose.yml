@@ -36,6 +36,9 @@ services:
     pull_policy: missing
     container_name: bot-builder-app
     restart: unless-stopped
+    # 0 = без лимита (по умолчанию). На маленьких VPS задайте APP_MEM_LIMIT=1280m в .env
+    mem_limit: ${APP_MEM_LIMIT:-0}
+    memswap_limit: ${APP_MEM_LIMIT:-0}
     depends_on:
       db:
         condition: service_healthy

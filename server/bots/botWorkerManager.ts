@@ -87,6 +87,9 @@ class BotWorkerManager extends EventEmitter {
   /** Последняя stderr-ошибка бота для errorMessage в БД */
   private lastBotErrors = new Map<number, string>();
 
+  /** projectId, для которых killWorker/shutdownAll намеренно гасят воркер */
+  private intentionalKills = new Set<number>();
+
   /** Подробные логи stdout воркера (JSON) */
   private workerVerbose = process.env.WORKER_POOL_VERBOSE === "true";
 
@@ -259,9 +262,14 @@ class BotWorkerManager extends EventEmitter {
         const wasReady = worker.status === "ready";
         worker.status = "stopped";
 
+        const intentional = this.intentionalKills.has(projectId);
+        this.intentionalKills.delete(projectId);
+        // Неожиданная смерть процесса (OOM/cgroup/kill -9), не кнопка Стоп и не shutdown
+        const unexpected = !intentional;
+
         // Уведомляем о завершении каждого бота
         for (const tokenId of worker.activeBots) {
-          this.emit("bot-exited", projectId, tokenId, code);
+          this.emit("bot-exited", projectId, tokenId, code, undefined, unexpected);
         }
         worker.activeBots.clear();
         this.workers.delete(projectId);
@@ -368,7 +376,7 @@ class BotWorkerManager extends EventEmitter {
       } else {
         console.log(`🏭 [WorkerPool:${projectId}] бот ${ev.tokenId} остановлен`);
       }
-      this.emit("bot-exited", projectId, ev.tokenId, status, runtimeError);
+      this.emit("bot-exited", projectId, ev.tokenId, status, runtimeError, false);
       // Drain: не убиваем воркер мгновенно (гонка с restart)
       if (worker && worker.activeBots.size === 0 && worker.status === "ready") {
         this.scheduleWorkerDrain(projectId);
@@ -478,7 +486,7 @@ class BotWorkerManager extends EventEmitter {
         token_id: tokenId,
       });
       if (!sent) {
-        this.emit("bot-exited", projectId, tokenId, "stopped");
+        this.emit("bot-exited", projectId, tokenId, "stopped", undefined, false);
         return true;
       }
 
@@ -507,6 +515,9 @@ class BotWorkerManager extends EventEmitter {
     this.cancelWorkerDrain(projectId);
     const worker = this.workers.get(projectId);
     if (!worker) return;
+
+    // Чтобы exit-handler не принял наш kill за OOM
+    this.intentionalKills.add(projectId);
 
     // Пытаемся graceful shutdown
     const sent = this.sendCommand(projectId, { cmd: "shutdown" });

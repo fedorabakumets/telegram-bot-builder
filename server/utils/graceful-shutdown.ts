@@ -16,6 +16,7 @@
 import { botProcesses } from "../routes/routes";
 import { closeDbPool } from "../database/db";
 import { workerManager } from '../bots/botWorkerManager';
+import { markServerShuttingDown } from '../bots/serverShutdownState';
 
 /**
  * Модуль для взаимодействия с хранилищем данных
@@ -67,6 +68,9 @@ import { execSync } from "node:child_process";
  * @since 1.0.0
  */
 export async function shutdownAllBots(): Promise<void> {
+  // Блокируем autoRestart на время деплоя / SIGTERM
+  markServerShuttingDown();
+
   /**
    * Маркер `__server_restart__` пишем ДО остановки воркеров.
    * Иначе `workerManager.shutdownAll()` → `bot_exited` → handleWorkerBotExited

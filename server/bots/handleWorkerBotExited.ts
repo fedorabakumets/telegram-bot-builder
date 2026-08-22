@@ -12,6 +12,21 @@ import { isWorkerCleanExit } from './isWorkerCleanExit';
 import { formatBotRuntimeError, formatBotRuntimeErrorShort } from './formatBotRuntimeError';
 import { isBotUnauthorized } from '@shared/broadcast-unauthorized';
 import { markBotTokenUnauthorized } from './mark-bot-token-unauthorized';
+import { isUnexpectedBotExit } from './isUnexpectedBotExit';
+import { isExpectedStop } from './expectedStops';
+import { isServerShuttingDown } from './serverShutdownState';
+import { scheduleBotRestart } from './scheduleBotRestart';
+
+/**
+ * Смерть всего python-процесса (exit code / signal), а не штатный bot_exited из asyncio.
+ * @param exitStatus - Статус из emit
+ */
+function isProcessDeathExit(exitStatus: string | number): boolean {
+  if (typeof exitStatus === 'number') return true;
+  const s = String(exitStatus);
+  if (s === 'null') return true;
+  return /^\d+$/.test(s);
+}
 
 /**
  * Обновляет БД и шлёт WS после выхода бота из воркера
@@ -19,13 +34,22 @@ import { markBotTokenUnauthorized } from './mark-bot-token-unauthorized';
  * @param tokenId - ID токена
  * @param exitStatus - Статус из worker (`error` / `stopped` / код)
  * @param runtimeError - Последняя stderr-ошибка бота (опционально)
+ * @param processDeathUnexpected - true если умер весь python-воркер не от killWorker
  */
 export async function handleWorkerBotExited(
   projectId: number,
   tokenId: number,
   exitStatus: string | number,
   runtimeError?: string,
+  processDeathUnexpected = false,
 ): Promise<void> {
+  // Снимаем флаги синхронно ДО любых await — иначе stopBot.finally
+  // успеет clearExpectedStop до проверки autoRestart
+  const expectedStop = isExpectedStop(tokenId);
+  const serverShuttingDown = isServerShuttingDown();
+  const intentionalWorkerKill =
+    isProcessDeathExit(exitStatus) && !processDeathUnexpected;
+
   const statusStr = String(exitStatus);
   const isError = statusStr === 'error' || !isWorkerCleanExit(exitStatus);
   const launchStatus = isError ? 'error' : 'stopped';
@@ -90,4 +114,16 @@ export async function handleWorkerBotExited(
       isError && runtimeError ? ` (${formatBotRuntimeErrorShort(runtimeError)})` : ''
     }`,
   );
+
+  if (
+    isUnexpectedBotExit({
+      tokenId,
+      exitStatus,
+      intentionalWorkerKill,
+      serverShuttingDown,
+      expectedStop,
+    })
+  ) {
+    await scheduleBotRestart(projectId, tokenId, statusStr);
+  }
 }

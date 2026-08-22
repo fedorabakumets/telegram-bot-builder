@@ -30,6 +30,7 @@ import { broadcastProjectEvent } from '../terminal/broadcastProjectEvent';
 import { clearActiveLaunchId } from '../terminal/activeLaunchIds';
 import { clearBotRedisLockByTokenId } from './clearBotRedisLock';
 import { POST_STOP_COOLDOWN_MS, sleepMs } from './restartTiming';
+import { markExpectedStop, clearExpectedStop } from './expectedStops';
 
 /**
  * Останавливает запущенный экземпляр Telegram-бота по идентификатору проекта и токена
@@ -62,6 +63,8 @@ import { POST_STOP_COOLDOWN_MS, sleepMs } from './restartTiming';
  * ```
  */
 export async function stopBot(projectId: number, tokenId: number): Promise<{ success: boolean; error?: string; }> {
+  // Чтобы WorkerPool не принял stop за OOM и не автоперезапустил
+  markExpectedStop(tokenId);
   try {
     // ─── Режим воркера: остановка бота через worker pool ───
     if (process.env.USE_WORKER_POOL !== 'false') {
@@ -215,5 +218,7 @@ export async function stopBot(projectId: number, tokenId: number): Promise<{ suc
   } catch (error) {
     console.error('Ошибка остановки бота:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };
+  } finally {
+    clearExpectedStop(tokenId);
   }
 }
