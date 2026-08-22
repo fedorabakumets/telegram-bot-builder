@@ -3,6 +3,7 @@ import express, { NextFunction, type Request, Response } from "express";
 import { createServer } from "http";
 import { startFileMonitoring } from "./files/file-monitoring";
 import { restoreRunningBots } from "./bots/restoreRunningBots";
+import { scheduleRestoreSweep } from "./bots/restoreSweep";
 import { reconcileOrphanLaunchHistories } from "./bots/reconcileLaunchHistory";
 import { workerManager } from "./bots/botWorkerManager";
 import { findActiveProcessForToken } from "./utils/findActiveProcessForToken";
@@ -231,7 +232,7 @@ app.use((req, res, next) => {
 
     // Восстанавливаем боты, которые были запущены до рестарта/редеплоя
     restoreRunningBots()
-      .then(async () => {
+      .then(async (restoreResult) => {
         const closed = await reconcileOrphanLaunchHistories(async (tokenId) => {
           const token = await storage.getBotToken(tokenId);
           if (!token) return false;
@@ -244,6 +245,8 @@ app.use((req, res, next) => {
         if (closed > 0) {
           log(`Закрыто сиротских launch-history записей: ${closed}`);
         }
+        // Через минуту добить тех, кто не встал или числится running без воркера
+        scheduleRestoreSweep(restoreResult.failedTokenIds);
       })
       .catch((err) =>
         log(`Ошибка при восстановлении ботов: ${err.message}`)

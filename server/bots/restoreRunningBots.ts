@@ -4,13 +4,22 @@
  */
 
 import { storage } from "../storages/storage";
-import { startBot } from "./startBot";
 import { clearBotRedisLock } from "./clearBotRedisLock";
 import {
   RESTORE_START_STAGGER_MS,
   waitRestoreStagger,
 } from "./restoreStartStagger";
 import { refuseInactiveBotStart } from "./refuse-inactive-bot-start";
+import { startBotWithRetries } from "./restoreRetry";
+
+export interface RestoreRunningBotsResult {
+  /** Сколько ботов пытались поднять */
+  total: number;
+  /** Успешно подняты */
+  restored: number;
+  /** tokenId, которые не поднялись после всех попыток */
+  failedTokenIds: number[];
+}
 
 /**
  * Определяет, был ли бот остановлен внезапно (не вручную пользователем).
@@ -41,9 +50,11 @@ function isAbruptShutdown(errorMessage: string | null | undefined): boolean {
  * botProcesses очищается, но в БД боты остаются со статусом "running".
  * Эта функция находит такие боты и перезапускает их автоматически.
  *
- * @returns {Promise<void>}
+ * @returns Итог: сколько поднято и список неудачных tokenId
  */
-export async function restoreRunningBots(): Promise<void> {
+export async function restoreRunningBots(): Promise<RestoreRunningBotsResult> {
+  const empty: RestoreRunningBotsResult = { total: 0, restored: 0, failedTokenIds: [] };
+
   try {
     console.log("🔄 Восстанавливаем запущенные боты после рестарта...");
 
@@ -69,10 +80,13 @@ export async function restoreRunningBots(): Promise<void> {
 
     if (runningInstances.length === 0) {
       console.log("ℹ️ Нет ботов для восстановления.");
-      return;
+      return empty;
     }
 
     console.log(`🤖 Найдено ${runningInstances.length} бот(ов) для восстановления.`);
+
+    let restored = 0;
+    const failedTokenIds: number[] = [];
 
     for (let i = 0; i < runningInstances.length; i++) {
       const instance = runningInstances[i];
@@ -95,6 +109,7 @@ export async function restoreRunningBots(): Promise<void> {
             status: "error",
             errorMessage: "Нет валидного токена для восстановления",
           });
+          if (instance.tokenId != null) failedTokenIds.push(instance.tokenId);
           continue;
         }
 
@@ -111,27 +126,36 @@ export async function restoreRunningBots(): Promise<void> {
           continue;
         }
 
-        // Удаляем Redis lock перед запуском — старый процесс мог держать lock
+        // Первый clear — внутри startBotWithRetries тоже чистит перед каждой попыткой
         await clearBotRedisLock(launchToken, instance.tokenId);
 
-        const result = await startBot(instance.projectId, launchToken, instance.tokenId, { clearLogs: false });
+        const result = await startBotWithRetries(
+          instance.projectId,
+          launchToken,
+          instance.tokenId,
+        );
 
         if (result.success) {
+          restored += 1;
           console.log(
-            `✅ Бот projectId=${instance.projectId} успешно восстановлен (PID: ${result.processId})`
+            `✅ Бот projectId=${instance.projectId} успешно восстановлен`
+            + ` (PID: ${result.processId}, попыток: ${result.attempts})`,
           );
         } else {
           console.error(
-            `❌ Не удалось восстановить бота projectId=${instance.projectId}: ${result.error}`
+            `❌ Не удалось восстановить бота projectId=${instance.projectId}`
+            + ` tokenId=${instance.tokenId}: ${result.error}`,
           );
           /**
-           * Убираем маркер `__server_restart__` при неудаче, чтобы следующий рестарт
-           * не пытался снова запустить заведомо неработающего бота.
+           * Убираем маркер `__server_restart__` только после исчерпания попыток,
+           * чтобы контрольный проход ещё мог подхватить.
+           * failedTokenIds передаём в scheduleRestoreSweep.
            */
           await storage.updateBotInstance(instance.id, {
             status: "error",
             errorMessage: result.error ?? "Ошибка при восстановлении после рестарта",
           });
+          failedTokenIds.push(instance.tokenId);
         }
       } catch (err) {
         console.error(`❌ Ошибка при восстановлении бота projectId=${instance.projectId}:`, err);
@@ -139,6 +163,7 @@ export async function restoreRunningBots(): Promise<void> {
           status: "error",
           errorMessage: String(err),
         });
+        if (instance.tokenId != null) failedTokenIds.push(instance.tokenId);
       }
 
       // Stagger: не бить Redis одновременным ping от всех ботов
@@ -147,8 +172,17 @@ export async function restoreRunningBots(): Promise<void> {
       }
     }
 
-    console.log("✅ Восстановление ботов завершено.");
+    const total = runningInstances.length;
+    const failedPart = failedTokenIds.length
+      ? `, не удалось: token=${failedTokenIds.join(",")}`
+      : "";
+    console.log(
+      `✅ Восстановление: ${restored} из ${total}${failedPart}`,
+    );
+
+    return { total, restored, failedTokenIds };
   } catch (error) {
     console.error("❌ Критическая ошибка при восстановлении ботов:", error);
+    return empty;
   }
 }
