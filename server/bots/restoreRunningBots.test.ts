@@ -180,3 +180,18 @@ describe('restoreRunningBots — stagger анти-stampede', () => {
     assert.ok(RESTORE_START_STAGGER_MS <= 1000);
   });
 });
+
+describe('restoreRunningBots — маркер при опросе статуса', () => {
+  it('resolveStoppedErrorMessage не затирает __server_restart__', async () => {
+    const { resolveStoppedErrorMessage } = await import('./resolveStoppedErrorMessage');
+    const { SERVER_RESTART_MARKER } = await import('./restoreSweepSelect');
+
+    const kept = resolveStoppedErrorMessage(SERVER_RESTART_MARKER, 'stopped');
+    assert.strictEqual(kept, SERVER_RESTART_MARKER);
+
+    const toRestore = filterInstancesToRestore([
+      { status: 'stopped', errorMessage: kept },
+    ]);
+    assert.strictEqual(toRestore.length, 1);
+  });
+});

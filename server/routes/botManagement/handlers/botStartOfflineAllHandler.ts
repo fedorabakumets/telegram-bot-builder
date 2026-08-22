@@ -12,6 +12,8 @@ import {
   type StartOfflineSource,
 } from '../../../terminal/ProjectEvent';
 import { isTokenOfflineForBulkStart } from '../isTokenOfflineForBulkStart';
+import { isTokenPendingRestore } from '../../../bots/restoreState';
+import { shouldSkipBulkStartDuringRestore } from '../../../../shared/should-skip-bulk-start-during-restore';
 
 /** Пауза между стартами, чтобы не устроить thundering herd */
 const START_DELAY_MS = 400;
@@ -74,8 +76,13 @@ export async function handleBotStartOfflineAll(req: Request, res: Response): Pro
 
     const offlineTokens: typeof tokens = [];
     let skippedRunning = 0;
+    let skippedRestoring = 0;
 
     for (const t of tokens) {
+      if (shouldSkipBulkStartDuringRestore(isTokenPendingRestore(t.id))) {
+        skippedRestoring += 1;
+        continue;
+      }
       const instance = await storage.getBotInstanceByToken(t.id);
       if (isTokenOfflineForBulkStart(instance?.status, t.isActive)) {
         offlineTokens.push(t);
@@ -85,11 +92,15 @@ export async function handleBotStartOfflineAll(req: Request, res: Response): Pro
     }
 
     if (!offlineTokens.length) {
+      const message = skippedRestoring > 0
+        ? `Идёт восстановление после рестарта, ${skippedRestoring} бот(ов) в очереди`
+        : 'Нет офлайн-ботов';
       res.json({
-        message: 'Нет офлайн-ботов',
+        message,
         started: 0,
         failed: 0,
         skippedRunning,
+        skippedRestoring,
         results: [],
       });
       return;
@@ -149,7 +160,7 @@ export async function handleBotStartOfflineAll(req: Request, res: Response): Pro
       source,
     });
 
-    res.json({ started, failed, skippedRunning, results });
+    res.json({ started, failed, skippedRunning, skippedRestoring, results });
   } catch (error) {
     console.error('Ошибка массового запуска офлайн-ботов:', error);
     res.status(500).json({ message: 'Не удалось запустить офлайн-ботов' });

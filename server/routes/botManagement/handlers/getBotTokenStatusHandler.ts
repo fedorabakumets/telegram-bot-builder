@@ -10,6 +10,8 @@ import { restoreProcessTracking } from '../utils/processRestorer';
 import { findActiveProcessForToken } from '../../../utils/findActiveProcessForToken';
 import { workerManager } from '../../../bots/botWorkerManager';
 import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
+import { resolveStoppedErrorMessage, formatBotStatusLabel } from '../../../bots/resolveStoppedErrorMessage';
+import { isTokenPendingRestore } from '../../../bots/restoreState';
 
 /**
  * Нормализует tokenId — срезает префикс `token_` если он есть
@@ -24,16 +26,11 @@ function parseTokenId(raw: string): number {
 /**
  * Преобразует технический статус бота в понятную подпись для карточки.
  * @param status - Технический статус бота
+ * @param restorePending - Токен ждёт restore после рестарта
  * @returns Человекочитаемая подпись статуса
  */
-function formatStatusLabel(status: string): string {
-    if (status === 'running') {
-        return '🟢 Работает';
-    }
-    if (status === 'stopped') {
-        return '🔴 Остановлен';
-    }
-    return '⚪ Неизвестно';
+function formatStatusLabel(status: string, restorePending = false): string {
+    return formatBotStatusLabel(status, restorePending);
 }
 
 /**
@@ -184,10 +181,11 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
         }
 
         // Обновляем статус в БД если изменился
+        const restorePending = isTokenPendingRestore(tokenId);
         if (instance.status !== actualStatus) {
             await storage.updateBotInstance(instance.id, {
                 status: actualStatus,
-                errorMessage: actualStatus === 'stopped' ? 'Процесс завершен' : null,
+                errorMessage: resolveStoppedErrorMessage(instance.errorMessage, actualStatus),
             });
         }
 
@@ -195,13 +193,15 @@ export async function getBotTokenStatusHandler(req: Request, res: Response): Pro
 
         res.json({
             status: actualStatus,
+            restorePending,
             userStats,
             instance: {
                 botName,
                 botUsername,
                 tokenId,
                 status: actualStatus,
-                statusLabel: formatStatusLabel(actualStatus),
+                statusLabel: formatStatusLabel(actualStatus, restorePending),
+                restorePending,
                 uptime: actualStatus === 'running' ? formatUptime(instance.startedAt) : null,
                 startedAt: instance.startedAt,
                 processId: instance.processId,

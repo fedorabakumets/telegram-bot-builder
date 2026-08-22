@@ -211,7 +211,6 @@ class BotWorker:
         """Загружает bot.py в изолированном namespace и вызывает main()."""
         token_id = ctx.token_id
         token_token = iso.current_token_id.set(token_id)
-        _original_signal = None
         alias_prev: Dict[str, Any] = {}
 
         try:
@@ -258,11 +257,6 @@ class BotWorker:
                 }
                 module.__builtins__["print"] = patched_print
 
-                import signal as _signal_module
-
-                _original_signal = _signal_module.signal
-                _signal_module.signal = lambda *args, **kwargs: None
-
                 emit_log(token_id, "Выполнение top-level кода бота...", "stdout")
                 exec(compiled, module.__dict__)
                 iso.inject_bot_constants(
@@ -307,10 +301,6 @@ class BotWorker:
         finally:
             if alias_prev:
                 iso.restore_short_aliases(alias_prev)
-            if _original_signal is not None:
-                import signal as _signal_module
-
-                _signal_module.signal = _original_signal
             iso.cleanup_bot_modules(token_id, ctx.bot_dir)
             if token_id in self.bots and self.bots[token_id] is ctx:
                 del self.bots[token_id]
@@ -437,6 +427,9 @@ def main():
 
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+    # Один раз на процесс воркера: боты не регистрируют свои signal_handler
+    signal.signal = lambda *args, **kwargs: None  # type: ignore[method-assign]
+
     asyncio.run(BotWorker().run())
 
 

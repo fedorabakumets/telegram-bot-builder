@@ -4,6 +4,7 @@
  */
 
 import { toPublicBotInstance } from '../botTokens/to-public-bot-token';
+import { formatBotStatusLabel } from '../../bots/resolveStoppedErrorMessage';
 
 /** Публичный элемент списка статусов */
 export interface ProjectBotStatusItem {
@@ -11,6 +12,8 @@ export interface ProjectBotStatusItem {
   tokenId: number;
   /** Live-статус */
   status: 'running' | 'stopped' | 'error';
+  /** true если токен ждёт restore после рестарта */
+  restorePending?: boolean;
   /** Экземпляр без поля token или null */
   instance: Record<string, unknown> | null;
 }
@@ -27,14 +30,24 @@ export function mapProjectBotStatusItems(
   tokenIds: number[],
   instanceByTokenId: Map<number, { token?: string | null; status?: string }>,
   liveStatus: (tokenId: number) => 'running' | 'stopped' | 'error',
+  restorePending: (tokenId: number) => boolean = () => false,
 ): ProjectBotStatusItem[] {
   return tokenIds.map((tokenId) => {
     const instance = instanceByTokenId.get(tokenId);
     const status = liveStatus(tokenId);
+    const pending = restorePending(tokenId);
+    const publicInstance = instance ? toPublicBotInstance(instance) : null;
     return {
       tokenId,
       status,
-      instance: instance ? toPublicBotInstance(instance) : null,
+      restorePending: pending,
+      instance: publicInstance
+        ? {
+            ...publicInstance,
+            statusLabel: formatBotStatusLabel(status, pending),
+            restorePending: pending,
+          }
+        : null,
     };
   });
 }

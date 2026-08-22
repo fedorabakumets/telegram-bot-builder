@@ -8,6 +8,8 @@ import { storage } from '../../../storages/storage';
 import { reconcileLaunchHistoryForToken } from '../../../bots/reconcileLaunchHistory';
 import { computeLiveBotStatus } from '../compute-live-bot-status';
 import { mapProjectBotStatusItems } from '../map-project-bot-status-items';
+import { resolveStoppedErrorMessage } from '../../../bots/resolveStoppedErrorMessage';
+import { isTokenPendingRestore } from '../../../bots/restoreState';
 
 /**
  * Запрещает кэш ответа со статусами
@@ -51,18 +53,21 @@ export async function handleBotProjectStatuses(req: Request, res: Response): Pro
       if (instance.status !== live) {
         await storage.updateBotInstance(instance.id, {
           status: live,
-          errorMessage: live === 'stopped' ? 'Процесс завершен' : null,
+          errorMessage: resolveStoppedErrorMessage(instance.errorMessage, live),
         });
         instance.status = live;
       }
       await reconcileLaunchHistoryForToken(token.id, live === 'running');
     }
 
+    const tokenIdList = tokens.map((token) => token.id);
     res.json({
+      restoreInProgress: tokenIdList.some((id) => isTokenPendingRestore(id)),
       statuses: mapProjectBotStatusItems(
-        tokens.map((token) => token.id),
+        tokenIdList,
         instanceByTokenId,
         (tokenId) => liveByTokenId.get(tokenId) ?? 'stopped',
+        (tokenId) => isTokenPendingRestore(tokenId),
       ),
     });
   } catch (error) {

@@ -103,12 +103,16 @@ export interface BotStatusDto {
   startedAt: string | null;
   /** Статистика пользователей бота (строки с разделителями тысяч) */
   userStats: Record<string, string> | null;
+  /** true если бот ждёт restore после рестарта сервера */
+  restorePending?: boolean;
 }
 
 /** Сырой ответ GET /api/bot/tokens/:tokenId/status */
 interface RawBotStatus {
   /** Технический статус */
   status?: string;
+  /** Бот ждёт restore */
+  restorePending?: boolean;
   /** Статистика пользователей */
   userStats?: Record<string, string> | null;
   /** Данные экземпляра бота */
@@ -119,6 +123,8 @@ interface RawBotStatus {
     botUsername?: string | null;
     /** Подпись статуса */
     statusLabel?: string | null;
+    /** Ждёт restore */
+    restorePending?: boolean;
     /** Время работы */
     uptime?: string | null;
     /** Время запуска */
@@ -166,6 +172,7 @@ export async function botStatusInDb(
     uptime: instance?.uptime ?? null,
     startedAt: instance?.startedAt ?? null,
     userStats: body.userStats ?? null,
+    restorePending: body.restorePending ?? instance?.restorePending ?? false,
   };
 }
 
@@ -532,6 +539,7 @@ export async function startOfflineBotsInDb(
     started: number;
     failed: number;
     skippedRunning: number;
+    skippedRestoring: number;
     results: unknown[];
     message?: string;
   }
@@ -565,6 +573,7 @@ export async function startOfflineBotsInDb(
     started?: number;
     failed?: number;
     skippedRunning?: number;
+    skippedRestoring?: number;
     results?: unknown[];
     message?: string;
   };
@@ -579,6 +588,7 @@ export async function startOfflineBotsInDb(
     started: body.started ?? 0,
     failed: body.failed ?? 0,
     skippedRunning: body.skippedRunning ?? 0,
+    skippedRestoring: body.skippedRestoring ?? 0,
     results: body.results ?? [],
     message: body.message,
   };
