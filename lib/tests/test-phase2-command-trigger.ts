@@ -486,6 +486,16 @@ test('E07', 'description: "Запустить бота" → текст опис�
   ok(code.includes('Запустить бота'), '"Запустить бота" должно быть в коде');
 });
 
+test('E07b', 'set_my_commands с ретраями при flood — не роняет старт', () => {
+  const p = makeCleanProject([makeTriggerNode('t1', '/start', 'msg1', { showInMenu: true, description: 'Старт' }), makeMessageNode('msg1')]);
+  const code = gen(p, 'e07b');
+  ok(code.includes('TelegramRetryAfter'), 'TelegramRetryAfter должен быть в set_bot_commands');
+  ok(code.includes('for _attempt in range(1, 4)'), 'цикл ретраев должен быть');
+  const mainIdx = code.indexOf('async def main(');
+  const setIdx = code.indexOf('async def set_bot_commands(');
+  ok(setIdx !== -1 && setIdx < mainIdx, 'set_bot_commands должна быть выше main()');
+});
+
 test('E08', 'description: "" (пустое) → генерация не падает', () => {
   const p = makeCleanProject([makeTriggerNode('t1', '/start', 'msg1', { showInMenu: true, description: '' }), makeMessageNode('msg1')]);
   ok(true, 'генерация не должна падать с пустым description');

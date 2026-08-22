@@ -41,6 +41,25 @@ describe('main.py.jinja2 шаблон', () => {
         assert.ok(result.includes('async def set_bot_commands()'));
       });
 
+      it('set_bot_commands включает retry при Telegram flood', () => {
+        const result = generateMain({
+          userDatabaseEnabled: false,
+          menuCommands: [{ command: 'start', description: 'Запустить бота' }],
+        });
+
+        assert.ok(result.includes('TelegramRetryAfter'));
+        assert.ok(result.includes('for _attempt in range(1, 4)'));
+        assert.ok(result.includes('await bot.set_my_commands(commands)'));
+      });
+
+      it('main() пробрасывает необработанные ошибки (raise)', () => {
+        const result = generateMain(validParamsEnabled);
+        const exceptIdx = result.indexOf('except Exception as e:');
+
+        assert.ok(exceptIdx !== -1);
+        assert.ok(result.indexOf('raise', exceptIdx) !== -1);
+      });
+
       it('не должен включать set_bot_commands() без команд', () => {
         const result = generateMain({ userDatabaseEnabled: false, menuCommands: [] });
 

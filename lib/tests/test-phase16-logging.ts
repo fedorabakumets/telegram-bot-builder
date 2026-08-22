@@ -410,6 +410,13 @@ test('E09', 'userDatabaseEnabled: true → ЕСТЬ except Exception обраб�
   ok(code.includes('except Exception'), 'except Exception должен быть в коде');
 });
 
+test('E09b', 'userDatabaseEnabled: true → ошибка в main() пробрасывается (raise)', () => {
+  const code = genDB(makeSimpleProject(), 'e09b');
+  const exceptIdx = code.indexOf('except Exception as e:');
+  ok(exceptIdx !== -1, 'except Exception as e: должен быть');
+  ok(code.indexOf('raise', exceptIdx) !== -1, 'raise после except Exception должен быть');
+});
+
 test('E10', 'userDatabaseEnabled: true → ЕСТЬ проверка db_pool', () => {
   const code = genDB(makeSimpleProject(), 'e10');
   ok(code.includes('db_pool'), 'db_pool должен быть в коде');
