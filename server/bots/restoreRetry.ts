@@ -22,7 +22,7 @@ export type StartBotFn = (
   projectId: number,
   token: string,
   tokenId: number,
-  options?: { clearLogs?: boolean },
+  options?: { clearLogs?: boolean; reuseGeneratedCode?: boolean },
 ) => Promise<{ success: boolean; error?: string; processId?: string }>;
 
 export type ClearLockFn = (
@@ -91,7 +91,10 @@ export async function startBotWithRetries(
     }
 
     await clearLock(token, tokenId);
-    const result = await start(projectId, token, tokenId, { clearLogs: false });
+    const result = await start(projectId, token, tokenId, {
+      clearLogs: false,
+      reuseGeneratedCode: true,
+    });
 
     if (result.success) {
       return {

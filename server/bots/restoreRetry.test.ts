@@ -76,4 +76,21 @@ describe('startBotWithRetries', () => {
     assert.strictEqual(calls, 3);
     assert.strictEqual(result.error, 'fail-3');
   });
+
+  it('передаёт reuseGeneratedCode: true в startBot', async () => {
+    let receivedOpts: { clearLogs?: boolean; reuseGeneratedCode?: boolean } | undefined;
+    await startBotWithRetries(1, 'tok', 7, {
+      waitFn: async () => {},
+      clearLockFn: async () => true,
+      startBotFn: async (_p, _t, _id, opts) => {
+        receivedOpts = opts;
+        return { success: true, processId: 'worker_1' };
+      },
+    });
+
+    assert.deepStrictEqual(receivedOpts, {
+      clearLogs: false,
+      reuseGeneratedCode: true,
+    });
+  });
 });

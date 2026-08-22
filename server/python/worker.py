@@ -17,12 +17,14 @@ import logging
 import os
 import signal
 import sys
+import time
 import traceback
 import types
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+import bot_code_cache
 import worker_isolation as iso
 
 PROJECT_ID = int(os.environ.get("PROJECT_ID", "0"))
@@ -240,9 +242,10 @@ class BotWorker:
                 loaded = iso.load_sibling_modules(token_id, bot_dir, siblings)
                 iso.apply_short_aliases(loaded, alias_prev)
 
-                source_code = bot_path.read_text(encoding="utf-8")
-                emit_log(token_id, f"Код прочитан: {len(source_code)} символов", "stdout")
-                compiled = compile(source_code, str(bot_path), "exec")
+                def _bot_log(msg: str) -> None:
+                    emit_log(token_id, msg, "stdout")
+
+                compiled = bot_code_cache.load_bot_code(bot_path, _bot_log)
 
                 module = types.ModuleType(f"bot_{token_id}")
                 module.__file__ = str(bot_path)
@@ -258,7 +261,9 @@ class BotWorker:
                 module.__builtins__["print"] = patched_print
 
                 emit_log(token_id, "Выполнение top-level кода бота...", "stdout")
+                t_exec = time.perf_counter()
                 exec(compiled, module.__dict__)
+                exec_ms = (time.perf_counter() - t_exec) * 1000
                 iso.inject_bot_constants(
                     module, ctx.token, token_id, ctx.webhook_url, ctx.webhook_port
                 )
@@ -266,7 +271,7 @@ class BotWorker:
                 for _name, smod in loaded.items():
                     smod.__dict__["BOT_TOKEN"] = ctx.token
                     smod.__dict__["TOKEN_ID"] = token_id
-                emit_log(token_id, "Top-level код выполнен", "stdout")
+                emit_log(token_id, f"Top-level код выполнен за {exec_ms:.0f} мс", "stdout")
                 ctx.module = module
 
                 iso.restore_short_aliases(alias_prev)

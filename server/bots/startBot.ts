@@ -38,7 +38,7 @@ import { processCleanups } from "../terminal/setupBotProcessListeners";
  * @external createCompleteBotFiles
  * @see {@link ./createBotFile}
  */
-import { createCompleteBotFiles } from "../files/createBotFile";
+import { createCompleteBotFiles, resolveBotPaths } from "../files/createBotFile";
 import { normalizeProjectNameToFile } from "../files/normalizeFileName";
 
 /**
@@ -63,6 +63,17 @@ import { refuseInactiveBotStart } from './refuse-inactive-bot-start';
 import { markBotTokenUnauthorized } from './mark-bot-token-unauthorized';
 import { isTelegramMethodUnauthorized } from './telegram-method-unauthorized';
 import { BOT_UNAUTHORIZED_HINT } from '@shared/broadcast-unauthorized';
+import { existsSync } from 'node:fs';
+import {
+  buildGeneratedCodeFingerprint,
+  canReuseGeneratedCode,
+  checksumProjectData,
+} from './generatedCodeFingerprint';
+import { getGeneratorVersion } from './generatorVersion';
+import {
+  readGeneratedCodeMeta,
+  writeGeneratedCodeMeta,
+} from '../files/generatedCodeMeta';
 
 
 
@@ -102,7 +113,12 @@ import { BOT_UNAUTHORIZED_HINT } from '@shared/broadcast-unauthorized';
  * }
  * ```
  */
-export async function startBot(projectId: number, token: string, tokenId: number, options?: { clearLogs?: boolean }): Promise<{ success: boolean; error?: string; processId?: string | undefined; }> {
+export async function startBot(
+  projectId: number,
+  token: string,
+  tokenId: number,
+  options?: { clearLogs?: boolean; reuseGeneratedCode?: boolean },
+): Promise<{ success: boolean; error?: string; processId?: string | undefined; }> {
   const shouldClearLogs = options?.clearLogs !== false; // по умолчанию true
   try {
     const tokenRecord = await storage.getBotToken(tokenId);
@@ -240,62 +256,118 @@ export async function startBot(projectId: number, token: string, tokenId: number
     console.log(`   typeof project.userDatabaseEnabled:`, typeof project.userDatabaseEnabled);
 
     const userDatabaseEnabled = project.userDatabaseEnabled === 1;
-    
-    console.log(`🔧 Генерация кода бота:`);
-    console.log(`   userDatabaseEnabled:`, userDatabaseEnabled);
-    
-    // Собираем attachedMediaThumbnails из нод project.json
-    const allNodesForThumbs: any[] = [];
-    const botDataAny = project.data as any;
-    if (Array.isArray(botDataAny?.sheets)) {
-      for (const sheet of botDataAny.sheets) {
-        if (Array.isArray(sheet?.nodes)) allNodesForThumbs.push(...sheet.nodes);
-      }
-    } else if (Array.isArray(botDataAny?.nodes)) {
-      allNodesForThumbs.push(...botDataAny.nodes);
-    }
-    const thumbnailUrls: Record<string, string> = {};
-    for (const node of allNodesForThumbs) {
-      const thumbs = node?.data?.attachedMediaThumbnails;
-      if (!thumbs) continue;
-      for (const [videoUrl, thumbUrl] of Object.entries(thumbs)) {
-        if (typeof thumbUrl === 'string' && !thumbnailUrls[videoUrl]) {
-          thumbnailUrls[videoUrl] = thumbUrl;
-        }
-      }
-    }
-    if (Object.keys(thumbnailUrls).length > 0) {
-      console.log(`[StartBot] Обложки из нод: ${Object.keys(thumbnailUrls).length}`);
-    }
 
-    const botCode = generatePythonCode(project.data as any, {
-      botName: project.name,
-      userDatabaseEnabled,
+    const customFileName = normalizeProjectNameToFile(project.name);
+    const { botDir, mainFile: expectedMainFile } = resolveBotPaths(
       projectId,
-      enableLogging: false,
-      enableGroupHandlers: false,
-      groups: [],
+      tokenId,
+      customFileName,
+    );
+
+    const reuseAllowed =
+      options?.reuseGeneratedCode === true &&
+      process.env.BOT_REUSE_GENERATED_CODE !== 'false';
+
+    const generatorVersion = await getGeneratorVersion();
+    const fingerprint = buildGeneratedCodeFingerprint({
+      projectDataChecksum: checksumProjectData(project.data),
+      projectName: project.name,
+      userDatabaseEnabled,
       saveIncomingMedia: tokenSettings?.saveIncomingMedia === 1,
       catchAllHandlers: tokenSettings?.catchAllHandlers !== 0,
       protectContent: tokenSettings?.protectContent === 1,
       contentCache: tokenSettings?.contentCache === 1,
-      thumbnailUrls,
+      generatorVersion,
     });
-    
-    // Проверяем, содержит ли код функции БД
-    const hasDbInit = botCode.includes('async def init_database()');
-    const hasDbPool = botCode.includes('db_pool');
-    console.log(`📝 Проверка сгенерированного кода:`);
-    console.log(`   init_database присутствует:`, hasDbInit);
-    console.log(`   db_pool присутствует:`, hasDbPool);
 
-    // Нормализуем имя проекта для использования в качестве имени файла
-    const customFileName = normalizeProjectNameToFile(project.name);
+    const reuse =
+      reuseAllowed &&
+      canReuseGeneratedCode(
+        readGeneratedCodeMeta(botDir)?.fingerprint,
+        fingerprint,
+        existsSync(expectedMainFile),
+      );
 
-    // Создаем все файлы бота (основной файл + сопутствующие)
-    const { mainFile, assets } = await createCompleteBotFiles(botCode, project.name, project.data, projectId, tokenId, customFileName);
+    let mainFile: string;
+    let assets: string[];
 
-    console.log(`📁 Созданы файлы бота:`);
+    if (reuse) {
+      console.log(`♻️ Файлы бота взяты готовыми: projectId=${projectId}, tokenId=${tokenId}`);
+      ({ mainFile, assets } = await createCompleteBotFiles(
+        '',
+        project.name,
+        project.data,
+        projectId,
+        tokenId,
+        customFileName,
+        { skipCodeAndData: true },
+      ));
+    } else {
+      console.log(`🔧 Генерация кода бота:`);
+      console.log(`   userDatabaseEnabled:`, userDatabaseEnabled);
+
+      const allNodesForThumbs: any[] = [];
+      const botDataAny = project.data as any;
+      if (Array.isArray(botDataAny?.sheets)) {
+        for (const sheet of botDataAny.sheets) {
+          if (Array.isArray(sheet?.nodes)) allNodesForThumbs.push(...sheet.nodes);
+        }
+      } else if (Array.isArray(botDataAny?.nodes)) {
+        allNodesForThumbs.push(...botDataAny.nodes);
+      }
+      const thumbnailUrls: Record<string, string> = {};
+      for (const node of allNodesForThumbs) {
+        const thumbs = node?.data?.attachedMediaThumbnails;
+        if (!thumbs) continue;
+        for (const [videoUrl, thumbUrl] of Object.entries(thumbs)) {
+          if (typeof thumbUrl === 'string' && !thumbnailUrls[videoUrl]) {
+            thumbnailUrls[videoUrl] = thumbUrl;
+          }
+        }
+      }
+      if (Object.keys(thumbnailUrls).length > 0) {
+        console.log(`[StartBot] Обложки из нод: ${Object.keys(thumbnailUrls).length}`);
+      }
+
+      const botCode = generatePythonCode(project.data as any, {
+        botName: project.name,
+        userDatabaseEnabled,
+        projectId,
+        enableLogging: false,
+        enableGroupHandlers: false,
+        groups: [],
+        saveIncomingMedia: tokenSettings?.saveIncomingMedia === 1,
+        catchAllHandlers: tokenSettings?.catchAllHandlers !== 0,
+        protectContent: tokenSettings?.protectContent === 1,
+        contentCache: tokenSettings?.contentCache === 1,
+        thumbnailUrls,
+      });
+
+      const hasDbInit = botCode.includes('async def init_database()');
+      const hasDbPool = botCode.includes('db_pool');
+      console.log(`📝 Проверка сгенерированного кода:`);
+      console.log(`   init_database присутствует:`, hasDbInit);
+      console.log(`   db_pool присутствует:`, hasDbPool);
+
+      console.log(`📄 Файлы бота созданы заново: projectId=${projectId}, tokenId=${tokenId}`);
+      ({ mainFile, assets } = await createCompleteBotFiles(
+        botCode,
+        project.name,
+        project.data,
+        projectId,
+        tokenId,
+        customFileName,
+      ));
+
+      writeGeneratedCodeMeta(botDir, {
+        fingerprint,
+        projectId,
+        tokenId,
+        writtenAt: new Date().toISOString(),
+      });
+    }
+
+    console.log(`📁 Файлы бота:`);
     console.log(`   - Основной файл: ${mainFile}`);
     console.log(`   - Дополнительные файлы: ${assets.length} шт.`);
     assets.forEach((asset: string) => console.log(`     * ${asset}`));
