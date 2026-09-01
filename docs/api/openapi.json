@@ -3945,7 +3945,8 @@
                 "example": {
                   "telegramClientId": 12345678,
                   "telegramBotUsername": "my_bot",
-                  "skipAuth": false
+                  "skipAuth": false,
+                  "apiBaseUrl": "https://example.com"
                 }
               }
             }
@@ -24794,6 +24795,248 @@
           }
         }
       }
+    },
+    "/api/hooks/{projectId}/{path}": {
+      "get": {
+        "tags": [
+          "hooks"
+        ],
+        "summary": "HTTP hook (GET) — api_trigger",
+        "description": "**Публичный** эндпоинт для сервер-сервер интеграций. Путь в allowlist `requireApiAuth` (`/hooks/`).\n\n**Поток:** Node → `http://localhost:{9000+tokenId}{apiPath}` → Python `api_trigger`.\n\n**Auth:** `X-Api-Secret` или `Authorization: Bearer` (проверка в Python).\n\nСм. также `docs/api/hooks.md`.",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "payment"
+            },
+            "required": true,
+            "name": "path",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ из api_response или дефолт {\"ok\":true}"
+          },
+          "401": {
+            "description": "invalid_secret"
+          },
+          "413": {
+            "description": "payload_too_large"
+          },
+          "429": {
+            "description": "rate_limit"
+          },
+          "503": {
+            "description": "bot_offline"
+          },
+          "504": {
+            "description": "timeout (нет api_response за 30 с)"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "hooks"
+        ],
+        "summary": "HTTP hook (POST) — api_trigger",
+        "description": "**Публичный** эндпоинт для сервер-сервер интеграций. Путь в allowlist `requireApiAuth` (`/hooks/`).\n\n**Поток:** Node → `http://localhost:{9000+tokenId}{apiPath}` → Python `api_trigger`.\n\n**Auth:** `X-Api-Secret` или `Authorization: Bearer` (проверка в Python).\n\nСм. также `docs/api/hooks.md`.",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "payment"
+            },
+            "required": true,
+            "name": "path",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ из api_response или дефолт {\"ok\":true}"
+          },
+          "401": {
+            "description": "invalid_secret"
+          },
+          "413": {
+            "description": "payload_too_large"
+          },
+          "429": {
+            "description": "rate_limit"
+          },
+          "503": {
+            "description": "bot_offline"
+          },
+          "504": {
+            "description": "timeout (нет api_response за 30 с)"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "hooks"
+        ],
+        "summary": "HTTP hook (PUT) — api_trigger",
+        "description": "**Публичный** эндпоинт для сервер-сервер интеграций. Путь в allowlist `requireApiAuth` (`/hooks/`).\n\n**Поток:** Node → `http://localhost:{9000+tokenId}{apiPath}` → Python `api_trigger`.\n\n**Auth:** `X-Api-Secret` или `Authorization: Bearer` (проверка в Python).\n\nСм. также `docs/api/hooks.md`.",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "payment"
+            },
+            "required": true,
+            "name": "path",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ из api_response или дефолт {\"ok\":true}"
+          },
+          "401": {
+            "description": "invalid_secret"
+          },
+          "413": {
+            "description": "payload_too_large"
+          },
+          "429": {
+            "description": "rate_limit"
+          },
+          "503": {
+            "description": "bot_offline"
+          },
+          "504": {
+            "description": "timeout (нет api_response за 30 с)"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "hooks"
+        ],
+        "summary": "HTTP hook (PATCH) — api_trigger",
+        "description": "**Публичный** эндпоинт для сервер-сервер интеграций. Путь в allowlist `requireApiAuth` (`/hooks/`).\n\n**Поток:** Node → `http://localhost:{9000+tokenId}{apiPath}` → Python `api_trigger`.\n\n**Auth:** `X-Api-Secret` или `Authorization: Bearer` (проверка в Python).\n\nСм. также `docs/api/hooks.md`.",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "payment"
+            },
+            "required": true,
+            "name": "path",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ из api_response или дефолт {\"ok\":true}"
+          },
+          "401": {
+            "description": "invalid_secret"
+          },
+          "413": {
+            "description": "payload_too_large"
+          },
+          "429": {
+            "description": "rate_limit"
+          },
+          "503": {
+            "description": "bot_offline"
+          },
+          "504": {
+            "description": "timeout (нет api_response за 30 с)"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "hooks"
+        ],
+        "summary": "HTTP hook (DELETE) — api_trigger",
+        "description": "**Публичный** эндпоинт для сервер-сервер интеграций. Путь в allowlist `requireApiAuth` (`/hooks/`).\n\n**Поток:** Node → `http://localhost:{9000+tokenId}{apiPath}` → Python `api_trigger`.\n\n**Auth:** `X-Api-Secret` или `Authorization: Bearer` (проверка в Python).\n\nСм. также `docs/api/hooks.md`.",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "42"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "example": "payment"
+            },
+            "required": true,
+            "name": "path",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный ответ из api_response или дефолт {\"ok\":true}"
+          },
+          "401": {
+            "description": "invalid_secret"
+          },
+          "413": {
+            "description": "payload_too_large"
+          },
+          "429": {
+            "description": "rate_limit"
+          },
+          "503": {
+            "description": "bot_offline"
+          },
+          "504": {
+            "description": "timeout (нет api_response за 30 с)"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -29799,12 +30042,19 @@
             "type": "boolean",
             "description": "true при auth_login_mode=dev_login; false при telegram_widget",
             "example": false
+          },
+          "apiBaseUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Базовый URL для публичных эндпоинтов; приоритет — API_BASE_URL на сервере",
+            "example": "https://example.com"
           }
         },
         "required": [
           "telegramClientId",
           "telegramBotUsername",
-          "skipAuth"
+          "skipAuth",
+          "apiBaseUrl"
         ]
       },
       "SetupStatus": {
