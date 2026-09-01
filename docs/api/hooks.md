@@ -1,52 +1,163 @@
 # hooks
 
-Эндпоинты: **5 методов** на один catch-all путь
+Эндпоинтов: **5**
 
-### `GET|POST|PUT|PATCH|DELETE` /api/hooks/{projectId}/{path}
+### `DELETE` /api/hooks/{projectId}/{path}
 
-Публичный HTTP hook для внешних интеграций (платёжки, CRM, backend).
+HTTP hook (DELETE) — api_trigger
 
-**Авторизация:** Secret в заголовке `X-Api-Secret` или `Authorization: Bearer {secret}` (проверка в Python).
+**Авторизация:** Публичный
 
-**Публичный URL (UI):** `{API_BASE_URL}/api/hooks/{projectId}{apiPath}`
+**Публичный** эндпоинт для сервер-сервер интеграций. Путь в allowlist `requireApiAuth` (`/hooks/`).
 
-**Поток:**
-1. Внешний сервис → Node `/api/hooks/{projectId}/payment`
-2. Node находит running bot по `projectId` → `tokenId` → порт `9000 + tokenId`
-3. Прокси на `http://localhost:{port}{apiPath}`
-4. Python `api_trigger` → цепочка → `api_response`
+**Поток:** Node → `http://localhost:{9000+tokenId}{apiPath}` → Python `api_trigger`.
 
-**Офлайн бот:** `503 {"error":"bot_offline"}`
+**Auth:** `X-Api-Secret` или `Authorization: Bearer` (проверка в Python).
 
-**Rate limit:** 60 req/min на `(projectId, path)` (Node)
+См. также `docs/api/hooks.md`.
 
-**Лимит body:** 1 MB
+#### Параметры
 
-**Коды ошибок:**
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | `"42"` |
+| `path` | path | да | — | `"payment"` |
 
-| Код | Тело | Причина |
-|-----|------|---------|
-| 401 | `{"error":"invalid_secret"}` | Неверный secret |
-| 413 | `{"error":"payload_too_large"}` | Body > 1 MB |
-| 429 | `{"error":"rate_limit"}` | Превышен лимит |
-| 503 | `{"error":"bot_offline"}` | Бот не запущен |
-| 504 | `{"error":"timeout"}` | Нет `api_response` за 30 с |
+#### Ответы
 
-#### Пример (curl)
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ из api_response или дефолт {"ok":true} |
+| 401 | invalid_secret |
+| 413 | payload_too_large |
+| 429 | rate_limit |
+| 503 | bot_offline |
+| 504 | timeout (нет api_response за 30 с) |
 
-```bash
-curl -X POST "https://example.com/api/hooks/42/payment" \
-  -H "Content-Type: application/json" \
-  -H "X-Api-Secret: your-secret" \
-  -d '{"order_id":"123","amount":100}'
-```
+### `GET` /api/hooks/{projectId}/{path}
 
-#### Debug (локально, прямо на Python)
+HTTP hook (GET) — api_trigger
 
-```bash
-curl -X POST "http://localhost:9042/payment" \
-  -H "X-Api-Secret: your-secret" \
-  -d '{"order_id":"123"}'
-```
+**Авторизация:** Публичный
 
-(порт `9000 + tokenId`, только при запущенном боте)
+**Публичный** эндпоинт для сервер-сервер интеграций. Путь в allowlist `requireApiAuth` (`/hooks/`).
+
+**Поток:** Node → `http://localhost:{9000+tokenId}{apiPath}` → Python `api_trigger`.
+
+**Auth:** `X-Api-Secret` или `Authorization: Bearer` (проверка в Python).
+
+См. также `docs/api/hooks.md`.
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | `"42"` |
+| `path` | path | да | — | `"payment"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ из api_response или дефолт {"ok":true} |
+| 401 | invalid_secret |
+| 413 | payload_too_large |
+| 429 | rate_limit |
+| 503 | bot_offline |
+| 504 | timeout (нет api_response за 30 с) |
+
+### `PATCH` /api/hooks/{projectId}/{path}
+
+HTTP hook (PATCH) — api_trigger
+
+**Авторизация:** Публичный
+
+**Публичный** эндпоинт для сервер-сервер интеграций. Путь в allowlist `requireApiAuth` (`/hooks/`).
+
+**Поток:** Node → `http://localhost:{9000+tokenId}{apiPath}` → Python `api_trigger`.
+
+**Auth:** `X-Api-Secret` или `Authorization: Bearer` (проверка в Python).
+
+См. также `docs/api/hooks.md`.
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | `"42"` |
+| `path` | path | да | — | `"payment"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ из api_response или дефолт {"ok":true} |
+| 401 | invalid_secret |
+| 413 | payload_too_large |
+| 429 | rate_limit |
+| 503 | bot_offline |
+| 504 | timeout (нет api_response за 30 с) |
+
+### `POST` /api/hooks/{projectId}/{path}
+
+HTTP hook (POST) — api_trigger
+
+**Авторизация:** Публичный
+
+**Публичный** эндпоинт для сервер-сервер интеграций. Путь в allowlist `requireApiAuth` (`/hooks/`).
+
+**Поток:** Node → `http://localhost:{9000+tokenId}{apiPath}` → Python `api_trigger`.
+
+**Auth:** `X-Api-Secret` или `Authorization: Bearer` (проверка в Python).
+
+См. также `docs/api/hooks.md`.
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | `"42"` |
+| `path` | path | да | — | `"payment"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ из api_response или дефолт {"ok":true} |
+| 401 | invalid_secret |
+| 413 | payload_too_large |
+| 429 | rate_limit |
+| 503 | bot_offline |
+| 504 | timeout (нет api_response за 30 с) |
+
+### `PUT` /api/hooks/{projectId}/{path}
+
+HTTP hook (PUT) — api_trigger
+
+**Авторизация:** Публичный
+
+**Публичный** эндпоинт для сервер-сервер интеграций. Путь в allowlist `requireApiAuth` (`/hooks/`).
+
+**Поток:** Node → `http://localhost:{9000+tokenId}{apiPath}` → Python `api_trigger`.
+
+**Auth:** `X-Api-Secret` или `Authorization: Bearer` (проверка в Python).
+
+См. также `docs/api/hooks.md`.
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `projectId` | path | да | — | `"42"` |
+| `path` | path | да | — | `"payment"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Успешный ответ из api_response или дефолт {"ok":true} |
+| 401 | invalid_secret |
+| 413 | payload_too_large |
+| 429 | rate_limit |
+| 503 | bot_offline |
+| 504 | timeout (нет api_response за 30 с) |
