@@ -46,6 +46,8 @@ build/
 
 # Logs
 *.log
+memurai-log.txt
+dump.rdb
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
