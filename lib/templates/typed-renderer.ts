@@ -136,6 +136,8 @@ export function generateUniversalHandlers(params: UniversalHandlersTemplateParam
       validated.hasSkipDataCollectionButtons ?? hasSkipDataCollectionButtons(params.nodes ?? []),
     allNodeIds: params.allNodeIds ?? [],
     generateCatchAll: validated.generateCatchAll,
+    hasInputCollection: params.hasInputCollection ?? validated.hasInputCollection ?? false,
+    hasInputTimeoutNodes: params.hasInputTimeoutNodes ?? validated.hasInputTimeoutNodes ?? false,
   });
 }
 
@@ -146,6 +148,8 @@ const universalHandlersParamsSchema = z.object({
   userDatabaseEnabled: z.boolean().optional().default(false),
   hasSkipDataCollectionButtons: z.boolean().optional(),
   generateCatchAll: z.boolean().optional().default(true),
+  hasInputCollection: z.boolean().optional().default(false),
+  hasInputTimeoutNodes: z.boolean().optional().default(false),
 });
 
 // ============================================================================

@@ -32,4 +32,6 @@ export interface MediaInputHandlersTemplateParams {
   navigationCode: string;
   /** Конфигурация сохранения метаданных для каждого типа медиа */
   mediaMetadataConfigs?: MediaMetadataConfig[];
+  /** Нужны ли вызовы таймаута и form_session */
+  hasInputTimeoutNodes?: boolean;
 }

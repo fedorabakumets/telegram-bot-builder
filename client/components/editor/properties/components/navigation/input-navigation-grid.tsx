@@ -41,7 +41,9 @@ export function InputNavigationGrid({
   formatNodeDisplay,
   availableVariables = []
 }: InputNavigationGridProps) {
-  const availableTargets = getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id);
+  const availableTargets = getAllNodesFromAllSheets.filter(
+    (n) => n.node.id && n.node.id !== selectedNode.id,
+  );
   const selectedTarget = availableTargets.find(({ node }) => node.id === (selectedNode.data.inputTargetNodeId || ''));
 
   return (

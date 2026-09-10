@@ -28,6 +28,7 @@ async def deep_link_router(message: types.Message, command: CommandObject, state
     args = command.args or ""
     user_id = message.from_user.id
     username = message.from_user.username or message.from_user.first_name or str(user_id)
+    await capture_message_context(user_id, message)
     logging.info(f"🔗 [DeepLink] Пользователь {user_id} (@{username}) перешёл по deep link: '{args}'")
 
     # Сохраняем utm_source только при первом визите (не перезаписываем — первое касание важнее)
@@ -153,6 +154,7 @@ async def deep_link_router(message: types.Message, command: CommandObject, state
 @dp.message(CommandStart(deep_link=False))
 async def start_command_handler(message: types.Message, state: FSMContext = None):
     user_id = message.from_user.id
+    await capture_message_context(user_id, message)
     logging.info(f"Пользователь {user_id} вызвал команду '/start' — триггер узла {{ defaultStartEntry.nodeId }}")
     {%- if defaultStartEntry.adminOnly %}
     if not await is_admin(user_id):
@@ -209,6 +211,7 @@ async def start_command_handler(message: types.Message, state: FSMContext = None
 @dp.message(Command("{{ cmd }}"))
 async def command_trigger_{{ sanitized_node_id }}_handler(message: types.Message, state: FSMContext = None):
     user_id = message.from_user.id
+    await capture_message_context(user_id, message)
     logging.info(f"Пользователь {user_id} вызвал команду '{{ entry.command }}' — триггер узла {{ entry.nodeId }}")
     {%- if entry.adminOnly %}
     if not await is_admin(user_id):

@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { Node } from '@shared/schema';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -320,6 +321,42 @@ export function UserInputSettingsSection({
                 formatNodeDisplay={formatNodeDisplay}
                 availableVariables={availableVariables}
               />
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-2 rounded-xl border border-white/40 dark:border-slate-800/50 bg-white/70 dark:bg-slate-950/30 px-3 py-3">
+                  <Label htmlFor="inputTimeout" className="text-sm font-medium">Предел времени (сек)</Label>
+                  <Input
+                    id="inputTimeout"
+                    type="number"
+                    min={0}
+                    value={selectedNode.data.inputTimeout ?? ''}
+                    onChange={(event) => {
+                      const raw = event.target.value.trim();
+                      onNodeUpdate(selectedNode.id, {
+                        inputTimeout: raw === '' ? undefined : Number(raw),
+                      });
+                    }}
+                    placeholder="Без ограничения"
+                  />
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    0 или пусто — ожидание без таймаута
+                  </p>
+                </div>
+
+                <div className="space-y-2 rounded-xl border border-white/40 dark:border-slate-800/50 bg-white/70 dark:bg-slate-950/30 px-3 py-3">
+                  <Label htmlFor="inputTimeoutMessage" className="text-sm font-medium">Сообщение при истечении</Label>
+                  <Input
+                    id="inputTimeoutMessage"
+                    value={selectedNode.data.inputTimeoutMessage ?? ''}
+                    onChange={(event) => {
+                      onNodeUpdate(selectedNode.id, {
+                        inputTimeoutMessage: event.target.value || undefined,
+                      });
+                    }}
+                    placeholder="Время ожидания истекло."
+                  />
+                </div>
+              </div>
             </>
           )}
         </div>

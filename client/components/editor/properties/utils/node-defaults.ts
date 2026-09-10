@@ -349,6 +349,17 @@ export function getNodeDefaults(type: Node['type']): any {
       filterByUserId: '',
       autoTransitionTo: '',
     },
+    member_trigger: {
+      memberEventType: 'join',
+      groupChatId: '',
+      groupChatIdSource: 'manual',
+      groupChatVariableName: '',
+      saveJoinedUserIdTo: 'joined_user_id',
+      saveJoinedUsernameTo: 'joined_username',
+      saveLeftUserIdTo: 'left_user_id',
+      saveLeftUsernameTo: 'left_username',
+      autoTransitionTo: '',
+    },
     schedule_trigger: {
       rules: [{ mode: 'interval', intervalMinutes: 5 }],
       timezone: 'Europe/Moscow',
@@ -523,6 +534,17 @@ export function getNodeDefaults(type: Node['type']): any {
       /** ID следующего узла */
       autoTransitionTo: '',
       /** Включить автопереход */
+      enableAutoTransition: false,
+    },
+    stop_processing: {
+      autoTransitionTo: '',
+      enableAutoTransition: false,
+    },
+    rate_counter: {
+      counterKey: '',
+      windowSeconds: '60',
+      saveResultTo: 'rate_count',
+      autoTransitionTo: '',
       enableAutoTransition: false,
     },
     code: {

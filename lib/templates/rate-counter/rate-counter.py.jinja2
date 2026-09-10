@@ -1,0 +1,44 @@
+{#
+  Шаблон узла rate_counter — подсчёт событий в скользящем окне
+
+  @fileoverview In-memory deque по ключу, сохраняет количество в переменную
+  @param {array} rateCounterEntries - Массив объектов RateCounterEntry
+#}
+
+# Обработчики узлов rate_counter
+{% for entry in rateCounterEntries %}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Узел rate_counter: подсчёт событий в скользящем окне."""
+    try:
+        user_id = callback_query.from_user.id
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        _all_vars = await init_all_user_vars(user_id)
+        _rc_key = replace_variables_in_text({{ entry.counterKey | tojson }}, _all_vars) or "{{ entry.nodeId }}"
+        _rc_window_raw = replace_variables_in_text({{ entry.windowSeconds | tojson }}, _all_vars) or "60"
+        try:
+            _rc_window = float(_rc_window_raw)
+        except (ValueError, TypeError):
+            _rc_window = 60.0
+        if _rc_window < 0:
+            _rc_window = 0.0
+        _rc_now = time.time()
+        if _rc_key not in _rate_counter_deques:
+            _rate_counter_deques[_rc_key] = deque()
+        _rc_dq = _rate_counter_deques[_rc_key]
+        _rc_dq.append(_rc_now)
+        _rc_cutoff = _rc_now - _rc_window
+        while _rc_dq and _rc_dq[0] < _rc_cutoff:
+            _rc_dq.popleft()
+        _rc_count = len(_rc_dq)
+        user_data[user_id][{{ entry.saveResultTo | tojson }}] = str(_rc_count)
+        logging.info(f"📊 rate_counter [{{ entry.nodeId }}]: ключ={_rc_key!r}, окно={_rc_window}с, счётчик={_rc_count}")
+{% if entry.autoTransitionTo %}
+        await handle_callback_{{ entry.autoTransitionTo | safe_name }}(callback_query, state=state)
+{% endif %}
+    except Exception as e:
+        logging.error(f"❌ Ошибка в rate_counter [{{ entry.nodeId }}]: {e}")
+
+{% endfor %}

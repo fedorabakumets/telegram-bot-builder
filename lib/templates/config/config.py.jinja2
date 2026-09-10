@@ -102,6 +102,11 @@ all_user_vars = {}  # Глобальные переменные пользова
 # Заполняется из media_file_tokens при старте и после первой успешной отправки
 _media_file_id_cache: dict = {}
 
+{%- if hasRateCounterNodes %}
+# In-memory счётчики rate_counter: ключ -> deque временных меток
+_rate_counter_deques: dict = {}
+{%- endif %}
+
 {% include 'media/partials/media-file-id-helpers.py.jinja2' %}
 
 # Redis — опциональное хранилище (задаётся через REDIS_URL в .env)

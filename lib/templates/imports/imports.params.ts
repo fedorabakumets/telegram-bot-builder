@@ -35,4 +35,8 @@ export interface ImportsTemplateParams {
   hasDeepLinkTriggers?: boolean;
   /** Есть ли узлы userbot_message (нужен Telethon) */
   hasUserbotNodes?: boolean;
+  /** Есть ли узлы rate_counter (нужен deque и time) */
+  hasRateCounterNodes?: boolean;
+  /** Есть ли таймаут ожидания ввода или сбор ответов */
+  hasInputTimeoutNodes?: boolean;
 }

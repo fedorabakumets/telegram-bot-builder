@@ -13,3 +13,4 @@ export { groupMessageTrigger } from './group-message-trigger';
 export { callbackTrigger } from './callback-trigger';
 export { incomingCallbackTrigger } from './incoming-callback-trigger';
 export { outgoingMessageTrigger } from './outgoing-message-trigger';
+export { memberTrigger } from './member-trigger';

@@ -37,6 +37,14 @@ export const SYSTEM_VARIABLES: SystemVariable[] = [
   // Переменные сообщения
   { name: 'message_id', nodeId: 'system', nodeType: 'system', description: 'ID последнего сообщения', sourceTable: null as any },
   { name: 'message_text', nodeId: 'system', nodeType: 'system', description: 'Текст последнего сообщения от пользователя', sourceTable: null as any },
+  { name: 'message_type', nodeId: 'system', nodeType: 'system', description: 'Тип содержимого сообщения (text, photo, video и т.д.)', sourceTable: null as any },
+  { name: 'chat_type', nodeId: 'system', nodeType: 'system', description: 'Тип чата (private, group, supergroup, channel)', sourceTable: null as any },
+  { name: 'reply_to_user_id', nodeId: 'system', nodeType: 'system', description: 'ID автора сообщения, на которое ответили', sourceTable: null as any },
+  { name: 'reply_to_username', nodeId: 'system', nodeType: 'system', description: 'Username автора сообщения-ответа', sourceTable: null as any },
+  { name: 'reply_to_first_name', nodeId: 'system', nodeType: 'system', description: 'Имя автора сообщения-ответа', sourceTable: null as any },
+  { name: 'reply_to_last_name', nodeId: 'system', nodeType: 'system', description: 'Фамилия автора сообщения-ответа', sourceTable: null as any },
+  { name: 'reply_to_message_id', nodeId: 'system', nodeType: 'system', description: 'ID сообщения, на которое ответили', sourceTable: null as any },
+  { name: 'reply_to_text', nodeId: 'system', nodeType: 'system', description: 'Текст сообщения, на которое ответили', sourceTable: null as any },
   // Дата и время
   { name: 'current_date', nodeId: 'system', nodeType: 'system', description: 'Текущая дата (YYYY-MM-DD)', sourceTable: null as any },
   { name: 'current_time', nodeId: 'system', nodeType: 'system', description: 'Текущее время (HH:MM:SS)', sourceTable: null as any },

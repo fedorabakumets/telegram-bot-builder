@@ -9,9 +9,9 @@ import { textMessage, mediaMessage, keyboardMessage, saveAnswerNode } from './ma
 import { allCommandPresets } from './massive/commands';
 import type { CommandPreset } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
-import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger, scheduleTrigger, apiTrigger } from './massive/triggers';
+import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, memberTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger, scheduleTrigger, apiTrigger } from './massive/triggers';
 import { apiResponseNode } from './massive/api-response/api-response-node';
-import { conditionNode, setVariableNode, loopNode, delayNode, codeNode, parallelSplitNode } from './massive/logic';
+import { conditionNode, setVariableNode, loopNode, delayNode, codeNode, parallelSplitNode, stopProcessingNode, rateCounterNode } from './massive/logic';
 import { forwardMessage, createForumTopicNode, deleteMessage } from './massive/content-management';
 import { httpRequestNode } from './massive/http-request';
 import { psqlQueryNode } from './massive/psql-query';
@@ -20,7 +20,7 @@ import { convertFileNode } from './massive/convert-file';
 import { getManagedBotTokenNode } from './massive/managed-bots';
 import { answerCallbackQueryNode, editMessageNode } from './massive/actions';
 import { userbotMessage, userbotClickButton, userbotInlineQuery, userbotEditTrigger } from './massive/userbot';
-import { kickUser } from './massive/user-management';
+import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from './massive/user-management';
 import { commentNode } from './massive/utility';
 
 /**
@@ -43,7 +43,11 @@ export const componentCategories: Array<{
   },
   {
     title: 'Группы',
-    components: [groupMessageTrigger, createForumTopicNode, kickUser]
+    components: [groupMessageTrigger, memberTrigger, createForumTopicNode]
+  },
+  {
+    title: 'Модерация',
+    components: [banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights]
   },
   {
     title: 'Автоматизация',
@@ -55,7 +59,7 @@ export const componentCategories: Array<{
   },
   {
     title: 'Интеграции',
-    components: [httpRequestNode, psqlQueryNode, botTableNode, convertFileNode, conditionNode, setVariableNode, loopNode, delayNode, codeNode, parallelSplitNode]
+    components: [httpRequestNode, psqlQueryNode, botTableNode, convertFileNode, conditionNode, setVariableNode, loopNode, delayNode, codeNode, parallelSplitNode, stopProcessingNode, rateCounterNode]
   },
   {
     title: 'Юзербот',

@@ -28,6 +28,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'create_forum_topic', // собственный обработчик генерируется шаблоном create-forum-topic.py.jinja2
   'http_request', // собственный обработчик генерируется шаблоном http-request.py.jinja2
   'group_message_trigger', // собственный обработчик генерируется шаблоном group-message-trigger.py.jinja2
+  'member_trigger', // собственный обработчик генерируется шаблоном member-trigger.py.jinja2
   'set_variable', // собственный обработчик генерируется шаблоном set-variable.py.jinja2
   'psql_query', // собственный обработчик генерируется шаблоном psql-query.py.jinja2
   'convert_file', // собственный обработчик генерируется шаблоном convert-file.py.jinja2
@@ -39,6 +40,8 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'answer_callback_query', // собственный обработчик генерируется шаблоном answer-callback-query.py.jinja2
   'bot_table', // собственный обработчик генерируется шаблоном bot-table.py.jinja2
   'delay', // собственный обработчик генерируется шаблоном delay.py.jinja2
+  'stop_processing', // собственный обработчик генерируется шаблоном stop-processing.py.jinja2
+  'rate_counter', // собственный обработчик генерируется шаблоном rate-counter.py.jinja2
   'code', // собственный обработчик генерируется шаблоном code.py.jinja2
   'edit_message', // собственный обработчик генерируется шаблоном edit-message.py.jinja2
   'delete_message', // собственный обработчик генерируется шаблоном delete-message.py.jinja2

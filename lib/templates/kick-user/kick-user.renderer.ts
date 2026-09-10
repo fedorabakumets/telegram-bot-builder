@@ -11,6 +11,7 @@ import { renderPartialTemplate } from '../template-renderer';
 /**
  * Собирает KickUserEntry[] из массива узлов графа.
  * Находит все узлы с type === 'kick_user'.
+ * Значение userIdSource last_message из общей схемы ноды приводится к reply_user.
  *
  * @param nodes - Массив узлов холста
  * @returns Массив KickUserEntry для генерации обработчиков
@@ -33,7 +34,7 @@ export function collectKickUserEntries(nodes: Node[]): KickUserEntry[] {
       safeName: node.id.replace(/[^a-zA-Z0-9_]/g, '_'),
       targetNodeId,
       targetNodeType,
-      userIdSource: data?.userIdSource ?? 'current_user',
+      userIdSource: data?.userIdSource === 'last_message' ? 'reply_user' : (data?.userIdSource ?? 'current_user'),
       userIdManual: data?.userIdManual ?? '',
       chatIdSource: data?.chatIdSource ?? 'current_chat',
       chatIdManual: data?.chatIdManual ?? '',

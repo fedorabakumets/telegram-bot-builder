@@ -55,6 +55,8 @@ export const userInputParamsSchema = z.object({
   // --- Сообщения ---
   retryMessage: z.string().optional().default('Пожалуйста, попробуйте еще раз.'),
   successMessage: z.string().optional().default(''),
+  inputTimeout: z.number().optional().default(0),
+  inputTimeoutMessage: z.string().optional().default('Время ожидания истекло.'),
   inputPrompt: z.string().optional().default(''),
   inputRequired: z.boolean().optional().default(true),
 

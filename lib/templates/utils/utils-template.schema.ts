@@ -10,6 +10,7 @@ export const utilsParamsSchema = z.object({
   userDatabaseEnabled: z.boolean().optional().default(false),
   adminOnly: z.boolean().optional().default(false),
   requiresAuth: z.boolean().optional().default(false),
+  hasInputTimeoutNodes: z.boolean().optional().default(false),
 });
 
 /** Тип параметров утилит (выведен из схемы) */

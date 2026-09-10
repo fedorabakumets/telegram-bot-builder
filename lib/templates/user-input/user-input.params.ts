@@ -90,6 +90,10 @@ export interface UserInputTemplateParams {
   retryMessage?: string;
   /** Сообщение при успешном сохранении */
   successMessage?: string;
+  /** Таймаут ожидания ввода в секундах */
+  inputTimeout?: number;
+  /** Сообщение при истечении таймаута ожидания */
+  inputTimeoutMessage?: string;
   /** Текст подсказки для input-узла */
   inputPrompt?: string;
   /** Обязателен ли ответ */

@@ -1,55 +1,82 @@
-{#
-  Шаблон middleware триггеров входящих сообщений
-
-  @fileoverview Генерирует Python middleware для обработки входящих сообщений (incoming_message_trigger узлов)
-  @param {array} incomingMessageTriggerEntries - Массив объектов IncomingMessageTriggerEntry:
-    - nodeId: string          — ID узла incoming_message_trigger
-    - targetNodeId: string    — ID целевого узла
-    - targetNodeType: string  — тип целевого узла
-#}
-
-# Middleware триггеров входящих сообщений
-{% for entry in incomingMessageTriggerEntries -%}
-{%- set sanitized_node_id = entry.nodeId | safe_name -%}
-{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
-
-async def incoming_message_trigger_{{ sanitized_node_id }}_middleware(handler, event: types.Message, data: dict):
-    """Срабатывает на каждое входящее сообщение от пользователя"""
-    try:
-        user_id = event.from_user.id
-        logging.info(f"Входящее сообщение от {user_id} — триггер узла {{ entry.nodeId }}")
-
-        class MockCallback:
-            def __init__(self, data, user, msg):
-                self.data = data
-                self.from_user = user
-                self.message = msg
-
-            async def answer(self, *args, **kwargs):
-                pass
-
-            async def edit_text(self, text, **kwargs):
-                try:
-                    return await self.message.edit_text(text, **kwargs)
-                except Exception as e:
-                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
-                    return await self.message.answer(text, **kwargs)
-
-        mock_callback = MockCallback("{{ entry.targetNodeId }}", event.from_user, event)
-        # Получаем FSM-контекст из данных middleware для передачи в обработчик
-        _state = data.get("state")
-        await handle_callback_{{ sanitized_target_id }}(mock_callback, state=_state)
-        # Помечаем что сообщение уже обработано триггером
-        if event.from_user.id not in user_data:
-            user_data[event.from_user.id] = {}
-        user_data[event.from_user.id]["_imt_handled"] = True
-    except Exception as e:
-        logging.error(f"Ошибка в incoming_message_trigger middleware: {e}")
-
-    result = await handler(event, data)
-    # Сбрасываем флаг после обработки
-    if event.from_user.id in user_data:
-        user_data[event.from_user.id].pop("_imt_handled", None)
-    return result
-
-{% endfor %}
+{#
+  Шаблон middleware триггеров входящих сообщений
+
+  @fileoverview Генерирует Python middleware для обработки входящих сообщений (incoming_message_trigger узлов)
+  @param {array} incomingMessageTriggerEntries - Массив объектов IncomingMessageTriggerEntry
+#}
+
+# Middleware триггеров входящих сообщений
+{% for entry in incomingMessageTriggerEntries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+
+async def incoming_message_trigger_{{ sanitized_node_id }}_middleware(handler, event: types.Message, data: dict):
+    """Срабатывает на каждое входящее сообщение от пользователя"""
+    user_id = event.from_user.id
+    try:
+        await capture_message_context(user_id, event)
+{%- if entry.chatTypeFilter == 'private' %}
+        _imt_chat_type = getattr(event.chat, 'type', None)
+        if _imt_chat_type != 'private':
+            return await handler(event, data)
+{%- elif entry.chatTypeFilter == 'group' %}
+        _imt_chat_type = getattr(event.chat, 'type', None)
+        if _imt_chat_type not in ('group', 'supergroup'):
+            return await handler(event, data)
+{%- if entry.groupChatIdSource == 'manual' and entry.groupChatId %}
+        _imt_expected_chat_ids = ('{{ entry.groupChatId }}', '-100{{ entry.groupChatId }}')
+        if str(event.chat.id) not in _imt_expected_chat_ids:
+            return await handler(event, data)
+{%- elif entry.groupChatIdSource == 'variable' and entry.groupChatVariableName %}
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        _imt_vars = await init_all_user_vars(user_id)
+        _imt_group_chat_id = replace_variables_in_text({{ entry.groupChatVariableName | tojson }}, _imt_vars)
+        if not _imt_group_chat_id:
+            return await handler(event, data)
+        _imt_expected_group_ids = (str(_imt_group_chat_id), f"-100{_imt_group_chat_id}")
+        if str(event.chat.id) not in _imt_expected_group_ids:
+            return await handler(event, data)
+{%- endif %}
+{%- endif %}
+        logging.info(f"Входящее сообщение от {user_id} — триггер узла {{ entry.nodeId }}")
+
+        class MockCallback:
+            def __init__(self, data, user, msg):
+                self.data = data
+                self.from_user = user
+                self.message = msg
+
+            async def answer(self, *args, **kwargs):
+                pass
+
+            async def edit_text(self, text, **kwargs):
+                try:
+                    return await self.message.edit_text(text, **kwargs)
+                except Exception as e:
+                    logging.warning(f"Не удалось отредактировать сообщение: {e}")
+                    return await self.message.answer(text, **kwargs)
+
+        mock_callback = MockCallback("{{ entry.targetNodeId }}", event.from_user, event)
+        _state = data.get("state")
+        await handle_callback_{{ sanitized_target_id }}(mock_callback, state=_state)
+        if event.from_user.id not in user_data:
+            user_data[event.from_user.id] = {}
+        user_data[event.from_user.id]["_imt_handled"] = True
+    except Exception as e:
+        logging.error(f"Ошибка в incoming_message_trigger middleware: {e}")
+
+{%- if entry.stopOnFlag %}
+    if user_data.get(user_id, {}).get('_stop_processing'):
+        if user_id in user_data:
+            user_data[user_id].pop("_imt_handled", None)
+            user_data[user_id].pop("_stop_processing", None)
+        return None
+{%- endif %}
+    result = await handler(event, data)
+    if user_id in user_data:
+        user_data[user_id].pop("_imt_handled", None)
+        user_data[user_id].pop("_stop_processing", None)
+    return result
+
+{% endfor %}

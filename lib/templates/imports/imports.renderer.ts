@@ -46,6 +46,8 @@ export function generateImports(params: ImportsTemplateParams): string {
     hasLocalMediaFiles: params.hasLocalMediaFiles ?? false,
     hasBotCommands: params.hasBotCommands ?? false,
     hasDeepLinkTriggers: params.hasDeepLinkTriggers ?? false,
+    hasRateCounterNodes: params.hasRateCounterNodes ?? false,
+    hasInputTimeoutNodes: params.hasInputTimeoutNodes ?? false,
   });
   return renderPartialTemplate('imports/imports.py.jinja2', validated);
 }

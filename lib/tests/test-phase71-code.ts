@@ -94,6 +94,13 @@ test('A05', 'синтаксис Python OK', () => {
   syntax(gen(p, 'a05'), 'a05');
 });
 
+test('A06', 'блокировка узла code по пользователю', () => {
+  const p = makeCleanProject([makeCodeNode('code1')]);
+  const code = gen(p, 'a06');
+  ok(code.includes('_get_code_node_lock'), '_get_code_node_lock должен быть');
+  ok(!code.includes('_code_node_lock = asyncio.Lock()'), 'глобальная блокировка не должна быть');
+});
+
 console.log('── Блок B: Telethon ──────────────────────────────────────────────');
 
 test('B01', 'исходник с await client попадает в файл', () => {

@@ -235,6 +235,16 @@ export function hasManagedBotUpdatedTriggerNodes(nodes: Node[]): boolean {
 }
 
 /**
+ * Проверяет наличие узлов member_trigger в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа member_trigger
+ */
+export function hasMemberTriggerNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'member_trigger');
+}
+
+/**
  * Проверяет наличие узлов get_managed_bot_token в массиве узлов
  * @param nodes - Массив узлов для проверки
  * @returns true если есть хотя бы один узел типа get_managed_bot_token
@@ -362,6 +372,37 @@ export function hasCodeNodes(nodes: Node[]): boolean {
  */
 export function hasParallelSplitNodes(nodes: Node[]): boolean {
   return nodes.filter(n => n != null).some(node => (node.type as string) === 'parallel_split');
+}
+
+/**
+ * Проверяет наличие узлов с таймаутом ожидания ввода
+ * @param nodes - Массив узлов для проверки
+ * @returns true если хотя бы у одного узла задан inputTimeout > 0
+ */
+export function hasInputTimeoutNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.filter(n => n != null).some(node => {
+    const timeout = node.data?.inputTimeout;
+    return typeof timeout === 'number' && timeout > 0;
+  });
+}
+
+/**
+ * Проверяет наличие узлов rate_counter в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа rate_counter
+ */
+export function hasRateCounterNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'rate_counter');
+}
+
+/**
+ * Проверяет наличие узлов stop_processing в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа stop_processing
+ */
+export function hasStopProcessingNodes(nodes: Node[]): boolean {
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'stop_processing');
 }
 
 /**

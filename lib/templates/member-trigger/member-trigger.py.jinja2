@@ -1,0 +1,140 @@
+{#
+  Шаблон обработчиков триггера входа/выхода участника группы.
+
+  @param {array} memberTriggerEntries - Массив MemberTriggerEntry:
+    - nodeId: string
+    - targetNodeId: string
+    - targetNodeType: string
+    - memberEventType: 'join' | 'leave' | 'both'
+    - groupChatId?: string
+    - groupChatIdSource: 'manual' | 'variable'
+    - groupChatVariableName?: string
+    - saveJoinedUserIdTo?: string
+    - saveJoinedUsernameTo?: string
+    - saveLeftUserIdTo?: string
+    - saveLeftUsernameTo?: string
+    - hasGroupChatFilter: boolean
+#}
+
+# Обработчики триггеров входа/выхода участника группы
+{% for entry in memberTriggerEntries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+
+{% if entry.memberEventType == 'join' or entry.memberEventType == 'both' %}
+@dp.message(F.new_chat_members)
+async def member_trigger_{{ sanitized_node_id }}_join_handler(message: types.Message):
+    """Срабатывает когда участник вошёл в группу — узел {{ entry.nodeId }}"""
+    try:
+        if not message.new_chat_members:
+            return
+
+        {% if entry.hasGroupChatFilter %}
+        {% if entry.groupChatIdSource == 'manual' %}
+        _expected_chat_ids = ('{{ entry.groupChatId }}', '-100{{ entry.groupChatId }}')
+        if str(message.chat.id) not in _expected_chat_ids:
+            return
+        {% else %}
+        _group_chat_id_var = globals().get('user_data', {}).get(0, {}).get('{{ entry.groupChatVariableName }}', '')
+        if not _group_chat_id_var:
+            logging.warning(f"member_trigger {{ entry.nodeId }}: переменная {{ entry.groupChatVariableName }} не задана, пропускаем")
+            return
+        _expected_group_ids = (str(_group_chat_id_var), f"-100{_group_chat_id_var}")
+        if str(message.chat.id) not in _expected_group_ids:
+            return
+        {% endif %}
+        {% endif %}
+
+        for new_member in message.new_chat_members:
+            if new_member.is_bot:
+                continue
+
+            user_id = new_member.id
+            await capture_message_context(user_id, message)
+            logging.info(f"Участник вошёл в группу — триггер узла {{ entry.nodeId }}, user_id={user_id}")
+
+            if user_id not in user_data:
+                user_data[user_id] = {}
+
+            {% if entry.saveJoinedUserIdTo %}
+            user_data[user_id]["{{ entry.saveJoinedUserIdTo }}"] = new_member.id
+            {% endif %}
+            {% if entry.saveJoinedUsernameTo %}
+            user_data[user_id]["{{ entry.saveJoinedUsernameTo }}"] = new_member.username or ""
+            {% endif %}
+
+            class FakeCallbackQuery:
+                """Фейковый объект callback_query для вызова обработчика следующего узла"""
+                def __init__(self, member, msg):
+                    self.from_user = member
+                    self.message = msg
+                    self.data = "{{ entry.targetNodeId }}"
+                    self._is_fake = True
+
+                async def answer(self, *args, **kwargs):
+                    pass
+
+            fake_cb = FakeCallbackQuery(new_member, message)
+            await handle_callback_{{ sanitized_target_id }}(fake_cb, state=None)
+    except Exception as e:
+        logging.error(f"Ошибка в member_trigger join {{ entry.nodeId }}: {e}")
+
+{% endif %}
+
+{% if entry.memberEventType == 'leave' or entry.memberEventType == 'both' %}
+@dp.message(F.left_chat_member)
+async def member_trigger_{{ sanitized_node_id }}_leave_handler(message: types.Message):
+    """Срабатывает когда участник вышел из группы — узел {{ entry.nodeId }}"""
+    try:
+        left_member = message.left_chat_member
+        if not left_member or left_member.is_bot:
+            return
+
+        {% if entry.hasGroupChatFilter %}
+        {% if entry.groupChatIdSource == 'manual' %}
+        _expected_chat_ids = ('{{ entry.groupChatId }}', '-100{{ entry.groupChatId }}')
+        if str(message.chat.id) not in _expected_chat_ids:
+            return
+        {% else %}
+        _group_chat_id_var = globals().get('user_data', {}).get(0, {}).get('{{ entry.groupChatVariableName }}', '')
+        if not _group_chat_id_var:
+            logging.warning(f"member_trigger {{ entry.nodeId }}: переменная {{ entry.groupChatVariableName }} не задана, пропускаем")
+            return
+        _expected_group_ids = (str(_group_chat_id_var), f"-100{_group_chat_id_var}")
+        if str(message.chat.id) not in _expected_group_ids:
+            return
+        {% endif %}
+        {% endif %}
+
+        user_id = left_member.id
+        await capture_message_context(user_id, message)
+        logging.info(f"Участник вышел из группы — триггер узла {{ entry.nodeId }}, user_id={user_id}")
+
+        if user_id not in user_data:
+            user_data[user_id] = {}
+
+        {% if entry.saveLeftUserIdTo %}
+        user_data[user_id]["{{ entry.saveLeftUserIdTo }}"] = left_member.id
+        {% endif %}
+        {% if entry.saveLeftUsernameTo %}
+        user_data[user_id]["{{ entry.saveLeftUsernameTo }}"] = left_member.username or ""
+        {% endif %}
+
+        class FakeCallbackQuery:
+            """Фейковый объект callback_query для вызова обработчика следующего узла"""
+            def __init__(self, member, msg):
+                self.from_user = member
+                self.message = msg
+                self.data = "{{ entry.targetNodeId }}"
+                self._is_fake = True
+
+            async def answer(self, *args, **kwargs):
+                pass
+
+        fake_cb = FakeCallbackQuery(left_member, message)
+        await handle_callback_{{ sanitized_target_id }}(fake_cb, state=None)
+    except Exception as e:
+        logging.error(f"Ошибка в member_trigger leave {{ entry.nodeId }}: {e}")
+
+{% endif %}
+{% endfor %}

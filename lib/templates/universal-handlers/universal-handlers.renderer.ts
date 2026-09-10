@@ -44,5 +44,7 @@ export function generateUniversalHandlers(params: UniversalHandlersTemplateParam
       validated.hasSkipDataCollectionButtons ?? hasSkipDataCollectionButtons(nodes),
     allNodeIds: params.allNodeIds ?? [],
     generateCatchAll: params.generateCatchAll ?? true,
+    hasInputCollection: params.hasInputCollection ?? false,
+    hasInputTimeoutNodes: params.hasInputTimeoutNodes ?? false,
   });
 }

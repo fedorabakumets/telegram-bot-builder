@@ -154,6 +154,12 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     color: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
     canvasColor: 'bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 text-violet-600 dark:text-violet-400 border-2 border-violet-300 dark:border-violet-700/50 shadow-lg shadow-violet-500/20',
   },
+  member_trigger: {
+    name: 'Участник вошёл или вышел',
+    icon: 'fas fa-user-plus',
+    color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+    canvasColor: 'bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-300 dark:border-emerald-700/50 shadow-lg shadow-emerald-500/20',
+  },
   callback_trigger: {
     name: 'Триггер inline-кнопки',
     icon: 'fas fa-hand-pointer',
@@ -345,6 +351,18 @@ export const nodeRegistry: Record<string, NodeMeta> = {
     icon: 'fas fa-stopwatch',
     color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
     canvasColor: 'bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-600 dark:text-amber-400 border-2 border-amber-300 dark:border-amber-700/50 shadow-lg shadow-amber-500/20',
+  },
+  stop_processing: {
+    name: 'Стоп обработки',
+    icon: 'fas fa-hand-paper',
+    color: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+    canvasColor: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-600 dark:text-red-400 border-2 border-red-300 dark:border-red-700/50 shadow-lg shadow-red-500/20',
+  },
+  rate_counter: {
+    name: 'Счётчик частоты',
+    icon: 'fas fa-chart-line',
+    color: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
+    canvasColor: 'bg-gradient-to-br from-sky-50 to-cyan-100 dark:from-sky-900/30 dark:to-cyan-900/30 text-sky-600 dark:text-sky-400 border-2 border-sky-300 dark:border-sky-700/50 shadow-lg shadow-sky-500/20',
   },
   // Логика — произвольный Python
   code: {

@@ -288,6 +288,39 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
       }
     });
   });
+
+  // Добавляем переменные от member_trigger нод
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'member_trigger') return;
+    const data = node.data as any;
+    const memberEventType = data.memberEventType ?? 'join';
+    const vars: Array<{ key: string; name: string; description: string }> = [];
+    if (memberEventType === 'join' || memberEventType === 'both') {
+      vars.push(
+        { key: 'saveJoinedUserIdTo', name: data.saveJoinedUserIdTo || 'joined_user_id', description: 'ID вошедшего участника' },
+        { key: 'saveJoinedUsernameTo', name: data.saveJoinedUsernameTo || 'joined_username', description: 'Username вошедшего участника' },
+      );
+    }
+    if (memberEventType === 'leave' || memberEventType === 'both') {
+      vars.push(
+        { key: 'saveLeftUserIdTo', name: data.saveLeftUserIdTo || 'left_user_id', description: 'ID вышедшего участника' },
+        { key: 'saveLeftUsernameTo', name: data.saveLeftUsernameTo || 'left_username', description: 'Username вышедшего участника' },
+      );
+    }
+    vars.forEach(({ key, name, description }) => {
+      if (!name) return;
+      const mapKey = `member_trigger__${node.id}__${key}`;
+      if (!variablesMap.has(mapKey)) {
+        variablesMap.set(mapKey, {
+          name,
+          nodeId: node.id,
+          nodeType: 'member_trigger' as any,
+          description,
+        });
+      }
+    });
+  });
+
   // Добавляем переменные от get_managed_bot_token нод (Bot API 9.6)
   allNodes.forEach(node => {
     if ((node.type as string) !== 'get_managed_bot_token') return;

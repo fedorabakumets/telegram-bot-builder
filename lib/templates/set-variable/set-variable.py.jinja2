@@ -400,6 +400,13 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         logging.info(f"📝 set_variable [{{ nodeId }}]: «{_sv_varname_{{ loop.index }}}» = {user_data[user_id][_sv_varname_{{ loop.index }}]!r} (было: {_sv_old_{{ loop.index }}!r})")
         {%- endif %}
         {% endfor %}
+        {% for assignment in assignments %}
+        {%- if assignment.persistToDb %}
+        {%- set safe_var = assignment.variable | replace('{', '') | replace('}', '') | trim %}
+        if user_id in user_data and "{{ safe_var }}" in user_data[user_id]:
+            await set_user_var(user_id, "{{ safe_var }}", user_data[user_id]["{{ safe_var }}"])
+        {%- endif %}
+        {% endfor %}
         logging.info(f"✅ set_variable [{{ nodeId }}]: установлено {{ assignments | length }} переменных для {user_id}")
         {% if nodeId == 'bot-setv-btc-done' %}
         # #region agent log

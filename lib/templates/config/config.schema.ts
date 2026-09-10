@@ -19,6 +19,9 @@ export const configParamsSchema = z.object({
   hasUserbotNodes: z.boolean().default(false),
   /** Генерировать обёртку защиты контента от копирования/пересылки */
   protectContent: z.boolean().optional().default(false),
+  /** Есть ли узлы rate_counter (нужен in-memory deque) */
+  hasRateCounterNodes: z.boolean().default(false),
+  hasInputTimeoutNodes: z.boolean().default(false),
 });
 
 /** Тип параметров конфигурации (выведен из схемы) */

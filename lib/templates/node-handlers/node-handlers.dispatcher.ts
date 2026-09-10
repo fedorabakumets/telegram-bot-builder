@@ -32,6 +32,7 @@ import { generateIncomingMessageTriggerHandlers } from '../incoming-message-trig
 import { generateIncomingCallbackTriggerHandlers } from '../incoming-callback-trigger/incoming-callback-trigger.renderer';
 import { generateOutgoingMessageTriggerHandlers } from '../outgoing-message-trigger/outgoing-message-trigger.renderer';
 import { generateManagedBotUpdatedTriggerHandlers } from '../managed-bot-updated-trigger/managed-bot-updated-trigger.renderer';
+import { generateMemberTriggerHandlers } from '../member-trigger/member-trigger.renderer';
 import { generateScheduleTriggerHandlers } from '../schedule-trigger/schedule-trigger.renderer';
 import { generateApiTriggerHandlers } from '../api-trigger/api-trigger.renderer';
 import { generateApiResponseHandlers } from '../api-response/api-response.renderer';
@@ -46,6 +47,8 @@ import { generateConvertFileHandlers } from '../convert-file/convert-file.render
 import { generateLoopHandlers } from '../loop';
 import { generateParallelSplitHandlers } from '../parallel-split';
 import { generateDelayHandlers } from '../delay/delay.renderer';
+import { generateStopProcessingHandlers } from '../stop-processing/stop-processing.renderer';
+import { generateRateCounterHandlers } from '../rate-counter/rate-counter.renderer';
 import { generateCodeHandlers } from '../code/code.renderer';
 import { generateGetManagedBotToken } from '../get-managed-bot-token/get-managed-bot-token.renderer';
 import { generateGroupMessageTriggerHandlers } from '../group-message-trigger';
@@ -216,6 +219,7 @@ function generateCommandEntryHandler(node: Node, callbackHandlerCode: string): s
     `@dp.message(Command("${commandName}"))`,
     `async def ${entryHandlerName}(message: types.Message):`,
     `    """Точка входа для команды /${commandName}, перенаправляет в callback-обработчик узла ${node.id}."""`,
+    `    await capture_message_context(message.from_user.id, message)`,
     '    class FakeCallbackQuery:',
     '        def __init__(self, message: types.Message, data: str):',
     '            self.from_user = message.from_user',
@@ -453,6 +457,13 @@ export function generateNodeHandlers(
     groupMessageTriggerCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Обработчики триггеров входа/выхода участника ---
+  const memberTriggerCode = generateMemberTriggerHandlers(nodes);
+  if (memberTriggerCode) {
+    codeLines.push('\n# Обработчики триггеров входа/выхода участника');
+    memberTriggerCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   // --- Обработчики узлов условия ---
   const conditionCode = generateConditionHandlers(nodes);
   if (conditionCode) {
@@ -530,6 +541,20 @@ export function generateNodeHandlers(
     delayCode.split('\n').forEach(line => codeLines.push(line));
   }
 
+  // --- Обработчики узлов stop_processing ---
+  const stopProcessingCode = generateStopProcessingHandlers(nodes);
+  if (stopProcessingCode) {
+    codeLines.push('\n# Обработчики узлов stop_processing');
+    stopProcessingCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
+  // --- Обработчики узлов rate_counter ---
+  const rateCounterCode = generateRateCounterHandlers(nodes);
+  if (rateCounterCode) {
+    codeLines.push('\n# Обработчики узлов rate_counter');
+    rateCounterCode.split('\n').forEach(line => codeLines.push(line));
+  }
+
   // --- Обработчики узлов code (Python + Telethon) ---
   const codeNodeCode = generateCodeHandlers(nodes);
   if (codeNodeCode) {
@@ -595,7 +620,7 @@ export function generateNodeHandlers(
 
   nodes.forEach((node: Node) => {
     // Пропускаем триггеры — они уже обработаны выше
-    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message' || (node.type as any) === 'set_variable' || (node.type as any) === 'psql_query' || (node.type as any) === 'bot_table' || (node.type as any) === 'convert_file' || (node.type as any) === 'loop' || (node.type as any) === 'delay' || (node.type as any) === 'code' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'api_trigger' || (node.type as any) === 'api_response' || (node.type as any) === 'answer_callback_query' || (node.type as any) === 'userbot_message' || (node.type as any) === 'userbot_click_button' || (node.type as any) === 'userbot_inline_query' || (node.type as any) === 'userbot_edit_trigger' || (node.type as any) === 'kick_user' || (node.type as any) === 'parallel_split') {
+    if (node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'member_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'edit_message' || (node.type as any) === 'set_variable' || (node.type as any) === 'psql_query' || (node.type as any) === 'bot_table' || (node.type as any) === 'convert_file' || (node.type as any) === 'loop' || (node.type as any) === 'delay' || (node.type as any) === 'stop_processing' || (node.type as any) === 'rate_counter' || (node.type as any) === 'code' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'api_trigger' || (node.type as any) === 'api_response' || (node.type as any) === 'answer_callback_query' || (node.type as any) === 'userbot_message' || (node.type as any) === 'userbot_click_button' || (node.type as any) === 'userbot_inline_query' || (node.type as any) === 'userbot_edit_trigger' || (node.type as any) === 'kick_user' || (node.type as any) === 'parallel_split') {
       return;
     }
 

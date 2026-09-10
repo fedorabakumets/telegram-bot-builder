@@ -32,6 +32,8 @@ export function collectAllNodesFromSheets(
     allSheets.forEach((sheet: any) => {
       if (sheet.nodes) {
         sheet.nodes.forEach((node: Node) => {
+          /** Пустой id ломает Radix Select: value="" запрещён */
+          if (!node?.id) return;
           allNodesFromSheets.push({
             node,
             sheetId: sheet.id,
@@ -42,6 +44,7 @@ export function collectAllNodesFromSheets(
     });
   } else {
     allNodes.forEach((node: Node) => {
+      if (!node?.id) return;
       allNodesFromSheets.push({
         node,
         sheetId: currentSheetId || 'current',

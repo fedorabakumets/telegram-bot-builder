@@ -4,13 +4,12 @@
  */
 
 import type { Node } from '@shared/schema';
-import type { IncomingMessageTriggerEntry, IncomingMessageTriggerTemplateParams } from './incoming-message-trigger.params';
+import type { IncomingMessageTriggerEntry, IncomingMessageTriggerTemplateParams, ImtChatTypeFilter, ImtGroupChatIdSource } from './incoming-message-trigger.params';
 import { incomingMessageTriggerParamsSchema } from './incoming-message-trigger.schema';
 import { renderPartialTemplate } from '../template-renderer';
 
 /**
  * Собирает IncomingMessageTriggerEntry[] из массива узлов графа.
- * Находит все узлы с type === 'incoming_message_trigger' и autoTransitionTo.
  *
  * @param nodes - Массив узлов холста
  * @returns Массив IncomingMessageTriggerEntry для генерации middleware
@@ -18,22 +17,31 @@ import { renderPartialTemplate } from '../template-renderer';
 export function collectIncomingMessageTriggerEntries(nodes: Node[]): IncomingMessageTriggerEntry[] {
   const validNodes = nodes.filter(n => n != null);
   const nodeMap = new Map(validNodes.map(n => [n.id, n]));
-
   const entries: IncomingMessageTriggerEntry[] = [];
 
   for (const node of validNodes) {
     if (node.type !== 'incoming_message_trigger') continue;
 
-    const targetNodeId: string = node.data.autoTransitionTo ?? '';
+    const targetNodeId: string = node.data?.autoTransitionTo ?? '';
     if (!targetNodeId) continue;
 
     const targetNode = nodeMap.get(targetNodeId);
     const targetNodeType = targetNode?.type ?? 'message';
+    const data = node.data as Record<string, unknown>;
+
+    const chatTypeFilter = (data?.imtChatTypeFilter as ImtChatTypeFilter) ?? 'any';
+    const groupChatIdSource: ImtGroupChatIdSource =
+      data?.imtGroupChatIdSource === 'variable' ? 'variable' : 'manual';
 
     entries.push({
       nodeId: node.id,
       targetNodeId,
       targetNodeType,
+      chatTypeFilter,
+      groupChatId: String(data?.imtGroupChatId ?? ''),
+      groupChatIdSource,
+      groupChatVariableName: String(data?.groupChatVariableName ?? ''),
+      stopOnFlag: data?.imtStopOnFlag !== false,
     });
   }
 

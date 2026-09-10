@@ -97,6 +97,17 @@ terminal-output-*.txt
 # Standalone telegram-moderator (local tool, not part of builder)
 telegram-moderator/
 
+# Nore Community Bot — локальные инструменты миграции и артефакты (не часть конструктора)
+Nore-Community-Bot-1.0.0/
+tools/nore-community/
+tools/import-nore-project.ts
+tools/migrate-nore-db.ts
+tools/setup-nore-tables.ts
+scripts/generate-nore-project.ts
+/projects/
+_tmp_nore_acceptance.py
+_tmp_nore*.py
+
 # Archive folder (backup files)
 archive/
 

@@ -83,6 +83,8 @@ export const assignmentSchema = z.object({
   concatWith: z.string().optional().default(''),
   /** Пропустить присваивание, если эта переменная пустая или 0 */
   skipIfEmpty: z.string().optional().default(''),
+  /** Сохранить значение в PostgreSQL после присваивания */
+  persistToDb: z.boolean().optional().default(false),
 });
 
 /** Тип присваивания переменной */

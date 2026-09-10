@@ -11,4 +11,6 @@ export interface UtilsTemplateParams {
   adminOnly?: boolean;
   /** Есть узлы с requiresAuth */
   requiresAuth?: boolean;
+  /** Есть ли таймаут ожидания ввода или сбор ответов */
+  hasInputTimeoutNodes?: boolean;
 }

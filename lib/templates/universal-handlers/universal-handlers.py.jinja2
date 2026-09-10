@@ -10,9 +10,24 @@
   @param {array}   commandNodes        - Узлы с командами (start/command)
   @param {boolean} hasUrlButtons       - Есть ли URL кнопки в проекте
   @param {array}   allNodeIds          - Все ID узлов
+  @param {boolean} generateCatchAll - Генерировать catch-all обработчики
+  @param {boolean} hasInputCollection - Есть ли сбор пользовательского ввода
+  @param {boolean} hasInputTimeoutNodes - Нужны ли утилиты таймаута/form_session
 #}
 
 {% set indentLevel = '    ' %}
+
+{% if hasInputCollection %}
+@dp.message(Command("cancel"))
+async def handle_cancel_input_form(message: types.Message):
+    """Общая отмена многошаговой формы: сброс ожидания ввода и промежуточных переменных."""
+    user_id = message.from_user.id
+    if user_id not in user_data or "waiting_for_input" not in user_data.get(user_id, {}):
+        return
+    await _clear_form_session(user_id)
+    await message.answer("Форма отменена.")
+
+{% endif %}
 
 @dp.message(F.text)
 async def fallback_text_handler(message: types.Message):

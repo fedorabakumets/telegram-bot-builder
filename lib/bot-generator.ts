@@ -269,6 +269,8 @@ function generateCodeSections(
       hasBotCommands: flags.hasBotCommandsResult,
       hasDeepLinkTriggers: flags.hasDeepLinkTriggersResult,
       hasUserbotNodes: flags.hasUserbotNodesResult,
+      hasRateCounterNodes: flags.hasRateCounterNodesResult,
+      hasInputTimeoutNodes: flags.hasInputTimeoutNodesResult,
     })
   );
 
@@ -292,6 +294,8 @@ function generateCodeSections(
       webhookPort: context.options.webhookPort ?? null,
       hasUserbotNodes: flags.hasUserbotNodesResult,
       protectContent: !!context.options.protectContent,
+      hasRateCounterNodes: flags.hasRateCounterNodesResult,
+      hasInputTimeoutNodes: flags.hasInputTimeoutNodesResult,
     })
   );
 
@@ -321,7 +325,12 @@ function generateCodeSections(
   const utils = emitOnce(state, COMPONENT_NAMES.UTILS, () => {
     const adminOnly = nodes.some(n => n.data?.adminOnly);
     const requiresAuth = nodes.some(n => n.data?.requiresAuth);
-    return generateUtils({ userDatabaseEnabled, adminOnly, requiresAuth });
+    return generateUtils({
+      userDatabaseEnabled,
+      adminOnly,
+      requiresAuth,
+      hasInputTimeoutNodes: flags.hasInputTimeoutNodesResult,
+    });
   });
 
   // --- media functions ---
@@ -485,6 +494,7 @@ function generateCodeSections(
       hasContactInput: inputCollection.hasContactInput,
       navigationCode: mediaInputNavigationCode,
       mediaMetadataConfigs: collectMediaMetadataConfigs(nodes),
+      hasInputTimeoutNodes: flags.hasInputTimeoutNodesResult,
     })
   );
 
@@ -506,6 +516,8 @@ function generateCodeSections(
       hasSkipDataCollectionButtons: hasSkipDataCollectionButtonsFlag,
       allNodeIds: context.allNodeIds,
       generateCatchAll: flags.generateCatchAllResult,
+      hasInputCollection: inputCollection.hasCollectInput,
+      hasInputTimeoutNodes: flags.hasInputTimeoutNodesResult,
     })
   );
 
