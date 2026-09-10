@@ -138,6 +138,14 @@ export { generateCodeHandlers, collectCodeEntries } from './templates/code';
 export { generateMemberTriggerHandlers, collectMemberTriggerEntries, generateMemberTriggers } from './templates/member-trigger';
 export type { MemberTriggerEntry, MemberTriggerTemplateParams } from './templates/member-trigger';
 
+/** Экспорт шаблона остановки middleware-цепочки */
+export { generateStopProcessingHandlers, collectStopProcessingEntries, generateStopProcessing } from './templates/stop-processing';
+export type { StopProcessingEntry, StopProcessingTemplateParams } from './templates/stop-processing';
+
+/** Экспорт шаблона счётчика частоты */
+export { generateRateCounterHandlers, collectRateCounterEntries, generateRateCounter } from './templates/rate-counter';
+export type { RateCounterEntry, RateCounterTemplateParams } from './templates/rate-counter';
+
 // Ядро: централизованное логирование
 export { createLogger, generatorLogger } from './bot-generator/core/generator-logger';
 export type { GeneratorLogger, LogLevel, LoggerOptions } from './bot-generator/core/generator-logger';
