@@ -24,7 +24,7 @@ interface AdminSidebarFooterProps {
 export function AdminSidebarFooter({ isCollapsed }: AdminSidebarFooterProps) {
   return (
     <div className={cn('flex flex-col gap-1', isCollapsed && 'items-center')}>
-      <Link href="/projects">
+      <Link href="/">
         <Button
           variant="ghost"
           className={cn(
