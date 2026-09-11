@@ -48,12 +48,16 @@ const PROJECT_FORMAT_RULES = [
 
 /**
  * Возвращает список типов нод, доступных в MCP (палитра UI)
+ * @param disabledNodeTypes - Типы, выключенные администратором
  * @returns Объект с types, count и forbidden
  */
-export function listNodeTypes() {
+export function listNodeTypes(disabledNodeTypes: readonly string[] = []) {
+  const disabled = new Set(disabledNodeTypes);
+  const types = buildMcpNodeTypeList().filter((item) => !disabled.has(item.type));
   return {
-    types: buildMcpNodeTypeList(),
-    count: MCP_ALLOWED_NODE_TYPES.length,
+    types,
+    count: types.length,
+    disabledByAdmin: [...disabled],
     ...getMcpForbiddenTypesHint(),
   };
 }

@@ -4,7 +4,7 @@
  */
 
 import { Link } from 'wouter';
-import { Settings, Wrench, BookOpen } from 'lucide-react';
+import { Settings, Wrench, BookOpen, Blocks } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,6 +78,12 @@ export function AdminOverview() {
             <Button variant="outline" className="gap-2">
               <Settings className="h-4 w-4" />
               Настройки приложения
+            </Button>
+          </Link>
+          <Link href="/admin/node-types">
+            <Button variant="outline" className="gap-2">
+              <Blocks className="h-4 w-4" />
+              Типы блоков
             </Button>
           </Link>
           <Link href="/admin/maintenance">

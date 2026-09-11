@@ -11,6 +11,7 @@ import { ADMIN_DOCS_VIEWER_PAGES } from "./admin-docs-viewer-pages";
 export const ADMIN_CLIENT_PAGES = [
   "/admin",
   "/admin/settings",
+  "/admin/node-types",
   "/admin/maintenance",
   "/admin/docs",
   "/admin/schema",

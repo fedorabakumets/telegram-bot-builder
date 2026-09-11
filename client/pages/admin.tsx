@@ -18,6 +18,7 @@ import { AdminOpenapiPage } from '@/components/admin/pages/admin-openapi';
 import { AdminLiveDbPage } from '@/components/admin/pages/admin-live-db';
 import { AdminUsersPage } from '@/components/admin/pages/admin-users';
 import { AdminUserDetailPage } from '@/components/admin/pages/admin-user-detail';
+import { AdminNodeTypesPage } from '@/components/admin/pages/admin-node-types';
 import type { ComponentType } from 'react';
 
 /**
@@ -56,6 +57,7 @@ export default function AdminPanel() {
         <Route path="/admin/live-db" component={adminRoute(AdminLiveDbPage)} />
         <Route path="/admin/users/:id" component={adminRoute(AdminUserDetailPage)} />
         <Route path="/admin/users" component={adminRoute(AdminUsersPage)} />
+        <Route path="/admin/node-types" component={adminRoute(AdminNodeTypesPage)} />
         <Route path="/admin/maintenance" component={adminRoute(AdminMaintenancePage)} />
         <Route path="/admin" component={adminRoute(AdminOverview)} />
       </Switch>

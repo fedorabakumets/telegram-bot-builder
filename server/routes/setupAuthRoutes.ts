@@ -14,6 +14,7 @@ import { handleGetUser } from "./auth/handlers/getUserHandler";
 import { handleMiniAppAuth } from "./auth/handlers/miniAppAuthHandler";
 import { handleDevLogin } from "./auth/handlers/devLoginHandler";
 import { handlePublicConfig } from "./auth/handlers/configHandler";
+import { handlePublicDisabledNodeTypes } from "./auth/handlers/disabledNodeTypesHandler";
 import { handleMe } from "./auth/handlers/meHandler";
 import { handleLogout } from "./auth/handlers/logoutHandler";
 import { authRateLimitMiddleware } from "./auth/utils/authRateLimit";
@@ -43,5 +44,6 @@ export function setupAuthRoutes(app: Express): void {
     app.post("/api/auth/telegram/miniapp", ...withAuthLimit(handleMiniAppAuth));
     app.post("/api/auth/dev-login", ...withAuthLimit(handleDevLogin));
     app.get("/api/config", handlePublicConfig);
+    app.get("/api/disabled-node-types", handlePublicDisabledNodeTypes);
     setupSetupRoutes(app);
 }

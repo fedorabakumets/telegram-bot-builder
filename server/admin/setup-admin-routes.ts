@@ -11,6 +11,10 @@ import {
   handleGetAdminAppSettings,
   handlePutAdminAppSettings,
 } from "./handlers/app-settings-handlers";
+import {
+  handleGetAdminDisabledNodeTypes,
+  handlePutAdminDisabledNodeTypes,
+} from "./handlers/disabled-node-types-handlers";
 import { adminCleanupOrphanedBotFoldersHandler } from "./handlers/bot-folders-cleanup-handler";
 import { adminSetTemplateFeaturedHandler } from "./handlers/template-featured-handler";
 import {
@@ -93,6 +97,17 @@ export function setupAdminRoutes(app: Express): void {
 
   app.get("/admin/api/app-settings", requireAdminAuth, handleGetAdminAppSettings);
   app.put("/admin/api/app-settings", requireAdminAuth, handlePutAdminAppSettings);
+
+  app.get(
+    "/admin/api/disabled-node-types",
+    requireAdminAuth,
+    handleGetAdminDisabledNodeTypes,
+  );
+  app.put(
+    "/admin/api/disabled-node-types",
+    requireAdminAuth,
+    handlePutAdminDisabledNodeTypes,
+  );
 
   app.post("/admin/api/templates/refresh", requireAdminAuth, adminRefreshTemplatesHandler);
   app.post("/admin/api/templates/recreate", requireAdminAuth, adminRecreateTemplatesHandler);
