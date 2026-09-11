@@ -5,17 +5,29 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { buildNodeTypeCatalog } from './node-types-catalog';
 import { NodeTypeGroup } from './node-type-group';
+import { NodeTypesSaveFab } from './node-types-save-fab';
 import {
   useAdminDisabledNodeTypes,
   useSaveAdminDisabledNodeTypes,
 } from './use-disabled-node-types';
 
 /**
- * Список групп с переключателями и кнопкой сохранения
+ * Сравнивает два списка типов без учёта порядка
+ * @param a - Первый список
+ * @param b - Второй список
+ * @returns true, если наборы совпадают
+ */
+function sameTypeSet(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const setB = new Set(b);
+  return a.every((item) => setB.has(item));
+}
+
+/**
+ * Список групп с переключателями и плавающей кнопкой сохранения
  * @returns JSX элемент формы
  */
 export function NodeTypesForm() {
@@ -24,12 +36,16 @@ export function NodeTypesForm() {
   const saveMutation = useSaveAdminDisabledNodeTypes();
   const catalog = useMemo(() => buildNodeTypeCatalog(), []);
   const [disabled, setDisabled] = useState<string[]>([]);
+  const [saved, setSaved] = useState<string[]>([]);
 
   useEffect(() => {
-    if (data?.disabled) setDisabled(data.disabled);
+    if (!data?.disabled) return;
+    setDisabled(data.disabled);
+    setSaved(data.disabled);
   }, [data]);
 
   const disabledSet = useMemo(() => new Set(disabled), [disabled]);
+  const dirty = !sameTypeSet(disabled, saved);
 
   const onToggle = (type: string, nextDisabled: boolean) => {
     setDisabled((prev) => {
@@ -43,7 +59,9 @@ export function NodeTypesForm() {
   const onSave = () => {
     saveMutation.mutate(disabled, {
       onSuccess: (result: { disabled?: string[] }) => {
-        if (Array.isArray(result?.disabled)) setDisabled(result.disabled);
+        const next = Array.isArray(result?.disabled) ? result.disabled : disabled;
+        setDisabled(next);
+        setSaved(next);
         toast({ title: 'Список типов сохранён' });
       },
       onError: (error: Error) => {
@@ -65,17 +83,12 @@ export function NodeTypesForm() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground max-w-2xl">
-          Выключенный тип скрывается из набора слева и нельзя создать через помощника.
-          Уже стоящие блоки на холсте остаются. Запуск бота с такими блоками будет отказан.
-          Ядро конструктора выключить нельзя.
-        </p>
-        <Button onClick={onSave} disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? 'Сохранение…' : 'Сохранить'}
-        </Button>
-      </div>
+    <div className="space-y-4 pb-20">
+      <p className="text-sm text-muted-foreground max-w-2xl">
+        Выключенный тип скрывается из набора слева и нельзя создать через помощника.
+        Уже стоящие блоки на холсте остаются. Запуск бота с такими блоками будет отказан.
+        Ядро конструктора выключить нельзя.
+      </p>
       <div className="grid gap-4 lg:grid-cols-2">
         {catalog.map((group) => (
           <NodeTypeGroup
@@ -86,6 +99,11 @@ export function NodeTypesForm() {
           />
         ))}
       </div>
+      <NodeTypesSaveFab
+        dirty={dirty}
+        pending={saveMutation.isPending}
+        onSave={onSave}
+      />
     </div>
   );
 }
