@@ -1,15 +1,22 @@
 {#
-  @fileoverview Шаблон обработчиков счёта в звёздах (send_invoice).
+  @fileoverview Шаблон обработчиков счёта в звёздах и общего роутера оплаты.
   1) handle_callback_{id} — отправка счёта (без перехода)
-  2) один pre_checkout_query — всегда ok=True
-  3) один successful_payment — сохранение и переход по метке
+  2) один pre_checkout_query — только если есть send_invoice
+  3) один successful_payment — счёт → триггер successful_payment_trigger
 
   @param {array} sendInvoiceEntries - Массив SendInvoiceEntry
+  @param {array} successfulPaymentTriggerEntries - Триггеры (exact→starts_with→all)
 #}
 
+{%- set has_invoices = sendInvoiceEntries and sendInvoiceEntries|length > 0 -%}
+{%- set has_triggers = successfulPaymentTriggerEntries and successfulPaymentTriggerEntries|length > 0 -%}
+
+{% if has_invoices or has_triggers %}
 # Маршруты оплаты: payload → настройки узла send_invoice
 _stars_payment_targets = {}
+{% endif %}
 
+{% if has_invoices %}
 # Обработчики счетов в звёздах (send_invoice)
 {% for entry in sendInvoiceEntries %}
 {%- set sanitized_node_id = entry.nodeId | safe_name %}
@@ -101,7 +108,6 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
 
 {% endfor %}
 
-{%- if sendInvoiceEntries and sendInvoiceEntries|length > 0 %}
 @dp.pre_checkout_query()
 async def on_pre_checkout_query_stars(pre_checkout_query: types.PreCheckoutQuery):
     """Проверка перед списанием звёзд — всегда разрешаем"""
@@ -109,11 +115,12 @@ async def on_pre_checkout_query_stars(pre_checkout_query: types.PreCheckoutQuery
         f"⭐ pre_checkout: payload={pre_checkout_query.invoice_payload} amount={pre_checkout_query.total_amount}"
     )
     await pre_checkout_query.answer(ok=True)
+{% endif %}
 
-
+{%- if has_invoices or has_triggers %}
 @dp.message(F.successful_payment)
 async def on_successful_payment_stars(message: types.Message, state: FSMContext = None):
-    """Успешная оплата звёздами — сохранение и переход по метке покупки"""
+    """Успешная оплата звёздами — счёт, иначе триггер по метке"""
     payment = message.successful_payment
     if not payment:
         return
@@ -124,25 +131,8 @@ async def on_successful_payment_stars(message: types.Message, state: FSMContext 
         f"⭐ successful_payment: payload={payload} amount={payment.total_amount} charge={payment.telegram_payment_charge_id}"
     )
 
-    _route = _stars_payment_targets.get(payload)
-    if not _route:
-        logging.warning(f"⭐ successful_payment: неизвестный payload={payload!r}")
-        return
-
     if user_id not in user_data:
         user_data[user_id] = {}
-
-    _amount_var = _route.get("save_amount_to") or ""
-    if _amount_var:
-        user_data[user_id][_amount_var] = payment.total_amount
-
-    _charge_var = _route.get("save_charge_to") or ""
-    if _charge_var:
-        user_data[user_id][_charge_var] = payment.telegram_payment_charge_id
-
-    _next = _route.get("next_node") or ""
-    if not _next:
-        return
 
     class FakeCallbackQuery:
         """Фейковый callback для перехода после оплаты"""
@@ -155,14 +145,78 @@ async def on_successful_payment_stars(message: types.Message, state: FSMContext 
         async def answer(self, *args, **kwargs):
             pass
 
-    fake_cb = FakeCallbackQuery(message.from_user, message, _next)
+    _route = _stars_payment_targets.get(payload)
+    if _route:
+        _amount_var = _route.get("save_amount_to") or ""
+        if _amount_var:
+            user_data[user_id][_amount_var] = payment.total_amount
+
+        _charge_var = _route.get("save_charge_to") or ""
+        if _charge_var:
+            user_data[user_id][_charge_var] = payment.telegram_payment_charge_id
+
+        _next = _route.get("next_node") or ""
+        if not _next:
+            return
+
+        fake_cb = FakeCallbackQuery(message.from_user, message, _next)
 {% for entry in sendInvoiceEntries %}
 {%- if entry.autoTransitionTo %}
 {%- set sanitized_target_id = entry.autoTransitionTo | safe_name %}
-    if _next == "{{ entry.autoTransitionTo }}":
+        if _next == "{{ entry.autoTransitionTo }}":
+            await handle_callback_{{ sanitized_target_id }}(fake_cb, state=state)
+            return
+{% endif %}
+{% endfor %}
+        return
+
+{% if has_triggers %}
+    _spt = None
+{% for entry in successfulPaymentTriggerEntries %}
+{% if entry.payloadFilter == 'exact' %}
+    if _spt is None and payload == {{ entry.payloadValue | tojson }}:
+{% elif entry.payloadFilter == 'starts_with' %}
+    if _spt is None and str(payload).startswith({{ entry.payloadValue | tojson }}):
+{% else %}
+    if _spt is None:
+{% endif %}
+        _spt = {
+            "node_id": "{{ entry.nodeId }}",
+            "save_amount_to": {{ entry.savePaymentAmountTo | tojson }},
+            "save_charge_to": {{ entry.savePaymentChargeIdTo | tojson }},
+            "next_node": {{ entry.targetNodeId | tojson }},
+        }
+{% endfor %}
+
+    if _spt is None:
+        logging.warning(f"⭐ successful_payment: неизвестный payload={payload!r}, триггер не найден")
+        return
+
+    logging.info(f"⭐ successful_payment_trigger [{_spt.get('node_id')}]: payload={payload!r}")
+
+    _amount_var = _spt.get("save_amount_to") or ""
+    if _amount_var:
+        user_data[user_id][_amount_var] = payment.total_amount
+
+    _charge_var = _spt.get("save_charge_to") or ""
+    if _charge_var:
+        user_data[user_id][_charge_var] = payment.telegram_payment_charge_id
+
+    _next = _spt.get("next_node") or ""
+    if not _next:
+        return
+
+    fake_cb = FakeCallbackQuery(message.from_user, message, _next)
+{% for entry in successfulPaymentTriggerEntries %}
+{%- if entry.targetNodeId %}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name %}
+    if _next == "{{ entry.targetNodeId }}":
         await handle_callback_{{ sanitized_target_id }}(fake_cb, state=state)
         return
 {% endif %}
 {% endfor %}
+{% else %}
+    logging.warning(f"⭐ successful_payment: неизвестный payload={payload!r}")
+{% endif %}
 
 {%- endif %}

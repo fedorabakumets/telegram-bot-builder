@@ -37,6 +37,7 @@ import { CallbackTriggerPreview } from './callback-trigger-preview';
 import { IncomingCallbackTriggerPreview } from './incoming-callback-trigger-preview';
 import { OutgoingMessageTriggerPreview } from './outgoing-message-trigger-preview';
 import { ManagedBotUpdatedTriggerPreview } from './managed-bot-updated-trigger-preview';
+import { SuccessfulPaymentTriggerPreview } from './successful-payment-trigger-preview';
 import { MemberTriggerPreview } from './member-trigger-preview';
 import { ScheduleTriggerPreview } from './schedule-trigger-preview';
 import { ApiTriggerPreview } from './api-trigger-preview';
@@ -580,7 +581,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
       {/* Порт выхода — снаружи основного div, позиционируется относительно wrapper */}
       {/* Узел condition имеет порты на каждой ветке — общий порт не нужен */}
       {/* Узел loop имеет два порта (тело + далее) внутри превью */}
-      {(node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'member_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'api_trigger' || (node.type as any) === 'userbot_edit_trigger') ? (
+      {(node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'member_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'successful_payment_trigger' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'api_trigger' || (node.type as any) === 'userbot_edit_trigger') ? (
         <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'loop' && (node.type as any) !== 'parallel_split' && (node.type as any) !== 'comment' && (node.type as any) !== 'refund_stars' ? (
         <OutputPort portType={node.type === 'input' ? 'input-target' : 'auto-transition'} onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
@@ -595,7 +596,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
           // Компактный размер для триггеров и утилит; счёт чуть шире под длинное имя
           (node.type as any) === 'send_invoice'
             ? "p-3 w-56"
-            : node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'api_trigger' || (node.type as any) === 'userbot_edit_trigger' || (node.type as any) === 'bot_table' || (node.type as any) === 'delay' || (node.type as any) === 'refund_stars' || (node.type as any) === 'stop_processing' || (node.type as any) === 'rate_counter' || (node.type as any) === 'code' || (node.type as any) === 'comment'
+            : node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'successful_payment_trigger' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'api_trigger' || (node.type as any) === 'userbot_edit_trigger' || (node.type as any) === 'bot_table' || (node.type as any) === 'delay' || (node.type as any) === 'refund_stars' || (node.type as any) === 'stop_processing' || (node.type as any) === 'rate_counter' || (node.type as any) === 'code' || (node.type as any) === 'comment'
             ? "p-3 w-52"
             : (node.type as any) === 'callback_trigger' || (node.type as any) === 'answer_callback_query'
             ? "p-3 w-52"            : node.type === 'condition' || (node.type as any) === 'parallel_split'
@@ -642,7 +643,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
         }}
       >
         {/* Заголовок узла — скрыт для триггеров, узла сообщения и узла условия */}
-        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'member_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'schedule_trigger' && (node.type as any) !== 'api_trigger' && (node.type as any) !== 'userbot_edit_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && (node.type as any) !== 'edit_message' && (node.type as any) !== 'set_variable' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (node.type as any) !== 'loop' && (node.type as any) !== 'delay' && (node.type as any) !== 'send_invoice' && (node.type as any) !== 'refund_stars' && (node.type as any) !== 'stop_processing' && (node.type as any) !== 'rate_counter' && (node.type as any) !== 'code' && (node.type as any) !== 'userbot_message' && (node.type as any) !== 'userbot_click_button' && (node.type as any) !== 'userbot_inline_query' && (node.type as any) !== 'parallel_split' && (node.type as any) !== 'comment' && (
+        {node.type !== 'command_trigger' && node.type !== 'text_trigger' && node.type !== 'incoming_message_trigger' && node.type !== 'group_message_trigger' && (node.type as any) !== 'member_trigger' && (node.type as any) !== 'callback_trigger' && (node.type as any) !== 'incoming_callback_trigger' && (node.type as any) !== 'outgoing_message_trigger' && (node.type as any) !== 'managed_bot_updated_trigger' && (node.type as any) !== 'successful_payment_trigger' && (node.type as any) !== 'schedule_trigger' && (node.type as any) !== 'api_trigger' && (node.type as any) !== 'userbot_edit_trigger' && (node.type as any) !== 'get_managed_bot_token' && (node.type as any) !== 'answer_callback_query' && (node.type as any) !== 'edit_message' && (node.type as any) !== 'set_variable' && node.type !== 'message' && node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'input' && (node.type as any) !== 'loop' && (node.type as any) !== 'delay' && (node.type as any) !== 'send_invoice' && (node.type as any) !== 'refund_stars' && (node.type as any) !== 'stop_processing' && (node.type as any) !== 'rate_counter' && (node.type as any) !== 'code' && (node.type as any) !== 'userbot_message' && (node.type as any) !== 'userbot_click_button' && (node.type as any) !== 'userbot_inline_query' && (node.type as any) !== 'parallel_split' && (node.type as any) !== 'comment' && (
           <NodeHeader node={node} onMove={!!onMove} />
         )}
 
@@ -718,6 +719,7 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
 
         {/* Managed Bot Updated Trigger Preview */}
         {(node.type as any) === 'managed_bot_updated_trigger' && <ManagedBotUpdatedTriggerPreview node={node} />}
+        {(node.type as any) === 'successful_payment_trigger' && <SuccessfulPaymentTriggerPreview node={node} />}
 
         {/* Schedule Trigger Preview */}
         {(node.type as any) === 'schedule_trigger' && <ScheduleTriggerPreview node={node} />}

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Рендерер шаблона send_invoice
+ * @fileoverview Рендерер шаблона send_invoice (+ роутер successful_payment)
  * @module templates/send-invoice/send-invoice.renderer
  */
 
@@ -7,6 +7,7 @@ import type { Node } from '@shared/schema';
 import type { SendInvoiceEntry } from './send-invoice.params';
 import { renderPartialTemplate } from '../template-renderer';
 import { sortButtonsByLayout, computeAdjustStr } from '../keyboard/keyboard.renderer';
+import { collectSuccessfulPaymentTriggerEntries } from '../successful-payment-trigger';
 
 /**
  * Собирает SendInvoiceEntry[] из узлов холста
@@ -46,18 +47,21 @@ export function collectSendInvoiceEntries(nodes: Node[]): SendInvoiceEntry[] {
 }
 
 /**
- * Генерирует Python-код обработчиков всех узлов send_invoice
+ * Генерирует Python: счета, pre_checkout (если есть счета) и общий successful_payment
+ * (счёт → триггер). Вызывается при наличии send_invoice и/или successful_payment_trigger.
  * @param nodes - Массив узлов холста
  * @returns Сгенерированный Python-код или пустая строка
  */
 export function generateSendInvoiceHandlers(nodes: Node[]): string {
   const entries = collectSendInvoiceEntries(nodes);
-  if (entries.length === 0) return '';
+  const triggerEntries = collectSuccessfulPaymentTriggerEntries(nodes);
+  if (entries.length === 0 && triggerEntries.length === 0) return '';
 
   return renderPartialTemplate('send-invoice/send-invoice.py.jinja2', {
     sendInvoiceEntries: entries.map((entry) => ({
       ...entry,
       adjustStr: computeAdjustStr(entry.keyboardLayout as any),
     })),
+    successfulPaymentTriggerEntries: triggerEntries,
   });
 }

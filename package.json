@@ -140,6 +140,7 @@
     "test:phase79": "node run-tests.js --pattern test-phase79-input-timeout",
     "test:phase80": "node run-tests.js --pattern test-phase80-send-invoice",
     "test:phase81": "node run-tests.js --pattern test-phase81-refund-stars",
+    "test:phase82": "node run-tests.js --pattern test-phase82-successful-payment-trigger",
     "test:phase76": "node run-tests.js --pattern test-phase76-member-trigger"
   },
   "dependencies": {

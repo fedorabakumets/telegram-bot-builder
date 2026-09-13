@@ -351,6 +351,14 @@ export function getNodeDefaults(type: Node['type']): any {
       filterByUserId: '',
       autoTransitionTo: '',
     },
+    successful_payment_trigger: {
+      payloadFilter: 'all',
+      payloadValue: '',
+      savePaymentAmountTo: 'payment_amount',
+      savePaymentChargeIdTo: 'payment_charge_id',
+      autoTransitionTo: '',
+      enableAutoTransition: false,
+    },
     member_trigger: {
       memberEventType: 'join',
       groupChatId: '',

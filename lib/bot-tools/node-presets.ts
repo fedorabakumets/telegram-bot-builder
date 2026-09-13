@@ -590,6 +590,20 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       keyboardType: 'none',
       buttons: [],
     },
+    successful_payment_trigger: {
+      /** Фильтр метки: all | exact | starts_with */
+      payloadFilter: 'all',
+      /** Значение метки для exact / starts_with */
+      payloadValue: '',
+      /** Переменная для суммы оплаты */
+      savePaymentAmountTo: 'payment_amount',
+      /** Переменная для кода покупки */
+      savePaymentChargeIdTo: 'payment_charge_id',
+      /** ID следующего узла */
+      autoTransitionTo: '',
+      /** Включить автопереход (у триггеров обычно не нужен) */
+      enableAutoTransition: false,
+    },
     refund_stars: {
       /** Источник user_id */
       refundUserSource: 'current_user',

@@ -28,6 +28,7 @@ import { CallbackTriggerConfiguration } from '../trigger/CallbackTriggerConfigur
 import { IncomingCallbackTriggerConfiguration } from '../trigger/IncomingCallbackTriggerConfiguration';
 import { OutgoingMessageTriggerConfiguration } from '../trigger/OutgoingMessageTriggerConfiguration';
 import { ManagedBotUpdatedTriggerConfiguration } from '../trigger/ManagedBotUpdatedTriggerConfiguration';
+import { SuccessfulPaymentTriggerConfiguration } from '../trigger/SuccessfulPaymentTriggerConfiguration';
 import { MemberTriggerConfiguration } from '../trigger/MemberTriggerConfiguration';
 import { ScheduleTriggerConfiguration } from '../trigger/ScheduleTriggerConfiguration';
 import { ApiTriggerConfiguration } from '../trigger/ApiTriggerConfiguration';
@@ -877,6 +878,14 @@ export function PropertiesPanel({
           )}
           {isTriggerNode(selectedNode.type) && (selectedNode.type as any) === 'managed_bot_updated_trigger' && (
             <ManagedBotUpdatedTriggerConfiguration
+              selectedNode={selectedNode}
+              onNodeUpdate={onNodeUpdate}
+              getAllNodesFromAllSheets={getAllNodesFromAllSheets}
+              formatNodeDisplay={formatNodeDisplay}
+            />
+          )}
+          {isTriggerNode(selectedNode.type) && (selectedNode.type as any) === 'successful_payment_trigger' && (
+            <SuccessfulPaymentTriggerConfiguration
               selectedNode={selectedNode}
               onNodeUpdate={onNodeUpdate}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}

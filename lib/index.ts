@@ -136,6 +136,10 @@ export { generateCodeHandlers, collectCodeEntries } from './templates/code';
 
 /** Экспорт шаблона триггера участника */
 export { generateMemberTriggerHandlers, collectMemberTriggerEntries, generateMemberTriggers } from './templates/member-trigger';
+export {
+  collectSuccessfulPaymentTriggerEntries,
+  generateSuccessfulPaymentTriggerHandlers,
+} from './templates/successful-payment-trigger';
 export type { MemberTriggerEntry, MemberTriggerTemplateParams } from './templates/member-trigger';
 
 /** Экспорт шаблона остановки middleware-цепочки */

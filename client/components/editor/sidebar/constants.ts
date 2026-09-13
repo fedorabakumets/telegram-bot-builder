@@ -9,7 +9,7 @@ import { textMessage, mediaMessage, keyboardMessage, saveAnswerNode } from './ma
 import { allCommandPresets } from './massive/commands';
 import type { CommandPreset } from './massive/commands';
 import { broadcastNode } from '@/components/editor/canvas/canvas-node/broadcast-node';
-import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, memberTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger, scheduleTrigger, apiTrigger } from './massive/triggers';
+import { commandTrigger, textTrigger, anyMessageTrigger, groupMessageTrigger, memberTrigger, callbackTrigger, incomingCallbackTrigger, outgoingMessageTrigger, managedBotUpdatedTrigger, scheduleTrigger, apiTrigger, successfulPaymentTrigger } from './massive/triggers';
 import { apiResponseNode } from './massive/api-response/api-response-node';
 import { conditionNode, setVariableNode, loopNode, delayNode, codeNode, parallelSplitNode, stopProcessingNode, rateCounterNode } from './massive/logic';
 import { forwardMessage, createForumTopicNode, deleteMessage } from './massive/content-management';
@@ -60,7 +60,7 @@ export const componentCategories: Array<{
   },
   {
     title: 'Платежи',
-    components: [sendInvoiceNode, refundStarsNode]
+    components: [sendInvoiceNode, refundStarsNode, successfulPaymentTrigger]
   },
   {
     title: 'Интеграции',

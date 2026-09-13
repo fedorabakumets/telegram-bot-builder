@@ -55,6 +55,7 @@ export const MCP_ALLOWED_NODE_TYPES = [
   'comment',
   'send_invoice',
   'refund_stars',
+  'successful_payment_trigger',
 ] as const;
 
 /** Legacy и типы вне палитры — запрещены для create_node / list_node_types */
@@ -127,6 +128,7 @@ const MCP_NODE_DESCRIPTIONS: Record<string, string> = {
   comment: 'Комментарий на холсте',
   send_invoice: 'Выставить счёт в звёздах',
   refund_stars: 'Вернуть звёзды',
+  successful_payment_trigger: 'Успешная оплата',
 };
 
 /**

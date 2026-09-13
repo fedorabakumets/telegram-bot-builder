@@ -366,6 +366,17 @@ export function hasSendInvoiceNodes(nodes: Node[]): boolean {
 }
 
 /**
+ * Проверяет наличие узлов successful_payment_trigger
+ * @param nodes - Массив узлов
+ * @returns true, если есть хотя бы один триггер успешной оплаты
+ */
+export function hasSuccessfulPaymentTriggerNodes(nodes: Node[]): boolean {
+  return nodes
+    .filter(n => n != null)
+    .some(node => (node.type as string) === 'successful_payment_trigger');
+}
+
+/**
  * Проверяет наличие узлов code
  * @param nodes - Массив узлов
  * @returns true если есть хотя бы один узел code

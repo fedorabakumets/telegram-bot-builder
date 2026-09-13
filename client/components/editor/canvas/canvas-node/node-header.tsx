@@ -138,6 +138,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             🤖 {getNodeName('managed_bot_updated_trigger')}
           </span>
         );
+      /** Заголовок триггера успешной оплаты */
+      case 'successful_payment_trigger' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('successful_payment_trigger')}
+          </span>
+        );
       case 'http_request':
         return (
           <span className="font-semibold text-cyan-700 dark:text-cyan-300">

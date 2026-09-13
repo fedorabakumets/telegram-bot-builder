@@ -89,6 +89,7 @@ export const TRIGGER_NODE_TYPES = [
   'schedule_trigger' as any,
   'api_trigger' as any,
   'userbot_edit_trigger' as any,
+  'successful_payment_trigger' as any,
 ] as const;
 
 /**

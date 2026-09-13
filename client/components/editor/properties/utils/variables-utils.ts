@@ -785,6 +785,36 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
+  // Переменные триггера успешной оплаты
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'successful_payment_trigger') return;
+    const data = node.data as any;
+    if (data.savePaymentAmountTo?.trim()) {
+      const key = `spt_amount__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentAmountTo,
+          nodeId: node.id,
+          nodeType: 'successful_payment_trigger' as any,
+          sourceTable: 'bot_users',
+          description: 'Сумма оплаты (триггер)',
+        });
+      }
+    }
+    if (data.savePaymentChargeIdTo?.trim()) {
+      const key = `spt_charge__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentChargeIdTo,
+          nodeId: node.id,
+          nodeType: 'successful_payment_trigger' as any,
+          sourceTable: 'bot_users',
+          description: 'Код покупки (триггер)',
+        });
+      }
+    }
+  });
+
   // Аргументы команды (/donate 777 → переменная)
   allNodes.forEach(node => {
     if (node.type !== 'command_trigger') return;

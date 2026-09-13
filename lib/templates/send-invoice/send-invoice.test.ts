@@ -65,6 +65,33 @@ describe('generateSendInvoiceHandlers()', () => {
     assert.equal(generateSendInvoiceHandlers(nodesWithoutInvoice as any), '');
   });
 
+  it('только триггер — successful_payment без pre_checkout', () => {
+    const nodes = [
+      {
+        id: 'spt_1',
+        type: 'successful_payment_trigger',
+        position: { x: 0, y: 0 },
+        data: {
+          payloadFilter: 'all',
+          payloadValue: '',
+          savePaymentAmountTo: 'payment_amount',
+          savePaymentChargeIdTo: 'payment_charge_id',
+          autoTransitionTo: 'msg_1',
+        },
+      },
+      {
+        id: 'msg_1',
+        type: 'message',
+        position: { x: 100, y: 0 },
+        data: { messageText: 'ok', buttons: [], keyboardType: 'none' },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    assert.ok(code.includes('successful_payment'));
+    assert.ok(!code.includes('pre_checkout_query'));
+    assert.ok(code.includes('handle_callback_msg_1'));
+  });
+
   it('с кнопками клавиатуры добавляет pay=True и reply_markup', () => {
     const nodes = [
       {

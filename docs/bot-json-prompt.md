@@ -1131,6 +1131,32 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 Типичная цепочка: `command_trigger` `/buy` → `send_invoice` → (после оплаты) `message` «спасибо».  
 Для `/paysupport` и `/terms` используйте обычные `command_trigger` + `message` — отдельных типов не нужно.
 
+### successful_payment_trigger — успешная оплата (вне цепочки счёта)
+
+Ловит оплату звёздами, если payload **нет** в `_stars_payment_targets` текущей сессии (ссылка, старый счёт). Один общий `successful_payment` с `send_invoice`: сначала счёт, иначе триггер. Фильтры проверяются в порядке `exact` → `starts_with` → `all`. Без `send_invoice` хендлер всё равно генерируется, но `pre_checkout` — нет.
+
+```json
+{
+  "type": "successful_payment_trigger",
+  "data": {
+    "payloadFilter": "starts_with",
+    "payloadValue": "donate_",
+    "savePaymentAmountTo": "payment_amount",
+    "savePaymentChargeIdTo": "payment_charge_id",
+    "autoTransitionTo": "msg_outside_pay",
+    "enableAutoTransition": false
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `payloadFilter` | `"all"` / `"exact"` / `"starts_with"` |
+| `payloadValue` | Метка для exact / starts_with |
+| `savePaymentAmountTo` | Переменная суммы |
+| `savePaymentChargeIdTo` | Переменная кода покупки |
+| `autoTransitionTo` | Следующий узел (у триггеров `enableAutoTransition` не обязателен) |
+
 ### refund_stars — вернуть звёзды
 
 Возврат покупки в этом боте через `refundStarPayment`.
@@ -1790,7 +1816,7 @@ HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет отве
 - `data.branches[].target: "nodeId"` — переход по ветке условия
 - `data.afterLoopTo: "nodeId"` — переход после завершения цикла
 
-> ⚠️ **Важно:** для нетриггерных нод (message, set_variable, bot_table, delete_message, delay, send_invoice, refund_stars, code, psql_query, convert_file, http_request и др.) при использовании `autoTransitionTo` **обязательно** добавлять `"enableAutoTransition": true`. Без этого флага связь не отрисуется на канвасе. Триггеры (command_trigger, text_trigger, schedule_trigger и др.) не нуждаются в этом флаге — их связи обрабатываются отдельно.
+> ⚠️ **Важно:** для нетриггерных нод (message, set_variable, bot_table, delete_message, delay, send_invoice, refund_stars, code, psql_query, convert_file, http_request и др.) при использовании `autoTransitionTo` **обязательно** добавлять `"enableAutoTransition": true`. Без этого флага связь не отрисуется на канвасе. Триггеры (command_trigger, text_trigger, schedule_trigger, successful_payment_trigger и др.) не нуждаются в этом флаге — их связи обрабатываются отдельно.
 
 ---
 
