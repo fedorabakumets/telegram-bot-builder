@@ -270,6 +270,7 @@ function generateCodeSections(
       hasDeepLinkTriggers: flags.hasDeepLinkTriggersResult,
       hasUserbotNodes: flags.hasUserbotNodesResult,
       hasRateCounterNodes: flags.hasRateCounterNodesResult,
+      hasSendInvoiceNodes: flags.hasSendInvoiceNodesResult,
       hasInputTimeoutNodes: flags.hasInputTimeoutNodesResult,
     })
   );

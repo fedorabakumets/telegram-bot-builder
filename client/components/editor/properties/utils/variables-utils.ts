@@ -755,6 +755,36 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
+  // Добавляем переменные от send_invoice (сумма и код покупки)
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'send_invoice') return;
+    const data = node.data as any;
+    if (data.savePaymentAmountTo?.trim()) {
+      const key = `send_invoice_amount__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentAmountTo,
+          nodeId: node.id,
+          nodeType: 'send_invoice' as any,
+          sourceTable: 'bot_users',
+          description: 'Сумма оплаты в звёздах',
+        });
+      }
+    }
+    if (data.savePaymentChargeIdTo?.trim()) {
+      const key = `send_invoice_charge__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentChargeIdTo,
+          nodeId: node.id,
+          nodeType: 'send_invoice' as any,
+          sourceTable: 'bot_users',
+          description: 'Код покупки для возврата',
+        });
+      }
+    }
+  });
+
   // Разделяем на текстовые и медиа
   const all = Array.from(variablesMap.values());
   return { textVariables: all.filter(v => !v.mediaType), mediaVariables: all.filter(v => v.mediaType) };

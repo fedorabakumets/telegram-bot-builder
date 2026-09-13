@@ -155,13 +155,19 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
 
   server.registerTool(
     'list_commands',
-    { description: 'Стандартные команды Telegram (/start, /help и др.)' },
+    {
+      description:
+        'Стандартные и допустимые команды Telegram (/start, /help, /paysupport…). Свои command_trigger — только латиница a-z0-9_ (/buy, /refund); кириллица в команде запрещена',
+    },
     async () => textResult(listCommands()),
   );
 
   server.registerTool(
     'get_prompt_guide',
-    { description: 'Полный гайд формата project.json (docs/bot-json-prompt.md)' },
+    {
+      description:
+        'Полный гайд project.json (docs/bot-json-prompt.md). В т.ч. правило: команды только латиницей (не /купить)',
+    },
     async () => {
       const guide = getPromptGuide();
       if ('error' in guide) return textResult(guide);
@@ -209,7 +215,8 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
   server.registerTool(
     'create_node',
     {
-      description: 'Создать одну ноду с корректными дефолтами конструктора (вызывай get_node_schema перед незнакомым типом)',
+      description:
+        'Создать одну ноду с дефолтами конструктора (get_node_schema перед незнакомым типом). Для command_trigger: только латиница (/buy, /refund), не /купить',
       inputSchema: {
         type: z.string().describe('Тип ноды'),
         partial_data: z.record(z.unknown()).optional().describe('Частичные поля data для merge'),

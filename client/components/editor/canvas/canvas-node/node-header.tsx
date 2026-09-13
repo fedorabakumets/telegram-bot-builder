@@ -179,6 +179,20 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             {getNodeName('code')}
           </span>
         );
+      /** Заголовок узла счёта в звёздах */
+      case 'send_invoice' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('send_invoice')}
+          </span>
+        );
+      /** Заголовок узла возврата звёзд */
+      case 'refund_stars' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('refund_stars')}
+          </span>
+        );
       default:
         return null;
     }

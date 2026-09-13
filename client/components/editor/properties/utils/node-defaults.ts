@@ -555,6 +555,44 @@ export function getNodeDefaults(type: Node['type']): any {
       /** Включить автопереход */
       enableAutoTransition: false,
     },
+    send_invoice: {
+      /** Название товара */
+      invoiceTitle: 'Товар',
+      /** Описание товара */
+      invoiceDescription: 'Описание товара',
+      /** Цена в звёздах */
+      invoiceAmount: '1',
+      /** URL картинки */
+      invoicePhotoUrl: '',
+      /** Скрытая метка покупки */
+      invoicePayload: '',
+      /** Переменная для суммы */
+      savePaymentAmountTo: '',
+      /** Переменная для кода покупки */
+      savePaymentChargeIdTo: '',
+      /** ID следующего узла после оплаты */
+      autoTransitionTo: '',
+      /** Включить автопереход после оплаты */
+      enableAutoTransition: false,
+      keyboardType: 'none',
+      buttons: [],
+    },
+    refund_stars: {
+      /** Источник user_id: current_user | custom */
+      refundUserSource: 'current_user',
+      /** ID пользователя при custom */
+      refundUserId: '',
+      /** Код покупки telegram_payment_charge_id */
+      refundChargeId: '',
+      /** Не прерывать сценарий при ошибке */
+      ignoreErrors: false,
+      /** ID следующего узла после успешного возврата */
+      autoTransitionTo: '',
+      /** Включить автопереход */
+      enableAutoTransition: false,
+      keyboardType: 'none',
+      buttons: [],
+    },
     userbot_edit_trigger: {
       /** Сущность (чат/канал) для отслеживания */
       userbotEntity: '',

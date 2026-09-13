@@ -22,6 +22,7 @@ import { answerCallbackQueryNode, editMessageNode } from './massive/actions';
 import { userbotMessage, userbotClickButton, userbotInlineQuery, userbotEditTrigger } from './massive/userbot';
 import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from './massive/user-management';
 import { commentNode } from './massive/utility';
+import { sendInvoiceNode, refundStarsNode } from './massive/payments';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -56,6 +57,10 @@ export const componentCategories: Array<{
   {
     title: 'Внешний API',
     components: [apiTrigger, apiResponseNode]
+  },
+  {
+    title: 'Платежи',
+    components: [sendInvoiceNode, refundStarsNode]
   },
   {
     title: 'Интеграции',

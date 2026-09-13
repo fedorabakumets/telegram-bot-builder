@@ -566,6 +566,44 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       /** Цвет заметки */
       commentColor: 'yellow',
     },
+    send_invoice: {
+      /** Название товара */
+      invoiceTitle: 'Товар',
+      /** Описание товара */
+      invoiceDescription: 'Описание товара',
+      /** Цена в звёздах */
+      invoiceAmount: '1',
+      /** URL картинки */
+      invoicePhotoUrl: '',
+      /** Скрытая метка покупки */
+      invoicePayload: '',
+      /** Переменная для суммы */
+      savePaymentAmountTo: '',
+      /** Переменная для кода покупки */
+      savePaymentChargeIdTo: '',
+      /** ID следующего узла после оплаты */
+      autoTransitionTo: '',
+      /** Включить автопереход после оплаты */
+      enableAutoTransition: false,
+      keyboardType: 'none',
+      buttons: [],
+    },
+    refund_stars: {
+      /** Источник user_id */
+      refundUserSource: 'current_user',
+      /** ID пользователя при custom */
+      refundUserId: '',
+      /** Код покупки */
+      refundChargeId: '',
+      /** Игнорировать ошибки */
+      ignoreErrors: false,
+      /** ID следующего узла после возврата */
+      autoTransitionTo: '',
+      /** Включить автопереход */
+      enableAutoTransition: false,
+      keyboardType: 'none',
+      buttons: [],
+    },
   };
   return structuredClone(defaults[type] ?? {});
 }

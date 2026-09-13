@@ -64,7 +64,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'member_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'schedule_trigger', 'api_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query', 'convert_file', 'loop', 'bot_table', 'delay', 'api_response', 'userbot_message', 'userbot_click_button', 'userbot_inline_query', 'userbot_edit_trigger', 'parallel_split', 'stop_processing', 'rate_counter', 'code', 'comment']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'member_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'schedule_trigger', 'api_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query', 'convert_file', 'loop', 'bot_table', 'delay', 'api_response', 'userbot_message', 'userbot_click_button', 'userbot_inline_query', 'userbot_edit_trigger', 'parallel_split', 'stop_processing', 'rate_counter', 'code', 'comment', 'send_invoice', 'refund_stars']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -832,6 +832,28 @@ export const nodeSchema = z.object({
       /** Значение заголовка */
       value: z.string(),
     })).default([]).optional(),
+    /** Название товара в счёте (1–32 знака) */
+    invoiceTitle: z.string().optional().default(''),
+    /** Описание товара в счёте (1–255 знаков) */
+    invoiceDescription: z.string().optional().default(''),
+    /** Цена в звёздах (целое число или {переменная}) */
+    invoiceAmount: z.string().optional().default('1'),
+    /** URL картинки товара (необязательно) */
+    invoicePhotoUrl: z.string().optional().default(''),
+    /** Скрытая метка покупки; пусто = id узла */
+    invoicePayload: z.string().optional().default(''),
+    /** Переменная для сохранения суммы оплаты */
+    savePaymentAmountTo: z.string().optional().default(''),
+    /** Переменная для сохранения кода покупки */
+    savePaymentChargeIdTo: z.string().optional().default(''),
+    /** Источник user_id для возврата: current_user | custom */
+    refundUserSource: z.string().optional().default('current_user'),
+    /** ID пользователя или {переменная} при refundUserSource=custom */
+    refundUserId: z.string().optional().default(''),
+    /** Код покупки (telegram_payment_charge_id), допускает {переменные} */
+    refundChargeId: z.string().optional().default(''),
+    /** Не прерывать сценарий при ошибке возврата */
+    ignoreErrors: z.boolean().optional().default(false),
   }),
 });
 

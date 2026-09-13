@@ -54,6 +54,8 @@ export const MANAGEMENT_NODE_TYPES = [
   'stop_processing' as any,
   'rate_counter' as any,
   'comment' as any,
+  'send_invoice' as any,
+  'refund_stars' as any,
 ] as const;
 
 /**

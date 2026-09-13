@@ -1,0 +1,277 @@
+/**
+ * @fileoverview Фазовые тесты узла send_invoice (phase80)
+ *
+ * Блок A: Генерация счёта (answer_invoice, XTR, LabeledPrice)
+ * Блок B: pre_checkout и successful_payment
+ * Блок C: нет перехода сразу после отправки; импорт LabeledPrice
+ */
+
+import fs from 'fs';
+import { execSync } from 'child_process';
+import { generatePythonCode } from '../bot-generator.ts';
+
+/**
+ * Собирает минимальный project.json для генерации
+ * @param nodes - Узлы листа
+ * @returns Объект проекта
+ */
+function makeCleanProject(nodes: unknown[]) {
+  return {
+    sheets: [{
+      id: 'sheet1',
+      name: 'Test',
+      nodes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      viewState: { pan: { x: 0, y: 0 }, zoom: 100 },
+    }],
+    version: 2,
+    activeSheetId: 'sheet1',
+  };
+}
+
+/**
+ * Генерирует Python-код бота
+ * @param project - Проект
+ * @param label - Метка для имени бота
+ * @returns Сгенерированный код
+ */
+function gen(project: unknown, label: string): string {
+  return generatePythonCode(project as any, {
+    botName: `Phase80_${label}`,
+    userDatabaseEnabled: false,
+  });
+}
+
+/**
+ * Проверяет синтаксис Python через py_compile
+ * @param code - Код
+ * @param label - Метка временного файла
+ * @returns Результат проверки
+ */
+function checkSyntax(code: string, label: string): { ok: boolean; error?: string } {
+  const tmp = `_tmp_p80_${label}.py`;
+  fs.writeFileSync(tmp, code, 'utf-8');
+  try {
+    execSync(`python -m py_compile ${tmp}`, { stdio: 'pipe' });
+    fs.unlinkSync(tmp);
+    return { ok: true };
+  } catch (e: any) {
+    try { fs.unlinkSync(tmp); } catch {}
+    return { ok: false, error: e.stderr?.toString() ?? String(e) };
+  }
+}
+
+type R = { id: string; name: string; passed: boolean; note: string };
+const results: R[] = [];
+
+/**
+ * Запускает один тест и пишет результат в консоль
+ * @param id - Идентификатор теста
+ * @param name - Название
+ * @param fn - Тело теста
+ */
+function test(id: string, name: string, fn: () => void) {
+  try {
+    fn();
+    results.push({ id, name, passed: true, note: 'OK' });
+    console.log(`  ✅ ${id}. ${name}`);
+  } catch (e: any) {
+    results.push({ id, name, passed: false, note: e.message });
+    console.log(`  ❌ ${id}. ${name}\n     → ${e.message}`);
+  }
+}
+
+/**
+ * Утверждает условие или бросает ошибку
+ * @param cond - Условие
+ * @param msg - Сообщение об ошибке
+ */
+function ok(cond: boolean, msg: string) {
+  if (!cond) throw new Error(msg);
+}
+
+/**
+ * Проверяет синтаксис и падает при ошибке
+ * @param code - Код
+ * @param label - Метка
+ */
+function syntax(code: string, label: string) {
+  const r = checkSyntax(code, label);
+  ok(r.ok, `Синтаксическая ошибка:\n${r.error}`);
+}
+
+/**
+ * Создаёт узел send_invoice
+ * @param id - ID узла
+ * @param targetId - ID следующего узла после оплаты
+ * @param extra - Дополнительные поля data
+ * @returns Узел
+ */
+function makeInvoiceNode(id: string, targetId: string, extra: Record<string, unknown> = {}) {
+  return {
+    id,
+    type: 'send_invoice',
+    position: { x: 0, y: 0 },
+    data: {
+      invoiceTitle: 'Тестовый товар',
+      invoiceDescription: 'Описание товара',
+      invoiceAmount: '5',
+      invoicePhotoUrl: '',
+      invoicePayload: '',
+      savePaymentAmountTo: 'paid_amount',
+      savePaymentChargeIdTo: 'paid_charge',
+      autoTransitionTo: targetId,
+      enableAutoTransition: true,
+      keyboardType: 'none',
+      buttons: [],
+      ...extra,
+    },
+  };
+}
+
+/**
+ * Создаёт узел message
+ * @param id - ID узла
+ * @returns Узел
+ */
+function makeMessageNode(id: string) {
+  return {
+    id,
+    type: 'message',
+    position: { x: 400, y: 0 },
+    data: {
+      messageText: 'Спасибо за оплату!',
+      buttons: [],
+      keyboardType: 'none',
+      formatMode: 'none',
+      markdown: false,
+    },
+  };
+}
+
+/**
+ * Вырезает тело handle_callback_inv1 из кода
+ * @param code - Полный код бота
+ * @returns Тело функции или пустая строка
+ */
+function extractInvoiceHandlerBody(code: string): string {
+  const start = code.indexOf('async def handle_callback_inv1');
+  if (start < 0) return '';
+  const nextDef = code.indexOf('\nasync def ', start + 1);
+  const nextAt = code.indexOf('\n@dp.', start + 1);
+  let end = code.length;
+  if (nextDef >= 0) end = Math.min(end, nextDef);
+  if (nextAt >= 0) end = Math.min(end, nextAt);
+  return code.slice(start, end);
+}
+
+console.log('\n╔══════════════════════════════════════════════════════════════╗');
+console.log('║   Тест phase80 — send_invoice (счёт в звёздах)               ║');
+console.log('╚══════════════════════════════════════════════════════════════╝\n');
+
+console.log('── Блок A: Генерация счёта ──────────────────────────────────────');
+
+test('A01', 'answer_invoice / send_invoice, XTR, пустой provider_token', () => {
+  const p = makeCleanProject([makeInvoiceNode('inv1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'a01');
+  ok(code.includes('handle_callback_inv1'), 'обработчик inv1');
+  ok(
+    code.includes('answer_invoice') || code.includes('send_invoice'),
+    'вызов answer_invoice или send_invoice',
+  );
+  ok(code.includes('currency": "XTR"') || code.includes("currency': 'XTR'") || code.includes('"XTR"'), 'валюта XTR');
+  ok(code.includes('provider_token') && code.includes('""'), 'пустой provider_token');
+  ok(code.includes('LabeledPrice'), 'LabeledPrice');
+});
+
+test('A02', 'один LabeledPrice и карта _stars_payment_targets', () => {
+  const p = makeCleanProject([makeInvoiceNode('inv1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'a02');
+  ok(code.includes('_stars_payment_targets'), 'карта целей оплаты');
+  const priceMatches = code.match(/LabeledPrice\(/g) || [];
+  ok(priceMatches.length >= 1, 'есть LabeledPrice');
+});
+
+test('A03', 'синтаксис Python OK', () => {
+  const p = makeCleanProject([makeInvoiceNode('inv1', 'msg1'), makeMessageNode('msg1')]);
+  syntax(gen(p, 'a03'), 'a03');
+});
+
+console.log('── Блок B: pre_checkout и successful_payment ────────────────────');
+
+test('B01', 'pre_checkout_query с ok=True', () => {
+  const p = makeCleanProject([makeInvoiceNode('inv1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'b01');
+  ok(code.includes('pre_checkout_query'), 'декоратор pre_checkout_query');
+  ok(code.includes('ok=True') || code.includes('ok = True'), 'answer(ok=True)');
+});
+
+test('B02', 'successful_payment и переход на handle_callback_msg1', () => {
+  const p = makeCleanProject([makeInvoiceNode('inv1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'b02');
+  ok(code.includes('successful_payment'), 'фильтр successful_payment');
+  ok(code.includes('handle_callback_msg1'), 'вызов следующего узла');
+  ok(code.includes('FakeCallbackQuery') || code.includes('fake_cb'), 'FakeCallbackQuery');
+  ok(code.includes('paid_amount') || code.includes('save_amount'), 'сохранение суммы');
+});
+
+test('B03', 'без send_invoice нет pre_checkout и LabeledPrice', () => {
+  const p = makeCleanProject([makeMessageNode('msg1')]);
+  const code = gen(p, 'b03');
+  ok(!code.includes('on_pre_checkout_query_stars'), 'нет pre_checkout хендлера');
+  ok(!code.includes('_stars_payment_targets'), 'нет карты оплаты');
+  ok(!code.includes('from aiogram.types import LabeledPrice'), 'нет импорта LabeledPrice');
+});
+
+console.log('── Блок C: нет раннего перехода и дублей ─────────────────────────');
+
+test('C01', 'нет автоперехода сразу после отправки счёта', () => {
+  const p = makeCleanProject([makeInvoiceNode('inv1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'c01');
+  const body = extractInvoiceHandlerBody(code);
+  ok(body.length > 0, 'тело handle_callback_inv1 найдено');
+  ok(body.includes('answer_invoice') || body.includes('send_invoice'), 'в теле есть отправка счёта');
+  ok(
+    !body.includes('handle_callback_msg1'),
+    'в хендлере отправки нет вызова следующего узла',
+  );
+});
+
+test('C02', 'нет пустого дубля callback-хендлера inv1', () => {
+  const p = makeCleanProject([makeInvoiceNode('inv1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'c02');
+  const matches = code.match(/async def handle_callback_inv1\b/g) || [];
+  ok(matches.length === 1, `ожидался 1 хендлер inv1, найдено ${matches.length}`);
+});
+
+test('C03', 'импорт LabeledPrice при наличии счёта', () => {
+  const p = makeCleanProject([makeInvoiceNode('inv1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'c03');
+  ok(code.includes('LabeledPrice'), 'LabeledPrice в коде');
+  ok(
+    code.includes('from aiogram.types import LabeledPrice')
+      || /from aiogram\.types import \([\s\S]*LabeledPrice/.test(code),
+    'импорт LabeledPrice',
+  );
+});
+
+test('C04', 'синтаксис с двумя счетами OK', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1'),
+    makeInvoiceNode('inv2', 'msg1', { invoiceAmount: '10', invoiceTitle: 'Второй' }),
+    makeMessageNode('msg1'),
+  ]);
+  syntax(gen(p, 'c04'), 'c04');
+});
+
+console.log('\n── Итог ─────────────────────────────────────────────────────────');
+const failed = results.filter(r => !r.passed);
+console.log(`Пройдено: ${results.length - failed.length}/${results.length}`);
+if (failed.length) {
+  console.log('Провалы:');
+  for (const f of failed) console.log(`  - ${f.id}: ${f.note}`);
+  process.exit(1);
+}
+console.log('Все тесты phase80 прошли.\n');
+process.exit(0);

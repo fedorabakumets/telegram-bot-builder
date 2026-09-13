@@ -47,6 +47,7 @@ export function generateImports(params: ImportsTemplateParams): string {
     hasBotCommands: params.hasBotCommands ?? false,
     hasDeepLinkTriggers: params.hasDeepLinkTriggers ?? false,
     hasRateCounterNodes: params.hasRateCounterNodes ?? false,
+    hasSendInvoiceNodes: params.hasSendInvoiceNodes ?? false,
     hasInputTimeoutNodes: params.hasInputTimeoutNodes ?? false,
   });
   return renderPartialTemplate('imports/imports.py.jinja2', validated);

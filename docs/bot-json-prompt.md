@@ -108,6 +108,8 @@
 }
 ```
 
+**Команда (`command`):** только латиница `a-z`, цифры и `_` (Telegram Bot API): `/buy`, `/refund`. Кириллица запрещена (`/купить` нельзя). `description` — по-русски.
+
 ### Поля text_trigger
 
 ```json
@@ -1057,6 +1059,73 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 }
 ```
 
+### send_invoice — выставить счёт в звёздах
+
+Только счёт в чат (без ссылки и подписки). Валюта всегда `XTR`, токен кассы пустой. `autoTransitionTo` срабатывает **после оплаты**, не после `answer_invoice`.
+
+```json
+{
+  "type": "send_invoice",
+  "data": {
+    "invoiceTitle": "Доступ на месяц",
+    "invoiceDescription": "Оплата звёздами",
+    "invoiceAmount": "100",
+    "invoicePhotoUrl": "",
+    "invoicePayload": "",
+    "savePaymentAmountTo": "paid_stars",
+    "savePaymentChargeIdTo": "payment_charge_id",
+    "autoTransitionTo": "msg_thanks",
+    "enableAutoTransition": true,
+    "keyboardType": "none",
+    "buttons": []
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `invoiceTitle` | Название, 1–32 |
+| `invoiceDescription` | Описание, 1–255 |
+| `invoiceAmount` | Цена в звёздах (строка, `{переменные}` допустимы) |
+| `invoicePhotoUrl` | Необязательный URL картинки |
+| `invoicePayload` | Скрытая метка; пусто = id узла |
+| `savePaymentAmountTo` | Куда сохранить сумму |
+| `savePaymentChargeIdTo` | Куда сохранить код покупки (для возврата позже) |
+| `autoTransitionTo` | Узел после успешной оплаты (`enableAutoTransition: true`) |
+
+Типичная цепочка: `command_trigger` `/buy` → `send_invoice` → (после оплаты) `message` «спасибо».  
+Для `/paysupport` и `/terms` используйте обычные `command_trigger` + `message` — отдельных типов не нужно.
+
+### refund_stars — вернуть звёзды
+
+Возврат покупки в этом боте через `refundStarPayment`. `autoTransitionTo` — после успешного возврата.
+
+```json
+{
+  "type": "refund_stars",
+  "data": {
+    "refundUserSource": "current_user",
+    "refundUserId": "",
+    "refundChargeId": "{payment_charge_id}",
+    "ignoreErrors": false,
+    "autoTransitionTo": "msg_refunded",
+    "enableAutoTransition": true,
+    "keyboardType": "none",
+    "buttons": []
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `refundUserSource` | `"current_user"` или `"custom"` |
+| `refundUserId` | ID / `{var}` при `custom` |
+| `refundChargeId` | Код покупки (`telegram_payment_charge_id`) |
+| `ignoreErrors` | При ошибке всё равно перейти дальше |
+| `autoTransitionTo` | Узел после успешного возврата (`enableAutoTransition: true`) |
+
+Цепочки: `/refund` → `input` кода → `refund_stars` → сообщение; демо: `send_invoice` (1⭐) → после оплаты `refund_stars` с сохранённым кодом.
+
 ### code — произвольный Python (Telethon)
 
 Пишите **тело async-функции** с `await` (без своего `async def`). Переменные пользователя доступны по имени. `client` и `userbot_client` — тот же Telethon-клиент, что у узлов юзербота.
@@ -1673,7 +1742,7 @@ HTTP-узел с `httpRequestResponseFormat: "file"` сохраняет отве
 - `data.branches[].target: "nodeId"` — переход по ветке условия
 - `data.afterLoopTo: "nodeId"` — переход после завершения цикла
 
-> ⚠️ **Важно:** для нетриггерных нод (message, set_variable, bot_table, delete_message, delay, code, psql_query, convert_file, http_request и др.) при использовании `autoTransitionTo` **обязательно** добавлять `"enableAutoTransition": true`. Без этого флага связь не отрисуется на канвасе. Триггеры (command_trigger, text_trigger, schedule_trigger и др.) не нуждаются в этом флаге — их связи обрабатываются отдельно.
+> ⚠️ **Важно:** для нетриггерных нод (message, set_variable, bot_table, delete_message, delay, send_invoice, refund_stars, code, psql_query, convert_file, http_request и др.) при использовании `autoTransitionTo` **обязательно** добавлять `"enableAutoTransition": true`. Без этого флага связь не отрисуется на канвасе. Триггеры (command_trigger, text_trigger, schedule_trigger и др.) не нуждаются в этом флаге — их связи обрабатываются отдельно.
 
 ---
 
@@ -1943,6 +2012,7 @@ GIN-индекс на `bot_table_rows.data` для быстрого поиска
 
 ### Антипаттерны
 
+- ❌ Не создавать `command_trigger` с кириллицей (`/купить`) — только латиница (`/buy`)
 - ❌ Не хранить массивы как строку — использовать `json_push` в `set_variable`
 - ❌ Не делать SELECT + UPDATE в двух узлах — использовать `bot_table` с `operation: "update"` и `op: "increment"`
 - ❌ Не дублировать данные в `user_data` и в пользовательской таблице — выбрать одно место

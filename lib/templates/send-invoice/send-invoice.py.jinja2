@@ -1,0 +1,143 @@
+{#
+  @fileoverview Шаблон обработчиков счёта в звёздах (send_invoice).
+  1) handle_callback_{id} — отправка счёта (без перехода)
+  2) один pre_checkout_query — всегда ok=True
+  3) один successful_payment — сохранение и переход по метке
+
+  @param {array} sendInvoiceEntries - Массив SendInvoiceEntry
+#}
+
+# Маршруты оплаты: payload → настройки узла send_invoice
+_stars_payment_targets = {}
+
+# Обработчики счетов в звёздах (send_invoice)
+{% for entry in sendInvoiceEntries %}
+{%- set sanitized_node_id = entry.nodeId | safe_name %}
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Выставляет счёт в звёздах — узел {{ entry.nodeId }}"""
+    user_id = callback_query.from_user.id
+    await init_user_variables(user_id, callback_query.from_user)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    _all_vars = await init_all_user_vars(user_id)
+    if state is not None:
+        try:
+            _fsm_data = await state.get_data()
+            if _fsm_data:
+                _all_vars.update(_fsm_data)
+        except Exception:
+            pass
+
+    _title = replace_variables_in_text({{ entry.title | tojson }}, _all_vars, {})
+    _description = replace_variables_in_text({{ entry.description | tojson }}, _all_vars, {})
+    _amount_raw = replace_variables_in_text({{ entry.amount | tojson }}, _all_vars, {}) or "1"
+    try:
+        _amount = int(float(str(_amount_raw).strip()))
+    except (ValueError, TypeError):
+        _amount = 1
+    if _amount < 1:
+        _amount = 1
+
+    _payload = replace_variables_in_text({{ entry.payload | tojson }}, _all_vars, {}) or "{{ entry.nodeId }}"
+    _payload = str(_payload)[:128]
+{% if entry.photoUrl %}
+    _photo_url = replace_variables_in_text({{ entry.photoUrl | tojson }}, _all_vars, {})
+{% else %}
+    _photo_url = ""
+{% endif %}
+
+    _invoice_kwargs = {
+        "title": (_title or "Товар")[:32],
+        "description": (_description or "Описание")[:255],
+        "payload": _payload,
+        "provider_token": "",
+        "currency": "XTR",
+        "prices": [LabeledPrice(label="XTR", amount=_amount)],
+    }
+    if _photo_url:
+        _invoice_kwargs["photo_url"] = _photo_url
+
+    _stars_payment_targets[_payload] = {
+        "node_id": "{{ entry.nodeId }}",
+        "save_amount_to": {{ entry.savePaymentAmountTo | tojson }},
+        "save_charge_to": {{ entry.savePaymentChargeIdTo | tojson }},
+        "next_node": {{ entry.autoTransitionTo | tojson }},
+    }
+
+    try:
+        await callback_query.message.answer_invoice(**_invoice_kwargs)
+        logging.info(f"⭐ send_invoice [{{ entry.nodeId }}]: счёт на {_amount} ⭐ для {user_id}, payload={_payload}")
+    except Exception as e:
+        logging.error(f"❌ Ошибка send_invoice [{{ entry.nodeId }}]: {e}")
+
+{% endfor %}
+
+{%- if sendInvoiceEntries and sendInvoiceEntries|length > 0 %}
+@dp.pre_checkout_query()
+async def on_pre_checkout_query_stars(pre_checkout_query: types.PreCheckoutQuery):
+    """Проверка перед списанием звёзд — всегда разрешаем"""
+    logging.info(
+        f"⭐ pre_checkout: payload={pre_checkout_query.invoice_payload} amount={pre_checkout_query.total_amount}"
+    )
+    await pre_checkout_query.answer(ok=True)
+
+
+@dp.message(F.successful_payment)
+async def on_successful_payment_stars(message: types.Message, state: FSMContext = None):
+    """Успешная оплата звёздами — сохранение и переход по метке покупки"""
+    payment = message.successful_payment
+    if not payment:
+        return
+    payload = payment.invoice_payload or ""
+    user_id = message.from_user.id
+    await init_user_variables(user_id, message.from_user)
+    logging.info(
+        f"⭐ successful_payment: payload={payload} amount={payment.total_amount} charge={payment.telegram_payment_charge_id}"
+    )
+
+    _route = _stars_payment_targets.get(payload)
+    if not _route:
+        logging.warning(f"⭐ successful_payment: неизвестный payload={payload!r}")
+        return
+
+    if user_id not in user_data:
+        user_data[user_id] = {}
+
+    _amount_var = _route.get("save_amount_to") or ""
+    if _amount_var:
+        user_data[user_id][_amount_var] = payment.total_amount
+
+    _charge_var = _route.get("save_charge_to") or ""
+    if _charge_var:
+        user_data[user_id][_charge_var] = payment.telegram_payment_charge_id
+
+    _next = _route.get("next_node") or ""
+    if not _next:
+        return
+
+    class FakeCallbackQuery:
+        """Фейковый callback для перехода после оплаты"""
+        def __init__(self, user, msg, data):
+            self.from_user = user
+            self.message = msg
+            self.data = data
+            self._is_fake = True
+
+        async def answer(self, *args, **kwargs):
+            pass
+
+    fake_cb = FakeCallbackQuery(message.from_user, message, _next)
+{% for entry in sendInvoiceEntries %}
+{%- if entry.autoTransitionTo %}
+{%- set sanitized_target_id = entry.autoTransitionTo | safe_name %}
+    if _next == "{{ entry.autoTransitionTo }}":
+        await handle_callback_{{ sanitized_target_id }}(fake_cb, state=state)
+        return
+{% endif %}
+{% endfor %}
+
+{%- endif %}

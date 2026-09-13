@@ -19,6 +19,7 @@ export const importsParamsSchema = z.object({
   hasTimezoneNodes: z.boolean().default(false),
   hasUserbotNodes: z.boolean().default(false),
   hasRateCounterNodes: z.boolean().default(false),
+  hasSendInvoiceNodes: z.boolean().default(false),
   hasInputTimeoutNodes: z.boolean().default(false),
 });
 
