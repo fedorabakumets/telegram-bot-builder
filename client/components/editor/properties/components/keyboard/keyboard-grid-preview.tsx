@@ -6,10 +6,9 @@
 import React from 'react';
 import { Button } from '@lib/bot-generator';
 import { KeyboardLayout } from '../../types/keyboard-layout';
-import { DYNAMIC_BUTTONS_PLACEHOLDER_ID } from '../../utils/keyboard-layout-utils';
-import { buildDynamicButtonsPreviewItems } from '../../utils/dynamic-buttons';
-import { getButtonStyleClassName } from '../../utils/button-style-classes';
 import { cn } from '@/utils/utils';
+import { KeyboardGridButtonCell } from './keyboard-grid-button-cell';
+import { useKeyboardGridTouch } from './use-keyboard-grid-touch';
 
 /** Свойства компонента KeyboardGridPreview */
 export interface KeyboardGridPreviewProps {
@@ -20,7 +19,7 @@ export interface KeyboardGridPreviewProps {
   /** Функция перемещения кнопки */
   onMoveButton: (buttonId: string, toRow: number, toIndex: number) => void;
   /** Конфигурация динамических кнопок для превью */
-  dynamicButtonsConfig?: any;
+  dynamicButtonsConfig?: unknown;
   /** Дополнительные CSS классы */
   className?: string;
   /** Отключён ли drag-and-drop */
@@ -28,8 +27,9 @@ export interface KeyboardGridPreviewProps {
 }
 
 /**
- * Компонент превью раскладки клавиатуры
- * Отображает визуальную сетку кнопок с drag-and-drop
+ * Превью раскладки с HTML5 и touch перетаскиванием
+ * @param props - Свойства компонента
+ * @returns JSX элемент
  */
 export function KeyboardGridPreview({
   buttons,
@@ -39,6 +39,9 @@ export function KeyboardGridPreview({
   className,
   disabled = false,
 }: KeyboardGridPreviewProps) {
+  const { draggingId, onTouchStart, onTouchMove, onTouchEnd, onTouchCancel } =
+    useKeyboardGridTouch(disabled, onMoveButton);
+
   const handleDragStart = (e: React.DragEvent, buttonId: string) => {
     if (disabled) {
       e.preventDefault();
@@ -49,12 +52,8 @@ export function KeyboardGridPreview({
   };
 
   const handleDragOver = (e: React.DragEvent) => {
-    if (disabled) {
-      e.preventDefault();
-      return;
-    }
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    if (!disabled) e.dataTransfer.dropEffect = 'move';
   };
 
   const handleDropOnRow = (e: React.DragEvent, rowIndex: number) => {
@@ -69,123 +68,79 @@ export function KeyboardGridPreview({
   const handleDropOnButton = (
     e: React.DragEvent,
     rowIndex: number,
-    buttonIndex: number
+    buttonIndex: number,
   ) => {
     if (disabled) return;
     e.preventDefault();
     const draggedButtonId = e.dataTransfer.getData('buttonId');
-    if (draggedButtonId) {
-      onMoveButton(draggedButtonId, rowIndex, buttonIndex);
-    }
-  };
-
-  const getButtonById = (buttonId: string): Button | undefined => {
-    return buttons.find((button) => button.id === buttonId);
-  };
-
-  const getButtonText = (buttonId: string): string => {
-    return getButtonById(buttonId)?.text || 'Кнопка';
-  };
-
-  /**
-   * Возвращает CSS-классы ячейки кнопки с учётом стиля и режима drag-and-drop.
-   *
-   * @param buttonId - ID кнопки в раскладке
-   * @returns Строка Tailwind-классов
-   */
-  const getButtonCellClassName = (buttonId: string): string => {
-    if (buttonId === DYNAMIC_BUTTONS_PLACEHOLDER_ID) {
-      return 'bg-amber-50 dark:bg-amber-950/30 border-amber-300/60 dark:border-amber-700/50 text-amber-800 dark:text-amber-200 cursor-move';
-    }
-
-    const button = getButtonById(buttonId);
-    const styleClass = getButtonStyleClassName(button?.style);
-
-    if (disabled) {
-      return cn(styleClass, 'cursor-not-allowed opacity-60');
-    }
-
-    return cn(styleClass, 'cursor-move hover:opacity-90 transition-colors');
+    if (draggedButtonId) onMoveButton(draggedButtonId, rowIndex, buttonIndex);
   };
 
   return (
     <div className={cn('space-y-2', className)}>
       {layout.rows.map((row, rowIndex) => (
         <div key={rowIndex}>
-          {/* Зона для сброса перед рядом */}
           {!disabled && (
             <div
+              data-kb-drop=""
+              data-kb-drop-row={rowIndex}
+              data-kb-drop-index={0}
               className="h-2 mb-1 rounded hover:bg-primary/10 transition-colors"
               onDragOver={handleDragOver}
               onDrop={(e) => {
                 e.preventDefault();
                 const buttonId = e.dataTransfer.getData('buttonId');
-                if (buttonId) {
-                  onMoveButton(buttonId, rowIndex, 0);
-                }
+                if (buttonId) onMoveButton(buttonId, rowIndex, 0);
               }}
             />
           )}
           <div
+            data-kb-drop=""
+            data-kb-drop-row={rowIndex}
+            data-kb-drop-index={row.buttonIds.length}
             className={cn(
               'flex gap-2 min-h-[48px] p-1 rounded-lg border transition-colors',
-              disabled 
-                ? 'border-transparent bg-muted/30 opacity-60' 
-                : 'border-transparent hover:border-primary/20'
+              disabled
+                ? 'border-transparent bg-muted/30 opacity-60'
+                : 'border-transparent hover:border-primary/20',
             )}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDropOnRow(e, rowIndex)}
           >
             {row.buttonIds.map((buttonId, buttonIndex) => (
-              <div
+              <KeyboardGridButtonCell
                 key={buttonId}
-                draggable={!disabled}
-                onDragStart={(e) => handleDragStart(e, buttonId)}
+                buttonId={buttonId}
+                rowIndex={rowIndex}
+                buttonIndex={buttonIndex}
+                buttons={buttons}
+                dynamicButtonsConfig={dynamicButtonsConfig}
+                disabled={disabled}
+                isDragging={draggingId === buttonId}
+                onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
-                onDrop={(e) => {
-                  e.stopPropagation();
-                  handleDropOnButton(e, rowIndex, buttonIndex);
-                }}
-                className={cn(
-                  'flex-1 min-w-[120px] p-3 rounded-md text-center text-sm border shadow-sm break-words',
-                  getButtonCellClassName(buttonId),
-                )}
-              >
-                {buttonId === DYNAMIC_BUTTONS_PLACEHOLDER_ID ? (
-                  <div className="space-y-1">
-                    {buildDynamicButtonsPreviewItems(dynamicButtonsConfig).slice(0, 2).map((item, i) => (
-                      <div
-                        key={i}
-                        className={cn(
-                          'rounded px-2 py-1 border text-xs text-left',
-                          getButtonStyleClassName(item.style),
-                        )}
-                      >
-                        {item.text}
-                      </div>
-                    ))}
-                    <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">⚡ +ещё...</div>
-                  </div>
-                ) : (
-                  getButtonText(buttonId)
-                )}
-              </div>
+                onDrop={handleDropOnButton}
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+                onTouchCancel={onTouchCancel}
+              />
             ))}
           </div>
         </div>
       ))}
 
-      {/* Зона для сброса после последнего ряда */}
       {!disabled && layout.rows.length > 0 && (
         <div
-          className="h-8 mt-2 rounded-lg border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-center cursor-pointer"
+          data-kb-drop=""
+          data-kb-drop-row={layout.rows.length}
+          data-kb-drop-index={0}
+          className="h-8 mt-2 rounded-lg border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-center"
           onDragOver={handleDragOver}
           onDrop={(e) => {
             e.preventDefault();
             const buttonId = e.dataTransfer.getData('buttonId');
-            if (buttonId) {
-              onMoveButton(buttonId, layout.rows.length, 0);
-            }
+            if (buttonId) onMoveButton(buttonId, layout.rows.length, 0);
           }}
         >
           <span className="text-xs text-muted-foreground">
@@ -194,14 +149,13 @@ export function KeyboardGridPreview({
         </div>
       )}
 
-      {/* Подсказка при авто-раскладке */}
       {disabled && (
         <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-start gap-2">
           <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <p className="text-xs text-amber-800 dark:text-amber-200">
-            <strong>Авто-раскладка включена.</strong> Кнопки автоматически распределяются по колонкам. 
+            <strong>Авто-раскладка включена.</strong> Кнопки автоматически распределяются по колонкам.
             Отключите авто-раскладку для ручного управления расположением.
           </p>
         </div>
