@@ -30,6 +30,14 @@ import { AnalyticsSourcesChart } from './analytics-sources-chart';
 import { AnalyticsPopularButtonsChart } from './analytics-popular-buttons-chart';
 import { AnalyticsTableChartCard } from './table-chart/analytics-table-chart-card';
 import { AnalyticsAudienceReachNote } from './analytics-audience-reach-note';
+import { AnalyticsUsersActivityCard } from './analytics-users-activity-card';
+import {
+  TotalUsersChartInfo,
+  MessagesActivityChartInfo,
+  SourcesDonutChartInfo,
+  PremiumDonutChartInfo,
+  LanguagesDonutChartInfo,
+} from './analytics-chart-info-texts';
 
 
 import { ProjectSelector } from '@/components/editor/database/user-database/components/header/project-selector';
@@ -187,6 +195,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               chartGranularity={growthGranularity}
               chartHeight={160}
               chartType={growthChartType}
+              info={<TotalUsersChartInfo />}
               footerExtra={
                 <AnalyticsAudienceReachNote
                   blockedBotUsers={stats.blockedBotUsers}
@@ -203,7 +212,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               }
             />
             <StatMetricCard
-              title="Активность"
+              title="Активность сообщений"
               value={stats.totalInteractions}
               sparklineData={activitySplitMode === 'total' ? messagePoints : undefined}
               multiLineData={activityMultiLine}
@@ -216,6 +225,7 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
               chartGranularity={msgGranularity}
               chartHeight={160}
               chartType={activityChartType}
+              info={<MessagesActivityChartInfo />}
               headerExtra={
                 <div className="flex flex-wrap items-center gap-1">
                   <ActivityGranularitySelector value={msgGranularity} onChange={setMsgGranularity} />
@@ -227,13 +237,27 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
             />
           </div>
 
+          {/* Строка: активность пользователей */}
+          <div className="grid grid-cols-1 gap-3">
+            <AnalyticsUsersActivityCard
+              projectId={projectId}
+              selectedTokenId={selectedTokenId}
+            />
+          </div>
+
           {/* Строка 2: источники трафика (bar/line) + donut источников */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             <AnalyticsSourcesChart
               projectId={projectId}
               selectedTokenId={selectedTokenId}
             />
-            <StatDonutCard title="Источники трафика" items={sourceItems} maxItems={null} className="h-full" />
+            <StatDonutCard
+              title="Источники трафика"
+              items={sourceItems}
+              maxItems={null}
+              className="h-full"
+              info={<SourcesDonutChartInfo />}
+            />
           </div>
 
           {/* Строка: топ-10 популярных кнопок */}
@@ -243,8 +267,18 @@ export function AnalyticsPanel({ projectId, selectedTokenId, onSelectToken, allP
 
           {/* Строка 3: Premium + языки */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <StatDonutCard title="Premium" items={statusItems} className="h-full" />
-            <StatDonutCard title="Языки" items={languageItems} className="h-full" />
+            <StatDonutCard
+              title="Premium"
+              items={statusItems}
+              className="h-full"
+              info={<PremiumDonutChartInfo />}
+            />
+            <StatDonutCard
+              title="Языки"
+              items={languageItems}
+              className="h-full"
+              info={<LanguagesDonutChartInfo />}
+            />
           </div>
 
           {/* Строка: конструктор графика по таблице */}

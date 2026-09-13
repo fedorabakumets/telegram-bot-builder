@@ -169,7 +169,7 @@ export function StatsDashboard(props: StatsDashboardProps): React.JSX.Element {
 
         {/* Карточка: активность */}
         <StatMetricCard
-          title="Активность"
+          title="Активность сообщений"
           value={stats.totalInteractions}
           sparklineData={activitySplitMode === 'total' ? messagePoints : undefined}
           multiLineData={activityMultiLine}

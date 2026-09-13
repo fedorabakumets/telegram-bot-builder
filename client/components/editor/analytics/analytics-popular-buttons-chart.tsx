@@ -16,6 +16,7 @@ import { usePopularButtons } from '@/components/editor/database/user-database/ho
 import { useUserMessagesLiveContext } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 import { PopularButtonsTooltip } from './analytics-popular-buttons-tooltip';
 import { GrowthGranularitySelector } from '@/components/editor/database/user-database/components/stats/growth-granularity-selector';
+import { PopularButtonsChartInfo } from './analytics-chart-info-texts';
 
 /**
  * Пропсы компонента AnalyticsPopularButtonsChart
@@ -67,6 +68,8 @@ export function AnalyticsPopularButtonsChart({ projectId, selectedTokenId }: Ana
         </div>
         <GrowthGranularitySelector value={granularity} onChange={setGranularity} />
       </div>
+
+      <PopularButtonsChartInfo />
 
       {/* Горизонтальный bar chart или пустое состояние */}
       {items.length === 0 ? (

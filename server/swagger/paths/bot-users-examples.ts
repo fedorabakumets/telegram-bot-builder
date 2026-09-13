@@ -77,6 +77,26 @@ export const BOT_USERS_GROWTH_EXAMPLE = [
   { date: "2026-08-02T00:00:00.000Z", count: 3 },
 ];
 
+/** GET /users/activity */
+export const BOT_USERS_ACTIVITY_EXAMPLE = {
+  points: [
+    {
+      date: "2026-09-01T00:00:00.000Z",
+      total: 42,
+      newcomers: 7,
+      returning: 35,
+    },
+    {
+      date: "2026-09-02T00:00:00.000Z",
+      total: 38,
+      newcomers: 4,
+      returning: 34,
+    },
+  ],
+  activeInWindow: 310,
+  newInWindow: 58,
+};
+
 /** GET /users/growth-by-source */
 export const BOT_USERS_GROWTH_BY_SOURCE_EXAMPLE = [
   { date: "2026-08-01T00:00:00.000Z", sources: { direct: 3, instagram: 2 } },

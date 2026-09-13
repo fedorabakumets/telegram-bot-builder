@@ -4,7 +4,7 @@
  *              Поддерживает режим split — разбивку на входящие (от пользователей) и исходящие (от бота).
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import {
   ChartGranularity,
@@ -101,12 +101,12 @@ export function useMessagesActivity(params: UseMessagesActivityParams) {
     },
     enabled: !!projectId,
     staleTime: 0,
-    gcTime: 0,
+    gcTime: 60_000,
     retry: false,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
     refetchInterval: getChartGranularityRefetchInterval(granularity),
-    placeholderData: undefined,
+    placeholderData: keepPreviousData,
   });
 
   if (split) {

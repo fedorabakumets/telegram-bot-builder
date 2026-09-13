@@ -15,6 +15,7 @@ import {
 import { buildUsersApiUrl } from '@/components/editor/database/utils';
 import { UserStats } from '../types';
 import { UserBotData } from '@shared/schema';
+import { createUsersActivityInvalidator } from './throttle-users-activity-invalidate';
 
 /**
  * Параметры хука useLiveInvalidate
@@ -187,6 +188,7 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
     const statsUrl = buildUsersApiUrl(`/api/projects/${projectId}/users/stats`, selectedTokenId);
     const statsKey = [statsUrl, selectedTokenId];
     const normalizedTokenId = selectedTokenId ?? null;
+    const usersActivity = createUsersActivityInvalidator(queryClient, projectId);
 
     const unsubscribe = liveContext.subscribe((event: LiveEvent) => {
       if (event.type === 'new-message') {
@@ -232,6 +234,11 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
           },
         });
 
+        // Активность пользователей — только входящие от человека (не ответы бота)
+        if (msg.data?.messageType === 'user') {
+          usersActivity.invalidate();
+        }
+
         // Инвалидируем трафик при new-message — deep_link_param мог записаться в БД
         // чуть позже чем пришло событие new-user (race condition при первом визите)
         const trafficUrlOnMsg = buildUsersApiUrl(`/api/projects/${projectId}/users/traffic`, selectedTokenId);
@@ -253,6 +260,8 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
           queryKey: ['infinite-users', projectId],
           refetchType: 'all',
         });
+        // Новичок текущего отрезка — обновляем график активности пользователей
+        usersActivity.invalidate();
 
         // Optimistic update статистики — новый активный пользователь.
         // deepLinkUsers инкрементируем если в событии есть deepLinkParam.
@@ -282,6 +291,9 @@ export function useLiveInvalidate({ projectId, selectedTokenId }: UseLiveInvalid
       }
     });
 
-    return unsubscribe;
+    return () => {
+      usersActivity.dispose();
+      unsubscribe();
+    };
   }, [projectId, selectedTokenId, queryClient, liveContext]);
 }

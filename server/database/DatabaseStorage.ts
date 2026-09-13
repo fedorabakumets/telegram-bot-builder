@@ -9,6 +9,7 @@ import type { StorageBotGroupInput, StorageBotGroupUpdate, StorageBotInstanceInp
 import { db } from "./db";
 import { generateAgentToken, hashAgentToken } from "../utils/agent-token-crypto";
 import { incrementMessageActivityDaily } from "./incrementMessageActivityDaily";
+import { markUserActivityDaily } from "../routes/users/mark-user-activity-daily";
 import { resolveLaunchIdsForLogs, mergeLogsByTimestampAsc } from "../bots/selectLatestLaunchLogs";
 
 /**
@@ -1210,6 +1211,19 @@ export class DatabaseStorage implements IStorage {
       });
     } catch (err) {
       console.warn('[createBotMessage] не удалось обновить message_activity_daily:', err);
+    }
+
+    // Отметка «человек был активен сегодня» — только для входящих от пользователя
+    if (insertMessage.messageType === "user") {
+      try {
+        await markUserActivityDaily({
+          projectId: insertMessage.projectId,
+          tokenId: insertMessage.tokenId,
+          userId: insertMessage.userId,
+        });
+      } catch (err) {
+        console.warn('[createBotMessage] не удалось обновить user_activity_daily:', err);
+      }
     }
 
     return message;

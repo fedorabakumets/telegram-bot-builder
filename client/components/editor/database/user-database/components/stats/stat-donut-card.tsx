@@ -46,6 +46,8 @@ export interface StatDonutCardProps {
   onItemClick?: (label: string) => void;
   /** Дополнительные CSS классы для корневого элемента */
   className?: string;
+  /** Спойлер «Что это за диаграмма?» */
+  info?: React.ReactNode;
 }
 
 /**
@@ -81,7 +83,7 @@ function DonutTooltip({ active, payload }: DonutTooltipProps): React.JSX.Element
  * @returns JSX элемент карточки
  */
 export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
-  const { title, items, maxItems = 8, onItemClick, className } = props;
+  const { title, items, maxItems = 8, onItemClick, className, info } = props;
 
   const allItems = items ?? [];
   const visible = maxItems == null ? allItems : allItems.slice(0, maxItems);
@@ -95,6 +97,7 @@ export function StatDonutCard(props: StatDonutCardProps): React.JSX.Element {
     <div className={`bg-background border rounded-xl p-3 flex flex-col gap-2 min-w-0 ${className ?? ''}`}>
       {/* Заголовок карточки */}
       <p className="text-sm font-medium text-foreground">{title}</p>
+      {info}
 
       {isEmpty ? (
         /* Пустое состояние */
