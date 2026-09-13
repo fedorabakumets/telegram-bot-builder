@@ -918,6 +918,21 @@
     "author": ""
   },
   {
+    "path": "database/user_activity_daily",
+    "title": "user_activity_daily",
+    "excerpt": "Дневные отметки «этот человек был активен в этот день».",
+    "parts": [
+      "database",
+      "user_activity_daily"
+    ],
+    "folder_titles": {
+      "database": "Database"
+    },
+    "updated_at": "2026-09-13T20:55:23+03:00",
+    "tags": [],
+    "author": ""
+  },
+  {
     "path": "database/user_project_archives",
     "title": "user_project_archives",
     "excerpt": "Личный архив проектов: каждый пользователь может скрыть проект только у себя.",
@@ -2432,7 +2447,7 @@
     "folder_titles": {
       "interface": "🖥️ Интерфейс"
     },
-    "updated_at": "2026-07-26T01:57:59+03:00",
+    "updated_at": "2026-09-13T20:55:23+03:00",
     "tags": [],
     "author": ""
   },
