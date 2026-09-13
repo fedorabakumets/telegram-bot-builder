@@ -35,6 +35,10 @@
       "description": "Bootstrap экрана входа Studio (до сессии): Client ID / bot username / skipAuth. Не конфиг бота — только что показать на AuthScreen (widget vs dev-login)."
     },
     {
+      "name": "disabled-node-types",
+      "description": "Эндпоинты /api/disabled-node-types"
+    },
+    {
       "name": "health",
       "description": "Публичный healthcheck: GET JSON (database/templates/ready), HEAD → 204. ready === database; templates независимо. Без Redis в ответе."
     },
@@ -3950,6 +3954,25 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/disabled-node-types": {
+      "get": {
+        "tags": [
+          "disabled-node-types"
+        ],
+        "summary": "GET /api/disabled-node-types",
+        "responses": {
+          "200": {
+            "description": "Успешный ответ"
+          },
+          "401": {
+            "description": "Требуется авторизация (сессия или Bearer PAT)"
+          },
+          "503": {
+            "description": "Приложение не настроено — настройка в /admin"
           }
         }
       }
@@ -11593,6 +11616,161 @@
                 },
                 "example": {
                   "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{id}/users/activity": {
+      "get": {
+        "tags": [
+          "project-users"
+        ],
+        "summary": "Активные пользователи по времени",
+        "description": "Считает **уникальных людей**, что-то сделавших за каждый слот (входящее сообщение или нажатие inline-кнопки, `message_type=user`). Ответы бота не учитываются.\n\nС `granularity` (1m|5m|1h|1w|1d|7d|30d):\n- короткие окна (1m/5m/1h) — из `bot_messages`;\n- длинные (1w/1d/7d/30d) — из `user_activity_daily` (переживают очистку сообщений и удаление людей).\n\nПоле `newcomers` — люди, у которых время первого появления попадает в тот же слот; `returning = total − newcomers`.\n\n`activeInWindow` / `newInWindow` — уникальные за **всё окно** (сумма точек не равна итогу: один человек за три дня — один, не три).\n\n**Клиент:** `use-users-activity`.\n\n```bash\ncurl -s 'http://localhost:5000/api/projects/42/users/activity?granularity=1d&tokenId=7' \\\n  -b cookies.txt\n```",
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "agentToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Числовой ID проекта",
+              "example": "42"
+            },
+            "required": true,
+            "description": "Числовой ID проекта",
+            "example": "42",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Скоуп bot_users/bot_messages по token_id. Без параметра — данные всех токенов проекта.",
+              "example": "7"
+            },
+            "required": false,
+            "description": "Опциональный ID токена бота. Без него — все токены проекта.",
+            "example": "7",
+            "name": "tokenId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1m",
+                "5m",
+                "1h",
+                "1w",
+                "1d",
+                "7d",
+                "30d"
+              ],
+              "description": "Окно и шаг: 1m|5m|1h|1w|1d|7d|30d. Короткие (1m/5m/1h) — из bot_messages; длинные — из user_activity_daily. По умолчанию 1d.",
+              "example": "1d"
+            },
+            "required": false,
+            "name": "granularity",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer PAT агента (`mcp_…`). Альтернатива cookie connect.sid. Без обоих — 401.",
+              "example": "Bearer mcp_xxxxxxxx"
+            },
+            "required": false,
+            "description": "Authorization: Bearer mcp_… — PAT агента (альтернатива cookie)",
+            "example": "Bearer mcp_xxxxxxxx",
+            "name": "Authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Session cookie после login. Не нужна, если передан Authorization Bearer PAT.",
+              "example": "s%3Axxxx.yyyy"
+            },
+            "required": false,
+            "description": "Session cookie после login. Не нужна при Authorization: Bearer mcp_…",
+            "example": "s%3Axxxx.yyyy",
+            "name": "connect.sid",
+            "in": "cookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Точки слотов и итоги окна",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserActivityResponse"
+                },
+                "example": {
+                  "points": [
+                    {
+                      "date": "2026-09-01T00:00:00.000Z",
+                      "total": 42,
+                      "newcomers": 7,
+                      "returning": 35
+                    },
+                    {
+                      "date": "2026-09-02T00:00:00.000Z",
+                      "total": 38,
+                      "newcomers": 4,
+                      "returning": 34
+                    }
+                  ],
+                  "activeInWindow": 310,
+                  "newInWindow": 58
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет session cookie и Bearer PAT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                },
+                "example": {
+                  "error": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет доступа к проекту",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Нет прав доступа к проекту"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка БД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageError"
+                },
+                "example": {
+                  "message": "Ошибка при получении активности пользователей"
                 }
               }
             }
@@ -27054,6 +27232,57 @@
         "items": {
           "$ref": "#/components/schemas/GrowthBySourcePoint"
         }
+      },
+      "UserActivityPoint": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-09-01T00:00:00.000Z"
+          },
+          "total": {
+            "type": "integer",
+            "example": 42
+          },
+          "newcomers": {
+            "type": "integer",
+            "example": 7
+          },
+          "returning": {
+            "type": "integer",
+            "example": 35
+          }
+        },
+        "required": [
+          "date",
+          "total",
+          "newcomers",
+          "returning"
+        ]
+      },
+      "UserActivityResponse": {
+        "type": "object",
+        "properties": {
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserActivityPoint"
+            }
+          },
+          "activeInWindow": {
+            "type": "integer",
+            "example": 310
+          },
+          "newInWindow": {
+            "type": "integer",
+            "example": 58
+          }
+        },
+        "required": [
+          "points",
+          "activeInWindow",
+          "newInWindow"
+        ]
       },
       "PopularButtonItem": {
         "type": "object",
