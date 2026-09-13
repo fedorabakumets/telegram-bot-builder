@@ -1,6 +1,6 @@
 # project-users
 
-Эндпоинтов: **10**
+Эндпоинтов: **11**
 
 ### `DELETE` /api/projects/{id}/users
 
@@ -104,6 +104,71 @@ curl -s 'http://localhost:5000/api/projects/42/users?limit=50&tokenId=7' -b cook
   ],
   "total": 120,
   "hasMore": true
+}
+```
+
+### `GET` /api/projects/{id}/users/activity
+
+Активные пользователи по времени
+
+**Авторизация:** Cookie (`connect.sid`) или Bearer PAT
+
+Считает **уникальных людей**, что-то сделавших за каждый слот (входящее сообщение или нажатие inline-кнопки, `message_type=user`). Ответы бота не учитываются.
+
+С `granularity` (1m|5m|1h|1w|1d|7d|30d):
+- короткие окна (1m/5m/1h) — из `bot_messages`;
+- длинные (1w/1d/7d/30d) — из `user_activity_daily` (переживают очистку сообщений и удаление людей).
+
+Поле `newcomers` — люди, у которых время первого появления попадает в тот же слот; `returning = total − newcomers`.
+
+`activeInWindow` / `newInWindow` — уникальные за **всё окно** (сумма точек не равна итогу: один человек за три дня — один, не три).
+
+**Клиент:** `use-users-activity`.
+
+```bash
+curl -s 'http://localhost:5000/api/projects/42/users/activity?granularity=1d&tokenId=7' \
+  -b cookies.txt
+```
+
+#### Параметры
+
+| Имя | In | Обязательный | Описание | Пример |
+|-----|-----|--------------|----------|--------|
+| `id` | path | да | Числовой ID проекта | `"42"` |
+| `tokenId` | query | нет | Опциональный ID токена бота. Без него — все токены проекта. | `"7"` |
+| `granularity` | query | нет | — | `"1d"` |
+| `Authorization` | header | нет | Authorization: Bearer mcp_… — PAT агента (альтернатива cookie) | `"Bearer mcp_xxxxxxxx"` |
+| `connect.sid` | cookie | нет | Session cookie после login. Не нужна при Authorization: Bearer mcp_… | `"s%3Axxxx.yyyy"` |
+
+#### Ответы
+
+| Код | Описание |
+|-----|----------|
+| 200 | Точки слотов и итоги окна |
+| 401 | Нет session cookie и Bearer PAT |
+| 403 | Нет доступа к проекту |
+| 500 | Ошибка БД |
+
+#### Пример ответа `200`
+
+```json
+{
+  "points": [
+    {
+      "date": "2026-09-01T00:00:00.000Z",
+      "total": 42,
+      "newcomers": 7,
+      "returning": 35
+    },
+    {
+      "date": "2026-09-02T00:00:00.000Z",
+      "total": 38,
+      "newcomers": 4,
+      "returning": 34
+    }
+  ],
+  "activeInWindow": 310,
+  "newInWindow": 58
 }
 ```
 
