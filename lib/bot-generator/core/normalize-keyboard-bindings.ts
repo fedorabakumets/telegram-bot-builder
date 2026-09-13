@@ -33,6 +33,7 @@ const KEYBOARD_HOST_TYPES = new Set<string>([
   NODE_TYPES.MESSAGE,
   NODE_TYPES.START,
   NODE_TYPES.COMMAND,
+  'send_invoice',
 ]);
 
 /** Значения клавиатуры по умолчанию */
@@ -237,6 +238,31 @@ function buildMergedKeyboardData(
 }
 
 /**
+ * Гарантирует кнопку оплаты первой у хоста счёта
+ * @param hostData - Данные узла после слияния с клавиатурой
+ * @returns Данные с pay-кнопкой в начале и keyboardType inline
+ */
+function ensureInvoicePayButtonsOnHost(hostData: Record<string, unknown>): Record<string, unknown> {
+  const list = Array.isArray(hostData.buttons) ? [...(hostData.buttons as any[])] : [];
+  const payButtons = list.filter((b) => b?.action === 'pay');
+  const rest = list.filter((b) => b?.action !== 'pay');
+  const pay = payButtons[0] ?? {
+    id: 'invoice_pay',
+    text: 'Оплатить ⭐',
+    action: 'pay',
+    buttonType: 'normal',
+    skipDataCollection: true,
+    hideAfterClick: false,
+  };
+  return {
+    ...hostData,
+    keyboardType: 'inline',
+    buttons: [pay, ...rest],
+    shuffleButtons: false,
+  };
+}
+
+/**
  * Очищает данные keyboard-ноды, чтобы она не выглядела как обычный message-like узел.
  *
  * @param node - keyboard-нода
@@ -318,7 +344,12 @@ export function normalizeKeyboardBindings(nodes: Node[], connections: GraphConne
         continue;
       }
       const hostData = hostNode.data as Record<string, unknown>;
-      hostNode.data = buildMergedKeyboardData(hostData, keyboardData) as Node['data'];
+      let merged = buildMergedKeyboardData(hostData, keyboardData);
+      /** У счёта первая кнопка обязана быть pay */
+      if ((hostNode.type as string) === 'send_invoice') {
+        merged = ensureInvoicePayButtonsOnHost(merged);
+      }
+      hostNode.data = merged as Node['data'];
       delete (hostNode.data as Record<string, unknown>).keyboardNodeId;
     }
 

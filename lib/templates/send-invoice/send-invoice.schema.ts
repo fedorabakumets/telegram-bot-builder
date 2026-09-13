@@ -27,6 +27,12 @@ export const sendInvoiceEntrySchema = z.object({
   autoTransitionTo: z.string().default(''),
   /** Тип целевого узла */
   targetNodeType: z.string().default('message'),
+  /** Есть ли клавиатура у счёта */
+  hasKeyboard: z.boolean().optional().default(false),
+  /** Кнопки клавиатуры */
+  buttons: z.array(z.any()).optional().default([]),
+  /** Раскладка */
+  keyboardLayout: z.any().optional(),
 });
 
 /** Схема параметров шаблона */

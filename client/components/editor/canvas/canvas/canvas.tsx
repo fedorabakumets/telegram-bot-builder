@@ -23,6 +23,7 @@ import { useMoveNodesToProject } from './use-move-nodes-to-project';
 import { MarqueeOverlay } from './marquee-overlay';
 import { MultiSelectionToolbar } from './multi-selection-toolbar';
 import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-connection';
+import { ensureInvoicePayButton } from '@/components/editor/properties/utils/invoice-pay-button';
 import { PortType } from '../canvas-node/port-colors';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from './utils/canvas-coordinate-utils';
 import { collectCrossSheetLinks, collectIncomingCrossSheetLinks } from './utils/collect-cross-sheet-links';
@@ -523,7 +524,11 @@ export function Canvas({
            * При дропе на keyboard создаём привязку клавиатуры,
            * а при дропе на любой другой узел — обычный переход.
            */
-          if (portType === 'auto-transition' && sourceNode?.type === 'message' && targetNode?.type === 'keyboard') {
+          if (
+            portType === 'auto-transition'
+            && (sourceNode?.type === 'message' || (sourceNode?.type as string) === 'send_invoice')
+            && targetNode?.type === 'keyboard'
+          ) {
             return { ...n, data: setKeyboardNodeId(data, targetNodeId) as unknown as Node['data'] };
           }
 
@@ -595,6 +600,23 @@ export function Canvas({
             sourceMessageVariableName: '',
             sourceMessageNodeId: sourceNodeId,
           },
+        };
+      }
+
+      /** При привязке счёта к клавиатуре — кнопка «Оплатить» и только inline */
+      if (
+        n.id === targetNodeId
+        && n.type === 'keyboard'
+        && (sourceNode?.type as string) === 'send_invoice'
+        && portType === 'auto-transition'
+      ) {
+        return {
+          ...n,
+          data: {
+            ...data,
+            keyboardType: 'inline',
+            buttons: ensureInvoicePayButton(data.buttons as any),
+          } as Node['data'],
         };
       }
 

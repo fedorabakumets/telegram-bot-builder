@@ -15,13 +15,16 @@
 | `savePaymentAmountTo` | Переменная для суммы |
 | `savePaymentChargeIdTo` | Переменная для кода покупки |
 | `autoTransitionTo` | Узел после оплаты |
+| `hasKeyboard` | Есть ли привязанная inline-клавиатура |
+| `buttons` | Кнопки (первая — `pay`) |
 
 ## Поведение
 
 1. `handle_callback_{id}` вызывает `answer_invoice` с `currency="XTR"` и пустым токеном кассы.
-2. Переход **не** выполняется после отправки счёта.
-3. Глобальный `pre_checkout_query` отвечает `ok=True`.
-4. `successful_payment` сохраняет переменные и вызывает следующий узел.
+2. Если есть клавиатура — передаёт `reply_markup` с `pay=True` на первой кнопке.
+3. Переход **не** выполняется после отправки счёта.
+4. Глобальный `pre_checkout_query` отвечает `ok=True`.
+5. `successful_payment` сохраняет переменные и вызывает следующий узел.
 
 ## API
 

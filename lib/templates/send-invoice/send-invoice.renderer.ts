@@ -6,6 +6,7 @@
 import type { Node } from '@shared/schema';
 import type { SendInvoiceEntry } from './send-invoice.params';
 import { renderPartialTemplate } from '../template-renderer';
+import { sortButtonsByLayout, computeAdjustStr } from '../keyboard/keyboard.renderer';
 
 /**
  * Собирает SendInvoiceEntry[] из узлов холста
@@ -21,6 +22,11 @@ export function collectSendInvoiceEntries(nodes: Node[]): SendInvoiceEntry[] {
       const customPayload = typeof data?.invoicePayload === 'string' ? data.invoicePayload.trim() : '';
       const targetId = data?.autoTransitionTo || '';
       const targetNode = validNodes.find(n => n.id === targetId);
+      const rawButtons = Array.isArray(data?.buttons) ? data.buttons : [];
+      const hasKeyboard = rawButtons.length > 0 && data?.keyboardType === 'inline';
+      const sortedButtons = hasKeyboard
+        ? sortButtonsByLayout(rawButtons, data?.keyboardLayout)
+        : [];
       return {
         nodeId: node.id,
         title: data?.invoiceTitle || 'Товар',
@@ -32,6 +38,9 @@ export function collectSendInvoiceEntries(nodes: Node[]): SendInvoiceEntry[] {
         savePaymentChargeIdTo: data?.savePaymentChargeIdTo || '',
         autoTransitionTo: targetId,
         targetNodeType: targetNode?.type || 'message',
+        hasKeyboard,
+        buttons: sortedButtons,
+        keyboardLayout: data?.keyboardLayout,
       };
     });
 }
@@ -46,6 +55,9 @@ export function generateSendInvoiceHandlers(nodes: Node[]): string {
   if (entries.length === 0) return '';
 
   return renderPartialTemplate('send-invoice/send-invoice.py.jinja2', {
-    sendInvoiceEntries: entries,
+    sendInvoiceEntries: entries.map((entry) => ({
+      ...entry,
+      adjustStr: computeAdjustStr(entry.keyboardLayout as any),
+    })),
   });
 }

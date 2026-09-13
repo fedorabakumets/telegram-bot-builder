@@ -25,6 +25,12 @@ export interface SendInvoiceEntry {
   autoTransitionTo: string;
   /** Тип целевого узла */
   targetNodeType: string;
+  /** Есть ли привязанная клавиатура с кнопками */
+  hasKeyboard: boolean;
+  /** Кнопки (после normalize; pay уже первая) */
+  buttons: unknown[];
+  /** Раскладка клавиатуры */
+  keyboardLayout?: unknown;
 }
 
 /** Параметры шаблона всех счетов */

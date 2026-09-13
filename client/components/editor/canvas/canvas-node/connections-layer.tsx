@@ -10,7 +10,7 @@
  * - button-goto (синий пунктир) — переход по inline-кнопке
  * - input-target (фиолетовый пунктир) — переход после ввода пользователя
  * - trigger-next (жёлтый сплошной) — переход из узла command_trigger
- * - keyboard-link (янтарный пунктир) — привязка message → keyboard
+ * - keyboard-link (янтарный пунктир) — привязка message/send_invoice → keyboard
  * - forward-source (янтарно-оранжевый пунктир) — привязка источника для forward_message
  *
  * При наведении на линию появляется кнопка удаления соединения.
@@ -344,8 +344,8 @@ export function collectConnections(nodes: Node[]): Connection[] {
       }
     }
 
-    // 8. Отдельная клавиатура у message-узла
-    if (node.type === 'message') {
+    // 8. Отдельная клавиатура у message / send_invoice
+    if (node.type === 'message' || (node.type as any) === 'send_invoice') {
       const keyboardNodeId = getKeyboardNodeId(node.data);
       const keyboardNode = keyboardNodeId ? nodes.find(n => n.id === keyboardNodeId && n.type === 'keyboard') : null;
       if (keyboardNode) {

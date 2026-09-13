@@ -25,6 +25,8 @@ interface KeyboardTypeSelectorProps {
   onToggle?: () => void;
   /** Динамический режим клавиатуры */
   isDynamicMode?: boolean;
+  /** Только inline (клавиатура счёта) */
+  forceInline?: boolean;
 }
 
 /**
@@ -40,14 +42,22 @@ interface KeyboardTypeSelectorProps {
  * @param {KeyboardTypeSelectorProps} props - Пропсы компонента
  * @returns {JSX.Element} Селектор типа клавиатуры
  */
-export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, isDynamicMode = false }: KeyboardTypeSelectorProps) {
+export function KeyboardTypeSelector({
+  selectedNode,
+  onNodeUpdate,
+  isDynamicMode = false,
+  forceInline = false,
+}: KeyboardTypeSelectorProps) {
   const handleKeyboardChange = (checked: boolean, type: 'reply' | 'inline' | 'none') => {
+    if (forceInline && type !== 'inline') return;
     const updates: Partial<Node['data']> = {};
     
     if (checked) {
       updates.keyboardType = type;
     } else {
-      updates.keyboardType = KEYBOARD_TYPES.NONE as 'none';
+      updates.keyboardType = forceInline
+        ? (KEYBOARD_TYPES.INLINE as 'inline')
+        : (KEYBOARD_TYPES.NONE as 'none');
     }
     
     onNodeUpdate(selectedNode.id, updates);
@@ -61,8 +71,8 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, isDynamicMode
           Inline
         </label>
         <Switch
-          checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.INLINE}
-          disabled={isDynamicMode}
+          checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.INLINE || forceInline}
+          disabled={isDynamicMode || forceInline}
           onCheckedChange={(checked) => handleKeyboardChange(checked, KEYBOARD_TYPES.INLINE as 'inline')}
         />
       </div>
@@ -72,8 +82,8 @@ export function KeyboardTypeSelector({ selectedNode, onNodeUpdate, isDynamicMode
           Reply
         </label>
         <Switch
-          checked={selectedNode.data.keyboardType === KEYBOARD_TYPES.REPLY}
-          disabled={isDynamicMode}
+          checked={!forceInline && selectedNode.data.keyboardType === KEYBOARD_TYPES.REPLY}
+          disabled={isDynamicMode || forceInline}
           onCheckedChange={(checked) => handleKeyboardChange(checked, KEYBOARD_TYPES.REPLY as 'reply')}
         />
       </div>

@@ -276,6 +276,71 @@ test('C05', 'картинка /uploads/ → API_BASE_URL', () => {
   syntax(code, 'c05');
 });
 
+console.log('── Блок D: клавиатура у счёта ───────────────────────────────────');
+
+/**
+ * Создаёт узел клавиатуры с кнопкой оплаты и отменой
+ * @param id - ID узла
+ * @param cancelTarget - Цель кнопки «Отмена»
+ * @returns Узел keyboard
+ */
+function makeInvoiceKeyboard(id: string, cancelTarget: string) {
+  return {
+    id,
+    type: 'keyboard',
+    position: { x: 200, y: 0 },
+    data: {
+      keyboardType: 'inline',
+      buttons: [
+        {
+          id: 'pay1',
+          text: 'Оплатить ⭐',
+          action: 'pay',
+          buttonType: 'normal',
+          skipDataCollection: true,
+          hideAfterClick: false,
+        },
+        {
+          id: 'cancel1',
+          text: 'Отмена',
+          action: 'goto',
+          target: cancelTarget,
+          buttonType: 'normal',
+          skipDataCollection: false,
+          hideAfterClick: false,
+        },
+      ],
+    },
+  };
+}
+
+test('D01', 'с клавиатурой: pay=True и кнопка Отмена', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', { keyboardNodeId: 'kbd1' }),
+    makeInvoiceKeyboard('kbd1', 'msg_cancel'),
+    makeMessageNode('msg1'),
+    {
+      id: 'msg_cancel',
+      type: 'message',
+      position: { x: 400, y: 100 },
+      data: { messageText: 'Отменено', buttons: [], keyboardType: 'none', formatMode: 'none' },
+    },
+  ]);
+  const code = gen(p, 'd01');
+  const body = extractInvoiceHandlerBody(code);
+  ok(body.includes('pay=True') || body.includes('pay = True'), 'кнопка оплаты pay=True');
+  ok(body.includes('Отмена') || body.includes('msg_cancel') || body.includes('cancel1'), 'кнопка Отмена');
+  ok(body.includes('reply_markup'), 'reply_markup у счёта');
+  syntax(code, 'd01');
+});
+
+test('D02', 'без клавиатуры нет pay=True в хендлере счёта', () => {
+  const p = makeCleanProject([makeInvoiceNode('inv1', 'msg1'), makeMessageNode('msg1')]);
+  const body = extractInvoiceHandlerBody(gen(p, 'd02'));
+  ok(!body.includes('pay=True') && !body.includes('pay = True'), 'нет pay без клавиатуры');
+  ok(!body.includes('reply_markup'), 'нет reply_markup без клавиатуры');
+});
+
 console.log('\n── Итог ─────────────────────────────────────────────────────────');
 const failed = results.filter(r => !r.passed);
 console.log(`Пройдено: ${results.length - failed.length}/${results.length}`);

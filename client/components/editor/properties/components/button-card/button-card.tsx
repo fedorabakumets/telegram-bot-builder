@@ -43,6 +43,8 @@ interface ButtonCardProps {
   hideExtras?: boolean;
   /** Показывать селектор стиля даже при hideExtras */
   showStyle?: boolean;
+  /** Заблокировать удаление/дублирование/смену типа (кнопка «Оплатить») */
+  lockPayButton?: boolean;
 }
 
 /**
@@ -64,6 +66,7 @@ export function ButtonCard({
   allowedActions,
   hideExtras = false,
   showStyle = false,
+  lockPayButton = false,
 }: ButtonCardProps) {
   return (
     <div
@@ -75,8 +78,8 @@ export function ButtonCard({
         button={button}
         textVariables={textVariables}
         onButtonUpdate={onButtonUpdate}
-        onDelete={() => onButtonDelete(nodeId, button.id)}
-        onDuplicate={() => onButtonDuplicate(nodeId, button)}
+        onDelete={lockPayButton ? undefined : () => onButtonDelete(nodeId, button.id)}
+        onDuplicate={lockPayButton ? undefined : () => onButtonDuplicate(nodeId, button)}
       />
 
       <div className="border-t border-border/20 my-3"></div>
@@ -88,6 +91,7 @@ export function ButtonCard({
         allowMultipleSelection={selectedNode.data.allowMultipleSelection ?? false}
         keyboardType={keyboardType}
         allowedActions={allowedActions}
+        disabled={lockPayButton}
       />
 
       {/* Селектор стиля кнопки (Bot API 9.4) */}

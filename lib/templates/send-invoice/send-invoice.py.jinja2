@@ -78,6 +78,21 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         "next_node": {{ entry.autoTransitionTo | tojson }},
     }
 
+{% if entry.hasKeyboard %}
+    {# Клавиатура счёта: первая кнопка pay=True, остальные — обычные #}
+    all_user_vars = _all_vars
+{%- set nodeId = entry.nodeId -%}
+{%- set keyboardType = 'inline' -%}
+{%- set buttons = entry.buttons -%}
+{%- set keyboardLayout = entry.keyboardLayout -%}
+{%- set adjustStr = entry.adjustStr -%}
+{%- set allowMultipleSelection = false -%}
+{%- set enableDynamicButtons = false -%}
+{%- set shuffleButtons = false -%}
+{%- filter indent(4) %}{% include 'keyboard/keyboard.py.jinja2' %}{% endfilter %}
+    _invoice_kwargs["reply_markup"] = keyboard
+{% endif %}
+
     try:
         await callback_query.message.answer_invoice(**_invoice_kwargs)
         logging.info(f"⭐ send_invoice [{{ entry.nodeId }}]: счёт на {_amount} ⭐ для {user_id}, payload={_payload}")

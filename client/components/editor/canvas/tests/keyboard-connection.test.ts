@@ -17,8 +17,9 @@ import {
 } from '../canvas-node/keyboard-connection';
 
 describe('keyboard connection helpers', () => {
-  it('разрешает только связь message -> keyboard', () => {
+  it('разрешает связь message/send_invoice -> keyboard', () => {
     expect(isKeyboardConnectionAllowed('message', 'keyboard')).toBe(true);
+    expect(isKeyboardConnectionAllowed('send_invoice', 'keyboard')).toBe(true);
     expect(isKeyboardConnectionAllowed('message', 'message')).toBe(false);
     expect(isKeyboardConnectionAllowed('condition', 'keyboard')).toBe(false);
     expect(isKeyboardConnectionAllowed('keyboard', 'message')).toBe(false);

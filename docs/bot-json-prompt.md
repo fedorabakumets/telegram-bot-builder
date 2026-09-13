@@ -1079,6 +1079,8 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 
 Только счёт в чат (без ссылки и подписки). Валюта всегда `XTR`, токен кассы пустой. `autoTransitionTo` срабатывает **после оплаты**, не после `answer_invoice`.
 
+Можно привязать узел `keyboard` через `keyboardNodeId` (как у `message`). Первая кнопка клавиатуры обязана быть `"action": "pay"` (текст вроде «Оплатить ⭐»). Остальные кнопки — обычные (`goto`, `url`…). Без клавиатуры Телеграм сам покажет одну кнопку оплаты. Тип `pay` нельзя ставить на клавиатуры обычных сообщений.
+
 ```json
 {
   "type": "send_invoice",
@@ -1092,8 +1094,24 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
     "savePaymentChargeIdTo": "payment_charge_id",
     "autoTransitionTo": "msg_thanks",
     "enableAutoTransition": true,
+    "keyboardNodeId": "kbd_invoice",
     "keyboardType": "none",
     "buttons": []
+  }
+}
+```
+
+Пример кнопок у связанной клавиатуры:
+
+```json
+{
+  "type": "keyboard",
+  "data": {
+    "keyboardType": "inline",
+    "buttons": [
+      { "id": "pay1", "text": "Оплатить ⭐", "action": "pay" },
+      { "id": "cancel1", "text": "Отмена", "action": "goto", "target": "msg_cancel" }
+    ]
   }
 }
 ```
@@ -1107,6 +1125,7 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 | `invoicePayload` | Скрытая метка; пусто = id узла |
 | `savePaymentAmountTo` | Куда сохранить сумму |
 | `savePaymentChargeIdTo` | Куда сохранить код покупки (для возврата позже) |
+| `keyboardNodeId` | Опционально: id узла `keyboard` со счётом |
 | `autoTransitionTo` | Узел после успешной оплаты (`enableAutoTransition: true`) |
 
 Типичная цепочка: `command_trigger` `/buy` → `send_invoice` → (после оплаты) `message` «спасибо».  

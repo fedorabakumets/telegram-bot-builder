@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Node } from '@shared/schema';
 import { VariableSelector } from '../variables/variable-selector';
+import { VariableNameInput } from '../variables/variable-name-input';
 import { InvoicePhotoField } from './invoice-photo-field';
 import type { Variable } from '../../../inline-rich/types';
 
@@ -71,7 +72,7 @@ export function SendInvoiceConfiguration({
       <div className="flex items-center gap-2">
         <i className="fas fa-star text-yellow-500 text-sm" />
         <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-300">
-          Выставить счёт в звёздах
+          Выставить счёт
         </span>
       </div>
       <p className="text-[10px] text-muted-foreground leading-relaxed">
@@ -142,21 +143,21 @@ export function SendInvoiceConfiguration({
 
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">Сохранить сумму в переменную</Label>
-        <Input
+        <VariableNameInput
           value={data?.savePaymentAmountTo || ''}
-          onChange={(e) => onNodeUpdate(selectedNode.id, { savePaymentAmountTo: e.target.value })}
+          availableVariables={textVariables}
+          onChange={(value) => onNodeUpdate(selectedNode.id, { savePaymentAmountTo: value })}
           placeholder="payment_amount"
-          className="h-8 text-xs"
         />
       </div>
 
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">Сохранить код покупки в переменную</Label>
-        <Input
+        <VariableNameInput
           value={data?.savePaymentChargeIdTo || ''}
-          onChange={(e) => onNodeUpdate(selectedNode.id, { savePaymentChargeIdTo: e.target.value })}
+          availableVariables={textVariables}
+          onChange={(value) => onNodeUpdate(selectedNode.id, { savePaymentChargeIdTo: value })}
           placeholder="payment_charge_id"
-          className="h-8 text-xs"
         />
       </div>
 

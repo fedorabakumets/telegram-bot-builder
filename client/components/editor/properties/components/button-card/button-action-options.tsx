@@ -5,7 +5,7 @@
  */
 
 /** Тип действия кнопки */
-export type ButtonActionType = 'goto' | 'url' | 'selection' | 'complete' | 'default' | 'contact' | 'location' | 'command' | 'copy_text' | 'web_app' | 'request_managed_bot';
+export type ButtonActionType = 'goto' | 'url' | 'selection' | 'complete' | 'default' | 'contact' | 'location' | 'command' | 'copy_text' | 'web_app' | 'request_managed_bot' | 'pay';
 
 /** Пропсы для рендеринга опции действия */
 interface ButtonActionOptionProps {
@@ -31,6 +31,8 @@ export const ACTION_CONFIG: Record<ButtonActionType, { icon: string; color: stri
   web_app: { icon: 'fa-globe', color: 'text-cyan-600 dark:text-cyan-400', label: 'Открыть Web App' },
   /** Запросить создание управляемого бота (Bot API 9.6, только reply) */
   request_managed_bot: { icon: 'fa-robot', color: 'text-indigo-600 dark:text-indigo-400', label: 'Запросить управляемого бота' },
+  /** Оплата счёта (только первая кнопка у клавиатуры счёта) */
+  pay: { icon: 'fa-star', color: 'text-yellow-600 dark:text-yellow-400', label: 'Оплатить' },
 };
 
 /**

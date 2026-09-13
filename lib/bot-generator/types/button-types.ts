@@ -28,6 +28,7 @@ export type ButtonAction =
   | 'copy_text'         /** Копировать текст в буфер обмена (Bot API 7.11, только inline) */
   | 'web_app'          /** Открыть Telegram Mini App по URL (только inline, требует HTTPS) */
   | 'request_managed_bot'; /** Запросить создание управляемого бота (Bot API 9.6, только reply) */
+  | 'pay'; /** Кнопка оплаты счёта (только первая у invoice) */
 
 /** Визуальный стиль кнопки (Bot API 9.4) */
 export type ButtonStyle = 'primary' | 'success' | 'danger';

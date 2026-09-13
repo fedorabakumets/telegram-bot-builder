@@ -80,6 +80,11 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
               Завершение
             </div>
           )}
+          {button.action === 'pay' && (
+            <div className="mt-1.5 text-xs text-yellow-600 dark:text-yellow-400">
+              ⭐ Оплатить
+            </div>
+          )}
           {button.action === 'copy_text' && (
             <div className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 break-words">
               📋 {(button as any).copyText}
@@ -109,6 +114,9 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
           )}
           {button.action === 'complete' && (
             <i className="fas fa-flag-checkered text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Завершение"></i>
+          )}
+          {button.action === 'pay' && (
+            <i className="fas fa-star text-yellow-600 dark:text-yellow-400 text-xs opacity-70" title="Оплатить"></i>
           )}
           {button.action === 'copy_text' && (
             <i className="fas fa-clipboard text-yellow-600 dark:text-yellow-400 text-xs opacity-70" title="Копировать текст"></i>

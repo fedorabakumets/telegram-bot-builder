@@ -64,4 +64,33 @@ describe('generateSendInvoiceHandlers()', () => {
   it('возвращает пустую строку без узлов', () => {
     assert.equal(generateSendInvoiceHandlers(nodesWithoutInvoice as any), '');
   });
+
+  it('с кнопками клавиатуры добавляет pay=True и reply_markup', () => {
+    const nodes = [
+      {
+        id: 'inv_kb',
+        type: 'send_invoice',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '1',
+          invoicePhotoUrl: '',
+          invoicePayload: '',
+          savePaymentAmountTo: '',
+          savePaymentChargeIdTo: '',
+          autoTransitionTo: '',
+          keyboardType: 'inline',
+          buttons: [
+            { id: 'pay1', text: 'Оплатить ⭐', action: 'pay' },
+            { id: 'c1', text: 'Отмена', action: 'goto', target: 'msg_x' },
+          ],
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    assert.ok(code.includes('pay=True'));
+    assert.ok(code.includes('reply_markup'));
+    assert.ok(code.includes('Отмена'));
+  });
 });
