@@ -1,5 +1,5 @@
 /**
- * @fileoverview Карточка «Активность пользователей» на вкладке Аналитика
+ * @fileoverview Карточка «Активные пользователи» на вкладке Аналитика
  * @module client/components/editor/analytics/analytics-users-activity-card
  */
 
@@ -55,7 +55,7 @@ export function AnalyticsUsersActivityCard({
 
   return (
     <StatMetricCard
-      title="Активность пользователей"
+      title="Активные пользователи"
       value={activeInWindow}
       sparklineData={splitMode === 'total' ? points : undefined}
       multiLineData={multiLine}
