@@ -89,6 +89,7 @@ import {
   queryActivityFromDaily,
 } from "./messages/queryActivityFromDaily";
 import { queryActivityFromDailyPeriod } from "./messages/queryActivityFromDailyPeriod";
+import { handleUserActivity } from "./users/handle-user-activity";
 import { updateMessagesRetentionHandler } from "./userProjectsTokens/handlers/tokens/updateMessagesRetentionHandler";
 import { getFirstProjectTokenHandler } from "./projectRoutes/handlers/getFirstProjectTokenHandler";
 
@@ -2727,6 +2728,27 @@ export async function registerRoutes(app: Express, httpServer?: Server): Promise
       console.error("Error fetching traffic data:", error);
       res.status(500).json({ message: "Ошибка при получении данных трафика" });
     }
+  });
+
+  /**
+   * Эндпоинт активности пользователей (уникальные люди за слот)
+   * @route GET /api/projects/:id/users/activity
+   * @query granularity - 1m|5m|1h|1w|1d|7d|30d
+   * @returns { points, activeInWindow, newInWindow }
+   */
+  app.get("/api/projects/:id/users/activity", async (req, res) => {
+    const projectId = parseInt(req.params.id);
+    const tokenId = getRequestTokenId(req);
+
+    const ownerId = getOwnerIdFromRequest(req);
+    if (ownerId !== null) {
+      const hasAccess = await storage.hasProjectAccess(projectId, ownerId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Нет прав доступа к проекту" });
+      }
+    }
+
+    await handleUserActivity(req, res, dbPool, projectId, tokenId);
   });
 
   /**

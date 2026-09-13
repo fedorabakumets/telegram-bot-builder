@@ -18,6 +18,7 @@ import { fmtTick, fmtTooltipDate, getTickIndices } from '@/components/editor/dat
 import { useUserMessagesLiveContext } from '@/components/editor/database/user-database/contexts/user-messages-live-context';
 import { ChartTypeToggle, ChartType } from '@/components/editor/database/user-database/components/stats/chart-type-toggle';
 import { GrowthGranularitySelector } from '@/components/editor/database/user-database/components/stats/growth-granularity-selector';
+import { SourcesTrendChartInfo } from './analytics-chart-info-texts';
 
 /**
  * Пропсы компонента AnalyticsSourcesChart
@@ -229,6 +230,8 @@ export function AnalyticsSourcesChart({ projectId, selectedTokenId }: AnalyticsS
           <GrowthGranularitySelector value={granularity} onChange={setGranularity} />
         </div>
       </div>
+
+      <SourcesTrendChartInfo />
 
       {chartData.length < 2 ? (
         <p className="text-xs text-muted-foreground/50 italic py-8 text-center">

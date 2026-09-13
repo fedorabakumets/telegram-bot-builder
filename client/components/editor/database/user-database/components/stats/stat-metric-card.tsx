@@ -56,6 +56,8 @@ export interface StatMetricCardProps {
   secondarySubtitle?: string;
   /** Блок под числом / над графиком (счётчики, пояснения) */
   footerExtra?: React.ReactNode;
+  /** Спойлер «Что это за график?» */
+  info?: React.ReactNode;
 }
 
 /**
@@ -116,6 +118,7 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
     stackHeader,
     secondarySubtitle,
     footerExtra,
+    info,
   } = props;
   const fmt = formatValue ?? defaultFormat;
   const displayValue = value !== undefined ? fmt(value) : '—';
@@ -169,6 +172,8 @@ export function StatMetricCard(props: StatMetricCardProps): React.JSX.Element {
           )}
         </div>
       )}
+
+      {info}
 
       {footerExtra}
 

@@ -390,6 +390,22 @@ export async function initializeDatabaseTables() {
     `, "Создание таблицы message_activity_daily");
 
     await executeWithRetry(db, sql`
+      CREATE TABLE IF NOT EXISTS user_activity_daily (
+        project_id INTEGER NOT NULL REFERENCES bot_projects(id) ON DELETE CASCADE,
+        token_id INTEGER NOT NULL DEFAULT 0,
+        day DATE NOT NULL,
+        user_id BIGINT NOT NULL,
+        first_seen_at TIMESTAMPTZ NOT NULL,
+        PRIMARY KEY (project_id, token_id, day, user_id)
+      );
+    `, "Создание таблицы user_activity_daily");
+
+    await executeWithRetry(db, sql`
+      CREATE INDEX IF NOT EXISTS user_activity_daily_project_day_idx
+      ON user_activity_daily (project_id, day);
+    `, "Индекс user_activity_daily_project_day_idx");
+
+    await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS app_settings (
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL,
