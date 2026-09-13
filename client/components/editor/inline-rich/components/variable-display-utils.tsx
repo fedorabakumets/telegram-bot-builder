@@ -64,6 +64,7 @@ export function getBadgeText(variable: Variable): string {
     userbot_click_button: '🟣 Юзербот',
     userbot_message: '🟣 Юзербот',
     send_invoice: '⭐ Счёт',
+    command_trigger: '⚡ Команда',
   };
   return labels[variable.nodeType] || '📌';
 }

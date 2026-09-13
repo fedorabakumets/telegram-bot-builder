@@ -141,6 +141,8 @@ export const nodeSchema = z.object({
     requiresAuth: z.boolean().default(false),
     /** Показывать команду в меню бота */
     showInMenu: z.boolean().default(true),
+    /** Имя переменной для аргументов команды (после пробела); пусто = не сохранять */
+    saveCommandArgsTo: z.string().optional().default(''),
     /** Таймаут выполнения команды в секундах */
     commandTimeout: z.number().optional(),
     /** Время задержки между повторными вызовами в секундах */
@@ -854,6 +856,18 @@ export const nodeSchema = z.object({
     refundChargeId: z.string().optional().default(''),
     /** Не прерывать сценарий при ошибке возврата */
     ignoreErrors: z.boolean().optional().default(false),
+    /** Сообщение, если код покупки пустой */
+    refundMsgEmpty: z.string().optional().default('Пожалуйста, укажите код покупки: /back КОД'),
+    /** Сообщение, если код не найден (CHARGE_NOT_FOUND и прочие) */
+    refundMsgNotFound: z.string().optional().default('Такой код покупки не найден. Проверьте данные и попробуйте снова.'),
+    /** Сообщение, если возврат уже был (CHARGE_ALREADY_REFUNDED) */
+    refundMsgAlreadyRefunded: z.string().optional().default('За эту покупку уже ранее был произведён возврат.'),
+    /** Выход «Пустой код» */
+    refundEmptyTarget: z.string().optional().default(''),
+    /** Выход «Код не найден» */
+    refundNotFoundTarget: z.string().optional().default(''),
+    /** Выход «Уже возвращён» */
+    refundAlreadyRefundedTarget: z.string().optional().default(''),
   }),
 });
 

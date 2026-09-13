@@ -1,6 +1,6 @@
 {#
   @fileoverview Шаблон обработчиков возврата звёзд (refund_stars).
-  Вызывает bot.refund_star_payment и при успехе переходит на autoTransitionTo.
+  Успех → autoTransitionTo; ошибки → свои target или fallback refundMsg*.
 
   @param {array} entries - Массив RefundStarsEntry
 #}
@@ -9,54 +9,76 @@
 {% for entry in entries -%}
 {%- set sanitized_node_id = entry.nodeId | safe_name -%}
 {%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+{%- set sanitized_empty_id = entry.refundEmptyTarget | safe_name -%}
+{%- set sanitized_not_found_id = entry.refundNotFoundTarget | safe_name -%}
+{%- set sanitized_already_id = entry.refundAlreadyRefundedTarget | safe_name -%}
+{%- set _msg_empty = entry.refundMsgEmpty | default('Пожалуйста, укажите код покупки: /back КОД') -%}
+{%- set _msg_not_found = entry.refundMsgNotFound | default('Такой код покупки не найден. Проверьте данные и попробуйте снова.') -%}
+{%- set _msg_already = entry.refundMsgAlreadyRefunded | default('За эту покупку уже ранее был произведён возврат.') -%}
 
 @dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
 async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
     """Возврат звёзд — узел {{ entry.nodeId }}"""
+    user_id = callback_query.from_user.id
+    await init_user_variables(user_id, callback_query.from_user)
     try:
-        user_id = callback_query.from_user.id
-        await init_user_variables(user_id, callback_query.from_user)
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    _all_vars = await init_all_user_vars(user_id)
+    if state is not None:
         try:
-            await callback_query.answer()
+            _fsm_data = await state.get_data()
+            if _fsm_data:
+                _all_vars.update(_fsm_data)
         except Exception:
             pass
 
-        _all_vars = await init_all_user_vars(user_id)
-        if state is not None:
-            try:
-                _fsm_data = await state.get_data()
-                if _fsm_data:
-                    _all_vars.update(_fsm_data)
-            except Exception:
-                pass
-
-        {% if entry.refundUserSource == 'custom' %}
-        {%- set _user_raw = entry.refundUserId | trim %}
-        {%- if '{' in _user_raw %}
-        _user_id_raw = replace_variables_in_text({{ _user_raw | format_python_text }}, _all_vars, {})
-        {%- else %}
-        _user_id_raw = {{ _user_raw | escape_python_string }}
-        {%- endif %}
-        try:
-            _refund_user_id = int(str(_user_id_raw).strip())
-        except (ValueError, TypeError):
-            logging.warning(f"⭐ refund_stars [{{ entry.nodeId }}]: неверный user_id из '{{ _user_raw }}'")
-            raise ValueError("invalid refund user_id")
+    {% if entry.refundUserSource == 'custom' %}
+    {%- set _user_raw = entry.refundUserId | trim %}
+    {%- if '{' in _user_raw %}
+    _user_id_raw = replace_variables_in_text({{ _user_raw | format_python_text }}, _all_vars, {})
+    {%- else %}
+    _user_id_raw = {{ _user_raw | escape_python_string }}
+    {%- endif %}
+    try:
+        _refund_user_id = int(str(_user_id_raw).strip())
+    except (ValueError, TypeError):
+        logging.warning(f"⭐ refund_stars [{{ entry.nodeId }}]: неверный user_id из '{{ _user_raw }}'")
+        {% if entry.refundNotFoundTarget %}
+        await handle_callback_{{ sanitized_not_found_id }}(callback_query, state=state)
         {% else %}
-        _refund_user_id = callback_query.from_user.id
+        await callback_query.message.answer({{ _msg_not_found | escape_python_string }})
+        {% if entry.ignoreErrors and entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
         {% endif %}
+        {% endif %}
+        return
+    {% else %}
+    _refund_user_id = callback_query.from_user.id
+    {% endif %}
 
-        {%- set _charge_raw = entry.refundChargeId | trim %}
-        {%- if '{' in _charge_raw %}
-        _charge_id = replace_variables_in_text({{ _charge_raw | format_python_text }}, _all_vars, {})
-        {%- else %}
-        _charge_id = {{ _charge_raw | escape_python_string }}
-        {%- endif %}
-        _charge_id = str(_charge_id or "").strip()
-        if not _charge_id:
-            logging.warning(f"⭐ refund_stars [{{ entry.nodeId }}]: пустой код покупки")
-            raise ValueError("empty refund charge id")
+    {%- set _charge_raw = entry.refundChargeId | trim %}
+    {%- if '{' in _charge_raw %}
+    _charge_id = replace_variables_in_text({{ _charge_raw | format_python_text }}, _all_vars, {})
+    {%- else %}
+    _charge_id = {{ _charge_raw | escape_python_string }}
+    {%- endif %}
+    _charge_id = str(_charge_id or "").strip()
+    if not _charge_id:
+        logging.warning(f"⭐ refund_stars [{{ entry.nodeId }}]: пустой код покупки")
+        {% if entry.refundEmptyTarget %}
+        await handle_callback_{{ sanitized_empty_id }}(callback_query, state=state)
+        {% else %}
+        await callback_query.message.answer({{ _msg_empty | escape_python_string }})
+        {% if entry.ignoreErrors and entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
+        {% endif %}
+        {% endif %}
+        return
 
+    try:
         await bot.refund_star_payment(
             user_id=_refund_user_id,
             telegram_payment_charge_id=_charge_id,
@@ -64,18 +86,47 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         logging.info(
             f"⭐ refund_stars [{{ entry.nodeId }}]: возврат для {_refund_user_id}, charge={_charge_id}"
         )
-
         {% if entry.targetNodeId %}
         await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
         {% endif %}
     except Exception as _e:
         logging.error(f"❌ Ошибка refund_stars [{{ entry.nodeId }}]: {_e}")
-        {% if entry.ignoreErrors %}
-        {% if entry.targetNodeId %}
-        await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
-        {% endif %}
-        {% else %}
-        raise
-        {% endif %}
+        _err = str(_e)
+        if "CHARGE_ALREADY_REFUNDED" in _err:
+            {% if entry.refundAlreadyRefundedTarget %}
+            await handle_callback_{{ sanitized_already_id }}(callback_query, state=state)
+            {% else %}
+            await callback_query.message.answer({{ _msg_already | escape_python_string }})
+            {% if entry.ignoreErrors and entry.targetNodeId %}
+            await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
+            {% endif %}
+            {% endif %}
+        elif not _charge_id or "empty refund" in _err.lower():
+            {% if entry.refundEmptyTarget %}
+            await handle_callback_{{ sanitized_empty_id }}(callback_query, state=state)
+            {% else %}
+            await callback_query.message.answer({{ _msg_empty | escape_python_string }})
+            {% if entry.ignoreErrors and entry.targetNodeId %}
+            await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
+            {% endif %}
+            {% endif %}
+        elif "CHARGE_NOT_FOUND" in _err:
+            {% if entry.refundNotFoundTarget %}
+            await handle_callback_{{ sanitized_not_found_id }}(callback_query, state=state)
+            {% else %}
+            await callback_query.message.answer({{ _msg_not_found | escape_python_string }})
+            {% if entry.ignoreErrors and entry.targetNodeId %}
+            await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
+            {% endif %}
+            {% endif %}
+        else:
+            {% if entry.refundNotFoundTarget %}
+            await handle_callback_{{ sanitized_not_found_id }}(callback_query, state=state)
+            {% else %}
+            await callback_query.message.answer({{ _msg_not_found | escape_python_string }})
+            {% if entry.ignoreErrors and entry.targetNodeId %}
+            await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
+            {% endif %}
+            {% endif %}
 
 {% endfor %}

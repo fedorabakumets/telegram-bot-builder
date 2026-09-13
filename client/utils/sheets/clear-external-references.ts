@@ -20,7 +20,10 @@ const SIMPLE_REF_FIELDS = [
   'autoTransitionTo',
   'sourceNodeId',
   'keyboardNodeId',
-  'sourceMessageNodeId'
+  'sourceMessageNodeId',
+  'refundEmptyTarget',
+  'refundNotFoundTarget',
+  'refundAlreadyRefundedTarget',
 ];
 
 /**

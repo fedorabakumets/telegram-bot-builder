@@ -34,6 +34,17 @@ export function collectRefundStarsEntries(nodes: Node[]): RefundStarsEntry[] {
       refundUserId: data?.refundUserId ?? '',
       refundChargeId: data?.refundChargeId ?? '',
       ignoreErrors: Boolean(data?.ignoreErrors),
+      refundMsgEmpty:
+        data?.refundMsgEmpty ?? 'Пожалуйста, укажите код покупки: /back КОД',
+      refundMsgNotFound:
+        data?.refundMsgNotFound
+        ?? 'Такой код покупки не найден. Проверьте данные и попробуйте снова.',
+      refundMsgAlreadyRefunded:
+        data?.refundMsgAlreadyRefunded
+        ?? 'За эту покупку уже ранее был произведён возврат.',
+      refundEmptyTarget: data?.refundEmptyTarget ?? '',
+      refundNotFoundTarget: data?.refundNotFoundTarget ?? '',
+      refundAlreadyRefundedTarget: data?.refundAlreadyRefundedTarget ?? '',
     });
   }
 

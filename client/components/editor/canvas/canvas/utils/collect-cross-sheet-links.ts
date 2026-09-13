@@ -167,6 +167,20 @@ export function collectCrossSheetLinks(
       tryAddLink(links, node.id, data?.autoTransitionTo, 'auto-transition', currentNodeIds, otherNodesMap);
     }
 
+    // 6b. refund_stars: выходы ошибок
+    if (type === 'refund_stars') {
+      tryAddLink(links, node.id, data?.refundEmptyTarget, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(links, node.id, data?.refundNotFoundTarget, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(
+        links,
+        node.id,
+        data?.refundAlreadyRefundedTarget,
+        'button-goto',
+        currentNodeIds,
+        otherNodesMap,
+      );
+    }
+
     // 7. Триггеры: autoTransitionTo
     if (isTrigger && data?.autoTransitionTo) {
       tryAddLink(links, node.id, data.autoTransitionTo, 'trigger-next', currentNodeIds, otherNodesMap);

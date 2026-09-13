@@ -10,7 +10,7 @@
 | `title` | Название товара |
 | `description` | Описание |
 | `amount` | Цена в звёздах (строка, `{переменные}`) |
-| `photoUrl` | URL картинки |
+| `photoUrl` | URL / `/uploads/…` / `{переменная}`; `/uploads/` → `API_BASE_URL` + путь |
 | `payload` | Скрытая метка (по умолчанию id узла) |
 | `savePaymentAmountTo` | Переменная для суммы |
 | `savePaymentChargeIdTo` | Переменная для кода покупки |

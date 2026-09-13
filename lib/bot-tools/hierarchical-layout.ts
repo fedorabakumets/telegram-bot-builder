@@ -377,6 +377,20 @@ function inferConnectionsFromNodes(
       });
     }
 
+    // Выходы ошибок refund_stars
+    if ((node.type as any) === 'refund_stars') {
+      for (const field of [
+        'refundEmptyTarget',
+        'refundNotFoundTarget',
+        'refundAlreadyRefundedTarget',
+      ] as const) {
+        const toId = data[field];
+        if (typeof toId === 'string' && toId) {
+          pushConnection({ fromId: node.id, toId, type: 'button-goto' });
+        }
+      }
+    }
+
     if (node.type === 'forward_message') {
       const sourceNodeId = typeof data.sourceMessageNodeId === 'string' ? data.sourceMessageNodeId.trim() : '';
       const sourceMode = typeof data.sourceMessageIdSource === 'string' ? data.sourceMessageIdSource : 'current_message';

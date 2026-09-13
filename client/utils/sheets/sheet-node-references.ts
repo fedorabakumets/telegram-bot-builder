@@ -29,7 +29,10 @@ export function updateNodeReferencesInData(data: any, nodeIdMap: Map<string, str
     'autoTransitionTo',
     'sourceNodeId',
     'keyboardNodeId',
-    'sourceMessageNodeId'
+    'sourceMessageNodeId',
+    'refundEmptyTarget',
+    'refundNotFoundTarget',
+    'refundAlreadyRefundedTarget',
   ];
 
   for (const field of nodeRefFields) {

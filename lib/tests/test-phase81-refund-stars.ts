@@ -216,6 +216,64 @@ test('B04', 'без refund_stars нет refund_star_payment', () => {
   ok(!code.includes('refund_star_payment'), 'нет вызова возврата');
 });
 
+test('B05', 'в коде есть тексты ошибок возврата (дефолты)', () => {
+  const p = makeCleanProject([makeRefundNode('ref1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'b05');
+  ok(code.includes('CHARGE_ALREADY_REFUNDED'), 'ветка уже возвращено');
+  ok(code.includes('Пожалуйста, укажите код покупки'), 'текст пустого кода');
+  ok(code.includes('Такой код покупки не найден'), 'текст не найден');
+  ok(code.includes('уже ранее был произведён возврат'), 'текст already');
+  ok(code.includes('callback_query.message.answer'), 'ответ пользователю');
+});
+
+test('B06', 'кастомные refundMsg* попадают в код', () => {
+  const p = makeCleanProject([
+    makeRefundNode('ref1', 'msg1', {
+      refundMsgEmpty: 'Нужен код X',
+      refundMsgNotFound: 'Код Y не найден',
+      refundMsgAlreadyRefunded: 'Уже вернули Z',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'b06');
+  ok(code.includes('Нужен код X'), 'кастом empty');
+  ok(code.includes('Код Y не найден'), 'кастом not found');
+  ok(code.includes('Уже вернули Z'), 'кастом already');
+});
+
+test('B07', 'refundNotFoundTarget → переход без answer на этой ветке', () => {
+  const p = makeCleanProject([
+    makeRefundNode('ref1', 'msg1', { refundNotFoundTarget: 'msg_nf' }),
+    makeMessageNode('msg1'),
+    {
+      id: 'msg_nf',
+      type: 'message',
+      position: { x: 400, y: 100 },
+      data: {
+        messageText: 'Код не найден на холсте',
+        buttons: [],
+        keyboardType: 'none',
+        formatMode: 'none',
+        markdown: false,
+      },
+    },
+  ]);
+  const code = gen(p, 'b07');
+  ok(code.includes('handle_callback_msg_nf'), 'переход на msg_nf');
+  const nfIdx = code.indexOf('CHARGE_NOT_FOUND');
+  ok(nfIdx >= 0, 'ветка CHARGE_NOT_FOUND');
+  const slice = code.slice(nfIdx, nfIdx + 350);
+  ok(slice.includes('handle_callback_msg_nf'), 'вызов после NOT_FOUND');
+  ok(!slice.includes('callback_query.message.answer'), 'нет answer при target');
+});
+
+test('B08', 'без error target остаётся fallback answer', () => {
+  const p = makeCleanProject([makeRefundNode('ref1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'b08');
+  ok(code.includes('callback_query.message.answer'), 'fallback answer');
+  ok(code.includes('Такой код покупки не найден'), 'дефолт not found');
+});
+
 console.log('── Блок C: Дубли и синтаксис ────────────────────────────────────');
 
 test('C01', 'нет дубля callback-хендлера ref1', () => {

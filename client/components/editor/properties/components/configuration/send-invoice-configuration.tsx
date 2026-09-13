@@ -8,12 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Node } from '@shared/schema';
 import { VariableSelector } from '../variables/variable-selector';
+import { InvoicePhotoField } from './invoice-photo-field';
 import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы панели конфигурации счёта */
 interface SendInvoiceConfigurationProps {
   /** Выбранный узел send_invoice */
   selectedNode: Node;
+  /** ID проекта для загрузки картинки */
+  projectId: number;
   /** Обновление данных узла */
   onNodeUpdate: (nodeId: string, updates: Partial<any>) => void;
   /** Узлы всех листов для выбора перехода */
@@ -31,6 +34,7 @@ interface SendInvoiceConfigurationProps {
  */
 export function SendInvoiceConfiguration({
   selectedNode,
+  projectId,
   onNodeUpdate,
   getAllNodesFromAllSheets,
   formatNodeDisplay,
@@ -115,15 +119,13 @@ export function SendInvoiceConfiguration({
         )}
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-xs font-medium">Картинка (URL)</Label>
-        <Input
-          value={data?.invoicePhotoUrl || ''}
-          onChange={(e) => onNodeUpdate(selectedNode.id, { invoicePhotoUrl: e.target.value })}
-          placeholder="https://…"
-          className="h-8 text-xs"
-        />
-      </div>
+      <InvoicePhotoField
+        projectId={projectId}
+        nodeId={selectedNode.id}
+        value={data?.invoicePhotoUrl || ''}
+        onChange={(value) => onNodeUpdate(selectedNode.id, { invoicePhotoUrl: value })}
+        textVariables={textVariables}
+      />
 
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">Скрытая метка покупки</Label>

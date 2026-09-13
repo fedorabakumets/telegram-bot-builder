@@ -110,6 +110,22 @@
 
 **Команда (`command`):** только латиница `a-z`, цифры и `_` (Telegram Bot API): `/buy`, `/refund`. Кириллица запрещена (`/купить` нельзя). `description` — по-русски.
 
+**Аргументы:** поле `saveCommandArgsTo` — имя переменной для текста после команды. Пример: `/donate 777` → в `{donate_amount}` попадёт `777`.
+
+```json
+{
+  "type": "command_trigger",
+  "data": {
+    "command": "/donate",
+    "description": "Донат звёздами",
+    "saveCommandArgsTo": "donate_amount",
+    "autoTransitionTo": "check_amount"
+  }
+}
+```
+
+Цепочка: `command_trigger(/donate)` → `condition(between 1..2500 по donate_amount)` → `send_invoice(invoiceAmount: "{donate_amount}")`.
+
 ### Поля text_trigger
 
 ```json
@@ -1087,7 +1103,7 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 | `invoiceTitle` | Название, 1–32 |
 | `invoiceDescription` | Описание, 1–255 |
 | `invoiceAmount` | Цена в звёздах (строка, `{переменные}` допустимы) |
-| `invoicePhotoUrl` | Необязательный URL картинки |
+| `invoicePhotoUrl` | Картинка: `https://…`, `/uploads/…` или `{var}`; для uploads бот склеит с `API_BASE_URL` |
 | `invoicePayload` | Скрытая метка; пусто = id узла |
 | `savePaymentAmountTo` | Куда сохранить сумму |
 | `savePaymentChargeIdTo` | Куда сохранить код покупки (для возврата позже) |
@@ -1098,7 +1114,10 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 
 ### refund_stars — вернуть звёзды
 
-Возврат покупки в этом боте через `refundStarPayment`. `autoTransitionTo` — после успешного возврата.
+Возврат покупки в этом боте через `refundStarPayment`.
+Четыре выхода на холсте: успех + пустой код + не найден + уже возвращён.
+Если выход ошибки подключён — только переход (текст рисует `message`).
+Если нет — `answer(refundMsg*)`; при `ignoreErrors` после текста — на `autoTransitionTo`. Без `raise`.
 
 ```json
 {
@@ -1108,8 +1127,14 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
     "refundUserId": "",
     "refundChargeId": "{payment_charge_id}",
     "ignoreErrors": false,
+    "refundMsgEmpty": "Пожалуйста, укажите код покупки: /back КОД",
+    "refundMsgNotFound": "Такой код покупки не найден. Проверьте данные и попробуйте снова.",
+    "refundMsgAlreadyRefunded": "За эту покупку уже ранее был произведён возврат.",
     "autoTransitionTo": "msg_refunded",
     "enableAutoTransition": true,
+    "refundEmptyTarget": "msg_empty",
+    "refundNotFoundTarget": "msg_not_found",
+    "refundAlreadyRefundedTarget": "msg_already",
     "keyboardType": "none",
     "buttons": []
   }
@@ -1121,10 +1146,14 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 | `refundUserSource` | `"current_user"` или `"custom"` |
 | `refundUserId` | ID / `{var}` при `custom` |
 | `refundChargeId` | Код покупки (`telegram_payment_charge_id`) |
-| `ignoreErrors` | При ошибке всё равно перейти дальше |
-| `autoTransitionTo` | Узел после успешного возврата (`enableAutoTransition: true`) |
+| `autoTransitionTo` | Успех (`enableAutoTransition: true`) |
+| `refundEmptyTarget` | Выход «Пустой код» |
+| `refundNotFoundTarget` | Выход «Код не найден» / прочие |
+| `refundAlreadyRefundedTarget` | Выход «Уже возвращён» |
+| `refundMsg*` | Fallback-тексты, если выход не подключён |
+| `ignoreErrors` | Без выхода ошибки — после текста идти на успех |
 
-Цепочки: `/refund` → `input` кода → `refund_stars` → сообщение; демо: `send_invoice` (1⭐) → после оплаты `refund_stars` с сохранённым кодом.
+Цепочки: `/back КОД` → `refund_stars` → сообщения по выходам; демо: `send_invoice` (1⭐) → после оплаты `refund_stars`.
 
 ### code — произвольный Python (Telethon)
 

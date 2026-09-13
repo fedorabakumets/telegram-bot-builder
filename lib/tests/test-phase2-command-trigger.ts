@@ -61,6 +61,7 @@ function makeTriggerNode(id: string, command: string, targetId: string, opts: {
   requiresAuth?: boolean;
   showInMenu?: boolean;
   description?: string;
+  saveCommandArgsTo?: string;
 } = {}) {
   return {
     id,
@@ -72,6 +73,7 @@ function makeTriggerNode(id: string, command: string, targetId: string, opts: {
       showInMenu: opts.showInMenu ?? true,
       adminOnly: opts.adminOnly ?? false,
       requiresAuth: opts.requiresAuth ?? false,
+      saveCommandArgsTo: opts.saveCommandArgsTo ?? '',
       autoTransitionTo: targetId,
       buttons: [],
       keyboardType: 'none',
@@ -1262,6 +1264,28 @@ test('O02', 'command_trigger → message + reply keyboard-нода → ReplyKeyb
   ok(code.includes('@dp.message(Command("menu"))'), '@dp.message(Command("menu")) должен быть в коде');
   ok(code.includes('handle_callback_kbd1'), 'handle_callback_kbd1 должен быть в коде');
   syntax(code, 'o02');
+});
+
+console.log('\n── Блок P: saveCommandArgsTo ─────────────────────────────────────');
+
+test('P01', 'saveCommandArgsTo → CommandObject и set_user_var(args)', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('cmd_donate', '/donate', 'msg1', { saveCommandArgsTo: 'donate_amount' }),
+    makeMessageNode('msg1', 'ok'),
+  ]);
+  const code = gen(p, 'p01');
+  ok(code.includes('command: CommandObject'), 'сигнатура с CommandObject');
+  ok(code.includes('set_user_var(user_id, "donate_amount", command.args or "")'), 'сохранение args');
+  syntax(code, 'p01');
+});
+
+test('P02', 'без saveCommandArgsTo нет записи args', () => {
+  const p = makeCleanProject([
+    makeTriggerNode('cmd_help', '/help', 'msg1'),
+    makeMessageNode('msg1', 'ok'),
+  ]);
+  const code = gen(p, 'p02');
+  ok(!/set_user_var\(user_id, "[^"]+", command\.args or ""\)/.test(code), 'не должно быть сохранения args');
 });
 
 // ИТОГИ

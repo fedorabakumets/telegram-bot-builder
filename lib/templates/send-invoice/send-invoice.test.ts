@@ -54,6 +54,13 @@ describe('generateSendInvoiceHandlers()', () => {
     assert.ok(!sendHandler.includes('await handle_callback_msg_1'));
   });
 
+  it('для /uploads/ собирает абсолютный URL через API_BASE_URL', () => {
+    const code = generateSendInvoiceHandlers(nodesWithInvoice as any);
+    assert.ok(code.includes('/uploads/1/product.jpg'));
+    assert.ok(code.includes('API_BASE_URL'));
+    assert.ok(code.includes('startswith("/uploads/")'));
+  });
+
   it('возвращает пустую строку без узлов', () => {
     assert.equal(generateSendInvoiceHandlers(nodesWithoutInvoice as any), '');
   });

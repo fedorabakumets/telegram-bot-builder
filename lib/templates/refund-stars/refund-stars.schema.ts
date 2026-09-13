@@ -26,6 +26,22 @@ export const refundStarsEntrySchema = z.object({
   refundChargeId: z.string().default(''),
   /** Игнорировать ошибки */
   ignoreErrors: z.boolean().default(false),
+  /** Сообщение при пустом коде */
+  refundMsgEmpty: z.string().default('Пожалуйста, укажите код покупки: /back КОД'),
+  /** Сообщение: код не найден */
+  refundMsgNotFound: z.string().default(
+    'Такой код покупки не найден. Проверьте данные и попробуйте снова.',
+  ),
+  /** Сообщение: уже возвращено */
+  refundMsgAlreadyRefunded: z.string().default(
+    'За эту покупку уже ранее был произведён возврат.',
+  ),
+  /** Выход «Пустой код» */
+  refundEmptyTarget: z.string().default(''),
+  /** Выход «Код не найден» */
+  refundNotFoundTarget: z.string().default(''),
+  /** Выход «Уже возвращён» */
+  refundAlreadyRefundedTarget: z.string().default(''),
 });
 
 /** Схема параметров шаблона */

@@ -46,6 +46,16 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
     _payload = str(_payload)[:128]
 {% if entry.photoUrl %}
     _photo_url = replace_variables_in_text({{ entry.photoUrl | tojson }}, _all_vars, {})
+    # Telegram качает photo_url сам — /uploads/ превращаем в абсолютный URL
+    if isinstance(_photo_url, str) and _photo_url.startswith("/uploads/"):
+        _api_base = (os.getenv("API_BASE_URL") or "").rstrip("/")
+        if _api_base:
+            _photo_url = f"{_api_base}{_photo_url}"
+        else:
+            logging.warning(
+                f"⭐ send_invoice [{{ entry.nodeId }}]: нет API_BASE_URL — картинка /uploads/ пропущена"
+            )
+            _photo_url = ""
 {% else %}
     _photo_url = ""
 {% endif %}

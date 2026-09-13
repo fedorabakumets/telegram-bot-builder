@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Node } from '@shared/schema';
 import { VariableSelector } from '../variables/variable-selector';
+import { RefundErrorMessagesFields } from './refund-error-messages-fields';
+import { RefundTransitionsFields } from './refund-transitions-fields';
 import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы панели конфигурации возврата */
@@ -37,23 +39,10 @@ export function RefundStarsConfiguration({
   textVariables = [],
 }: RefundStarsConfigurationProps) {
   const data = selectedNode.data as any;
-  const autoTransitionTo: string = data?.autoTransitionTo || '';
   const userSource: string = data?.refundUserSource || 'current_user';
   const availableTargets = getAllNodesFromAllSheets.filter(
     ({ node }) => node.id !== selectedNode.id,
   );
-
-  /**
-   * Обновляет цель перехода после возврата
-   * @param value - ID узла или sentinel без перехода
-   */
-  const applyTarget = (value: string) => {
-    const next = value === 'no-transition' ? '' : value;
-    onNodeUpdate(selectedNode.id, {
-      autoTransitionTo: next,
-      enableAutoTransition: Boolean(next),
-    });
-  };
 
   /**
    * Вставляет переменную в поле кода покупки
@@ -80,8 +69,8 @@ export function RefundStarsConfiguration({
         </span>
       </div>
       <p className="text-[10px] text-muted-foreground leading-relaxed">
-        Возврат покупки в этом боте по коду из успешной оплаты.
-        Переход сработает только после успешного возврата.
+        Возврат покупки в этом боте по коду. Исходы — на холсте (Успех / ошибки).
+        Тексты ниже — только если выход не подключён.
       </p>
 
       <div className="space-y-1.5">
@@ -146,29 +135,23 @@ export function RefundStarsConfiguration({
           className="h-3.5 w-3.5"
         />
         <Label htmlFor={`ignore-errors-${selectedNode.id}`} className="text-xs font-medium">
-          Игнорировать ошибки и идти дальше
+          Без выхода ошибки — идти на «Успех»
         </Label>
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-xs font-medium">После успешного возврата</Label>
-        <Select
-          value={autoTransitionTo || 'no-transition'}
-          onValueChange={applyTarget}
-        >
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue placeholder="Без перехода" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="no-transition">Без перехода</SelectItem>
-            {availableTargets.map(({ node, sheetName }) => (
-              <SelectItem key={node.id} value={node.id}>
-                {formatNodeDisplay(node, sheetName)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <RefundTransitionsFields
+        data={data}
+        nodeId={selectedNode.id}
+        onNodeUpdate={onNodeUpdate}
+        availableTargets={availableTargets}
+        formatNodeDisplay={formatNodeDisplay}
+      />
+
+      <RefundErrorMessagesFields
+        data={data}
+        nodeId={selectedNode.id}
+        onNodeUpdate={onNodeUpdate}
+      />
     </div>
   );
 }

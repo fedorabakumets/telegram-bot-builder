@@ -26,6 +26,18 @@ export interface RefundStarsEntry {
   refundChargeId: string;
   /** Не прерывать сценарий при ошибке */
   ignoreErrors: boolean;
+  /** Сообщение при пустом коде покупки */
+  refundMsgEmpty: string;
+  /** Сообщение: код не найден / прочая ошибка API */
+  refundMsgNotFound: string;
+  /** Сообщение: возврат уже был */
+  refundMsgAlreadyRefunded: string;
+  /** Выход «Пустой код» */
+  refundEmptyTarget: string;
+  /** Выход «Код не найден» */
+  refundNotFoundTarget: string;
+  /** Выход «Уже возвращён» */
+  refundAlreadyRefundedTarget: string;
 }
 
 /**

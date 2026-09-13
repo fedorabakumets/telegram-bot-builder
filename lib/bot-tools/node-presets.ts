@@ -130,7 +130,9 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       showInMenu: false,
       isPrivateOnly: false,
       requiresAuth: false,
-      adminOnly: false
+      adminOnly: false,
+      /** Переменная для аргументов команды */
+      saveCommandArgsTo: '',
     },
     text_trigger: {
       textSynonyms: [],
@@ -597,6 +599,18 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       refundChargeId: '',
       /** Игнорировать ошибки */
       ignoreErrors: false,
+      /** Сообщение при пустом коде */
+      refundMsgEmpty: 'Пожалуйста, укажите код покупки: /back КОД',
+      /** Сообщение: код не найден */
+      refundMsgNotFound: 'Такой код покупки не найден. Проверьте данные и попробуйте снова.',
+      /** Сообщение: уже возвращено */
+      refundMsgAlreadyRefunded: 'За эту покупку уже ранее был произведён возврат.',
+      /** Выход «Пустой код» */
+      refundEmptyTarget: '',
+      /** Выход «Код не найден» */
+      refundNotFoundTarget: '',
+      /** Выход «Уже возвращён» */
+      refundAlreadyRefundedTarget: '',
       /** ID следующего узла после возврата */
       autoTransitionTo: '',
       /** Включить автопереход */

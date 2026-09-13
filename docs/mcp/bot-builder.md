@@ -21,7 +21,8 @@
 - текст команды — **только английская латиница** `a-z`, цифры и `_` (Telegram Bot API / меню): `/buy`, `/refund`, `/help`;
 - **нельзя** кириллицу в команде (`/купить`, `/возврат` — не сработают в меню и `setMyCommands`);
 - `description` и тексты `message` — по-русски;
-- стандартные `/start`, `/help`, `/paysupport`, `/terms` — тоже латиница (см. `list_commands`).
+- стандартные `/start`, `/help`, `/paysupport`, `/terms` — тоже латиница (см. `list_commands`);
+- аргументы одной строки (`/donate 777`) — поле `saveCommandArgsTo` (имя переменной для текста после команды).
 
 Подробности: [[bot-json-prompt]] (раздел `command_trigger` и «Правила генерации»).
 

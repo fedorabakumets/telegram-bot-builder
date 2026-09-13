@@ -1,5 +1,5 @@
 /**
- * @fileoverview Определение узла «Выставить счёт в звёздах» для палитры
+ * @fileoverview Определение узла «Выставить счёт» для палитры
  * @module components/editor/sidebar/massive/payments/send-invoice
  */
 
@@ -10,7 +10,7 @@ import { ComponentDefinition } from '@shared/schema';
  */
 export const sendInvoiceNode: ComponentDefinition = {
   id: 'send-invoice',
-  name: 'Выставить счёт в звёздах',
+  name: 'Выставить счёт',
   description: 'Отправить счёт на оплату звёздами в текущий чат',
   icon: 'fas fa-star',
   color: 'bg-yellow-100 text-yellow-700',

@@ -120,7 +120,9 @@ export function getNodeDefaults(type: Node['type']): any {
       showInMenu: false,
       isPrivateOnly: false,
       requiresAuth: false,
-      adminOnly: false
+      adminOnly: false,
+      /** Переменная для аргументов команды (/donate 777 → 777) */
+      saveCommandArgsTo: '',
     },
     text_trigger: {
       textSynonyms: [],
@@ -586,6 +588,18 @@ export function getNodeDefaults(type: Node['type']): any {
       refundChargeId: '',
       /** Не прерывать сценарий при ошибке */
       ignoreErrors: false,
+      /** Сообщение при пустом коде */
+      refundMsgEmpty: 'Пожалуйста, укажите код покупки: /back КОД',
+      /** Сообщение: код не найден */
+      refundMsgNotFound: 'Такой код покупки не найден. Проверьте данные и попробуйте снова.',
+      /** Сообщение: уже возвращено */
+      refundMsgAlreadyRefunded: 'За эту покупку уже ранее был произведён возврат.',
+      /** Выход «Пустой код» */
+      refundEmptyTarget: '',
+      /** Выход «Код не найден» */
+      refundNotFoundTarget: '',
+      /** Выход «Уже возвращён» */
+      refundAlreadyRefundedTarget: '',
       /** ID следующего узла после успешного возврата */
       autoTransitionTo: '',
       /** Включить автопереход */

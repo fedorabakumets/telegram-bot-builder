@@ -156,6 +156,11 @@ function synthesizeConnectionsFromNodes(nodes: Node[]): GraphConnection[] {
     pushConnection(node.id, data.autoTransitionTo, { sourceHandle: 'auto-transition' });
     pushConnection(node.id, data.inputTargetNodeId, { sourceHandle: 'input-target' });
     pushConnection(node.id, data.keyboardNodeId, { sourceHandle: 'keyboard-link' });
+    pushConnection(node.id, data.refundEmptyTarget, { sourceHandle: 'refund-empty' });
+    pushConnection(node.id, data.refundNotFoundTarget, { sourceHandle: 'refund-not-found' });
+    pushConnection(node.id, data.refundAlreadyRefundedTarget, {
+      sourceHandle: 'refund-already',
+    });
     pushConnection(data.sourceNodeId, node.id, { targetHandle: 'source-node' });
 
     const buttons = Array.isArray(data.buttons) ? data.buttons : [];

@@ -692,6 +692,7 @@ export function PropertiesPanel({
           {(selectedNode.type as any) === 'send_invoice' && (
             <SendInvoiceConfiguration
               selectedNode={selectedNode}
+              projectId={projectId}
               onNodeUpdate={onNodeUpdate}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
               formatNodeDisplay={formatNodeDisplay}
@@ -825,6 +826,7 @@ export function PropertiesPanel({
               onNodeUpdate={onNodeUpdate}
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
               formatNodeDisplay={formatNodeDisplay}
+              textVariables={textVariables as Variable[]}
             />
           )}
           {isTriggerNode(selectedNode.type) && selectedNode.type === 'text_trigger' && (

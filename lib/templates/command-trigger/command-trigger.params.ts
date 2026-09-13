@@ -29,6 +29,8 @@ export interface CommandTriggerEntry {
   deepLinkSaveToVar?: boolean;
   /** Имя переменной для сохранения значения deep link */
   deepLinkVarName?: string;
+  /** Имя переменной для аргументов команды (после пробела); пусто = не сохранять */
+  saveCommandArgsTo?: string;
 }
 
 /** Параметры для генерации всех обработчиков командных триггеров */

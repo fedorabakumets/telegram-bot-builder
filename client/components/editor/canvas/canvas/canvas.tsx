@@ -535,6 +535,27 @@ export function Canvas({
         }
 
         if (portType === 'button-goto' && buttonId) {
+          /** Фиксированные порты refund_stars */
+          if ((n.type as any) === 'refund_stars') {
+            if (buttonId === 'refund-success') {
+              data.autoTransitionTo = targetNodeId;
+              data.enableAutoTransition = true;
+              return { ...n, data };
+            }
+            if (buttonId === 'refund-empty') {
+              data.refundEmptyTarget = targetNodeId;
+              return { ...n, data };
+            }
+            if (buttonId === 'refund-not-found') {
+              data.refundNotFoundTarget = targetNodeId;
+              return { ...n, data };
+            }
+            if (buttonId === 'refund-already') {
+              data.refundAlreadyRefundedTarget = targetNodeId;
+              return { ...n, data };
+            }
+          }
+
           const buttons = (data.buttons as any[] | undefined) ?? [];
           data.buttons = buttons.map((btn: any) =>
             btn.id === buttonId ? { ...btn, target: targetNodeId } : btn
@@ -605,6 +626,18 @@ export function Canvas({
           data.enableAutoTransition = false;
           delete data.autoTransitionTo;
         } else if (type === 'button-goto') {
+          /** Сброс выходов refund_stars по целевому id */
+          if ((n.type as any) === 'refund_stars') {
+            if (data.autoTransitionTo === toId) {
+              data.enableAutoTransition = false;
+              delete data.autoTransitionTo;
+            }
+            if (data.refundEmptyTarget === toId) delete data.refundEmptyTarget;
+            if (data.refundNotFoundTarget === toId) delete data.refundNotFoundTarget;
+            if (data.refundAlreadyRefundedTarget === toId) {
+              delete data.refundAlreadyRefundedTarget;
+            }
+          }
           const buttons = (data.buttons as any[] | undefined) ?? [];
           data.buttons = buttons.map((btn: any) =>
             btn.action === 'goto' && btn.target === toId ? { ...btn, target: undefined } : btn

@@ -24,6 +24,8 @@ import {
   validParamsRequiresAuth,
   nodesWithAdminOnly,
   nodesWithRequiresAuth,
+  validParamsSaveCommandArgs,
+  nodesWithSaveCommandArgs,
 } from './command-trigger.fixture';
 import { commandTriggerParamsSchema } from './command-trigger.schema';
 
@@ -200,6 +202,29 @@ describe('generateCommandTriggerHandlers()', () => {
 
   it('узлы без command_trigger → пустая строка', () => {
     expect(generateCommandTriggerHandlers(nodesWithoutCommandTriggers)).toBe('');
+  });
+});
+
+// ─── saveCommandArgsTo ───────────────────────────────────────────────────────
+
+describe('saveCommandArgsTo', () => {
+  it('генерирует CommandObject и set_user_var с args', () => {
+    const r = generateCommandTriggers(validParamsSaveCommandArgs);
+    expect(r).toContain('command: CommandObject');
+    expect(r).toContain('set_user_var(user_id, "donate_amount", command.args or "")');
+  });
+
+  it('collect + handlers из узлов', () => {
+    const entries = collectCommandTriggerEntries(nodesWithSaveCommandArgs);
+    expect(entries[0].saveCommandArgsTo).toBe('donate_amount');
+    const r = generateCommandTriggerHandlers(nodesWithSaveCommandArgs);
+    expect(r).toContain('donate_amount');
+    expect(r).toContain('command.args');
+  });
+
+  it('без saveCommandArgsTo нет set_user_var для args', () => {
+    const r = generateCommandTriggers(validParamsSingle);
+    expect(r).not.toMatch(/set_user_var\(user_id, "[^"]+", command\.args or ""\)/);
   });
 });
 

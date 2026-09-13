@@ -785,6 +785,24 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
+  // Аргументы команды (/donate 777 → переменная)
+  allNodes.forEach(node => {
+    if (node.type !== 'command_trigger') return;
+    const data = node.data as any;
+    const varName = typeof data?.saveCommandArgsTo === 'string' ? data.saveCommandArgsTo.trim() : '';
+    if (!varName) return;
+    const key = `command_args__${node.id}`;
+    if (!variablesMap.has(key)) {
+      variablesMap.set(key, {
+        name: varName,
+        nodeId: node.id,
+        nodeType: 'command_trigger' as any,
+        sourceTable: 'bot_users',
+        description: `Аргументы ${data.command || 'команды'}`,
+      });
+    }
+  });
+
   // Разделяем на текстовые и медиа
   const all = Array.from(variablesMap.values());
   return { textVariables: all.filter(v => !v.mediaType), mediaVariables: all.filter(v => v.mediaType) };

@@ -32,6 +32,7 @@ export const nodesWithInvoice: any[] = [
       invoiceTitle: 'Товар',
       invoiceDescription: 'Описание',
       invoiceAmount: '50',
+      invoicePhotoUrl: '/uploads/1/product.jpg',
       invoicePayload: '',
       savePaymentAmountTo: 'amt',
       savePaymentChargeIdTo: 'chg',

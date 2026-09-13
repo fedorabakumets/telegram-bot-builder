@@ -265,6 +265,17 @@ test('C04', 'синтаксис с двумя счетами OK', () => {
   syntax(gen(p, 'c04'), 'c04');
 });
 
+test('C05', 'картинка /uploads/ → API_BASE_URL', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', { invoicePhotoUrl: '/uploads/1/cover.jpg' }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'c05');
+  ok(code.includes('/uploads/1/cover.jpg'), 'путь uploads в коде');
+  ok(code.includes('API_BASE_URL'), 'склейка с API_BASE_URL');
+  syntax(code, 'c05');
+});
+
 console.log('\n── Итог ─────────────────────────────────────────────────────────');
 const failed = results.filter(r => !r.passed);
 console.log(`Пройдено: ${results.length - failed.length}/${results.length}`);

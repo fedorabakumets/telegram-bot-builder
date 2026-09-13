@@ -16,6 +16,7 @@
 |-----------|----------|
 | Команда | Текст команды: только латиница (`/start`, `/buy`). Кириллица недопустима |
 | Описание | Отображается в меню команд Telegram (можно по-русски) |
+| Аргументы → переменная | `saveCommandArgsTo`: для `/donate 777` сохранит `777` |
 | Показать в меню | Добавить команду в список меню бота |
 | Автопереход | Узел, на который перейти после срабатывания |
 
@@ -524,7 +525,7 @@ In-memory счётчик событий в **скользящем временн
 | Название | Заголовок карточки, 1–32 знака (`invoiceTitle`) |
 | Описание | Текст под названием, 1–255 (`invoiceDescription`) |
 | Цена | Целое число звёзд, строка; допускает `{переменные}` (`invoiceAmount`) |
-| Картинка | Необязательный URL (`invoicePhotoUrl`) |
+| Картинка | Загрузка / URL / переменная → `invoicePhotoUrl`; для `/uploads/` бот добавит `API_BASE_URL` |
 | Скрытая метка | Payload покупки; пусто = id узла (`invoicePayload`) |
 | Сохранить сумму | Имя переменной для `total_amount` (`savePaymentAmountTo`) |
 | Сохранить код покупки | Имя переменной для `telegram_payment_charge_id` (`savePaymentChargeIdTo`) |
@@ -544,10 +545,15 @@ In-memory счётчик событий в **скользящем временн
 |-----------|----------|
 | Кому | Текущий пользователь или ID / `{переменная}` (`refundUserSource`, `refundUserId`) |
 | Код покупки | Строка с `{переменными}` (`refundChargeId`) — обычно из `savePaymentChargeIdTo` у счёта |
-| Игнорировать ошибки | При ошибке всё равно идти дальше (`ignoreErrors`) |
-| Следующий узел | `autoTransitionTo` + `enableAutoTransition: true` — после **успешного** возврата |
+| Успех | `autoTransitionTo` + `enableAutoTransition: true` |
+| Пустой код | выход `refundEmptyTarget` (порт «Пустой код») |
+| Код не найден | выход `refundNotFoundTarget` (`CHARGE_NOT_FOUND` и прочие) |
+| Уже возвращён | выход `refundAlreadyRefundedTarget` (`CHARGE_ALREADY_REFUNDED`) |
+| Fallback-тексты | `refundMsg*` — только если соответствующий выход не подключён |
+| Без выхода ошибки | `ignoreErrors` — после fallback-текста идти на «Успех» |
 
-Типично: `/refund` → ввод кода → `refund_stars` → сообщение. Демо на 1⭐: после оплаты сразу `refund_stars` с `{payment_charge_id}`.
+Типично: `/back КОД` → `refund_stars` → сообщения по выходам. Демо на 1⭐: после оплаты сразу `refund_stars` с `{payment_charge_id}`.
+Бот **не** делает `raise` при ошибке возврата.
 
 ---
 

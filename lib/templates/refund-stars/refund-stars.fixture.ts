@@ -21,6 +21,12 @@ export const fixtureRefundStarsCurrent: RefundStarsTemplateParams = {
     refundUserId: '',
     refundChargeId: '{payment_charge_id}',
     ignoreErrors: false,
+    refundMsgEmpty: 'Пожалуйста, укажите код покупки: /back КОД',
+    refundMsgNotFound: 'Такой код покупки не найден. Проверьте данные и попробуйте снова.',
+    refundMsgAlreadyRefunded: 'За эту покупку уже ранее был произведён возврат.',
+    refundEmptyTarget: '',
+    refundNotFoundTarget: '',
+    refundAlreadyRefundedTarget: '',
   }],
 };
 
@@ -35,5 +41,31 @@ export const fixtureRefundStarsCustom: RefundStarsTemplateParams = {
     refundUserId: '{target_user}',
     refundChargeId: 'charge_abc',
     ignoreErrors: true,
+    refundMsgEmpty: 'Укажите код',
+    refundMsgNotFound: 'Код не найден',
+    refundMsgAlreadyRefunded: 'Уже возвращено',
+    refundEmptyTarget: '',
+    refundNotFoundTarget: '',
+    refundAlreadyRefundedTarget: '',
+  }],
+};
+
+/** Фикстура: выходы ошибок на холсте */
+export const fixtureRefundStarsErrorTargets: RefundStarsTemplateParams = {
+  entries: [{
+    nodeId: 'refund_err',
+    safeName: 'refund_err',
+    targetNodeId: 'msg_ok',
+    targetNodeType: 'message',
+    refundUserSource: 'current_user',
+    refundUserId: '',
+    refundChargeId: '{cid}',
+    ignoreErrors: false,
+    refundMsgEmpty: 'fallback empty',
+    refundMsgNotFound: 'fallback not found',
+    refundMsgAlreadyRefunded: 'fallback already',
+    refundEmptyTarget: 'msg_empty',
+    refundNotFoundTarget: 'msg_not_found',
+    refundAlreadyRefundedTarget: 'msg_already',
   }],
 };

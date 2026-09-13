@@ -227,8 +227,13 @@ export function collectConnections(nodes: Node[]): Connection[] {
   const existingIds = new Set(nodes.map(n => n.id));
 
   nodes.forEach(node => {
-    // 1. Автопереход (исключаем loop — у него свои порты в пункте 10)
-    if (node.data?.enableAutoTransition && node.data?.autoTransitionTo && (node.type as any) !== 'loop') {
+    // 1. Автопереход (исключаем loop / refund_stars — свои порты ниже)
+    if (
+      node.data?.enableAutoTransition
+      && node.data?.autoTransitionTo
+      && (node.type as any) !== 'loop'
+      && (node.type as any) !== 'refund_stars'
+    ) {
       const toId = node.data.autoTransitionTo as string;
       const targetNode = nodes.find((candidate) => candidate.id === toId);
       const isLegacyForwardSourceLink =
@@ -377,6 +382,33 @@ export function collectConnections(nodes: Node[]): Connection[] {
           label: '→ Далее',
           buttonId: 'loop-after',
         });
+      }
+    }
+
+    // 11. Выходы узла refund_stars
+    if ((node.type as any) === 'refund_stars') {
+      const d = node.data as any;
+      const refundPorts: Array<{ field: string; buttonId: string; label: string }> = [
+        { field: 'autoTransitionTo', buttonId: 'refund-success', label: 'Успех' },
+        { field: 'refundEmptyTarget', buttonId: 'refund-empty', label: 'Пустой код' },
+        { field: 'refundNotFoundTarget', buttonId: 'refund-not-found', label: 'Код не найден' },
+        {
+          field: 'refundAlreadyRefundedTarget',
+          buttonId: 'refund-already',
+          label: 'Уже возвращён',
+        },
+      ];
+      for (const port of refundPorts) {
+        const toId = d?.[port.field] as string | undefined;
+        if (toId && existingIds.has(toId)) {
+          connections.push({
+            fromId: node.id,
+            toId,
+            type: 'button-goto',
+            label: port.label,
+            buttonId: port.buttonId,
+          });
+        }
       }
     }
   });
