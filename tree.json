@@ -31,7 +31,7 @@
       "bot-json-prompt"
     ],
     "folder_titles": {},
-    "updated_at": "2026-09-01T21:35:38+03:00",
+    "updated_at": "2026-09-11T02:36:53+03:00",
     "tags": [],
     "author": ""
   },
@@ -58,7 +58,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-23T22:51:09+03:00",
+    "updated_at": "2026-09-01T18:38:33Z",
     "tags": [],
     "author": ""
   },
@@ -163,7 +163,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-08-09T01:30:36+03:00",
+    "updated_at": "2026-09-01T18:38:33Z",
     "tags": [],
     "author": ""
   },
@@ -185,7 +185,7 @@
   {
     "path": "api/hooks",
     "title": "hooks",
-    "excerpt": "Эндпоинты: **5 методов** на один catch-all путь",
+    "excerpt": "Эндпоинтов: **5**",
     "parts": [
       "api",
       "hooks"
@@ -193,7 +193,7 @@
     "folder_titles": {
       "api": "Api"
     },
-    "updated_at": "2026-09-01T21:35:38+03:00",
+    "updated_at": "2026-09-01T18:38:33Z",
     "tags": [],
     "author": ""
   },
@@ -1123,7 +1123,7 @@
     "folder_titles": {
       "features": "🧩 Возможности"
     },
-    "updated_at": "2026-09-01T21:35:38+03:00",
+    "updated_at": "2026-09-11T02:36:53+03:00",
     "tags": [],
     "author": ""
   },
