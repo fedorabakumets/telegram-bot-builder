@@ -27,7 +27,7 @@ export { hasCommandButtons } from './templates/filters';
 // hasInlineButtons и hasMultiSelectNodes экспортируются из './bot-generator/Keyboard'
 export { hasMediaNodes } from './templates/filters';
 export { hasAutoTransitions } from './templates/filters';
-export { hasInputCollection } from './templates/filters';
+export { hasInputCollection, hasInputTimeoutNodes } from './templates/filters';
 // hasLocationFeatures does not exist yet
 export { hasNodesRequiringSafeEditOrSend } from './templates/filters';
 
@@ -133,6 +133,18 @@ export { createSectionContext } from './bot-generator/core/generation-context';
 
 /** Экспорт шаблона Python-кода (Telethon) */
 export { generateCodeHandlers, collectCodeEntries } from './templates/code';
+
+/** Экспорт шаблона триггера участника */
+export { generateMemberTriggerHandlers, collectMemberTriggerEntries, generateMemberTriggers } from './templates/member-trigger';
+export type { MemberTriggerEntry, MemberTriggerTemplateParams } from './templates/member-trigger';
+
+/** Экспорт шаблона остановки middleware-цепочки */
+export { generateStopProcessingHandlers, collectStopProcessingEntries, generateStopProcessing } from './templates/stop-processing';
+export type { StopProcessingEntry, StopProcessingTemplateParams } from './templates/stop-processing';
+
+/** Экспорт шаблона счётчика частоты */
+export { generateRateCounterHandlers, collectRateCounterEntries, generateRateCounter } from './templates/rate-counter';
+export type { RateCounterEntry, RateCounterTemplateParams } from './templates/rate-counter';
 
 // Ядро: централизованное логирование
 export { createLogger, generatorLogger } from './bot-generator/core/generator-logger';

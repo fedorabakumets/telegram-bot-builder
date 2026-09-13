@@ -18,6 +18,8 @@ export const importsParamsSchema = z.object({
   hasDatetimeNodes: z.boolean().default(false),
   hasTimezoneNodes: z.boolean().default(false),
   hasUserbotNodes: z.boolean().default(false),
+  hasRateCounterNodes: z.boolean().default(false),
+  hasInputTimeoutNodes: z.boolean().default(false),
 });
 
 /** Тип параметров импортов (выведен из схемы) */

@@ -133,7 +133,12 @@
     "test:phase9": "node run-tests.js --pattern test-phase9-multiselect",
     "test:phase10": "node run-tests.js --pattern test-phase10-broadcast",
     "test:phase11": "node run-tests.js --pattern test-phase11-user-message-actions",
-    "test:phase13": "node run-tests.js --pattern test-phase13-database"
+    "test:phase13": "node run-tests.js --pattern test-phase13-database",
+    "test:phase74": "node run-tests.js --pattern test-phase74-reply-context",
+    "test:phase77": "node run-tests.js --pattern test-phase77-incoming-trigger-guard",
+    "test:phase78": "node run-tests.js --pattern test-phase78-rate-counter",
+    "test:phase79": "node run-tests.js --pattern test-phase79-input-timeout",
+    "test:phase76": "node run-tests.js --pattern test-phase76-member-trigger"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.4",

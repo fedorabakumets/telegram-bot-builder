@@ -9,7 +9,16 @@
   @param {boolean} hasContactInput - Есть узлы с enableContactInput
   @param {string}  navigationCode  - Код навигации к следующему узлу
   @param {Array}   mediaMetadataConfigs - Конфигурация сохранения метаданных медиа
+  @param {boolean} hasInputTimeoutNodes - Нужны ли вызовы таймаута/form_session
 #}
+
+{% macro finalize_media_input(var_name) %}
+{% if hasInputTimeoutNodes %}
+    await _cancel_input_timeout_task(user_id)
+    _track_form_variable(user_id, {{ var_name }})
+{% endif %}
+    del user_data[user_id]["waiting_for_input"]
+{% endmacro %}
 
 {% if hasPhotoInput %}
 # Обработчик получения фото от пользователя
@@ -127,7 +136,7 @@ async def handle_photo_input(message: types.Message):
 {% endfor %}
 {% endif %}
 
-    del user_data[user_id]["waiting_for_input"]
+    {{ finalize_media_input('photo_variable') }}
     logging.info(f"Фото сохранено: {photo_variable} = {photo_file_id}")
 
     if next_node_id:
@@ -261,7 +270,7 @@ async def handle_video_input(message: types.Message):
 {% endfor %}
 {% endif %}
 
-    del user_data[user_id]["waiting_for_input"]
+    {{ finalize_media_input('video_variable') }}
     logging.info(f"🎥 Видео сохранено: {video_variable} = {video_file_id}")
 
     if next_node_id:
@@ -403,7 +412,7 @@ async def handle_audio_input(message: types.Message):
 {% endfor %}
 {% endif %}
 
-    del user_data[user_id]["waiting_for_input"]
+    {{ finalize_media_input('audio_variable') }}
     logging.info(f"🎵 Аудио сохранено: {audio_variable} = {audio_file_id}")
 
     if next_node_id:
@@ -491,7 +500,7 @@ async def handle_animation_input(message: types.Message):
     if saved_to_db:
         logging.info(f"✅ Анимация сохранена в БД: {document_variable} = {anim_file_id} (пользователь {user_id})")
 
-    del user_data[user_id]["waiting_for_input"]
+    {{ finalize_media_input('document_variable') }}
     logging.info(f"Анимация сохранена: {document_variable} = {anim_file_id}")
 
     if next_node_id:
@@ -613,7 +622,7 @@ async def handle_document_input(message: types.Message):
 {% endfor %}
 {% endif %}
 
-    del user_data[user_id]["waiting_for_input"]
+    {{ finalize_media_input('document_variable') }}
     logging.info(f"📄 Документ сохранен: {document_variable} = {document_file_id}")
 
     if next_node_id:
@@ -679,7 +688,7 @@ async def handle_location_input(message: types.Message):
     else:
         logging.warning("⚠️ Не удалось сохранить геолокацию в БД, данные сохранены локально")
 
-    del user_data[user_id]["waiting_for_input"]
+    {{ finalize_media_input('location_variable') }}
     logging.info(f"📍 Геолокация сохранена: {location_variable}")
 
     if next_node_id:
@@ -748,7 +757,7 @@ async def handle_contact_input(message: types.Message):
     else:
         logging.warning("⚠️ Не удалось сохранить контакт в БД, данные сохранены локально")
 
-    del user_data[user_id]["waiting_for_input"]
+    {{ finalize_media_input('contact_variable') }}
     logging.info(f"👤 Контакт сохранен: {contact_variable}")
 
     if next_node_id:

@@ -58,6 +58,12 @@ async def callback_trigger_{{ sanitized_node_id }}_handler(callback_query: types
     if user_id not in user_data:
         user_data[user_id] = {}
     user_data[user_id]["callback_data"] = callback_query.data or "{{ entry.callbackData }}"
+    {%- if entry.matchType == 'startswith' %}
+    _cb_suffix = (callback_query.data or "").replace("{{ escaped_callback_data }}", "", 1)
+    if _cb_suffix:
+        user_data[user_id]["_cb_dynamic_id"] = _cb_suffix
+        await set_user_var(user_id, "_cb_dynamic_id", _cb_suffix)
+    {%- endif %}
     # Читаем текст кнопки из reply_markup сообщения — Telegram хранит его там
     _cb_btn_text = ""
     try:

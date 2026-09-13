@@ -21,4 +21,8 @@ export interface ConfigTemplateParams {
   hasUserbotNodes?: boolean;
   /** Генерировать обёртку защиты контента от копирования/пересылки */
   protectContent?: boolean;
+  /** Есть ли узлы rate_counter (нужен in-memory deque) */
+  hasRateCounterNodes?: boolean;
+  /** Есть ли таймаут ожидания ввода или сбор ответов */
+  hasInputTimeoutNodes?: boolean;
 }

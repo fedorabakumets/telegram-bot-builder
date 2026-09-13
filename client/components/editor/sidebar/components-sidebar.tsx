@@ -4,7 +4,7 @@
  */
 
 import { BotProject } from '@shared/schema';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   handleProjectDragStart,
@@ -16,6 +16,7 @@ import {
   handleContainerDragLeave,
 } from './handlers';
 import { componentCategories, commandPresets } from './constants';
+import { filterDisabledCategories } from './filter-disabled-categories';
 import type { ComponentsSidebarProps } from './types';
 import { useSidebarTabs } from './hooks/use-sidebar-tabs';
 import { useSidebarDragState } from './hooks/use-sidebar-drag-state';
@@ -43,6 +44,7 @@ import { Button } from '@/components/ui/button';
 
 import { Home, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useDisabledNodeTypes } from '@/hooks/use-disabled-node-types';
 import { apiRequest } from '@/queryClient';
 import { useIsMobile } from '@/components/editor/header/hooks/use-mobile';
 
@@ -78,6 +80,11 @@ export function ComponentsSidebar({
   // Хук управления вкладками
   const { currentTab, setCurrentTab } = useSidebarTabs();
   const [projectsView, setProjectsView] = useState<ProjectsViewMode>('active');
+  const { data: disabledNodeTypesData } = useDisabledNodeTypes();
+  const visibleCategories = useMemo(
+    () => filterDisabledCategories(componentCategories, disabledNodeTypesData?.disabled),
+    [disabledNodeTypesData?.disabled],
+  );
 
   // Хук управления drag-and-drop
   const {
@@ -577,7 +584,7 @@ export function ComponentsSidebar({
 
         {currentTab === 'elements' && (
           <ComponentsTab
-            categories={componentCategories}
+            categories={visibleCategories}
             commandPresets={commandPresets}
             collapsedCategories={collapsedCategories}
             touchState={touchHook.touchState}

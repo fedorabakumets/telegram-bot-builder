@@ -39,6 +39,8 @@ export interface Assignment {
   maxValue?: string;
   /** Имя второго массива для объединения (только array_concat) */
   concatWith?: string;
+  /** Сохранить в базу после присваивания */
+  persistToDb?: boolean;
 }
 
 /** Все доступные режимы присваивания */
@@ -300,6 +302,15 @@ export function AssignmentRow({
         <span className="text-[10px] text-muted-foreground truncate">
           {modeConfig.hint}
         </span>
+        <label className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!assignment.persistToDb}
+            onChange={(e) => onChange(assignment.id, 'persistToDb', e.target.checked)}
+            className="h-3 w-3"
+          />
+          В базу
+        </label>
       </div>
 
       {/* Условия lookup (если режим lookup) */}

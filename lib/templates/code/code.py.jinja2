@@ -15,7 +15,14 @@ try:
 except Exception:
     Button = None
 
-_code_node_lock = asyncio.Lock()
+_code_node_locks: dict = {}
+
+def _get_code_node_lock(user_id: int) -> asyncio.Lock:
+    """Возвращает asyncio.Lock для узла code в расчёте на одного пользователя."""
+    if user_id not in _code_node_locks:
+        _code_node_locks[user_id] = asyncio.Lock()
+    return _code_node_locks[user_id]
+
 _CODE_NODE_TIMEOUT = 180
 _CODE_SKIP_KEYS = {
     'client', 'userbot_client', 'callback_query', 'state', 'user_id', 'user_data',
@@ -71,7 +78,7 @@ async def _run_code_node(user_id, source, callback_query=None, state=None, node_
             )
             _ns['_ns'] = _ns
             exec(compile(_wrapped, f"<code:{node_id}>", "exec"), _ns, _ns)
-            async with _code_node_lock:
+            async with _get_code_node_lock(user_id):
                 await asyncio.wait_for(_ns["__code_entry"](), timeout=_CODE_NODE_TIMEOUT)
         except asyncio.TimeoutError:
             logging.error(f"❌ code [{node_id}]: таймаут {_CODE_NODE_TIMEOUT}с")

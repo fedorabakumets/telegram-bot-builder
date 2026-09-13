@@ -100,15 +100,24 @@ def _calc_delay_{{ entry.safeName }}(_now, _last_run):
             return (_candidate - _now).total_seconds()
     return 86400
 {% elif rule.mode == 'cron' %}
-    # Правило: cron {{ rule.cronExpression }}
+    # Правило: cron {{ rule.cronExpression | default('') }}
+{% if rule.cronExpression %}
+    _cron_expr = "{{ rule.cronExpression }}"
     try:
         from croniter import croniter
-        _cron = croniter("{{ rule.cronExpression }}", _now)
+        _cron = croniter(_cron_expr, _now)
         _next = _cron.get_next(type(_now))
         return (_next - _now).total_seconds()
     except ImportError:
         logging.warning("⏰ croniter не установлен, fallback 5 мин")
         return 300
+    except Exception as _cron_err:
+        logging.warning(f"⏰ cron {_cron_expr} ошибка: {_cron_err}, fallback 5 мин")
+        return 300
+{% else %}
+    logging.warning("⏰ cronExpression пуст, fallback 5 мин")
+    return 300
+{% endif %}
 {% endif %}
 {% endfor %}
     return 300  # fallback

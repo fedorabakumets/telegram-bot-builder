@@ -13,6 +13,7 @@ import {
   HeartPulse,
   Braces,
   Users,
+  Blocks,
 } from 'lucide-react';
 
 /** Внутренний раздел панели */
@@ -30,6 +31,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: '/', label: 'Сводка', icon: LayoutDashboard },
   { href: '/users', label: 'Аккаунты', icon: Users },
   { href: '/settings', label: 'Настройки', icon: Settings },
+  { href: '/node-types', label: 'Типы блоков', icon: Blocks },
   { href: '/docs', label: 'Документация API', icon: BookOpen },
   { href: '/maintenance', label: 'Обслуживание', icon: Wrench },
 ];
@@ -73,6 +75,9 @@ export function isAdminNavItemActive(location: string, href: string): boolean {
   }
   if (href === '/users') {
     return location === '/admin/users' || location.startsWith('/admin/users/');
+  }
+  if (href === '/node-types') {
+    return location === '/admin/node-types' || location.startsWith('/admin/node-types/');
   }
 
   return location === path || location === `${path}/`;

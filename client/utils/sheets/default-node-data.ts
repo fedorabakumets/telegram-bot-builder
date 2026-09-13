@@ -182,6 +182,8 @@ export const defaultNodeData = {
   inputRequired: true,
   /** Таймаут ожидания ввода */
   inputTimeout: undefined,
+  /** Сообщение при истечении таймаута ожидания */
+  inputTimeoutMessage: undefined,
   /** Сообщение при неверном вводе */
   inputRetryMessage: undefined,
   /** Сообщение при успешном вводе */

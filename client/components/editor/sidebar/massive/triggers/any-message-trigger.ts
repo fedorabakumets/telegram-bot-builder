@@ -13,5 +13,10 @@ export const anyMessageTrigger: ComponentDefinition = {
   icon: 'fas fa-inbox',
   color: 'bg-green-100 text-green-600',
   type: 'incoming_message_trigger',
-  defaultData: {},
+  defaultData: {
+    imtChatTypeFilter: 'any',
+    imtGroupChatId: '',
+    imtGroupChatIdSource: 'manual',
+    imtStopOnFlag: true,
+  },
 };

@@ -7,6 +7,7 @@ import type { Request, Response } from 'express';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { runWithMcpToken } from '../../../lib/bot-tools/mcp-request-context';
 import { createBotcraftMcpServer } from '../../../lib/bot-tools/mcp-register-tools';
+import { getDisabledNodeTypes } from '../../services/disabled-node-types';
 
 /**
  * Обрабатывает POST /mcp в stateless-режиме (новый server+transport на запрос).
@@ -21,8 +22,13 @@ export async function handleMcpHttpRequest(req: Request, res: Response): Promise
     return;
   }
 
+  const disabledNodeTypes = await getDisabledNodeTypes();
+
   await runWithMcpToken(token, async () => {
-    const server = createBotcraftMcpServer({ enableFileTools: false });
+    const server = createBotcraftMcpServer({
+      enableFileTools: false,
+      disabledNodeTypes,
+    });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });

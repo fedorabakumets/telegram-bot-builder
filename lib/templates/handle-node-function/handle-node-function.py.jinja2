@@ -27,6 +27,7 @@
 async def handle_node_{{ node.safeName }}(message: types.Message):
     """Обработчик узла {{ node.nodeId }} с условными сообщениями"""
     user_id = message.from_user.id
+    await capture_message_context(user_id, message)
     logging.info(f"🔧 Вызван обработчик узла с условными сообщениями: {{ node.nodeId }} для пользователя {user_id}")
 
     # Инициализируем базовые переменные пользователя

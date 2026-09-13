@@ -7,6 +7,7 @@ import { cn } from '@/utils/utils';
 import { SidebarBrand } from './components/sidebar-brand';
 import { SidebarNav } from './components/sidebar-nav';
 import { SidebarActions } from './components/sidebar-actions';
+import { SidebarAdminLink } from './components/sidebar-admin-link';
 import { SidebarFooter } from './components/sidebar-footer';
 import { SidebarSeparator } from './components/sidebar-separator';
 import type { AppSidebarProps } from './types';
@@ -83,6 +84,7 @@ export function AppSidebar({
           onSaveAsTemplate={onSaveAsTemplate}
           isCollapsed={isCollapsed}
         />
+        <SidebarAdminLink isCollapsed={isCollapsed} />
       </div>
 
       <div className="px-2">

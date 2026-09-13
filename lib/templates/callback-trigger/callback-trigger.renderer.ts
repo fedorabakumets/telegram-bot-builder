@@ -73,9 +73,17 @@ export function generateCallbackTriggers(params: CallbackTriggerTemplateParams):
 }
 
 /**
+ * Типы нод, которые сами слушают динамический customCallbackData (startswith).
+ * Для них виртуальный триггер с `{переменной}` не нужен — иначе будет двойной handler.
+ */
+const SELF_HANDLING_DYNAMIC_CALLBACK = new Set(['message', 'edit_message', 'start', 'command']);
+
+/**
  * Собирает виртуальные записи триггеров из кнопок с customCallbackData.
  * Для каждой кнопки с customCallbackData и target генерируется виртуальный
  * CallbackTriggerEntry — как если бы пользователь создал callback_trigger ноду.
+ * Если customCallbackData содержит `{переменную}`, matchType=startswith по префиксу
+ * (кроме message/edit_message/start/command — они ловят callback сами).
  * @param nodes - Массив всех узлов проекта
  * @returns Массив виртуальных записей триггеров
  */
@@ -92,17 +100,23 @@ export function collectVirtualCallbackTriggerEntries(nodes: Node[]): CallbackTri
       if (!btn.customCallbackData || !btn.target) continue;
       if (btn.action !== 'goto' && btn.action !== 'command') continue;
 
-      const key = `${btn.customCallbackData}::${btn.target}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
+      const raw = String(btn.customCallbackData);
+      const isDynamic = raw.includes('{');
+      const callbackData = isDynamic ? raw.split('{')[0] : raw;
+      if (!callbackData) continue;
 
       const targetNode = nodeMap.get(btn.target);
       if (!targetNode) continue;
+      if (isDynamic && SELF_HANDLING_DYNAMIC_CALLBACK.has(String(targetNode.type))) continue;
+
+      const key = `${callbackData}::${btn.target}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
 
       entries.push({
         nodeId: `auto_${btn.id.replace(/[^a-zA-Z0-9_]/g, '_')}`,
-        callbackData: btn.customCallbackData,
-        matchType: 'exact',
+        callbackData,
+        matchType: isDynamic ? 'startswith' : 'exact',
         targetNodeId: btn.target,
         targetNodeType: targetNode.type,
         buttonText: btn.text || '',

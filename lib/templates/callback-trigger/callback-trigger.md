@@ -106,6 +106,11 @@ async def callback_trigger_auto_btn_yes_handler(callback_query):
 
 **Приоритет:** если в проекте есть явный `callback_trigger` с тем же `callbackData` — виртуальный не генерируется.
 
+**Динамический `customCallbackData`** (содержит `{переменную}`, например `profile:name:{user_id}`):
+- кнопка в рантайме шлёт `profile:name:1612141295`;
+- виртуальный триггер слушает `startswith("profile:name:")` и вызывает целевую ноду (`input`, `bot_table`, …);
+- для `message` / `edit_message` / `start` / `command` виртуальный триггер не создаётся — они ловят префикс сами.
+
 **Два способа настройки:**
 - Линия от кнопки к ноде + `customCallbackData` → виртуальный триггер (простой UX)
 - Явная нода `callback_trigger` → расширенные настройки (adminOnly, requiresAuth, startswith)

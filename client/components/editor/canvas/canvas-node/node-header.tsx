@@ -103,6 +103,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
         );
       case 'group_message_trigger':
         return <GroupMessageTriggerHeader node={node} />;
+      /** Заголовок триггера входа/выхода участника */
+      case 'member_trigger' as any:
+        return (
+          <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+            👥 {getNodeName('member_trigger')}
+          </span>
+        );
       /** Заголовок узла ответа на callback_query */
       case 'answer_callback_query' as any:
         return (

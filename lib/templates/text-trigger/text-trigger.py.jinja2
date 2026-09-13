@@ -28,6 +28,7 @@
 async def text_trigger_{{ sanitized_node_id }}_{{ sanitized_synonym }}_handler(message: types.Message, state: FSMContext = None):
     # Текстовый триггер для узла {{ entry.nodeId }}, фраза: {{ synonym }}
     user_id = message.from_user.id
+    await capture_message_context(user_id, message)
     logging.info(f"Пользователь {user_id} написал '{{ synonym }}' — триггер узла {{ entry.nodeId }}")
     {%- if entry.adminOnly %}
     if not await is_admin(user_id):

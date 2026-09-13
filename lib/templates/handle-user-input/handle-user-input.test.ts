@@ -134,6 +134,18 @@ describe('generateHandleUserInput()', () => {
       assert.ok(r.includes('del user_data[user_id]["waiting_for_input"]'));
     });
 
+    it('отменяет таймер и трекает переменную при hasInputTimeoutNodes', () => {
+      const r = generateHandleUserInput({ ...validParamsDefault, hasInputTimeoutNodes: true });
+      assert.ok(r.includes('await _cancel_input_timeout_task(user_id)'));
+      assert.ok(r.includes('_track_form_variable(user_id, variable_name)'));
+    });
+
+    it('не вызывает таймаут-утилиты без hasInputTimeoutNodes', () => {
+      const r = generateHandleUserInput(validParamsDefault);
+      assert.ok(!r.includes('_cancel_input_timeout_task'));
+      assert.ok(!r.includes('_track_form_variable'));
+    });
+
     it('логирует успешный переход', () => {
       const r = generateHandleUserInput(validParamsDefault);
       assert.ok(r.includes('✅ Переход к следующему узлу выполнен успешно'));

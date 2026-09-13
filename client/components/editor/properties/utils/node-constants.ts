@@ -51,6 +51,8 @@ export const MANAGEMENT_NODE_TYPES = [
   'userbot_click_button' as any,
   'userbot_inline_query' as any,
   'parallel_split' as any,
+  'stop_processing' as any,
+  'rate_counter' as any,
   'comment' as any,
 ] as const;
 
@@ -77,6 +79,7 @@ export const TRIGGER_NODE_TYPES = [
   'text_trigger',
   'incoming_message_trigger',
   'group_message_trigger',
+  'member_trigger' as any,
   'callback_trigger' as any,
   'incoming_callback_trigger' as any,
   'outgoing_message_trigger' as any,

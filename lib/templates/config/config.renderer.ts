@@ -26,6 +26,8 @@ export function generateConfig(params: ConfigTemplateParams): string {
     userDatabaseEnabled: params.userDatabaseEnabled ?? false,
     projectId: params.projectId ?? null,
     protectContent: params.protectContent ?? false,
+    hasRateCounterNodes: params.hasRateCounterNodes ?? false,
+    hasInputTimeoutNodes: params.hasInputTimeoutNodes ?? false,
   });
   return renderPartialTemplate('config/config.py.jinja2', validated);
 }

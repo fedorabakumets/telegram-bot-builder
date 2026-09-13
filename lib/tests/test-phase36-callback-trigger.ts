@@ -4,6 +4,7 @@
  * Блок A: Базовая генерация (exact, startswith)
  * Блок B: adminOnly, requiresAuth
  * Блок C: Синтаксис Python
+ * Блок Q: Динамический customCallbackData на input
  */
 
 import fs from 'fs';
@@ -1229,6 +1230,33 @@ test('P10', 'callbackParseTemplate с тремя переменными → вс
   ok(code.includes('set_user_var(user_id, "op_action"'), 'set_user_var для op_action');
   ok(code.includes('set_user_var(user_id, "op_user"'), 'set_user_var для op_user');
   ok(code.includes('set_user_var(user_id, "op_amount"'), 'set_user_var для op_amount');
+});
+
+// ─── Блок Q: Динамический customCallbackData → input ─────────────────────────
+console.log('\n── Блок Q: Динамический customCallbackData на input ───');
+
+test('Q01', 'кнопка profile:name:{user_id} → input генерирует startswith', () => {
+  const p = makeCleanProject([
+    makeMessageNodeWithButtons('card', 'Профиль', [
+      { id: 'btn_name', text: 'Имя', action: 'goto', target: 'name_in', customCallbackData: 'profile:name:{user_id}' },
+    ]),
+    { id: 'name_in', type: 'input', position: { x: 400, y: 0 }, data: { inputPrompt: 'Имя', inputVariable: 'profile_name', inputType: 'text' } },
+  ]);
+  const code = gen(p, 'q01');
+  ok(code.includes('startswith("profile:name:")'), 'нет startswith("profile:name:")');
+  ok(code.includes('handle_callback_name_in'), 'нет вызова handle_callback_name_in');
+});
+
+test('Q02', 'кнопка profile:avatar:{user_id} → message не дублирует виртуальный startswith', () => {
+  const p = makeCleanProject([
+    makeMessageNodeWithButtons('card', 'Профиль', [
+      { id: 'btn_av', text: 'Аватар', action: 'goto', target: 'hint', customCallbackData: 'profile:avatar:{user_id}' },
+    ]),
+    makeMessageNode('hint', 'фото'),
+  ]);
+  const code = gen(p, 'q02');
+  const virtual = (code.match(/startswith\("profile:avatar:"\)/g) || []).length;
+  ok(virtual <= 1, `startswith profile:avatar дублируется: ${virtual}`);
 });
 
 // ─── Итоги ───────────────────────────────────────────────────────────────────

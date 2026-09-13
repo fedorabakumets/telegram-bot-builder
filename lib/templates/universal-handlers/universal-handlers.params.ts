@@ -25,4 +25,8 @@ export interface UniversalHandlersTemplateParams {
    * При false эти обработчики не попадают в сгенерированный код.
    */
   generateCatchAll?: boolean;
+  /** Есть ли в проекте сбор пользовательского ввода */
+  hasInputCollection?: boolean;
+  /** Нужны ли утилиты таймаута и form_session */
+  hasInputTimeoutNodes?: boolean;
 }

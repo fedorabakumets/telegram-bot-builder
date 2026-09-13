@@ -10,7 +10,7 @@ import type { EnhancedNode } from '../types/enhanced-node.types';
 import type { GenerationContext } from './generation-context';
 import { NODE_TYPES } from '../types';
 import { hasInlineButtons } from '../../templates/keyboard/keyboard.renderer';
-import { hasAutoTransitions, hasMediaNodes, hasUploadImageUrls, hasNodesRequiringSafeEditOrSend, hasReplyKeyboardButtons, hasLocalMediaFiles, hasBotCommands, hasInputCollection, hasCatchAllDependencies } from '../../templates/filters';
+import { hasAutoTransitions, hasMediaNodes, hasUploadImageUrls, hasNodesRequiringSafeEditOrSend, hasReplyKeyboardButtons, hasLocalMediaFiles, hasBotCommands, hasInputCollection, hasCatchAllDependencies, hasRateCounterNodes, hasInputTimeoutNodes } from '../../templates/filters';
 
 /**
  * Флаги возможностей, вычисленные из узлов бота
@@ -43,6 +43,10 @@ export interface FeatureFlags {
   generateCatchAllResult: boolean;
   /** Генерировать машинерию live-reload контента (load_content/reload_content/циклы) */
   generateContentResult: boolean;
+  /** Есть ли узлы rate_counter (нужен deque и time) */
+  hasRateCounterNodesResult: boolean;
+  /** Есть ли таймаут ожидания ввода или сбор ответов (нужны form_session утилиты) */
+  hasInputTimeoutNodesResult: boolean;
 }
 
 /**
@@ -161,5 +165,8 @@ export function computeFeatureFlags(context: GenerationContext): FeatureFlags {
     // get_content/_content_cache генерируются отдельно (всегда при projectId).
     generateContentResult:
       context.options.contentCache === true && !!context.options.userDatabaseEnabled,
+    hasRateCounterNodesResult: hasRateCounterNodes(nodes),
+    hasInputTimeoutNodesResult:
+      hasInputTimeoutNodes(nodes) || inputCollection.hasCollectInput,
   };
 }

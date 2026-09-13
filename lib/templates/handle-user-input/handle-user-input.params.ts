@@ -55,4 +55,6 @@ export interface HandleUserInputTemplateParams {
   hasSkipDataCollectionButtons?: boolean;
   /** Узлы с командами (start/command) */
   commandNodes?: NodeItem[];
+  /** Нужны ли вызовы таймаута и form_session */
+  hasInputTimeoutNodes?: boolean;
 }

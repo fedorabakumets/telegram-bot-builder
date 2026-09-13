@@ -66,10 +66,11 @@
 |-----|-------------------|
 | `command_trigger` | Команда `/start`, `/help` и т.д. |
 | `text_trigger` | Текстовое сообщение (точное / содержит) |
-| `incoming_message_trigger` | Любое входящее сообщение |
+| `incoming_message_trigger` | Любое входящее сообщение (с фильтрами чата) |
 | `incoming_callback_trigger` | Callback от inline-кнопки |
 | `callback_trigger` | Конкретный `callback_data` |
 | `group_message_trigger` | Сообщение в группе |
+| `member_trigger` | Вход или выход участника из группы |
 | `managed_bot_updated_trigger` | Обновление управляемого бота |
 | `schedule_trigger` | Запуск по расписанию (интервал / cron) |
 | `api_trigger` | Входящий HTTP-запрос от внешней системы |
@@ -159,6 +160,8 @@
 
 **Не нужно менять движок** — используй существующие ноды. `callback_trigger` — универсальный перехватчик динамических callback'ов.
 
+Если кнопка с `customCallbackData: "profile:name:{user_id}"` ведёт на `input` / `bot_table` / другую ноду без собственного startswith — генератор сам создаёт виртуальный триггер `startswith("profile:name:")`. Для `message` и `edit_message` виртуальный триггер не дублируется.
+
 ### Поля incoming_callback_trigger
 
 ```json
@@ -183,6 +186,62 @@
 | `callbackDataSaveAs` | Имя переменной куда сохранять callback_data (по умолчанию `"callback_data"`) |
 
 ⚠️ **Критично**: `matchType` должен быть в camelCase: `"startsWith"`, НЕ `"startswith"`. При неправильном регистре фильтрация не применяется и middleware перехватывает ВСЕ callback_query.
+
+### Поля incoming_message_trigger
+
+```json
+{
+  "type": "incoming_message_trigger",
+  "data": {
+    "imtChatTypeFilter": "group",
+    "imtGroupChatId": "2300967595",
+    "imtGroupChatIdSource": "manual",
+    "imtStopOnFlag": true,
+    "autoTransitionTo": "guard_handler_node"
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `imtChatTypeFilter` | `"any"` / `"private"` / `"group"` — фильтр типа чата |
+| `imtGroupChatId` | ID группы без префикса `-100` (при `imtChatTypeFilter: "group"`) |
+| `imtGroupChatIdSource` | `"manual"` — из `imtGroupChatId`, `"variable"` — из `groupChatVariableName` |
+| `groupChatVariableName` | Имя переменной с ID группы (при `imtGroupChatIdSource: "variable"`) |
+| `imtStopOnFlag` | По умолчанию `true`. Учитывать флаг `_stop_processing` от узла `stop_processing` |
+| `autoTransitionTo` | ID целевого узла |
+
+Пример охраны группы: `incoming_message_trigger` (фильтр group + chat id) → `stop_processing` → дальнейшая логика.
+
+### Поля member_trigger
+
+```json
+{
+  "type": "member_trigger",
+  "data": {
+    "memberEventType": "join",
+    "groupChatId": "2300967595",
+    "groupChatIdSource": "manual",
+    "saveJoinedUserIdTo": "joined_user_id",
+    "saveJoinedUsernameTo": "joined_username",
+    "saveLeftUserIdTo": "left_user_id",
+    "saveLeftUsernameTo": "left_username",
+    "autoTransitionTo": "welcome_node"
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `memberEventType` | `"join"` / `"leave"` / `"both"` |
+| `groupChatId` | Опциональный фильтр по ID группы (без `-100`) |
+| `groupChatIdSource` | `"manual"` / `"variable"` |
+| `groupChatVariableName` | Переменная с ID группы (при `groupChatIdSource: "variable"`) |
+| `saveJoinedUserIdTo` | Переменная для ID вошедшего (по умолчанию `joined_user_id`) |
+| `saveJoinedUsernameTo` | Переменная для username вошедшего |
+| `saveLeftUserIdTo` | Переменная для ID вышедшего |
+| `saveLeftUsernameTo` | Переменная для username вышедшего |
+| `autoTransitionTo` | ID следующего узла |
 
 ### Поля schedule_trigger
 
@@ -440,6 +499,20 @@
 | `trim` | Убрать пробелы по краям | `"{user_input}"` |
 | `length` | Длина строки или массива | `"{inventory}"` → "3" |
 | `array_concat` | Объединить два массива в один. Поля: `value` (первый массив), `concatWith` (второй массив). Результат: склеенный массив. | `value: "{arr1}"`, `concatWith: "{arr2}"` |
+
+#### Сохранение в PostgreSQL (`persistToDb`)
+
+В каждом элементе `assignments` можно указать `"persistToDb": true` — после присваивания значение дополнительно сохраняется в PostgreSQL через `set_user_var` (требуется включённая пользовательская БД бота):
+
+```json
+{
+  "id": "a1",
+  "variable": "reputation",
+  "value": "{reputation} + 10",
+  "mode": "expression",
+  "persistToDb": true
+}
+```
 
 #### Примеры
 
@@ -909,6 +982,44 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 **Внутри веток НЕ использовать** `input` (FSM один на пользователя) и триггеры (это точки входа).
 Перед сбросом счётчика (`set_variable` done=0) ставить **до** parallel_split, не внутри веток.
 
+### stop_processing — остановка middleware-цепочки
+
+```json
+{
+  "type": "stop_processing",
+  "data": {
+    "autoTransitionTo": "next_node_id",
+    "enableAutoTransition": true
+  }
+}
+```
+
+Устанавливает `user_data[user_id]["_stop_processing"] = True`. Работает в паре с `incoming_message_trigger` и `imtStopOnFlag: true` — middleware не вызовет следующий handler для этого апдейта.
+
+### rate_counter — счётчик частоты в скользящем окне
+
+```json
+{
+  "type": "rate_counter",
+  "data": {
+    "counterKey": "spam_{user_id}",
+    "windowSeconds": "60",
+    "saveResultTo": "rate_count",
+    "autoTransitionTo": "check_limit_node",
+    "enableAutoTransition": true
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `counterKey` | Ключ счётчика (поддерживает `{переменные}`) |
+| `windowSeconds` | Размер окна в секундах |
+| `saveResultTo` | Переменная для количества событий в окне |
+| `autoTransitionTo` | Следующий узел (`enableAutoTransition: true`) |
+
+Данные in-memory — сбрасываются при перезапуске бота.
+
 ### delay — задержка
 
 ```json
@@ -1076,6 +1187,27 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 | `minLength` | number | Минимальная длина текста (0 = без ограничений) |
 | `validationType` | string | Валидация: `none`, `email`, `phone`, `number` |
 | `retryMessage` | string | Сообщение при ошибке валидации |
+| `inputTimeout` | number | Таймаут ожидания в секундах (> 0). По истечении FSM сбрасывается |
+| `inputTimeoutMessage` | string | Сообщение при таймауте (по умолчанию «Время ожидания истекло.») |
+
+#### Таймаут и отмена `/cancel`
+
+При `inputTimeout > 0` генерируется планировщик `_schedule_input_timeout`. По истечении срока форма сбрасывается, пользователю отправляется `inputTimeoutMessage`.
+
+При активном сборе ввода автоматически регистрируется команда `/cancel` — сбрасывает FSM и отвечает «Форма отменена.»
+
+```json
+{
+  "type": "input",
+  "data": {
+    "inputVariable": "user_answer",
+    "inputType": "text",
+    "inputTargetNodeId": "next_node_id",
+    "inputTimeout": 120,
+    "inputTimeoutMessage": "Слишком долго ждали. Начните заново."
+  }
+}
+```
 
 #### inputType: "callback"
 
@@ -1504,10 +1636,19 @@ float('{amount}'.replace(',', '.')) if '{amount}'.replace(',', '.').replace('.',
 | `{first_name}` | Имя пользователя |
 | `{last_name}` | Фамилия пользователя |
 | `{chat_id}` | ID чата |
+| `{chat_type}` | Тип чата: `private`, `group`, `supergroup`, `channel` |
+| `{message_text}` | Текст или подпись последнего сообщения |
+| `{message_type}` | Тип содержимого: `text`, `photo`, `video`, `document` и т.д. |
 | `{callback_data}` | Данные нажатой кнопки |
-| `{reply_to_user_id}` | ID пользователя из reply-сообщения |
-| `{reply_to_username}` | Username из reply-сообщения |
+| `{reply_to_user_id}` | ID автора сообщения, на которое ответили |
+| `{reply_to_username}` | Username автора reply-сообщения |
+| `{reply_to_first_name}` | Имя автора reply-сообщения |
+| `{reply_to_last_name}` | Фамилия автора reply-сообщения |
+| `{reply_to_message_id}` | ID сообщения, на которое ответили |
+| `{reply_to_text}` | Текст reply-сообщения |
 | `{message_id}` | ID текущего сообщения |
+
+> `chat_id`, `chat_type`, `message_*` и `reply_to_*` заполняются `capture_message_context` в обработчиках команд, текста, `incoming_message_trigger` и `member_trigger`. `reply_to_*` — только если входящее сообщение является reply; иначе пустые строки.
 
 ### Переменная типа `file`
 

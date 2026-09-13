@@ -7,11 +7,13 @@
  * @module PropertiesHeader
  */
 
+import { useRef, type SyntheticEvent } from 'react';
 import { Node } from '@shared/schema';
 import { Button as UIButton } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { copyTextToClipboard } from '@/utils/copy-text';
 import { getNodeDefaults } from '../../utils/node-defaults';
 import { getNodeName, getNodeIcon, getNodeColor } from '../../../shared/node-registry';
 import { PropertiesViewToggle, type PropertiesView } from './properties-view-toggle';
@@ -49,6 +51,36 @@ export function PropertiesHeader({
   onPropertiesViewChange,
 }: PropertiesHeaderProps) {
   const { toast } = useToast();
+  /** Защита от двойного копирования: pointerdown + последующий click */
+  const copyLockRef = useRef(false);
+
+  /**
+   * Копирует ID узла в буфер. Срабатывает и с мыши, и с клавиатуры.
+   * @param event - Событие указателя или клика
+   */
+  const handleCopyNodeId = async (event: SyntheticEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (copyLockRef.current) return;
+    copyLockRef.current = true;
+    const nodeId = displayNodeId || selectedNode.id;
+    const copied = await copyTextToClipboard(nodeId);
+    if (copied) {
+      toast({
+        title: '✅ ID скопирован!',
+        description: `"${nodeId}" в буфер обмена`,
+      });
+    } else {
+      toast({
+        title: 'Не удалось скопировать ID',
+        description: 'Выделите ID и скопируйте вручную',
+        variant: 'destructive',
+      });
+    }
+    window.setTimeout(() => {
+      copyLockRef.current = false;
+    }, 300);
+  };
 
   const getNodeTitle = () => {
     return getNodeName(selectedNode.type as string);
@@ -139,18 +171,14 @@ export function PropertiesHeader({
                     </SelectContent>
                   </Select>
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(displayNodeId);
-                      toast({
-                        title: "✅ ID скопирован!",
-                        description: `"${displayNodeId}" в буфер обмена`,
-                      });
-                    }}
-                    className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500/15 to-cyan-500/15 dark:from-blue-600/20 dark:to-cyan-600/20 hover:from-blue-500/25 hover:to-cyan-500/25 dark:hover:from-blue-600/30 dark:hover:to-cyan-600/30 border border-blue-300/40 dark:border-blue-600/40 hover:border-blue-400/60 dark:hover:border-blue-500/60 rounded-lg transition-all duration-200 group shadow-sm hover:shadow-md w-1/2 min-w-0"
+                    type="button"
+                    onPointerDown={handleCopyNodeId}
+                    onClick={handleCopyNodeId}
+                    className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500/15 to-cyan-500/15 dark:from-blue-600/20 dark:to-cyan-600/20 hover:from-blue-500/25 hover:to-cyan-500/25 dark:hover:from-blue-600/30 dark:hover:to-cyan-600/30 border border-blue-300/40 dark:border-blue-600/40 hover:border-blue-400/60 dark:hover:border-blue-500/60 rounded-lg transition-all duration-200 group shadow-sm hover:shadow-md w-1/2 min-w-0 select-none"
                     title="Нажмите, чтобы скопировать ID"
                     data-testid="button-copy-node-id"
                   >
-                    <code className="text-sm font-mono font-semibold text-blue-700 dark:text-blue-300 truncate group-hover:text-blue-800 dark:group-hover:text-blue-200 transition-colors w-full overflow-hidden text-left">
+                    <code className="text-sm font-mono font-semibold text-blue-700 dark:text-blue-300 truncate group-hover:text-blue-800 dark:group-hover:text-blue-200 transition-colors w-full overflow-hidden text-left pointer-events-none">
                       {displayNodeId}
                     </code>
                     <i className="fas fa-copy text-blue-600 dark:text-blue-400 text-sm opacity-60 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>

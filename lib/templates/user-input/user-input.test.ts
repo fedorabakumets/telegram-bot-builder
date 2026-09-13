@@ -80,6 +80,23 @@ describe('generateUserInput()', () => {
     assert.ok(r.includes('"appendVariable": False'));
   });
 
+  it('содержит timeout_seconds и вызывает _schedule_input_timeout при inputTimeout > 0', () => {
+    const r = generateUserInput({
+      ...validParamsTextOnly,
+      inputTimeout: 120,
+      inputTimeoutMessage: 'Время вышло, начните заново.',
+    });
+    assert.ok(r.includes('"timeout_seconds": 120'));
+    assert.ok(r.includes('Время вышло, начните заново.'));
+    assert.ok(r.includes('await _schedule_input_timeout(user_id, 120'));
+  });
+
+  it('не содержит timeout_seconds без inputTimeout', () => {
+    const r = generateUserInput(validParamsTextOnly);
+    assert.ok(!r.includes('timeout_seconds'));
+    assert.ok(!r.includes('_schedule_input_timeout'));
+  });
+
   it('modes содержит только text для текстового ввода', () => {
     const r = generateUserInput(validParamsTextOnly);
     assert.ok(r.includes('"modes": ["text"]'));

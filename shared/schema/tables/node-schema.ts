@@ -64,7 +64,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'schedule_trigger', 'api_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query', 'convert_file', 'loop', 'bot_table', 'delay', 'api_response', 'userbot_message', 'userbot_click_button', 'userbot_inline_query', 'userbot_edit_trigger', 'parallel_split', 'code', 'comment']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'member_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'schedule_trigger', 'api_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query', 'convert_file', 'loop', 'bot_table', 'delay', 'api_response', 'userbot_message', 'userbot_click_button', 'userbot_inline_query', 'userbot_edit_trigger', 'parallel_split', 'stop_processing', 'rate_counter', 'code', 'comment']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -306,6 +306,8 @@ export const nodeSchema = z.object({
     inputRequired: z.boolean().default(true),
     /** Таймаут ожидания ввода в секундах */
     inputTimeout: z.number().optional(),
+    /** Сообщение при истечении таймаута ожидания ввода */
+    inputTimeoutMessage: z.string().optional(),
     /** Сообщение при неверном вводе */
     inputRetryMessage: z.string().optional(),
     /** Сообщение при успешном вводе */
@@ -609,6 +611,14 @@ export const nodeSchema = z.object({
     filterByUserId: z.string().optional(),
     /** Не создавать топик повторно, если переменная saveThreadIdTo уже заполнена */
     skipIfExists: z.boolean().default(false),
+    /** Фильтр типа чата для incoming_message_trigger */
+    imtChatTypeFilter: z.enum(['any', 'private', 'group']).default('any'),
+    /** ID группы для incoming_message_trigger (без -100) */
+    imtGroupChatId: z.string().optional(),
+    /** Источник ID группы для incoming_message_trigger */
+    imtGroupChatIdSource: z.enum(['manual', 'variable']).optional(),
+    /** Проверять _stop_processing перед вызовом handler в middleware */
+    imtStopOnFlag: z.boolean().default(true),
     /** ID группы для триггера сообщения в группе */
     groupChatId: z.string().optional(),
     /** Источник ID группы: "manual" — вручную, "variable" — из переменной */
@@ -619,6 +629,16 @@ export const nodeSchema = z.object({
     threadIdVariable: z.string().optional(),
     /** Имя переменной куда положить найденный user_id */
     resolvedUserIdVariable: z.string().optional(),
+    /** Тип события участника: join, leave или both */
+    memberEventType: z.enum(['join', 'leave', 'both']).optional().default('join'),
+    /** Переменная для сохранения user.id вошедшего участника */
+    saveJoinedUserIdTo: z.string().optional(),
+    /** Переменная для сохранения username вошедшего участника */
+    saveJoinedUsernameTo: z.string().optional(),
+    /** Переменная для сохранения user.id вышедшего участника */
+    saveLeftUserIdTo: z.string().optional(),
+    /** Переменная для сохранения username вышедшего участника */
+    saveLeftUsernameTo: z.string().optional(),
     /** Ветки узла условия */
     branches: z.array(conditionBranchSchema).default([]),
     /** Ветки узла параллельного запуска (parallel_split) */
@@ -638,6 +658,10 @@ export const nodeSchema = z.object({
     awaitAll: z.boolean().optional().default(false),
     /** Не запускать parallel_split повторно, пока предыдущий прогон пользователя не завершён */
     skipIfRunning: z.boolean().optional().default(true),
+    /** Ключ in-memory счётчика rate_counter */
+    counterKey: z.string().optional(),
+    /** Размер окна rate_counter в секундах */
+    windowSeconds: z.string().optional(),
     /** Список получателей сообщения (для узлов message и media) */
     messageSendRecipients: z.array(z.object({
       /** Уникальный ID получателя */

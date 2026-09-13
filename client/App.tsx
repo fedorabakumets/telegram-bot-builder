@@ -140,6 +140,7 @@ function Router() {
         <Route path="/admin/live-db" component={AdminPanel} />
         <Route path="/admin/users/:id" component={AdminPanel} />
         <Route path="/admin/users" component={AdminPanel} />
+        <Route path="/admin/node-types" component={AdminPanel} />
         <Route path="/admin/maintenance" component={AdminPanel} />
         <Route path="/admin" component={AdminPanel} />
         <Route>

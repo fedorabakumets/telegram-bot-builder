@@ -15,6 +15,8 @@ export interface SetVariableAssignment {
   mode: 'text' | 'expression' | 'random' | 'random_item' | 'array_item' | 'timestamp' | 'format_duration' | 'format_number' | 'regex_extract' | 'extract_number' | 'split_get' | 'json_get' | 'substring' | 'conditional' | 'lowercase' | 'uppercase' | 'trim' | 'length' | 'array_concat';
   /** Имя второго массива для объединения (только array_concat) */
   concatWith?: string;
+  /** Сохранить в PostgreSQL после присваивания */
+  persistToDb?: boolean;
   /** Максимальное значение для mode=random */
   maxValue?: string;
   /** Регулярное выражение для mode=regex_extract */

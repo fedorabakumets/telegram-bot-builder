@@ -74,6 +74,11 @@ import {
   validateBotProject,
   validateNode,
 } from './index.ts';
+import {
+  extractNodeType,
+  refuseDisabledAddOps,
+  refuseDisabledNodeType,
+} from './mcp-disabled-types.ts';
 
 /** Имя и версия MCP-сервера */
 export const MCP_SERVER_INFO = {
@@ -88,6 +93,8 @@ export interface RegisterMcpToolsOptions {
    * Только для stdio; на remote HTTP должно быть false.
    */
   enableFileTools?: boolean;
+  /** Типы блоков, выключенные администратором */
+  disabledNodeTypes?: readonly string[];
 }
 
 /**
@@ -106,10 +113,12 @@ function textResult(data: unknown) {
  */
 export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOptions = {}): void {
   const enableFileTools = options.enableFileTools === true;
+  const disabledSet = new Set(options.disabledNodeTypes ?? []);
+
   server.registerTool(
     'list_node_types',
     { description: 'Список всех типов нод конструктора с кратким описанием' },
-    async () => textResult(listNodeTypes()),
+    async () => textResult(listNodeTypes([...disabledSet])),
   );
 
   server.registerTool(
@@ -118,7 +127,11 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
       description: 'Схема и правила формата ноды по типу (обязательно перед созданием нод)',
       inputSchema: { type: z.string().describe('Тип ноды, например condition, message, command_trigger') },
     },
-    async ({ type }) => textResult(getNodeSchema(type)),
+    async ({ type }) => {
+      const refused = refuseDisabledNodeType(type, disabledSet);
+      if (refused) return textResult(refused);
+      return textResult(getNodeSchema(type));
+    },
   );
 
   server.registerTool(
@@ -127,7 +140,11 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
       description: 'Эталонный пример ноды — копируй формат data отсюда',
       inputSchema: { type: z.string().describe('Тип ноды') },
     },
-    async ({ type }) => textResult(getNodeExampleTool(type)),
+    async ({ type }) => {
+      const refused = refuseDisabledNodeType(type, disabledSet);
+      if (refused) return textResult(refused);
+      return textResult(getNodeExampleTool(type));
+    },
   );
 
   server.registerTool(
@@ -200,8 +217,11 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
         position: z.object({ x: z.number(), y: z.number() }).optional(),
       },
     },
-    async ({ type, partial_data, id, position }) =>
-      textResult(createNode(type, partial_data, { id, position })),
+    async ({ type, partial_data, id, position }) => {
+      const refused = refuseDisabledNodeType(type, disabledSet);
+      if (refused) return textResult(refused);
+      return textResult(createNode(type, partial_data, { id, position }));
+    },
   );
 
   server.registerTool(
@@ -227,8 +247,12 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
         sheet_id: z.string().optional(),
       },
     },
-    async ({ project_json, node, sheet_id }) =>
-      textResult(addNodeToProject(project_json, node as never, sheet_id)),
+    async ({ project_json, node, sheet_id }) => {
+      const type = extractNodeType(node);
+      const refused = type ? refuseDisabledNodeType(type, disabledSet) : null;
+      if (refused) return textResult(refused);
+      return textResult(addNodeToProject(project_json, node as never, sheet_id));
+    },
   );
 
   server.registerTool(
@@ -337,10 +361,14 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
         commit_message: z.string().optional().describe('Заметка к версии (ручной чекпоинт)'),
       },
     },
-    async ({ project_id, node, sheet_id, commit_message }) =>
-      textResult(await addNodeInDb(project_id, node as never, sheet_id, {
+    async ({ project_id, node, sheet_id, commit_message }) => {
+      const type = extractNodeType(node);
+      const refused = type ? refuseDisabledNodeType(type, disabledSet) : null;
+      if (refused) return textResult(refused);
+      return textResult(await addNodeInDb(project_id, node as never, sheet_id, {
         commitMessage: commit_message,
-      })),
+      }));
+    },
   );
 
   server.registerTool(
@@ -843,11 +871,14 @@ export function registerMcpTools(server: McpServer, options: RegisterMcpToolsOpt
         skip_validation: z.boolean().optional().describe('Пропустить валидацию перед записью (для легаси-проектов с битыми ссылками)'),
       },
     },
-    async ({ project_id, ops, commit_message, skip_validation }) =>
-      textResult(await applyOpsInDb(project_id, ops as never, {
+    async ({ project_id, ops, commit_message, skip_validation }) => {
+      const refused = refuseDisabledAddOps(ops, disabledSet);
+      if (refused) return textResult(refused);
+      return textResult(await applyOpsInDb(project_id, ops as never, {
         commitMessage: commit_message,
         skipValidation: skip_validation,
-      })),
+      }));
+    },
   );
 
   server.registerTool(

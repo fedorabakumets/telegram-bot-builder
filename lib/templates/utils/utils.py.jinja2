@@ -3,6 +3,7 @@
 
   @fileoverview Вспомогательные функции: is_admin, check_auth, get_user_variables, TTL-очистка user_data
   @param {boolean} userDatabaseEnabled - Включена ли база данных пользователей
+  @param {boolean} hasInputTimeoutNodes - Нужны ли утилиты таймаута и form_session
 #}
 
 # Утилитарные функции
@@ -32,6 +33,69 @@ async def cleanup_user_data() -> None:
             _user_last_seen.pop(uid, None)
         if expired:
             logging.debug(f"🧹 TTL-очистка user_data: удалено {len(expired)} записей")
+
+{%- if hasInputTimeoutNodes %}
+
+# Активные задачи таймаута ожидания ввода: user_id -> asyncio.Task
+_input_timeout_tasks: dict[int, asyncio.Task] = {}
+
+
+async def _cancel_input_timeout_task(user_id: int) -> None:
+    """Отменяет запланированный таймаут ожидания ввода для пользователя."""
+    task = _input_timeout_tasks.pop(user_id, None)
+    if task and not task.done():
+        task.cancel()
+
+
+async def _input_timeout_worker(user_id: int, seconds: float, message: str) -> None:
+    """Фоновая задача: по истечении времени отправляет сообщение и сбрасывает форму."""
+    try:
+        await asyncio.sleep(seconds)
+        if user_id not in user_data or "waiting_for_input" not in user_data.get(user_id, {}):
+            return
+        try:
+            await bot.send_message(user_id, message)
+        except Exception as e:
+            logging.warning(f"Не удалось отправить сообщение о таймауте пользователю {user_id}: {e}")
+        await _clear_form_session(user_id)
+    except asyncio.CancelledError:
+        pass
+    finally:
+        _input_timeout_tasks.pop(user_id, None)
+
+
+async def _schedule_input_timeout(user_id: int, seconds: float, message: str) -> None:
+    """Планирует сброс ожидания ввода по истечении заданного времени."""
+    await _cancel_input_timeout_task(user_id)
+    if seconds <= 0:
+        return
+    _input_timeout_tasks[user_id] = asyncio.create_task(_input_timeout_worker(user_id, seconds, message))
+
+
+def _track_form_variable(user_id: int, var_name: str) -> None:
+    """Добавляет имя переменной в сессию формы для последующей очистки при отмене."""
+    if not var_name:
+        return
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    form_session = user_data[user_id].setdefault("form_session", {})
+    variables = form_session.setdefault("variables", [])
+    if var_name not in variables:
+        variables.append(var_name)
+
+
+async def _clear_form_session(user_id: int) -> None:
+    """Отменяет таймер, сбрасывает waiting_for_input и очищает переменные формы."""
+    await _cancel_input_timeout_task(user_id)
+    if user_id not in user_data:
+        return
+    store = user_data[user_id]
+    form_session = store.get("form_session", {})
+    for var_name in form_session.get("variables", []):
+        store.pop(var_name, None)
+    store.pop("form_session", None)
+    store.pop("waiting_for_input", None)
+{%- endif %}
 
 {%- if adminOnly %}
 
@@ -72,6 +136,69 @@ async def init_user_variables(user_id: int, from_user) -> str:
     user_data[user_id]['is_premium'] = getattr(from_user, 'is_premium', None) or False
     user_data[user_id]['is_bot'] = getattr(from_user, 'is_bot', None) or False
     return user_name
+
+
+async def capture_message_context(user_id: int, message) -> None:
+    """Записывает контекст входящего сообщения в user_data для подстановки переменных.
+
+    Args:
+        user_id: ID пользователя Telegram
+        message: Объект types.Message или None для сброса полей ответа
+    """
+    import time
+    _user_last_seen[user_id] = time.monotonic()
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    store = user_data[user_id]
+
+    _empty_reply = {
+        'reply_to_user_id': '',
+        'reply_to_username': '',
+        'reply_to_first_name': '',
+        'reply_to_last_name': '',
+        'reply_to_message_id': '',
+        'reply_to_text': '',
+    }
+    if message is None:
+        store.update(_empty_reply)
+        return
+
+    chat = getattr(message, 'chat', None)
+    store['chat_id'] = str(chat.id) if chat and chat.id is not None else ''
+    store['chat_type'] = str(getattr(chat, 'type', '') or '') if chat else ''
+    store['message_id'] = str(message.message_id) if getattr(message, 'message_id', None) else ''
+    store['message_text'] = (getattr(message, 'text', None) or getattr(message, 'caption', None) or '')
+
+    if getattr(message, 'photo', None):
+        store['message_type'] = 'photo'
+    elif getattr(message, 'video', None):
+        store['message_type'] = 'video'
+    elif getattr(message, 'document', None):
+        store['message_type'] = 'document'
+    elif getattr(message, 'audio', None):
+        store['message_type'] = 'audio'
+    elif getattr(message, 'voice', None):
+        store['message_type'] = 'voice'
+    elif getattr(message, 'animation', None):
+        store['message_type'] = 'animation'
+    elif getattr(message, 'sticker', None):
+        store['message_type'] = 'sticker'
+    elif getattr(message, 'text', None):
+        store['message_type'] = 'text'
+    else:
+        store['message_type'] = 'other'
+
+    reply = getattr(message, 'reply_to_message', None)
+    if reply and getattr(reply, 'from_user', None):
+        reply_user = reply.from_user
+        store['reply_to_user_id'] = str(reply_user.id)
+        store['reply_to_username'] = getattr(reply_user, 'username', None) or ''
+        store['reply_to_first_name'] = getattr(reply_user, 'first_name', None) or ''
+        store['reply_to_last_name'] = getattr(reply_user, 'last_name', None) or ''
+        store['reply_to_message_id'] = str(reply.message_id) if getattr(reply, 'message_id', None) else ''
+        store['reply_to_text'] = (getattr(reply, 'text', None) or getattr(reply, 'caption', None) or '')
+    else:
+        store.update(_empty_reply)
 
 
 {%- if userDatabaseEnabled %}

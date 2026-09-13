@@ -21,6 +21,8 @@
   @param {number} maxLength           — максимальная длина текста (0 = без ограничений)
   @param {string} retryMessage        — сообщение при ошибке валидации
   @param {string} successMessage      — сообщение при успешном сохранении
+  @param {number} inputTimeout        — таймаут ожидания ввода в секундах
+  @param {string} inputTimeoutMessage — сообщение при истечении таймаута
   @param {bool}   saveToDatabase      — сохранять в базу данных
 #}
 
@@ -98,7 +100,9 @@
         "max_length": {{ maxLength | default(0) }},
         "validation_type": "{{ validationType | default('none') }}",
         "retry_message": {{ retryMessage | default('Пожалуйста, попробуйте еще раз.') | escape_python_string }},
-        "success_message": {{ successMessage | default("") | escape_python_string }}{% if enablePhotoInput and photoInputVariable %},
+        "success_message": {{ successMessage | default("") | escape_python_string }}{% if inputTimeout and inputTimeout > 0 %},
+        "timeout_seconds": {{ inputTimeout }},
+        "timeout_message": {{ inputTimeoutMessage | default('Время ожидания истекло.') | escape_python_string }}{% endif %}{% if enablePhotoInput and photoInputVariable %},
         "photo_variable": "{{ photoInputVariable }}"{% endif %}{% if enableVideoInput and videoInputVariable %},
         "video_variable": "{{ videoInputVariable }}"{% endif %}{% if enableAudioInput and audioInputVariable %},
         "audio_variable": "{{ audioInputVariable }}"{% endif %}{% if enableDocumentInput and documentInputVariable %},
@@ -109,3 +113,6 @@
 
     }
     logging.info(f'✅ Состояние ожидания настроено: modes={{ modes | dump }} для переменной {{ inputVariable }} (узел {{ nodeId }})')
+{%- if inputTimeout and inputTimeout > 0 %}
+    await _schedule_input_timeout(user_id, {{ inputTimeout }}, {{ inputTimeoutMessage | default('Время ожидания истекло.') | escape_python_string }})
+{%- endif %}

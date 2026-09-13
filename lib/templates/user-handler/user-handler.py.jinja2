@@ -59,6 +59,7 @@ async def {{ nodeType }}_{{ safeName }}_command_handler(message: types.Message):
     Использование: ответ на сообщение пользователя или упоминание
     """
     user_id = message.from_user.id
+    await capture_message_context(user_id, message)
     chat_id = message.chat.id
 
     if message.chat.type not in ['group', 'supergroup']:
@@ -229,6 +230,7 @@ async def {{ nodeType }}_{{ safeName }}_handler(message: types.Message):
     Синонимы: {{ synonyms | join(', ') }}
     """
     user_id = message.from_user.id
+    await capture_message_context(user_id, message)
     chat_id = message.chat.id
 
     target_user_id = None

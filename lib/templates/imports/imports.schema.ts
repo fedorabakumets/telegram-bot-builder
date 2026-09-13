@@ -37,6 +37,10 @@ export const importsParamsSchema = z.object({
   hasDeepLinkTriggers: z.boolean().default(false),
   /** Есть ли узлы userbot_message (нужен Telethon) */
   hasUserbotNodes: z.boolean().default(false),
+  /** Есть ли узлы rate_counter (нужен deque и time) */
+  hasRateCounterNodes: z.boolean().default(false),
+  /** Есть ли таймаут ожидания ввода или сбор ответов */
+  hasInputTimeoutNodes: z.boolean().default(false),
 });
 
 /** Тип параметров импортов (выведен из схемы) */

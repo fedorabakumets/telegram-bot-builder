@@ -68,7 +68,7 @@ describe('generateCallbackTriggers()', () => {
   it('генерирует mock_callback = MockCallback и вызов handle_callback', () => {
     const r = generateCallbackTriggers(validParamsExact);
     expect(r).toContain('mock_callback = MockCallback(');
-    expect(r).toContain('await handle_callback_msg_confirmed(mock_callback)');
+    expect(r).toContain('await handle_callback_msg_confirmed(mock_callback, state=state)');
   });
 
   it('содержит logging.info с user_id', () => {
@@ -376,6 +376,45 @@ describe('Виртуальные callback_trigger из customCallbackData', () =
     /** Должен быть только один обработчик для "yes" */
     const count = (r.match(/lambda c: c\.data == "yes"/g) || []).length;
     expect(count).toBe(1);
+  });
+
+  it('динамический customCallbackData на input → startswith по префиксу', () => {
+    const nodes = [
+      makeNode('src', 'keyboard', {
+        buttons: [{
+          id: 'btn_name',
+          text: 'Имя',
+          action: 'goto',
+          target: 'name_in',
+          customCallbackData: 'profile:name:{user_id}',
+        }],
+      }),
+      makeNode('name_in', 'input', { inputVariable: 'profile_name' }),
+    ];
+    const entries = collectVirtualCallbackTriggerEntries(nodes as any);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].callbackData).toBe('profile:name:');
+    expect(entries[0].matchType).toBe('startswith');
+    const r = generateCallbackTriggerHandlers(nodes as any);
+    expect(r).toContain('c.data.startswith("profile:name:")');
+    expect(r).toContain('handle_callback_name_in');
+  });
+
+  it('динамический customCallbackData на message → виртуальный триггер не дублируется', () => {
+    const nodes = [
+      makeNode('src', 'keyboard', {
+        buttons: [{
+          id: 'btn_av',
+          text: 'Аватар',
+          action: 'goto',
+          target: 'hint',
+          customCallbackData: 'profile:avatar:{user_id}',
+        }],
+      }),
+      makeNode('hint', 'message', { messageText: 'фото' }),
+    ];
+    const entries = collectVirtualCallbackTriggerEntries(nodes as any);
+    expect(entries).toHaveLength(0);
   });
 });
 

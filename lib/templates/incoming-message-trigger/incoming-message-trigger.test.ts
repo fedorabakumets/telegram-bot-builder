@@ -13,6 +13,7 @@ import {
   validParamsEmpty,
   validParamsSingle,
   validParamsMultiple,
+  validParamsGroupFilter,
   nodesWithTrigger,
   nodesWithMissingTarget,
   nodesWithoutTriggers,
@@ -32,14 +33,15 @@ describe('generateIncomingMessageTriggers()', () => {
     expect(r).toContain('async def incoming_message_trigger_trigger_1_middleware');
   });
 
-  it('регистрирует middleware через dp.message.middleware', () => {
+  it('регистрирует async def middleware функцию', () => {
     const r = generateIncomingMessageTriggers(validParamsSingle);
-    expect(r).toContain('dp.message.middleware(incoming_message_trigger_trigger_1_middleware)');
+    expect(r).toContain('async def incoming_message_trigger_trigger_1_middleware');
   });
 
-  it('содержит return await handler(event, data)', () => {
+  it('содержит result = await handler(event, data) и return result', () => {
     const r = generateIncomingMessageTriggers(validParamsSingle);
-    expect(r).toContain('return await handler(event, data)');
+    expect(r).toContain('result = await handler(event, data)');
+    expect(r).toContain('return result');
   });
 
   it('генерирует MockCallback', () => {
@@ -50,7 +52,7 @@ describe('generateIncomingMessageTriggers()', () => {
 
   it('вызывает handle_callback с правильным targetNodeId', () => {
     const r = generateIncomingMessageTriggers(validParamsSingle);
-    expect(r).toContain('await handle_callback_msg_hello(mock_callback)');
+    expect(r).toContain('await handle_callback_msg_hello(mock_callback, state=_state)');
   });
 
   it('содержит logging.info с user_id', () => {
@@ -71,10 +73,22 @@ describe('generateIncomingMessageTriggers()', () => {
     expect(opens).toBe(closes);
   });
 
+  it('содержит проверку _stop_processing при stopOnFlag', () => {
+    const r = generateIncomingMessageTriggers(validParamsSingle);
+    expect(r).toContain("_stop_processing");
+    expect(r).toContain('return None');
+  });
+
   it('несколько триггеров генерируют несколько middleware', () => {
     const r = generateIncomingMessageTriggers(validParamsMultiple);
     expect(r).toContain('incoming_message_trigger_trigger_1_middleware');
     expect(r).toContain('incoming_message_trigger_trigger_2_middleware');
+  });
+
+  it('фильтр group генерирует проверку типа чата', () => {
+    const r = generateIncomingMessageTriggers(validParamsGroupFilter);
+    expect(r).toContain("'group', 'supergroup'");
+    expect(r).toContain('2300967595');
   });
 });
 
@@ -108,6 +122,7 @@ describe('collectIncomingMessageTriggerEntries()', () => {
     expect(entries[0].nodeId).toBe('trigger_1');
     expect(entries[0].targetNodeId).toBe('msg_hello');
     expect(entries[0].targetNodeType).toBe('message');
+    expect(entries[0].chatTypeFilter).toBe('any');
   });
 
   it('пропускает триггер без autoTransitionTo', () => {

@@ -10,6 +10,7 @@
   @param {array}   allNodeIds   - все ID узлов
   @param {boolean} hasUrlButtons - есть ли URL кнопки в проекте
   @param {array}   commandNodes - узлы с командами (start/command)
+  @param {boolean} hasInputTimeoutNodes - нужны ли вызовы таймаута/form_session
 #}
 
 {% set ind = indentLevel or '    ' %}
@@ -299,6 +300,10 @@
 {{ ind3 }}user_data[user_id] = {}
 {{ ind2 }}user_data[user_id][variable_name] = response_data
 {{ ind2 }}logging.info(f"✅ Сохранено в user_data: {variable_name} = {response_data}")
+{% if hasInputTimeoutNodes %}
+{{ ind2 }}await _cancel_input_timeout_task(user_id)
+{{ ind2 }}_track_form_variable(user_id, variable_name)
+{% endif %}
 {{ ind2 }}
 {{ ind2 }}# Дополнительно сохраняем в БД если доступна
 {{ ind2 }}if db_pool:

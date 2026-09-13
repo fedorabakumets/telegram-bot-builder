@@ -50,6 +50,7 @@ export const handleUserInputParamsSchema = z.object({
   hasUrlButtons: z.boolean().optional().default(false),
   hasSkipDataCollectionButtons: z.boolean().optional(),
   commandNodes: z.array(nodeItemSchema).optional().default([]),
+  hasInputTimeoutNodes: z.boolean().optional().default(false),
 });
 
 export type HandleUserInputParams = z.infer<typeof handleUserInputParamsSchema>;

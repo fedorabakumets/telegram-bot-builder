@@ -37,6 +37,7 @@ curl -s http://localhost:5000/api/config
 {
   "telegramClientId": 12345678,
   "telegramBotUsername": "my_bot",
-  "skipAuth": false
+  "skipAuth": false,
+  "apiBaseUrl": "https://example.com"
 }
 ```

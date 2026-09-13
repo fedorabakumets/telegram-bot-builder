@@ -13,6 +13,16 @@ const incomingMessageTriggerEntrySchema = z.object({
   targetNodeId: z.string(),
   /** Тип целевого узла */
   targetNodeType: z.string(),
+  /** Фильтр типа чата */
+  chatTypeFilter: z.enum(['any', 'private', 'group']).default('any'),
+  /** ID группы */
+  groupChatId: z.string().default(''),
+  /** Источник ID группы */
+  groupChatIdSource: z.enum(['manual', 'variable']).default('manual'),
+  /** Имя переменной с ID группы */
+  groupChatVariableName: z.string().default(''),
+  /** Проверять флаг _stop_processing */
+  stopOnFlag: z.boolean().default(true),
 });
 
 /** Схема параметров шаблона middleware триггеров входящих сообщений */

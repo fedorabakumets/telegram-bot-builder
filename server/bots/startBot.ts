@@ -18,6 +18,11 @@ import { URL } from "node:url";
 import { dirname, join } from "node:path";
 import { fetchWithProxy } from "../utils/telegram-proxy";
 import { generatePythonCode } from "../../lib/bot-generator";
+import {
+  buildStartBlockedByDisabledTypesError,
+  findDisabledNodesInProject,
+  getDisabledNodeTypes,
+} from "../services/disabled-node-types";
 
 /**
  * Глобальная коллекция активных процессов ботов
@@ -249,6 +254,13 @@ export async function startBot(
     const project = await storage.getBotProject(projectId);
     if (!project) {
       return { success: false, error: "Проект не найден" };
+    }
+
+    const disabledTypes = await getDisabledNodeTypes();
+    const disabledHits = findDisabledNodesInProject(project.data, disabledTypes);
+    const disabledError = buildStartBlockedByDisabledTypesError(disabledHits);
+    if (disabledError) {
+      return { success: false, error: disabledError };
     }
 
     console.log(`📊 Проект ${projectId} загружен из БД:`);
