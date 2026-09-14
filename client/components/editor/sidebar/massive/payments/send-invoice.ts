@@ -34,6 +34,7 @@ export const sendInvoiceNode: ComponentDefinition = {
     autoTransitionTo: '',
     /** Включить автопереход после оплаты */
     enableAutoTransition: false,
+    /** Клавиатура — отдельным узлом рядом (создаётся при добавлении) */
     keyboardType: 'none',
     buttons: [],
   },

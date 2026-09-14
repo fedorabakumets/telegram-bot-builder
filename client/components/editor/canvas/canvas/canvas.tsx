@@ -24,6 +24,11 @@ import { MarqueeOverlay } from './marquee-overlay';
 import { MultiSelectionToolbar } from './multi-selection-toolbar';
 import { clearKeyboardNodeId, setKeyboardNodeId } from '../canvas-node/keyboard-connection';
 import { ensureInvoicePayButton } from '@/components/editor/properties/utils/invoice-pay-button';
+import { buildInvoiceWithPayKeyboard } from '@/components/editor/properties/utils/create-invoice-with-keyboard';
+import {
+  findInvoiceHostForKeyboard,
+  findPayButtonOnKeyboard,
+} from '@/components/editor/properties/utils/invoice-pay-connection';
 import { PortType } from '../canvas-node/port-colors';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from './utils/canvas-coordinate-utils';
 import { collectCrossSheetLinks, collectIncomingCrossSheetLinks } from './utils/collect-cross-sheet-links';
@@ -510,8 +515,24 @@ export function Canvas({
       existingSourceMode !== 'variable' &&
       (!existingSourceNodeId || existingSourceNodeId === sourceNodeId);
 
+    /** Связь от кнопки «Оплатить» → цель после оплаты на send_invoice */
+    let invoicePayHostId: string | null = null;
+    if (portType === 'button-goto' && buttonId && sourceNode?.type === 'keyboard') {
+      const payBtn = findPayButtonOnKeyboard(sourceNode);
+      const host = findInvoiceHostForKeyboard(sourceNode.id, nodes);
+      if (payBtn?.id === buttonId && host) {
+        invoicePayHostId = host.id;
+      }
+    }
+
     const updatedNodes = nodes.map((n) => {
       const data = { ...n.data } as Record<string, unknown>;
+
+      if (invoicePayHostId && n.id === invoicePayHostId) {
+        data.autoTransitionTo = targetNodeId;
+        data.enableAutoTransition = true;
+        return { ...n, data };
+      }
 
       if (n.id === sourceNodeId) {
         if (isForwardMessageSourceLink) {
@@ -559,6 +580,11 @@ export function Canvas({
               data.refundAlreadyRefundedTarget = targetNodeId;
               return { ...n, data };
             }
+          }
+
+          /** pay у счёта — не пишем target на кнопку, host уже обновлён выше */
+          if (invoicePayHostId) {
+            return n;
           }
 
           const buttons = (data.buttons as any[] | undefined) ?? [];
@@ -638,8 +664,24 @@ export function Canvas({
       return;
     }
 
+    const sourceForDelete = nodes.find((n) => n.id === fromId);
+    let clearInvoicePayHostId: string | null = null;
+    if (type === 'button-goto' && sourceForDelete?.type === 'keyboard') {
+      const payBtn = findPayButtonOnKeyboard(sourceForDelete);
+      const host = findInvoiceHostForKeyboard(fromId, nodes);
+      if (payBtn && host && (host.data as any)?.autoTransitionTo === toId) {
+        clearInvoicePayHostId = host.id;
+      }
+    }
+
     const updatedNodes = nodes.map(n => {
       const data = { ...n.data } as Record<string, unknown>;
+
+      if (clearInvoicePayHostId && n.id === clearInvoicePayHostId) {
+        data.enableAutoTransition = false;
+        delete data.autoTransitionTo;
+        return { ...n, data };
+      }
 
       if (n.id === fromId) {
         if (type === 'trigger-next') {
@@ -659,6 +701,9 @@ export function Canvas({
             if (data.refundAlreadyRefundedTarget === toId) {
               delete data.refundAlreadyRefundedTarget;
             }
+          }
+          if (clearInvoicePayHostId) {
+            return n;
           }
           const buttons = (data.buttons as any[] | undefined) ?? [];
           data.buttons = buttons.map((btn: any) =>
@@ -1383,6 +1428,20 @@ export function Canvas({
       (clonedData as any).buttons = (clonedData as any).buttons.map((btn: any) => ({ ...btn, id: generateButtonId() }));
     }
 
+    /** Счёт — сразу с соседней клавиатурой «Оплатить» */
+    if ((component.type as string) === 'send_invoice') {
+      const { invoice, keyboard } = buildInvoiceWithPayKeyboard(
+        nanoid(),
+        nanoid(),
+        nodePosition,
+        clonedData as Record<string, unknown>,
+      );
+      addAction('add', 'Добавлен счёт со клавиатурой «Оплатить»');
+      onNodeAdd(invoice);
+      onNodeAdd(keyboard);
+      return;
+    }
+
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
@@ -1437,6 +1496,20 @@ export function Canvas({
     );
     if (Array.isArray((clonedTouchData as any).buttons)) {
       (clonedTouchData as any).buttons = (clonedTouchData as any).buttons.map((btn: any) => ({ ...btn, id: generateButtonId() }));
+    }
+
+    /** Счёт — сразу с соседней клавиатурой «Оплатить» */
+    if ((component.type as string) === 'send_invoice') {
+      const { invoice, keyboard } = buildInvoiceWithPayKeyboard(
+        nanoid(),
+        nanoid(),
+        nodePosition,
+        clonedTouchData as Record<string, unknown>,
+      );
+      addAction('add', 'Добавлен счёт со клавиатурой «Оплатить»');
+      onNodeAdd(invoice);
+      onNodeAdd(keyboard);
+      return;
     }
 
     const newNode: Node = {

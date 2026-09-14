@@ -82,7 +82,7 @@ export function InlineButton({ button, allNodes }: InlineButtonProps) {
           )}
           {button.action === 'pay' && (
             <div className="mt-1.5 text-xs text-yellow-600 dark:text-yellow-400">
-              ⭐ Оплатить
+              ⭐ После оплаты
             </div>
           )}
           {button.action === 'copy_text' && (

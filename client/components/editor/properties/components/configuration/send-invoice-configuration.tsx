@@ -11,6 +11,9 @@ import { VariableSelector } from '../variables/variable-selector';
 import { VariableNameInput } from '../variables/variable-name-input';
 import { InvoicePhotoField } from './invoice-photo-field';
 import type { Variable } from '../../../inline-rich/types';
+import { getKeyboardNodeId } from '../../../canvas/canvas-node/keyboard-connection';
+import { findPayButtonOnKeyboard } from '../../utils/invoice-pay-connection';
+import { useMemo } from 'react';
 
 /** Пропсы панели конфигурации счёта */
 interface SendInvoiceConfigurationProps {
@@ -47,8 +50,16 @@ export function SendInvoiceConfiguration({
     ({ node }) => node.id !== selectedNode.id,
   );
 
+  /** Есть ли связанная клавиатура с кнопкой «Оплатить» — тогда цель та же, что у кнопки */
+  const hasPayKeyboard = useMemo(() => {
+    const kbId = getKeyboardNodeId(data);
+    if (!kbId) return false;
+    const kbEntry = getAllNodesFromAllSheets.find(({ node }) => node.id === kbId);
+    return Boolean(kbEntry && findPayButtonOnKeyboard(kbEntry.node));
+  }, [data, getAllNodesFromAllSheets]);
+
   /**
-   * Обновляет цель перехода после оплаты
+   * Обновляет цель перехода после оплаты (то же поле, что у кнопки pay на клавиатуре)
    * @param value - ID узла или sentinel без перехода
    */
   const applyTarget = (value: string) => {
@@ -76,8 +87,8 @@ export function SendInvoiceConfiguration({
         </span>
       </div>
       <p className="text-[10px] text-muted-foreground leading-relaxed">
-        Бот отправит счёт в чат. Переход к следующему узлу сработает только после оплаты,
-        не сразу после отправки счёта.
+        Бот отправит счёт в чат. Переход после оплаты на холсте тянется от кнопки «Оплатить»
+        на клавиатуре (в данных это autoTransitionTo счёта), не сразу после отправки счёта.
       </p>
 
       <div className="space-y-1.5">
@@ -162,9 +173,14 @@ export function SendInvoiceConfiguration({
       </div>
 
       <div className="flex flex-col p-3 rounded-lg bg-gradient-to-br from-yellow-50/60 to-amber-50/40 dark:from-yellow-950/30 dark:to-amber-950/20 border border-yellow-200/40 dark:border-yellow-700/40">
-        <Label className="text-xs font-semibold text-yellow-700 dark:text-yellow-300 mb-2">
+        <Label className="text-xs font-semibold text-yellow-700 dark:text-yellow-300 mb-1">
           После оплаты
         </Label>
+        {hasPayKeyboard && (
+          <p className="text-[10px] text-yellow-700/80 dark:text-yellow-300/70 mb-2 leading-relaxed">
+            То же, что у кнопки «Оплатить» на клавиатуре — стрелка на холсте идёт от неё.
+          </p>
+        )}
         <Select value={autoTransitionTo || 'no-transition'} onValueChange={applyTarget}>
           <SelectTrigger className="text-xs h-8 bg-white/60 dark:bg-slate-950/60">
             <SelectValue placeholder="Без перехода" />

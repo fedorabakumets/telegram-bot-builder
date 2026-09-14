@@ -90,6 +90,11 @@ import { BotData, BotDataWithSheets, BotProject, UserBotData } from '@shared/sch
 import type { ComponentDefinition, Node } from '@shared/schema';
 import { nanoid } from 'nanoid';
 import { generateButtonId } from '@/utils/generate-button-id';
+import { buildInvoiceWithPayKeyboard } from '@/components/editor/properties/utils/create-invoice-with-keyboard';
+import {
+  findInvoiceHostForKeyboard,
+  findPayButtonOnKeyboard,
+} from '@/components/editor/properties/utils/invoice-pay-connection';
 import { applyTemplateLayout } from '@/utils/hierarchical-layout';
 
 /**
@@ -1293,8 +1298,24 @@ export default function Editor() {
    */
   const handleConnectionDelete = useCallback((fromId: string, toId: string, type: string) => {
     saveToHistory();
+    const sourceForDelete = nodes.find((n) => n.id === fromId);
+    let clearInvoicePayHostId: string | null = null;
+    if (type === 'button-goto' && sourceForDelete?.type === 'keyboard') {
+      const payBtn = findPayButtonOnKeyboard(sourceForDelete);
+      const host = findInvoiceHostForKeyboard(fromId, nodes);
+      if (payBtn && host && (host.data as any)?.autoTransitionTo === toId) {
+        clearInvoicePayHostId = host.id;
+      }
+    }
+
     const updatedNodes = nodes.map(n => {
       const data = { ...n.data };
+
+      if (clearInvoicePayHostId && n.id === clearInvoicePayHostId) {
+        data.enableAutoTransition = false;
+        delete data.autoTransitionTo;
+        return { ...n, data };
+      }
 
       if (n.id === fromId) {
         if (type === 'trigger-next') {
@@ -1303,6 +1324,9 @@ export default function Editor() {
           data.enableAutoTransition = false;
           delete data.autoTransitionTo;
         } else if (type === 'button-goto') {
+          if (clearInvoicePayHostId) {
+            return n;
+          }
           const buttons = (data.buttons as any[] | undefined) ?? [];
           data.buttons = buttons.map((btn: any) =>
             btn.action === 'goto' && btn.target === toId ? { ...btn, target: undefined } : btn
@@ -1416,10 +1440,34 @@ export default function Editor() {
     if (Array.isArray((clonedData as any).buttons)) {
       (clonedData as any).buttons = (clonedData as any).buttons.map((btn: any) => ({ ...btn, id: generateButtonId() }));
     }
+
+    const position = { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 };
+
+    /** Счёт — сразу с соседней клавиатурой «Оплатить» */
+    if ((component.type as string) === 'send_invoice') {
+      const { invoice, keyboard } = buildInvoiceWithPayKeyboard(
+        nanoid(),
+        nanoid(),
+        position,
+        clonedData as Record<string, unknown>,
+      );
+      console.log('📝 Добавление узла: send_invoice + keyboard');
+      handleActionLog('add', 'Добавлен счёт со клавиатурой «Оплатить»');
+      saveToHistory();
+      addNode(invoice);
+      addNode(keyboard);
+      setTimeout(() => {
+        if (activeProject?.id) {
+          updateProjectMutation.mutate({});
+        }
+      }, 1000);
+      return;
+    }
+
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
-      position: { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 }, // Случайная позиция с небольшим смещением
+      position,
       data: clonedData
     };
 

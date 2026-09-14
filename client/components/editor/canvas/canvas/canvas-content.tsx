@@ -136,11 +136,20 @@ export function CanvasContent({
    * Мемоизируем, чтобы ссылка на массив не менялась на каждый кадр зума —
    * иначе мемоизированные ноды считали бы пропс изменённым и ре-рендерились.
    */
+  /**
+   * Для активного листа берём живые `nodes` (актуальные data),
+   * иначе порт pay / стрелка «после оплаты» смотрят в устаревший botData.sheets.
+   */
   const allNodes = useMemo<Node[]>(() => {
     if (!botData?.sheets) return nodes;
+    const activeId = botData.activeSheetId;
     const collected: Node[] = [];
-    botData.sheets.forEach(sheet => {
-      if (sheet.nodes) collected.push(...sheet.nodes);
+    botData.sheets.forEach((sheet) => {
+      if (sheet.id === activeId) {
+        collected.push(...nodes);
+      } else if (sheet.nodes) {
+        collected.push(...sheet.nodes);
+      }
     });
     return collected;
   }, [botData, nodes]);

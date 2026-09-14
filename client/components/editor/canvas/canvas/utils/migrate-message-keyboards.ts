@@ -1,7 +1,7 @@
 /**
- * @fileoverview Миграция legacy-клавиатур из `message` в отдельные `keyboard`-узлы.
+ * @fileoverview Миграция legacy-клавиатур из `message`/`send_invoice` в отдельные `keyboard`-узлы.
  *
- * При загрузке проекта этот модуль находит `message`-узлы со встроенными кнопками
+ * При загрузке проекта этот модуль находит host-узлы со встроенными кнопками
  * и переносит клавиатурные данные в отдельный `keyboard`-узел, связывая его через
  * `keyboardNodeId`. Это позволяет привести старую модель canvas к новой, где
  * клавиатура редактируется отдельной нодой.
@@ -23,6 +23,9 @@ const TRANSFERRED_KEYBOARD_KEYS = [
   'continueButtonTarget',
 ] as const;
 
+/** Host-типы с выносом кнопок в keyboard */
+const HOISTABLE_HOST_TYPES = new Set(['message', 'send_invoice']);
+
 function cloneValue<T>(value: T): T {
   return value === undefined ? value : JSON.parse(JSON.stringify(value));
 }
@@ -41,13 +44,13 @@ function hasMigratableButtons(data: Record<string, unknown>): boolean {
 }
 
 /**
- * Переносит встроенные кнопки `message` в отдельные `keyboard`-узлы.
+ * Переносит встроенные кнопки `message` / `send_invoice` в отдельные `keyboard`-узлы.
  *
  * Правила:
- * - мигрируем только `message`-узлы с непустыми `buttons`
+ * - мигрируем host-узлы с непустыми `buttons`
  * - если linked `keyboard` уже существует, узел пропускается
  * - если `keyboardNodeId` уже указан, но нода отсутствует, переиспользуем этот ID
- * - данные клавиатуры удаляются из `message`, чтобы не дублировать UI
+ * - данные клавиатуры удаляются из host, чтобы не дублировать UI
  */
 export function migrateMessageKeyboardsToNodes(nodes: Node[]): Node[] {
   const migratedNodes = nodes.map((node) => ({
@@ -58,7 +61,7 @@ export function migrateMessageKeyboardsToNodes(nodes: Node[]): Node[] {
 
   for (let index = 0; index < migratedNodes.length; index += 1) {
     const node = migratedNodes[index];
-    if (node.type !== 'message') continue;
+    if (!HOISTABLE_HOST_TYPES.has(node.type as string)) continue;
 
     const nodeData = node.data as Record<string, unknown>;
     if (!hasMigratableButtons(nodeData)) continue;
@@ -93,16 +96,16 @@ export function migrateMessageKeyboardsToNodes(nodes: Node[]): Node[] {
       data: keyboardData as Node['data'],
     };
 
-    const nextMessageData = setKeyboardNodeId(nodeData, keyboardNodeId) as Record<string, unknown>;
+    const nextHostData = setKeyboardNodeId(nodeData, keyboardNodeId) as Record<string, unknown>;
     for (const key of TRANSFERRED_KEYBOARD_KEYS) {
-      delete nextMessageData[key];
+      delete nextHostData[key];
     }
-    nextMessageData.keyboardType = 'none';
-    nextMessageData.buttons = [];
+    nextHostData.keyboardType = 'none';
+    nextHostData.buttons = [];
 
     migratedNodes[index] = {
       ...node,
-      data: nextMessageData as Node['data'],
+      data: nextHostData as Node['data'],
     };
     appendedNodes.push(keyboardNode);
   }

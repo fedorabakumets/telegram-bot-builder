@@ -584,6 +584,7 @@ export function getNodeDefaults(type: Node['type']): any {
       autoTransitionTo: '',
       /** Включить автопереход после оплаты */
       enableAutoTransition: false,
+      /** Клавиатура — отдельным узлом рядом при добавлении с холста */
       keyboardType: 'none',
       buttons: [],
     },

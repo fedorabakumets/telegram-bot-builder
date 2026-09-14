@@ -587,8 +587,21 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       autoTransitionTo: '',
       /** Включить автопереход после оплаты */
       enableAutoTransition: false,
-      keyboardType: 'none',
-      buttons: [],
+      /**
+       * Встроенные кнопки — hoist вынесет в отдельный keyboard при записи через MCP.
+       * На холсте пара создаётся сразу при drag/click.
+       */
+      keyboardType: 'inline',
+      buttons: [
+        {
+          id: 'invoice_pay',
+          text: 'Оплатить ⭐',
+          action: 'pay',
+          buttonType: 'normal',
+          skipDataCollection: true,
+          hideAfterClick: false,
+        },
+      ],
     },
     successful_payment_trigger: {
       /** Фильтр метки: all | exact | starts_with */

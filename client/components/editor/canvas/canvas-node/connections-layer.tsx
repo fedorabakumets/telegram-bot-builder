@@ -24,6 +24,11 @@ import {
   KEYBOARD_LINK_PORT_TYPE,
   getKeyboardNodeId,
 } from './keyboard-connection';
+import {
+  findInvoiceHostForKeyboard,
+  findPayButtonOnKeyboard,
+  invoiceUsesPayButtonVisual,
+} from '@/components/editor/properties/utils/invoice-pay-connection';
 
 /** Размер SVG-холста — достаточно большой чтобы покрыть любой граф */
 const SVG_SIZE = 20000;
@@ -227,12 +232,14 @@ export function collectConnections(nodes: Node[]): Connection[] {
   const existingIds = new Set(nodes.map(n => n.id));
 
   nodes.forEach(node => {
-    // 1. Автопереход (исключаем loop / refund_stars — свои порты ниже)
+    // 1. Автопереход (исключаем loop / refund_stars — свои порты ниже;
+    //    send_invoice с клавиатурой pay — линия от кнопки, не от счёта)
     if (
       node.data?.enableAutoTransition
       && node.data?.autoTransitionTo
       && (node.type as any) !== 'loop'
       && (node.type as any) !== 'refund_stars'
+      && !((node.type as string) === 'send_invoice' && invoiceUsesPayButtonVisual(node, nodes))
     ) {
       const toId = node.data.autoTransitionTo as string;
       const targetNode = nodes.find((candidate) => candidate.id === toId);
@@ -264,6 +271,34 @@ export function collectConnections(nodes: Node[]): Connection[] {
         }
       }
     });
+
+    // 2.1 Кнопка «Оплатить» у клавиатуры счёта → autoTransitionTo счёта
+    // Достаточно autoTransitionTo (как у триггеров); enableAutoTransition выставляем в UI, но не блокируем стрелку
+    if (node.type === 'keyboard') {
+      const payBtn = findPayButtonOnKeyboard(node);
+      const invoiceHost = findInvoiceHostForKeyboard(node.id, nodes);
+      const payTarget = invoiceHost?.data?.autoTransitionTo
+        ? String(invoiceHost.data.autoTransitionTo).trim()
+        : '';
+      if (payBtn && payTarget && existingIds.has(payTarget)) {
+        const alreadyExists = connections.some(
+          (c) =>
+            c.fromId === node.id
+            && c.toId === payTarget
+            && c.type === 'button-goto'
+            && c.buttonId === payBtn.id,
+        );
+        if (!alreadyExists) {
+          connections.push({
+            fromId: node.id,
+            toId: payTarget,
+            type: 'button-goto',
+            label: payBtn.text || 'Оплатить',
+            buttonId: payBtn.id,
+          });
+        }
+      }
+    }
 
     // 3. Input target — куда идёт после ввода пользователя
     const inputTargetNodeId = (node.data as any)?.inputTargetNodeId
@@ -419,18 +454,18 @@ export function collectConnections(nodes: Node[]): Connection[] {
 export function isConnectionRenderable(
   connection: Connection,
   nodeSizes: Map<string, NodeSize>,
-  buttonPortYOffsets?: Map<string, { x: number; y: number }>,
+  _buttonPortYOffsets?: Map<string, { x: number; y: number }>,
 ): boolean {
-  const { fromId, toId, type, buttonId } = connection;
+  const { fromId, toId } = connection;
 
   if (!nodeSizes.has(fromId) || !nodeSizes.has(toId)) {
     return false;
   }
 
-  if (type === 'button-goto' && buttonId && !buttonPortYOffsets?.has(buttonId)) {
-    return false;
-  }
-
+  /**
+   * Offset порта кнопки опционален: без него buildSmartPath рисует от центра узла.
+   * Раньше button-goto без замера скрывался — стрелка «после оплаты» не появлялась.
+   */
   return true;
 }
 

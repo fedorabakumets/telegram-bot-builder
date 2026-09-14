@@ -7,6 +7,7 @@ import { cn } from '@/utils/utils';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { OutputPort } from './output-port';
 import { PortType } from './port-colors';
+import { invoiceUsesPayButtonVisual } from '@/components/editor/properties/utils/invoice-pay-connection';
 import { getCanvasViewportMetrics, screenPointToCanvasPoint } from '../canvas/utils/canvas-coordinate-utils';
 import { NodeContextMenu } from './context-menu/node-context-menu';
 import { useNodeContextMenu } from './context-menu/use-node-context-menu';
@@ -583,7 +584,8 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
       {/* Узел loop имеет два порта (тело + далее) внутри превью */}
       {(node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || node.type === 'group_message_trigger' || (node.type as any) === 'member_trigger' || (node.type as any) === 'callback_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'successful_payment_trigger' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'api_trigger' || (node.type as any) === 'userbot_edit_trigger') ? (
         <OutputPort portType="trigger-next" onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
-      ) : node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'loop' && (node.type as any) !== 'parallel_split' && (node.type as any) !== 'comment' && (node.type as any) !== 'refund_stars' ? (
+      ) : node.type !== 'condition' && node.type !== 'keyboard' && node.type !== 'loop' && (node.type as any) !== 'parallel_split' && (node.type as any) !== 'comment' && (node.type as any) !== 'refund_stars'
+        && !((node.type as string) === 'send_invoice' && allNodes && invoiceUsesPayButtonVisual(node, allNodes)) ? (
         <OutputPort portType={node.type === 'input' ? 'input-target' : 'auto-transition'} onPortMouseDown={handlePortMouseDown} isActive={isConnectionSource} />
       ) : null}
 

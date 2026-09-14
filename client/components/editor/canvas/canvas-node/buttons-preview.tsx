@@ -10,6 +10,7 @@ import { OutputPort } from './output-port';
 import { PortType } from './port-colors';
 import { getDynamicButtonsSummary, normalizeDynamicButtonsConfig } from '@/components/editor/properties/utils/dynamic-buttons';
 import { resolveKeyboardPreviewParams } from '../utils/resolve-keyboard-preview-buttons';
+import { isInvoicePayKeyboard, findPayButtonOnKeyboard } from '@/components/editor/properties/utils/invoice-pay-connection';
 
 interface ButtonsPreviewProps {
   node: Node;
@@ -21,6 +22,16 @@ interface ButtonsPreviewProps {
 
 export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSource, onButtonPortMount }: ButtonsPreviewProps) {
   const previewParams = useMemo(() => resolveKeyboardPreviewParams(node), [node]);
+  /**
+   * Порт у pay нужен на keyboard с кнопкой оплаты, привязанной к счёту.
+   * Без порта offset не регистрируется → стрелка button-goto не рисуется.
+   */
+  const showPayPort = useMemo(() => {
+    if (node.type !== 'keyboard') return false;
+    if (!findPayButtonOnKeyboard(node)) return false;
+    if (!allNodes?.length) return true;
+    return isInvoicePayKeyboard(node, allNodes);
+  }, [allNodes, node]);
 
   if (!previewParams) {
     return null;
@@ -49,6 +60,14 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
   void completeButton;
 
   const dynamicSummary = enableDynamicButtons ? getDynamicButtonsSummary(dynamicButtons) : '';
+
+  /**
+   * Нужен ли выходной порт у кнопки (goto или pay у счёта)
+   * @param button - Кнопка
+   * @returns true если показывать порт
+   */
+  const hasButtonPort = (button: { action?: string }) =>
+    button.action === 'goto' || (button.action === 'pay' && showPayPort);
 
   return (
     <div className="space-y-3 mb-1">
@@ -79,7 +98,7 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
             return (
               <div className="relative">
                 <InlineButton button={button} allNodes={allNodes} />
-                {button.action === 'goto' && (
+                {hasButtonPort(button) && (
                   <OutputPort portType="button-goto" buttonId={button.id} onPortMouseDown={onPortMouseDown} isActive={isConnectionSource} onMount={onButtonPortMount} />
                 )}
               </div>

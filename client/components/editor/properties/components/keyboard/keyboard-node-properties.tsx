@@ -27,6 +27,7 @@ import {
   ensureInvoicePayButton,
   isKeyboardBoundToInvoice,
 } from '../../utils/invoice-pay-button';
+import { findInvoiceHostForKeyboard } from '../../utils/invoice-pay-connection';
 import { lockInvoicePayInLayout } from '../../utils/lock-invoice-pay-layout';
 import type { ButtonActionType } from '../button-card/button-action-options';
 import type { KeyboardLayout } from '../../types/keyboard-layout';
@@ -69,9 +70,28 @@ export function KeyboardNodeProperties({
   onButtonDelete,
 }: KeyboardNodePropertiesProps) {
   const isInvoiceKb = isKeyboardBoundToInvoice(selectedNode.id, getAllNodesFromAllSheets);
+  const allNodesFlat = React.useMemo(
+    () => getAllNodesFromAllSheets.map((item: any) => item.node ?? item) as Node[],
+    [getAllNodesFromAllSheets],
+  );
+  const invoiceHost = isInvoiceKb
+    ? findInvoiceHostForKeyboard(selectedNode.id, allNodesFlat)
+    : undefined;
   const rawButtons = selectedNode.data.buttons || [];
   const buttons = isInvoiceKb ? ensureInvoicePayButton(rawButtons) : rawButtons;
   const enableDynamicButtons = selectedNode.data.enableDynamicButtons ?? false;
+
+  /**
+   * Пишет цель после оплаты на узел send_invoice
+   * @param targetNodeId - ID следующего узла или пусто
+   */
+  const handleInvoiceAfterPayTarget = (targetNodeId: string) => {
+    if (!invoiceHost) return;
+    onNodeUpdate(invoiceHost.id, {
+      autoTransitionTo: targetNodeId,
+      enableAutoTransition: Boolean(targetNodeId.trim()),
+    });
+  };
 
   React.useEffect(() => {
     if (!isInvoiceKb) return;
@@ -167,6 +187,14 @@ export function KeyboardNodeProperties({
         }
         lockPayButton={button.action === 'pay'}
         hideExtras={button.action === 'pay'}
+        invoiceAfterPayTarget={
+          button.action === 'pay'
+            ? String((invoiceHost?.data as any)?.autoTransitionTo || '')
+            : undefined
+        }
+        onInvoiceAfterPayTargetChange={
+          button.action === 'pay' && invoiceHost ? handleInvoiceAfterPayTarget : undefined
+        }
       />
     ));
 

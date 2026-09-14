@@ -14,6 +14,11 @@
 
 import { Node } from '@/types/bot';
 import { CanvasSheet } from '@shared/schema';
+import {
+  findInvoiceHostForKeyboard,
+  findPayButtonOnKeyboard,
+  invoiceUsesPayButtonVisual,
+} from '@/components/editor/properties/utils/invoice-pay-connection';
 
 /**
  * Одна кросс-листовая связь от ноды на текущем листе к ноде на другом листе
@@ -127,7 +132,13 @@ export function collectCrossSheetLinks(
       'schedule_trigger', 'userbot_edit_trigger',
     ].includes(type);
 
-    if (data?.enableAutoTransition && data?.autoTransitionTo && type !== 'loop' && !isTrigger) {
+    if (
+      data?.enableAutoTransition
+      && data?.autoTransitionTo
+      && type !== 'loop'
+      && !isTrigger
+      && !(type === 'send_invoice' && invoiceUsesPayButtonVisual(node, currentNodes))
+    ) {
       tryAddLink(links, node.id, data.autoTransitionTo, 'auto-transition', currentNodeIds, otherNodesMap);
     }
 
@@ -136,6 +147,18 @@ export function collectCrossSheetLinks(
     for (const btn of buttons) {
       if (btn.action === 'goto' && btn.target) {
         tryAddLink(links, node.id, btn.target, 'button-goto', currentNodeIds, otherNodesMap);
+      }
+    }
+
+    // 2.1 pay у клавиатуры счёта → autoTransitionTo счёта (другой лист)
+    if (type === 'keyboard') {
+      const payBtn = findPayButtonOnKeyboard(node);
+      const invoiceHost = findInvoiceHostForKeyboard(node.id, currentNodes);
+      const payTarget = invoiceHost?.data?.autoTransitionTo
+        ? String(invoiceHost.data.autoTransitionTo).trim()
+        : '';
+      if (payBtn && payTarget) {
+        tryAddLink(links, node.id, payTarget, 'button-goto', currentNodeIds, otherNodesMap);
       }
     }
 
@@ -236,8 +259,14 @@ export function collectIncomingCrossSheetLinks(
         'schedule_trigger', 'userbot_edit_trigger',
       ].includes(type);
 
-      // 1. Автопереход
-      if (data?.enableAutoTransition && data?.autoTransitionTo && type !== 'loop' && !isTrigger) {
+      // 1. Автопереход (счёт с pay-клавиатурой — портал от кнопки, не от счёта)
+      if (
+        data?.enableAutoTransition
+        && data?.autoTransitionTo
+        && type !== 'loop'
+        && !isTrigger
+        && !(type === 'send_invoice' && invoiceUsesPayButtonVisual(node, sheetNodes))
+      ) {
         if (currentNodeIds.has(data.autoTransitionTo)) {
           links.push({ sourceNodeId: node.id, targetNodeId: data.autoTransitionTo, targetSheetId: sheet.id, targetSheetName: sheet.name, connectionType: 'auto-transition' });
         }
@@ -248,6 +277,24 @@ export function collectIncomingCrossSheetLinks(
       for (const btn of buttons) {
         if (btn.action === 'goto' && btn.target && currentNodeIds.has(btn.target)) {
           links.push({ sourceNodeId: node.id, targetNodeId: btn.target, targetSheetId: sheet.id, targetSheetName: sheet.name, connectionType: 'button-goto' });
+        }
+      }
+
+      // 2.1 pay у клавиатуры счёта
+      if (type === 'keyboard') {
+        const payBtn = findPayButtonOnKeyboard(node);
+        const invoiceHost = findInvoiceHostForKeyboard(node.id, sheetNodes);
+        const payTarget = invoiceHost?.data?.autoTransitionTo
+          ? String(invoiceHost.data.autoTransitionTo).trim()
+          : '';
+        if (payBtn && payTarget && currentNodeIds.has(payTarget)) {
+          links.push({
+            sourceNodeId: node.id,
+            targetNodeId: payTarget,
+            targetSheetId: sheet.id,
+            targetSheetName: sheet.name,
+            connectionType: 'button-goto',
+          });
         }
       }
 
