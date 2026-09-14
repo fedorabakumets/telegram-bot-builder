@@ -785,6 +785,48 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
+  // Переменные create_invoice_link (URL + сумма/код после оплаты)
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'create_invoice_link') return;
+    const data = node.data as any;
+    if (data.saveInvoiceLinkTo?.trim()) {
+      const key = `create_invoice_link_url__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.saveInvoiceLinkTo,
+          nodeId: node.id,
+          nodeType: 'create_invoice_link' as any,
+          sourceTable: 'bot_users',
+          description: 'Ссылка на счёт в звёздах',
+        });
+      }
+    }
+    if (data.savePaymentAmountTo?.trim()) {
+      const key = `create_invoice_link_amount__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentAmountTo,
+          nodeId: node.id,
+          nodeType: 'create_invoice_link' as any,
+          sourceTable: 'bot_users',
+          description: 'Сумма оплаты в звёздах',
+        });
+      }
+    }
+    if (data.savePaymentChargeIdTo?.trim()) {
+      const key = `create_invoice_link_charge__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.savePaymentChargeIdTo,
+          nodeId: node.id,
+          nodeType: 'create_invoice_link' as any,
+          sourceTable: 'bot_users',
+          description: 'Код покупки для возврата',
+        });
+      }
+    }
+  });
+
   // Переменные триггера успешной оплаты
   allNodes.forEach(node => {
     if ((node.type as string) !== 'successful_payment_trigger') return;

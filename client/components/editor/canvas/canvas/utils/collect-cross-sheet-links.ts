@@ -137,6 +137,7 @@ export function collectCrossSheetLinks(
       && data?.autoTransitionTo
       && type !== 'loop'
       && !isTrigger
+      && type !== 'create_invoice_link'
       && !(type === 'send_invoice' && invoiceUsesPayButtonVisual(node, currentNodes))
     ) {
       tryAddLink(links, node.id, data.autoTransitionTo, 'auto-transition', currentNodeIds, otherNodesMap);
@@ -204,6 +205,12 @@ export function collectCrossSheetLinks(
       );
     }
 
+    // 6c. create_invoice_link: после создания и после оплаты
+    if (type === 'create_invoice_link') {
+      tryAddLink(links, node.id, data?.autoTransitionTo, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(links, node.id, data?.afterPaymentTo, 'button-goto', currentNodeIds, otherNodesMap);
+    }
+
     // 7. Триггеры: autoTransitionTo
     if (isTrigger && data?.autoTransitionTo) {
       tryAddLink(links, node.id, data.autoTransitionTo, 'trigger-next', currentNodeIds, otherNodesMap);
@@ -265,6 +272,7 @@ export function collectIncomingCrossSheetLinks(
         && data?.autoTransitionTo
         && type !== 'loop'
         && !isTrigger
+        && type !== 'create_invoice_link'
         && !(type === 'send_invoice' && invoiceUsesPayButtonVisual(node, sheetNodes))
       ) {
         if (currentNodeIds.has(data.autoTransitionTo)) {
@@ -291,6 +299,28 @@ export function collectIncomingCrossSheetLinks(
           links.push({
             sourceNodeId: node.id,
             targetNodeId: payTarget,
+            targetSheetId: sheet.id,
+            targetSheetName: sheet.name,
+            connectionType: 'button-goto',
+          });
+        }
+      }
+
+      // 2.2 create_invoice_link
+      if (type === 'create_invoice_link') {
+        if (data?.autoTransitionTo && currentNodeIds.has(data.autoTransitionTo)) {
+          links.push({
+            sourceNodeId: node.id,
+            targetNodeId: data.autoTransitionTo,
+            targetSheetId: sheet.id,
+            targetSheetName: sheet.name,
+            connectionType: 'button-goto',
+          });
+        }
+        if (data?.afterPaymentTo && currentNodeIds.has(data.afterPaymentTo)) {
+          links.push({
+            sourceNodeId: node.id,
+            targetNodeId: data.afterPaymentTo,
             targetSheetId: sheet.id,
             targetSheetName: sheet.name,
             connectionType: 'button-goto',

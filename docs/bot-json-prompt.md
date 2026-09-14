@@ -1077,7 +1077,7 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 
 ### send_invoice — выставить счёт в звёздах
 
-Только счёт в чат (без ссылки и подписки). Валюта всегда `XTR`, токен кассы пустой. `autoTransitionTo` срабатывает **после оплаты**, не после `answer_invoice`.
+Только счёт в чат. Валюта всегда `XTR`, токен кассы пустой. `autoTransitionTo` срабатывает **после оплаты**, не после `answer_invoice`. Ссылка на оплату — отдельный тип `create_invoice_link`.
 
 Можно привязать узел `keyboard` через `keyboardNodeId` (как у `message`). Первая кнопка клавиатуры обязана быть `"action": "pay"` (текст вроде «Оплатить ⭐»). Остальные кнопки — обычные (`goto`, `url`…). **При добавлении с холста** рядом сразу создаётся `keyboard` с одной кнопкой pay. Через MCP встроенные кнопки на `send_invoice` выносятся в `keyboard` (hoist). Без клавиатуры Телеграм сам покажет оплату. Тип `pay` нельзя ставить на клавиатуры обычных сообщений.
 
@@ -1129,11 +1129,41 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 | `autoTransitionTo` | Узел после успешной оплаты (`enableAutoTransition: true`) |
 
 Типичная цепочка: `command_trigger` `/buy` → `send_invoice` → (после оплаты) `message` «спасибо».  
-Для `/paysupport` и `/terms` используйте обычные `command_trigger` + `message` — отдельных типов не нужно.
+
+### create_invoice_link — ссылка на счёт
+
+Отдельный узел (не режим `send_invoice`). Bot API `createInvoiceLink`: URL в `saveInvoiceLinkTo`, сразу `autoTransitionTo`, после оплаты — `afterPaymentTo` (или `successful_payment_trigger`). Без pay-клавиатуры. `pre_checkout` генерируется, если есть `send_invoice` **или** `create_invoice_link`.
+
+```json
+{
+  "type": "create_invoice_link",
+  "data": {
+    "invoiceTitle": "Доступ",
+    "invoiceDescription": "Оплата по ссылке",
+    "invoiceAmount": "50",
+    "invoicePhotoUrl": "",
+    "invoicePayload": "",
+    "saveInvoiceLinkTo": "invoice_url",
+    "savePaymentAmountTo": "paid_stars",
+    "savePaymentChargeIdTo": "payment_charge_id",
+    "autoTransitionTo": "msg_with_link",
+    "enableAutoTransition": true,
+    "afterPaymentTo": "msg_thanks"
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `saveInvoiceLinkTo` | Переменная под URL (`https://t.me/$…`) |
+| `autoTransitionTo` | Сразу после создания ссылки |
+| `afterPaymentTo` | После оплаты по этой ссылке (в текущей сессии) |
+
+Цепочка: `/buy` → `create_invoice_link` → `message` «Оплатить: {invoice_url}».
 
 ### successful_payment_trigger — успешная оплата (вне цепочки счёта)
 
-Ловит оплату звёздами, если payload **нет** в `_stars_payment_targets` текущей сессии (ссылка, старый счёт). Один общий `successful_payment` с `send_invoice`: сначала счёт, иначе триггер. Фильтры проверяются в порядке `exact` → `starts_with` → `all`. Без `send_invoice` хендлер всё равно генерируется, но `pre_checkout` — нет.
+Ловит оплату звёздами, если payload **нет** в `_stars_payment_targets` текущей сессии (ссылка, старый счёт). Один общий `successful_payment` с `send_invoice` / `create_invoice_link`: сначала счёт/ссылка, иначе триггер. Фильтры проверяются в порядке `exact` → `starts_with` → `all`. Без счёта/ссылки хендлер всё равно генерируется при наличии триггера, но `pre_checkout` — нет. Для `/paysupport` и `/terms` используйте обычные `command_trigger` + `message`.
 
 ```json
 {

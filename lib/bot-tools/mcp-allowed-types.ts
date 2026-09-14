@@ -54,6 +54,7 @@ export const MCP_ALLOWED_NODE_TYPES = [
   'userbot_edit_trigger',
   'comment',
   'send_invoice',
+  'create_invoice_link',
   'refund_stars',
   'successful_payment_trigger',
 ] as const;
@@ -127,6 +128,7 @@ const MCP_NODE_DESCRIPTIONS: Record<string, string> = {
   userbot_edit_trigger: 'Триггер на редактирование (юзербот)',
   comment: 'Комментарий на холсте',
   send_invoice: 'Выставить счёт в звёздах',
+  create_invoice_link: 'Ссылка на счёт',
   refund_stars: 'Вернуть звёзды',
   successful_payment_trigger: 'Успешная оплата',
 };

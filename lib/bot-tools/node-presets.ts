@@ -603,6 +603,30 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
         },
       ],
     },
+    create_invoice_link: {
+      /** Название товара */
+      invoiceTitle: 'Товар',
+      /** Описание товара */
+      invoiceDescription: 'Описание товара',
+      /** Цена в звёздах */
+      invoiceAmount: '1',
+      /** URL картинки */
+      invoicePhotoUrl: '',
+      /** Скрытая метка покупки */
+      invoicePayload: '',
+      /** Куда сохранить ссылку */
+      saveInvoiceLinkTo: 'invoice_url',
+      /** Переменная для суммы после оплаты */
+      savePaymentAmountTo: '',
+      /** Переменная для кода покупки после оплаты */
+      savePaymentChargeIdTo: '',
+      /** Сразу после создания ссылки */
+      autoTransitionTo: '',
+      /** Включить переход после создания */
+      enableAutoTransition: false,
+      /** После оплаты по ссылке */
+      afterPaymentTo: '',
+    },
     successful_payment_trigger: {
       /** Фильтр метки: all | exact | starts_with */
       payloadFilter: 'all',

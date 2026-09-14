@@ -357,12 +357,15 @@ export function hasDelayNodes(nodes: Node[]): boolean {
 }
 
 /**
- * Проверяет наличие узлов send_invoice (счёт в звёздах)
+ * Проверяет наличие узлов счёта в звёздах (чат или ссылка)
  * @param nodes - Массив узлов
- * @returns true, если есть хотя бы один счёт
+ * @returns true, если есть send_invoice или create_invoice_link
  */
 export function hasSendInvoiceNodes(nodes: Node[]): boolean {
-  return nodes.filter(n => n != null).some(node => (node.type as string) === 'send_invoice');
+  return nodes.filter(n => n != null).some(node => {
+    const t = node.type as string;
+    return t === 'send_invoice' || t === 'create_invoice_link';
+  });
 }
 
 /**

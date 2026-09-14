@@ -1,5 +1,5 @@
 /**
- * @fileoverview Параметры шаблона send_invoice (счёт в звёздах)
+ * @fileoverview Параметры шаблона send_invoice / create_invoice_link
  * @module templates/send-invoice/send-invoice.params
  */
 
@@ -33,8 +33,36 @@ export interface SendInvoiceEntry {
   keyboardLayout?: unknown;
 }
 
+/** Параметры одного узла create_invoice_link */
+export interface CreateInvoiceLinkEntry {
+  /** ID узла */
+  nodeId: string;
+  /** Название товара */
+  title: string;
+  /** Описание товара */
+  description: string;
+  /** Цена в звёздах */
+  amount: string;
+  /** URL картинки */
+  photoUrl: string;
+  /** Скрытая метка покупки */
+  payload: string;
+  /** Переменная для URL ссылки */
+  saveInvoiceLinkTo: string;
+  /** Переменная для суммы после оплаты */
+  savePaymentAmountTo: string;
+  /** Переменная для кода покупки после оплаты */
+  savePaymentChargeIdTo: string;
+  /** Сразу после создания ссылки */
+  autoTransitionTo: string;
+  /** После оплаты по ссылке */
+  afterPaymentTo: string;
+}
+
 /** Параметры шаблона всех счетов */
 export interface SendInvoiceTemplateParams {
-  /** Массив узлов-счетов */
+  /** Массив узлов-счетов в чат */
   sendInvoiceEntries: SendInvoiceEntry[];
+  /** Массив узлов ссылок на счёт */
+  createInvoiceLinkEntries: CreateInvoiceLinkEntry[];
 }

@@ -232,13 +232,14 @@ export function collectConnections(nodes: Node[]): Connection[] {
   const existingIds = new Set(nodes.map(n => n.id));
 
   nodes.forEach(node => {
-    // 1. Автопереход (исключаем loop / refund_stars — свои порты ниже;
+    // 1. Автопереход (исключаем loop / refund_stars / create_invoice_link — свои порты ниже;
     //    send_invoice с клавиатурой pay — линия от кнопки, не от счёта)
     if (
       node.data?.enableAutoTransition
       && node.data?.autoTransitionTo
       && (node.type as any) !== 'loop'
       && (node.type as any) !== 'refund_stars'
+      && (node.type as any) !== 'create_invoice_link'
       && !((node.type as string) === 'send_invoice' && invoiceUsesPayButtonVisual(node, nodes))
     ) {
       const toId = node.data.autoTransitionTo as string;
@@ -434,6 +435,27 @@ export function collectConnections(nodes: Node[]): Connection[] {
         },
       ];
       for (const port of refundPorts) {
+        const toId = d?.[port.field] as string | undefined;
+        if (toId && existingIds.has(toId)) {
+          connections.push({
+            fromId: node.id,
+            toId,
+            type: 'button-goto',
+            label: port.label,
+            buttonId: port.buttonId,
+          });
+        }
+      }
+    }
+
+    // 12. Выходы create_invoice_link
+    if ((node.type as any) === 'create_invoice_link') {
+      const d = node.data as any;
+      const linkPorts: Array<{ field: string; buttonId: string; label: string }> = [
+        { field: 'autoTransitionTo', buttonId: 'invoice-link-created', label: 'Ссылка готова' },
+        { field: 'afterPaymentTo', buttonId: 'invoice-link-after-pay', label: 'После оплаты' },
+      ];
+      for (const port of linkPorts) {
         const toId = d?.[port.field] as string | undefined;
         if (toId && existingIds.has(toId)) {
           connections.push({

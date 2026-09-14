@@ -4,4 +4,5 @@
  */
 
 export { sendInvoiceNode } from './send-invoice';
+export { createInvoiceLinkNode } from './create-invoice-link';
 export { refundStarsNode } from './refund-stars';

@@ -1,22 +1,26 @@
 {#
-  @fileoverview Шаблон обработчиков счёта в звёздах и общего роутера оплаты.
-  1) handle_callback_{id} — отправка счёта (без перехода)
-  2) один pre_checkout_query — только если есть send_invoice
-  3) один successful_payment — счёт → триггер successful_payment_trigger
+  @fileoverview Шаблон счетов в чат, ссылок на счёт и общего роутера оплаты.
+  1) handle_callback — answer_invoice (send_invoice)
+  2) handle_callback — create_invoice_link + save URL + переход
+  3) pre_checkout — если есть счёт или ссылка
+  4) successful_payment — targets → триггер
 
-  @param {array} sendInvoiceEntries - Массив SendInvoiceEntry
-  @param {array} successfulPaymentTriggerEntries - Триггеры (exact→starts_with→all)
+  @param {array} sendInvoiceEntries
+  @param {array} createInvoiceLinkEntries
+  @param {array} successfulPaymentTriggerEntries
 #}
 
-{%- set has_invoices = sendInvoiceEntries and sendInvoiceEntries|length > 0 -%}
+{%- set has_chat = sendInvoiceEntries and sendInvoiceEntries|length > 0 -%}
+{%- set has_links = createInvoiceLinkEntries and createInvoiceLinkEntries|length > 0 -%}
+{%- set has_invoices = has_chat or has_links -%}
 {%- set has_triggers = successfulPaymentTriggerEntries and successfulPaymentTriggerEntries|length > 0 -%}
 
 {% if has_invoices or has_triggers %}
-# Маршруты оплаты: payload → настройки узла send_invoice
+# Маршруты оплаты: payload → настройки узла счёта / ссылки
 _stars_payment_targets = {}
 {% endif %}
 
-{% if has_invoices %}
+{% if has_chat %}
 # Обработчики счетов в звёздах (send_invoice)
 {% for entry in sendInvoiceEntries %}
 {%- set sanitized_node_id = entry.nodeId | safe_name %}
@@ -53,7 +57,6 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
     _payload = str(_payload)[:128]
 {% if entry.photoUrl %}
     _photo_url = replace_variables_in_text({{ entry.photoUrl | tojson }}, _all_vars, {})
-    # Telegram качает photo_url сам — /uploads/ превращаем в абсолютный URL
     if isinstance(_photo_url, str) and _photo_url.startswith("/uploads/"):
         _api_base = (os.getenv("API_BASE_URL") or "").rstrip("/")
         if _api_base:
@@ -86,7 +89,6 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
     }
 
 {% if entry.hasKeyboard %}
-    {# Клавиатура счёта: первая кнопка pay=True, остальные — обычные #}
     all_user_vars = _all_vars
 {%- set nodeId = entry.nodeId -%}
 {%- set keyboardType = 'inline' -%}
@@ -107,7 +109,112 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         logging.error(f"❌ Ошибка send_invoice [{{ entry.nodeId }}]: {e}")
 
 {% endfor %}
+{% endif %}
 
+{% if has_links %}
+# Обработчики ссылок на счёт (create_invoice_link)
+{% for entry in createInvoiceLinkEntries %}
+{%- set sanitized_node_id = entry.nodeId | safe_name %}
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Создаёт ссылку на счёт — узел {{ entry.nodeId }}"""
+    user_id = callback_query.from_user.id
+    await init_user_variables(user_id, callback_query.from_user)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    _all_vars = await init_all_user_vars(user_id)
+    if state is not None:
+        try:
+            _fsm_data = await state.get_data()
+            if _fsm_data:
+                _all_vars.update(_fsm_data)
+        except Exception:
+            pass
+
+    _title = replace_variables_in_text({{ entry.title | tojson }}, _all_vars, {})
+    _description = replace_variables_in_text({{ entry.description | tojson }}, _all_vars, {})
+    _amount_raw = replace_variables_in_text({{ entry.amount | tojson }}, _all_vars, {}) or "1"
+    try:
+        _amount = int(float(str(_amount_raw).strip()))
+    except (ValueError, TypeError):
+        _amount = 1
+    if _amount < 1:
+        _amount = 1
+
+    _payload = replace_variables_in_text({{ entry.payload | tojson }}, _all_vars, {}) or "{{ entry.nodeId }}"
+    _payload = str(_payload)[:128]
+{% if entry.photoUrl %}
+    _photo_url = replace_variables_in_text({{ entry.photoUrl | tojson }}, _all_vars, {})
+    if isinstance(_photo_url, str) and _photo_url.startswith("/uploads/"):
+        _api_base = (os.getenv("API_BASE_URL") or "").rstrip("/")
+        if _api_base:
+            _photo_url = f"{_api_base}{_photo_url}"
+        else:
+            logging.warning(
+                f"⭐ create_invoice_link [{{ entry.nodeId }}]: нет API_BASE_URL — картинка /uploads/ пропущена"
+            )
+            _photo_url = ""
+{% else %}
+    _photo_url = ""
+{% endif %}
+
+    _invoice_kwargs = {
+        "title": (_title or "Товар")[:32],
+        "description": (_description or "Описание")[:255],
+        "payload": _payload,
+        "provider_token": "",
+        "currency": "XTR",
+        "prices": [LabeledPrice(label="XTR", amount=_amount)],
+    }
+    if _photo_url:
+        _invoice_kwargs["photo_url"] = _photo_url
+
+    _stars_payment_targets[_payload] = {
+        "node_id": "{{ entry.nodeId }}",
+        "save_amount_to": {{ entry.savePaymentAmountTo | tojson }},
+        "save_charge_to": {{ entry.savePaymentChargeIdTo | tojson }},
+        "next_node": {{ entry.afterPaymentTo | tojson }},
+    }
+
+    try:
+        # Глобальный bot: MockCallback (из command_trigger) не имеет .bot
+        _invoice_link = await bot.create_invoice_link(**_invoice_kwargs)
+        logging.info(
+            f"⭐ create_invoice_link [{{ entry.nodeId }}]: ссылка на {_amount} ⭐ для {user_id}, payload={_payload}"
+        )
+    except Exception as e:
+        logging.error(f"❌ Ошибка create_invoice_link [{{ entry.nodeId }}]: {e}")
+        return
+
+    if user_id not in user_data:
+        user_data[user_id] = {}
+{% if entry.saveInvoiceLinkTo %}
+    user_data[user_id][{{ entry.saveInvoiceLinkTo | tojson }}] = _invoice_link
+{% endif %}
+
+{% if entry.autoTransitionTo %}
+{%- set sanitized_next_id = entry.autoTransitionTo | safe_name %}
+    class FakeCallbackQuery:
+        def __init__(self, user, msg, data):
+            self.from_user = user
+            self.message = msg
+            self.data = data
+            self._is_fake = True
+
+        async def answer(self, *args, **kwargs):
+            pass
+
+    fake_cb = FakeCallbackQuery(callback_query.from_user, callback_query.message, "{{ entry.autoTransitionTo }}")
+    await handle_callback_{{ sanitized_next_id }}(fake_cb, state=state)
+{% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if has_invoices %}
 @dp.pre_checkout_query()
 async def on_pre_checkout_query_stars(pre_checkout_query: types.PreCheckoutQuery):
     """Проверка перед списанием звёзд — всегда разрешаем"""
@@ -120,7 +227,7 @@ async def on_pre_checkout_query_stars(pre_checkout_query: types.PreCheckoutQuery
 {%- if has_invoices or has_triggers %}
 @dp.message(F.successful_payment)
 async def on_successful_payment_stars(message: types.Message, state: FSMContext = None):
-    """Успешная оплата звёздами — счёт, иначе триггер по метке"""
+    """Успешная оплата звёздами — счёт/ссылка, иначе триггер по метке"""
     payment = message.successful_payment
     if not payment:
         return
@@ -164,6 +271,14 @@ async def on_successful_payment_stars(message: types.Message, state: FSMContext 
 {%- if entry.autoTransitionTo %}
 {%- set sanitized_target_id = entry.autoTransitionTo | safe_name %}
         if _next == "{{ entry.autoTransitionTo }}":
+            await handle_callback_{{ sanitized_target_id }}(fake_cb, state=state)
+            return
+{% endif %}
+{% endfor %}
+{% for entry in createInvoiceLinkEntries %}
+{%- if entry.afterPaymentTo %}
+{%- set sanitized_target_id = entry.afterPaymentTo | safe_name %}
+        if _next == "{{ entry.afterPaymentTo }}":
             await handle_callback_{{ sanitized_target_id }}(fake_cb, state=state)
             return
 {% endif %}

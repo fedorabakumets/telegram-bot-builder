@@ -582,6 +582,19 @@ export function Canvas({
             }
           }
 
+          /** Порты create_invoice_link */
+          if ((n.type as any) === 'create_invoice_link') {
+            if (buttonId === 'invoice-link-created') {
+              data.autoTransitionTo = targetNodeId;
+              data.enableAutoTransition = true;
+              return { ...n, data };
+            }
+            if (buttonId === 'invoice-link-after-pay') {
+              data.afterPaymentTo = targetNodeId;
+              return { ...n, data };
+            }
+          }
+
           /** pay у счёта — не пишем target на кнопку, host уже обновлён выше */
           if (invoicePayHostId) {
             return n;
@@ -701,6 +714,13 @@ export function Canvas({
             if (data.refundAlreadyRefundedTarget === toId) {
               delete data.refundAlreadyRefundedTarget;
             }
+          }
+          if ((n.type as any) === 'create_invoice_link') {
+            if (data.autoTransitionTo === toId) {
+              data.enableAutoTransition = false;
+              delete data.autoTransitionTo;
+            }
+            if (data.afterPaymentTo === toId) delete data.afterPaymentTo;
           }
           if (clearInvoicePayHostId) {
             return n;

@@ -22,7 +22,7 @@ import { answerCallbackQueryNode, editMessageNode } from './massive/actions';
 import { userbotMessage, userbotClickButton, userbotInlineQuery, userbotEditTrigger } from './massive/userbot';
 import { banUser, unbanUser, muteUser, unmuteUser, kickUser, promoteUser, demoteUser, adminRights } from './massive/user-management';
 import { commentNode } from './massive/utility';
-import { sendInvoiceNode, refundStarsNode } from './massive/payments';
+import { sendInvoiceNode, createInvoiceLinkNode, refundStarsNode } from './massive/payments';
 
 /**
  * Группировка компонентов по категориям для удобной навигации
@@ -60,7 +60,7 @@ export const componentCategories: Array<{
   },
   {
     title: 'Платежи',
-    components: [sendInvoiceNode, refundStarsNode, successfulPaymentTrigger]
+    components: [sendInvoiceNode, createInvoiceLinkNode, refundStarsNode, successfulPaymentTrigger]
   },
   {
     title: 'Интеграции',

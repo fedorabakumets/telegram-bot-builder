@@ -193,6 +193,12 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             {getNodeName('send_invoice')}
           </span>
         );
+      case 'create_invoice_link' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('create_invoice_link')}
+          </span>
+        );
       /** Заголовок узла возврата звёзд */
       case 'refund_stars' as any:
         return (

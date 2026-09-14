@@ -64,6 +64,7 @@ export function getBadgeText(variable: Variable): string {
     userbot_click_button: '🟣 Юзербот',
     userbot_message: '🟣 Юзербот',
     send_invoice: '⭐ Счёт',
+    create_invoice_link: '🔗 Ссылка на счёт',
     successful_payment_trigger: '⭐ Оплата',
     refund_stars: '↩️ Возврат',
     command_trigger: '⚡ Команда',
@@ -253,6 +254,13 @@ export function getNodeInfo(variable: Variable) {
     return (
       <div className="text-[10px] text-yellow-600 dark:text-yellow-400 mt-0.5 truncate">
         ⭐ {variable.description}
+      </div>
+    );
+  }
+  if ((variable.nodeType as string) === 'create_invoice_link') {
+    return (
+      <div className="text-[10px] text-yellow-600 dark:text-yellow-400 mt-0.5 truncate">
+        🔗 {variable.description}
       </div>
     );
   }

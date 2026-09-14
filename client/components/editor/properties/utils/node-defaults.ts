@@ -588,6 +588,30 @@ export function getNodeDefaults(type: Node['type']): any {
       keyboardType: 'none',
       buttons: [],
     },
+    create_invoice_link: {
+      /** Название товара */
+      invoiceTitle: 'Товар',
+      /** Описание товара */
+      invoiceDescription: 'Описание товара',
+      /** Цена в звёздах */
+      invoiceAmount: '1',
+      /** URL картинки */
+      invoicePhotoUrl: '',
+      /** Скрытая метка покупки */
+      invoicePayload: '',
+      /** Куда сохранить ссылку */
+      saveInvoiceLinkTo: 'invoice_url',
+      /** Переменная для суммы после оплаты */
+      savePaymentAmountTo: '',
+      /** Переменная для кода покупки после оплаты */
+      savePaymentChargeIdTo: '',
+      /** Сразу после создания ссылки */
+      autoTransitionTo: '',
+      /** Включить переход после создания */
+      enableAutoTransition: false,
+      /** После оплаты по ссылке */
+      afterPaymentTo: '',
+    },
     refund_stars: {
       /** Источник user_id: current_user | custom */
       refundUserSource: 'current_user',

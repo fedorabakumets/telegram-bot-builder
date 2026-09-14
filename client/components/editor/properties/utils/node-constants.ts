@@ -55,6 +55,7 @@ export const MANAGEMENT_NODE_TYPES = [
   'rate_counter' as any,
   'comment' as any,
   'send_invoice' as any,
+  'create_invoice_link' as any,
   'refund_stars' as any,
 ] as const;
 
