@@ -56,6 +56,7 @@ export const MCP_ALLOWED_NODE_TYPES = [
   'send_invoice',
   'create_invoice_link',
   'refund_stars',
+  'edit_star_subscription',
   'successful_payment_trigger',
 ] as const;
 
@@ -130,6 +131,7 @@ const MCP_NODE_DESCRIPTIONS: Record<string, string> = {
   send_invoice: 'Выставить счёт в звёздах',
   create_invoice_link: 'Ссылка на счёт',
   refund_stars: 'Вернуть звёзды',
+  edit_star_subscription: 'Отменить или разрешить автопродление Stars',
   successful_payment_trigger: 'Успешная оплата',
 };
 

@@ -341,6 +341,25 @@ test('D02', 'без клавиатуры нет pay=True в хендлере с�
   ok(!body.includes('reply_markup'), 'нет reply_markup без клавиатуры');
 });
 
+console.log('── Блок E: подписка 30 дней (только ссылка) ───────────────────');
+
+test('E01', 'send_invoice игнорирует invoiceSubscription (SUBSCRIPTION_EXPORT_MISSING)', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', { invoiceSubscription: true }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'e01');
+  ok(!code.includes('subscription_period'), 'нет subscription_period у счёта в чат');
+  ok(!code.includes('2592000'), 'нет 2592000 у счёта в чат');
+  syntax(code, 'e01');
+});
+
+test('E02', 'обычный send_invoice без subscription_period', () => {
+  const p = makeCleanProject([makeInvoiceNode('inv1', 'msg1'), makeMessageNode('msg1')]);
+  const code = gen(p, 'e02');
+  ok(!code.includes('subscription_period'), 'нет subscription_period');
+});
+
 console.log('\n── Итог ─────────────────────────────────────────────────────────');
 const failed = results.filter(r => !r.passed);
 console.log(`Пройдено: ${results.length - failed.length}/${results.length}`);

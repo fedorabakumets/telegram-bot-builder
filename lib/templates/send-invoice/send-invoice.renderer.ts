@@ -70,6 +70,7 @@ export function collectCreateInvoiceLinkEntries(nodes: Node[]): CreateInvoiceLin
         savePaymentChargeIdTo: data?.savePaymentChargeIdTo || '',
         autoTransitionTo: data?.autoTransitionTo || '',
         afterPaymentTo: data?.afterPaymentTo || '',
+        subscription: data?.invoiceSubscription === true,
       };
     });
 }

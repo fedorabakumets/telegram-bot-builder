@@ -1129,10 +1129,11 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 | `autoTransitionTo` | Узел после успешной оплаты (`enableAutoTransition: true`) |
 
 Типичная цепочка: `command_trigger` `/buy` → `send_invoice` → (после оплаты) `message` «спасибо».  
+Подписка 30 дней у `send_invoice` **недоступна** (Telegram: `SUBSCRIPTION_EXPORT_MISSING`) — только `create_invoice_link` + `invoiceSubscription`.
 
 ### create_invoice_link — ссылка на счёт
 
-Отдельный узел (не режим `send_invoice`). Bot API `createInvoiceLink`: URL в `saveInvoiceLinkTo`, сразу `autoTransitionTo`, после оплаты — `afterPaymentTo` (или `successful_payment_trigger`). Без pay-клавиатуры. `pre_checkout` генерируется, если есть `send_invoice` **или** `create_invoice_link`.
+Отдельный узел (не режим `send_invoice`). Bot API `createInvoiceLink`: URL в `saveInvoiceLinkTo`, сразу `autoTransitionTo`, после оплаты — `afterPaymentTo` (или `successful_payment_trigger`). Без pay-клавиатуры. `pre_checkout` генерируется, если есть `send_invoice` **или** `create_invoice_link`. **Единственный** способ подписки Stars в боте: `invoiceSubscription: true`.
 
 ```json
 {
@@ -1141,6 +1142,7 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
     "invoiceTitle": "Доступ",
     "invoiceDescription": "Оплата по ссылке",
     "invoiceAmount": "50",
+    "invoiceSubscription": false,
     "invoicePhotoUrl": "",
     "invoicePayload": "",
     "saveInvoiceLinkTo": "invoice_url",
@@ -1155,6 +1157,7 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 
 | Поле | Описание |
 |------|----------|
+| `invoiceSubscription` | `true` → `subscription_period: 2592000` (подписка 30 дней). Нельзя через `send_invoice` |
 | `saveInvoiceLinkTo` | Переменная под URL (`https://t.me/$…`) |
 | `autoTransitionTo` | Сразу после создания ссылки |
 | `afterPaymentTo` | После оплаты по этой ссылке (в текущей сессии) |
@@ -1229,6 +1232,41 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 | `ignoreErrors` | Без выхода ошибки — после текста идти на успех |
 
 Цепочки: `/back КОД` → `refund_stars` → сообщения по выходам; демо: `send_invoice` (1⭐) → после оплаты `refund_stars`.
+
+### edit_star_subscription — управление автопродлением
+
+Bot API `editUserStarSubscription`. Не путать с `refund_stars` и с галкой `invoiceSubscription` на ссылке.
+Три выхода: успех / пустой код / ошибка. `subscriptionAction`: `cancel` → `is_canceled=True`, `enable` → `False`.
+
+```json
+{
+  "type": "edit_star_subscription",
+  "data": {
+    "subscriptionUserSource": "current_user",
+    "subscriptionUserId": "",
+    "subscriptionChargeId": "{payment_charge_id}",
+    "subscriptionAction": "cancel",
+    "ignoreErrors": false,
+    "subscriptionMsgEmpty": "Укажите код покупки подписки",
+    "subscriptionMsgError": "Не удалось изменить автопродление. Проверьте код покупки.",
+    "autoTransitionTo": "msg_done",
+    "enableAutoTransition": true,
+    "subscriptionEmptyTarget": "msg_empty",
+    "subscriptionErrorTarget": "msg_err",
+    "keyboardType": "none",
+    "buttons": []
+  }
+}
+```
+
+| Поле | Описание |
+|------|----------|
+| `subscriptionAction` | `"cancel"` \| `"enable"` |
+| `subscriptionChargeId` | Код покупки подписки |
+| `autoTransitionTo` | Успех |
+| `subscriptionEmptyTarget` / `subscriptionErrorTarget` | Ошибки |
+
+Цепочка: `/cancel_sub` → `edit_star_subscription` → `message`.
 
 ### code — произвольный Python (Telethon)
 

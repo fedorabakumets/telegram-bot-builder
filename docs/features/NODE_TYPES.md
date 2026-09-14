@@ -532,7 +532,7 @@ In-memory счётчик событий в **скользящем временн
 | Клавиатура | При добавлении — соседний `keyboard` с «Оплатить»; стрелка «после оплаты» визуально от кнопки pay (данные — `autoTransitionTo` счёта) |
 | Следующий узел | `autoTransitionTo` + `enableAutoTransition: true` — после оплаты |
 
-Если в проекте есть хотя бы один `send_invoice` или `create_invoice_link`, бот отвечает на `pre_checkout_query` всегда «да» (лимит Телеграма — 10 секунд). Подписка на 30 дней — отдельный этап роадмапа.
+Если в проекте есть хотя бы один `send_invoice` или `create_invoice_link`, бот отвечает на `pre_checkout_query` всегда «да» (лимит Телеграма — 10 секунд). **Подписка на 30 дней в чат не ставится** — Telegram отвечает `SUBSCRIPTION_EXPORT_MISSING`; только узел «Ссылка на счёт». Отмена автопродления — узел `edit_star_subscription`.
 
 Для ботов с цифровой оплатой Телеграм требует `/paysupport` (и обычно `/terms`) — сделайте их обычными `command_trigger` + `message`.
 
@@ -545,6 +545,7 @@ In-memory счётчик событий в **скользящем временн
 | Настройка | Описание |
 |-----------|----------|
 | Название / описание / цена / картинка / метка | Как у `send_invoice` |
+| Подписка на 30 дней | `invoiceSubscription: true` → `subscription_period: 2592000`. **Только здесь** — в чат с кнопкой Telegram подписку не шлёт (`SUBSCRIPTION_EXPORT_MISSING`) |
 | Сохранить ссылку | `saveInvoiceLinkTo` — имя переменной под URL |
 | Сохранить сумму / код | После оплаты (`savePaymentAmountTo`, `savePaymentChargeIdTo`) |
 | После создания | `autoTransitionTo` + `enableAutoTransition` — сразу после URL |
@@ -587,6 +588,25 @@ In-memory счётчик событий в **скользящем временн
 
 Типично: `/back КОД` → `refund_stars` → сообщения по выходам. Демо на 1⭐: после оплаты сразу `refund_stars` с `{payment_charge_id}`.
 Бот **не** делает `raise` при ошибке возврата.
+
+---
+
+### 🔄 Подписка за звёзды (`edit_star_subscription`)
+
+Отменяет или снова разрешает **автопродление** Stars-подписки (Bot API `editUserStarSubscription`). Не возврат денег и не выставление счёта — нужен `telegram_payment_charge_id` из оплаты подписки (ссылка с `invoiceSubscription`).
+
+| Настройка | Описание |
+|-----------|----------|
+| Действие | `subscriptionAction`: `cancel` → `is_canceled=True`; `enable` → `False` |
+| Кому | Текущий / ID / `{var}` (`subscriptionUserSource`, `subscriptionUserId`) |
+| Код покупки | `subscriptionChargeId` |
+| Успех | `autoTransitionTo` + `enableAutoTransition` |
+| Пустой код | `subscriptionEmptyTarget` |
+| Ошибка API | `subscriptionErrorTarget` |
+| Fallback-тексты | `subscriptionMsgEmpty`, `subscriptionMsgError` |
+| ignoreErrors | После текста ошибки идти на успех, если задан |
+
+Типично: `/cancel_sub` → `edit_star_subscription` (cancel, `{payment_charge_id}`) → сообщение.
 
 ---
 

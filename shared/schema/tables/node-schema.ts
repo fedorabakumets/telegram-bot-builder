@@ -64,7 +64,7 @@ export const nodeSchema = z.object({
    * @deprecated Canonical content node is `message`.
    * `start` and `command` are kept only for backward compatibility with legacy projects.
    */
-  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'member_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'schedule_trigger', 'api_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query', 'convert_file', 'loop', 'bot_table', 'delay', 'api_response', 'userbot_message', 'userbot_click_button', 'userbot_inline_query', 'userbot_edit_trigger', 'parallel_split', 'stop_processing', 'rate_counter', 'code', 'comment', 'send_invoice', 'create_invoice_link', 'refund_stars', 'successful_payment_trigger']),
+  type: z.enum(['start', 'message', 'command', 'command_trigger', 'text_trigger', 'incoming_message_trigger', 'incoming_callback_trigger', 'outgoing_message_trigger', 'group_message_trigger', 'member_trigger', 'callback_trigger', 'managed_bot_updated_trigger', 'schedule_trigger', 'api_trigger', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'forward_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights', 'photo', 'video', 'audio', 'document', 'keyboard', 'input', 'condition', 'broadcast', 'client_auth', 'media', 'create_forum_topic', 'http_request', 'get_managed_bot_token', 'answer_callback_query', 'edit_message', 'set_variable', 'psql_query', 'convert_file', 'loop', 'bot_table', 'delay', 'api_response', 'userbot_message', 'userbot_click_button', 'userbot_inline_query', 'userbot_edit_trigger', 'parallel_split', 'stop_processing', 'rate_counter', 'code', 'comment', 'send_invoice', 'create_invoice_link', 'refund_stars', 'edit_star_subscription', 'successful_payment_trigger']),
   /** Позиция узла на холсте */
   position: z.object({
     /** Координата X */
@@ -840,6 +840,8 @@ export const nodeSchema = z.object({
     invoiceDescription: z.string().optional().default(''),
     /** Цена в звёздах (целое число или {переменная}) */
     invoiceAmount: z.string().optional().default('1'),
+    /** Подписка на 30 дней (только create_invoice_link; у send_invoice Telegram запрещает) */
+    invoiceSubscription: z.boolean().optional().default(false),
     /** URL картинки товара (необязательно) */
     invoicePhotoUrl: z.string().optional().default(''),
     /** Скрытая метка покупки; пусто = id узла */
@@ -872,6 +874,22 @@ export const nodeSchema = z.object({
     refundNotFoundTarget: z.string().optional().default(''),
     /** Выход «Уже возвращён» */
     refundAlreadyRefundedTarget: z.string().optional().default(''),
+    /** Источник user_id для управления подпиской: current_user | custom */
+    subscriptionUserSource: z.string().optional().default('current_user'),
+    /** ID пользователя или {переменная} при subscriptionUserSource=custom */
+    subscriptionUserId: z.string().optional().default(''),
+    /** Код покупки подписки (telegram_payment_charge_id) */
+    subscriptionChargeId: z.string().optional().default(''),
+    /** Действие: cancel | enable → is_canceled True/False */
+    subscriptionAction: z.string().optional().default('cancel'),
+    /** Сообщение при пустом коде подписки */
+    subscriptionMsgEmpty: z.string().optional().default('Укажите код покупки подписки'),
+    /** Сообщение при ошибке API управления подпиской */
+    subscriptionMsgError: z.string().optional().default('Не удалось изменить автопродление. Проверьте код покупки.'),
+    /** Выход «Пустой код» */
+    subscriptionEmptyTarget: z.string().optional().default(''),
+    /** Выход «Ошибка» */
+    subscriptionErrorTarget: z.string().optional().default(''),
   }),
 });
 

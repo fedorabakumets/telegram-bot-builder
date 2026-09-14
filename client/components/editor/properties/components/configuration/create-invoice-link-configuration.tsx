@@ -10,6 +10,7 @@ import type { Node } from '@shared/schema';
 import { VariableSelector } from '../variables/variable-selector';
 import { VariableNameInput } from '../variables/variable-name-input';
 import { InvoicePhotoField } from './invoice-photo-field';
+import { InvoiceSubscriptionToggle } from './invoice-subscription-toggle';
 import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы панели ссылки на счёт */
@@ -124,6 +125,12 @@ export function CreateInvoiceLinkConfiguration({
           <VariableSelector availableVariables={textVariables} onSelect={insertAmountVariable} />
         )}
       </div>
+
+      <InvoiceSubscriptionToggle
+        id={`invoice-link-sub-${selectedNode.id}`}
+        checked={Boolean(data?.invoiceSubscription)}
+        onChange={(checked) => onNodeUpdate(selectedNode.id, { invoiceSubscription: checked })}
+      />
 
       <InvoicePhotoField
         projectId={projectId}

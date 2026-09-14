@@ -139,6 +139,11 @@ export function SendInvoiceConfiguration({
         textVariables={textVariables}
       />
 
+      <p className="text-[10px] text-muted-foreground leading-relaxed rounded-md border border-dashed border-yellow-300/50 dark:border-yellow-700/40 px-2 py-1.5">
+        Подписка на 30 дней в чате недоступна (Telegram: только ссылка).
+        Используйте узел «Ссылка на счёт».
+      </p>
+
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">Скрытая метка покупки</Label>
         <Input

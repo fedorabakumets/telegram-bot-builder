@@ -205,6 +205,13 @@ export function collectCrossSheetLinks(
       );
     }
 
+    // 6b2. edit_star_subscription
+    if (type === 'edit_star_subscription') {
+      tryAddLink(links, node.id, data?.autoTransitionTo, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(links, node.id, data?.subscriptionEmptyTarget, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(links, node.id, data?.subscriptionErrorTarget, 'button-goto', currentNodeIds, otherNodesMap);
+    }
+
     // 6c. create_invoice_link: после создания и после оплаты
     if (type === 'create_invoice_link') {
       tryAddLink(links, node.id, data?.autoTransitionTo, 'button-goto', currentNodeIds, otherNodesMap);

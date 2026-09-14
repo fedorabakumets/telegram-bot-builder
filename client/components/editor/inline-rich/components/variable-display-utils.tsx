@@ -67,6 +67,7 @@ export function getBadgeText(variable: Variable): string {
     create_invoice_link: '🔗 Ссылка на счёт',
     successful_payment_trigger: '⭐ Оплата',
     refund_stars: '↩️ Возврат',
+    edit_star_subscription: '🔄 Подписка',
     command_trigger: '⚡ Команда',
   };
   return labels[variable.nodeType] || '📌';

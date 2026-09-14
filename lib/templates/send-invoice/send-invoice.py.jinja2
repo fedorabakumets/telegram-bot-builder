@@ -80,6 +80,7 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
     }
     if _photo_url:
         _invoice_kwargs["photo_url"] = _photo_url
+{# Подписка только через createInvoiceLink: sendInvoice → SUBSCRIPTION_EXPORT_MISSING #}
 
     _stars_payment_targets[_payload] = {
         "node_id": "{{ entry.nodeId }}",
@@ -171,6 +172,9 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
     }
     if _photo_url:
         _invoice_kwargs["photo_url"] = _photo_url
+{% if entry.subscription %}
+    _invoice_kwargs["subscription_period"] = 2592000
+{% endif %}
 
     _stars_payment_targets[_payload] = {
         "node_id": "{{ entry.nodeId }}",

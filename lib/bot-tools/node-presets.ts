@@ -610,6 +610,8 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       invoiceDescription: 'Описание товара',
       /** Цена в звёздах */
       invoiceAmount: '1',
+      /** Подписка на 30 дней (только createInvoiceLink) */
+      invoiceSubscription: false,
       /** URL картинки */
       invoicePhotoUrl: '',
       /** Скрытая метка покупки */
@@ -665,6 +667,31 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       /** ID следующего узла после возврата */
       autoTransitionTo: '',
       /** Включить автопереход */
+      enableAutoTransition: false,
+      keyboardType: 'none',
+      buttons: [],
+    },
+    edit_star_subscription: {
+      /** Источник user_id */
+      subscriptionUserSource: 'current_user',
+      /** ID при custom */
+      subscriptionUserId: '',
+      /** Код покупки подписки */
+      subscriptionChargeId: '',
+      /** cancel | enable */
+      subscriptionAction: 'cancel',
+      /** Игнорировать ошибки */
+      ignoreErrors: false,
+      /** Текст пустого кода */
+      subscriptionMsgEmpty: 'Укажите код покупки подписки',
+      /** Текст ошибки */
+      subscriptionMsgError: 'Не удалось изменить автопродление. Проверьте код покупки.',
+      /** Выход пустого кода */
+      subscriptionEmptyTarget: '',
+      /** Выход ошибки */
+      subscriptionErrorTarget: '',
+      /** Успех */
+      autoTransitionTo: '',
       enableAutoTransition: false,
       keyboardType: 'none',
       buttons: [],

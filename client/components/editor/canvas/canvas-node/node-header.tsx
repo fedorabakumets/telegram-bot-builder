@@ -206,6 +206,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             {getNodeName('refund_stars')}
           </span>
         );
+      /** Заголовок управления подпиской Stars */
+      case 'edit_star_subscription' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('edit_star_subscription')}
+          </span>
+        );
       default:
         return null;
     }

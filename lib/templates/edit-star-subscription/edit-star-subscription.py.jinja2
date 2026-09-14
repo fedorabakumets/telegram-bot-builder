@@ -1,0 +1,102 @@
+{#
+  @fileoverview Обработчики edit_star_subscription (editUserStarSubscription).
+  @param {array} entries - EditStarSubscriptionEntry[]
+#}
+
+# Управление автопродлением Stars (edit_star_subscription)
+{% for entry in entries -%}
+{%- set sanitized_node_id = entry.nodeId | safe_name -%}
+{%- set sanitized_target_id = entry.targetNodeId | safe_name -%}
+{%- set sanitized_empty_id = entry.subscriptionEmptyTarget | safe_name -%}
+{%- set sanitized_error_id = entry.subscriptionErrorTarget | safe_name -%}
+{%- set _msg_empty = entry.subscriptionMsgEmpty | default('Укажите код покупки подписки') -%}
+{%- set _msg_error = entry.subscriptionMsgError | default('Не удалось изменить автопродление. Проверьте код покупки.') -%}
+{%- set _is_canceled = entry.subscriptionAction != 'enable' -%}
+
+@dp.callback_query(lambda c: c.data == "{{ entry.nodeId }}")
+async def handle_callback_{{ sanitized_node_id }}(callback_query: types.CallbackQuery, state: FSMContext = None):
+    """Управление подпиской Stars — узел {{ entry.nodeId }}"""
+    user_id = callback_query.from_user.id
+    await init_user_variables(user_id, callback_query.from_user)
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass
+
+    _all_vars = await init_all_user_vars(user_id)
+    if state is not None:
+        try:
+            _fsm_data = await state.get_data()
+            if _fsm_data:
+                _all_vars.update(_fsm_data)
+        except Exception:
+            pass
+
+    {% if entry.subscriptionUserSource == 'custom' %}
+    {%- set _user_raw = entry.subscriptionUserId | trim %}
+    {%- if '{' in _user_raw %}
+    _user_id_raw = replace_variables_in_text({{ _user_raw | format_python_text }}, _all_vars, {})
+    {%- else %}
+    _user_id_raw = {{ _user_raw | escape_python_string }}
+    {%- endif %}
+    try:
+        _sub_user_id = int(str(_user_id_raw).strip())
+    except (ValueError, TypeError):
+        logging.warning(f"⭐ edit_star_subscription [{{ entry.nodeId }}]: неверный user_id")
+        {% if entry.subscriptionErrorTarget %}
+        await handle_callback_{{ sanitized_error_id }}(callback_query, state=state)
+        {% else %}
+        await callback_query.message.answer({{ _msg_error | escape_python_string }})
+        {% if entry.ignoreErrors and entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
+        {% endif %}
+        {% endif %}
+        return
+    {% else %}
+    _sub_user_id = callback_query.from_user.id
+    {% endif %}
+
+    {%- set _charge_raw = entry.subscriptionChargeId | trim %}
+    {%- if '{' in _charge_raw %}
+    _charge_id = replace_variables_in_text({{ _charge_raw | format_python_text }}, _all_vars, {})
+    {%- else %}
+    _charge_id = {{ _charge_raw | escape_python_string }}
+    {%- endif %}
+    _charge_id = str(_charge_id or "").strip().strip("`").strip()
+    if not _charge_id:
+        logging.warning(f"⭐ edit_star_subscription [{{ entry.nodeId }}]: пустой код покупки")
+        {% if entry.subscriptionEmptyTarget %}
+        await handle_callback_{{ sanitized_empty_id }}(callback_query, state=state)
+        {% else %}
+        await callback_query.message.answer({{ _msg_empty | escape_python_string }})
+        {% if entry.ignoreErrors and entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
+        {% endif %}
+        {% endif %}
+        return
+
+    try:
+        await bot.edit_user_star_subscription(
+            user_id=_sub_user_id,
+            telegram_payment_charge_id=_charge_id,
+            is_canceled={{ 'True' if _is_canceled else 'False' }},
+        )
+        logging.info(
+            f"⭐ edit_star_subscription [{{ entry.nodeId }}]: "
+            f"user={_sub_user_id} charge={_charge_id} is_canceled={{ 'True' if _is_canceled else 'False' }}"
+        )
+        {% if entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
+        {% endif %}
+    except Exception as _e:
+        logging.error(f"❌ Ошибка edit_star_subscription [{{ entry.nodeId }}]: {_e}")
+        {% if entry.subscriptionErrorTarget %}
+        await handle_callback_{{ sanitized_error_id }}(callback_query, state=state)
+        {% else %}
+        await callback_query.message.answer({{ _msg_error | escape_python_string }})
+        {% if entry.ignoreErrors and entry.targetNodeId %}
+        await handle_callback_{{ sanitized_target_id }}(callback_query, state=state)
+        {% endif %}
+        {% endif %}
+
+{% endfor %}

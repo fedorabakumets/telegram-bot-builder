@@ -182,5 +182,43 @@ console.log('\nC: Синтаксис Python');
   readAndCleanup(path);
 }
 
+console.log('\nD: Подписка 30 дней');
+{
+  const path = generateToFile([
+    {
+      id: 'link_sub',
+      type: 'create_invoice_link',
+      position: { x: 0, y: 0 },
+      data: {
+        invoiceTitle: 'Sub',
+        invoiceDescription: 'Month',
+        invoiceAmount: '100',
+        invoiceSubscription: true,
+        saveInvoiceLinkTo: 'invoice_url',
+      },
+    },
+  ]);
+  const code = readAndCleanup(path);
+  check('subscription_period в коде', code.includes('subscription_period'));
+  check('период 2592000', code.includes('2592000'));
+}
+{
+  const path = generateToFile([
+    {
+      id: 'link_once',
+      type: 'create_invoice_link',
+      position: { x: 0, y: 0 },
+      data: {
+        invoiceTitle: 'Once',
+        invoiceDescription: 'D',
+        invoiceAmount: '1',
+        saveInvoiceLinkTo: 'url',
+      },
+    },
+  ]);
+  const code = readAndCleanup(path);
+  check('без галки нет subscription_period', !code.includes('subscription_period'));
+}
+
 console.log(`\n=== Итого: ${passed} passed, ${failed} failed ===\n`);
 process.exit(failed > 0 ? 1 : 0);

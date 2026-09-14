@@ -57,6 +57,8 @@ export interface CreateInvoiceLinkEntry {
   autoTransitionTo: string;
   /** После оплаты по ссылке */
   afterPaymentTo: string;
+  /** Подписка на 30 дней (subscription_period) */
+  subscription: boolean;
 }
 
 /** Параметры шаблона всех счетов */

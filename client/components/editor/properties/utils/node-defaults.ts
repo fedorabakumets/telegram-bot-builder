@@ -595,6 +595,8 @@ export function getNodeDefaults(type: Node['type']): any {
       invoiceDescription: 'Описание товара',
       /** Цена в звёздах */
       invoiceAmount: '1',
+      /** Подписка на 30 дней (только ссылка; в чат Telegram запрещает) */
+      invoiceSubscription: false,
       /** URL картинки */
       invoicePhotoUrl: '',
       /** Скрытая метка покупки */
@@ -636,6 +638,31 @@ export function getNodeDefaults(type: Node['type']): any {
       /** ID следующего узла после успешного возврата */
       autoTransitionTo: '',
       /** Включить автопереход */
+      enableAutoTransition: false,
+      keyboardType: 'none',
+      buttons: [],
+    },
+    edit_star_subscription: {
+      /** Источник user_id */
+      subscriptionUserSource: 'current_user',
+      /** ID при custom */
+      subscriptionUserId: '',
+      /** Код покупки подписки */
+      subscriptionChargeId: '',
+      /** cancel | enable */
+      subscriptionAction: 'cancel',
+      /** Не рвать сценарий при ошибке */
+      ignoreErrors: false,
+      /** Текст пустого кода */
+      subscriptionMsgEmpty: 'Укажите код покупки подписки',
+      /** Текст ошибки API */
+      subscriptionMsgError: 'Не удалось изменить автопродление. Проверьте код покупки.',
+      /** Выход пустого кода */
+      subscriptionEmptyTarget: '',
+      /** Выход ошибки */
+      subscriptionErrorTarget: '',
+      /** Успех */
+      autoTransitionTo: '',
       enableAutoTransition: false,
       keyboardType: 'none',
       buttons: [],
