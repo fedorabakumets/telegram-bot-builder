@@ -6,6 +6,10 @@
 import { getNodeName } from '../../shared/node-registry';
 import { OutputPort } from './output-port';
 import { PortType } from './port-colors';
+import {
+  isStaticStarsCurrency,
+  normalizeInvoiceCurrency,
+} from '../../properties/components/configuration/invoice-currency-utils';
 
 /** Порт выхода ссылки на счёт */
 interface LinkPortRow {
@@ -48,7 +52,7 @@ interface CreateInvoiceLinkPreviewProps {
 }
 
 /**
- * Превью: товар, цена и порты «ссылка готова» / «после оплаты»
+ * Превью: валюта, товар, цена и порты «ссылка готова» / «после оплаты»
  * @param props - Пропсы
  * @returns JSX
  */
@@ -61,14 +65,40 @@ export function CreateInvoiceLinkPreview({
   const typeLabel = getNodeName('create_invoice_link');
   const title = (data?.invoiceTitle || 'Товар').trim() || 'Товар';
   const amount = (data?.invoiceAmount || '1').trim() || '1';
-  const isSubscription = Boolean(data?.invoiceSubscription);
+  const rawCurrency = String(data?.invoiceCurrency ?? 'XTR').trim() || 'XTR';
+  const currency = rawCurrency.includes('{') ? rawCurrency : normalizeInvoiceCurrency(rawCurrency);
+  const isStars = isStaticStarsCurrency(rawCurrency);
+  const isSubscription = isStars && Boolean(data?.invoiceSubscription);
+  const tokenHint = isStars ? null : data?.invoiceProviderSource === 'env' ? 'env' : 'токен';
+  const needBadges: string[] = [];
+  if (!isStars) {
+    if (data?.invoiceNeedName) needBadges.push('ФИО');
+    if (data?.invoiceNeedEmail) needBadges.push('email');
+    if (data?.invoiceNeedPhone) needBadges.push('тел');
+  }
   const linkVar = (data?.saveInvoiceLinkTo || 'invoice_url').trim() || 'invoice_url';
 
   return (
     <div className="px-3 py-2 space-y-2 text-[11px] leading-snug">
-      <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300">
-        <i className="fas fa-link text-base" />
-        <span className="font-semibold truncate text-sm flex-1">{typeLabel}</span>
+      <div className="flex flex-wrap items-center gap-1.5 text-yellow-700 dark:text-yellow-300">
+        <i className="fas fa-link text-base shrink-0" />
+        <span className="font-semibold text-sm leading-tight">{typeLabel}</span>
+        <span className="shrink-0 rounded bg-yellow-200/90 dark:bg-yellow-800/80 px-1 py-0.5 text-[9px] font-semibold text-yellow-900 dark:text-yellow-100">
+          {currency}
+        </span>
+        {tokenHint && (
+          <span className="shrink-0 rounded bg-slate-200/90 dark:bg-slate-700/80 px-1 py-0.5 text-[9px] font-medium text-slate-700 dark:text-slate-200">
+            {tokenHint}
+          </span>
+        )}
+        {needBadges.map((b) => (
+          <span
+            key={b}
+            className="shrink-0 rounded bg-sky-200/90 dark:bg-sky-800/80 px-1 py-0.5 text-[9px] font-medium text-sky-900 dark:text-sky-100"
+          >
+            {b}
+          </span>
+        ))}
         {isSubscription && (
           <span className="shrink-0 rounded bg-amber-200/90 dark:bg-amber-800/80 px-1 py-0.5 text-[9px] font-semibold text-amber-900 dark:text-amber-100">
             30 дн.
@@ -79,8 +109,9 @@ export function CreateInvoiceLinkPreview({
         <div className="font-semibold text-[11px] truncate">{title}</div>
         <div className="flex items-center justify-between gap-1">
           <span className="inline-flex items-center gap-1 rounded-md bg-yellow-400/90 px-1.5 py-0.5 text-[10px] font-bold text-yellow-950">
-            <i className="fas fa-star text-[8px]" />
+            {isStars && <i className="fas fa-star text-[8px]" />}
             {amount}
+            {!isStars && <span className="font-semibold opacity-80">{currency}</span>}
           </span>
           <span className="font-mono text-[9px] text-muted-foreground truncate">→ {linkVar}</span>
         </div>

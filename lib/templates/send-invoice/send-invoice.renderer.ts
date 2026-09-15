@@ -4,10 +4,60 @@
  */
 
 import type { Node } from '@shared/schema';
-import type { CreateInvoiceLinkEntry, SendInvoiceEntry } from './send-invoice.params';
+import type {
+  CreateInvoiceLinkEntry,
+  InvoiceProviderSource,
+  SendInvoiceEntry,
+} from './send-invoice.params';
+import {
+  normalizeInvoiceCurrency,
+} from '@shared/invoice-currencies';
 import { renderPartialTemplate } from '../template-renderer';
 import { sortButtonsByLayout, computeAdjustStr } from '../keyboard/keyboard.renderer';
 import { collectSuccessfulPaymentTriggerEntries } from '../successful-payment-trigger';
+
+/**
+ * Нормализует валюту, токен и флаги need_* из data узла
+ * @param data - Data узла счёта / ссылки
+ * @returns Поля currency / provider* / need*
+ */
+function resolveInvoicePaymentFields(data: any): {
+  currency: string;
+  providerSource: InvoiceProviderSource;
+  providerToken: string;
+  providerTokenEnv: string;
+  needName: boolean;
+  needEmail: boolean;
+  needPhone: boolean;
+} {
+  const rawCurrency = String(data?.invoiceCurrency ?? 'XTR').trim() || 'XTR';
+  const currencyDynamic = rawCurrency.includes('{');
+  const currency = currencyDynamic ? rawCurrency : normalizeInvoiceCurrency(rawCurrency);
+  const isStars = !currencyDynamic && currency === 'XTR';
+  if (isStars) {
+    return {
+      currency: 'XTR',
+      providerSource: 'inline',
+      providerToken: '',
+      providerTokenEnv: 'PAYMENT_PROVIDER_TOKEN',
+      needName: false,
+      needEmail: false,
+      needPhone: false,
+    };
+  }
+  const providerSource: InvoiceProviderSource =
+    data?.invoiceProviderSource === 'env' ? 'env' : 'inline';
+  const envKey = String(data?.invoiceProviderTokenEnv || 'PAYMENT_PROVIDER_TOKEN').trim();
+  return {
+    currency,
+    providerSource,
+    providerToken: String(data?.invoiceProviderToken || ''),
+    providerTokenEnv: envKey || 'PAYMENT_PROVIDER_TOKEN',
+    needName: data?.invoiceNeedName === true,
+    needEmail: data?.invoiceNeedEmail === true,
+    needPhone: data?.invoiceNeedPhone === true,
+  };
+}
 
 /**
  * Собирает SendInvoiceEntry[] из узлов холста
@@ -28,15 +78,20 @@ export function collectSendInvoiceEntries(nodes: Node[]): SendInvoiceEntry[] {
       const sortedButtons = hasKeyboard
         ? sortButtonsByLayout(rawButtons, data?.keyboardLayout)
         : [];
+      const payment = resolveInvoicePaymentFields(data);
       return {
         nodeId: node.id,
         title: data?.invoiceTitle || 'Товар',
         description: data?.invoiceDescription || 'Описание',
         amount: data?.invoiceAmount || '1',
+        ...payment,
         photoUrl: data?.invoicePhotoUrl || '',
         payload: customPayload || node.id,
         savePaymentAmountTo: data?.savePaymentAmountTo || '',
         savePaymentChargeIdTo: data?.savePaymentChargeIdTo || '',
+        saveOrderNameTo: data?.saveOrderNameTo || '',
+        saveOrderEmailTo: data?.saveOrderEmailTo || '',
+        saveOrderPhoneTo: data?.saveOrderPhoneTo || '',
         autoTransitionTo: targetId,
         targetNodeType: targetNode?.type || 'message',
         hasKeyboard,
@@ -58,19 +113,26 @@ export function collectCreateInvoiceLinkEntries(nodes: Node[]): CreateInvoiceLin
     .map(node => {
       const data = node.data as any;
       const customPayload = typeof data?.invoicePayload === 'string' ? data.invoicePayload.trim() : '';
+      const payment = resolveInvoicePaymentFields(data);
       return {
         nodeId: node.id,
         title: data?.invoiceTitle || 'Товар',
         description: data?.invoiceDescription || 'Описание',
         amount: data?.invoiceAmount || '1',
+        ...payment,
         photoUrl: data?.invoicePhotoUrl || '',
         payload: customPayload || node.id,
         saveInvoiceLinkTo: data?.saveInvoiceLinkTo || 'invoice_url',
         savePaymentAmountTo: data?.savePaymentAmountTo || '',
         savePaymentChargeIdTo: data?.savePaymentChargeIdTo || '',
+        saveOrderNameTo: data?.saveOrderNameTo || '',
+        saveOrderEmailTo: data?.saveOrderEmailTo || '',
+        saveOrderPhoneTo: data?.saveOrderPhoneTo || '',
         autoTransitionTo: data?.autoTransitionTo || '',
         afterPaymentTo: data?.afterPaymentTo || '',
-        subscription: data?.invoiceSubscription === true,
+        subscription:
+          data?.invoiceSubscription === true
+          && (payment.currency === 'XTR' || String(payment.currency).includes('{')),
       };
     });
 }

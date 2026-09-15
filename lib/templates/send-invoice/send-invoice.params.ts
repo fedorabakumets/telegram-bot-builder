@@ -3,6 +3,13 @@
  * @module templates/send-invoice/send-invoice.params
  */
 
+import type { InvoiceCurrencyCode } from '@shared/invoice-currencies';
+
+export type { InvoiceCurrencyCode } from '@shared/invoice-currencies';
+
+/** Источник токена провайдера */
+export type InvoiceProviderSource = 'inline' | 'env';
+
 /** Параметры одного узла send_invoice */
 export interface SendInvoiceEntry {
   /** ID узла */
@@ -11,8 +18,22 @@ export interface SendInvoiceEntry {
   title: string;
   /** Описание товара */
   description: string;
-  /** Цена в звёздах (строка, допускает {переменные}) */
+  /** Цена (звёзды или минорные единицы; допускает {переменные}) */
   amount: string;
+  /** Валюта счёта (код или {переменная}) */
+  currency: string;
+  /** Источник provider_token (игнор при XTR) */
+  providerSource: InvoiceProviderSource;
+  /** Токен в ноде при inline */
+  providerToken: string;
+  /** Имя env-ключа при env */
+  providerTokenEnv: string;
+  /** Запросить имя (need_name), только фиат */
+  needName: boolean;
+  /** Запросить email (need_email) */
+  needEmail: boolean;
+  /** Запросить телефон (need_phone_number) */
+  needPhone: boolean;
   /** URL картинки (пусто если нет) */
   photoUrl: string;
   /** Скрытая метка покупки (уже разрешённая: payload или nodeId) */
@@ -21,6 +42,12 @@ export interface SendInvoiceEntry {
   savePaymentAmountTo: string;
   /** Переменная для кода покупки */
   savePaymentChargeIdTo: string;
+  /** Переменная для order_info.name */
+  saveOrderNameTo: string;
+  /** Переменная для order_info.email */
+  saveOrderEmailTo: string;
+  /** Переменная для order_info.phone_number */
+  saveOrderPhoneTo: string;
   /** ID узла после оплаты */
   autoTransitionTo: string;
   /** Тип целевого узла */
@@ -41,8 +68,22 @@ export interface CreateInvoiceLinkEntry {
   title: string;
   /** Описание товара */
   description: string;
-  /** Цена в звёздах */
+  /** Цена (звёзды или минорные единицы) */
   amount: string;
+  /** Валюта счёта (код или {переменная}) */
+  currency: string;
+  /** Источник provider_token (игнор при XTR) */
+  providerSource: InvoiceProviderSource;
+  /** Токен в ноде при inline */
+  providerToken: string;
+  /** Имя env-ключа при env */
+  providerTokenEnv: string;
+  /** Запросить имя (need_name), только фиат */
+  needName: boolean;
+  /** Запросить email (need_email) */
+  needEmail: boolean;
+  /** Запросить телефон (need_phone_number) */
+  needPhone: boolean;
   /** URL картинки */
   photoUrl: string;
   /** Скрытая метка покупки */
@@ -53,11 +94,17 @@ export interface CreateInvoiceLinkEntry {
   savePaymentAmountTo: string;
   /** Переменная для кода покупки после оплаты */
   savePaymentChargeIdTo: string;
+  /** Переменная для order_info.name */
+  saveOrderNameTo: string;
+  /** Переменная для order_info.email */
+  saveOrderEmailTo: string;
+  /** Переменная для order_info.phone_number */
+  saveOrderPhoneTo: string;
   /** Сразу после создания ссылки */
   autoTransitionTo: string;
   /** После оплаты по ссылке */
   afterPaymentTo: string;
-  /** Подписка на 30 дней (subscription_period) */
+  /** Подписка на 30 дней (только XTR) */
   subscription: boolean;
 }
 

@@ -570,8 +570,22 @@ export function getNodeDefaults(type: Node['type']): any {
       invoiceTitle: 'Товар',
       /** Описание товара */
       invoiceDescription: 'Описание товара',
-      /** Цена в звёздах */
+      /** Цена */
       invoiceAmount: '1',
+      /** Валюта */
+      invoiceCurrency: 'XTR',
+      /** Источник токена при фиате */
+      invoiceProviderSource: 'inline',
+      /** Токен в ноде */
+      invoiceProviderToken: '',
+      /** Env-ключ токена */
+      invoiceProviderTokenEnv: 'PAYMENT_PROVIDER_TOKEN',
+      /** Запросить имя (фиат) */
+      invoiceNeedName: false,
+      /** Запросить email (фиат) */
+      invoiceNeedEmail: false,
+      /** Запросить телефон (фиат) */
+      invoiceNeedPhone: false,
       /** URL картинки */
       invoicePhotoUrl: '',
       /** Скрытая метка покупки */
@@ -580,6 +594,12 @@ export function getNodeDefaults(type: Node['type']): any {
       savePaymentAmountTo: '',
       /** Переменная для кода покупки */
       savePaymentChargeIdTo: '',
+      /** Переменная для имени покупателя */
+      saveOrderNameTo: '',
+      /** Переменная для email покупателя */
+      saveOrderEmailTo: '',
+      /** Переменная для телефона покупателя */
+      saveOrderPhoneTo: '',
       /** ID следующего узла после оплаты */
       autoTransitionTo: '',
       /** Включить автопереход после оплаты */
@@ -593,9 +613,23 @@ export function getNodeDefaults(type: Node['type']): any {
       invoiceTitle: 'Товар',
       /** Описание товара */
       invoiceDescription: 'Описание товара',
-      /** Цена в звёздах */
+      /** Цена */
       invoiceAmount: '1',
-      /** Подписка на 30 дней (только ссылка; в чат Telegram запрещает) */
+      /** Валюта */
+      invoiceCurrency: 'XTR',
+      /** Источник токена при фиате */
+      invoiceProviderSource: 'inline',
+      /** Токен в ноде */
+      invoiceProviderToken: '',
+      /** Env-ключ токена */
+      invoiceProviderTokenEnv: 'PAYMENT_PROVIDER_TOKEN',
+      /** Запросить имя (фиат) */
+      invoiceNeedName: false,
+      /** Запросить email (фиат) */
+      invoiceNeedEmail: false,
+      /** Запросить телефон (фиат) */
+      invoiceNeedPhone: false,
+      /** Подписка на 30 дней (только ссылка + XTR) */
       invoiceSubscription: false,
       /** URL картинки */
       invoicePhotoUrl: '',
@@ -607,6 +641,12 @@ export function getNodeDefaults(type: Node['type']): any {
       savePaymentAmountTo: '',
       /** Переменная для кода покупки после оплаты */
       savePaymentChargeIdTo: '',
+      /** Переменная для имени покупателя */
+      saveOrderNameTo: '',
+      /** Переменная для email покупателя */
+      saveOrderEmailTo: '',
+      /** Переменная для телефона покупателя */
+      saveOrderPhoneTo: '',
       /** Сразу после создания ссылки */
       autoTransitionTo: '',
       /** Включить переход после создания */

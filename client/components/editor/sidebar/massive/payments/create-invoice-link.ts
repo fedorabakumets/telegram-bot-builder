@@ -11,7 +11,7 @@ import { ComponentDefinition } from '@shared/schema';
 export const createInvoiceLinkNode: ComponentDefinition = {
   id: 'create-invoice-link',
   name: 'Ссылка на счёт',
-  description: 'Создать ссылку на оплату звёздами и сохранить URL в переменную',
+  description: 'Создать ссылку на оплату (XTR или фиат) и сохранить URL',
   icon: 'fas fa-link',
   color: 'bg-yellow-100 text-yellow-700',
   type: 'create_invoice_link' as any,
@@ -20,8 +20,24 @@ export const createInvoiceLinkNode: ComponentDefinition = {
     invoiceTitle: 'Товар',
     /** Описание товара */
     invoiceDescription: 'Описание товара',
-    /** Цена в звёздах */
+    /** Цена */
     invoiceAmount: '1',
+    /** Валюта */
+    invoiceCurrency: 'XTR',
+    /** Источник токена при фиате */
+    invoiceProviderSource: 'inline',
+    /** Токен в ноде */
+    invoiceProviderToken: '',
+    /** Env-ключ токена */
+    invoiceProviderTokenEnv: 'PAYMENT_PROVIDER_TOKEN',
+    /** Запросить имя (фиат) */
+    invoiceNeedName: false,
+    /** Запросить email (фиат) */
+    invoiceNeedEmail: false,
+    /** Запросить телефон (фиат) */
+    invoiceNeedPhone: false,
+    /** Подписка 30 дней — только XTR */
+    invoiceSubscription: false,
     /** URL картинки */
     invoicePhotoUrl: '',
     /** Скрытая метка покупки; пусто = id узла */
@@ -32,6 +48,12 @@ export const createInvoiceLinkNode: ComponentDefinition = {
     savePaymentAmountTo: '',
     /** Переменная для кода покупки после оплаты */
     savePaymentChargeIdTo: '',
+    /** Переменная для имени покупателя */
+    saveOrderNameTo: '',
+    /** Переменная для email покупателя */
+    saveOrderEmailTo: '',
+    /** Переменная для телефона покупателя */
+    saveOrderPhoneTo: '',
     /** Сразу после создания ссылки */
     autoTransitionTo: '',
     /** Включить переход после создания */

@@ -11,7 +11,7 @@ import { ComponentDefinition } from '@shared/schema';
 export const sendInvoiceNode: ComponentDefinition = {
   id: 'send-invoice',
   name: 'Выставить счёт',
-  description: 'Отправить счёт на оплату звёздами в текущий чат',
+  description: 'Отправить счёт: звёзды (XTR) или фиат через провайдера BotFather',
   icon: 'fas fa-star',
   color: 'bg-yellow-100 text-yellow-700',
   type: 'send_invoice' as any,
@@ -20,8 +20,22 @@ export const sendInvoiceNode: ComponentDefinition = {
     invoiceTitle: 'Товар',
     /** Описание товара */
     invoiceDescription: 'Описание товара',
-    /** Цена в звёздах */
+    /** Цена (звёзды или минорные единицы) */
     invoiceAmount: '1',
+    /** Валюта */
+    invoiceCurrency: 'XTR',
+    /** Источник токена при фиате */
+    invoiceProviderSource: 'inline',
+    /** Токен в ноде */
+    invoiceProviderToken: '',
+    /** Env-ключ токена */
+    invoiceProviderTokenEnv: 'PAYMENT_PROVIDER_TOKEN',
+    /** Запросить имя (фиат) */
+    invoiceNeedName: false,
+    /** Запросить email (фиат) */
+    invoiceNeedEmail: false,
+    /** Запросить телефон (фиат) */
+    invoiceNeedPhone: false,
     /** URL картинки товара */
     invoicePhotoUrl: '',
     /** Скрытая метка покупки; пусто = id узла */
@@ -30,6 +44,12 @@ export const sendInvoiceNode: ComponentDefinition = {
     savePaymentAmountTo: '',
     /** Переменная для кода покупки */
     savePaymentChargeIdTo: '',
+    /** Переменная для имени покупателя */
+    saveOrderNameTo: '',
+    /** Переменная для email покупателя */
+    saveOrderEmailTo: '',
+    /** Переменная для телефона покупателя */
+    saveOrderPhoneTo: '',
     /** ID следующего узла после оплаты */
     autoTransitionTo: '',
     /** Включить автопереход после оплаты */

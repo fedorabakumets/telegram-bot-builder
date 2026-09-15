@@ -5,7 +5,7 @@
 
 import { z } from 'zod';
 
-/** Схема одного счёта в звёздах */
+/** Схема одного счёта (XTR или фиат) */
 export const sendInvoiceEntrySchema = z.object({
   /** ID узла */
   nodeId: z.string(),
@@ -13,8 +13,22 @@ export const sendInvoiceEntrySchema = z.object({
   title: z.string(),
   /** Описание товара */
   description: z.string(),
-  /** Цена в звёздах */
+  /** Цена (звёзды или минорные единицы) */
   amount: z.string(),
+  /** Валюта: код или шаблон {переменная} */
+  currency: z.string().default('XTR'),
+  /** Источник токена провайдера */
+  providerSource: z.enum(['inline', 'env']).default('inline'),
+  /** Токен в ноде */
+  providerToken: z.string().default(''),
+  /** Env-ключ токена */
+  providerTokenEnv: z.string().default('PAYMENT_PROVIDER_TOKEN'),
+  /** Запросить имя */
+  needName: z.boolean().default(false),
+  /** Запросить email */
+  needEmail: z.boolean().default(false),
+  /** Запросить телефон */
+  needPhone: z.boolean().default(false),
   /** URL картинки */
   photoUrl: z.string().default(''),
   /** Скрытая метка покупки */
@@ -23,6 +37,12 @@ export const sendInvoiceEntrySchema = z.object({
   savePaymentAmountTo: z.string().default(''),
   /** Переменная для кода покупки */
   savePaymentChargeIdTo: z.string().default(''),
+  /** Переменная для имени покупателя */
+  saveOrderNameTo: z.string().default(''),
+  /** Переменная для email */
+  saveOrderEmailTo: z.string().default(''),
+  /** Переменная для телефона */
+  saveOrderPhoneTo: z.string().default(''),
   /** ID узла после оплаты */
   autoTransitionTo: z.string().default(''),
   /** Тип целевого узла */

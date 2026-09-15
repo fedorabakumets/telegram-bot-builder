@@ -838,9 +838,23 @@ export const nodeSchema = z.object({
     invoiceTitle: z.string().optional().default(''),
     /** Описание товара в счёте (1–255 знаков) */
     invoiceDescription: z.string().optional().default(''),
-    /** Цена в звёздах (целое число или {переменная}) */
+    /** Цена (звёзды или минимальные единицы валюты; целое или {переменная}) */
     invoiceAmount: z.string().optional().default('1'),
-    /** Подписка на 30 дней (только create_invoice_link; у send_invoice Telegram запрещает) */
+    /** Валюта счёта: XTR или ISO 4217 из Bot Payments */
+    invoiceCurrency: z.string().optional().default('XTR'),
+    /** Источник provider_token при фиате: inline | env */
+    invoiceProviderSource: z.string().optional().default('inline'),
+    /** Токен провайдера, если invoiceProviderSource=inline */
+    invoiceProviderToken: z.string().optional().default(''),
+    /** Имя env-ключа токена, если invoiceProviderSource=env */
+    invoiceProviderTokenEnv: z.string().optional().default('PAYMENT_PROVIDER_TOKEN'),
+    /** Запросить имя покупателя (фиат, need_name) */
+    invoiceNeedName: z.boolean().optional().default(false),
+    /** Запросить email (фиат, need_email) */
+    invoiceNeedEmail: z.boolean().optional().default(false),
+    /** Запросить телефон (фиат, need_phone_number) */
+    invoiceNeedPhone: z.boolean().optional().default(false),
+    /** Подписка на 30 дней (только create_invoice_link + XTR; у send_invoice Telegram запрещает) */
     invoiceSubscription: z.boolean().optional().default(false),
     /** URL картинки товара (необязательно) */
     invoicePhotoUrl: z.string().optional().default(''),
@@ -850,6 +864,12 @@ export const nodeSchema = z.object({
     savePaymentAmountTo: z.string().optional().default(''),
     /** Переменная для сохранения кода покупки */
     savePaymentChargeIdTo: z.string().optional().default(''),
+    /** Переменная для order_info.name после оплаты */
+    saveOrderNameTo: z.string().optional().default(''),
+    /** Переменная для order_info.email после оплаты */
+    saveOrderEmailTo: z.string().optional().default(''),
+    /** Переменная для order_info.phone_number после оплаты */
+    saveOrderPhoneTo: z.string().optional().default(''),
     /** Переменная для URL ссылки на счёт (create_invoice_link) */
     saveInvoiceLinkTo: z.string().optional().default(''),
     /** ID узла после оплаты по ссылке (create_invoice_link) */

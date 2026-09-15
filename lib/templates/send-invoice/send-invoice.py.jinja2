@@ -70,22 +70,71 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
     _photo_url = ""
 {% endif %}
 
+    _currency = str(replace_variables_in_text({{ entry.currency | tojson }}, _all_vars, {}) or "XTR").upper().strip() or "XTR"
+    # Неподставленный {var} / мусор → CURRENCY_INVALID у Telegram
+    import re as _re_cur
+    if "{" in _currency or not _re_cur.fullmatch(r"[A-Z]{3}", _currency):
+        logging.error(
+            f"❌ send_invoice [{{ entry.nodeId }}]: некорректная валюта {_currency!r} (проверьте переменную invoiceCurrency)"
+        )
+        await callback_query.message.answer(
+            "Не задана валюта счёта. Выберите валюту в меню или задайте invoiceCurrency."
+        )
+        return
+{% if entry.providerSource == 'env' %}
+    _provider_token = "" if _currency == "XTR" else (os.getenv({{ entry.providerTokenEnv | tojson }}) or "")
+{% else %}
+    _provider_token = "" if _currency == "XTR" else {{ entry.providerToken | tojson }}
+{% endif %}
+    if _currency != "XTR" and not str(_provider_token or "").strip():
+        logging.error(
+            f"❌ send_invoice [{{ entry.nodeId }}]: пустой provider_token для валюты {_currency}"
+        )
+        await callback_query.message.answer(
+            "Не задан токен платёжного провайдера. Укажите его в ноде или в переменной окружения бота."
+        )
+        return
+
     _invoice_kwargs = {
         "title": (_title or "Товар")[:32],
         "description": (_description or "Описание")[:255],
         "payload": _payload,
-        "provider_token": "",
-        "currency": "XTR",
-        "prices": [LabeledPrice(label="XTR", amount=_amount)],
+        "provider_token": _provider_token,
+        "currency": _currency,
+        "prices": [LabeledPrice(label=_currency, amount=_amount)],
     }
     if _photo_url:
         _invoice_kwargs["photo_url"] = _photo_url
+    elif str(_all_vars.get("shop_need_photo") or "").lower() in ("1", "true", "yes"):
+        _invoice_kwargs["photo_url"] = str(_all_vars.get("shop_photo_url") or "https://cdn.pixabay.com/photo/2017/01/31/16/59/robot-2025475_640.png")
+    if _currency != "XTR":
+{% if entry.needName %}
+        _invoice_kwargs["need_name"] = True
+{% endif %}
+{% if entry.needEmail %}
+        _invoice_kwargs["need_email"] = True
+{% endif %}
+{% if entry.needPhone %}
+        _invoice_kwargs["need_phone_number"] = True
+{% endif %}
+        if str(_all_vars.get("shop_need_name") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_name"] = True
+        if str(_all_vars.get("shop_need_email") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_email"] = True
+        if str(_all_vars.get("shop_need_phone") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_phone_number"] = True
+        if str(_all_vars.get("shop_need_shipping") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_shipping_address"] = True
+        pass
 {# Подписка только через createInvoiceLink: sendInvoice → SUBSCRIPTION_EXPORT_MISSING #}
 
     _stars_payment_targets[_payload] = {
         "node_id": "{{ entry.nodeId }}",
         "save_amount_to": {{ entry.savePaymentAmountTo | tojson }},
         "save_charge_to": {{ entry.savePaymentChargeIdTo | tojson }},
+        "save_name_to": {{ entry.saveOrderNameTo | tojson }},
+        "save_email_to": {{ entry.saveOrderEmailTo | tojson }},
+        "save_phone_to": {{ entry.saveOrderPhoneTo | tojson }},
         "next_node": {{ entry.autoTransitionTo | tojson }},
     }
 
@@ -105,7 +154,9 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
 
     try:
         await callback_query.message.answer_invoice(**_invoice_kwargs)
-        logging.info(f"⭐ send_invoice [{{ entry.nodeId }}]: счёт на {_amount} ⭐ для {user_id}, payload={_payload}")
+        logging.info(
+            f"⭐ send_invoice [{{ entry.nodeId }}]: счёт {_amount} {_currency} для {user_id}, payload={_payload}"
+        )
     except Exception as e:
         logging.error(f"❌ Ошибка send_invoice [{{ entry.nodeId }}]: {e}")
 
@@ -162,24 +213,63 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
     _photo_url = ""
 {% endif %}
 
+    _currency = str(replace_variables_in_text({{ entry.currency | tojson }}, _all_vars, {}) or "XTR").upper().strip() or "XTR"
+    import re as _re_cur_link
+    if "{" in _currency or not _re_cur_link.fullmatch(r"[A-Z]{3}", _currency):
+        logging.error(
+            f"❌ create_invoice_link [{{ entry.nodeId }}]: некорректная валюта {_currency!r}"
+        )
+        await callback_query.message.answer(
+            "Не задана валюта счёта. Выберите валюту в меню или задайте invoiceCurrency."
+        )
+        return
+{% if entry.providerSource == 'env' %}
+    _provider_token = "" if _currency == "XTR" else (os.getenv({{ entry.providerTokenEnv | tojson }}) or "")
+{% else %}
+    _provider_token = "" if _currency == "XTR" else {{ entry.providerToken | tojson }}
+{% endif %}
+    if _currency != "XTR" and not str(_provider_token or "").strip():
+        logging.error(
+            f"❌ create_invoice_link [{{ entry.nodeId }}]: пустой provider_token для валюты {_currency}"
+        )
+        await callback_query.message.answer(
+            "Не задан токен платёжного провайдера. Укажите его в ноде или в переменной окружения бота."
+        )
+        return
+
     _invoice_kwargs = {
         "title": (_title or "Товар")[:32],
         "description": (_description or "Описание")[:255],
         "payload": _payload,
-        "provider_token": "",
-        "currency": "XTR",
-        "prices": [LabeledPrice(label="XTR", amount=_amount)],
+        "provider_token": _provider_token,
+        "currency": _currency,
+        "prices": [LabeledPrice(label=_currency, amount=_amount)],
     }
     if _photo_url:
         _invoice_kwargs["photo_url"] = _photo_url
 {% if entry.subscription %}
-    _invoice_kwargs["subscription_period"] = 2592000
+    if _currency == "XTR":
+        _invoice_kwargs["subscription_period"] = 2592000
 {% endif %}
+    if _currency != "XTR":
+{% if entry.needName %}
+        _invoice_kwargs["need_name"] = True
+{% endif %}
+{% if entry.needEmail %}
+        _invoice_kwargs["need_email"] = True
+{% endif %}
+{% if entry.needPhone %}
+        _invoice_kwargs["need_phone_number"] = True
+{% endif %}
+        pass
 
     _stars_payment_targets[_payload] = {
         "node_id": "{{ entry.nodeId }}",
         "save_amount_to": {{ entry.savePaymentAmountTo | tojson }},
         "save_charge_to": {{ entry.savePaymentChargeIdTo | tojson }},
+        "save_name_to": {{ entry.saveOrderNameTo | tojson }},
+        "save_email_to": {{ entry.saveOrderEmailTo | tojson }},
+        "save_phone_to": {{ entry.saveOrderPhoneTo | tojson }},
         "next_node": {{ entry.afterPaymentTo | tojson }},
     }
 
@@ -187,7 +277,7 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         # Глобальный bot: MockCallback (из command_trigger) не имеет .bot
         _invoice_link = await bot.create_invoice_link(**_invoice_kwargs)
         logging.info(
-            f"⭐ create_invoice_link [{{ entry.nodeId }}]: ссылка на {_amount} ⭐ для {user_id}, payload={_payload}"
+            f"⭐ create_invoice_link [{{ entry.nodeId }}]: ссылка {_amount} {_currency} для {user_id}, payload={_payload}"
         )
     except Exception as e:
         logging.error(f"❌ Ошибка create_invoice_link [{{ entry.nodeId }}]: {e}")
@@ -226,6 +316,21 @@ async def on_pre_checkout_query_stars(pre_checkout_query: types.PreCheckoutQuery
         f"⭐ pre_checkout: payload={pre_checkout_query.invoice_payload} amount={pre_checkout_query.total_amount}"
     )
     await pre_checkout_query.answer(ok=True)
+
+@dp.shipping_query()
+async def on_shipping_query_stars(shipping_query: types.ShippingQuery):
+    """Демо-доставка: один бесплатный вариант (для need_shipping_address)"""
+    from aiogram.types import LabeledPrice as _LP, ShippingOption as _SO
+    try:
+        await bot.answer_shipping_query(
+            shipping_query_id=shipping_query.id,
+            ok=True,
+            shipping_options=[
+                _SO(id="free", title="Бесплатная доставка", prices=[_LP(label="Доставка", amount=0)])
+            ],
+        )
+    except Exception as _ship_err:
+        logging.error(f"❌ shipping_query: {_ship_err}")
 {% endif %}
 
 {%- if has_invoices or has_triggers %}
@@ -265,6 +370,17 @@ async def on_successful_payment_stars(message: types.Message, state: FSMContext 
         _charge_var = _route.get("save_charge_to") or ""
         if _charge_var:
             user_data[user_id][_charge_var] = payment.telegram_payment_charge_id
+
+        _oi = getattr(payment, "order_info", None)
+        _name_var = _route.get("save_name_to") or ""
+        if _name_var:
+            user_data[user_id][_name_var] = getattr(_oi, "name", None) or ""
+        _email_var = _route.get("save_email_to") or ""
+        if _email_var:
+            user_data[user_id][_email_var] = getattr(_oi, "email", None) or ""
+        _phone_var = _route.get("save_phone_to") or ""
+        if _phone_var:
+            user_data[user_id][_phone_var] = getattr(_oi, "phone_number", None) or ""
 
         _next = _route.get("next_node") or ""
         if not _next:

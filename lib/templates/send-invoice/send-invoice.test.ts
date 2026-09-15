@@ -120,4 +120,153 @@ describe('generateSendInvoiceHandlers()', () => {
     assert.ok(code.includes('reply_markup'));
     assert.ok(code.includes('Отмена'));
   });
+
+  it('EUR + inline: токен в коде, currency EUR', () => {
+    const nodes = [
+      {
+        id: 'inv_eur',
+        type: 'send_invoice',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '100',
+          invoiceCurrency: 'EUR',
+          invoiceProviderSource: 'inline',
+          invoiceProviderToken: '2051:TEST:token',
+          keyboardType: 'none',
+          buttons: [],
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    assert.ok(code.includes('"EUR"'));
+    assert.ok(code.includes('2051:TEST:token'));
+    assert.ok(!code.includes('os.getenv("PAYMENT_PROVIDER_TOKEN")'));
+  });
+
+  it('EUR + env: os.getenv по ключу', () => {
+    const nodes = [
+      {
+        id: 'inv_env',
+        type: 'send_invoice',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '100',
+          invoiceCurrency: 'EUR',
+          invoiceProviderSource: 'env',
+          invoiceProviderTokenEnv: 'PAYMENT_PROVIDER_TOKEN',
+          keyboardType: 'none',
+          buttons: [],
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    assert.ok(code.includes('os.getenv("PAYMENT_PROVIDER_TOKEN")'));
+    assert.ok(code.includes('"EUR"'));
+  });
+
+  it('create_invoice_link: подписка только при XTR', () => {
+    const nodesFiat = [
+      {
+        id: 'link_eur',
+        type: 'create_invoice_link',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '100',
+          invoiceCurrency: 'EUR',
+          invoiceProviderSource: 'inline',
+          invoiceProviderToken: 'tok',
+          invoiceSubscription: true,
+          saveInvoiceLinkTo: 'url',
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodesFiat as any);
+    assert.ok(!code.includes('subscription_period'));
+    assert.ok(code.includes('"EUR"'));
+  });
+
+  it('EUR + need_email: kwargs и save order_info в переменные', () => {
+    const nodes = [
+      {
+        id: 'inv_oi',
+        type: 'send_invoice',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '100',
+          invoiceCurrency: 'EUR',
+          invoiceProviderSource: 'inline',
+          invoiceProviderToken: 'tok',
+          invoiceNeedEmail: true,
+          saveOrderEmailTo: 'buyer_email',
+          keyboardType: 'none',
+          buttons: [],
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    assert.ok(code.includes('need_email'));
+    assert.ok(code.includes('"save_email_to": "buyer_email"') || code.includes("'save_email_to': 'buyer_email'"));
+    assert.ok(code.includes('order_info'));
+    assert.ok(code.includes('buyer_email'));
+  });
+
+  it('XTR: статические need_* из галок не попадают в kwargs', () => {
+    const nodes = [
+      {
+        id: 'inv_xtr',
+        type: 'send_invoice',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '1',
+          invoiceCurrency: 'XTR',
+          invoiceNeedName: true,
+          invoiceNeedEmail: true,
+          invoiceNeedPhone: true,
+          keyboardType: 'none',
+          buttons: [],
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    // Галочки сброшены для Stars; runtime shop_need_* допустимы только внутри if _currency != XTR
+    assert.ok(code.includes('if _currency != "XTR"'));
+    assert.ok(!/"need_name":\s*True/.test(code));
+    assert.ok(!/"need_email":\s*True/.test(code));
+    assert.ok(!/"need_phone_number":\s*True/.test(code));
+  });
+
+  it('валюта из {переменной} резолвится в runtime', () => {
+    const nodes = [
+      {
+        id: 'inv_var',
+        type: 'send_invoice',
+        position: { x: 0, y: 0 },
+        data: {
+          invoiceTitle: 'Товар',
+          invoiceDescription: 'Описание',
+          invoiceAmount: '100',
+          invoiceCurrency: '{shop_currency}',
+          invoiceProviderSource: 'inline',
+          invoiceProviderToken: 'tok',
+          invoiceNeedEmail: true,
+          keyboardType: 'none',
+          buttons: [],
+        },
+      },
+    ];
+    const code = generateSendInvoiceHandlers(nodes as any);
+    assert.ok(code.includes('replace_variables_in_text("{shop_currency}"') || code.includes("replace_variables_in_text('{shop_currency}'"));
+    assert.ok(code.includes('need_email'));
+    assert.ok(code.includes('_currency != "XTR"') || code.includes("_currency != 'XTR'"));
+  });
 });

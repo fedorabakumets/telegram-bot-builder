@@ -198,6 +198,62 @@ test('A03', 'синтаксис Python OK', () => {
   syntax(gen(p, 'a03'), 'a03');
 });
 
+test('A04', 'EUR + inline: токен литералом в коде', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', {
+      invoiceCurrency: 'EUR',
+      invoiceProviderSource: 'inline',
+      invoiceProviderToken: '2051:TEST:abc',
+      invoiceAmount: '100',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'a04');
+  ok(code.includes('"EUR"') || code.includes("'EUR'"), 'валюта EUR');
+  ok(code.includes('2051:TEST:abc'), 'токен inline в коде');
+  ok(!code.includes('os.getenv("PAYMENT_PROVIDER_TOKEN")'), 'нет getenv при inline');
+  syntax(code, 'a04');
+});
+
+test('A05', 'EUR + env: provider_token из os.getenv', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', {
+      invoiceCurrency: 'EUR',
+      invoiceProviderSource: 'env',
+      invoiceProviderTokenEnv: 'PAYMENT_PROVIDER_TOKEN',
+      invoiceAmount: '100',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'a05');
+  ok(code.includes('os.getenv("PAYMENT_PROVIDER_TOKEN")'), 'getenv токена');
+  ok(code.includes('"EUR"') || code.includes("'EUR'"), 'валюта EUR');
+  syntax(code, 'a05');
+});
+
+test('A06', 'EUR + need_email: kwargs и запись order_info', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', {
+      invoiceCurrency: 'EUR',
+      invoiceProviderSource: 'inline',
+      invoiceProviderToken: '2051:TEST:abc',
+      invoiceAmount: '100',
+      invoiceNeedEmail: true,
+      saveOrderEmailTo: 'buyer_email',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const code = gen(p, 'a06');
+  ok(code.includes('need_email'), 'need_email в kwargs');
+  ok(
+    code.includes('"save_email_to": "buyer_email"') || code.includes("'save_email_to': 'buyer_email'"),
+    'save_email_to в targets',
+  );
+  ok(code.includes('order_info'), 'чтение order_info после оплаты');
+  ok(code.includes('buyer_email'), 'переменная buyer_email');
+  syntax(code, 'a06');
+});
+
 console.log('── Блок B: pre_checkout и successful_payment ────────────────────');
 
 test('B01', 'pre_checkout_query с ok=True', () => {

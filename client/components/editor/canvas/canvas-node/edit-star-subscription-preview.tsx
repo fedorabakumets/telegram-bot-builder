@@ -74,7 +74,7 @@ export function EditStarSubscriptionPreview({
     <div className="px-3 py-2 space-y-2 text-[11px] leading-snug">
       <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-300">
         <i className="fas fa-sync-alt text-base" />
-        <span className="font-semibold truncate text-sm flex-1">{typeLabel}</span>
+        <span className="font-semibold text-sm flex-1 min-w-0 leading-tight">{typeLabel}</span>
         <span className="shrink-0 rounded bg-amber-200/90 dark:bg-amber-800/80 px-1 py-0.5 text-[9px] font-semibold text-amber-900 dark:text-amber-100">
           {action}
         </span>

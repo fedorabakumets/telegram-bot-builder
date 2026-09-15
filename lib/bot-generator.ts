@@ -578,7 +578,8 @@ function generateCodeSections(
     const selectionButtons = allButtons
       .filter((b: any) => b.action === 'selection')
       .map((b: any) => {
-        const value = b.target || b.id || 'btn';
+        // Как в keyboard.py.jinja2: target || id (без обрезки — иначе рассинхрон с первой отрисовкой)
+        const value = String(b.target || b.id || 'btn');
         const valueTruncated = value.slice(-8);
         return {
           id: b.id,
@@ -588,7 +589,7 @@ function generateCodeSections(
           value,
           valueTruncated,
           escapedText: b.text.replace(/"/g, '\\"'),
-          callbackData: `ms_${shortNodeId}_${valueTruncated}`,
+          callbackData: `ms_${shortNodeId}_${value}`,
         };
       });
     const regularButtons = allButtons
@@ -598,6 +599,13 @@ function generateCodeSections(
       .filter((b: any) => b.action === 'goto' && b.target)
       .map((b: any) => ({ id: b.id, text: b.text, action: b.action, target: b.target }));
     const completeBtn = allButtons.find((b: any) => b.action === 'complete');
+    const continueButtonTarget =
+      (typeof node.data?.continueButtonTarget === 'string' && node.data.continueButtonTarget.trim()) ||
+      (completeBtn?.target ? String(completeBtn.target) : '') ||
+      '';
+    const targetNode = continueButtonTarget
+      ? nodes.find((n: any) => n.id === continueButtonTarget)
+      : undefined;
 
     return {
       ...node,
@@ -612,6 +620,15 @@ function generateCodeSections(
       doneCallbackData: `done_${shortNodeId}`,
       totalButtonsCount: allButtons.length,
       variableName: node.data?.multiSelectVariable || `multi_select_${node.id}`,
+      continueButtonTarget: continueButtonTarget || undefined,
+      targetNode: targetNode
+        ? {
+            id: targetNode.id,
+            type: targetNode.type,
+            data: targetNode.data || {},
+            shortId: String(targetNode.id).slice(-10).replace(/^_+/, ''),
+          }
+        : undefined,
     };
   });
 
@@ -704,8 +721,9 @@ function assembleAndValidate(
     sections.commandCallbackHandlers,
     sections.groupHandlers,
     sections.mediaInputHandlers,
-    sections.universalHandlers,
+    // multi-select (ms_/done_) до catch-all @dp.callback_query()
     sections.multiSelectHandlers,
+    sections.universalHandlers,
     sections.main,
   ];
 

@@ -516,23 +516,27 @@ In-memory счётчик событий в **скользящем временн
 
 ---
 
-### ⭐ Выставить счёт в звёздах (`send_invoice`)
+### ⭐ Выставить счёт (`send_invoice`)
 
-Выставляет счёт в текущий чат (валюта всегда звёзды). **При добавлении** рядом создаётся узел **Клавиатура** с одной кнопкой «Оплатить» (`action: pay`, нельзя убрать); можно добавить «Отмена» и другие ниже. Связь — через `keyboardNodeId`. Без клавиатуры кнопку оплаты нарисует Телеграм сам. Клавиатура только **inline**. Переход по `autoTransitionTo` — **после успешной оплаты**, не с кнопки «Оплатить».
+Выставляет счёт в текущий чат: **XTR** (звёзды) или фиат (ISO 4217 из [Telegram Payments](https://core.telegram.org/bots/payments#supported-currencies), напр. EUR / RUB / USD / GBP / UAH…) через провайдера из BotFather → Payments. **При добавлении** рядом создаётся узел **Клавиатура** с одной кнопкой «Оплатить» (`action: pay`, нельзя убрать); можно добавить «Отмена» и другие ниже. Связь — через `keyboardNodeId`. Без клавиатуры кнопку оплаты нарисует Телеграм сам. Клавиатура только **inline**. Переход по `autoTransitionTo` — **после успешной оплаты**, не с кнопки «Оплатить».
 
 | Настройка | Описание |
 |-----------|----------|
+| Валюта | `invoiceCurrency`: `XTR` или код из Bot Payments; либо `{переменная}` (код подставится при оплате) |
+| Токен провайдера | При не-XTR: `invoiceProviderSource` = `inline` (поле `invoiceProviderToken`) или `env` (`invoiceProviderTokenEnv`, напр. `PAYMENT_PROVIDER_TOKEN`). Для продакшена предпочтителен `env` — при `inline` токен попадает в project.json и код |
 | Название | Заголовок карточки, 1–32 знака (`invoiceTitle`) |
 | Описание | Текст под названием, 1–255 (`invoiceDescription`) |
-| Цена | Целое число звёзд, строка; допускает `{переменные}` (`invoiceAmount`) |
+| Цена | XTR — целые звёзды; фиат — минорные единицы (100 = 1.00). Строка; допускает `{переменные}` (`invoiceAmount`) |
 | Картинка | Загрузка / URL / переменная → `invoicePhotoUrl`; для `/uploads/` бот добавит `API_BASE_URL` |
 | Скрытая метка | Payload покупки; пусто = id узла (`invoicePayload`) |
 | Сохранить сумму | Имя переменной для `total_amount` (`savePaymentAmountTo`) |
 | Сохранить код покупки | Имя переменной для `telegram_payment_charge_id` (`savePaymentChargeIdTo`) |
+| Запросить контакты | Только фиат (не XTR): `invoiceNeedName` / `invoiceNeedEmail` / `invoiceNeedPhone` → `need_name` / `need_email` / `need_phone_number` |
+| Сохранить order_info | После оплаты: `saveOrderNameTo` / `saveOrderEmailTo` / `saveOrderPhoneTo` ← `order_info.name` / `email` / `phone_number` (пусто = не писать) |
 | Клавиатура | При добавлении — соседний `keyboard` с «Оплатить»; стрелка «после оплаты» визуально от кнопки pay (данные — `autoTransitionTo` счёта) |
 | Следующий узел | `autoTransitionTo` + `enableAutoTransition: true` — после оплаты |
 
-Если в проекте есть хотя бы один `send_invoice` или `create_invoice_link`, бот отвечает на `pre_checkout_query` всегда «да» (лимит Телеграма — 10 секунд). **Подписка на 30 дней в чат не ставится** — Telegram отвечает `SUBSCRIPTION_EXPORT_MISSING`; только узел «Ссылка на счёт». Отмена автопродления — узел `edit_star_subscription`.
+Если в проекте есть хотя бы один `send_invoice` или `create_invoice_link`, бот отвечает на `pre_checkout_query` всегда «да» (лимит Телеграма — 10 секунд). **Подписка на 30 дней в чат не ставится** — Telegram отвечает `SUBSCRIPTION_EXPORT_MISSING`; только узел «Ссылка на счёт» и только при `XTR`. Отмена автопродления — узел `edit_star_subscription`.
 
 Для ботов с цифровой оплатой Телеграм требует `/paysupport` (и обычно `/terms`) — сделайте их обычными `command_trigger` + `message`.
 
@@ -540,14 +544,16 @@ In-memory счётчик событий в **скользящем временн
 
 ### 🔗 Ссылка на счёт (`create_invoice_link`)
 
-Создаёт URL оплаты через Bot API `createInvoiceLink` (не карточку в чат). Кладёт ссылку в переменную и **сразу** идёт на `autoTransitionTo`. После оплаты — `afterPaymentTo` (если сессия ещё жива) или триггер «Успешная оплата».
+Создаёт URL оплаты через Bot API `createInvoiceLink` (не карточку в чат). Те же валюта и токен провайдера, что у `send_invoice`. Кладёт ссылку в переменную и **сразу** идёт на `autoTransitionTo`. После оплаты — `afterPaymentTo` (если сессия ещё жива) или триггер «Успешная оплата».
 
 | Настройка | Описание |
 |-----------|----------|
+| Валюта / токен | Как у `send_invoice` (`invoiceCurrency`, `invoiceProviderSource`, …) |
 | Название / описание / цена / картинка / метка | Как у `send_invoice` |
-| Подписка на 30 дней | `invoiceSubscription: true` → `subscription_period: 2592000`. **Только здесь** — в чат с кнопкой Telegram подписку не шлёт (`SUBSCRIPTION_EXPORT_MISSING`) |
+| Подписка на 30 дней | `invoiceSubscription: true` → `subscription_period: 2592000`. **Только при XTR** — в чат с кнопкой Telegram подписку не шлёт (`SUBSCRIPTION_EXPORT_MISSING`) |
 | Сохранить ссылку | `saveInvoiceLinkTo` — имя переменной под URL |
 | Сохранить сумму / код | После оплаты (`savePaymentAmountTo`, `savePaymentChargeIdTo`) |
+| Запросить / сохранить контакты | Как у `send_invoice` (`invoiceNeed*`, `saveOrder*To`) — только фиат |
 | После создания | `autoTransitionTo` + `enableAutoTransition` — сразу после URL |
 | После оплаты | `afterPaymentTo` — опционально |
 

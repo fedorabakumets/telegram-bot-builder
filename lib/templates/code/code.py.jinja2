@@ -26,7 +26,7 @@ def _get_code_node_lock(user_id: int) -> asyncio.Lock:
 _CODE_NODE_TIMEOUT = 180
 _CODE_SKIP_KEYS = {
     'client', 'userbot_client', 'callback_query', 'state', 'user_id', 'user_data',
-    'all_user_data', 'bot', 'set_user_var',
+    'all_user_data', 'bot', 'dp', 'set_user_var',
     'asyncio', 'json', 're', 'math', 'datetime', 'logging', 'Button', 'events',
     '__code_entry', '__builtins__',
 }
@@ -46,6 +46,7 @@ async def _run_code_node(user_id, source, callback_query=None, state=None, node_
         'user_data': user_data.get(user_id, {}),
         'all_user_data': user_data,
         'bot': globals().get('bot'),
+        'dp': globals().get('dp'),
         'set_user_var': set_user_var,
         'client': _ub,
         'userbot_client': _ub,

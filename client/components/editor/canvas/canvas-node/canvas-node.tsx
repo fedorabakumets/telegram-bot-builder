@@ -599,9 +599,9 @@ export function CanvasNode({ node, allNodes, isSelected, isMultiSelected, onClic
         className={cn(
           "bg-white/90 dark:bg-slate-900/90 rounded-2xl border-2 relative select-none",
           // Компактный размер для триггеров и утилит; счёт чуть шире под длинное имя
-          (node.type as any) === 'send_invoice' || (node.type as any) === 'create_invoice_link'
-            ? "p-3 w-56"
-            : node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'successful_payment_trigger' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'api_trigger' || (node.type as any) === 'userbot_edit_trigger' || (node.type as any) === 'bot_table' || (node.type as any) === 'delay' || (node.type as any) === 'refund_stars' || (node.type as any) === 'edit_star_subscription' || (node.type as any) === 'get_star_balance' || (node.type as any) === 'stop_processing' || (node.type as any) === 'rate_counter' || (node.type as any) === 'code' || (node.type as any) === 'comment'
+          (node.type as any) === 'send_invoice' || (node.type as any) === 'create_invoice_link' || (node.type as any) === 'edit_star_subscription'
+            ? "p-3 w-64"
+            : node.type === 'command_trigger' || node.type === 'text_trigger' || node.type === 'incoming_message_trigger' || (node.type as any) === 'incoming_callback_trigger' || (node.type as any) === 'outgoing_message_trigger' || (node.type as any) === 'managed_bot_updated_trigger' || (node.type as any) === 'successful_payment_trigger' || (node.type as any) === 'schedule_trigger' || (node.type as any) === 'api_trigger' || (node.type as any) === 'userbot_edit_trigger' || (node.type as any) === 'bot_table' || (node.type as any) === 'delay' || (node.type as any) === 'refund_stars' || (node.type as any) === 'get_star_balance' || (node.type as any) === 'stop_processing' || (node.type as any) === 'rate_counter' || (node.type as any) === 'code' || (node.type as any) === 'comment'
             ? "p-3 w-52"
             : (node.type as any) === 'callback_trigger' || (node.type as any) === 'answer_callback_query'
             ? "p-3 w-52"            : node.type === 'condition' || (node.type as any) === 'parallel_split'

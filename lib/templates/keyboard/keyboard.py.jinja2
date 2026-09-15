@@ -252,18 +252,15 @@
 {{ indent }}if user_id not in user_data:
 {{ indent }}    user_data[user_id] = {}
 {{ indent }}saved_selections = []
-{{ indent }}if user_vars is defined and user_vars:
-{{ indent }}    for var_name, var_data in user_vars.items():
-{{ indent }}        if var_name == "{{ multiSelectVariable }}":
-{{ indent }}            if isinstance(var_data, dict) and "value" in var_data:
-{{ indent }}                selections_str = var_data["value"]
-{{ indent }}            elif isinstance(var_data, str):
-{{ indent }}                selections_str = var_data
-{{ indent }}            else:
-{{ indent }}                continue
-{{ indent }}            if selections_str and selections_str.strip():
-{{ indent }}                saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]
-{{ indent }}                break
+{{ indent }}_ms_raw = None
+{{ indent }}if "all_user_vars" in locals() and isinstance(all_user_vars, dict):
+{{ indent }}    _ms_raw = all_user_vars.get("{{ multiSelectVariable }}")
+{{ indent }}if _ms_raw is None:
+{{ indent }}    _ms_raw = user_data.get(user_id, {}).get("{{ multiSelectVariable }}")
+{{ indent }}if isinstance(_ms_raw, dict):
+{{ indent }}    _ms_raw = _ms_raw.get("value")
+{{ indent }}if isinstance(_ms_raw, str) and _ms_raw.strip():
+{{ indent }}    saved_selections = [sel.strip() for sel in _ms_raw.split(",") if sel.strip()]
 {{ indent }}if "multi_select_{{ nodeId }}" not in user_data[user_id]:
 {{ indent }}    user_data[user_id]["multi_select_{{ nodeId }}"] = saved_selections.copy()
 {{ indent }}user_data[user_id]["multi_select_node"] = "{{ nodeId }}"

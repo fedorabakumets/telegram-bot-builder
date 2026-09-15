@@ -1075,9 +1075,11 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 }
 ```
 
-### send_invoice — выставить счёт в звёздах
+### send_invoice — выставить счёт
 
-Только счёт в чат. Валюта всегда `XTR`, токен кассы пустой. `autoTransitionTo` срабатывает **после оплаты**, не после `answer_invoice`. Ссылка на оплату — отдельный тип `create_invoice_link`.
+Счёт в чат. Валюта `invoiceCurrency`: `XTR` (дефолт, `provider_token=""`) или любой ISO 4217 из [Supported Currencies](https://core.telegram.org/bots/payments#supported-currencies) (нужен токен провайдера). `autoTransitionTo` срабатывает **после оплаты**, не после `answer_invoice`. Ссылка на оплату — отдельный тип `create_invoice_link`.
+
+Токен при фиате: `invoiceProviderSource` = `inline` → `invoiceProviderToken` в data (удобно для теста; попадёт в project.json и код) или `env` → `os.getenv(invoiceProviderTokenEnv)` (рекомендуется для продакшена). Пустой токен при фиате — лог и сообщение пользователю, счёт не шлётся.
 
 Можно привязать узел `keyboard` через `keyboardNodeId` (как у `message`). Первая кнопка клавиатуры обязана быть `"action": "pay"` (текст вроде «Оплатить ⭐»). Остальные кнопки — обычные (`goto`, `url`…). **При добавлении с холста** рядом сразу создаётся `keyboard` с одной кнопкой pay. Через MCP встроенные кнопки на `send_invoice` выносятся в `keyboard` (hoist). Без клавиатуры Телеграм сам покажет оплату. Тип `pay` нельзя ставить на клавиатуры обычных сообщений.
 
@@ -1088,10 +1090,20 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
     "invoiceTitle": "Доступ на месяц",
     "invoiceDescription": "Оплата звёздами",
     "invoiceAmount": "100",
+    "invoiceCurrency": "XTR",
+    "invoiceProviderSource": "inline",
+    "invoiceProviderToken": "",
+    "invoiceProviderTokenEnv": "PAYMENT_PROVIDER_TOKEN",
     "invoicePhotoUrl": "",
     "invoicePayload": "",
+    "invoiceNeedName": false,
+    "invoiceNeedEmail": false,
+    "invoiceNeedPhone": false,
     "savePaymentAmountTo": "paid_stars",
     "savePaymentChargeIdTo": "payment_charge_id",
+    "saveOrderNameTo": "",
+    "saveOrderEmailTo": "",
+    "saveOrderPhoneTo": "",
     "autoTransitionTo": "msg_thanks",
     "enableAutoTransition": true,
     "keyboardNodeId": "kbd_invoice",
@@ -1120,20 +1132,26 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 |------|----------|
 | `invoiceTitle` | Название, 1–32 |
 | `invoiceDescription` | Описание, 1–255 |
-| `invoiceAmount` | Цена в звёздах (строка, `{переменные}` допустимы) |
+| `invoiceAmount` | XTR — целые звёзды; фиат — минорные единицы (100 = 1.00); `{переменные}` допустимы |
+| `invoiceCurrency` | `XTR` или код из Bot Payments (EUR, RUB, USD, GBP, UAH, …); также `{переменная}` — код подставится в runtime |
+| `invoiceProviderSource` | `inline` \| `env` (игнор при XTR) |
+| `invoiceProviderToken` | Токен в ноде при `inline` |
+| `invoiceProviderTokenEnv` | Имя env-ключа при `env` (дефолт `PAYMENT_PROVIDER_TOKEN`) |
 | `invoicePhotoUrl` | Картинка: `https://…`, `/uploads/…` или `{var}`; для uploads бот склеит с `API_BASE_URL` |
 | `invoicePayload` | Скрытая метка; пусто = id узла |
+| `invoiceNeedName` / `Email` / `Phone` | Запросить имя/email/телефон при оплате (**только фиат**, не XTR) |
 | `savePaymentAmountTo` | Куда сохранить сумму |
 | `savePaymentChargeIdTo` | Куда сохранить код покупки (для возврата позже) |
+| `saveOrderNameTo` / `EmailTo` / `PhoneTo` | После оплаты ← `order_info` (пусто = не писать) |
 | `keyboardNodeId` | Опционально: id узла `keyboard` со счётом |
 | `autoTransitionTo` | Узел после успешной оплаты (`enableAutoTransition: true`) |
 
 Типичная цепочка: `command_trigger` `/buy` → `send_invoice` → (после оплаты) `message` «спасибо».  
-Подписка 30 дней у `send_invoice` **недоступна** (Telegram: `SUBSCRIPTION_EXPORT_MISSING`) — только `create_invoice_link` + `invoiceSubscription`.
+Подписка 30 дней у `send_invoice` **недоступна** (Telegram: `SUBSCRIPTION_EXPORT_MISSING`) — только `create_invoice_link` + `invoiceSubscription` и только при `XTR`.
 
 ### create_invoice_link — ссылка на счёт
 
-Отдельный узел (не режим `send_invoice`). Bot API `createInvoiceLink`: URL в `saveInvoiceLinkTo`, сразу `autoTransitionTo`, после оплаты — `afterPaymentTo` (или `successful_payment_trigger`). Без pay-клавиатуры. `pre_checkout` генерируется, если есть `send_invoice` **или** `create_invoice_link`. **Единственный** способ подписки Stars в боте: `invoiceSubscription: true`.
+Отдельный узел (не режим `send_invoice`). Bot API `createInvoiceLink`: те же `invoiceCurrency` / токен провайдера. URL в `saveInvoiceLinkTo`, сразу `autoTransitionTo`, после оплаты — `afterPaymentTo` (или `successful_payment_trigger`). Без pay-клавиатуры. `pre_checkout` генерируется, если есть `send_invoice` **или** `create_invoice_link`. **Единственный** способ подписки Stars: `invoiceSubscription: true` при `invoiceCurrency: "XTR"`.
 
 ```json
 {
@@ -1142,6 +1160,7 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
     "invoiceTitle": "Доступ",
     "invoiceDescription": "Оплата по ссылке",
     "invoiceAmount": "50",
+    "invoiceCurrency": "XTR",
     "invoiceSubscription": false,
     "invoicePhotoUrl": "",
     "invoicePayload": "",
@@ -1157,7 +1176,9 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 
 | Поле | Описание |
 |------|----------|
-| `invoiceSubscription` | `true` → `subscription_period: 2592000` (подписка 30 дней). Нельзя через `send_invoice` |
+| `invoiceCurrency` / токен | Как у `send_invoice` |
+| `invoiceSubscription` | `true` → `subscription_period: 2592000` (подписка 30 дней, **только XTR**). Нельзя через `send_invoice` |
+| `invoiceNeed*` / `saveOrder*To` | Как у `send_invoice` (только фиат) |
 | `saveInvoiceLinkTo` | Переменная под URL (`https://t.me/$…`) |
 | `autoTransitionTo` | Сразу после создания ссылки |
 | `afterPaymentTo` | После оплаты по этой ссылке (в текущей сессии) |
@@ -1324,6 +1345,7 @@ Bot API `getMyStarBalance`. Баланс **бота**, не пользовате
 |-----|---------|
 | `client`, `userbot_client` | Telethon-клиент юзербота (тот же, что у userbot-узлов) |
 | `bot` | Экземпляр aiogram `Bot` — можно править сообщения самого бота |
+| `dp` | Dispatcher aiogram — можно один раз зарегистрировать свои callback-хендлеры |
 | `user_id` | ID текущего пользователя |
 | `user_data` | Словарь переменных **текущего** пользователя |
 | `all_user_data` | Словарь всех пользователей: `all_user_data[user_id]` |

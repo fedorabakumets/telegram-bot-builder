@@ -701,6 +701,7 @@ export function PropertiesPanel({
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
               formatNodeDisplay={formatNodeDisplay}
               textVariables={textVariables as Variable[]}
+              envVariables={envVariablesForNode}
             />
           )}
 
@@ -712,6 +713,7 @@ export function PropertiesPanel({
               getAllNodesFromAllSheets={getAllNodesFromAllSheets}
               formatNodeDisplay={formatNodeDisplay}
               textVariables={textVariables as Variable[]}
+              envVariables={envVariablesForNode}
             />
           )}
 

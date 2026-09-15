@@ -220,5 +220,77 @@ console.log('\nD: Подписка 30 дней');
   check('без галки нет subscription_period', !code.includes('subscription_period'));
 }
 
+console.log('\nE: Фиат и подписка только XTR');
+{
+  const path = generateToFile([
+    {
+      id: 'link_eur',
+      type: 'create_invoice_link',
+      position: { x: 0, y: 0 },
+      data: {
+        invoiceTitle: 'Euro',
+        invoiceDescription: 'D',
+        invoiceAmount: '100',
+        invoiceCurrency: 'EUR',
+        invoiceProviderSource: 'inline',
+        invoiceProviderToken: '2051:TEST:link',
+        saveInvoiceLinkTo: 'invoice_url',
+      },
+    },
+  ]);
+  const code = readAndCleanup(path);
+  check('EUR в коде ссылки', code.includes('"EUR"') || code.includes("'EUR'"));
+  check('токен inline на ссылке', code.includes('2051:TEST:link'));
+}
+{
+  const path = generateToFile([
+    {
+      id: 'link_eur_sub',
+      type: 'create_invoice_link',
+      position: { x: 0, y: 0 },
+      data: {
+        invoiceTitle: 'EuroSub',
+        invoiceDescription: 'D',
+        invoiceAmount: '100',
+        invoiceCurrency: 'EUR',
+        invoiceProviderSource: 'env',
+        invoiceProviderTokenEnv: 'PAYMENT_PROVIDER_TOKEN',
+        invoiceSubscription: true,
+        saveInvoiceLinkTo: 'url',
+      },
+    },
+  ]);
+  const code = readAndCleanup(path);
+  check('фиат: нет subscription_period даже с галкой', !code.includes('subscription_period'));
+  check('фиат env: getenv', code.includes('os.getenv("PAYMENT_PROVIDER_TOKEN")'));
+}
+{
+  const path = generateToFile([
+    {
+      id: 'link_eur_need',
+      type: 'create_invoice_link',
+      position: { x: 0, y: 0 },
+      data: {
+        invoiceTitle: 'EuroNeed',
+        invoiceDescription: 'D',
+        invoiceAmount: '100',
+        invoiceCurrency: 'EUR',
+        invoiceProviderSource: 'inline',
+        invoiceProviderToken: '2051:TEST:need',
+        invoiceNeedEmail: true,
+        saveOrderEmailTo: 'buyer_email',
+        saveInvoiceLinkTo: 'invoice_url',
+      },
+    },
+  ]);
+  const code = readAndCleanup(path);
+  check('ссылка EUR: need_email', code.includes('need_email'));
+  check(
+    'ссылка: save_email_to в targets',
+    code.includes('"save_email_to": "buyer_email"') || code.includes("'save_email_to': 'buyer_email'"),
+  );
+  check('ссылка: order_info после оплаты', code.includes('order_info'));
+}
+
 console.log(`\n=== Итого: ${passed} passed, ${failed} failed ===\n`);
 process.exit(failed > 0 ? 1 : 0);

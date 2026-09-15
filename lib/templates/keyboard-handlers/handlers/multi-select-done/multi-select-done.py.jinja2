@@ -6,7 +6,10 @@
 
 {% if multiSelectNodes and multiSelectNodes|length > 0 %}
 # Обработчик для кнопок завершения множественного выбора
-@dp.callback_query(lambda callback_query: callback_query.data and callback_query.data.startswith("multi_select_done_"))
+# Клавиатура шлёт done_<shortNodeId>; legacy — multi_select_done_<fullId>
+@dp.callback_query(lambda callback_query: callback_query.data and (
+    callback_query.data.startswith("done_") or callback_query.data.startswith("multi_select_done_")
+))
 async def handle_multi_select_done(callback_query: types.CallbackQuery, state: FSMContext = None):
     logging.info(f"🏁 ОБРАБОТЧИК ГОТОВО АКТИВИРОВАН! callback_data: {callback_query.data}")
     await callback_query.answer()
@@ -14,115 +17,52 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery, state: F
     callback_data = callback_query.data
 
     logging.info(f"🏁 Завершение множественного выбора: {callback_data}")
-    node_id = callback_data.replace("multi_select_done_", "")
-    logging.info(f"🎯 Node ID для завершения: {node_id}")
+    if callback_data.startswith("multi_select_done_"):
+        node_key = callback_data.replace("multi_select_done_", "", 1)
+    else:
+        node_key = callback_data.replace("done_", "", 1)
+    logging.info(f"🎯 Node key для завершения: {node_key}")
 
 {% for node in multiSelectNodes %}
-    if node_id == "{{ node.id }}":
+    if node_key == "{{ node.id }}" or node_key == "{{ node.shortNodeId or node.id }}":
         logging.info(f"🔍 Обрабатываем завершение для узла {{ node.id }}")
         selected_options = user_data.get(user_id, {}).get("multi_select_{{ node.id }}", [])
         logging.info(f"📋 Выбранные опции для {{ node.id }}: {selected_options}")
 
         if selected_options:
             selected_text = ", ".join(selected_options)
-            await save_user_data_to_db(user_id, "{{ node.variableName }}", selected_text)
+            await update_user_data_in_db(user_id, "{{ node.variableName }}", selected_text)
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["{{ node.variableName }}"] = selected_text
             logging.info(f"💾 Сохранили в БД: {{ node.variableName }} = {selected_text}")
         else:
-            logging.info(f"⚠️ Нет выбранных опций для сохранения")
+            selected_text = ""
+            await update_user_data_in_db(user_id, "{{ node.variableName }}", selected_text)
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["{{ node.variableName }}"] = selected_text
+            logging.info(f"⚠️ Нет выбранных опций для {{ node.id }} — сохранили пустую строку")
+
+        if user_id in user_data:
+            user_data[user_id].pop("multi_select_{{ node.id }}", None)
+            user_data[user_id].pop("multi_select_node", None)
+            user_data[user_id].pop("multi_select_type", None)
+            user_data[user_id].pop("multi_select_variable", None)
 
         # Переход к следующему узлу или завершение
 {% if node.continueButtonTarget and node.targetNode %}
         # Переход к следующему узлу: {{ node.continueButtonTarget }}
         logging.info(f"🚀 Переходим к узлу '{{ node.continueButtonTarget }}'")
 
-{% if node.targetNode.data.allowMultipleSelection %}
-        # Узел поддерживает множественный выбор
-        if user_id not in user_data:
-            user_data[user_id] = {}
-        user_data[user_id]["multi_select_{{ node.targetNode.id }}"] = []
-        user_data[user_id]["multi_select_node"] = "{{ node.targetNode.id }}"
-        user_data[user_id]["multi_select_type"] = "{{ node.targetNode.data.keyboardType or 'inline' }}"
-{% endif %}
-
-{% if node.targetNode.type == 'message' %}
-        # Отправляем сообщение
-        text = {{ node.targetNode.data.messageText|format_python_text }}
-
-{% if node.targetNode.data.allowMultipleSelection and node.targetNode.data.buttons and node.targetNode.data.buttons|length > 0 %}
-        # Инициализируем состояние множественного выбора
-        if user_id not in user_data:
-            user_data[user_id] = {}
-
-        # Загружаем ранее выбранные варианты из БД
-        saved_selections = []
-        user_record = await get_user_from_db(user_id)
-        if user_record and isinstance(user_record, dict):
-            user_data_field = user_record.get("user_data", {})
-            if isinstance(user_data_field, str):
-                try:
-                    user_vars = json.loads(user_data_field)
-                except:
-                    user_vars = {}
-            elif isinstance(user_data_field, dict):
-                user_vars = user_data_field
-            else:
-                user_vars = {}
-
-            if "{{ node.targetNode.data.multiSelectVariable or 'user_interests' }}" in user_vars:
-                var_data = user_vars["{{ node.targetNode.data.multiSelectVariable or 'user_interests' }}"]
-                if isinstance(var_data, str) and var_data.strip():
-                    saved_selections = [sel.strip() for sel in var_data.split(",") if sel.strip()]
-
-        user_data[user_id]["multi_select_{{ node.targetNode.id }}"] = saved_selections.copy()
-        user_data[user_id]["multi_select_node"] = "{{ node.targetNode.id }}"
-        user_data[user_id]["multi_select_type"] = "{{ node.targetNode.data.keyboardType or 'reply' }}"
-        user_data[user_id]["multi_select_variable"] = "{{ node.targetNode.data.multiSelectVariable or 'user_interests' }}"
-{% endif %}
-
-{% if node.targetNode.data.keyboardType == 'reply' %}
-        builder = ReplyKeyboardBuilder()
-{% for button in node.targetNode.data.buttons %}
-{% if button.action == 'selection' %}
-{% set btnText = button.text|escape_python_string %}
-        builder.add(KeyboardButton(text=('✅ ' if {{ btnText }} in user_data[user_id]['multi_select_{{ node.targetNode.id }}'] else '') + {{ btnText }}))
-{% endif %}
-{% endfor %}
-{% set completeBtn = null %}
-{% for button in node.targetNode.data.buttons %}{% if button.action == 'complete' %}{% set completeBtn = button %}{% endif %}{% endfor %}
-{% if completeBtn %}
-        builder.add(KeyboardButton(text="{{ completeBtn.text or 'Готово' }}"))
-{% endif %}
-        keyboard = builder.as_markup(resize_keyboard={{ node.targetNode.data.resizeKeyboard|to_python_boolean }}, one_time_keyboard={{ node.targetNode.data.oneTimeKeyboard|to_python_boolean }})
-        await bot.send_message(user_id, text, reply_markup=keyboard)
-{% else %}
-        builder = InlineKeyboardBuilder()
-{% for button in node.targetNode.data.buttons %}
-{% if button.action == 'selection' %}
-{% set btnText = button.text|escape_python_string %}
-        builder.add(InlineKeyboardButton(text=('✅ ' if {{ btnText }} in user_data[user_id]['multi_select_{{ node.targetNode.id }}'] else '') + {{ btnText }}, callback_data="{{ button.callbackData or 'btn' }}"))
-{% endif %}
-{% endfor %}
-{% set completeBtn = null %}
-{% for button in node.targetNode.data.buttons %}{% if button.action == 'complete' %}{% set completeBtn = button %}{% endif %}{% endfor %}
-{% if completeBtn %}
-        builder.add(InlineKeyboardButton(text="{{ completeBtn.text or 'Готово' }}", callback_data="done_{{ node.targetNode.shortId or 'btn' }}"))
-{% endif %}
-        {{ node.targetNode.adjustCode or 'builder.adjust(2)' }}
-        keyboard = builder.as_markup()
-        await callback_query.message.answer(text, reply_markup=keyboard)
-{% endif %}
-        logging.info(f"🏁 Сообщение отправлено, ЗАВЕРШАЕМ функцию")
+{% if node.targetNode.type == 'message' or node.targetNode.type == 'set_variable' or node.targetNode.type == 'condition' or node.targetNode.type == 'send_invoice' or node.targetNode.type == 'create_invoice_link' or node.targetNode.type == 'keyboard' %}
+        await handle_callback_{{ node.targetNode.id | safe_name }}(callback_query, state=state)
         return
-{% endif %}
-{# END: if node.targetNode.type == 'message' #}
-
-{% if node.targetNode.type != 'message' %}
-        # Узел не message
-{% if node.targetNode.type == 'command' %}
-        await handle_command_{{ node.targetNode.data.command|safe_name }}(callback_query.message)
+{% elif node.targetNode.type == 'command' %}
+        await handle_command_{{ node.targetNode.data.command | safe_name }}(callback_query.message)
+        return
 {% else %}
-        await handle_callback_{{ node.targetNode.id|safe_name }}(callback_query, state=state)
-{% endif %}
+        await handle_callback_{{ node.targetNode.id | safe_name }}(callback_query, state=state)
         return
 {% endif %}
 
@@ -130,6 +70,7 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery, state: F
         # Целевой узел не найден
         logging.info(f"⚠️ Целевой узел не найден")
         await callback_query.message.answer("Переход завершен")
+        return
 {% endif %}
 {# END: if node.continueButtonTarget and node.targetNode #}
 

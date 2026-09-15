@@ -402,9 +402,14 @@ async def handle_callback_{{ safe_node_id }}(callback_query: types.CallbackQuery
         {% endfor %}
         {% for assignment in assignments %}
         {%- if assignment.persistToDb %}
+        {%- if '{' in assignment.variable %}
+        _sv_persist_key_{{ loop.index }} = replace_variables_in_text({{ assignment.variable | tojson }}, await init_all_user_vars(user_id))
+        {%- else %}
         {%- set safe_var = assignment.variable | replace('{', '') | replace('}', '') | trim %}
-        if user_id in user_data and "{{ safe_var }}" in user_data[user_id]:
-            await set_user_var(user_id, "{{ safe_var }}", user_data[user_id]["{{ safe_var }}"])
+        _sv_persist_key_{{ loop.index }} = "{{ safe_var }}"
+        {%- endif %}
+        if user_id in user_data and _sv_persist_key_{{ loop.index }} in user_data[user_id]:
+            await set_user_var(user_id, _sv_persist_key_{{ loop.index }}, user_data[user_id][_sv_persist_key_{{ loop.index }}])
         {%- endif %}
         {% endfor %}
         logging.info(f"✅ set_variable [{{ nodeId }}]: установлено {{ assignments | length }} переменных для {user_id}")

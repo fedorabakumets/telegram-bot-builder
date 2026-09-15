@@ -71,7 +71,7 @@ describe('multi-select-done.py.jinja2 шаблон', () => {
       it('должен генерировать код сохранения выбранных опций', () => {
         const result = generateMultiSelectDone(validParamsBasic);
 
-        assert.ok(result.includes('save_user_data_to_db'));
+        assert.ok(result.includes('update_user_data_in_db'));
         assert.ok(result.includes('selected_options'));
         assert.ok(result.includes('selected_text'));
       });

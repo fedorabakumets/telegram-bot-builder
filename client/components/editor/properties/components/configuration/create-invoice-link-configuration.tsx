@@ -11,6 +11,12 @@ import { VariableSelector } from '../variables/variable-selector';
 import { VariableNameInput } from '../variables/variable-name-input';
 import { InvoicePhotoField } from './invoice-photo-field';
 import { InvoiceSubscriptionToggle } from './invoice-subscription-toggle';
+import {
+  InvoiceCurrencyProviderFields,
+  normalizeInvoiceCurrency,
+} from './invoice-currency-provider-fields';
+import { isStaticStarsCurrency } from './invoice-currency-utils';
+import { InvoiceOrderInfoFields } from './invoice-order-info-fields';
 import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы панели ссылки на счёт */
@@ -27,6 +33,8 @@ interface CreateInvoiceLinkConfigurationProps {
   formatNodeDisplay: (node: Node, sheetName: string) => string;
   /** Доступные переменные */
   textVariables?: Variable[];
+  /** Env-ключи бота для токена провайдера */
+  envVariables?: Array<{ key: string; value: string }>;
 }
 
 /**
@@ -41,8 +49,12 @@ export function CreateInvoiceLinkConfiguration({
   getAllNodesFromAllSheets,
   formatNodeDisplay,
   textVariables = [],
+  envVariables = [],
 }: CreateInvoiceLinkConfigurationProps) {
   const data = selectedNode.data as any;
+  const rawCurrency = String(data?.invoiceCurrency ?? 'XTR').trim() || 'XTR';
+  const currency = rawCurrency.includes('{') ? rawCurrency : normalizeInvoiceCurrency(rawCurrency);
+  const isStars = isStaticStarsCurrency(rawCurrency);
   const autoTransitionTo: string = data?.autoTransitionTo || '';
   const afterPaymentTo: string = data?.afterPaymentTo || '';
   const availableTargets = getAllNodesFromAllSheets.filter(
@@ -91,6 +103,20 @@ export function CreateInvoiceLinkConfiguration({
         Карточку в чат не шлёт. Для канала/поздней оплаты — триггер «Успешная оплата».
       </p>
 
+      <InvoiceCurrencyProviderFields
+        nodeId={selectedNode.id}
+        data={data}
+        onNodeUpdate={onNodeUpdate}
+        envVariables={envVariables}
+      />
+
+      <InvoiceOrderInfoFields
+        nodeId={selectedNode.id}
+        data={data}
+        onNodeUpdate={onNodeUpdate}
+        textVariables={textVariables}
+      />
+
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">Название</Label>
         <Input
@@ -114,11 +140,13 @@ export function CreateInvoiceLinkConfiguration({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs font-medium">Цена в звёздах</Label>
+        <Label className="text-xs font-medium">
+          {isStars ? 'Цена в звёздах' : `Цена (${currency}, минорные единицы)`}
+        </Label>
         <Input
           value={data?.invoiceAmount || ''}
           onChange={(e) => onNodeUpdate(selectedNode.id, { invoiceAmount: e.target.value })}
-          placeholder="1"
+          placeholder={isStars ? '1' : '100'}
           className="h-8 text-xs"
         />
         {textVariables.length > 0 && (
@@ -126,11 +154,13 @@ export function CreateInvoiceLinkConfiguration({
         )}
       </div>
 
-      <InvoiceSubscriptionToggle
-        id={`invoice-link-sub-${selectedNode.id}`}
-        checked={Boolean(data?.invoiceSubscription)}
-        onChange={(checked) => onNodeUpdate(selectedNode.id, { invoiceSubscription: checked })}
-      />
+      {isStars && (
+        <InvoiceSubscriptionToggle
+          id={`invoice-link-sub-${selectedNode.id}`}
+          checked={Boolean(data?.invoiceSubscription)}
+          onChange={(checked) => onNodeUpdate(selectedNode.id, { invoiceSubscription: checked })}
+        />
+      )}
 
       <InvoicePhotoField
         projectId={projectId}

@@ -10,6 +10,12 @@ import type { Node } from '@shared/schema';
 import { VariableSelector } from '../variables/variable-selector';
 import { VariableNameInput } from '../variables/variable-name-input';
 import { InvoicePhotoField } from './invoice-photo-field';
+import {
+  InvoiceCurrencyProviderFields,
+  normalizeInvoiceCurrency,
+} from './invoice-currency-provider-fields';
+import { isStaticStarsCurrency } from './invoice-currency-utils';
+import { InvoiceOrderInfoFields } from './invoice-order-info-fields';
 import type { Variable } from '../../../inline-rich/types';
 import { getKeyboardNodeId } from '../../../canvas/canvas-node/keyboard-connection';
 import { findPayButtonOnKeyboard } from '../../utils/invoice-pay-connection';
@@ -29,6 +35,8 @@ interface SendInvoiceConfigurationProps {
   formatNodeDisplay: (node: Node, sheetName: string) => string;
   /** Доступные переменные */
   textVariables?: Variable[];
+  /** Env-ключи бота для токена провайдера */
+  envVariables?: Array<{ key: string; value: string }>;
 }
 
 /**
@@ -43,8 +51,12 @@ export function SendInvoiceConfiguration({
   getAllNodesFromAllSheets,
   formatNodeDisplay,
   textVariables = [],
+  envVariables = [],
 }: SendInvoiceConfigurationProps) {
   const data = selectedNode.data as any;
+  const rawCurrency = String(data?.invoiceCurrency ?? 'XTR').trim() || 'XTR';
+  const currency = rawCurrency.includes('{') ? rawCurrency : normalizeInvoiceCurrency(rawCurrency);
+  const isStars = isStaticStarsCurrency(rawCurrency);
   const autoTransitionTo: string = data?.autoTransitionTo || '';
   const availableTargets = getAllNodesFromAllSheets.filter(
     ({ node }) => node.id !== selectedNode.id,
@@ -81,15 +93,29 @@ export function SendInvoiceConfiguration({
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center gap-2">
-        <i className="fas fa-star text-yellow-500 text-sm" />
+        <i className={`${isStars ? 'fas fa-star' : 'fas fa-receipt'} text-yellow-500 text-sm`} />
         <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-300">
           Выставить счёт
         </span>
       </div>
       <p className="text-[10px] text-muted-foreground leading-relaxed">
-        Бот отправит счёт в чат. Переход после оплаты на холсте тянется от кнопки «Оплатить»
-        на клавиатуре (в данных это autoTransitionTo счёта), не сразу после отправки счёта.
+        Счёт в чат: звёзды (XTR) или фиат через провайдера BotFather.
+        Переход после оплаты — от кнопки «Оплатить» (autoTransitionTo счёта).
       </p>
+
+      <InvoiceCurrencyProviderFields
+        nodeId={selectedNode.id}
+        data={data}
+        onNodeUpdate={onNodeUpdate}
+        envVariables={envVariables}
+      />
+
+      <InvoiceOrderInfoFields
+        nodeId={selectedNode.id}
+        data={data}
+        onNodeUpdate={onNodeUpdate}
+        textVariables={textVariables}
+      />
 
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">Название</Label>
@@ -116,11 +142,13 @@ export function SendInvoiceConfiguration({
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs font-medium">Цена в звёздах</Label>
+        <Label className="text-xs font-medium">
+          {isStars ? 'Цена в звёздах' : `Цена (${currency}, минорные единицы)`}
+        </Label>
         <Input
           value={data?.invoiceAmount || ''}
           onChange={(e) => onNodeUpdate(selectedNode.id, { invoiceAmount: e.target.value })}
-          placeholder="1"
+          placeholder={isStars ? '1' : '100'}
           className="h-8 text-xs"
         />
         {textVariables.length > 0 && (
