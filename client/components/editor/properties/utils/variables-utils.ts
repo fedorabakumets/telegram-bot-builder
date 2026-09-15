@@ -827,6 +827,24 @@ export function extractVariables(allNodes: Node[], botTables?: BotTableForVariab
     }
   });
 
+  // Переменные get_star_balance (целое amount баланса бота)
+  allNodes.forEach(node => {
+    if ((node.type as string) !== 'get_star_balance') return;
+    const data = node.data as any;
+    if (data.saveStarBalanceTo?.trim()) {
+      const key = `get_star_balance__${node.id}`;
+      if (!variablesMap.has(key)) {
+        variablesMap.set(key, {
+          name: data.saveStarBalanceTo,
+          nodeId: node.id,
+          nodeType: 'get_star_balance' as any,
+          sourceTable: 'bot_users',
+          description: 'Баланс звёзд бота',
+        });
+      }
+    }
+  });
+
   // Переменные триггера успешной оплаты
   allNodes.forEach(node => {
     if ((node.type as string) !== 'successful_payment_trigger') return;

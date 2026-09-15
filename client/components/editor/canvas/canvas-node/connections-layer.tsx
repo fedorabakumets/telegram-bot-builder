@@ -240,6 +240,7 @@ export function collectConnections(nodes: Node[]): Connection[] {
       && (node.type as any) !== 'loop'
       && (node.type as any) !== 'refund_stars'
       && (node.type as any) !== 'edit_star_subscription'
+      && (node.type as any) !== 'get_star_balance'
       && (node.type as any) !== 'create_invoice_link'
       && !((node.type as string) === 'send_invoice' && invoiceUsesPayButtonVisual(node, nodes))
     ) {
@@ -458,6 +459,27 @@ export function collectConnections(nodes: Node[]): Connection[] {
         { field: 'subscriptionErrorTarget', buttonId: 'sub-error', label: 'Ошибка' },
       ];
       for (const port of subPorts) {
+        const toId = d?.[port.field] as string | undefined;
+        if (toId && existingIds.has(toId)) {
+          connections.push({
+            fromId: node.id,
+            toId,
+            type: 'button-goto',
+            label: port.label,
+            buttonId: port.buttonId,
+          });
+        }
+      }
+    }
+
+    // 11c. Выходы get_star_balance
+    if ((node.type as any) === 'get_star_balance') {
+      const d = node.data as any;
+      const balPorts: Array<{ field: string; buttonId: string; label: string }> = [
+        { field: 'autoTransitionTo', buttonId: 'bal-success', label: 'Успех' },
+        { field: 'balanceErrorTarget', buttonId: 'bal-error', label: 'Ошибка' },
+      ];
+      for (const port of balPorts) {
         const toId = d?.[port.field] as string | undefined;
         if (toId && existingIds.has(toId)) {
           connections.push({

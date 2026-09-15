@@ -255,6 +255,16 @@ export function hasGetManagedBotTokenNodes(nodes: Node[]): boolean {
 }
 
 /**
+ * Проверяет наличие узлов get_star_balance в массиве узлов
+ * @param nodes - Массив узлов для проверки
+ * @returns true если есть хотя бы один узел типа get_star_balance
+ */
+export function hasGetStarBalanceNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.filter(n => n != null).some(node => (node.type as string) === 'get_star_balance');
+}
+
+/**
  * Проверяет наличие узлов answer_callback_query в массиве узлов
  * @param nodes - Массив узлов для проверки
  * @returns true если есть хотя бы один узел типа answer_callback_query

@@ -212,6 +212,12 @@ export function collectCrossSheetLinks(
       tryAddLink(links, node.id, data?.subscriptionErrorTarget, 'button-goto', currentNodeIds, otherNodesMap);
     }
 
+    // 6b3. get_star_balance
+    if (type === 'get_star_balance') {
+      tryAddLink(links, node.id, data?.autoTransitionTo, 'button-goto', currentNodeIds, otherNodesMap);
+      tryAddLink(links, node.id, data?.balanceErrorTarget, 'button-goto', currentNodeIds, otherNodesMap);
+    }
+
     // 6c. create_invoice_link: после создания и после оплаты
     if (type === 'create_invoice_link') {
       tryAddLink(links, node.id, data?.autoTransitionTo, 'button-goto', currentNodeIds, otherNodesMap);

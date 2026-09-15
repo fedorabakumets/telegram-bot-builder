@@ -45,6 +45,7 @@ const NODE_TYPES_WITH_DEDICATED_HANDLERS = new Set<string>([
   'successful_payment_trigger', // роутер в send-invoice.py.jinja2 (fallback после счёта)
   'refund_stars', // собственный обработчик генерируется шаблоном refund-stars.py.jinja2
   'edit_star_subscription', // editUserStarSubscription
+  'get_star_balance', // getMyStarBalance
   'stop_processing', // собственный обработчик генерируется шаблоном stop-processing.py.jinja2
   'rate_counter', // собственный обработчик генерируется шаблоном rate-counter.py.jinja2
   'code', // собственный обработчик генерируется шаблоном code.py.jinja2

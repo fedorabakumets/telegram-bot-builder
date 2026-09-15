@@ -696,6 +696,21 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       keyboardType: 'none',
       buttons: [],
     },
+    get_star_balance: {
+      /** Переменная для целого amount */
+      saveStarBalanceTo: 'star_balance',
+      /** Игнорировать ошибки */
+      ignoreErrors: false,
+      /** Текст ошибки */
+      balanceMsgError: 'Не удалось получить баланс звёзд',
+      /** Выход ошибки */
+      balanceErrorTarget: '',
+      /** Успех */
+      autoTransitionTo: '',
+      enableAutoTransition: false,
+      keyboardType: 'none',
+      buttons: [],
+    },
   };
   return structuredClone(defaults[type] ?? {});
 }

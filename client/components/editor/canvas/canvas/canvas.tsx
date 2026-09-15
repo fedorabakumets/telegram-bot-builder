@@ -599,6 +599,19 @@ export function Canvas({
             }
           }
 
+          /** Порты get_star_balance */
+          if ((n.type as any) === 'get_star_balance') {
+            if (buttonId === 'bal-success') {
+              data.autoTransitionTo = targetNodeId;
+              data.enableAutoTransition = true;
+              return { ...n, data };
+            }
+            if (buttonId === 'bal-error') {
+              data.balanceErrorTarget = targetNodeId;
+              return { ...n, data };
+            }
+          }
+
           /** Порты create_invoice_link */
           if ((n.type as any) === 'create_invoice_link') {
             if (buttonId === 'invoice-link-created') {
@@ -739,6 +752,13 @@ export function Canvas({
             }
             if (data.subscriptionEmptyTarget === toId) delete data.subscriptionEmptyTarget;
             if (data.subscriptionErrorTarget === toId) delete data.subscriptionErrorTarget;
+          }
+          if ((n.type as any) === 'get_star_balance') {
+            if (data.autoTransitionTo === toId) {
+              data.enableAutoTransition = false;
+              delete data.autoTransitionTo;
+            }
+            if (data.balanceErrorTarget === toId) delete data.balanceErrorTarget;
           }
           if ((n.type as any) === 'create_invoice_link') {
             if (data.autoTransitionTo === toId) {

@@ -58,6 +58,7 @@ export const MANAGEMENT_NODE_TYPES = [
   'create_invoice_link' as any,
   'refund_stars' as any,
   'edit_star_subscription' as any,
+  'get_star_balance' as any,
 ] as const;
 
 /**

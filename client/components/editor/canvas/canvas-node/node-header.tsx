@@ -213,6 +213,13 @@ export function NodeHeader({ node, onMove }: NodeHeaderProps) {
             {getNodeName('edit_star_subscription')}
           </span>
         );
+      /** Заголовок баланса звёзд бота */
+      case 'get_star_balance' as any:
+        return (
+          <span className="font-semibold text-yellow-700 dark:text-yellow-300">
+            {getNodeName('get_star_balance')}
+          </span>
+        );
       default:
         return null;
     }

@@ -68,6 +68,7 @@ export function getBadgeText(variable: Variable): string {
     successful_payment_trigger: '⭐ Оплата',
     refund_stars: '↩️ Возврат',
     edit_star_subscription: '🔄 Подписка',
+    get_star_balance: '💰 Баланс',
     command_trigger: '⚡ Команда',
   };
   return labels[variable.nodeType] || '📌';
@@ -262,6 +263,13 @@ export function getNodeInfo(variable: Variable) {
     return (
       <div className="text-[10px] text-yellow-600 dark:text-yellow-400 mt-0.5 truncate">
         🔗 {variable.description}
+      </div>
+    );
+  }
+  if ((variable.nodeType as string) === 'get_star_balance') {
+    return (
+      <div className="text-[10px] text-yellow-600 dark:text-yellow-400 mt-0.5 truncate">
+        💰 {variable.description}
       </div>
     );
   }

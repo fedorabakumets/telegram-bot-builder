@@ -610,6 +610,22 @@ In-memory счётчик событий в **скользящем временн
 
 ---
 
+### 💰 Баланс звёзд (`get_star_balance`)
+
+Запрашивает **баланс звёзд на счету бота** (Bot API `getMyStarBalance`), не баланс пользователя. Целое `amount` (может быть отрицательным) сохраняется в переменную.
+
+| Настройка | Описание |
+|-----------|----------|
+| Сохранить баланс | `saveStarBalanceTo` (по умолчанию `star_balance`) |
+| Успех | `autoTransitionTo` + `enableAutoTransition` |
+| Ошибка API | `balanceErrorTarget` |
+| Fallback-текст | `balanceMsgError` |
+| ignoreErrors | После текста ошибки идти на успех, если задан |
+
+Типично: `/balance` → `get_star_balance` → сообщение «На боте {star_balance} ⭐»; перед `refund_stars` — `condition` по балансу.
+
+---
+
 ### 💻 Python-код (`code`)
 
 Выполняет произвольный Python как тело async-функции. Позволяет заменить длинную цепочку userbot-нод одним узлом.

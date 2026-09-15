@@ -667,6 +667,21 @@ export function getNodeDefaults(type: Node['type']): any {
       keyboardType: 'none',
       buttons: [],
     },
+    get_star_balance: {
+      /** Переменная для целого amount */
+      saveStarBalanceTo: 'star_balance',
+      /** Не рвать сценарий при ошибке */
+      ignoreErrors: false,
+      /** Текст ошибки API */
+      balanceMsgError: 'Не удалось получить баланс звёзд',
+      /** Выход ошибки */
+      balanceErrorTarget: '',
+      /** Успех */
+      autoTransitionTo: '',
+      enableAutoTransition: false,
+      keyboardType: 'none',
+      buttons: [],
+    },
     userbot_edit_trigger: {
       /** Сущность (чат/канал) для отслеживания */
       userbotEntity: '',
