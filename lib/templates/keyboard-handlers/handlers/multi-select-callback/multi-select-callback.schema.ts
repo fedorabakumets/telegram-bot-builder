@@ -25,6 +25,8 @@ const multiSelectButtonSchema = z.object({
   escapedText: z.string(),
   /** Pre-computed callback_data */
   callbackData: z.string(),
+  /** Группа радиовыбора (пусто = обычная галочка) */
+  selectionGroup: z.string().optional(),
 });
 
 /** Схема для обычной кнопки */

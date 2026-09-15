@@ -37,6 +37,11 @@ export interface ButtonWithShortId extends Button {
   suggestedBotName?: string;
   /** Предложенный username для создаваемого управляемого бота (Bot API 9.6) */
   suggestedBotUsername?: string;
+  /**
+   * Группа радиовыбора для selection при multi-select
+   * (одинаковое значение = один выбор, префиксы 🔘/⚪️)
+   */
+  selectionGroup?: string;
 }
 
 /** Условное сообщение */

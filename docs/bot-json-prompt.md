@@ -1842,9 +1842,18 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 | `command` | Выполнить команду | — |
 | `contact` | Запросить контакт | `requestContact: true` |
 | `location` | Запросить геолокацию | `requestLocation: true` |
-| `selection` | Выбор из списка | — |
-| `complete` | Завершить сбор данных | — |
+| `selection` | Выбор из списка (галочка/радио при multi-select) | опционально `selectionGroup` |
+| `complete` | Завершить сбор данных / multi-select | `target` — куда перейти после «Готово» |
 | `request_managed_bot` | Создать управляемого бота | `suggestedBotName`, `suggestedBotUsername` |
+
+### Multi-select и радиогруппы
+
+На узле с `allowMultipleSelection: true` кнопки `action: "selection"` переключают выбор, префикс `✅ `; итог пишется в переменную через запятую. Кнопка `action: "complete"` завершает выбор.
+
+Опциональное поле кнопки `selectionGroup` (строка, напр. `"currency"`):
+- **пусто / нет** — обычный мультивыбор (`✅ `);
+- **одинаковая непустая группа** у нескольких кнопок — радио: в группе активна одна кнопка, префиксы `🔘 ` / `⚪️ `; повторный клик снимает выбор;
+- разные группы независимы друг от друга и от обычных галочек.
 
 ### Стили кнопок (style)
 

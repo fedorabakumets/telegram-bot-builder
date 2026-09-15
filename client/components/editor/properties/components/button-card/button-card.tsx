@@ -13,6 +13,7 @@ import { ButtonHideAfterClickToggle } from './button-hide-after-click-toggle';
 import { GotoTargetSection } from '../navigation/goto-target-section';
 import { InvoicePayTargetSection } from '../navigation/invoice-pay-target-section';
 import { ButtonRequestManagedBotFields } from './button-request-managed-bot-fields';
+import { ButtonSelectionGroupField } from './button-selection-group-field';
 import type { Button } from '@shared/schema';
 import type { ProjectVariable } from '../../utils/variables-utils';
 import type { Node } from '@shared/schema';
@@ -100,6 +101,14 @@ export function ButtonCard({
         allowedActions={allowedActions}
         disabled={lockPayButton}
       />
+
+      {selectedNode.data.allowMultipleSelection && (
+        <ButtonSelectionGroupField
+          nodeId={nodeId}
+          button={button}
+          onButtonUpdate={onButtonUpdate}
+        />
+      )}
 
       {/* Селектор стиля кнопки (Bot API 9.4) */}
       {(!hideExtras || showStyle) && (

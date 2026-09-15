@@ -44,8 +44,8 @@ async def handle_multi_select_done(callback_query: types.CallbackQuery, state: F
             user_data[user_id]["{{ node.variableName }}"] = selected_text
             logging.info(f"⚠️ Нет выбранных опций для {{ node.id }} — сохранили пустую строку")
 
+        # Не чистим multi_select_<id> — то же сообщение можно править дальше (галочки)
         if user_id in user_data:
-            user_data[user_id].pop("multi_select_{{ node.id }}", None)
             user_data[user_id].pop("multi_select_node", None)
             user_data[user_id].pop("multi_select_type", None)
             user_data[user_id].pop("multi_select_variable", None)

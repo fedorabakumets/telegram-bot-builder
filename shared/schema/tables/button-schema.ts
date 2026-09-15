@@ -39,6 +39,11 @@ export const buttonSchema = z.object({
   suggestedBotName: z.string().optional(),
   /** Предложенный username для создаваемого управляемого бота */
   suggestedBotUsername: z.string().optional(),
+  /**
+   * Группа радиовыбора для action=selection при allowMultipleSelection.
+   * Кнопки с одинаковым непустым значением — один выбор (🔘/⚪️); без группы — мультивыбор (✅).
+   */
+  selectionGroup: z.string().optional(),
 });
 
 /** Тип кнопки бота */

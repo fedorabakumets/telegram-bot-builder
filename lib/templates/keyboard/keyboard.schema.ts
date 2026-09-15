@@ -67,6 +67,13 @@ export const keyboardParamsSchema = z.object({
     suggestedBotName: z.string().optional(),
     /** Предложенный username для создаваемого управляемого бота (Bot API 9.6) */
     suggestedBotUsername: z.string().optional(),
+    /**
+     * Группа радиовыбора для selection при multi-select
+     * (одинаковое значение = один выбор, префиксы 🔘/⚪️)
+     */
+    selectionGroup: z.string().optional(),
+    /** Короткий ID кнопки (pre-computed) */
+    shortButtonId: z.string().optional(),
   })).default([]),
   /** Раскладка клавиатуры */
   keyboardLayout: z.object({

@@ -1,7 +1,7 @@
 {#
   Шаблон генерации обработчика callback для multi-select кнопок
 
-  @fileoverview Генерирует Python код для обработки выбора кнопок с галочками (✓/✗)
+  @fileoverview Генерирует Python код для обработки выбора кнопок с галочками / радио
   @param {array} multiSelectNodes - Массив узлов с множественным выбором
   @param {array} allNodeIds - Массив всех ID узлов для генерации коротких ID
   @param {string} indentLevel - Уровень отступа (по умолчанию '    ')
@@ -10,7 +10,7 @@
 {% set indent = indentLevel or '    ' %}
 
 {% if multiSelectNodes and multiSelectNodes|length > 0 %}
-# Обработчик выбора опций multi-select (✅ на кнопках)
+# Обработчик выбора опций multi-select (✅ / 🔘 на кнопках)
 @dp.callback_query(lambda c: c.data and (c.data.startswith("ms_") or c.data.startswith("multi_select_")))
 async def handle_multi_select_option(callback_query: types.CallbackQuery, state: FSMContext = None):
 {{ indent }}await callback_query.answer()
@@ -57,37 +57,81 @@ async def handle_multi_select_option(callback_query: types.CallbackQuery, state:
 {{ indent }}if user_id not in user_data:
 {{ indent }}    user_data[user_id] = {}
 
+{{ indent }}# Восстанавливаем выбор: память → переменная → БД → галочки на сообщении
 {{ indent }}if f"multi_select_{node_id}" not in user_data[user_id]:
-{{ indent }}    user_vars = await get_user_from_db(user_id)
 {{ indent }}    saved_selections = []
-{{ indent }}    if isinstance(user_vars, dict):
+{{ indent }}    _ms_var = None
 {% for node in multiSelectNodes %}
+{{ indent }}    if node_id == "{{ node.id }}":
 {{ indent }}        _ms_var = "{{ node.variableName or '' }}"
-{{ indent }}        if _ms_var and _ms_var in user_vars:
-{{ indent }}            _raw = user_vars.get(_ms_var)
-{{ indent }}            _s = _raw.get("value") if isinstance(_raw, dict) else _raw
-{{ indent }}            if isinstance(_s, str) and _s.strip():
-{{ indent }}                saved_selections = [x.strip() for x in _s.split(",") if x.strip()]
 {% endfor %}
+{{ indent }}    _ms_raw = user_data[user_id].get(_ms_var) if _ms_var else None
+{{ indent }}    if _ms_raw is None and _ms_var:
+{{ indent }}        try:
+{{ indent }}            _db_row = await get_user_from_db(user_id)
+{{ indent }}            if isinstance(_db_row, dict):
+{{ indent }}                _ms_raw = _db_row.get(_ms_var)
+{{ indent }}                if _ms_raw is None and isinstance(_db_row.get("user_data"), dict):
+{{ indent }}                    _ms_raw = _db_row["user_data"].get(_ms_var)
+{{ indent }}        except Exception as _e:
+{{ indent }}            logging.warning(f"⚠️ multi-select: не удалось прочитать БД: {_e}")
+{{ indent }}    if isinstance(_ms_raw, dict):
+{{ indent }}        _ms_raw = _ms_raw.get("value")
+{{ indent }}    if isinstance(_ms_raw, str) and _ms_raw.strip():
+{{ indent }}        saved_selections = [x.strip() for x in _ms_raw.split(",") if x.strip()]
+{{ indent }}    if not saved_selections and callback_query.message and getattr(callback_query.message, "reply_markup", None):
+{{ indent }}        try:
+{{ indent }}            for _row in callback_query.message.reply_markup.inline_keyboard or []:
+{{ indent }}                for _btn in _row:
+{{ indent }}                    _t = (_btn.text or "").strip()
+{{ indent }}                    if _t.startswith("✅ "):
+{{ indent }}                        saved_selections.append(_t[2:].strip())
+{{ indent }}                    elif _t.startswith("🔘 "):
+{{ indent }}                        saved_selections.append(_t[2:].strip())
+{{ indent }}        except Exception:
+{{ indent }}            pass
 {{ indent }}    user_data[user_id][f"multi_select_{node_id}"] = saved_selections
+{{ indent }}    logging.info(f"♻️ multi-select восстановлен ({node_id}): {saved_selections}")
 
 {{ indent }}button_text = None
+{{ indent }}_btn_group = None
+{{ indent }}_group_peers = []
 {% for node in multiSelectNodes %}
 {% if node.selectionButtons and node.selectionButtons|length > 0 %}
 {{ indent }}if node_id == "{{ node.id }}":
 {% for button in node.selectionButtons %}
 {{ indent }}    if button_id == "{{ button.value }}" or button_id == "{{ button.valueTruncated }}":
 {{ indent }}        button_text = {{ button.text|escape_python_string }}
+{% if button.selectionGroup %}
+{{ indent }}        _btn_group = {{ button.selectionGroup|tojson }}
+{{ indent }}        _group_peers = [
+{%- for peer in node.selectionButtons -%}
+{%- if peer.selectionGroup == button.selectionGroup -%}
+{{ indent }}            {{ peer.text|escape_python_string }},
+{%- endif -%}
+{%- endfor %}
+{{ indent }}        ]
+{% endif %}
 {% endfor %}
 {% endif %}
 {% endfor %}
 
 {{ indent }}if button_text:
 {{ indent }}    selected_list = user_data[user_id][f"multi_select_{node_id}"]
-{{ indent }}    if button_text in selected_list:
-{{ indent }}        selected_list.remove(button_text)
+{{ indent }}    if _btn_group:
+{{ indent }}        # Радиогруппа: повторный клик снимает, иначе один выбор в группе
+{{ indent }}        if button_text in selected_list:
+{{ indent }}            selected_list.remove(button_text)
+{{ indent }}        else:
+{{ indent }}            for _peer in _group_peers:
+{{ indent }}                while _peer in selected_list:
+{{ indent }}                    selected_list.remove(_peer)
+{{ indent }}            selected_list.append(button_text)
 {{ indent }}    else:
-{{ indent }}        selected_list.append(button_text)
+{{ indent }}        if button_text in selected_list:
+{{ indent }}            selected_list.remove(button_text)
+{{ indent }}        else:
+{{ indent }}            selected_list.append(button_text)
 {{ indent }}    logging.info(f"📋 Текущие выборы: {selected_list}")
 
 {{ indent }}    builder = InlineKeyboardBuilder()
@@ -96,7 +140,12 @@ async def handle_multi_select_option(callback_query: types.CallbackQuery, state:
 {% if node.selectionButtons and node.selectionButtons|length > 0 %}
 {% for button in node.selectionButtons %}
 {{ indent }}        _sel_text = {{ button.text|escape_python_string }}
-{{ indent }}        builder.add(InlineKeyboardButton(text=("✅ " if _sel_text in selected_list else "") + _sel_text, callback_data="{{ button.callbackData }}"))
+{% if button.selectionGroup %}
+{{ indent }}        _sel_pfx = ("🔘 " if _sel_text in selected_list else "⚪️ ")
+{% else %}
+{{ indent }}        _sel_pfx = ("✅ " if _sel_text in selected_list else "")
+{% endif %}
+{{ indent }}        builder.add(InlineKeyboardButton(text=_sel_pfx + _sel_text, callback_data="{{ button.callbackData }}"))
 {% endfor %}
 {% else %}
 {{ indent }}        pass
@@ -117,6 +166,11 @@ async def handle_multi_select_option(callback_query: types.CallbackQuery, state:
 {{ indent }}        builder.adjust(calculate_optimal_columns({{ node.totalButtonsCount }}))
 {% endif %}
 {% endfor %}
-{{ indent }}    await callback_query.message.edit_reply_markup(reply_markup=builder.as_markup())
+{{ indent }}    try:
+{{ indent }}        await callback_query.message.edit_reply_markup(reply_markup=builder.as_markup())
+{{ indent }}    except TelegramBadRequest as e:
+{{ indent }}        if "message is not modified" not in str(e):
+{{ indent }}            raise
+{{ indent }}        logging.info(f"ℹ️ multi-select: разметка не изменилась ({callback_data})")
 
 {% endif %}

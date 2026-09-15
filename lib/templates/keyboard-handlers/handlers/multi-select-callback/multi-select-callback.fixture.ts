@@ -219,6 +219,53 @@ export const invalidParamsWrongType = {
   allNodeIds: [],
 };
 
+/** Валидные параметры: радиогруппа валют (selectionGroup) */
+export const validParamsRadioGroup: MultiSelectCallbackTemplateParams = {
+  multiSelectNodes: [
+    {
+      id: 'shop-menu',
+      shortNodeId: 'shop-menu',
+      selectionButtons: [
+        {
+          id: 't-ship',
+          text: 'Доставка',
+          action: 'selection',
+          value: 't-ship',
+          valueTruncated: 't-ship',
+          escapedText: 'Доставка',
+          callbackData: 'ms_shop-menu_t-ship',
+        },
+        {
+          id: 'c-usd',
+          text: 'USD',
+          action: 'selection',
+          value: 'c-usd',
+          valueTruncated: 'c-usd',
+          escapedText: 'USD',
+          callbackData: 'ms_shop-menu_c-usd',
+          selectionGroup: 'currency',
+        },
+        {
+          id: 'c-eur',
+          text: 'EUR',
+          action: 'selection',
+          value: 'c-eur',
+          valueTruncated: 'c-eur',
+          escapedText: 'EUR',
+          callbackData: 'ms_shop-menu_c-eur',
+          selectionGroup: 'currency',
+        },
+      ],
+      regularButtons: [],
+      completeButton: { text: 'Отправить счёт', target: 'shop-apply-opts' },
+      doneCallbackData: 'done_shop-menu',
+      totalButtonsCount: 4,
+    },
+  ],
+  allNodeIds: ['shop-menu', 'shop-apply-opts'],
+  indentLevel: '    ',
+};
+
 /** Ожидаемый вывод: базовый */
 export const expectedOutputBasic = `
     # Обработка выбора опции

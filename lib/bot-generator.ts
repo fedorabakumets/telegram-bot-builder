@@ -581,6 +581,7 @@ function generateCodeSections(
         // Как в keyboard.py.jinja2: target || id (без обрезки — иначе рассинхрон с первой отрисовкой)
         const value = String(b.target || b.id || 'btn');
         const valueTruncated = value.slice(-8);
+        const groupRaw = typeof b.selectionGroup === 'string' ? b.selectionGroup.trim() : '';
         return {
           id: b.id,
           text: b.text,
@@ -590,6 +591,7 @@ function generateCodeSections(
           valueTruncated,
           escapedText: b.text.replace(/"/g, '\\"'),
           callbackData: `ms_${shortNodeId}_${value}`,
+          selectionGroup: groupRaw || undefined,
         };
       });
     const regularButtons = allButtons

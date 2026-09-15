@@ -23,6 +23,8 @@ export interface MultiSelectButton {
   escapedText: string;
   /** Pre-computed callback_data */
   callbackData: string;
+  /** Группа радиовыбора (пусто = обычная галочка) */
+  selectionGroup?: string;
 }
 
 /** Обычная кнопка (не selection) */
