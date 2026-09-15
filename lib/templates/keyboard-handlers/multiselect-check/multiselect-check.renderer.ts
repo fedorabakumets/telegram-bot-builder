@@ -6,6 +6,7 @@
 import type { MultiSelectCheckTemplateParams, MultiSelectNode } from './multiselect-check.params';
 import { multiSelectCheckParamsSchema } from './multiselect-check.schema';
 import { renderPartialTemplate } from '../../template-renderer';
+import { resolveSelectionMarkSymbols } from '../../keyboard/selection-mark-symbols';
 
 /** Предобработанный узел для шаблона */
 interface PreparedMultiSelectNode {
@@ -26,6 +27,8 @@ interface PreparedMultiSelectNode {
   keyboardType: string;
   buttons: Array<{ id: string; text: string; action: string; target?: string }>;
   allowMultipleSelection: boolean;
+  /** Символ выбранной галочки */
+  checkmarkSymbol: string;
 }
 
 /**
@@ -78,6 +81,7 @@ export function generateMultiSelectCheck(params: MultiSelectCheckTemplateParams)
       keyboardType: n.data.keyboardType || 'reply',
       buttons,
       allowMultipleSelection: n.data.allowMultipleSelection === true,
+      checkmarkSymbol: resolveSelectionMarkSymbols(n.data).checkmarkSymbol,
     };
   };
 

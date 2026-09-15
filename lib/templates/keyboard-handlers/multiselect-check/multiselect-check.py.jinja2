@@ -78,7 +78,7 @@
 {{ ind2 }}if node_id == "{{ node.id }}":
 {% for button in node.selectionButtons %}
 {{ ind3 }}# Проверяем текст кнопки, убирая галочку при необходимости
-{{ ind3 }}clean_user_input = user_input.replace("✅ ", "").strip()
+{{ ind3 }}clean_user_input = user_input.replace("{{ node.checkmarkSymbol or '✅' }} ", "").strip()
 {{ ind3 }}if clean_user_input == {{ button.text | escape_python_string }}:
 {{ ind4 }}if f"multi_select_{node_id}" not in user_data[user_id]:
 {{ ind4 }}    user_data[user_id][f"multi_select_{node_id}"] = []
@@ -95,7 +95,7 @@
 {{ ind4 }}builder = ReplyKeyboardBuilder()
 {% for sel_btn in node.selectionButtons %}
 {% set btn_text = sel_btn.text | escape_python_string %}
-{{ ind4 }}builder.add(KeyboardButton(text=('✅ ' if {{ btn_text }} in selected_list else '') + {{ btn_text }}))
+{{ ind4 }}builder.add(KeyboardButton(text=('{{ node.checkmarkSymbol or '✅' }} ' if {{ btn_text }} in selected_list else '') + {{ btn_text }}))
 {% endfor %}
 {% if node.completeButton %}
 {{ ind4 }}builder.add(KeyboardButton(text={{ node.completeButton.text | escape_python_string }}))

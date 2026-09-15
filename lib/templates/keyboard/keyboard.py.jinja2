@@ -275,9 +275,9 @@
 {%- set _btnVar = '_btn_' ~ loop.index %}
 {{ indent }}_btn_text = replace_variables_in_text({{ btn.text|format_python_text }}, all_user_vars, user_data.get(user_id, {}).get("_variable_filters", {}))
 {% if btn.selectionGroup %}
-{{ indent }}_btn_prefix = ("🔘 " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "⚪️ ")
+{{ indent }}_btn_prefix = ("{{ radioSelectedSymbol }} " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "{{ radioUnselectedSymbol }} ")
 {% else %}
-{{ indent }}_btn_prefix = ("✅ " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "")
+{{ indent }}_btn_prefix = ("{{ checkmarkSymbol }} " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "")
 {% endif %}
 {{ indent }}builder.add(InlineKeyboardButton(text=_btn_prefix + _btn_text, callback_data="ms_{{ effectiveNodeId }}_{{ btn.shortButtonId or btn.target or btn.id or 'btn' }}"{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
 {%- elif btn.action == 'selection' %}
@@ -340,9 +340,9 @@
 {%- elif btn.action == 'selection' and allowMultipleSelection %}
 {{ indent }}_btn_text = {% if projectId %}get_content("{{ nodeId }}.btn.{{ btn.id }}", {{ btn.text|format_python_text }}){% else %}{{ btn.text|format_python_text }}{% endif %}
 {% if btn.selectionGroup %}
-{{ indent }}_btn_prefix = ("🔘 " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "⚪️ ")
+{{ indent }}_btn_prefix = ("{{ radioSelectedSymbol }} " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "{{ radioUnselectedSymbol }} ")
 {% else %}
-{{ indent }}_btn_prefix = ("✅ " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "")
+{{ indent }}_btn_prefix = ("{{ checkmarkSymbol }} " if _btn_text in user_data[user_id]["multi_select_{{ nodeId }}"] else "")
 {% endif %}
 {{ indent }}builder.add(KeyboardButton(text=_btn_prefix + _btn_text{% if btn.style %}, style="{{ btn.style }}"{% endif %}))
 {%- else %}

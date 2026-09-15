@@ -10,6 +10,7 @@ import { computeAdjustStr, sortButtonsByLayout } from '../keyboard/keyboard.rend
 import { generateUserInput, nodeToUserInputParams } from '../user-input/user-input.renderer';
 import { normalizeDynamicButtonsConfig, shouldUseDynamicButtons } from '../keyboard/dynamic-buttons';
 import { buildStaticRowsAroundDynamic } from '../keyboard/keyboard-layout-rows';
+import { resolveSelectionMarkSymbols } from '../keyboard/selection-mark-symbols';
 import type { Node } from '@shared/schema';
 
 /**
@@ -86,8 +87,10 @@ export function generateMessage(params: MessageTemplateParams): string {
   const staticRowsAroundDynamic = hasDynamicLayout
     ? buildStaticRowsAroundDynamic(rawButtons, normalizedParams.keyboardLayout)
     : { staticRowsBefore: [], staticRowsAfter: [] };
+  const marks = resolveSelectionMarkSymbols(normalizedParams);
   const validated = messageParamsSchema.parse({
     ...normalizedParams,
+    ...marks,
     buttons: sortedButtons,
     userDatabaseEnabled: normalizedParams.userDatabaseEnabled ?? false,
     keyboardType: useDynamicButtons ? 'inline' : (normalizedParams.keyboardType ?? 'none'),

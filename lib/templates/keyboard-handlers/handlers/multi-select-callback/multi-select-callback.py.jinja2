@@ -81,13 +81,18 @@ async def handle_multi_select_option(callback_query: types.CallbackQuery, state:
 {{ indent }}        saved_selections = [x.strip() for x in _ms_raw.split(",") if x.strip()]
 {{ indent }}    if not saved_selections and callback_query.message and getattr(callback_query.message, "reply_markup", None):
 {{ indent }}        try:
-{{ indent }}            for _row in callback_query.message.reply_markup.inline_keyboard or []:
-{{ indent }}                for _btn in _row:
-{{ indent }}                    _t = (_btn.text or "").strip()
-{{ indent }}                    if _t.startswith("✅ "):
-{{ indent }}                        saved_selections.append(_t[2:].strip())
-{{ indent }}                    elif _t.startswith("🔘 "):
-{{ indent }}                        saved_selections.append(_t[2:].strip())
+{% for node in multiSelectNodes %}
+{{ indent }}            if node_id == "{{ node.id }}":
+{{ indent }}                _pfx_chk = "{{ node.checkmarkSymbol or '✅' }} "
+{{ indent }}                _pfx_rad = "{{ node.radioSelectedSymbol or '🔘' }} "
+{{ indent }}                for _row in callback_query.message.reply_markup.inline_keyboard or []:
+{{ indent }}                    for _btn in _row:
+{{ indent }}                        _t = (_btn.text or "").strip()
+{{ indent }}                        if _t.startswith(_pfx_chk):
+{{ indent }}                            saved_selections.append(_t[len(_pfx_chk):].strip())
+{{ indent }}                        elif _t.startswith(_pfx_rad):
+{{ indent }}                            saved_selections.append(_t[len(_pfx_rad):].strip())
+{% endfor %}
 {{ indent }}        except Exception:
 {{ indent }}            pass
 {{ indent }}    user_data[user_id][f"multi_select_{node_id}"] = saved_selections
@@ -141,9 +146,9 @@ async def handle_multi_select_option(callback_query: types.CallbackQuery, state:
 {% for button in node.selectionButtons %}
 {{ indent }}        _sel_text = {{ button.text|escape_python_string }}
 {% if button.selectionGroup %}
-{{ indent }}        _sel_pfx = ("🔘 " if _sel_text in selected_list else "⚪️ ")
+{{ indent }}        _sel_pfx = ("{{ node.radioSelectedSymbol or '🔘' }} " if _sel_text in selected_list else "{{ node.radioUnselectedSymbol or '⚪️' }} ")
 {% else %}
-{{ indent }}        _sel_pfx = ("✅ " if _sel_text in selected_list else "")
+{{ indent }}        _sel_pfx = ("{{ node.checkmarkSymbol or '✅' }} " if _sel_text in selected_list else "")
 {% endif %}
 {{ indent }}        builder.add(InlineKeyboardButton(text=_sel_pfx + _sel_text, callback_data="{{ button.callbackData }}"))
 {% endfor %}
@@ -158,7 +163,7 @@ async def handle_multi_select_option(callback_query: types.CallbackQuery, state:
 {% endif %}
 {% endfor %}
 {% if node.completeButton %}
-{{ indent }}        builder.add(InlineKeyboardButton(text="{{ node.completeButton.text }}", callback_data="{{ node.doneCallbackData }}"))
+{{ indent }}        builder.add(InlineKeyboardButton(text="{{ node.completeButton.text }}", callback_data="{{ node.doneCallbackData }}"{% if node.completeButton.style %}, style="{{ node.completeButton.style }}"{% endif %}))
 {% endif %}
 {% if node.hasKeyboardLayout and not node.keyboardLayoutAuto %}
 {{ indent }}        builder.adjust({{ node.adjustCode }})

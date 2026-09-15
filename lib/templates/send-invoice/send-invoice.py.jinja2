@@ -247,6 +247,8 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
     }
     if _photo_url:
         _invoice_kwargs["photo_url"] = _photo_url
+    elif str(_all_vars.get("shop_need_photo") or "").lower() in ("1", "true", "yes"):
+        _invoice_kwargs["photo_url"] = str(_all_vars.get("shop_photo_url") or "https://cdn.pixabay.com/photo/2017/01/31/16/59/robot-2025475_640.png")
 {% if entry.subscription %}
     if _currency == "XTR":
         _invoice_kwargs["subscription_period"] = 2592000
@@ -261,6 +263,14 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
 {% if entry.needPhone %}
         _invoice_kwargs["need_phone_number"] = True
 {% endif %}
+        if str(_all_vars.get("shop_need_name") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_name"] = True
+        if str(_all_vars.get("shop_need_email") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_email"] = True
+        if str(_all_vars.get("shop_need_phone") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_phone_number"] = True
+        if str(_all_vars.get("shop_need_shipping") or "").lower() in ("1", "true", "yes"):
+            _invoice_kwargs["need_shipping_address"] = True
         pass
 
     _stars_payment_targets[_payload] = {

@@ -270,6 +270,10 @@ export const defaultNodeData = {
   checkmarkSymbol: undefined,
   /** Символ галочки для множественного выбора */
   multiSelectCheckmark: undefined,
+  /** Символ выбранной кнопки в радиогруппе */
+  radioSelectedSymbol: undefined,
+  /** Символ невыбранной кнопки в радиогруппе */
+  radioUnselectedSymbol: undefined,
   /** Длительность */
   duration: undefined,
   /** Длительность мута */

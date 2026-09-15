@@ -215,6 +215,19 @@ function buildMergedKeyboardData(
       ? keyboardData.continueButtonTarget
       : (typeof hostData.continueButtonTarget === 'string' ? hostData.continueButtonTarget : undefined);
 
+  /**
+   * Берёт непустую строку символа с keyboard, иначе с host
+   * @param key - Имя поля символа
+   * @returns Строка или undefined
+   */
+  const resolveSymbolField = (key: string): string | undefined => {
+    const fromKb = keyboardData[key];
+    if (typeof fromKb === 'string' && fromKb.trim()) return fromKb.trim();
+    const fromHost = hostData[key];
+    if (typeof fromHost === 'string' && fromHost.trim()) return fromHost.trim();
+    return undefined;
+  };
+
   return {
     ...hostData,
     buttons: resolvedButtons,
@@ -225,6 +238,9 @@ function buildMergedKeyboardData(
     allowMultipleSelection: resolvedAllowMultipleSelection,
     multiSelectVariable: resolvedMultiSelectVariable,
     continueButtonTarget: resolvedContinueButtonTarget,
+    checkmarkSymbol: resolveSymbolField('checkmarkSymbol'),
+    radioSelectedSymbol: resolveSymbolField('radioSelectedSymbol'),
+    radioUnselectedSymbol: resolveSymbolField('radioUnselectedSymbol'),
     oneTimeKeyboard: typeof keyboardData.oneTimeKeyboard === 'boolean'
       ? keyboardData.oneTimeKeyboard
       : (typeof hostData.oneTimeKeyboard === 'boolean' ? hostData.oneTimeKeyboard : false),

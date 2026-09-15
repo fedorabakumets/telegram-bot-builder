@@ -292,5 +292,36 @@ console.log('\nE: Фиат и подписка только XTR');
   check('ссылка: order_info после оплаты', code.includes('order_info'));
 }
 
+console.log('\nF: shop_need_* паритет с send_invoice');
+{
+  const path = generateToFile([
+    {
+      id: 'link_shop_need',
+      type: 'create_invoice_link',
+      position: { x: 0, y: 0 },
+      data: {
+        invoiceTitle: 'Shop',
+        invoiceDescription: 'D',
+        invoiceAmount: '100',
+        invoiceCurrency: 'EUR',
+        invoiceProviderSource: 'inline',
+        invoiceProviderToken: '2051:TEST:shop',
+        saveInvoiceLinkTo: 'invoice_url',
+      },
+    },
+  ]);
+  const code = readAndCleanup(path);
+  // Берём только блок create_invoice_link (после маркера), не ветку send_invoice
+  const linkIdx = code.indexOf('# Обработчики ссылок на счёт');
+  const linkBlock = linkIdx >= 0 ? code.slice(linkIdx) : code;
+  check('link: shop_need_name', linkBlock.includes('shop_need_name'));
+  check('link: shop_need_email', linkBlock.includes('shop_need_email'));
+  check('link: shop_need_phone', linkBlock.includes('shop_need_phone'));
+  check('link: shop_need_shipping', linkBlock.includes('shop_need_shipping'));
+  check('link: shop_need_photo', linkBlock.includes('shop_need_photo'));
+  check('link: need_shipping_address', linkBlock.includes('need_shipping_address'));
+  check('link: shipping_query хендлер', code.includes('shipping_query') || code.includes('on_shipping_query'));
+}
+
 console.log(`\n=== Итого: ${passed} passed, ${failed} failed ===\n`);
 process.exit(failed > 0 ? 1 : 0);

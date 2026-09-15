@@ -278,7 +278,7 @@ keyboard (кнопка с customCallbackData: "approve_{user_id}")
 | Готово (complete) | Завершает multi-select и переходит дальше |
 | Создать бота | Запрос на создание управляемого бота |
 
-Дополнительно: перемешивание кнопок (`shuffleButtons`) для квизов и капч; `allowMultipleSelection` на узле — мультивыбор; `selectionGroup` у selection-кнопок — радиогруппа (один активный пункт в группе).
+Дополнительно: перемешивание кнопок (`shuffleButtons`) для квизов и капч; `allowMultipleSelection` на узле — мультивыбор; `selectionGroup` у selection-кнопок — радиогруппа (один активный пункт в группе). Символы отметки настраиваются на ноде: `checkmarkSymbol`, `radioSelectedSymbol`, `radioUnselectedSymbol` (дефолты `✅` / `🔘` / `⚪️`).
 
 ---
 
@@ -559,7 +559,9 @@ In-memory счётчик событий в **скользящем временн
 | После создания | `autoTransitionTo` + `enableAutoTransition` — сразу после URL |
 | После оплаты | `afterPaymentTo` — опционально |
 
-Клавиатуру pay не создаёт. Типичная цепочка: `/buy` → `create_invoice_link` → `message` со ссылкой `{invoice_url}`.
+Клавиатуру pay не создаёт. Типичная цепочка: `/buy` → `create_invoice_link` → `message` без голого URL + inline url-кнопка «Оплатить» с `{invoice_url}`.
+
+При фиате runtime читает те же `shop_need_name` / `email` / `phone` / `shipping` / `photo`, что и `send_invoice` (переменные после multi-select магазина).
 
 ---
 

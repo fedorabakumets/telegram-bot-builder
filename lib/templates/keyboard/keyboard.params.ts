@@ -76,6 +76,12 @@ export interface KeyboardTemplateParams {
   allowMultipleSelection?: boolean;
   /** Переменная для хранения выборов */
   multiSelectVariable?: string;
+  /** Символ выбранной галочки (без группы) */
+  checkmarkSymbol?: string;
+  /** Символ выбранного радио */
+  radioSelectedSymbol?: string;
+  /** Символ невыбранного радио */
+  radioUnselectedSymbol?: string;
   /** ID узла для callback_data */
   nodeId?: string;
   /** Кнопка завершения выбора */

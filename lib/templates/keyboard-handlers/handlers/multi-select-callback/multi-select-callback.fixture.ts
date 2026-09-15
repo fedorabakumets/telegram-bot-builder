@@ -266,6 +266,34 @@ export const validParamsRadioGroup: MultiSelectCallbackTemplateParams = {
   indentLevel: '    ',
 };
 
+/** Валидные параметры: кастомный символ галочки */
+export const validParamsCustomCheckmark: MultiSelectCallbackTemplateParams = {
+  multiSelectNodes: [
+    {
+      id: 'node_star',
+      shortNodeId: 'star123',
+      selectionButtons: [
+        {
+          id: 'btn_1',
+          text: 'Опция 1',
+          action: 'selection',
+          value: 'opt1',
+          valueTruncated: 'opt1',
+          escapedText: 'Опция 1',
+          callbackData: 'ms_star123_opt1',
+        },
+      ],
+      regularButtons: [],
+      totalButtonsCount: 1,
+      checkmarkSymbol: '⭐',
+      radioSelectedSymbol: '🟢',
+      radioUnselectedSymbol: '⚪',
+    },
+  ],
+  allNodeIds: ['node_star'],
+  indentLevel: '    ',
+};
+
 /** Ожидаемый вывод: базовый */
 export const expectedOutputBasic = `
     # Обработка выбора опции

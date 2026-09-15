@@ -20,6 +20,11 @@ export function generateReplyKeyboardSend(node: any, indent: string = '         
   code += generateKeyboard({
     keyboardType: 'reply',
     buttons: node.data.buttons,
+    allowMultipleSelection: node.data.allowMultipleSelection,
+    multiSelectVariable: node.data.multiSelectVariable,
+    checkmarkSymbol: node.data.checkmarkSymbol,
+    radioSelectedSymbol: node.data.radioSelectedSymbol,
+    radioUnselectedSymbol: node.data.radioUnselectedSymbol,
     nodeId: node.id,
     allNodeIds: [],
     resizeKeyboard: node.data.resizeKeyboard,

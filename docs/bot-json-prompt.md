@@ -1153,6 +1153,8 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 
 Отдельный узел (не режим `send_invoice`). Bot API `createInvoiceLink`: те же `invoiceCurrency` / токен провайдера. URL в `saveInvoiceLinkTo`, сразу `autoTransitionTo`, после оплаты — `afterPaymentTo` (или `successful_payment_trigger`). Без pay-клавиатуры. `pre_checkout` генерируется, если есть `send_invoice` **или** `create_invoice_link`. **Единственный** способ подписки Stars: `invoiceSubscription: true` при `invoiceCurrency: "XTR"`.
 
+При фиате (`invoiceCurrency != XTR`) runtime читает те же переменные магазина, что и `send_invoice`: `shop_need_name` / `shop_need_email` / `shop_need_phone` / `shop_need_shipping` / `shop_need_photo` (+ `shop_photo_url`). UX ссылки: после `create_invoice_link` — `message` **без** голого URL в тексте + inline-кнопка `action: "url"`, `url: "{invoice_url}"` (например «Оплатить»).
+
 ```json
 {
   "type": "create_invoice_link",
@@ -1183,7 +1185,7 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 | `autoTransitionTo` | Сразу после создания ссылки |
 | `afterPaymentTo` | После оплаты по этой ссылке (в текущей сессии) |
 
-Цепочка: `/buy` → `create_invoice_link` → `message` «Оплатить: {invoice_url}».
+Цепочка: `/buy` → `create_invoice_link` → `message` «Нажмите кнопку, чтобы оплатить» + url-кнопка `{invoice_url}` (не показывать голый URL в тексте).
 
 ### successful_payment_trigger — успешная оплата (вне цепочки счёта)
 
@@ -1848,7 +1850,17 @@ await bot.edit_message_text('Опрашиваю… 3/15', chat_id=chat_id,
 
 ### Multi-select и радиогруппы
 
-На узле с `allowMultipleSelection: true` кнопки `action: "selection"` переключают выбор, префикс `✅ `; итог пишется в переменную через запятую. Кнопка `action: "complete"` завершает выбор.
+На узле с `allowMultipleSelection: true` кнопки `action: "selection"` переключают выбор; итог пишется в переменную через запятую. Кнопка `action: "complete"` завершает выбор.
+
+Символы отметки на **ноде** (клавиатура / message после merge), опционально:
+
+| Поле | Назначение | По умолчанию |
+|------|------------|--------------|
+| `checkmarkSymbol` | выбранная кнопка без группы | `✅` |
+| `radioSelectedSymbol` | выбранная кнопка с `selectionGroup` | `🔘` |
+| `radioUnselectedSymbol` | невыбранная кнопка с группой | `⚪️` |
+
+Невыбранная галочка — пустой префикс (отдельного поля нет).
 
 Опциональное поле кнопки `selectionGroup` (строка, напр. `"currency"`):
 - **пусто / нет** — обычный мультивыбор (`✅ `);

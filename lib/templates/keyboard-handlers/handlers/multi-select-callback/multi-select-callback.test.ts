@@ -14,6 +14,7 @@ import {
   validParamsEmpty,
   validParamsCustomIndent,
   validParamsRadioGroup,
+  validParamsCustomCheckmark,
   invalidParamsMissingNodes,
   invalidParamsWrongType,
 } from './multi-select-callback.fixture';
@@ -127,6 +128,31 @@ describe('multi-select-callback.py.jinja2 шаблон', () => {
         assert.ok(result.includes('"currency"'));
         assert.ok(result.includes('"🔘 " if _sel_text in selected_list else "⚪️ "'));
         assert.ok(result.includes('"✅ " if _sel_text in selected_list else ""'));
+      });
+
+      it('должен использовать кастомный checkmarkSymbol', () => {
+        const result = generateMultiSelectCallback(validParamsCustomCheckmark);
+
+        assert.ok(result.includes('"⭐ " if _sel_text in selected_list else ""'));
+        assert.ok(!result.includes('"✅ " if _sel_text in selected_list else ""'));
+      });
+
+      it('должен генерировать style у completeButton при rebuild', () => {
+        const withStyle = {
+          ...validParamsBasic,
+          multiSelectNodes: [
+            {
+              ...validParamsBasic.multiSelectNodes[0],
+              completeButton: {
+                text: 'Готово',
+                target: 'next_node',
+                style: 'success' as const,
+              },
+            },
+          ],
+        };
+        const result = generateMultiSelectCallback(withStyle);
+        assert.ok(result.includes('style="success"'));
       });
 
       it('должен генерировать escaped текст для кнопок', () => {

@@ -1,29 +1,36 @@
 /**
- * @fileoverview Компонент кнопки опции для мульти-выбора
- *
- * Отображает кнопку опции в режиме множественного выбора
- * с визуальным индикатором состояния (галочка или радио).
+ * @fileoverview Кнопка опции multi-select на холсте (галочка или радио)
+ * @module client/components/editor/canvas/canvas-node/option-button
  */
 
-/**
- * Интерфейс свойств компонента OptionButton
- *
- * @interface OptionButtonProps
- * @property {any} button - Объект кнопки опции
- */
+/** Символы отметки с ноды клавиатуры */
+export interface SelectionMarkSymbols {
+  /** Выбранная галочка (без группы) */
+  checkmarkSymbol?: string;
+  /** Выбранное радио */
+  radioSelectedSymbol?: string;
+  /** Невыбранное радио */
+  radioUnselectedSymbol?: string;
+}
+
+/** Свойства OptionButton */
 interface OptionButtonProps {
   /** Кнопка опции (может содержать selectionGroup) */
   button: any;
+  /** Символы с data ноды */
+  symbols?: SelectionMarkSymbols;
 }
 
 /**
- * Компонент кнопки опции
- *
+ * Превью кнопки опции: радио или чекбокс
  * @param props - Свойства компонента
- * @returns JSX элемент кнопки опции
+ * @returns JSX элемент кнопки
  */
-export function OptionButton({ button }: OptionButtonProps) {
-  const isRadio = typeof button?.selectionGroup === 'string' && button.selectionGroup.trim().length > 0;
+export function OptionButton({ button, symbols }: OptionButtonProps) {
+  const isRadio =
+    typeof button?.selectionGroup === 'string' && button.selectionGroup.trim().length > 0;
+  const radioOff = (symbols?.radioUnselectedSymbol || '⚪️').trim() || '⚪️';
+  const checkOn = (symbols?.checkmarkSymbol || '✅').trim() || '✅';
 
   return (
     <div className="group relative">
@@ -31,10 +38,12 @@ export function OptionButton({ button }: OptionButtonProps) {
         <div className="flex items-center justify-center space-x-1">
           {isRadio ? (
             <span className="opacity-70" title="Радиогруппа">
-              ⚪️
+              {radioOff}
             </span>
           ) : (
-            <i className="fas fa-square text-green-600 dark:text-green-400 text-xs opacity-50" title="Невыбрано"></i>
+            <span className="opacity-40" title="Не выбрано (галочка появится при выборе)">
+              {checkOn}
+            </span>
           )}
           <span className="break-words">{button.text}</span>
         </div>

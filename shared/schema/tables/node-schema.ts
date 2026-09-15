@@ -455,10 +455,14 @@ export const nodeSchema = z.object({
     name: z.string().optional(),
     /** Метка для отображения */
     label: z.string().optional(),
-    /** Символ галочки для выбранных элементов */
+    /** Символ галочки для выбранных элементов (selection без группы) */
     checkmarkSymbol: z.string().optional(),
     /** Символ галочки для множественного выбора */
     multiSelectCheckmark: z.string().optional(),
+    /** Символ выбранной кнопки в радиогруппе (selectionGroup) */
+    radioSelectedSymbol: z.string().optional(),
+    /** Символ невыбранной кнопки в радиогруппе (selectionGroup) */
+    radioUnselectedSymbol: z.string().optional(),
     /** Длительность ограничения в секундах (для mute_user) */
     duration: z.number().optional(),
     /** Длительность мута в секундах */

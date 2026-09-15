@@ -51,6 +51,12 @@ export const messageParamsSchema = z.object({
   allowMultipleSelection: z.boolean().optional().default(false),
   /** Переменная для хранения выборов */
   multiSelectVariable: z.string().optional(),
+  /** Символ выбранной галочки */
+  checkmarkSymbol: z.string().optional().default('✅'),
+  /** Символ выбранного радио */
+  radioSelectedSymbol: z.string().optional().default('🔘'),
+  /** Символ невыбранного радио */
+  radioUnselectedSymbol: z.string().optional().default('⚪️'),
 
   // --- Автопереход ---
   /** Автопереход включён */

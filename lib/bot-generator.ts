@@ -23,6 +23,7 @@ import { generateDatabaseCode } from './templates/database/database-code.rendere
 import { generateSafeEditOrSend, generateHeader, generateUniversalHandlers, generateMain, generateImports, generateConfig, generateUtils } from './templates/typed-renderer';
 import { generateNodeHandlers } from './templates/node-handlers/node-handlers.dispatcher';
 import { filterInlineNodes, hasInlineButtons, identifyNodesRequiringMultiSelectLogic } from './templates/keyboard/keyboard.renderer';
+import { resolveSelectionMarkSymbols } from './templates/keyboard/selection-mark-symbols';
 import { generateButtonResponse, generateMultiSelectCallback, generateMultiSelectDone, generateMultiSelectReply, generateReplyButtonHandlers, generateCommandCallbackHandler } from './templates/keyboard-handlers/handlers';
 import { generateInteractiveCallbackHandlers } from './templates/keyboard-handlers/interactive-callback-handlers';
 import { generateGroupHandlers } from './templates/group-handlers/group-handlers.renderer';
@@ -609,6 +610,7 @@ function generateCodeSections(
       ? nodes.find((n: any) => n.id === continueButtonTarget)
       : undefined;
 
+    const marks = resolveSelectionMarkSymbols(node.data);
     return {
       ...node,
       hasKeyboardLayout,
@@ -618,10 +620,24 @@ function generateCodeSections(
       selectionButtons,
       regularButtons,
       gotoButtons,
-      completeButton: completeBtn ? { text: completeBtn.text, target: completeBtn.target } : undefined,
+      completeButton: completeBtn
+        ? {
+            text: completeBtn.text,
+            target: completeBtn.target,
+            style:
+              completeBtn.style === 'primary' ||
+              completeBtn.style === 'success' ||
+              completeBtn.style === 'danger'
+                ? completeBtn.style
+                : undefined,
+          }
+        : undefined,
       doneCallbackData: `done_${shortNodeId}`,
       totalButtonsCount: allButtons.length,
       variableName: node.data?.multiSelectVariable || `multi_select_${node.id}`,
+      checkmarkSymbol: marks.checkmarkSymbol,
+      radioSelectedSymbol: marks.radioSelectedSymbol,
+      radioUnselectedSymbol: marks.radioUnselectedSymbol,
       continueButtonTarget: continueButtonTarget || undefined,
       targetNode: targetNode
         ? {

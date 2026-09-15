@@ -52,6 +52,11 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
 
   const hasOptionButtons = staticButtons.some((button: any) => button.action === 'selection');
   const isMultiSelect = !enableDynamicButtons && hasOptionButtons && (node.data as any).allowMultipleSelection;
+  const selectionSymbols = {
+    checkmarkSymbol: (node.data as any).checkmarkSymbol,
+    radioSelectedSymbol: (node.data as any).radioSelectedSymbol,
+    radioUnselectedSymbol: (node.data as any).radioUnselectedSymbol,
+  };
 
   const completeButton = useMemo(
     () => (isMultiSelect ? staticButtons.find((button: any) => button.action === 'complete') : undefined),
@@ -94,7 +99,7 @@ export function ButtonsPreview({ node, allNodes, onPortMouseDown, isConnectionSo
           buttonClassName=""
           renderButton={(button: any) => {
             if (button.action === 'complete') return <DoneButton button={button} />;
-            if (button.action === 'selection') return <OptionButton button={button} />;
+            if (button.action === 'selection') return <OptionButton button={button} symbols={selectionSymbols} />;
             return (
               <div className="relative">
                 <InlineButton button={button} allNodes={allNodes} />

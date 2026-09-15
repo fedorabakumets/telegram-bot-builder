@@ -58,6 +58,12 @@ export interface MessageTemplateParams {
   allowMultipleSelection?: boolean;
   /** Переменная для хранения выборов */
   multiSelectVariable?: string;
+  /** Символ выбранной галочки */
+  checkmarkSymbol?: string;
+  /** Символ выбранного радио */
+  radioSelectedSymbol?: string;
+  /** Символ невыбранного радио */
+  radioUnselectedSymbol?: string;
 
   // --- Автопереход ---
   /** Автопереход включён */
