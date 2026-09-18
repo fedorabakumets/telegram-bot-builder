@@ -6,6 +6,7 @@
 import type { Node } from '@shared/schema';
 import type {
   CreateInvoiceLinkEntry,
+  InvoicePaymentCommon,
   InvoiceProviderSource,
   SendInvoiceEntry,
 } from './send-invoice.params';
@@ -15,25 +16,24 @@ import {
 import { renderPartialTemplate } from '../template-renderer';
 import { sortButtonsByLayout, computeAdjustStr } from '../keyboard/keyboard.renderer';
 import { collectSuccessfulPaymentTriggerEntries } from '../successful-payment-trigger';
+import {
+  parseSuggestedTipAmounts,
+  resolveInvoicePriceLines,
+} from './invoice-prices-utils';
 
 /**
- * Нормализует валюту, токен и флаги need_* из data узла
- * @param data - Data узла счёта / ссылки
- * @returns Поля currency / provider* / need*
+ * Нормализует валюту, токен, need_*, tips, photo, prices из data
+ * @param data - Data узла
+ * @param fallbackLabel - Label для одной строки цены
+ * @returns Общие платёжные поля
  */
-function resolveInvoicePaymentFields(data: any): {
-  currency: string;
-  providerSource: InvoiceProviderSource;
-  providerToken: string;
-  providerTokenEnv: string;
-  needName: boolean;
-  needEmail: boolean;
-  needPhone: boolean;
-} {
+function resolveInvoicePaymentFields(data: any, fallbackLabel: string): InvoicePaymentCommon {
   const rawCurrency = String(data?.invoiceCurrency ?? 'XTR').trim() || 'XTR';
   const currencyDynamic = rawCurrency.includes('{');
   const currency = currencyDynamic ? rawCurrency : normalizeInvoiceCurrency(rawCurrency);
   const isStars = !currencyDynamic && currency === 'XTR';
+  const priceLines = resolveInvoicePriceLines(data, fallbackLabel || currency || 'Item', isStars);
+
   if (isStars) {
     return {
       currency: 'XTR',
@@ -43,8 +43,21 @@ function resolveInvoicePaymentFields(data: any): {
       needName: false,
       needEmail: false,
       needPhone: false,
+      needShipping: false,
+      isFlexible: false,
+      sendPhoneToProvider: false,
+      sendEmailToProvider: false,
+      maxTipAmount: '',
+      suggestedTipAmounts: [],
+      providerData: String(data?.invoiceProviderData || ''),
+      photoUrl: data?.invoicePhotoUrl || '',
+      photoSize: String(data?.invoicePhotoSize || ''),
+      photoWidth: String(data?.invoicePhotoWidth || ''),
+      photoHeight: String(data?.invoicePhotoHeight || ''),
+      priceLines,
     };
   }
+
   const providerSource: InvoiceProviderSource =
     data?.invoiceProviderSource === 'env' ? 'env' : 'inline';
   const envKey = String(data?.invoiceProviderTokenEnv || 'PAYMENT_PROVIDER_TOKEN').trim();
@@ -56,6 +69,18 @@ function resolveInvoicePaymentFields(data: any): {
     needName: data?.invoiceNeedName === true,
     needEmail: data?.invoiceNeedEmail === true,
     needPhone: data?.invoiceNeedPhone === true,
+    needShipping: data?.invoiceNeedShipping === true,
+    isFlexible: data?.invoiceIsFlexible === true,
+    sendPhoneToProvider: data?.invoiceSendPhoneToProvider === true,
+    sendEmailToProvider: data?.invoiceSendEmailToProvider === true,
+    maxTipAmount: String(data?.invoiceMaxTipAmount || '').trim(),
+    suggestedTipAmounts: parseSuggestedTipAmounts(String(data?.invoiceSuggestedTipAmounts || '')),
+    providerData: String(data?.invoiceProviderData || ''),
+    photoUrl: data?.invoicePhotoUrl || '',
+    photoSize: String(data?.invoicePhotoSize || ''),
+    photoWidth: String(data?.invoicePhotoWidth || ''),
+    photoHeight: String(data?.invoicePhotoHeight || ''),
+    priceLines,
   };
 }
 
@@ -78,15 +103,24 @@ export function collectSendInvoiceEntries(nodes: Node[]): SendInvoiceEntry[] {
       const sortedButtons = hasKeyboard
         ? sortButtonsByLayout(rawButtons, data?.keyboardLayout)
         : [];
-      const payment = resolveInvoicePaymentFields(data);
+      const title = data?.invoiceTitle || 'Товар';
+      const payment = resolveInvoicePaymentFields(data, title);
       return {
         nodeId: node.id,
-        title: data?.invoiceTitle || 'Товар',
+        title,
         description: data?.invoiceDescription || 'Описание',
         amount: data?.invoiceAmount || '1',
         ...payment,
-        photoUrl: data?.invoicePhotoUrl || '',
         payload: customPayload || node.id,
+        protectContent: data?.invoiceProtectContent === true,
+        startParameter: String(data?.invoiceStartParameter || ''),
+        messageThreadId: String(data?.invoiceMessageThreadId || ''),
+        directMessagesTopicId: String(data?.invoiceDirectMessagesTopicId || ''),
+        disableNotification: data?.invoiceDisableNotification === true,
+        replyToMessageId: String(data?.invoiceReplyToMessageId || ''),
+        messageEffectId: String(data?.invoiceMessageEffectId || ''),
+        allowPaidBroadcast: data?.invoiceAllowPaidBroadcast === true,
+        suggestedPostParams: String(data?.invoiceSuggestedPostParams || ''),
         savePaymentAmountTo: data?.savePaymentAmountTo || '',
         savePaymentChargeIdTo: data?.savePaymentChargeIdTo || '',
         saveOrderNameTo: data?.saveOrderNameTo || '',
@@ -113,14 +147,14 @@ export function collectCreateInvoiceLinkEntries(nodes: Node[]): CreateInvoiceLin
     .map(node => {
       const data = node.data as any;
       const customPayload = typeof data?.invoicePayload === 'string' ? data.invoicePayload.trim() : '';
-      const payment = resolveInvoicePaymentFields(data);
+      const title = data?.invoiceTitle || 'Товар';
+      const payment = resolveInvoicePaymentFields(data, title);
       return {
         nodeId: node.id,
-        title: data?.invoiceTitle || 'Товар',
+        title,
         description: data?.invoiceDescription || 'Описание',
         amount: data?.invoiceAmount || '1',
         ...payment,
-        photoUrl: data?.invoicePhotoUrl || '',
         payload: customPayload || node.id,
         saveInvoiceLinkTo: data?.saveInvoiceLinkTo || 'invoice_url',
         savePaymentAmountTo: data?.savePaymentAmountTo || '',

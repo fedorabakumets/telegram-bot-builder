@@ -3,6 +3,7 @@
  * @module components/editor/properties/components/configuration/invoice-photo-field
  */
 
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { MediaQuickAddRow } from '../../media/media-quick-add-row';
@@ -23,6 +24,10 @@ interface InvoicePhotoFieldProps {
   onChange: (value: string) => void;
   /** Переменные для подстановки */
   textVariables?: Variable[];
+  /** Data узла для размеров фото */
+  data?: any;
+  /** Обновление размеров */
+  onNodeUpdate?: (nodeId: string, updates: Partial<any>) => void;
 }
 
 /**
@@ -46,6 +51,8 @@ export function InvoicePhotoField({
   value,
   onChange,
   textVariables = [],
+  data,
+  onNodeUpdate,
 }: InvoicePhotoFieldProps) {
   /**
    * Берёт первый подходящий URL из прикрепления
@@ -111,6 +118,28 @@ export function InvoicePhotoField({
           placeholder="URL или файл с диска"
           onAttached={handleAttached}
         />
+      )}
+      {onNodeUpdate && (
+        <div className="grid grid-cols-3 gap-1">
+          <Input
+            className="h-7 text-[10px]"
+            placeholder="size"
+            value={data?.invoicePhotoSize || ''}
+            onChange={(e) => onNodeUpdate(nodeId, { invoicePhotoSize: e.target.value })}
+          />
+          <Input
+            className="h-7 text-[10px]"
+            placeholder="width"
+            value={data?.invoicePhotoWidth || ''}
+            onChange={(e) => onNodeUpdate(nodeId, { invoicePhotoWidth: e.target.value })}
+          />
+          <Input
+            className="h-7 text-[10px]"
+            placeholder="height"
+            value={data?.invoicePhotoHeight || ''}
+            onChange={(e) => onNodeUpdate(nodeId, { invoicePhotoHeight: e.target.value })}
+          />
+        </div>
       )}
     </div>
   );

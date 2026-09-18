@@ -4,22 +4,16 @@
  */
 
 import type { InvoiceCurrencyCode } from '@shared/invoice-currencies';
+import type { InvoicePriceLine } from './invoice-prices-utils';
 
 export type { InvoiceCurrencyCode } from '@shared/invoice-currencies';
+export type { InvoicePriceLine } from './invoice-prices-utils';
 
 /** Источник токена провайдера */
 export type InvoiceProviderSource = 'inline' | 'env';
 
-/** Параметры одного узла send_invoice */
-export interface SendInvoiceEntry {
-  /** ID узла */
-  nodeId: string;
-  /** Название товара */
-  title: string;
-  /** Описание товара */
-  description: string;
-  /** Цена (звёзды или минорные единицы; допускает {переменные}) */
-  amount: string;
+/** Общие платёжные поля счёта / ссылки */
+export interface InvoicePaymentCommon {
   /** Валюта счёта (код или {переменная}) */
   currency: string;
   /** Источник provider_token (игнор при XTR) */
@@ -34,10 +28,62 @@ export interface SendInvoiceEntry {
   needEmail: boolean;
   /** Запросить телефон (need_phone_number) */
   needPhone: boolean;
-  /** URL картинки (пусто если нет) */
+  /** Запросить адрес доставки */
+  needShipping: boolean;
+  /** is_flexible */
+  isFlexible: boolean;
+  /** send_phone_number_to_provider */
+  sendPhoneToProvider: boolean;
+  /** send_email_to_provider */
+  sendEmailToProvider: boolean;
+  /** max_tip_amount как строка (пусто = нет) */
+  maxTipAmount: string;
+  /** suggested tip amounts */
+  suggestedTipAmounts: number[];
+  /** provider_data сырой текст */
+  providerData: string;
+  /** URL картинки */
   photoUrl: string;
-  /** Скрытая метка покупки (уже разрешённая: payload или nodeId) */
+  /** photo_size */
+  photoSize: string;
+  /** photo_width */
+  photoWidth: string;
+  /** photo_height */
+  photoHeight: string;
+  /** Строки LabeledPrice */
+  priceLines: InvoicePriceLine[];
+}
+
+/** Параметры одного узла send_invoice */
+export interface SendInvoiceEntry extends InvoicePaymentCommon {
+  /** ID узла */
+  nodeId: string;
+  /** Название товара */
+  title: string;
+  /** Описание товара */
+  description: string;
+  /** Цена fallback (если priceLines пуст — уже развёрнуто в priceLines) */
+  amount: string;
+  /** Скрытая метка покупки */
   payload: string;
+  /** protect_content */
+  protectContent: boolean;
+  /** start_parameter */
+  startParameter: string;
+  /** message_thread_id */
+  messageThreadId: string;
+  /** direct_messages_topic_id */
+  directMessagesTopicId: string;
+  /** disable_notification */
+  disableNotification: boolean;
+  /** reply_to message_id */
+  replyToMessageId: string;
+  /** message_effect_id */
+  messageEffectId: string;
+  /** allow_paid_broadcast */
+  allowPaidBroadcast: boolean;
+  /** suggested_post_parameters JSON */
+  suggestedPostParams: string;
   /** Переменная для суммы оплаты */
   savePaymentAmountTo: string;
   /** Переменная для кода покупки */
@@ -61,31 +107,15 @@ export interface SendInvoiceEntry {
 }
 
 /** Параметры одного узла create_invoice_link */
-export interface CreateInvoiceLinkEntry {
+export interface CreateInvoiceLinkEntry extends InvoicePaymentCommon {
   /** ID узла */
   nodeId: string;
   /** Название товара */
   title: string;
   /** Описание товара */
   description: string;
-  /** Цена (звёзды или минорные единицы) */
+  /** Цена fallback */
   amount: string;
-  /** Валюта счёта (код или {переменная}) */
-  currency: string;
-  /** Источник provider_token (игнор при XTR) */
-  providerSource: InvoiceProviderSource;
-  /** Токен в ноде при inline */
-  providerToken: string;
-  /** Имя env-ключа при env */
-  providerTokenEnv: string;
-  /** Запросить имя (need_name), только фиат */
-  needName: boolean;
-  /** Запросить email (need_email) */
-  needEmail: boolean;
-  /** Запросить телефон (need_phone_number) */
-  needPhone: boolean;
-  /** URL картинки */
-  photoUrl: string;
   /** Скрытая метка покупки */
   payload: string;
   /** Переменная для URL ссылки */

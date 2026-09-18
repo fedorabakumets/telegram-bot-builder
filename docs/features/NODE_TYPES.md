@@ -528,14 +528,16 @@ In-memory счётчик событий в **скользящем временн
 | Токен провайдера | При не-XTR: `invoiceProviderSource` = `inline` (поле `invoiceProviderToken`) или `env` (`invoiceProviderTokenEnv`, напр. `PAYMENT_PROVIDER_TOKEN`). Для продакшена предпочтителен `env` — при `inline` токен попадает в project.json и код |
 | Название | Заголовок карточки, 1–32 знака (`invoiceTitle`) |
 | Описание | Текст под названием, 1–255 (`invoiceDescription`) |
-| Цена | XTR — целые звёзды; фиат — минорные единицы (100 = 1.00). Строка; допускает `{переменные}` (`invoiceAmount`) |
-| Картинка | Загрузка / URL / переменная → `invoicePhotoUrl`; для `/uploads/` бот добавит `API_BASE_URL` |
+| Цена | Одна сумма `invoiceAmount` или список `invoicePrices: [{ id, label, amount }, …]` → несколько `LabeledPrice`. Для XTR — только одна строка. Label/amount допускают `{переменные}` |
+| Картинка | `invoicePhotoUrl` (+ опц. `invoicePhotoSize` / `Width` / `Height`); для `/uploads/` бот добавит `API_BASE_URL` |
 | Скрытая метка | Payload покупки; пусто = id узла (`invoicePayload`) |
+| Защита / deep-link | `invoiceProtectContent` → `protect_content`; `invoiceStartParameter` |
+| Доставка в чат | Только этот узел: `invoiceMessageThreadId`, `invoiceDirectMessagesTopicId`, тихая отправка, reply-to, effect, paid broadcast, JSON `invoiceSuggestedPostParams` |
 | Сохранить сумму | Имя переменной для `total_amount` (`savePaymentAmountTo`) |
 | Сохранить код покупки | Имя переменной для `telegram_payment_charge_id` (`savePaymentChargeIdTo`) |
-| Запросить контакты | Только фиат (не XTR): `invoiceNeedName` / `invoiceNeedEmail` / `invoiceNeedPhone` → `need_name` / `need_email` / `need_phone_number` |
-| Сохранить order_info | После оплаты: `saveOrderNameTo` / `saveOrderEmailTo` / `saveOrderPhoneTo` ← `order_info.name` / `email` / `phone_number` (пусто = не писать) |
-| Клавиатура | При добавлении — соседний `keyboard` с «Оплатить»; стрелка «после оплаты» визуально от кнопки pay (данные — `autoTransitionTo` счёта) |
+| Запросить контакты | Только фиат: `invoiceNeedName` / `Email` / `Phone` / `Shipping`; `invoiceIsFlexible`; `send_*_to_provider`; tips (`invoiceMaxTipAmount`, `invoiceSuggestedTipAmounts`); `invoiceProviderData` |
+| Сохранить order_info | После оплаты: `saveOrderNameTo` / `saveOrderEmailTo` / `saveOrderPhoneTo` ← `order_info` |
+| Клавиатура | При добавлении — соседний `keyboard` с «Оплатить»; стрелка «после оплаты» от кнопки pay |
 | Следующий узел | `autoTransitionTo` + `enableAutoTransition: true` — после оплаты |
 
 Если в проекте есть хотя бы один `send_invoice` или `create_invoice_link`, бот отвечает на `pre_checkout_query` всегда «да» (лимит Телеграма — 10 секунд). **Подписка на 30 дней в чат не ставится** — Telegram отвечает `SUBSCRIPTION_EXPORT_MISSING`; только узел «Ссылка на счёт» и только при `XTR`. Отмена автопродления — узел `edit_star_subscription`.
@@ -551,11 +553,12 @@ In-memory счётчик событий в **скользящем временн
 | Настройка | Описание |
 |-----------|----------|
 | Валюта / токен | Как у `send_invoice` (`invoiceCurrency`, `invoiceProviderSource`, …) |
-| Название / описание / цена / картинка / метка | Как у `send_invoice` |
-| Подписка на 30 дней | `invoiceSubscription: true` → `subscription_period: 2592000`. **Только при XTR** — в чат с кнопкой Telegram подписку не шлёт (`SUBSCRIPTION_EXPORT_MISSING`) |
+| Название / описание / цена / картинка / метка | Как у `send_invoice` (`invoicePrices`, photo sizes) |
+| Подписка на 30 дней | `invoiceSubscription: true` → `subscription_period: 2592000`. **Только при XTR** |
 | Сохранить ссылку | `saveInvoiceLinkTo` — имя переменной под URL |
 | Сохранить сумму / код | После оплаты (`savePaymentAmountTo`, `savePaymentChargeIdTo`) |
-| Запросить / сохранить контакты | Как у `send_invoice` (`invoiceNeed*`, `saveOrder*To`) — только фиат |
+| Запросить / сохранить контакты | Как у `send_invoice` (need_*, shipping, flexible, tips, provider_data, send_*_to_provider) — только фиат |
+| Без полей чата | Нет protect / start_parameter / thread / silent / reply (только у `send_invoice`) |
 | После создания | `autoTransitionTo` + `enableAutoTransition` — сразу после URL |
 | После оплаты | `afterPaymentTo` — опционально |
 

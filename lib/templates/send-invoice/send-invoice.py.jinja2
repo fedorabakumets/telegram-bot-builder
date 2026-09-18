@@ -45,13 +45,6 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
 
     _title = replace_variables_in_text({{ entry.title | tojson }}, _all_vars, {})
     _description = replace_variables_in_text({{ entry.description | tojson }}, _all_vars, {})
-    _amount_raw = replace_variables_in_text({{ entry.amount | tojson }}, _all_vars, {}) or "1"
-    try:
-        _amount = int(float(str(_amount_raw).strip()))
-    except (ValueError, TypeError):
-        _amount = 1
-    if _amount < 1:
-        _amount = 1
 
     _payload = replace_variables_in_text({{ entry.payload | tojson }}, _all_vars, {}) or "{{ entry.nodeId }}"
     _payload = str(_payload)[:128]
@@ -101,32 +94,61 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         "payload": _payload,
         "provider_token": _provider_token,
         "currency": _currency,
-        "prices": [LabeledPrice(label=_currency, amount=_amount)],
     }
-    if _photo_url:
-        _invoice_kwargs["photo_url"] = _photo_url
-    elif str(_all_vars.get("shop_need_photo") or "").lower() in ("1", "true", "yes"):
-        _invoice_kwargs["photo_url"] = str(_all_vars.get("shop_photo_url") or "https://cdn.pixabay.com/photo/2017/01/31/16/59/robot-2025475_640.png")
-    if _currency != "XTR":
-{% if entry.needName %}
-        _invoice_kwargs["need_name"] = True
-{% endif %}
-{% if entry.needEmail %}
-        _invoice_kwargs["need_email"] = True
-{% endif %}
-{% if entry.needPhone %}
-        _invoice_kwargs["need_phone_number"] = True
-{% endif %}
-        if str(_all_vars.get("shop_need_name") or "").lower() in ("1", "true", "yes"):
-            _invoice_kwargs["need_name"] = True
-        if str(_all_vars.get("shop_need_email") or "").lower() in ("1", "true", "yes"):
-            _invoice_kwargs["need_email"] = True
-        if str(_all_vars.get("shop_need_phone") or "").lower() in ("1", "true", "yes"):
-            _invoice_kwargs["need_phone_number"] = True
-        if str(_all_vars.get("shop_need_shipping") or "").lower() in ("1", "true", "yes"):
-            _invoice_kwargs["need_shipping_address"] = True
-        pass
+{% include 'send-invoice/invoice-kwargs-common.py.jinja2' %}
 {# Подписка только через createInvoiceLink: sendInvoice → SUBSCRIPTION_EXPORT_MISSING #}
+{% if entry.protectContent %}
+    _invoice_kwargs["protect_content"] = True
+{% endif %}
+{% if entry.disableNotification %}
+    _invoice_kwargs["disable_notification"] = True
+{% endif %}
+{% if entry.allowPaidBroadcast %}
+    _invoice_kwargs["allow_paid_broadcast"] = True
+{% endif %}
+{% if entry.startParameter %}
+    _sp = replace_variables_in_text({{ entry.startParameter | tojson }}, _all_vars, {})
+    if str(_sp or "").strip():
+        _invoice_kwargs["start_parameter"] = str(_sp)
+{% endif %}
+{% if entry.messageThreadId %}
+    try:
+        _tid = int(float(str(replace_variables_in_text({{ entry.messageThreadId | tojson }}, _all_vars, {}) or "0")))
+        if _tid > 0:
+            _invoice_kwargs["message_thread_id"] = _tid
+    except (ValueError, TypeError):
+        pass
+{% endif %}
+{% if entry.directMessagesTopicId %}
+    try:
+        _dmt = int(float(str(replace_variables_in_text({{ entry.directMessagesTopicId | tojson }}, _all_vars, {}) or "0")))
+        if _dmt > 0:
+            _invoice_kwargs["direct_messages_topic_id"] = _dmt
+    except (ValueError, TypeError):
+        pass
+{% endif %}
+{% if entry.replyToMessageId %}
+    try:
+        _rid = int(float(str(replace_variables_in_text({{ entry.replyToMessageId | tojson }}, _all_vars, {}) or "0")))
+        if _rid > 0:
+            _invoice_kwargs["reply_to_message_id"] = _rid
+    except (ValueError, TypeError):
+        pass
+{% endif %}
+{% if entry.messageEffectId %}
+    _eff = replace_variables_in_text({{ entry.messageEffectId | tojson }}, _all_vars, {})
+    if str(_eff or "").strip():
+        _invoice_kwargs["message_effect_id"] = str(_eff)
+{% endif %}
+{% if entry.suggestedPostParams %}
+    _spp = replace_variables_in_text({{ entry.suggestedPostParams | tojson }}, _all_vars, {})
+    if str(_spp or "").strip():
+        try:
+            import json as _json_spp
+            _invoice_kwargs["suggested_post_parameters"] = _json_spp.loads(str(_spp))
+        except Exception:
+            logging.warning(f"⭐ send_invoice [{{ entry.nodeId }}]: некорректный suggested_post_parameters JSON")
+{% endif %}
 
     _stars_payment_targets[_payload] = {
         "node_id": "{{ entry.nodeId }}",
@@ -188,13 +210,6 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
 
     _title = replace_variables_in_text({{ entry.title | tojson }}, _all_vars, {})
     _description = replace_variables_in_text({{ entry.description | tojson }}, _all_vars, {})
-    _amount_raw = replace_variables_in_text({{ entry.amount | tojson }}, _all_vars, {}) or "1"
-    try:
-        _amount = int(float(str(_amount_raw).strip()))
-    except (ValueError, TypeError):
-        _amount = 1
-    if _amount < 1:
-        _amount = 1
 
     _payload = replace_variables_in_text({{ entry.payload | tojson }}, _all_vars, {}) or "{{ entry.nodeId }}"
     _payload = str(_payload)[:128]
@@ -243,35 +258,12 @@ async def handle_callback_{{ sanitized_node_id }}(callback_query: types.Callback
         "payload": _payload,
         "provider_token": _provider_token,
         "currency": _currency,
-        "prices": [LabeledPrice(label=_currency, amount=_amount)],
     }
-    if _photo_url:
-        _invoice_kwargs["photo_url"] = _photo_url
-    elif str(_all_vars.get("shop_need_photo") or "").lower() in ("1", "true", "yes"):
-        _invoice_kwargs["photo_url"] = str(_all_vars.get("shop_photo_url") or "https://cdn.pixabay.com/photo/2017/01/31/16/59/robot-2025475_640.png")
+{% include 'send-invoice/invoice-kwargs-common.py.jinja2' %}
 {% if entry.subscription %}
     if _currency == "XTR":
         _invoice_kwargs["subscription_period"] = 2592000
 {% endif %}
-    if _currency != "XTR":
-{% if entry.needName %}
-        _invoice_kwargs["need_name"] = True
-{% endif %}
-{% if entry.needEmail %}
-        _invoice_kwargs["need_email"] = True
-{% endif %}
-{% if entry.needPhone %}
-        _invoice_kwargs["need_phone_number"] = True
-{% endif %}
-        if str(_all_vars.get("shop_need_name") or "").lower() in ("1", "true", "yes"):
-            _invoice_kwargs["need_name"] = True
-        if str(_all_vars.get("shop_need_email") or "").lower() in ("1", "true", "yes"):
-            _invoice_kwargs["need_email"] = True
-        if str(_all_vars.get("shop_need_phone") or "").lower() in ("1", "true", "yes"):
-            _invoice_kwargs["need_phone_number"] = True
-        if str(_all_vars.get("shop_need_shipping") or "").lower() in ("1", "true", "yes"):
-            _invoice_kwargs["need_shipping_address"] = True
-        pass
 
     _stars_payment_targets[_payload] = {
         "node_id": "{{ entry.nodeId }}",

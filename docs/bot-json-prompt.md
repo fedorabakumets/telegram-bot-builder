@@ -1132,14 +1132,26 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 |------|----------|
 | `invoiceTitle` | Название, 1–32 |
 | `invoiceDescription` | Описание, 1–255 |
-| `invoiceAmount` | XTR — целые звёзды; фиат — минорные единицы (100 = 1.00); `{переменные}` допустимы |
+| `invoiceAmount` | Fallback цены, если `invoicePrices` пуст; XTR — целые звёзды; фиат — минорные единицы; `{переменные}` |
+| `invoicePrices` | Массив `{ id, label, amount }` → несколько `LabeledPrice`; пусто = одна строка из `invoiceAmount`. Для **XTR** в API ровно одна позиция |
 | `invoiceCurrency` | `XTR` или код из Bot Payments (EUR, RUB, USD, GBP, UAH, …); также `{переменная}` — код подставится в runtime |
 | `invoiceProviderSource` | `inline` \| `env` (игнор при XTR) |
 | `invoiceProviderToken` | Токен в ноде при `inline` |
 | `invoiceProviderTokenEnv` | Имя env-ключа при `env` (дефолт `PAYMENT_PROVIDER_TOKEN`) |
 | `invoicePhotoUrl` | Картинка: `https://…`, `/uploads/…` или `{var}`; для uploads бот склеит с `API_BASE_URL` |
+| `invoicePhotoSize` / `Width` / `Height` | Опциональные размеры фото для API |
 | `invoicePayload` | Скрытая метка; пусто = id узла |
-| `invoiceNeedName` / `Email` / `Phone` | Запросить имя/email/телефон при оплате (**только фиат**, не XTR) |
+| `invoiceProtectContent` | `protect_content` на этом счёте |
+| `invoiceStartParameter` | `start_parameter` (deep-link) |
+| `invoiceNeedName` / `Email` / `Phone` | Запросить имя/email/телефон (**только фиат**) |
+| `invoiceNeedShipping` / `invoiceIsFlexible` | Адрес доставки / гибкая цена (**только фиат**; плюс runtime `shop_need_shipping`) |
+| `invoiceMaxTipAmount` / `invoiceSuggestedTipAmounts` | Чаевые: число и строка `"10,20,50"` → массив (**только фиат**) |
+| `invoiceProviderData` | Сырой `provider_data` (+ `{переменные}`) |
+| `invoiceSendPhoneToProvider` / `SendEmailToProvider` | Передать контакты провайдеру (**только фиат**) |
+| `invoiceMessageThreadId` / `invoiceDirectMessagesTopicId` | Тема форума / DM-топик (супергруппа) |
+| `invoiceDisableNotification` / `invoiceReplyToMessageId` | Тихая отправка / ответ на message_id |
+| `invoiceMessageEffectId` / `invoiceAllowPaidBroadcast` | Эффект в ЛС / платный broadcast |
+| `invoiceSuggestedPostParams` | JSON для `suggested_post_parameters` |
 | `savePaymentAmountTo` | Куда сохранить сумму |
 | `savePaymentChargeIdTo` | Куда сохранить код покупки (для возврата позже) |
 | `saveOrderNameTo` / `EmailTo` / `PhoneTo` | После оплаты ← `order_info` (пусто = не писать) |
@@ -1180,6 +1192,7 @@ parallel_split → ветка N: … → set_variable (done = int({done}) + 1, m
 |------|----------|
 | `invoiceCurrency` / токен | Как у `send_invoice` |
 | `invoiceSubscription` | `true` → `subscription_period: 2592000` (подписка 30 дней, **только XTR**). Нельзя через `send_invoice` |
+| `invoicePrices` / tips / shipping / provider_data / photo sizes / send_*_to_provider | Как у `send_invoice` (где есть в Bot API `createInvoiceLink`; **нет** protect/start_parameter/thread/silent/reply) |
 | `invoiceNeed*` / `saveOrder*To` | Как у `send_invoice` (только фиат) |
 | `saveInvoiceLinkTo` | Переменная под URL (`https://t.me/$…`) |
 | `autoTransitionTo` | Сразу после создания ссылки |

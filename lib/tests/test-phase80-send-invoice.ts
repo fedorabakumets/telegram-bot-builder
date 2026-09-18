@@ -416,6 +416,90 @@ test('E02', 'обычный send_invoice без subscription_period', () => {
   ok(!code.includes('subscription_period'), 'нет subscription_period');
 });
 
+console.log('── Блок F: платёжное ядро + prices[] + доставка ─────────────────');
+
+test('F01', 'protect_content и start_parameter в answer_invoice', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', {
+      invoiceProtectContent: true,
+      invoiceStartParameter: 'promo_start',
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const body = extractInvoiceHandlerBody(gen(p, 'f01'));
+  ok(body.includes('protect_content'), 'protect_content');
+  ok(body.includes('start_parameter'), 'start_parameter');
+  ok(body.includes('promo_start'), 'значение start_parameter');
+  syntax(gen(p, 'f01s'), 'f01s');
+});
+
+test('F02', 'need_shipping + is_flexible + tips + provider_data (EUR)', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', {
+      invoiceCurrency: 'EUR',
+      invoiceProviderSource: 'inline',
+      invoiceProviderToken: '2051:TEST:abc',
+      invoiceAmount: '100',
+      invoiceNeedShipping: true,
+      invoiceIsFlexible: true,
+      invoiceMaxTipAmount: '50',
+      invoiceSuggestedTipAmounts: '10,20,50',
+      invoiceProviderData: '{"order_id":"42"}',
+      invoiceSendPhoneToProvider: true,
+      invoiceSendEmailToProvider: true,
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const body = extractInvoiceHandlerBody(gen(p, 'f02'));
+  ok(body.includes('need_shipping_address'), 'need_shipping_address');
+  ok(body.includes('is_flexible'), 'is_flexible');
+  ok(body.includes('max_tip_amount'), 'max_tip_amount');
+  ok(body.includes('suggested_tip_amounts'), 'suggested_tip_amounts');
+  ok(body.includes('provider_data'), 'provider_data');
+  ok(body.includes('send_phone_number_to_provider'), 'send phone to provider');
+  ok(body.includes('send_email_to_provider'), 'send email to provider');
+  syntax(gen(p, 'f02s'), 'f02s');
+});
+
+test('F03', 'две строки invoicePrices → два LabeledPrice', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', {
+      invoiceCurrency: 'EUR',
+      invoiceProviderSource: 'inline',
+      invoiceProviderToken: '2051:TEST:abc',
+      invoicePrices: [
+        { id: 'p1', label: 'Товар', amount: '100' },
+        { id: 'p2', label: 'Доставка', amount: '20' },
+      ],
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const body = extractInvoiceHandlerBody(gen(p, 'f03'));
+  const labeledCount = (body.match(/LabeledPrice\(/g) || []).length;
+  ok(labeledCount >= 2, `ожидалось ≥2 LabeledPrice, получили ${labeledCount}`);
+  ok(body.includes('Товар') || body.includes('"Товар"'), 'label Товар');
+  ok(body.includes('Доставка') || body.includes('"Доставка"'), 'label Доставка');
+  syntax(gen(p, 'f03s'), 'f03s');
+});
+
+test('F04', 'message_thread_id и disable_notification', () => {
+  const p = makeCleanProject([
+    makeInvoiceNode('inv1', 'msg1', {
+      invoiceMessageThreadId: '12345',
+      invoiceDisableNotification: true,
+      invoiceReplyToMessageId: '99',
+      invoiceAllowPaidBroadcast: true,
+    }),
+    makeMessageNode('msg1'),
+  ]);
+  const body = extractInvoiceHandlerBody(gen(p, 'f04'));
+  ok(body.includes('message_thread_id'), 'message_thread_id');
+  ok(body.includes('disable_notification'), 'disable_notification');
+  ok(body.includes('reply_to_message_id'), 'reply_to_message_id');
+  ok(body.includes('allow_paid_broadcast'), 'allow_paid_broadcast');
+  syntax(gen(p, 'f04s'), 'f04s');
+});
+
 console.log('\n── Итог ─────────────────────────────────────────────────────────');
 const failed = results.filter(r => !r.passed);
 console.log(`Пройдено: ${results.length - failed.length}/${results.length}`);

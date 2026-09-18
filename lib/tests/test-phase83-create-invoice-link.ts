@@ -323,5 +323,53 @@ console.log('\nF: shop_need_* паритет с send_invoice');
   check('link: shipping_query хендлер', code.includes('shipping_query') || code.includes('on_shipping_query'));
 }
 
+console.log('\nG: платёжное ядро + prices[] на create_invoice_link');
+{
+  const path = generateToFile([
+    {
+      id: 'link_pay_core',
+      type: 'create_invoice_link',
+      position: { x: 0, y: 0 },
+      data: {
+        invoiceTitle: 'Bundle',
+        invoiceDescription: 'D',
+        invoiceCurrency: 'EUR',
+        invoiceProviderSource: 'inline',
+        invoiceProviderToken: '2051:TEST:core',
+        invoiceNeedShipping: true,
+        invoiceIsFlexible: true,
+        invoiceMaxTipAmount: '30',
+        invoiceSuggestedTipAmounts: '5,10,15',
+        invoiceProviderData: '{"sku":"A"}',
+        invoicePrices: [
+          { id: 'a', label: 'Item A', amount: '200' },
+          { id: 'b', label: 'Item B', amount: '50' },
+        ],
+        saveInvoiceLinkTo: 'invoice_url',
+        autoTransitionTo: 'msg1',
+        enableAutoTransition: true,
+      },
+    },
+    {
+      id: 'msg1',
+      type: 'message',
+      position: { x: 400, y: 0 },
+      data: { messageText: 'ok', buttons: [], keyboardType: 'none' },
+    },
+  ]);
+  const code = readAndCleanup(path);
+  const linkIdx = code.indexOf('# Обработчики ссылок на счёт');
+  const linkBlock = linkIdx >= 0 ? code.slice(linkIdx) : code;
+  check('link: need_shipping_address (нода)', linkBlock.includes('need_shipping_address'));
+  check('link: is_flexible', linkBlock.includes('is_flexible'));
+  check('link: max_tip_amount', linkBlock.includes('max_tip_amount'));
+  check('link: suggested_tip_amounts', linkBlock.includes('suggested_tip_amounts'));
+  check('link: provider_data', linkBlock.includes('provider_data'));
+  const labeledCount = (linkBlock.match(/LabeledPrice\(/g) || []).length;
+  check('link: ≥2 LabeledPrice из prices[]', labeledCount >= 2);
+  check('link: label Item A', linkBlock.includes('Item A'));
+  check('link: label Item B', linkBlock.includes('Item B'));
+}
+
 console.log(`\n=== Итого: ${passed} passed, ${failed} failed ===\n`);
 process.exit(failed > 0 ? 1 : 0);

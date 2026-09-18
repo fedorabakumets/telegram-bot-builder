@@ -87,6 +87,31 @@ export function InvoiceOrderInfoFields({
           placeholder="buyer_phone"
         />
       )}
+
+      <PropertyCheckbox
+        id={`inv-need-ship-${nodeId}`}
+        label="Запросить адрес доставки"
+        checked={Boolean(data?.invoiceNeedShipping)}
+        onChange={(checked) => onNodeUpdate(nodeId, { invoiceNeedShipping: checked })}
+      />
+      <PropertyCheckbox
+        id={`inv-flexible-${nodeId}`}
+        label="Цена зависит от доставки (is_flexible)"
+        checked={Boolean(data?.invoiceIsFlexible)}
+        onChange={(checked) => onNodeUpdate(nodeId, { invoiceIsFlexible: checked })}
+      />
+      <PropertyCheckbox
+        id={`inv-send-phone-${nodeId}`}
+        label="Отправить телефон провайдеру"
+        checked={Boolean(data?.invoiceSendPhoneToProvider)}
+        onChange={(checked) => onNodeUpdate(nodeId, { invoiceSendPhoneToProvider: checked })}
+      />
+      <PropertyCheckbox
+        id={`inv-send-email-${nodeId}`}
+        label="Отправить email провайдеру"
+        checked={Boolean(data?.invoiceSendEmailToProvider)}
+        onChange={(checked) => onNodeUpdate(nodeId, { invoiceSendEmailToProvider: checked })}
+      />
     </div>
   );
 }

@@ -842,8 +842,17 @@ export const nodeSchema = z.object({
     invoiceTitle: z.string().optional().default(''),
     /** Описание товара в счёте (1–255 знаков) */
     invoiceDescription: z.string().optional().default(''),
-    /** Цена (звёзды или минимальные единицы валюты; целое или {переменная}) */
+    /** Цена (звёзды или минимальные единицы валюты; целое или {переменная}); fallback если invoicePrices пуст */
     invoiceAmount: z.string().optional().default('1'),
+    /** Несколько строк LabeledPrice; пусто → одна строка из invoiceAmount */
+    invoicePrices: z.array(z.object({
+      /** ID строки в UI */
+      id: z.string(),
+      /** Подпись позиции (LabeledPrice.label) */
+      label: z.string(),
+      /** Сумма в минорных единицах или {переменная} */
+      amount: z.string(),
+    })).optional().default([]),
     /** Валюта счёта: XTR или ISO 4217 из Bot Payments */
     invoiceCurrency: z.string().optional().default('XTR'),
     /** Источник provider_token при фиате: inline | env */
@@ -858,10 +867,48 @@ export const nodeSchema = z.object({
     invoiceNeedEmail: z.boolean().optional().default(false),
     /** Запросить телефон (фиат, need_phone_number) */
     invoiceNeedPhone: z.boolean().optional().default(false),
+    /** Запросить адрес доставки (фиат, need_shipping_address) */
+    invoiceNeedShipping: z.boolean().optional().default(false),
+    /** Цена зависит от доставки (фиат, is_flexible) */
+    invoiceIsFlexible: z.boolean().optional().default(false),
+    /** Передать телефон провайдеру (фиат) */
+    invoiceSendPhoneToProvider: z.boolean().optional().default(false),
+    /** Передать email провайдеру (фиат) */
+    invoiceSendEmailToProvider: z.boolean().optional().default(false),
+    /** Защита контента счёта (sendInvoice.protect_content) */
+    invoiceProtectContent: z.boolean().optional().default(false),
+    /** Макс. чаевые в минорных единицах (фиат); пусто = не слать */
+    invoiceMaxTipAmount: z.string().optional().default(''),
+    /** Предложенные чаевые через запятую, напр. "10,20,50" */
+    invoiceSuggestedTipAmounts: z.string().optional().default(''),
+    /** JSON для провайдера (provider_data), допускает {переменные} */
+    invoiceProviderData: z.string().optional().default(''),
+    /** Deep-link start_parameter при пересылке счёта */
+    invoiceStartParameter: z.string().optional().default(''),
     /** Подписка на 30 дней (только create_invoice_link + XTR; у send_invoice Telegram запрещает) */
     invoiceSubscription: z.boolean().optional().default(false),
     /** URL картинки товара (необязательно) */
     invoicePhotoUrl: z.string().optional().default(''),
+    /** Размер фото в байтах (photo_size) */
+    invoicePhotoSize: z.string().optional().default(''),
+    /** Ширина фото (photo_width) */
+    invoicePhotoWidth: z.string().optional().default(''),
+    /** Высота фото (photo_height) */
+    invoicePhotoHeight: z.string().optional().default(''),
+    /** ID темы форума (message_thread_id), пусто = обычный чат */
+    invoiceMessageThreadId: z.string().optional().default(''),
+    /** ID топика direct messages */
+    invoiceDirectMessagesTopicId: z.string().optional().default(''),
+    /** Тихая отправка счёта */
+    invoiceDisableNotification: z.boolean().optional().default(false),
+    /** message_id сообщения для reply_to */
+    invoiceReplyToMessageId: z.string().optional().default(''),
+    /** ID эффекта сообщения (личка) */
+    invoiceMessageEffectId: z.string().optional().default(''),
+    /** Платный broadcast (allow_paid_broadcast) */
+    invoiceAllowPaidBroadcast: z.boolean().optional().default(false),
+    /** JSON suggested_post_parameters */
+    invoiceSuggestedPostParams: z.string().optional().default(''),
     /** Скрытая метка покупки; пусто = id узла */
     invoicePayload: z.string().optional().default(''),
     /** Переменная для сохранения суммы оплаты */

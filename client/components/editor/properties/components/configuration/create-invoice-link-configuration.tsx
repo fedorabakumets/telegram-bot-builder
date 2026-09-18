@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Node } from '@shared/schema';
-import { VariableSelector } from '../variables/variable-selector';
 import { VariableNameInput } from '../variables/variable-name-input';
 import { InvoicePhotoField } from './invoice-photo-field';
 import { InvoiceSubscriptionToggle } from './invoice-subscription-toggle';
@@ -17,6 +16,9 @@ import {
 } from './invoice-currency-provider-fields';
 import { isStaticStarsCurrency } from './invoice-currency-utils';
 import { InvoiceOrderInfoFields } from './invoice-order-info-fields';
+import { InvoicePricesEditor } from './invoice-prices-editor';
+import { InvoiceTipsFields } from './invoice-tips-fields';
+import { InvoiceProviderDataField } from './invoice-provider-data-field';
 import type { Variable } from '../../../inline-rich/types';
 
 /** Пропсы панели ссылки на счёт */
@@ -82,14 +84,6 @@ export function CreateInvoiceLinkConfiguration({
     onNodeUpdate(selectedNode.id, { afterPaymentTo: next });
   };
 
-  /**
-   * Подставить переменную в цену
-   * @param varName - Имя переменной
-   */
-  const insertAmountVariable = (varName: string) => {
-    onNodeUpdate(selectedNode.id, { invoiceAmount: `{${varName}}` });
-  };
-
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center gap-2">
@@ -139,20 +133,24 @@ export function CreateInvoiceLinkConfiguration({
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label className="text-xs font-medium">
-          {isStars ? 'Цена в звёздах' : `Цена (${currency}, минорные единицы)`}
-        </Label>
-        <Input
-          value={data?.invoiceAmount || ''}
-          onChange={(e) => onNodeUpdate(selectedNode.id, { invoiceAmount: e.target.value })}
-          placeholder={isStars ? '1' : '100'}
-          className="h-8 text-xs"
-        />
-        {textVariables.length > 0 && (
-          <VariableSelector availableVariables={textVariables} onSelect={insertAmountVariable} />
-        )}
-      </div>
+      <InvoicePricesEditor
+        nodeId={selectedNode.id}
+        data={data}
+        onNodeUpdate={onNodeUpdate}
+        textVariables={textVariables}
+      />
+
+      <InvoiceTipsFields
+        nodeId={selectedNode.id}
+        data={data}
+        onNodeUpdate={onNodeUpdate}
+      />
+
+      <InvoiceProviderDataField
+        nodeId={selectedNode.id}
+        value={data?.invoiceProviderData || ''}
+        onNodeUpdate={onNodeUpdate}
+      />
 
       {isStars && (
         <InvoiceSubscriptionToggle
@@ -168,6 +166,8 @@ export function CreateInvoiceLinkConfiguration({
         value={data?.invoicePhotoUrl || ''}
         onChange={(value) => onNodeUpdate(selectedNode.id, { invoicePhotoUrl: value })}
         textVariables={textVariables}
+        data={data}
+        onNodeUpdate={onNodeUpdate}
       />
 
       <div className="space-y-1.5">

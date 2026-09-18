@@ -573,8 +573,10 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       invoiceTitle: 'Товар',
       /** Описание товара */
       invoiceDescription: 'Описание товара',
-      /** Цена */
+      /** Цена (fallback) */
       invoiceAmount: '1',
+      /** Строки LabeledPrice */
+      invoicePrices: [] as Array<{ id: string; label: string; amount: string }>,
       /** Валюта */
       invoiceCurrency: 'XTR',
       /** Источник токена при фиате */
@@ -589,8 +591,36 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       invoiceNeedEmail: false,
       /** Запросить телефон (фиат) */
       invoiceNeedPhone: false,
+      /** Запросить адрес доставки */
+      invoiceNeedShipping: false,
+      /** Гибкая цена доставки */
+      invoiceIsFlexible: false,
+      /** Телефон провайдеру */
+      invoiceSendPhoneToProvider: false,
+      /** Email провайдеру */
+      invoiceSendEmailToProvider: false,
+      /** Защита контента счёта */
+      invoiceProtectContent: false,
+      /** Макс. чаевые */
+      invoiceMaxTipAmount: '',
+      /** Предложенные чаевые */
+      invoiceSuggestedTipAmounts: '',
+      /** provider_data JSON */
+      invoiceProviderData: '',
+      /** start_parameter */
+      invoiceStartParameter: '',
       /** URL картинки */
       invoicePhotoUrl: '',
+      invoicePhotoSize: '',
+      invoicePhotoWidth: '',
+      invoicePhotoHeight: '',
+      invoiceMessageThreadId: '',
+      invoiceDirectMessagesTopicId: '',
+      invoiceDisableNotification: false,
+      invoiceReplyToMessageId: '',
+      invoiceMessageEffectId: '',
+      invoiceAllowPaidBroadcast: false,
+      invoiceSuggestedPostParams: '',
       /** Скрытая метка покупки */
       invoicePayload: '',
       /** Переменная для суммы */
@@ -628,8 +658,10 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       invoiceTitle: 'Товар',
       /** Описание товара */
       invoiceDescription: 'Описание товара',
-      /** Цена */
+      /** Цена (fallback) */
       invoiceAmount: '1',
+      /** Строки LabeledPrice */
+      invoicePrices: [] as Array<{ id: string; label: string; amount: string }>,
       /** Валюта */
       invoiceCurrency: 'XTR',
       /** Источник токена при фиате */
@@ -644,10 +676,20 @@ export function getNodePresetData(type: Node['type']): Record<string, unknown> {
       invoiceNeedEmail: false,
       /** Запросить телефон (фиат) */
       invoiceNeedPhone: false,
+      invoiceNeedShipping: false,
+      invoiceIsFlexible: false,
+      invoiceSendPhoneToProvider: false,
+      invoiceSendEmailToProvider: false,
+      invoiceMaxTipAmount: '',
+      invoiceSuggestedTipAmounts: '',
+      invoiceProviderData: '',
       /** Подписка на 30 дней (только createInvoiceLink + XTR) */
       invoiceSubscription: false,
       /** URL картинки */
       invoicePhotoUrl: '',
+      invoicePhotoSize: '',
+      invoicePhotoWidth: '',
+      invoicePhotoHeight: '',
       /** Скрытая метка покупки */
       invoicePayload: '',
       /** Куда сохранить ссылку */
